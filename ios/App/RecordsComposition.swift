@@ -110,7 +110,8 @@ private struct RecordsPlanningProjection: Codable {
     }
     static func ledgerScope(_ workspace: LedgerWorkspace, shop: ShoppingLedger) throws -> LedgerWorkspace {
         let planning = try RecordsPlanningProjection(workspace.dinnerPlanning, shop: shop).decoded()
-        let value = LedgerWorkspace(shops: [shop], mealTemplates: [], selectedShopID: shop.id, dinnerPlanning: planning)
+        let value = LedgerWorkspace(shops: [shop], mealTemplates: [], selectedShopID: shop.id, dinnerPlanning: planning,
+            packSelections: workspace.packSelections.filter { $0.shopID == shop.id })
         try value.validate()
         return value
     }
@@ -123,13 +124,14 @@ private struct RecordsPlanningProjection: Codable {
     }
     private static func canonicalLedgerForImport(_ workspace: LedgerWorkspace, original: Data) throws -> Data {
         let normalized = try canonical(RecordsLedgerDocument(formatVersion: 1, workspace: workspace))
-        // Earlier public v1 ledger files predate planning state. Its documented empty
-        // default is the sole additive migration; unknown fields still fail equality.
+        // These public v1 fields have documented empty defaults. Only absent known
+        // additions are normalized; unknown fields still fail equality.
         guard let source = try JSONSerialization.jsonObject(with: original) as? [String: Any],
-              let oldWorkspace = source["workspace"] as? [String: Any], oldWorkspace["dinnerPlanning"] == nil else { return normalized }
+              let oldWorkspace = source["workspace"] as? [String: Any] else { return normalized }
         var object = try JSONSerialization.jsonObject(with: normalized) as! [String: Any]
         var body = object["workspace"] as! [String: Any]
-        body.removeValue(forKey: "dinnerPlanning"); object["workspace"] = body
+        for key in ["dinnerPlanning", "packSelections"] where oldWorkspace[key] == nil { body.removeValue(forKey: key) }
+        object["workspace"] = body
         return try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys, .withoutEscapingSlashes])
     }
     static func pickup(_ data: Data) throws -> PickupJourney {
@@ -137,6 +139,13 @@ private struct RecordsPlanningProjection: Codable {
         let value = try JSONDecoder().decode(PickupJourney.self, from: data)
         try PickupModel.validate(value)
         return value
+    }
+    private static func canonicalPickupForImport(_ value: PickupJourney, original: Data) throws -> Data {
+        let normalized = try canonical(value)
+        guard let source = try JSONSerialization.jsonObject(with: original) as? [String: Any], source["ledgerPackSelections"] == nil else { return normalized }
+        var object = try JSONSerialization.jsonObject(with: normalized) as! [String: Any]
+        object.removeValue(forKey: "ledgerPackSelections")
+        return try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys, .withoutEscapingSlashes])
     }
     static func validate(_ record: ArchiveRecord) throws {
         guard let bytes = record.nativePayload else { return }
@@ -153,7 +162,7 @@ private struct RecordsPlanningProjection: Codable {
         case .pickup:
             let value = try pickup(bytes)
             guard value.id.uuidString == record.id else { throw ArchiveError.invalidIdentity }
-            normalized = try canonical(value)
+            normalized = try canonicalPickupForImport(value, original: bytes)
         case .recipe:
             let recipe = try JSONDecoder().decode(ImportedRecipe.self, from: bytes).validated()
             normalized = try ArchiveCodec.canonical(recipe)
@@ -163,10 +172,34 @@ private struct RecordsPlanningProjection: Codable {
     }
 }
 
+/// Root must supply the actual cleanup for every app-private projection store.
+/// A failed cleanup remains retryable through the durable source tombstones.
+struct RecordsErasureCleanup {
+    let eraseLedgerWorkspace: @MainActor (UUID) async throws -> Void
+    let erasePickupRecord: @MainActor (UUID, UUID) async throws -> Void
+}
+
+@MainActor enum RecordsLedgerErasure {
+    static func reconcile(ledger: LedgerModel, registry: RecoveryRegistry, cleanup: RecordsErasureCleanup,
+                          purgeRecovered: () async throws -> Void) async throws {
+        let retiredIDs = try await ledger.retiredLedgerWorkspaceIDs()
+        try await registry.registerErasedOrigins(retiredIDs.map { "ledger/" + $0.uuidString })
+        for id in retiredIDs { try await cleanup.eraseLedgerWorkspace(id) }
+        try await purgeRecovered()
+    }
+
+    static func complete(_ review: WholeLedgerDeletionReview, ledger: LedgerModel, registry: RecoveryRegistry,
+                         cleanup: RecordsErasureCleanup, purgeRecovered: () async throws -> Void) async throws {
+        _ = try await ledger.eraseWholeLedger(review)
+        try await reconcile(ledger: ledger, registry: registry, cleanup: cleanup, purgeRecovered: purgeRecovered)
+        try await ledger.finishWholeLedgerDeletion()
+    }
+}
+
 struct RecordsToolsEntryView: View {
     @StateObject private var composition: RecordsComposition
-    init(app: AppModel, ledger: LedgerModel, pickup: PickupModel) {
-        _composition = StateObject(wrappedValue: RecordsComposition(app: app, ledger: ledger, pickup: pickup))
+    init(app: AppModel, ledger: LedgerModel, pickup: PickupModel, erasureCleanup: RecordsErasureCleanup) {
+        _composition = StateObject(wrappedValue: RecordsComposition(app: app, ledger: ledger, pickup: pickup, erasureCleanup: erasureCleanup))
     }
     var body: some View {
         Group {
@@ -191,7 +224,7 @@ struct RecordsToolsEntryView: View {
                         List {
                             Text(recordsText("This is a separate recovered workspace. Your current pickup is unchanged."))
                             NavigationLink(recordsText("Open recovered shopping list")) { LedgerHomeView(model: model) }
-                            NavigationLink(recordsText("Open recovered dinners")) { LedgerMealsView(model: model) }
+                            NavigationLink(recordsText("Open recovered dinners")) { RecordsRecoveredDinnersView(ledger: model) }
                         }.navigationTitle(recordsText("Recovered workspace"))
                     case let .pickup(model): PickupHomeView(model: model).environment(\.pickupLedger, nil)
                     case let .recipe(recipe): RecordsRecipeAdoptionView(recipe: recipe, ledger: composition.ledger)
@@ -204,6 +237,31 @@ struct RecordsToolsEntryView: View {
                 .toolbar { ToolbarItem(placement: .cancellationAction) { Button(recordsText("Done")) { composition.destination = nil }.disabled(composition.deletingLedger) } }
             }
         }
+    }
+}
+
+private struct RecordsRecoveredDinnersView: View {
+    @ObservedObject var ledger: LedgerModel
+    @EnvironmentObject private var access: WorkspaceAccess
+    var body: some View {
+        Group {
+            if ledger.shop == nil {
+                List {
+                    Text(recordsText("Start a shopping list in this separate recovered workspace to review and choose from its dinner library."))
+                    NavigationLink(recordsText("Open recovered shopping list")) { LedgerHomeView(model: ledger) }
+                }
+            } else {
+                DinnerPlanningHome(ledger: ledger, access: { shopID in
+                    guard access.unlocked, ledger.ready, let workspaceID = ledger.sourceWorkspaceID,
+                          ledger.workspace.shops.contains(where: { $0.id == shopID }) else { return nil }
+                    let now = Date(), actor = access.localActorID.uuidString
+                    return DinnerAccessContext(scope: .local(workspaceID: workspaceID), actorID: actor,
+                        shopID: shopID, assignedShopperID: actor, canPlan: true, canReadBudget: true,
+                        hasPaidTools: false, roleRevision: 0, verifiedAt: now, validUntil: now.addingTimeInterval(30),
+                        sharedCommitAuthorized: false)
+                }, phase: { _ in .draft })
+            }
+        }.navigationTitle(recordsText("Recovered workspace"))
     }
 }
 
@@ -220,17 +278,21 @@ struct RecordsToolsEntryView: View {
     let app: AppModel
     let ledger: LedgerModel
     let pickup: PickupModel
+    private let erasureCleanup: RecordsErasureCleanup
     private var registry: RecoveryRegistry?
     private var directory: URL?
     private var loading = false
     private var pickupOrigin: String?
-    init(app: AppModel, ledger: LedgerModel, pickup: PickupModel) { self.app = app; self.ledger = ledger; self.pickup = pickup }
+    private var unavailableRecords: [RecordsUnavailableRecord] = []
+    init(app: AppModel, ledger: LedgerModel, pickup: PickupModel, erasureCleanup: RecordsErasureCleanup) {
+        self.app = app; self.ledger = ledger; self.pickup = pickup; self.erasureCleanup = erasureCleanup
+    }
     func load() async {
         guard tools == nil, !loading else { return }
         loading = true; defer { loading = false }
         do {
             await app.open(); await ledger.open(); await pickup.load()
-            guard (app.ready && ledger.ready && pickup.ready) || ledger.hasPendingLedgerDeletion else { throw ArchiveError.unavailable }
+            guard (app.ready && ledger.ready) || ledger.hasPendingLedgerDeletion else { throw ArchiveError.unavailable }
             let base = try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
             var folder = base.appendingPathComponent("RoomInTheCart", isDirectory: true)
             #if DEBUG
@@ -243,7 +305,7 @@ struct RecordsToolsEntryView: View {
             self.registry = registry
             if ledger.hasPendingLedgerDeletion { try await synchronizeLedgerErasure() }
             else { try await synchronizeErasure() }
-            if pickup.ready { pickupOrigin = "pickups/" + (try await pickup.archiveSnapshot()).workspaceID.uuidString }
+            if !ledger.hasPendingLedgerDeletion { pickupOrigin = "pickups/" + (try await pickup.archiveListing()).workspaceID.uuidString }
             tools = RecordsToolsModel(registry: registry, snapshot: { [weak self] in
                 guard let self else { throw ArchiveError.unavailable }; return try await self.snapshot()
             }, validateNativePayload: { [weak self] record in
@@ -261,7 +323,7 @@ struct RecordsToolsEntryView: View {
                 guard let self else { throw ArchiveError.unavailable }
                 let review = try await self.ledger.reviewWholeLedgerDeletion()
                 self.destination = Destination(id: "whole-ledger-deletion", content: .ledgerDeletion(review))
-            })
+            }, unavailableRecords: { [weak self] in self?.unavailableRecords ?? [] })
             error = nil
         } catch { self.error = error as? ArchiveError ?? .unavailable }
     }
@@ -276,13 +338,14 @@ struct RecordsToolsEntryView: View {
         let erased = tombstones.map { ArchiveSourceIdentity(origin: "comparisons/" + $0.workspaceID.uuidString, recordID: $0.id.uuidString) }
             + pickupTombstones.map { ArchiveSourceIdentity(origin: "pickups/" + $0.workspaceID.uuidString, recordID: $0.id.uuidString) }
         try await registry.registerErasedSources(erased)
+        for tombstone in pickupTombstones { try await erasureCleanup.erasePickupRecord(tombstone.workspaceID, tombstone.id) }
         try await synchronizeLedgerErasure()
     }
     private func synchronizeLedgerErasure() async throws {
         guard let registry else { throw ArchiveError.unavailable }
-        let retiredOrigins = try await ledger.retiredLedgerWorkspaceIDs().map { "ledger/" + $0.uuidString }
-        try await registry.registerErasedOrigins(retiredOrigins)
-        try await purgeOrphanWorkspaces()
+        try await RecordsLedgerErasure.reconcile(ledger: ledger, registry: registry, cleanup: erasureCleanup) {
+            try await self.purgeOrphanWorkspaces()
+        }
     }
     private func purgeOrphanWorkspaces() async throws {
         guard let registry, let directory else { throw ArchiveError.unavailable }
@@ -298,15 +361,19 @@ struct RecordsToolsEntryView: View {
         try await synchronizeErasure()
         guard let store = app.store else { throw ArchiveError.unavailable }
         var result: [ArchiveRecord] = []
-        for saved in try await store.list() {
+        unavailableRecords = []
+        let comparisonOrigin = "comparisons/" + store.workspaceID.uuidString
+        let comparisonBatch = RecordsSnapshotProjection.project(try await store.listing(), origin: comparisonOrigin) { saved in
             let payload = try RecordsNativeCodec.comparison(saved.payload)
+            guard payload.draft.id == saved.id else { throw ArchiveError.invalidIdentity }
             let bytes = try RecordsNativeCodec.canonical(payload)
             let draft = payload.draft
-            result.append(ArchiveRecord(id: saved.id.uuidString, origin: "comparisons/" + store.workspaceID.uuidString,
+            return ArchiveRecord(id: saved.id.uuidString, origin: "comparisons/" + store.workspaceID.uuidString,
                 revision: ArchiveCodec.digest(bytes), kind: .comparison, title: draft.item,
                 savedAtMilliseconds: ArchiveCodec.milliseconds(saved.savedAt),
-                helperLines: [HelperLine(label: draft.item, originalAmount: draft.needed, originalUnit: draft.unit.rawValue)], nativePayload: bytes))
+                helperLines: [HelperLine(label: draft.item, originalAmount: draft.needed, originalUnit: draft.unit.rawValue)], nativePayload: bytes)
         }
+        result += comparisonBatch.records; unavailableRecords += comparisonBatch.unavailable
         if ledger.ready, let originID = ledger.sourceWorkspaceID {
             let workspace = try RecordsNativeCodec.ledger(ledger.exportPayload())
             for shop in workspace.shops {
@@ -327,18 +394,20 @@ struct RecordsToolsEntryView: View {
                     savedAtMilliseconds: ArchiveCodec.milliseconds(ledger.savedAt ?? Date(timeIntervalSince1970: 0)), nativePayload: bytes))
             }
         }
-        let pickupSnapshot = try await pickup.archiveSnapshot()
-        for saved in pickupSnapshot.records {
+        let pickupSnapshot = try await pickup.archiveListing()
+        let pickupBatch = RecordsSnapshotProjection.project(pickupSnapshot.listing, origin: "pickups/" + pickupSnapshot.workspaceID.uuidString) { saved in
             let value = try RecordsNativeCodec.pickup(saved.payload)
+            guard value.id == saved.id else { throw ArchiveError.invalidIdentity }
             let bytes = try RecordsNativeCodec.canonical(value)
             let lines = (value.basket?.current.lines ?? []).map { line in
                 HelperLine(label: line.name, originalAmount: line.quantity.originalLiteral, originalUnit: line.quantity.unit.rawValue)
             }
-            result.append(ArchiveRecord(id: saved.id.uuidString, origin: "pickups/" + pickupSnapshot.workspaceID.uuidString,
+            return ArchiveRecord(id: saved.id.uuidString, origin: "pickups/" + pickupSnapshot.workspaceID.uuidString,
                 revision: ArchiveCodec.digest(bytes), kind: .pickup,
                 title: value.basket?.current.lines.first?.name ?? value.urgent.first?.meal ?? "Pickup",
-                savedAtMilliseconds: ArchiveCodec.milliseconds(saved.savedAt), helperLines: lines, nativePayload: bytes))
+                savedAtMilliseconds: ArchiveCodec.milliseconds(saved.savedAt), helperLines: lines, nativePayload: bytes)
         }
+        result += pickupBatch.records; unavailableRecords += pickupBatch.unavailable
         // A separately recovered workspace may have been edited since import. Export
         // its committed domain state, retaining the original source identity and parent.
         if let registry {
@@ -358,10 +427,15 @@ struct RecordsToolsEntryView: View {
         case .comparison: filename = "comparison.sqlite"
         case .ledger: filename = "ledger.sqlite"
         case .pickup: filename = "pickup.sqlite"
-        case .recipe: return saved.record.nativePayload == nil ? [] : [saved.record]
+        case .recipe:
+            do { try RecordsNativeCodec.validate(saved.record); return saved.record.nativePayload == nil ? [] : [saved.record] }
+            catch { return omitRecovered(saved, reason: .invalidNative) }
         }
         let url = folder.appendingPathComponent(filename)
-        guard FileManager.default.fileExists(atPath: url.path) else { return [saved.record] }
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            do { try RecordsNativeCodec.validate(saved.record); return [saved.record] }
+            catch { return omitRecovered(saved, reason: .invalidNative) }
+        }
         func revised(_ bytes: Data, id: String, title: String, date: Date, lines: [HelperLine]) -> ArchiveRecord {
             var record = saved.record
             record.id = id; record.title = title; record.helperLines = lines; record.nativePayload = bytes
@@ -374,7 +448,8 @@ struct RecordsToolsEntryView: View {
             let store = try LedgerStore(url: url)
             let current = try await store.load()
             try await store.close()
-            guard let current else { throw ArchiveError.unavailable }
+            guard let current else { return omitRecovered(saved, reason: .unreadableStorage) }
+            do {
             let workspace = try RecordsNativeCodec.ledger(current.payload)
             var result = try workspace.shops.map { shop in
                 let scoped = try RecordsNativeCodec.ledgerScope(workspace, shop: shop)
@@ -389,20 +464,30 @@ struct RecordsToolsEntryView: View {
                 result.append(revised(bytes, id: "meal-library", title: "Reusable dinners", date: current.savedAt, lines: []))
             }
             return result
+            } catch { return omitRecovered(saved, reason: .invalidNative) }
         }
         let store = try ComparisonStore(url: url)
-        let records = try await store.list()
+        let listing = try await store.listing()
         try await store.close()
-        return try records.map { current in
+        if listing.records.isEmpty && listing.unavailable.isEmpty { return omitRecovered(saved, reason: .unreadableStorage) }
+        let batch = RecordsSnapshotProjection.project(listing, origin: saved.record.origin, localCopyID: saved.id) { current in
             if saved.record.kind == .comparison {
                 let value = try RecordsNativeCodec.comparison(current.payload), bytes = try RecordsNativeCodec.canonical(value)
+                guard value.draft.id == current.id else { throw ArchiveError.invalidIdentity }
                 return revised(bytes, id: current.id.uuidString, title: value.draft.item, date: current.savedAt,
                     lines: [HelperLine(label: value.draft.item, originalAmount: value.draft.needed, originalUnit: value.draft.unit.rawValue)])
             }
             let value = try RecordsNativeCodec.pickup(current.payload), bytes = try RecordsNativeCodec.canonical(value)
+            guard value.id == current.id else { throw ArchiveError.invalidIdentity }
             let lines = (value.basket?.current.lines ?? []).map { HelperLine(label: $0.name, originalAmount: $0.quantity.originalLiteral, originalUnit: $0.quantity.unit.rawValue) }
             return revised(bytes, id: current.id.uuidString, title: current.title, date: current.savedAt, lines: lines)
         }
+        unavailableRecords += batch.unavailable
+        return batch.records
+    }
+    private func omitRecovered(_ saved: RecoveredRecord, reason: RecordsUnavailableRecord.Reason) -> [ArchiveRecord] {
+        unavailableRecords.append(RecordsUnavailableRecord(origin: saved.record.origin, recordID: saved.record.id, title: saved.record.title, reason: reason, localCopyID: saved.id))
+        return []
     }
     private func validate(_ record: ArchiveRecord) async throws {
         try await synchronizeErasure()
@@ -416,14 +501,14 @@ struct RecordsToolsEntryView: View {
         try RecordsNativeCodec.validate(record)
     }
     func deleteWholeLedger(_ review: WholeLedgerDeletionReview) async throws {
-        guard !deletingLedger else { throw ArchiveError.unavailable }
+        guard !deletingLedger, let registry else { throw ArchiveError.unavailable }
         deletingLedger = true; defer { deletingLedger = false }
         tools?.invalidateForSourceErasure()
-        _ = try await ledger.eraseWholeLedger(review)
         // Keep the same deletion intent until both durable erasure and all local
         // recovery projections/workspaces have been reconciled successfully.
-        try await synchronizeLedgerErasure()
-        try await ledger.finishWholeLedgerDeletion()
+        try await RecordsLedgerErasure.complete(review, ledger: ledger, registry: registry, cleanup: erasureCleanup) {
+            try await self.purgeOrphanWorkspaces()
+        }
         await tools?.refresh()
     }
     private func delete(_ record: ArchiveRecord) async throws {

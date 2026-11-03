@@ -19,7 +19,7 @@ struct DinnerPlanningEntry: View {
     }
 
     private func localAccess(for shopID: UUID) -> DinnerAccessContext? {
-        guard access.unlocked, ledger.ready, pickup.ready,
+        guard access.unlocked, !household.locked, ledger.ready, pickup.ready,
               !pickup.saving, !pickup.hasPendingSave,
               let workspaceID = ledger.sourceWorkspaceID,
               ledger.workspace.shops.contains(where: { $0.id == shopID }) else { return nil }

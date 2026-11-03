@@ -748,6 +748,2607 @@
           }
         }
       }
+    },
+    "A pack count alone is not a usable amount. Unknown fields stay unknown; complete pack amounts are checked by the list planner.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A pack count alone is not a usable amount. Unknown fields stay unknown; complete pack amounts are checked by the list planner."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El número de paquetes por sí solo no indica una cantidad utilizable. Los campos desconocidos siguen sin resolverse; el planificador verifica las cantidades completas de los paquetes."
+          }
+        }
+      }
+    },
+    "Actual destination": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actual destination"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destino real"
+          }
+        }
+      }
+    },
+    "Back to captured words": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back to captured words"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a las palabras capturadas"
+          }
+        }
+      }
+    },
+    "Capture alone changes no servings. Choose a meal and group, then review a new total.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture alone changes no servings. Choose a meal and group, then review a new total."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La captura por sí sola no cambia las porciones. Elija una comida y un grupo; después, revise el nuevo total."
+          }
+        }
+      }
+    },
+    "Choose explicitly": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose explicitly"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elija una opción"
+          }
+        }
+      }
+    },
+    "Choose the meal": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the meal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elija la comida"
+          }
+        }
+      }
+    },
+    "Choose the serving group": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the serving group"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elija el grupo de porciones"
+          }
+        }
+      }
+    },
+    "Current servings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current servings"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porciones actuales"
+          }
+        }
+      }
+    },
+    "Destination wording": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destination wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destino indicado en el texto"
+          }
+        }
+      }
+    },
+    "Destination wording does not change where this list goes. Choose the displayed list explicitly, or cancel and open the intended list.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destination wording does not change where this list goes. Choose the displayed list explicitly, or cancel and open the intended list."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El destino escrito no cambia dónde se agrega esta lista. Confirme la lista mostrada, o cancele y abra la lista que desea."
+          }
+        }
+      }
+    },
+    "Exclusions, one per line": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exclusions, one per line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exclusiones, una por línea"
+          }
+        }
+      }
+    },
+    "Forget spelling": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forget spelling"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Olvidar corrección"
+          }
+        }
+      }
+    },
+    "Guest wording to review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guest wording to review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto sobre invitados para revisar"
+          }
+        }
+      }
+    },
+    "I checked the original wording, chosen meal, group and new total.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I checked the original wording, chosen meal, group and new total."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé las palabras originales, la comida elegida, el grupo y el nuevo total."
+          }
+        }
+      }
+    },
+    "I reviewed this item, amounts, packs, purpose, destination and exclusions, including any unknowns.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed this item, amounts, packs, purpose, destination and exclusions, including any unknowns."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé este artículo, las cantidades, los paquetes, el propósito, el destino y las exclusiones, incluidos los datos desconocidos."
+          }
+        }
+      }
+    },
+    "Item name": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item name"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre del artículo"
+          }
+        }
+      }
+    },
+    "Meal, group and new total": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal, group and new total"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comida, grupo y nuevo total"
+          }
+        }
+      }
+    },
+    "Negation may describe the product or exclude it. Nothing is deleted automatically. Correct or skip this line before confirming.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Negation may describe the product or exclude it. Nothing is deleted automatically. Correct or skip this line before confirming."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La negación puede describir el producto o excluirlo. Nada se elimina automáticamente. Corrija u omita esta línea antes de confirmar."
+          }
+        }
+      }
+    },
+    "Number of packs, unknown if blank": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Number of packs, unknown if blank"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Número de paquetes; en blanco si se desconoce"
+          }
+        }
+      }
+    },
+    "Only spellings you explicitly remember are saved for this profile and language. Turning this off deletes them. Previous records never change.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only spellings you explicitly remember are saved for this profile and language. Turning this off deletes them. Previous records never change."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo se guardan las correcciones que usted elige recordar para este perfil e idioma. Desactivar esta opción las elimina. Los registros anteriores no cambian."
+          }
+        }
+      }
+    },
+    "Optional spelling memory": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional spelling memory"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Memoria opcional de correcciones"
+          }
+        }
+      }
+    },
+    "Original wording and source": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original wording and source"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Palabras originales y fuente"
+          }
+        }
+      }
+    },
+    "Possible new total to review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Possible new total to review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Posible nuevo total para revisar"
+          }
+        }
+      }
+    },
+    "Preview guest changes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview guest changes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vista previa de cambios de invitados"
+          }
+        }
+      }
+    },
+    "Protected groups stay unchanged. Ambiguous wording needs a typed total. The dinner planner will show pack, lunch and checkout effects before any Apply.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protected groups stay unchanged. Ambiguous wording needs a typed total. The dinner planner will show pack, lunch and checkout effects before any Apply."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los grupos protegidos no cambian. Si el texto es ambiguo, escriba el total. El planificador mostrará los efectos en paquetes, almuerzos y costo antes de aplicar cambios."
+          }
+        }
+      }
+    },
+    "Purpose or meal, unknown if blank": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purpose or meal, unknown if blank"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Propósito o comida; en blanco si se desconoce"
+          }
+        }
+      }
+    },
+    "Remember product spellings on this device": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remember product spellings on this device"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recordar nombres de productos en este dispositivo"
+          }
+        }
+      }
+    },
+    "Remember this corrected product spelling": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remember this corrected product spelling"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recordar esta corrección del nombre"
+          }
+        }
+      }
+    },
+    "Remembered spelling to review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remembered spelling to review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corrección guardada para revisar"
+          }
+        }
+      }
+    },
+    "Review captured fields": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review captured fields"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar campos capturados"
+          }
+        }
+      }
+    },
+    "Review guest change": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review guest change"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar cambio de invitados"
+          }
+        }
+      }
+    },
+    "Reviewed new total servings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed new total servings"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nuevo total de porciones revisado"
+          }
+        }
+      }
+    },
+    "Selected source photo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected source photo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foto de origen seleccionada"
+          }
+        }
+      }
+    },
+    "Skip this captured line": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skip this captured line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Omitir esta línea capturada"
+          }
+        }
+      }
+    },
+    "Some wording, quantities, packs or destination were ambiguous. Compare every field with the original.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some wording, quantities, packs or destination were ambiguous. Compare every field with the original."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Algunas palabras, cantidades, paquetes o el destino eran ambiguos. Compare cada campo con el original."
+          }
+        }
+      }
+    },
+    "Speech is unavailable or uncertain. Type and review the guest wording instead.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speech is unavailable or uncertain. Type and review the guest wording instead."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El reconocimiento de voz no está disponible o es incierto. Escriba y revise el texto sobre invitados."
+          }
+        }
+      }
+    },
+    "Spelling memory is unavailable. Your reviewed list is still usable.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spelling memory is unavailable. Your reviewed list is still usable."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La memoria de correcciones no está disponible. Puede seguir usando la lista revisada."
+          }
+        }
+      }
+    },
+    "The draft could not be parsed. Keep typing or shorten the list, then review again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The draft could not be parsed. Keep typing or shorten the list, then review again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo interpretar el borrador. Siga escribiendo o acorte la lista y vuelva a revisarla."
+          }
+        }
+      }
+    },
+    "This is grocery wording — review it as items": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is grocery wording — review it as items"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este texto es una lista de compras: revisar como artículos"
+          }
+        }
+      }
+    },
+    "This may be a guest change. Open Guests and protected portions to choose the meal, group and new total before previewing.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This may be a guest change. Open Guests and protected portions to choose the meal, group and new total before previewing."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esto puede ser un cambio de invitados. Abra Invitados y porciones protegidas para elegir la comida, el grupo y el nuevo total antes de la vista previa."
+          }
+        }
+      }
+    },
+    "This pickup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This pickup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta compra"
+          }
+        }
+      }
+    },
+    "Total amount, unknown if blank": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total amount, unknown if blank"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad total; en blanco si se desconoce"
+          }
+        }
+      }
+    },
+    "Usable amount in each pack, unknown if blank": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usable amount in each pack, unknown if blank"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad utilizable por paquete; en blanco si se desconoce"
+          }
+        }
+      }
+    },
+    "Use the displayed destination": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use the displayed destination"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar el destino mostrado"
+          }
+        }
+      }
+    },
+    "Use this proposed total": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use this proposed total"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar este total propuesto"
+          }
+        }
+      }
+    },
+    "Use this spelling": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use this spelling"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar esta corrección"
+          }
+        }
+      }
+    },
+    "This workspace changed. Close capture and review the current list.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This workspace changed. Close capture and review the current list."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este espacio de trabajo cambió. Cierre la captura y revise la lista actual."
+          }
+        }
+      }
+    },
+    "Confirm the displayed destination for every item, or cancel and choose another list.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm the displayed destination for every item, or cancel and choose another list."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirme el destino mostrado para cada artículo, o cancele y elija otra lista."
+          }
+        }
+      }
+    },
+    "Review each item. Use a positive amount or leave it explicitly unknown; pack counts must be whole numbers.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review each item. Use a positive amount or leave it explicitly unknown; pack counts must be whole numbers."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revise cada artículo. Use una cantidad positiva o déjela como desconocida; el número de paquetes debe ser entero."
+          }
+        }
+      }
+    },
+    "Total unit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total unit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unidad de la cantidad total"
+          }
+        }
+      }
+    },
+    "Unit in each pack": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unit in each pack"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unidad por paquete"
+          }
+        }
+      }
+    },
+    "Count": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Count"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unidades"
+          }
+        }
+      }
+    },
+    "Grams": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grams"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gramos"
+          }
+        }
+      }
+    },
+    "Kilograms": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilograms"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilogramos"
+          }
+        }
+      }
+    },
+    "Ounces (weight)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ounces (weight)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onzas de peso"
+          }
+        }
+      }
+    },
+    "Pounds": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pounds"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Libras"
+          }
+        }
+      }
+    },
+    "Milliliters": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Milliliters"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mililitros"
+          }
+        }
+      }
+    },
+    "Liters": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liters"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Litros"
+          }
+        }
+      }
+    },
+    "Fluid ounces": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fluid ounces"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onzas líquidas"
+          }
+        }
+      }
+    },
+    "US cups": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "US cups"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tazas estadounidenses"
+          }
+        }
+      }
+    },
+    "Capture and review fields": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture and review fields"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capturar y revisar campos"
+          }
+        }
+      }
+    },
+    "Edit captured fields": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit captured fields"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar campos capturados"
+          }
+        }
+      }
+    },
+    "Reviewed capture details": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed capture details"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detalles de la captura revisada"
+          }
+        }
+      }
+    },
+    "Purpose": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purpose"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Propósito"
+          }
+        }
+      }
+    },
+    "Destination": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destination"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destino"
+          }
+        }
+      }
+    },
+    "Packs": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Packs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquetes"
+          }
+        }
+      }
+    },
+    "Usable amount per pack": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usable amount per pack"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad utilizable por paquete"
+          }
+        }
+      }
+    },
+    "Exclusions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exclusions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exclusiones"
+          }
+        }
+      }
+    },
+    "This capture belongs to an earlier workspace or list revision. Review it again before adding anything.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This capture belongs to an earlier workspace or list revision. Review it again before adding anything."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta captura corresponde a un espacio de trabajo o una versión anterior de la lista. Vuelva a revisarla antes de agregar artículos."
+          }
+        }
+      }
+    },
+    "Capture is for this private list. Guest changes use the dinner preview.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture is for this private list. Guest changes use the dinner preview."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La captura corresponde a esta lista privada. Los cambios de invitados usan la vista previa de la comida."
+          }
+        }
+      }
+    },
+    "The next screen reviews duplicates before adding the reviewed list. Capture does not verify a price, receipt, food safety or arrival.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The next screen reviews duplicates before adding the reviewed list. Capture does not verify a price, receipt, food safety or arrival."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La siguiente pantalla permite revisar duplicados antes de agregar la lista completa. La captura no verifica precios, recibos, seguridad de alimentos ni llegadas."
+          }
+        }
+      }
+    },
+    "A readable barcode is only a code. Match the product yourself.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A readable barcode is only a code. Match the product yourself."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un código de barras legible es solo un código. Comprueba tú a qué producto corresponde."
+          }
+        }
+      }
+    },
+    "Back to source wording": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back to source wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver al texto de origen"
+          }
+        }
+      }
+    },
+    "Camera permission was not granted. Type, paste or choose a photo instead.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Camera permission was not granted. Type, paste or choose a photo instead."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se concedió permiso para usar la cámara. Puedes escribir, pegar texto o elegir una foto."
+          }
+        }
+      }
+    },
+    "Captured source — review before using": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captured source — review before using"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuente capturada: revísala antes de usarla"
+          }
+        }
+      }
+    },
+    "Check the source, choose or type a code when scanning, and confirm the manual match. Nothing has been saved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the source, choose or type a code when scanning, and confirm the manual match. Nothing has been saved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa la fuente, elige o escribe un código si estás escaneando y confirma la coincidencia manual. No se ha guardado nada."
+          }
+        }
+      }
+    },
+    "Check the title, positive servings, source URL and every ingredient. No dinner has been saved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the title, positive servings, source URL and every ingredient. No dinner has been saved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa el título, las porciones mayores que cero, la URL de origen y cada ingrediente. No se ha guardado ninguna cena."
+          }
+        }
+      }
+    },
+    "Choose a code to inspect": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a code to inspect"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige un código para revisar"
+          }
+        }
+      }
+    },
+    "Choose a photo under 12 MB and 30 megapixels, and keep the text under 20,000 bytes and 200 lines.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a photo under 12 MB and 30 megapixels, and keep the text under 20,000 bytes and 200 lines."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una foto de menos de 12 MB y 30 megapíxeles, y limita el texto a 20,000 bytes y 200 líneas."
+          }
+        }
+      }
+    },
+    "Choose one photo for review": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose one photo for review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir una foto para revisar"
+          }
+        }
+      }
+    },
+    "Code typed from the package, optional": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code typed from the package, optional"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Código escrito del envase, opcional"
+          }
+        }
+      }
+    },
+    "Continue with reviewed reference": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue with reviewed reference"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuar con la referencia revisada"
+          }
+        }
+      }
+    },
+    "Editable recipe review": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editable recipe review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisión editable de la receta"
+          }
+        }
+      }
+    },
+    "Editable source text": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editable source text"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto de origen editable"
+          }
+        }
+      }
+    },
+    "I matched this source to the displayed product myself.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I matched this source to the displayed product myself."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yo comprobé que esta fuente corresponde al producto mostrado."
+          }
+        }
+      }
+    },
+    "I reviewed the recipe title, servings, source, notes and ingredient wording.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed the recipe title, servings, source, notes and ingredient wording."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé el título, las porciones, la fuente, las notas y el texto de los ingredientes."
+          }
+        }
+      }
+    },
+    "I reviewed the source and want to keep this reference.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed the source and want to keep this reference."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé la fuente y quiero conservar esta referencia."
+          }
+        }
+      }
+    },
+    "I reviewed these lines as source evidence only.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed these lines as source evidence only."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé estas líneas solo como evidencia de la fuente."
+          }
+        }
+      }
+    },
+    "Ingredient wording, one per line": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredient wording, one per line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto de los ingredientes, uno por línea"
+          }
+        }
+      }
+    },
+    "Keep my current draft": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep my current draft"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conservar mi borrador actual"
+          }
+        }
+      }
+    },
+    "Keep unreadable quantities or printed amounts unknown. These lines do not mark anything paid, received or usable.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep unreadable quantities or printed amounts unknown. These lines do not mark anything paid, received or usable."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deja como desconocidas las cantidades o los importes impresos ilegibles. Estas líneas no indican que algo esté pagado, recibido o utilizable."
+          }
+        }
+      }
+    },
+    "Manual product match": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manual product match"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comprobación manual del producto"
+          }
+        }
+      }
+    },
+    "No product catalog is queried. Unknown codes need your manual match. A matching name or code does not verify ingredients, allergens or a price.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No product catalog is queried. Unknown codes need your manual match. A matching name or code does not verify ingredients, allergens or a price."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se consulta ningún catálogo de productos. Debes comprobar manualmente los códigos desconocidos. Un nombre o código coincidente no verifica ingredientes, alérgenos ni precios."
+          }
+        }
+      }
+    },
+    "No readable text. You can type it below.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No readable text. You can type it below."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay texto legible. Puedes escribirlo abajo."
+          }
+        }
+      }
+    },
+    "Optional camera or selected photo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional camera or selected photo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cámara o foto seleccionada, opcionales"
+          }
+        }
+      }
+    },
+    "Paste source text": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste source text"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pegar texto de origen"
+          }
+        }
+      }
+    },
+    "Photo and scan review": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo and scan review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar foto o escaneo"
+          }
+        }
+      }
+    },
+    "Preparing source for review…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparing source for review…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparando la fuente para revisar…"
+          }
+        }
+      }
+    },
+    "Printed amount wording, unknown if blank": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Printed amount wording, unknown if blank"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto del importe impreso; desconocido si está vacío"
+          }
+        }
+      }
+    },
+    "Product label you checked": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Product label you checked"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre del producto que comprobaste"
+          }
+        }
+      }
+    },
+    "Quantity wording, unknown if blank": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quantity wording, unknown if blank"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto de la cantidad; desconocida si está vacío"
+          }
+        }
+      }
+    },
+    "Receipt lines are evidence only": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt lines are evidence only"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las líneas del recibo son solo evidencia"
+          }
+        }
+      }
+    },
+    "Recipe notes and instructions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipe notes and instructions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notas e instrucciones de la receta"
+          }
+        }
+      }
+    },
+    "Recipe title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipe title"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Título de la receta"
+          }
+        }
+      }
+    },
+    "Recognition stays on this device. Saved photo references are reduced in size and omit location metadata; the app does not save them to your photo library.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recognition stays on this device. Saved photo references are reduced in size and omit location metadata; the app does not save them to your photo library."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El reconocimiento se realiza en este dispositivo. Las fotos de referencia guardadas tienen un tamaño reducido y no incluyen metadatos de ubicación; la app no las guarda en tu fototeca."
+          }
+        }
+      }
+    },
+    "Review every ingredient or type a shorter list. No dinner has been saved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review every ingredient or type a shorter list. No dinner has been saved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa cada ingrediente o escribe una lista más corta. No se ha guardado ninguna cena."
+          }
+        }
+      }
+    },
+    "Review ingredient quantities and exclusions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review ingredient quantities and exclusions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar cantidades y exclusiones de ingredientes"
+          }
+        }
+      }
+    },
+    "Review printed lines": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review printed lines"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar líneas impresas"
+          }
+        }
+      }
+    },
+    "Review recipe fields": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review recipe fields"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar los campos de la receta"
+          }
+        }
+      }
+    },
+    "Review the title, servings and ingredients. Accepting this draft does not choose a dinner or add groceries.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the title, servings and ingredients. Accepting this draft does not choose a dinner or add groceries."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa el título, las porciones y los ingredientes. Aceptar este borrador no elige una cena ni añade productos a la lista."
+          }
+        }
+      }
+    },
+    "Reviewed line wording": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed line wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto revisado de la línea"
+          }
+        }
+      }
+    },
+    "Reviewed servings": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed servings"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porciones revisadas"
+          }
+        }
+      }
+    },
+    "Shorten the text or type the source again, then review.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shorten the text or type the source again, then review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acorta el texto o vuelve a escribir la fuente y después revísala."
+          }
+        }
+      }
+    },
+    "Source URL, attribution only": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source URL, attribution only"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "URL de origen, solo para atribución"
+          }
+        }
+      }
+    },
+    "Source reference label": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source reference label"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre de la referencia de origen"
+          }
+        }
+      }
+    },
+    "Take a photo for review": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take a photo for review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tomar una foto para revisar"
+          }
+        }
+      }
+    },
+    "The source URL is saved as attribution. It is never fetched, and the recipe stays editable if the page disappears.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The source URL is saved as attribution. It is never fetched, and the recipe stays editable if the page disappears."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La URL de origen se guarda como atribución. No se descarga su contenido y la receta sigue siendo editable si la página desaparece."
+          }
+        }
+      }
+    },
+    "This capture is unavailable. Your typed draft is still usable; nothing has been added automatically.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This capture is unavailable. Your typed draft is still usable; nothing has been added automatically."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta captura no está disponible. Puedes seguir usando tu borrador escrito; no se ha añadido nada automáticamente."
+          }
+        }
+      }
+    },
+    "This recipe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This recipe"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta receta"
+          }
+        }
+      }
+    },
+    "Unclassified source wording — copy only what belongs in the recipe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unclassified source wording — copy only what belongs in the recipe"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto de origen sin clasificar: copia solo lo que corresponda a la receta"
+          }
+        }
+      }
+    },
+    "Use this source for review": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use this source for review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar esta fuente para revisar"
+          }
+        }
+      }
+    },
+    "You can always type. A photo or scan never confirms a price, payment, arrival or safe ingredient.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can always type. A photo or scan never confirms a price, payment, arrival or safe ingredient."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Siempre puedes escribir. Una foto o un escaneo no confirma un precio, pago, llegada ni la seguridad de un ingrediente."
+          }
+        }
+      }
+    },
+    "Package photos and barcode references": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Package photos and barcode references"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotos de productos y referencias de códigos de barras"
+          }
+        }
+      }
+    },
+    "Receipt photos and reviewed lines": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt photos and reviewed lines"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotos de recibos y líneas revisadas"
+          }
+        }
+      }
+    },
+    "Receipt source": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt source"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuente del recibo"
+          }
+        }
+      }
+    },
+    "Review a recipe from text or photo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review a recipe from text or photo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar una receta a partir de texto o una foto"
+          }
+        }
+      }
+    },
+    "Allow on-device photo processing for this review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow on-device photo processing for this review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permitir el procesamiento de fotos en este dispositivo para esta revisión"
+          }
+        }
+      }
+    },
+    "The app does not upload photos or source text. Choosing an iCloud photo may download it through Apple. You can continue by typing without enabling photos.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The app does not upload photos or source text. Choosing an iCloud photo may download it through Apple. You can continue by typing without enabling photos."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La app no sube fotos ni texto de origen. Si eliges una foto de iCloud, Apple puede descargarla. Puedes seguir escribiendo sin habilitar las fotos."
+          }
+        }
+      }
+    },
+    "Accepting a recipe saves an editable candidate. Choose it separately in the dinner library to add grocery needs.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accepting a recipe saves an editable candidate. Choose it separately in the dinner library to add grocery needs."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aceptar una receta guarda una opción editable. Elígela por separado en la biblioteca de cenas para agregar los ingredientes que necesitas."
+          }
+        }
+      }
+    },
+    "Recipe accepted. No dinner was chosen and no groceries were added.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipe accepted. No dinner was chosen and no groceries were added."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receta aceptada. No se eligió ninguna cena ni se agregaron ingredientes."
+          }
+        }
+      }
+    },
+    "The original source stays with this recipe. Any saved photo stays only on this device until its grocery workspace is deleted; exports do not contain image bytes.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The original source stays with this recipe. Any saved photo stays only on this device until its grocery workspace is deleted; exports do not contain image bytes."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La fuente original se conserva con esta receta. Las fotos guardadas permanecen solo en este dispositivo hasta que se elimine su espacio de compras; las exportaciones no incluyen las imágenes."
+          }
+        }
+      }
+    },
+    "Accept reviewed recipe": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accept reviewed recipe"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aceptar la receta revisada"
+          }
+        }
+      }
+    },
+    "Start recipe review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start recipe review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empezar la revisión de la receta"
+          }
+        }
+      }
+    },
+    "The recipe save did not finish. Resolve any pending grocery save, then retry this same reviewed recipe. Nothing is chosen automatically.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The recipe save did not finish. Resolve any pending grocery save, then retry this same reviewed recipe. Nothing is chosen automatically."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se terminó de guardar la receta. Resuelve los cambios de compras pendientes y vuelve a intentar guardar esta misma receta revisada. No se elige nada automáticamente."
+          }
+        }
+      }
+    },
+    "Recipe source review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipe source review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisión de la fuente de la receta"
+          }
+        }
+      }
+    },
+    "Original recipe source": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original recipe source"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuente original de la receta"
+          }
+        }
+      }
+    },
+    "The source photo is local evidence and is not included in exports.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The source photo is local evidence and is not included in exports."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La foto de origen es evidencia local y no se incluye en las exportaciones."
+          }
+        }
+      }
+    },
+    "Remove saved recipe photo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove saved recipe photo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar la foto guardada de la receta"
+          }
+        }
+      }
+    },
+    "The source photo is unavailable. The original wording and editable recipe remain usable.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The source photo is unavailable. The original wording and editable recipe remain usable."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La foto de origen no está disponible. Puedes seguir usando el texto original y la receta editable."
+          }
+        }
+      }
+    },
+    "Remove saved recipe photo? The recipe and original text will stay.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove saved recipe photo? The recipe and original text will stay."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Eliminar la foto guardada de la receta? La receta y el texto original se conservarán."
+          }
+        }
+      }
+    },
+    "Add a source photo or typed reference": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a source photo or typed reference"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agregar una foto de origen o una referencia escrita"
+          }
+        }
+      }
+    },
+    "Discard reference draft": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard reference draft"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descartar el borrador de la referencia"
+          }
+        }
+      }
+    },
+    "Manually matched code": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manually matched code"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Código verificado manualmente"
+          }
+        }
+      }
+    },
+    "References are private source evidence. They do not change quantities, prices, payments or arrivals.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "References are private source evidence. They do not change quantities, prices, payments or arrivals."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las referencias son evidencia privada de origen. No cambian cantidades, precios, pagos ni entregas."
+          }
+        }
+      }
+    },
+    "Remove source reference": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove source reference"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar la referencia de origen"
+          }
+        }
+      }
+    },
+    "Remove the saved image and source wording from this device?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove the saved image and source wording from this device?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Eliminar de este dispositivo la imagen guardada y el texto de origen?"
+          }
+        }
+      }
+    },
+    "Remove this source reference": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this source reference"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar esta referencia de origen"
+          }
+        }
+      }
+    },
+    "Retry saving reference": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry saving reference"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a intentar guardar la referencia"
+          }
+        }
+      }
+    },
+    "Saved reduced-size source reference": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved reduced-size source reference"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referencia de origen guardada en tamaño reducido"
+          }
+        }
+      }
+    },
+    "Saved references stay on this device until removed or their saved pickup or grocery workspace is deleted. Current exports do not include image bytes.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved references stay on this device until removed or their saved pickup or grocery workspace is deleted. Current exports do not include image bytes."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las referencias guardadas permanecen en este dispositivo hasta que las elimines o se elimine su recogida o espacio de compras. Las exportaciones actuales no incluyen las imágenes."
+          }
+        }
+      }
+    },
+    "Scan a code and match it manually": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan a code and match it manually"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escanear un código y verificarlo manualmente"
+          }
+        }
+      }
+    },
+    "Source references": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source references"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referencias de origen"
+          }
+        }
+      }
+    },
+    "Source revision": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source revision"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisión de origen"
+          }
+        }
+      }
+    },
+    "The reference could not be saved or opened. Typed planning still works. Remove an older reference if this workspace already has twelve.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The reference could not be saved or opened. Typed planning still works. Remove an older reference if this workspace already has twelve."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo guardar o abrir la referencia. Puedes seguir planificando por escrito. Elimina una referencia anterior si este espacio ya tiene doce."
+          }
+        }
+      }
+    },
+    "This reference still needs a save check. Retry, or remove this draft and any saved copy.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This reference still needs a save check. Retry, or remove this draft and any saved copy."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún hay que verificar si se guardó esta referencia. Vuelve a intentarlo o elimina este borrador y cualquier copia guardada."
+          }
+        }
+      }
+    },
+    "Unlock your private workspace to review this source.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock your private workspace to review this source."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desbloquea tu espacio privado para revisar esta fuente."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

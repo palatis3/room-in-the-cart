@@ -3680,6 +3680,614 @@
           }
         }
       }
+    },
+    "Blank amount or price stays unresolved. A resolved pack can be selected even when the other pack is unknown.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blank amount or price stays unresolved. A resolved pack can be selected even when the other pack is unknown."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una cantidad o un precio en blanco queda sin resolver. Puedes elegir un paquete resuelto aunque el otro sea desconocido."
+          }
+        }
+      }
+    },
+    "Checked at": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checked at"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha de revisión"
+          }
+        }
+      }
+    },
+    "Choose %@ for checkout review": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose %@ for checkout review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir %@ para revisar la compra"
+          }
+        }
+      }
+    },
+    "Choose whole packs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose whole packs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir paquetes enteros"
+          }
+        }
+      }
+    },
+    "Choose whole packs for this item": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose whole packs for this item"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir paquetes enteros para este artículo"
+          }
+        }
+      }
+    },
+    "Compare the usable amount of one whole pack. Confirm usable stock separately; this choice does not claim pantry or freezer food.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare the usable amount of one whole pack. Confirm usable stock separately; this choice does not claim pantry or freezer food."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compara la cantidad utilizable de un paquete entero. Confirma por separado las existencias utilizables; esta elección no supone comida en la despensa ni en el congelador."
+          }
+        }
+      }
+    },
+    "Current ingredient need": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current ingredient need"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Necesidad actual del ingrediente"
+          }
+        }
+      }
+    },
+    "Enter the pack labels, checked source and valid amounts. Unknown amounts stay blank.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the pack labels, checked source and valid amounts. Unknown amounts stay blank."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introduce las etiquetas de los paquetes, la fuente revisada y cantidades válidas. Deja en blanco las cantidades desconocidas."
+          }
+        }
+      }
+    },
+    "First pack": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First pack"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Primer paquete"
+          }
+        }
+      }
+    },
+    "First pack label": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First pack label"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etiqueta del primer paquete"
+          }
+        }
+      }
+    },
+    "First pack price, USD": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First pack price, USD"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio del primer paquete, USD"
+          }
+        }
+      }
+    },
+    "First pack usable amount": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First pack usable amount"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad utilizable del primer paquete"
+          }
+        }
+      }
+    },
+    "Item cost": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item cost"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Costo del artículo"
+          }
+        }
+      }
+    },
+    "Item cost: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item cost: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Costo del artículo: %@"
+          }
+        }
+      }
+    },
+    "Item-only comparison. Whole-checkout affordability still needs all groceries, fees and other charges.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item-only comparison. Whole-checkout affordability still needs all groceries, fees and other charges."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparación de un solo artículo. Para saber si la compra completa cabe en el presupuesto, aún faltan todos los alimentos, las tarifas y los demás cargos."
+          }
+        }
+      }
+    },
+    "Item-only spending limit, optional": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item-only spending limit, optional"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Límite de gasto de este artículo, opcional"
+          }
+        }
+      }
+    },
+    "Left after this need": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Left after this need"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sobrante después de cubrir esta necesidad"
+          }
+        }
+      }
+    },
+    "Linking uses the amount already listed. Adding demand increases the list. A whole-pack choice keeps these ingredient needs and supplies the purchased amount at checkout review.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linking uses the amount already listed. Adding demand increases the list. A whole-pack choice keeps these ingredient needs and supplies the purchased amount at checkout review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vincular usa la cantidad ya anotada. Añadir una necesidad aumenta la lista. Elegir paquetes enteros conserva estas necesidades y aporta la cantidad comprada al revisar la compra."
+          }
+        }
+      }
+    },
+    "Needed for this list": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needed for this list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Necesario para esta lista"
+          }
+        }
+      }
+    },
+    "Pack choice saved for checkout review.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pack choice saved for checkout review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elección de paquete guardada para revisar la compra."
+          }
+        }
+      }
+    },
+    "Pack choices supply whole purchased amounts. The named meal needs stay unchanged, and the whole checkout still needs its complete charges.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pack choices supply whole purchased amounts. The named meal needs stay unchanged, and the whole checkout still needs its complete charges."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las elecciones de paquetes aportan cantidades enteras compradas. Las necesidades de cada comida no cambian y aún hay que revisar todos los cargos de la compra."
+          }
+        }
+      }
+    },
+    "Protected inside that amount": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protected inside that amount"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protegido dentro de esa cantidad"
+          }
+        }
+      }
+    },
+    "Purchased usable amount": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purchased usable amount"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad utilizable comprada"
+          }
+        }
+      }
+    },
+    "Purchased usable amount: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purchased usable amount: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad utilizable comprada: %@"
+          }
+        }
+      }
+    },
+    "Review whole packs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review whole packs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar paquetes enteros"
+          }
+        }
+      }
+    },
+    "Review whole packs for this item": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review whole packs for this item"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar paquetes enteros para este artículo"
+          }
+        }
+      }
+    },
+    "Reviewed pack choice: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed pack choice: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elección de paquete revisada: %@"
+          }
+        }
+      }
+    },
+    "Reviewed price evidence": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed price evidence"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evidencia de precios revisada"
+          }
+        }
+      }
+    },
+    "Second pack": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Second pack"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segundo paquete"
+          }
+        }
+      }
+    },
+    "Second pack label": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Second pack label"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etiqueta del segundo paquete"
+          }
+        }
+      }
+    },
+    "Second pack price, USD": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Second pack price, USD"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio del segundo paquete, USD"
+          }
+        }
+      }
+    },
+    "Second pack usable amount": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Second pack usable amount"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad utilizable del segundo paquete"
+          }
+        }
+      }
+    },
+    "The earlier pack choice needs a new review because this list changed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The earlier pack choice needs a new review because this list changed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La elección anterior de paquete necesita otra revisión porque esta lista cambió."
+          }
+        }
+      }
+    },
+    "The list or reviewed source changed. Make a new pack review before choosing.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The list or reviewed source changed. Make a new pack review before choosing."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La lista o la fuente revisada cambió. Revisa de nuevo los paquetes antes de elegir."
+          }
+        }
+      }
+    },
+    "This pack remains unresolved. Check its usable amount, unit and price.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This pack remains unresolved. Check its usable amount, unit and price."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este paquete sigue sin resolverse. Revisa su cantidad utilizable, unidad y precio."
+          }
+        }
+      }
+    },
+    "Where you checked these packs and prices": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where you checked these packs and prices"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dónde revisaste estos paquetes y precios"
+          }
+        }
+      }
+    },
+    "Whole packs to buy": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whole packs to buy"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquetes enteros que comprar"
+          }
+        }
+      }
+    },
+    "Your ingredient needs are unchanged. Open Review checkout to apply the purchased amount and item cost. An earlier saved checkout keeps its existing terms until you review it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your ingredient needs are unchanged. Open Review checkout to apply the purchased amount and item cost. An earlier saved checkout keeps its existing terms until you review it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las necesidades de ingredientes no cambian. Abre Revisar compra para aplicar la cantidad comprada y el costo del artículo. Una compra guardada anteriormente conserva sus condiciones hasta que la revises."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

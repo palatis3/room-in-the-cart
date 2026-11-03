@@ -8,6 +8,7 @@ import HouseholdClient
     @Published private(set) var workspaces: [WorkspaceList.Workspace] = []
     @Published private(set) var projection: HouseholdBootstrap?
     @Published private(set) var shopperInbox: HouseholdInboxModel?
+    @Published private(set) var sharedShop: HouseholdShopModel?
     @Published private(set) var lifecycle: HouseholdLifecycleModel?
     @Published private(set) var requests: [OwnRequest] = []
     @Published private(set) var nextRequestCursor: String?
@@ -32,6 +33,7 @@ import HouseholdClient
     private let service: HouseholdService?
     private let outbox: OperationOutbox
     private let shopperOutbox: OperationOutbox
+    private let sharedShopOutbox: OperationOutbox
     private let lifecycleStore: LifecycleIntentStore
     private var pending: PendingOperation?
     private var attempts = 0
@@ -45,6 +47,7 @@ import HouseholdClient
         let queueURL = outboxURL ?? base.appendingPathComponent("RoomInTheCart/household-outbox.json")
         outbox = OperationOutbox(url: queueURL)
         shopperOutbox = OperationOutbox(url: queueURL.deletingPathExtension().appendingPathExtension("shopper.json"))
+        sharedShopOutbox = OperationOutbox(url: queueURL.deletingPathExtension().appendingPathExtension("shared-shop.json"))
         lifecycleStore = LifecycleIntentStore(url: queueURL.deletingPathExtension().appendingPathExtension("lifecycle.json"))
         if let auth, let service { self.auth = auth; self.service = service; configured = true; return }
         guard let serviceString = bundle.object(forInfoDictionaryKey: "HouseholdServiceURL") as? String,
@@ -124,7 +127,7 @@ import HouseholdClient
                 }
                 notice = ht("An earlier request needs review. Check received requests before sending it again.")
             }
-            configureShopperInbox(value)
+            configureShopperInbox(value); configureSharedShop(value)
             lifecycle?.setScope(value)
     }
     private func configureLifecycle(_ identity: VerifiedAdultIdentity) {
@@ -148,14 +151,25 @@ import HouseholdClient
         busy = true; defer { busy = false }; let start = generation
         do {
             let fresh = try await service.bootstrap()
+            guard start == generation, let prior = projection else { return }
+            let scopeChanged = prior.household.id != fresh.household.id || prior.memberId != fresh.memberId ||
+                prior.role != fresh.role || prior.shopId != fresh.shopId || prior.grantId != fresh.grantId ||
+                Set(prior.capabilities) != Set(fresh.capabilities)
+            if scopeChanged {
+                onScopeChange?()
+                cancelEdit()
+                requests = []
+                nextRequestCursor = nil
+            }
+            // Revoke the old view as soon as authority is known, even if the request list cannot load.
+            projection = fresh
+            configureShopperInbox(fresh); configureSharedShop(fresh); lifecycle?.setScope(fresh)
+            notice = nil
             if fresh.capabilities.contains("own_requests") {
                 let page = try await service.ownRequests()
                 guard start == generation else { return }
                 requests = page.requests; nextRequestCursor = page.nextCursor
             } else { requests = []; nextRequestCursor = nil }
-            guard start == generation else { return }
-            projection = fresh; notice = nil
-            configureShopperInbox(fresh); lifecycle?.setScope(fresh)
         } catch { await show(error, start: start) }
     }
     func loadMoreRequests() async {
@@ -293,6 +307,7 @@ import HouseholdClient
         await service?.clearScope()
         do { try await outbox.purge() } catch { failed = true }
         do { try await shopperOutbox.purge() } catch { failed = true }
+        do { try await sharedShopOutbox.purge() } catch { failed = true }
         do { try await lifecycleStore.purge() } catch { failed = true }
         do { try await auth?.signOut(allDevices: allDevices) } catch { failed = true }
         notice = failed ? ht("Signed out on this phone. Remote sign-out or local cleanup could not be confirmed.") : nil
@@ -314,7 +329,7 @@ import HouseholdClient
     }
     private func clearProjection() {
         lifecycle?.clearScope()
-        shopperInbox?.clear(); shopperInbox = nil
+        shopperInbox?.clear(); shopperInbox = nil; sharedShop?.clear(); sharedShop = nil
         projection = nil; requests = []; nextRequestCursor = nil; pending = nil
         delivery = .localDraft; attempts = 0; retryAfter = .distantPast; cancelEdit()
     }
@@ -332,6 +347,20 @@ import HouseholdClient
             await self?.show(ClientError.accessEnded, start: start)
         }
     }
+    private func configureSharedShop(_ projection: HouseholdBootstrap) {
+        guard !locked, projection.grantId == nil,
+              projection.capabilities.contains("household_admin") || projection.role == "shopper", let service else {
+            sharedShop?.clear(); sharedShop = nil; return
+        }
+        if let sharedShop, sharedShop.authorized, sharedShop.householdID == projection.household.id, sharedShop.memberID == projection.memberId {
+            sharedShop.updateScope(projection); return
+        }
+        sharedShop?.clear()
+        let start = generation
+        sharedShop = HouseholdShopModel(scope: projection, service: service, outbox: sharedShopOutbox) { [weak self] in
+            guard let self, self.generation == start else { return }; await self.refresh()
+        } onAccessEnded: { [weak self] in await self?.show(ClientError.accessEnded, start: start) }
+    }
     private func show(_ error: Error, start: UUID) async {
         guard start == generation else { return }
         switch error as? ClientError {
@@ -343,6 +372,8 @@ import HouseholdClient
             do { try await outbox.purge() }
             catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
             do { try await shopperOutbox.purge() }
+            catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
+            do { try await sharedShopOutbox.purge() }
             catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
             do { try await lifecycleStore.purge() }
             catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }

@@ -175,6 +175,24 @@ public enum DinnerScenarioEngine {
             let check = MealTemplate(title: "Reviewed ingredient", ingredients: [MealIngredient(name: demand.name, quantity: demand.quantity, exclusions: demand.exclusions)], exclusions: (source?.template.exclusions ?? []) + (source?.template.ingredients.flatMap(\.exclusions) ?? []))
             try check.validate()
         }
+        // Explicit food matches must not hide a known exclusion in a pack or stock
+        // label behind a benign ingredient name. This only enforces recorded rules;
+        // it does not infer ingredients or certify allergen safety from a label.
+        func validateMatchedLabel(_ label: String, foodID: UUID) throws {
+            guard !label.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+            for demand in scenario.demands where demand.foodID == foodID {
+                let isDinner = scenario.commitments.commitments.first(where: { $0.id == demand.commitmentID })?.kind == .dinner
+                let sourceID = demand.acceptedDinnerID ?? (isDinner && scenario.acceptedDinnerIDs.count == 1 ? scenario.acceptedDinnerIDs.first : nil)
+                let source = acceptedDinners.first { $0.id == sourceID }
+                let ingredientRules = source?.template.ingredients.filter { demand.ingredientID == nil || $0.id == demand.ingredientID }.flatMap(\.exclusions) ?? []
+                let check = MealTemplate(title: "Reviewed food match", ingredients: [MealIngredient(name: label, quantity: nil, exclusions: demand.exclusions)],
+                    exclusions: (source?.template.exclusions ?? []) + ingredientRules)
+                try check.validate()
+            }
+        }
+        for pack in scenario.packs { try validateMatchedLabel(pack.offer.label, foodID: pack.foodID) }
+        for lot in scenario.stock { try validateMatchedLabel(lot.name, foodID: lot.foodID) }
+
         // A single known demand cannot prove an entire accepted recipe is covered.
         // Legacy unbound scenarios remain readable, but need review before claiming
         // complete food or checkout coverage. Names are not ingredient identities.

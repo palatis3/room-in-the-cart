@@ -15,7 +15,22 @@ suffix = {"Debug": ".debug", "Staging": ".staging", "Release": ""}[args.configur
 assert info["CFBundleIdentifier"] == "dev.roominthecart.app" + suffix, "Wrong environment bundle"
 assert info.get("CFBundleIcons", {}).get("CFBundlePrimaryIcon", {}).get("CFBundleIconName") == "AppIcon", "Missing app icon"
 assert (args.app / "PrivacyInfo.xcprivacy").is_file(), "Missing privacy manifest"
+privacy = plistlib.loads((args.app / "PrivacyInfo.xcprivacy").read_bytes())
+expected_privacy = plistlib.loads((root / "ios/Resources/PrivacyInfo.xcprivacy").read_bytes())
+assert privacy == expected_privacy, "Compiled privacy manifest differs from the reviewed source"
+assert privacy.get("NSPrivacyTracking") is False, "Unexpected tracking declaration"
 assert info.get("NSFaceIDUsageDescription"), "Missing workspace unlock purpose"
+permission_keys = ["NSFaceIDUsageDescription"]
+if (root / "ios/Features/Capture/OnDeviceSpeechCapture.swift").is_file():
+    permission_keys += ["NSMicrophoneUsageDescription", "NSSpeechRecognitionUsageDescription"]
+if (root / "ios/Features/Capture/CameraCapture.swift").exists():
+    permission_keys += ["NSCameraUsageDescription"]
+for key in permission_keys:
+    assert isinstance(info.get(key), str) and info[key].strip(), f"Missing compiled permission purpose: {key}"
+for language in ("en", "es"):
+    localized_info = plistlib.loads((args.app / f"{language}.lproj/InfoPlist.strings").read_bytes())
+    for key in permission_keys:
+        assert localized_info.get(key, "").strip(), f"Missing {language} permission purpose: {key}"
 configuration = json.loads((root / "config/staging.json").read_text()) if args.configuration != "Release" else {}
 assert info.get("RITCEmailOTPEnabled") == ("YES" if configuration.get("emailOTPEnabled") is True else "NO"), "Incorrect email-provider availability"
 for key, source in (("HouseholdServiceURL", "serviceURL"), ("SupabaseProjectURL", "supabaseURL"), ("SupabasePublishableKey", "publishableKey")):

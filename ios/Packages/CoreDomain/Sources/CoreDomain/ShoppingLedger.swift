@@ -134,6 +134,7 @@ public struct MealTemplate: Codable, Equatable, Sendable, Identifiable {
     public var ingredients: [MealIngredient]
     public var notes: String
     public var sourceURL: String?
+    public var sourceEvidence: RecipeSourceEvidence? = nil
     public var exclusions: [String]
     public var servingGroups: [ServingGroup]
     public var leadTimeMinutes: Int?
@@ -142,16 +143,18 @@ public struct MealTemplate: Codable, Equatable, Sendable, Identifiable {
     public init(id: UUID = UUID(), title: String, servings: Rational = .one,
                 ingredients: [MealIngredient] = [], notes: String = "", sourceURL: String? = nil,
                 exclusions: [String] = [], revision: Int = 0, servingGroups: [ServingGroup] = [],
-                leadTimeMinutes: Int? = nil, completedSteps: [String] = []) {
+                leadTimeMinutes: Int? = nil, completedSteps: [String] = [], sourceEvidence: RecipeSourceEvidence? = nil) {
         self.id = id; self.revision = revision; self.title = title; self.servings = servings
         self.ingredients = ingredients; self.notes = notes; self.sourceURL = sourceURL
         self.exclusions = exclusions; self.servingGroups = servingGroups
         self.leadTimeMinutes = leadTimeMinutes; self.completedSteps = completedSteps
+        self.sourceEvidence = sourceEvidence
     }
 
     public func validate() throws {
         try ledgerText(title, nonempty: true, maximum: 512); try ledgerText(notes)
         if let sourceURL { try ledgerText(sourceURL, maximum: 2048) }
+        try sourceEvidence?.validate()
         try validateExclusions(exclusions)
         guard revision >= 0, servings > .zero, ingredients.count <= 200,
               servingGroups.count <= 100, completedSteps.count <= 100,
@@ -178,6 +181,7 @@ public struct MealOccurrence: Codable, Equatable, Sendable, Identifiable {
     public var servings: Rational
     public var notes: String
     public var sourceURL: String?
+    public var sourceEvidence: RecipeSourceEvidence? = nil
     public var exclusions: [String]
     public var servingGroups: [ServingGroup]
     public var leadTimeMinutes: Int?
@@ -209,6 +213,7 @@ public struct LedgerContribution: Codable, Equatable, Sendable, Identifiable {
     public var notes: String
     public var exclusions: [String]
     public var removedAt: Date?
+    public var capture: CaptureImportMetadata? = nil
 }
 
 public enum AllocationKind: String, Codable, Sendable { case duplicate, withinExisting }
@@ -254,6 +259,29 @@ public struct StagedImportLine: Codable, Equatable, Sendable, Identifiable {
     public var quantity: Quantity?
     public var unresolvedReason: String?
     public var duplicateLineIDs: [UUID]
+    public var exclusions: [String]
+    public var capture: CaptureImportMetadata?
+
+    public init(id: UUID, proposedLineID: UUID, originalText: String, name: String, quantity: Quantity?,
+                unresolvedReason: String?, duplicateLineIDs: [UUID], exclusions: [String] = [],
+                capture: CaptureImportMetadata? = nil) {
+        self.id = id; self.proposedLineID = proposedLineID; self.originalText = originalText; self.name = name
+        self.quantity = quantity; self.unresolvedReason = unresolvedReason; self.duplicateLineIDs = duplicateLineIDs
+        self.exclusions = exclusions; self.capture = capture
+    }
+    private enum CodingKeys: String, CodingKey {
+        case id, proposedLineID, originalText, name, quantity, unresolvedReason, duplicateLineIDs, exclusions, capture
+    }
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id); proposedLineID = try c.decode(UUID.self, forKey: .proposedLineID)
+        originalText = try c.decode(String.self, forKey: .originalText); name = try c.decode(String.self, forKey: .name)
+        quantity = try c.decodeIfPresent(Quantity.self, forKey: .quantity)
+        unresolvedReason = try c.decodeIfPresent(String.self, forKey: .unresolvedReason)
+        duplicateLineIDs = try c.decode([UUID].self, forKey: .duplicateLineIDs)
+        exclusions = try c.decodeIfPresent([String].self, forKey: .exclusions) ?? []
+        capture = try c.decodeIfPresent(CaptureImportMetadata.self, forKey: .capture)
+    }
 }
 
 public struct StagedListImport: Codable, Equatable, Sendable, Identifiable {
@@ -302,18 +330,21 @@ public struct LedgerWorkspace: Codable, Equatable, Sendable {
     public var mealTemplates: [MealTemplate]
     public var selectedShopID: UUID?
     public var dinnerPlanning: DinnerPlanningState
+    public var packSelections: [LedgerPackSelection]
     public init(shops: [ShoppingLedger] = [], mealTemplates: [MealTemplate] = [], selectedShopID: UUID? = nil,
-                dinnerPlanning: DinnerPlanningState = DinnerPlanningState()) {
+                dinnerPlanning: DinnerPlanningState = DinnerPlanningState(), packSelections: [LedgerPackSelection] = []) {
         self.shops = shops; self.mealTemplates = mealTemplates; self.selectedShopID = selectedShopID
         self.dinnerPlanning = dinnerPlanning
+        self.packSelections = packSelections
     }
-    private enum CodingKeys: String, CodingKey { case shops, mealTemplates, selectedShopID, dinnerPlanning }
+    private enum CodingKeys: String, CodingKey { case shops, mealTemplates, selectedShopID, dinnerPlanning, packSelections }
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         shops = try c.decode([ShoppingLedger].self, forKey: .shops)
         mealTemplates = try c.decode([MealTemplate].self, forKey: .mealTemplates)
         selectedShopID = try c.decodeIfPresent(UUID.self, forKey: .selectedShopID)
         dinnerPlanning = try c.decodeIfPresent(DinnerPlanningState.self, forKey: .dinnerPlanning) ?? DinnerPlanningState()
+        packSelections = try c.decodeIfPresent([LedgerPackSelection].self, forKey: .packSelections) ?? []
         try validate()
     }
     public func validate() throws {
@@ -323,6 +354,12 @@ public struct LedgerWorkspace: Codable, Equatable, Sendable {
         for shop in shops { try shop.validate() }
         for meal in mealTemplates { try meal.validate() }
         try dinnerPlanning.validate(shops: shops)
+        guard packSelections.count <= 10_000 else { throw LedgerError.invalid("packSelections") }
+        try uniqueIDs(packSelections.map(\.id))
+        for selection in packSelections {
+            guard let shop = shops.first(where: { $0.id == selection.shopID }) else { throw LedgerPackError.invalidEvidence }
+            try selection.validateReference(in: shop)
+        }
     }
 }
 
@@ -353,10 +390,15 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
 
     public func search(_ query: String) -> [ShoppingLine] {
         let term = normalizedProduct(query)
-        return lines.filter { line in
-            guard !line.isTrashed else { return false }
-            return term.isEmpty || normalizedProduct(line.name + " " + line.notes + " " + line.aisle).contains(term)
-                || contributions(forLineID: line.id).contains { normalizedProduct($0.originalText + " " + $0.notes).contains(term) }
+        let visible = lines.filter { !$0.isTrashed }
+        guard !term.isEmpty else { return visible.sorted { $0.originalOrder < $1.originalOrder } }
+        // Search each source once, rather than rescanning every source for each line.
+        let matchingSourceLines = Set(contributions.lazy.filter {
+            $0.removedAt == nil && normalizedProduct($0.originalText + " " + $0.notes).contains(term)
+        }.map(\.lineID))
+        return visible.filter { line in
+            matchingSourceLines.contains(line.id)
+                || normalizedProduct(line.name + " " + line.notes + " " + line.aisle).contains(term)
         }.sorted { $0.originalOrder < $1.originalOrder }
     }
 
@@ -374,12 +416,15 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     /// Nil is unresolved, including any missing or nonconvertible contribution.
     /// A trashed line retains its need for inspection and restoration.
     public func quantity(forLineID lineID: UUID) throws -> Quantity? {
-        let index = try lineIndex(lineID)
-        let members = contributions(forLineID: lineID)
+        let line = lines[try lineIndex(lineID)]
+        return try quantity(for: line, members: contributions(forLineID: lineID), edges: allocations)
+    }
+
+    private func quantity(for line: ShoppingLine, members: [LedgerContribution], edges: [AllocationEdge]) throws -> Quantity? {
         guard !members.isEmpty else { return nil }
         guard let unit = members.first?.quantity?.unit else { return nil }
         let activeIDs = Set(members.map(\.id))
-        let roots = duplicateRoots(for: members)
+        let roots = duplicateRoots(for: members, edges: edges)
         var totals: [UUID: Rational] = [:]
         for member in members {
             guard let quantity = member.quantity, let amount = try quantity.converted(to: unit) else { return nil }
@@ -388,12 +433,12 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         }
         var total = Rational.zero
         for amount in totals.values { total = try total.adding(amount) }
-        for edge in allocations where edge.kind == .withinExisting
+        for edge in edges where edge.kind == .withinExisting
             && activeIDs.contains(edge.demandContributionID) && activeIDs.contains(edge.supplyContributionID) {
             guard let amount = try edge.quantity.converted(to: unit) else { return nil }
             total = try total.subtracting(amount)
         }
-        return Quantity(amount: total, unit: unit, originalLiteral: "\(total) \(lines[index].name)")
+        return Quantity(amount: total, unit: unit, originalLiteral: "\(total) \(line.name)")
     }
 
     @discardableResult
@@ -413,12 +458,14 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     /// deliberately not equivalent to replaying an already committed preview.
     public func stageImport(text: String, source: ImportSource = .typed, importID: UUID = UUID()) -> StagedListImport {
         var staged: [StagedImportLine] = []
+        var candidatesByName = importCandidatesByName()
         for original in text.components(separatedBy: .newlines) where !original.trimmingCharacters(in: .whitespaces).isEmpty {
             let parsed = Self.parseLine(original)
-            let candidates = lines.filter { !$0.isTrashed && normalizedProduct($0.name) == normalizedProduct(parsed.name) }.map(\.id)
-                + staged.filter { normalizedProduct($0.name) == normalizedProduct(parsed.name) }.map(\.proposedLineID)
-            staged.append(StagedImportLine(id: UUID(), proposedLineID: UUID(), originalText: original,
-                name: parsed.name, quantity: parsed.quantity, unresolvedReason: parsed.reason, duplicateLineIDs: candidates))
+            let name = normalizedProduct(parsed.name), proposedLineID = UUID()
+            staged.append(StagedImportLine(id: UUID(), proposedLineID: proposedLineID, originalText: original,
+                name: parsed.name, quantity: parsed.quantity, unresolvedReason: parsed.reason,
+                duplicateLineIDs: candidatesByName[name] ?? []))
+            candidatesByName[name, default: []].append(proposedLineID)
         }
         return StagedListImport(id: importID, shopID: id, baseRevision: revision, source: source, originalText: text, lines: staged)
     }
@@ -429,15 +476,19 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         guard preview.shopID == id, preview.baseRevision == revision else { throw LedgerError.stalePreview }
         try validatePreview(preview)
         var refreshed = preview
+        var candidatesByName = importCandidatesByName()
         for index in refreshed.lines.indices {
             let name = normalizedProduct(refreshed.lines[index].name)
-            refreshed.lines[index].duplicateLineIDs = lines.filter {
-                !$0.isTrashed && normalizedProduct($0.name) == name
-            }.map(\.id) + refreshed.lines.prefix(index).filter {
-                normalizedProduct($0.name) == name
-            }.map(\.proposedLineID)
+            refreshed.lines[index].duplicateLineIDs = candidatesByName[name] ?? []
+            candidatesByName[name, default: []].append(refreshed.lines[index].proposedLineID)
         }
         return refreshed
+    }
+
+    private func importCandidatesByName() -> [String: [UUID]] {
+        var candidates: [String: [UUID]] = [:]
+        for line in lines where !line.isTrashed { candidates[normalizedProduct(line.name), default: []].append(line.id) }
+        return candidates
     }
 
     @discardableResult
@@ -453,21 +504,26 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         guard Set(decisions.keys).isSubset(of: Set(preview.lines.map(\.id))) else { throw LedgerError.invalid("importDecision") }
         return try mutate("commitImport", at: at) { next in
             var contributionIDs: [UUID] = []
+            var existingNames = Set(next.lines.lazy.filter { !$0.isTrashed }.map { normalizedProduct($0.name) })
             for entry in preview.lines {
-                let matches = next.lines.filter { !$0.isTrashed && normalizedProduct($0.name) == normalizedProduct(entry.name) }
-                if !matches.isEmpty && decisions[entry.id] == nil { throw LedgerError.duplicateDecisionRequired(entry.id) }
+                let name = normalizedProduct(entry.name)
+                if existingNames.contains(name) && decisions[entry.id] == nil { throw LedgerError.duplicateDecisionRequired(entry.id) }
                 let resolution = decisions[entry.id] ?? .addNew
                 if case .skip = resolution { continue }
+                if let capture = entry.capture, !capture.blockingFields.isEmpty {
+                    throw CaptureImportError.reviewRequired(capture.blockingFields)
+                }
                 let lineID: UUID
                 var duplicateSupply: LedgerContribution?
                 switch resolution {
                 case .addNew:
                     lineID = next.appendLine(id: entry.proposedLineID, name: entry.name)
+                    existingNames.insert(name)
                 case let .addToLine(target):
-                    try next.requireMatch(name: entry.name, quantity: entry.quantity, exclusions: [], lineID: target)
+                    try next.requireMatch(name: entry.name, quantity: entry.quantity, exclusions: entry.exclusions, lineID: target)
                     lineID = target
                 case let .mergeDuplicate(target):
-                    try next.requireMatch(name: entry.name, quantity: entry.quantity, exclusions: [], lineID: target)
+                    try next.requireMatch(name: entry.name, quantity: entry.quantity, exclusions: entry.exclusions, lineID: target)
                     guard let quantity = entry.quantity,
                           let source = try next.contributions(forLineID: target).first(where: { candidate in
                               guard candidate.source.canSupplyExistingQuantity, let original = candidate.quantity,
@@ -479,7 +535,9 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
                 }
                 next.contributions.append(LedgerContribution(id: entry.id, lineID: lineID, source: .imported(batchID: preview.id),
                     productName: entry.name, quantity: entry.quantity, originalText: entry.originalText,
-                    notes: entry.unresolvedReason ?? "", exclusions: [], removedAt: nil))
+                    notes: [entry.capture?.purpose, entry.capture?.destination, entry.unresolvedReason]
+                        .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: "\n"),
+                    exclusions: entry.exclusions, removedAt: nil, capture: entry.capture))
                 if let supply = duplicateSupply, let quantity = entry.quantity {
                     next.allocations.append(AllocationEdge(id: UUID(), demandContributionID: entry.id,
                         supplyContributionID: supply.id, quantity: quantity, kind: .duplicate))
@@ -597,7 +655,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
             }
             next.mealOccurrences.append(MealOccurrence(id: occurrenceID, templateID: template.id, templateRevision: template.revision,
                 title: template.title, servings: template.servings, notes: template.notes, sourceURL: template.sourceURL,
-                exclusions: template.exclusions, servingGroups: template.servingGroups, leadTimeMinutes: template.leadTimeMinutes,
+                sourceEvidence: template.sourceEvidence, exclusions: template.exclusions, servingGroups: template.servingGroups, leadTimeMinutes: template.leadTimeMinutes,
                 completedSteps: template.completedSteps, ingredientContributionIDs: ingredientIDs, scheduledDay: scheduledDay,
                 isHidden: false, removedAt: nil))
             return occurrenceID
@@ -676,7 +734,9 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         try uniqueIDs(lines.map(\.id)); try uniqueIDs(contributions.map(\.id)); try uniqueIDs(allocations.map(\.id))
         try uniqueIDs(mealOccurrences.map(\.id)); try uniqueIDs(importBatches.map(\.id)); try uniqueIDs(revisions.map(\.id))
         guard Set(lines.map(\.originalOrder)) == Set(0..<lines.count) else { throw LedgerError.invalid("originalOrder") }
-        let lineIDs = Set(lines.map(\.id)); let mealIDs = Set(mealOccurrences.map(\.id)); let batchIDs = Set(importBatches.map(\.id))
+        let lineIDs = Set(lines.map(\.id))
+        let mealSources = Dictionary(uniqueKeysWithValues: mealOccurrences.map { ($0.id, Set($0.ingredientContributionIDs)) })
+        let batchSources = Dictionary(uniqueKeysWithValues: importBatches.map { ($0.id, Set($0.contributionIDs)) })
         let sources = Dictionary(uniqueKeysWithValues: contributions.map { ($0.id, $0) })
         for line in lines {
             try ledgerText(line.name, nonempty: true, maximum: 512); try ledgerText(line.notes); try ledgerText(line.aisle, maximum: 512)
@@ -688,14 +748,15 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
             guard lineIDs.contains(source.lineID) else { throw LedgerError.notFound(source.lineID) }
             try ledgerText(source.productName, nonempty: true, maximum: 512); try ledgerText(source.originalText)
             try ledgerText(source.notes); try source.quantity?.validate(); try validateExclusions(source.exclusions)
+            _ = try source.capture?.resolvedQuantity()
             try permittedProduct(source.productName, exclusions: source.exclusions); try ledgerDate(source.removedAt)
             switch source.source {
             case .manual: break
             case let .imported(batchID):
-                guard batchIDs.contains(batchID), importBatches.first(where: { $0.id == batchID })!.contributionIDs.contains(source.id)
+                guard batchSources[batchID]?.contains(source.id) == true
                 else { throw LedgerError.invalid("importSource") }
             case let .meal(occurrenceID):
-                guard mealIDs.contains(occurrenceID), mealOccurrences.first(where: { $0.id == occurrenceID })!.ingredientContributionIDs.contains(source.id)
+                guard mealSources[occurrenceID]?.contains(source.id) == true
                 else { throw LedgerError.invalid("mealSource") }
             case let .protectedNeed(purpose): try ledgerText(purpose, nonempty: true, maximum: 512)
             }
@@ -708,7 +769,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
             try uniqueIDs(meal.ingredientContributionIDs); try meal.scheduledDay?.validate(); try ledgerDate(meal.removedAt)
             let validationTemplate = MealTemplate(title: meal.title, servings: meal.servings, notes: meal.notes,
                 sourceURL: meal.sourceURL, exclusions: meal.exclusions, servingGroups: meal.servingGroups,
-                leadTimeMinutes: meal.leadTimeMinutes, completedSteps: meal.completedSteps)
+                leadTimeMinutes: meal.leadTimeMinutes, completedSteps: meal.completedSteps, sourceEvidence: meal.sourceEvidence)
             try validationTemplate.validate()
             for sourceID in meal.ingredientContributionIDs {
                 guard let source = sources[sourceID], source.source == .meal(occurrenceID: meal.id),
@@ -717,18 +778,25 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         }
         for batch in importBatches {
             try validatePreview(batch.preview); try ledgerDate(batch.createdAt); try ledgerDate(batch.undoneAt)
+            let previewIDs = Set(batch.preview.lines.map(\.id))
             guard batch.id == batch.preview.id, batch.preview.shopID == id,
                   batch.preview.baseRevision < revision,
-                  Set(batch.decisions.keys).isSubset(of: Set(batch.preview.lines.map(\.id))) else { throw LedgerError.invalid("importBatch") }
+                  Set(batch.decisions.keys).isSubset(of: previewIDs) else { throw LedgerError.invalid("importBatch") }
             try uniqueIDs(batch.contributionIDs)
             for sourceID in batch.contributionIDs {
                 guard let source = sources[sourceID], source.source == .imported(batchID: batch.id),
-                      batch.preview.lines.contains(where: { $0.id == sourceID }),
+                      previewIDs.contains(sourceID),
                       (batch.undoneAt == nil || source.removedAt != nil) else { throw LedgerError.invalid("importSource") }
             }
         }
         try validateAllocations(sources: sources)
-        for line in lines { _ = try quantity(forLineID: line.id) }
+        // Preserve every per-line arithmetic/overflow check, using indexes for this
+        // validation pass only. No cached state can outlive a mutation or decode.
+        let membersByLine = Dictionary(grouping: contributions.filter { $0.removedAt == nil }, by: \.lineID)
+        let edgesByLine = Dictionary(grouping: allocations) { sources[$0.demandContributionID]?.lineID }
+        for line in lines {
+            _ = try quantity(for: line, members: membersByLine[line.id] ?? [], edges: edgesByLine[line.id] ?? [])
+        }
         var parent: UUID?
         var number = 0
         for entry in revisions {
@@ -771,7 +839,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
                     let template = dinner.template
                     next.mealOccurrences.append(MealOccurrence(id: dinner.occurrenceID, templateID: template.id, templateRevision: template.revision,
                         title: template.title, servings: template.servings, notes: template.notes, sourceURL: template.sourceURL,
-                        exclusions: template.exclusions, servingGroups: template.servingGroups, leadTimeMinutes: template.leadTimeMinutes,
+                        sourceEvidence: template.sourceEvidence, exclusions: template.exclusions, servingGroups: template.servingGroups, leadTimeMinutes: template.leadTimeMinutes,
                         completedSteps: template.completedSteps, ingredientContributionIDs: dinner.contributionIDs,
                         scheduledDay: dinner.day, isHidden: false, removedAt: nil))
                 case .move(let occurrenceID, let day):
@@ -841,8 +909,9 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     }
 
     private mutating func appendLine(id: UUID = UUID(), name: String, notes: String = "") -> UUID {
-        // Count is bounded by validate(), so this cannot overflow for a valid ledger.
-        let order = (lines.map(\.originalOrder).max() ?? -1) + 1
+        // validate() requires originalOrder to be exactly 0..<lines.count; lines
+        // remain as tombstones when removed. Appending preserves that invariant.
+        let order = lines.count
         lines.append(ShoppingLine(id: id, name: name, notes: notes, aisle: "", originalOrder: order,
                                   checkedAt: nil, handledBy: nil, handledAt: nil, trashedAt: nil))
         return id
@@ -922,14 +991,14 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         for index in lines.indices where contributions(forLineID: lines[index].id).isEmpty { lines[index].trashedAt = at }
     }
 
-    private func duplicateRoots(for members: [LedgerContribution]) -> [UUID: UUID] {
+    private func duplicateRoots(for members: [LedgerContribution], edges: [AllocationEdge]? = nil) -> [UUID: UUID] {
         var parent = Dictionary(uniqueKeysWithValues: members.map { ($0.id, $0.id) })
         func root(_ id: UUID) -> UUID {
             var result = id
             while let next = parent[result], next != result { result = next }
             return result
         }
-        for edge in allocations where edge.kind == .duplicate && parent[edge.demandContributionID] != nil && parent[edge.supplyContributionID] != nil {
+        for edge in edges ?? allocations where edge.kind == .duplicate && parent[edge.demandContributionID] != nil && parent[edge.supplyContributionID] != nil {
             let a = root(edge.demandContributionID), b = root(edge.supplyContributionID)
             if a != b { parent[a] = b }
         }
@@ -1006,6 +1075,10 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         for line in preview.lines {
             try ledgerText(line.originalText); try ledgerText(line.name, nonempty: true, maximum: 512)
             try line.quantity?.validate()
+            try validateExclusions(line.exclusions)
+            if let capture = line.capture {
+                guard line.quantity == (try capture.resolvedQuantity()) else { throw CaptureImportError.conflictingQuantity }
+            }
             if let reason = line.unresolvedReason { try ledgerText(reason) }
             guard line.duplicateLineIDs.count <= 11_000 else { throw LedgerError.invalid("duplicateCandidates") }
         }
@@ -1069,6 +1142,7 @@ private func validateExclusions(_ exclusions: [String]) throws {
     for exclusion in exclusions { try ledgerText(exclusion, nonempty: true, maximum: 512) }
 }
 private func permittedProduct(_ name: String, exclusions: [String]) throws {
+    guard !exclusions.isEmpty else { return }
     let words = normalizedProduct(name).components(separatedBy: CharacterSet.alphanumerics.inverted).filter { !$0.isEmpty }
     let product = " " + words.joined(separator: " ") + " "
     for exclusion in exclusions {

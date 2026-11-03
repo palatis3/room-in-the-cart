@@ -1,4 +1,5 @@
 import SwiftUI
+import DeviceSurfaces
 
 @main struct RoomInTheCartApp: App {
     @StateObject private var model = AppModel()
@@ -7,6 +8,7 @@ import SwiftUI
     @StateObject private var household = HouseholdModel()
     @StateObject private var access = WorkspaceAccess()
     @StateObject private var membership = MembershipCoordinator()
+    @StateObject private var surfaces = DeviceSurfacesComposition()
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("appearance") private var appearance = "system"
     var body: some Scene {
@@ -15,22 +17,41 @@ import SwiftUI
                 if scenePhase != .active && access.isProtected {
                     Theme.canvas.ignoresSafeArea()
                 } else { RootView() }
-            }.environmentObject(model)
+            }.environment(\.pickupLedger, ledger)
+                .environmentObject(model)
                 .environmentObject(ledger).environmentObject(pickup)
                 .environmentObject(household).environmentObject(access)
-                .environmentObject(membership)
+                .environmentObject(membership).environmentObject(surfaces)
                 .tint(Theme.action)
                 .preferredColorScheme(appearance == "dark" ? .dark : appearance == "light" ? .light : nil)
-                .task { membership.bind(to: household); await model.open(); await ledger.open(); await pickup.load() }
+                .task {
+                    membership.bind(to: household)
+                    surfaces.bind(ledger: ledger, pickup: pickup, household: household, access: access)
+                    await model.open(); await ledger.open(); await pickup.load()
+                    await surfaces.foreground()
+                }
+                .onOpenURL { surfaces.handle(url: $0) }
+                .sheet(item: Binding(get: { scenePhase == .active ? surfaces.destination : nil },
+                                     set: { surfaces.destination = $0 })) { destination in
+                    NavigationStack {
+                        DeviceSurfacesDestination(composition: surfaces, destination: destination,
+                                                  ledger: ledger, pickup: pickup, household: household)
+                    }.environment(\.pickupLedger, ledger)
+                        .environmentObject(ledger).environmentObject(pickup)
+                        .environmentObject(household).environmentObject(access)
+                        .environmentObject(membership).environmentObject(surfaces)
+                }
                 .onChange(of: household.identity?.subject) { _, subject in
                     if subject != nil { access.protect() }
+                    surfaces.scopeChanged()
                 }
                 .onChange(of: household.projection?.memberId) { _, id in
                     if id != nil { access.protect() }
+                    surfaces.scopeChanged()
                 }
                 .onChange(of: scenePhase) { _, phase in
-                    if phase == .background { access.background(); household.lock() }
-                    if phase == .active { membership.foreground() }
+                    if phase == .background { surfaces.background(); access.background(); household.lock() }
+                    if phase == .active { membership.foreground(); Task { await surfaces.foreground() } }
                 }
         }
     }
@@ -60,10 +81,27 @@ struct RootView: View {
 }
 
 struct ShopView: View {
+    @EnvironmentObject private var surfaces: DeviceSurfacesComposition
     @EnvironmentObject private var model: AppModel
     @EnvironmentObject private var ledger: LedgerModel
     @EnvironmentObject private var pickup: PickupModel
     var body: some View {
+        GeometryReader { viewport in
+            VStack(spacing: 0) {
+                shopContent
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .clipped()
+                // Keep scrolling text inside the actual content viewport. The
+                // footer occupies the boundary above bottom navigation.
+                Theme.canvas.frame(height: 8)
+                    .background(Theme.canvas.ignoresSafeArea(edges: .bottom))
+                    .accessibilityHidden(true)
+            }
+            .frame(width: viewport.size.width, height: viewport.size.height)
+        }.workingSurface().navigationTitle(tr("Shop")).settingsButton()
+            .task { await model.refresh() }
+    }
+    private var shopContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 Label(tr("On this iPhone"), systemImage: "iphone")
@@ -92,12 +130,15 @@ struct ShopView: View {
                         }.frame(minHeight: 44)
                     }
                     NavigationLink(tr("Something is missing")) { UrgentRepairView(model: pickup).environment(\.pickupLedger, ledger) }
-                        .frame(minHeight: 44)
+                        .frame(minHeight: 44).accessibilityIdentifier("urgentRepairShortcut")
                     if !pickup.journeys.isEmpty {
                         NavigationLink(tr("Pickup, repairs and handoffs")) { PickupHomeView(model: pickup).environment(\.pickupLedger, ledger) }
                             .frame(minHeight: 44)
                     }
                 }.padding(20).background(Theme.surface, in: RoundedRectangle(cornerRadius: 20))
+                NavigationLink(SurfaceCopy.text("Device shortcuts")) {
+                    DeviceSurfacesEntry(composition: surfaces)
+                }.frame(minHeight: 44).accessibilityIdentifier("deviceShortcuts")
                 if let error = model.error {
                     Label(error, systemImage: "exclamationmark.triangle").foregroundStyle(Color("error"))
                     Button(tr("Try again")) { Task { await model.open(); await model.refresh() } }.frame(minHeight: 44)
@@ -110,8 +151,7 @@ struct ShopView: View {
                     }
                 }
             }.padding(20)
-        }.workingSurface().navigationTitle(tr("Shop")).settingsButton()
-            .task { await model.refresh() }
+        }.accessibilityIdentifier("shopContentScroll")
     }
 }
 
@@ -137,13 +177,22 @@ struct SavedRow: View {
 }
 
 struct RecordsView: View {
+    @EnvironmentObject private var surfaces: DeviceSurfacesComposition
     @EnvironmentObject private var model: AppModel
     @EnvironmentObject private var pickup: PickupModel
     @EnvironmentObject private var ledger: LedgerModel
     var body: some View {
         List {
             NavigationLink(tr("Recovery, exports and saved records")) {
-                RecordsToolsEntryView(app: model, ledger: ledger, pickup: pickup)
+                RecordsToolsEntryView(app: model, ledger: ledger, pickup: pickup,
+                    erasureCleanup: RecordsErasureCleanup(eraseLedgerWorkspace: { id in
+                        try await surfaces.eraseLedgerWorkspace(id)
+                        try await CaptureCorrectionStore.shared.eraseProfile(
+                            CaptureCorrectionScope(profileID: "local:" + id.uuidString,
+                                                   localeIdentifier: Locale.current.language.languageCode?.identifier == "es" ? "es-US" : "en-US"))
+                    }, erasePickupRecord: { workspaceID, recordID in
+                        try await surfaces.erasePickupRecord(workspaceID: workspaceID, recordID: recordID)
+                    }))
             }
             if model.records.isEmpty && model.unavailableRecords.isEmpty {
                 ContentUnavailableView(tr("Your comparisons live here"), systemImage: "tray", description: Text(tr("Save a pack comparison to return to the same amounts and prices, even offline.")))
@@ -183,6 +232,7 @@ private struct SettingsButton: ViewModifier {
 extension View { func settingsButton() -> some View { modifier(SettingsButton()) } }
 
 struct SettingsView: View {
+    @EnvironmentObject private var surfaces: DeviceSurfacesComposition
     @EnvironmentObject private var household: HouseholdModel
     @Environment(\.dismiss) private var dismiss
     @AppStorage("appearance") private var appearance = "system"
@@ -204,6 +254,11 @@ struct SettingsView: View {
             Section(tr("Household")) {
                 NavigationLink(tr("Household requests")) { HouseholdSettingsView(model: household) }
                 NavigationLink(tr("Household membership")) { MembershipEntryView(household: household) }
+            }
+            if surfaces.privateAuthorized {
+                Section(SurfaceCopy.text("Device shortcuts")) {
+                    NavigationLink(SurfaceCopy.text("Device shortcuts")) { DeviceSurfacesEntry(composition: surfaces) }
+                }
             }
             Section(tr("Your data")) {
                 Text(tr("Private comparisons and planning stay on this iPhone. Joining a household does not upload existing work."))
@@ -235,6 +290,6 @@ struct ComponentGallery: View {
             .dynamicTypeSize(large ? .accessibility5 : .large)
     }
 }
-#Preview("Shop") { RootView().environmentObject(AppModel()).environmentObject(LedgerModel()).environmentObject(PickupModel()).environmentObject(HouseholdModel()).environmentObject(WorkspaceAccess()) }
-#Preview("Dark / largest type") { RootView().environmentObject(AppModel()).environmentObject(LedgerModel()).environmentObject(PickupModel()).environmentObject(HouseholdModel()).environmentObject(WorkspaceAccess()).preferredColorScheme(.dark).dynamicTypeSize(.accessibility5) }
+#Preview("Shop") { RootView().environmentObject(AppModel()).environmentObject(LedgerModel()).environmentObject(PickupModel()).environmentObject(HouseholdModel()).environmentObject(WorkspaceAccess()).environmentObject(MembershipCoordinator()).environmentObject(DeviceSurfacesComposition()) }
+#Preview("Dark / largest type") { RootView().environmentObject(AppModel()).environmentObject(LedgerModel()).environmentObject(PickupModel()).environmentObject(HouseholdModel()).environmentObject(WorkspaceAccess()).environmentObject(MembershipCoordinator()).environmentObject(DeviceSurfacesComposition()).preferredColorScheme(.dark).dynamicTypeSize(.accessibility5) }
 #endif

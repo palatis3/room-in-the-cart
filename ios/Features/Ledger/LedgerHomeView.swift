@@ -189,7 +189,7 @@ struct LedgerNewShopView: View {
             LedgerSaveStatus(model: model, onRetried: { dismiss() })
             Button(ledgerText("Start pickup")) {
                 Task { if await model.startShop(title: title.trimmingCharacters(in: .whitespacesAndNewlines)) { dismiss() } }
-            }.buttonStyle(PrimaryAction()).disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || model.saving)
+            }.buttonStyle(PrimaryAction()).disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || model.saving).accessibilityIdentifier("ledgerCreateShop")
         }.scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(ledgerText("Start pickup"))
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() }.disabled(model.saving) } }
             .interactiveDismissDisabled(model.saving)

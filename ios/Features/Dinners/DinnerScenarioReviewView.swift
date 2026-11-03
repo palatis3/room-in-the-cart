@@ -42,13 +42,38 @@ struct DinnerScenarioReviewView: View {
                     ForEach(recovery.alternatives, id: \.scenarioID) { scenario($0) }
                 }
             }
-            Section { Text(dinnerText("These comparisons are read-only. Choosing, replacing or amending a dinner requires a separate reviewed action.")) }
+            Section {
+                Text(dinnerText("These comparisons are read-only. Choosing, replacing or amending a dinner requires a separate reviewed action."))
+                NavigationLink(dinnerText("Review candidate dinners separately")) {
+                    DinnerScenarioChoicesView(model: model, acceptedIDs: Set(alternatives.flatMap(\.acceptedDinnerIDs)))
+                }
+                NavigationLink(dinnerText("Add a manual dinner")) { DinnerTemplateEditor(model: model, purpose: .manual) }
+            }
             DinnerFeedback(model: model)
         }.navigationTitle(dinnerText("Dinner scenarios")).dinnerAccess(model, budget: true)
     }
     private func scenario(_ result: DinnerScenarioResult) -> some View {
         VStack(alignment: .leading, spacing: 6) {
+            let source = ([current] + alternatives).first { $0.id == result.scenarioID }
+            Text(result.scenarioID == current.id ? dinnerText("Current plan") : dinnerText("Candidate plan")).font(.title3.bold())
             Text(dinnerFormat("Checkout: %@", dinnerMoney(result.checkout.total.exact))).font(.headline)
+            Text(dinnerCap(result.checkout.cap))
+            if let source {
+                ForEach(result.stockAllocation.demands) { need in
+                    let name = source.demands.first { $0.id == need.id }?.name ?? source.otherReservations.first { $0.id == need.id }?.name ?? dinnerText("Protected need")
+                    Text(dinnerFormat("%@ · confirmed stock allocated: %@ %@", name, need.allocated?.description ?? dinnerText("Unresolved"), dinnerUnit(need.unit)))
+                }
+                ForEach(result.packs, id: \.foodID) { pack in
+                    let demand = source.demands.first { $0.foodID == pack.foodID }
+                    let unit = demand?.quantity?.unit
+                    Text(demand?.name ?? dinnerText("Food name")).font(.headline)
+                    if let calculated = pack.result {
+                        Text(dinnerFormat("Packs to buy: %@", calculated.packsToBuy.map(String.init) ?? dinnerText("Unresolved")))
+                        Text(dinnerFormat("Pack purchase cost: %@", dinnerMoney(calculated.totalCost)))
+                        if let leftover = calculated.leftover, let unit { Text(dinnerFormat("Usable leftover: %@ %@", leftover.description, dinnerUnit(unit))) }
+                    } else { Text(pack.availabilityConfirmed ? dinnerText("Need covered by confirmed stock") : dinnerText("Pack amount or coverage is unresolved")) }
+                }
+            }
             Text(result.foodCoverageComplete ? dinnerText("Reviewed food coverage is complete") : dinnerText("Food coverage is unresolved"))
             Text(result.timingFeasible == true ? dinnerText("Reviewed preparation fits the available time") : dinnerText("Preparation timing is unresolved or does not fit"))
             ForEach(result.issues, id: \.self) { Text(dinnerIssue($0)) }
@@ -61,5 +86,32 @@ struct DinnerScenarioReviewView: View {
         case .noFeasiblePair: return dinnerText("No feasible new pair has been confirmed.")
         case .searchIncomplete: return dinnerText("The pairing search is incomplete.")
         }
+    }
+}
+
+private struct DinnerScenarioChoicesView: View {
+    @ObservedObject var model: DinnerFeatureModel
+    let acceptedIDs: Set<UUID>
+    @State private var showPreview = false
+    var body: some View {
+        List {
+            Section {
+                Text(dinnerText("Choosing uses the accepted recipe's saved servings. It does not apply scenario portions, stock allocations, pack purchases or quoted costs."))
+                Text(dinnerText("Existing chosen dinners remain. Review a separate removal when replacing a dinner."))
+            }
+            ForEach(model.state.acceptedDinners.filter { acceptedIDs.contains($0.id) }) { dinner in
+                Section(dinner.template.title) {
+                    Text(dinnerFormat("Servings: %@", dinner.template.servings.description))
+                    ForEach(dinner.template.ingredients) { ingredient in Text(dinnerFormat("%@ · %@", ingredient.name, dinnerQuantity(ingredient.quantity))) }
+                    if !model.paid && model.state.freeReusableDinnerID != dinner.id {
+                        Button(dinnerText("Use as Free reusable dinner")) { Task { _ = await model.selectFree(dinner.id) } }
+                    }
+                    Button(dinnerText("Choose for this pickup")) { showPreview = model.choose(dinner, day: nil) }
+                        .disabled(!model.editable || (!model.paid && model.state.freeReusableDinnerID != dinner.id))
+                }
+            }
+            DinnerFeedback(model: model)
+        }.navigationTitle(dinnerText("Candidate dinners")).dinnerAccess(model)
+            .navigationDestination(isPresented: $showPreview) { DinnerPreviewView(model: model) }
     }
 }

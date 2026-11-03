@@ -42,20 +42,28 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
         XCTAssertTrue(ledger.shop?.mealOccurrences.allSatisfy { $0.scheduledDay == nil } == true)
         XCTAssertEqual(ledger.workspace.mealTemplates.first?.sourceURL, reusable.sourceURL)
 
-        // This is the shipping Free manual path: compute whole packs, then enter
-        // reviewed line prices in checkout. There is currently no pack-selection bridge.
+        // Choosing whole packs persists reviewed item evidence in the ledger.
+        // The separate checkout store changes only after its explicit review.
         let wraps = try XCTUnwrap(savedShop.lines.first { $0.name == "Wraps" })
-        let required = try XCTUnwrap(savedShop.quantity(forLineID: wraps.id))
-        let packs = try PackComparison.evaluate(ComparisonRequest(itemName: wraps.name, needed: required,
-            protectedAmount: quantity(2),
+        let packReview = try LedgerPackReview.prepare(ledger: ledger, shopID: shopID, lineID: wraps.id,
             offerA: PackOffer(id: "eight", label: "8 wraps", usableQuantity: quantity(8), price: Money(minorUnits: 300)),
-            offerB: PackOffer(id: "six", label: "6 wraps", usableQuantity: quantity(6), price: Money(minorUnits: 200))))
-        XCTAssertEqual(packs.offerA.packsToBuy, 2)
-        XCTAssertEqual(packs.offerB.packsToBuy, 2)
-        XCTAssertEqual(packs.offerB.purchasedAmount, try Rational(12))
-        XCTAssertEqual(packs.offerB.totalCost, Money(minorUnits: 400))
-        XCTAssertEqual(packs.scope, .itemOnly)
-        let review = try LedgerCheckoutAdapter.review(shop: savedShop, workspaceRevision: ledger.revision, previous: nil)
+            offerB: PackOffer(id: "six", label: "6 wraps", usableQuantity: quantity(6), price: Money(minorUnits: 200)),
+            itemCap: nil, at: now, source: "Reviewed family market shelf")
+        XCTAssertEqual(packReview.result.offerA.packsToBuy, 2)
+        XCTAssertEqual(packReview.result.offerB.packsToBuy, 2)
+        XCTAssertEqual(packReview.result.offerB.purchasedAmount, try Rational(12))
+        XCTAssertEqual(packReview.result.offerB.totalCost, Money(minorUnits: 400))
+        XCTAssertEqual(packReview.result.scope, .itemOnly)
+        try requireSaved(try await packReview.save(offerID: "six", ledger: ledger))
+        let selectedPacks = ledger.workspace.packSelections
+        XCTAssertEqual(selectedPacks.count, 1)
+        XCTAssertNil(pickup.journey)
+        ledger = LedgerModel(databaseURL: directory.appendingPathComponent("ledger.sqlite"))
+        await ledger.open()
+        XCTAssertEqual(ledger.workspace.packSelections, selectedPacks)
+        let review = try LedgerCheckoutAdapter.review(shop: XCTUnwrap(ledger.shop), workspaceRevision: ledger.revision, previous: nil,
+            packSelections: ledger.workspace.packSelections, workspaceID: ledger.sourceWorkspaceID)
+        XCTAssertEqual(review.lines.first { $0.id == wraps.id }?.expectedCost, .exact(Money(minorUnits: 400)))
         try requireSaved(try await LedgerCheckoutAdapter.apply(review, ledger: ledger, pickup: pickup))
         XCTAssertEqual(pickup.journey?.plannedNeeds.filter { $0.priority == .protected }.first?.amount.amount, try Rational(2))
         let coffee = try XCTUnwrap(review.lines.first { $0.name == "Coffee" })
@@ -76,6 +84,7 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
         pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"))
         await pickup.load()
         XCTAssertEqual(pickup.frozenSnapshot, frozen)
+        XCTAssertEqual(pickup.journey?.ledgerPackSelections, selectedPacks)
         try requireSaved(await pickup.reportPlaced())
         let placed = try XCTUnwrap(pickup.journey)
         XCTAssertEqual(placed.needs.first { $0.id == protectedID }?.amount.amount, try Rational(2))
@@ -164,6 +173,8 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
         XCTAssertEqual(ledger.shop?.id, next.id)
         XCTAssertEqual(ledger.shop?.mealOccurrences.first?.id, nextMeal.id)
         XCTAssertEqual(ledger.workspace.shops.first { $0.id == shopID }, savedShop)
+        XCTAssertEqual(ledger.workspace.packSelections, selectedPacks)
+        XCTAssertEqual(pickup.journeys.first { $0.id == shopID }?.ledgerPackSelections, selectedPacks)
         XCTAssertEqual(pickup.journeys.first { $0.id == shopID }, closed)
         XCTAssertEqual(pickup.journeys.first { $0.id == next.id }?.carriedMeals, next.carriedMeals)
         XCTAssertEqual(pickup.journeys.count, 2)

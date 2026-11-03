@@ -192,6 +192,48 @@ final class DeviceSurfacesTests: XCTestCase {
         let rows = try await store.all(); XCTAssertEqual(rows.filter { $0.status == .cancelled }.count, 1)
         _ = try await store.put(intent(), expectedVersion: nil, now: now)
     }
+    func testErasureCancelsOSRegistrationAndRemovesPrivateMetadataIdempotently() async throws {
+        let store = try ReminderStore(url: file()), scheduler = FakeScheduler(), date = now, value = try intent()
+        await scheduler.setPermission(.authorized)
+        let coordinator = ReminderCoordinator(store: store, scheduler: scheduler, now: { date })
+        _ = try await coordinator.save(value, expectedVersion: nil, requestPermission: false)
+        try await coordinator.erase(value.id); try await coordinator.erase(value.id)
+        let row = try await store.get(value.id); XCTAssertNil(row)
+        let pending = await scheduler.pending; XCTAssertTrue(pending.isEmpty)
+    }
+    func testErasureRejectsUncancelledOrStaleVersion() async throws {
+        let store = try ReminderStore(url: file()), value = try intent()
+        let saved = try await store.put(value, expectedVersion: nil, now: now)
+        do { try await store.eraseCancelled(value.id, version: saved.version); XCTFail() } catch { XCTAssertEqual(error as? SurfaceError, .stale) }
+        let cancelled = try await store.cancel(value.id)
+        do { try await store.eraseCancelled(value.id, version: saved.version); XCTFail() } catch { XCTAssertEqual(error as? SurfaceError, .stale) }
+        try await store.eraseCancelled(value.id, version: try XCTUnwrap(cancelled).version)
+        let absent = try await store.get(value.id); XCTAssertNil(absent)
+    }
+
+    func testErasureReceiptRejectsLateInitialSaveAcrossRestartAndAbsentRow() async throws {
+        let url = try file(), store = try ReminderStore(url: url), scheduler = FakeScheduler(), date = now, value = try intent()
+        let coordinator = ReminderCoordinator(store: store, scheduler: scheduler, now: { date })
+        try await coordinator.erase(value.id)
+        let reopened = try ReminderStore(url: url)
+        do { _ = try await reopened.put(value, expectedVersion: nil, now: now); XCTFail() } catch { XCTAssertEqual(error as? SurfaceError, .stale) }
+        let rows = try await reopened.all(); XCTAssertTrue(rows.isEmpty)
+        let connection = try SurfaceDatabase(url: url, kind: "private-reminders", schema: "")
+        let retirement = try connection.rows("SELECT * FROM reminder_retirements")
+        XCTAssertEqual(retirement, [[value.id.uuidString]])
+    }
+    func testRetirementMigrationProtectsLegacyWriterWithoutKeepingPrivateBody() async throws {
+        let url = try file(), value = try intent()
+        let legacy = try SurfaceDatabase(url: url, kind: "private-reminders", schema: "CREATE TABLE reminders(id TEXT PRIMARY KEY NOT NULL, version INTEGER NOT NULL, body TEXT NOT NULL, status TEXT NOT NULL);")
+        let store = try ReminderStore(url: url)
+        let row = try await store.put(value, expectedVersion: nil, now: now)
+        let cancelled = try await store.cancel(value.id)
+        try await store.eraseCancelled(value.id, version: try XCTUnwrap(cancelled).version)
+        let body = String(data: try canonical(value), encoding: .utf8)!
+        XCTAssertThrowsError(try legacy.execute("INSERT INTO reminders VALUES(?,?,?,?)", [.text(value.id.uuidString), .integer(row.version), .text(body), .text("desired")]))
+        XCTAssertTrue(try legacy.rows("SELECT body FROM reminders").isEmpty)
+    }
+
 }
 
 actor FakeScheduler: NotificationScheduling {

@@ -108,6 +108,7 @@ struct PickupJourney: Codable, Equatable, Identifiable {
     var needDetails: [PickupNeedDetail] = []
     var ledgerBasis: ShopBasis?
     var ledgerSourceRevisionID: UUID?
+    var ledgerPackSelections: [LedgerPackSelection] = []
     var originShopID: UUID?
     var carriedMeals: [AllocationNeed] = []
     var urgent: [UrgentMealNeed] = []
@@ -131,7 +132,7 @@ struct PickupJourney: Codable, Equatable, Identifiable {
 // Required identity/version/date still fail closed, and validate checks all links.
 extension PickupJourney {
     private enum CodingKeys: String, CodingKey {
-        case id, savedAt, version, revision, basket, context, cap, quote, quotedRevisionID, frozenQuotes, pickup, needs, plannedNeeds, needDetails, ledgerBasis, ledgerSourceRevisionID, originShopID, carriedMeals, urgent, stockLots, stockNeeds, repairs, deferred, flexible, proposals, undoneProposals, offers, offerActions, notes, cookShareEvents, settlement, closedAt
+        case id, savedAt, version, revision, basket, context, cap, quote, quotedRevisionID, frozenQuotes, pickup, needs, plannedNeeds, needDetails, ledgerBasis, ledgerSourceRevisionID, ledgerPackSelections, originShopID, carriedMeals, urgent, stockLots, stockNeeds, repairs, deferred, flexible, proposals, undoneProposals, offers, offerActions, notes, cookShareEvents, settlement, closedAt
     }
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -150,6 +151,7 @@ extension PickupJourney {
         if let decoded = try container.decodeIfPresent([PickupNeedDetail].self, forKey: .needDetails) { needDetails = decoded }
         ledgerBasis = try container.decodeIfPresent(ShopBasis.self, forKey: .ledgerBasis)
         ledgerSourceRevisionID = try container.decodeIfPresent(UUID.self, forKey: .ledgerSourceRevisionID)
+        ledgerPackSelections = try container.decodeIfPresent([LedgerPackSelection].self, forKey: .ledgerPackSelections) ?? []
         originShopID = try container.decodeIfPresent(UUID.self, forKey: .originShopID)
         if let decoded = try container.decodeIfPresent([AllocationNeed].self, forKey: .carriedMeals) { carriedMeals = decoded }
         if let decoded = try container.decodeIfPresent([UrgentMealNeed].self, forKey: .urgent) { urgent = decoded }
@@ -211,6 +213,7 @@ struct PickupPersistenceLocation {
          launchArguments: [String] = ProcessInfo.processInfo.arguments) {
         self.store = store; self.databaseURL = databaseURL; self.clock = clock; self.launchArguments = launchArguments
     }
+    var sourceWorkspaceID: UUID? { store?.workspaceID }
     var journey: PickupJourney? { journeys.first { $0.id == selectedID } }
     var result: CheckoutResult? {
         guard let value = journey, let quote = value.quote, value.quotedRevisionID == value.basket?.current.id else { return nil }
@@ -269,9 +272,14 @@ struct PickupPersistenceLocation {
         guard ready, let store else { throw PickupModelError.missing }
         return (store.workspaceID, try await store.list())
     }
+    func archiveListing() async throws -> (workspaceID: UUID, listing: ComparisonListing) {
+        if store == nil { await load() }
+        guard let store else { throw PickupModelError.missing }
+        return (store.workspaceID, try await store.listing())
+    }
     func archiveTombstones() async throws -> [ComparisonTombstone] {
-        if !ready { await load() }
-        guard ready, let store else { throw PickupModelError.missing }
+        if store == nil { await load() }
+        guard let store else { throw PickupModelError.missing }
         return try await store.tombstones()
     }
     func deleteArchived(id: UUID, expectedRevision: Int64, operationID: UUID) async throws {
@@ -301,7 +309,7 @@ struct PickupPersistenceLocation {
         }
     }
     @discardableResult func start(from lines: [BasketLine], shopID: UUID, context: CheckoutContext, cap: CheckoutCap? = nil, plannedNeeds: [AllocationNeed] = [], ledgerBasis: ShopBasis? = nil,
-                                  ledgerSourceRevisionID: UUID? = nil, needDetails: [PickupNeedDetail] = []) async -> Bool {
+                                  ledgerSourceRevisionID: UUID? = nil, needDetails: [PickupNeedDetail] = [], ledgerPackSelections: [LedgerPackSelection] = []) async -> Bool {
         if !ready { await load() }
         guard ready, !saving, pending == nil else { return false }
         if journeys.contains(where: { $0.id == shopID }) { selectedID = shopID; return true }
@@ -310,6 +318,7 @@ struct PickupPersistenceLocation {
             var value = PickupJourney(id: shopID, savedAt: clock())
             value.basket = basket; value.context = context; value.cap = cap; value.plannedNeeds = plannedNeeds
             value.ledgerBasis = ledgerBasis; value.ledgerSourceRevisionID = ledgerSourceRevisionID; value.needDetails = needDetails
+            value.ledgerPackSelections = ledgerPackSelections
             return await save(value)
         } catch { self.error = pTr("Check the amounts and units. Your saved pickup has not changed."); return false }
     }
@@ -474,6 +483,13 @@ struct PickupPersistenceLocation {
               Set(value.repairs.map(\.id)).count == value.repairs.count,
               Set(value.deferred.map(\.id)).count == value.deferred.count else { throw PickupModelError.invalid }
         try value.ledgerBasis?.validate()
+        guard value.ledgerPackSelections.count <= 10_000,
+              Set(value.ledgerPackSelections.map(\.lineID)).count == value.ledgerPackSelections.count else { throw PickupModelError.invalid }
+        for selection in value.ledgerPackSelections {
+            try selection.validate()
+            guard selection.shopID == value.id, selection.shopRevisionID == value.ledgerSourceRevisionID,
+                  value.basket?.revisions.contains(where: { revision in revision.lines.contains(where: { $0.id == selection.lineID }) }) == true else { throw PickupModelError.invalid }
+        }
         guard value.originShopID != value.id, Set(value.needDetails.map(\.id)).count == value.needDetails.count else { throw PickupModelError.invalid }
         for detail in value.needDetails {
             try detail.scheduledDay?.validate()

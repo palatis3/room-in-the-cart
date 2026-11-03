@@ -27,6 +27,18 @@ struct RecordsToolsView: View {
                     .font(.footnote).foregroundStyle(.secondary)
             }
             if model.busy { ProgressView(recordsText("Working on this iPhone…")) }
+            if !model.unavailableRecords.isEmpty {
+                Section(recordsText("Unavailable records · excluded from export")) {
+                    Text(recordsText("These records remain saved on this iPhone, but this app could not read them. Only readable selected records are included in an export."))
+                    ForEach(model.unavailableRecords) { record in
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(record.title?.isEmpty == false ? record.title! : recordsText("Untitled record"))
+                            if record.localCopyID != nil { Text(recordsText("Recovered copy")).font(.caption) }
+                            Text(unavailableMessage(record.reason)).font(.caption)
+                        }
+                    }
+                }
+            }
             if let error = model.error { Section { Label(errorMessage(error), systemImage: "exclamationmark.triangle").foregroundStyle(.red) } }
             if let status = model.status { Section { Text(status).accessibilityAddTraits(.updatesFrequently) } }
             currentSources
@@ -86,9 +98,9 @@ struct RecordsToolsView: View {
     }
     private var currentSources: some View {
         Section(recordsText("Choose records to export")) {
-            if model.currentRecords.isEmpty { Text(recordsText("No saved source records yet.")) }
+            if model.currentRecords.isEmpty { Text(recordsText(model.unavailableRecords.isEmpty ? "No saved source records yet." : "No readable source records are available for export.")) }
             else {
-                Button(recordsText("Select all records")) { model.selectAll() }
+                Button(recordsText("Select all readable records")) { model.selectAll() }
                 ForEach(model.currentRecords, id: \.selfSelectionID) { record in
                     VStack(alignment: .leading, spacing: 8) {
                         Toggle(isOn: Binding(get: { model.selectedIDs.contains(RecordsToolsModel.selectionID(record)) }, set: { selected in
@@ -129,18 +141,16 @@ struct RecordsToolsView: View {
                     .disabled(!savedKey || model.recoveryKey.isEmpty || model.selectedCount == 0)
             }
             if let document = model.preparedDocument {
-                VStack(alignment: .leading, spacing: 12) {
-                    Label(model.preparedIsPrivate ? recordsText("Private owner file ready") : recordsText("Redacted copy ready"), systemImage: model.preparedIsPrivate ? "lock.doc" : "doc.text")
-                    Text(ByteCountFormatter.string(fromByteCount: Int64(document.data.count), countStyle: .file)).font(.caption)
-                    Button(recordsText("Save file…")) { exporting = true }
-                    if document.kind != .text {
-                        ShareLink(item: RecordsShareFile(data: document.data, kind: document.kind), preview: SharePreview(model.preparedName)) { Label(recordsText("Share prepared file…"), systemImage: "square.and.arrow.up") }
-                    } else if let text = String(data: document.data, encoding: .utf8) {
-                        ShareLink(item: text) { Label(recordsText("Share prepared text…"), systemImage: "square.and.arrow.up") }
-                        DisclosureGroup(recordsText("Preview readable copy")) { Text(text).textSelection(.enabled) }
-                    }
-                    Button(recordsText("Discard prepared file")) { model.dismissPreparedFile() }
+                Label(model.preparedIsPrivate ? recordsText("Private owner file ready") : recordsText("Redacted copy ready"), systemImage: model.preparedIsPrivate ? "lock.doc" : "doc.text")
+                Text(ByteCountFormatter.string(fromByteCount: Int64(document.data.count), countStyle: .file)).font(.caption)
+                Button(recordsText("Save file…")) { exporting = true }
+                if document.kind != .text {
+                    ShareLink(item: RecordsShareFile(data: document.data, kind: document.kind), preview: SharePreview(model.preparedName)) { Label(recordsText("Share prepared file…"), systemImage: "square.and.arrow.up") }
+                } else if let text = String(data: document.data, encoding: .utf8) {
+                    ShareLink(item: text) { Label(recordsText("Share prepared text…"), systemImage: "square.and.arrow.up") }
+                    DisclosureGroup(recordsText("Preview readable copy")) { Text(text).textSelection(.enabled) }
                 }
+                Button(recordsText("Discard prepared file")) { model.dismissPreparedFile() }
             }
         }
     }
@@ -227,6 +237,13 @@ struct RecordsToolsView: View {
         case .sibling: return recordsText("Related revision — keep both copies")
         case .quarantined: return recordsText("Same identity, different content — blocked")
         case .erased: return recordsText("Previously deleted here — blocked")
+        }
+    }
+    private func unavailableMessage(_ reason: RecordsUnavailableRecord.Reason) -> String {
+        switch reason {
+        case .unreadableStorage: return recordsText("Saved record could not be read. Its bytes were not replaced.")
+        case .unsupportedStorage: return recordsText("This saved format needs a compatible app version.")
+        case .invalidNative: return recordsText("This record's content could not be validated. Other readable records are still available.")
         }
     }
     private func errorMessage(_ error: ArchiveError) -> String {

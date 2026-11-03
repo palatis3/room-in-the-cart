@@ -41,3 +41,21 @@ func dinnerIssue(_ issue: String) -> String {
     default: return dinnerText("Review the entered evidence before continuing.")
     }
 }
+
+func dinnerCap(_ assessment: CheckoutCapAssessment) -> String {
+    switch assessment {
+    case .notProvided: return dinnerText("No cap supplied")
+    case .scopeMismatch: return dinnerText("The cap covers a different scope; no whole-shop headroom is claimed.")
+    case .unresolved: return dinnerText("Cap headroom is unresolved")
+    case .within(_, let headroom): return dinnerFormat("Minimum cap headroom: %@", dinnerMoney(headroom))
+    case .over(_, let overage): return dinnerFormat("Minimum amount over cap: %@", dinnerMoney(overage))
+    }
+}
+
+func dinnerBudgetScope(_ scope: BudgetScope) -> String {
+    switch scope {
+    case .wholeShop: return dinnerText("Whole pickup")
+    case .dinnersOnly: return dinnerText("Dinners only")
+    case .selectedItems: return dinnerText("Selected items only")
+    }
+}

@@ -1,0 +1,74 @@
+{
+  "devicesAndConfigurations" : [
+    {
+      "device" : {
+        "architecture" : "arm64",
+        "deviceId" : "65B8A2FE-51FE-44A5-A9C7-F2524E33179B",
+        "deviceName" : "Room in the Cart iOS 17 Small",
+        "modelName" : "iPhone SE",
+        "osBuildNumber" : "21A328",
+        "osVersion" : "17.0",
+        "platform" : "iOS Simulator"
+      },
+      "expectedFailures" : 0,
+      "failedTests" : 2,
+      "passedTests" : 212,
+      "skippedTests" : 0,
+      "testPlanConfiguration" : {
+        "configurationId" : "1",
+        "configurationName" : "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription" : "RoomInTheCart · Built with macOS 27.2",
+  "expectedFailures" : 0,
+  "failedTests" : 2,
+  "finishTime" : 1793692687.101,
+  "passedTests" : 212,
+  "result" : "Failed",
+  "runtimeWarnings" : [
+
+  ],
+  "skippedTests" : 0,
+  "startTime" : 1793691962.088,
+  "statistics" : [
+
+  ],
+  "testFailures" : [
+    {
+      "failureText" : "Contrast failed",
+      "targetName" : "RoomInTheCartUITests",
+      "testIdentifier" : 207,
+      "testIdentifierString" : "RoomInTheCartUITests/testAutomatedAccessibilityAuditOnShopAndKnownResults()",
+      "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/RoomInTheCartUITests/testAutomatedAccessibilityAuditOnShopAndKnownResults",
+      "testName" : "testAutomatedAccessibilityAuditOnShopAndKnownResults()"
+    },
+    {
+      "failureText" : "failed - The complete control must fit in the visible results area: \"comparisonSourceNote\" StaticText",
+      "targetName" : "RoomInTheCartUITests",
+      "testIdentifier" : 212,
+      "testIdentifierString" : "RoomInTheCartUITests/testLargestTextSourceAndSavedDetailsAreFullyReadableAboveTabs()",
+      "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextSourceAndSavedDetailsAreFullyReadableAboveTabs",
+      "testName" : "testLargestTextSourceAndSavedDetailsAreFullyReadableAboveTabs()"
+    }
+  ],
+  "title" : "Test - RoomInTheCart",
+  "topInsights" : [
+    {
+      "category" : "Common Failures",
+      "impact" : "50% of failures",
+      "text" : "13 runs of 1 test failed with Dynamic Type font sizes are unsupported"
+    },
+    {
+      "category" : "Common Failures",
+      "impact" : "50% of failures",
+      "text" : "10 runs of 1 test failed with Text clipped"
+    },
+    {
+      "category" : "Common Failures",
+      "impact" : "50% of failures",
+      "text" : "5 runs of 1 test failed with Contrast failed"
+    }
+  ],
+  "totalTestCount" : 214
+}

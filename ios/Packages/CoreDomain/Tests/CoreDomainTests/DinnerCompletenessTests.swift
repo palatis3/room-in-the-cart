@@ -2,8 +2,8 @@ import XCTest
 @testable import CoreDomain
 final class DinnerCompletenessTests: XCTestCase {
  func q(_ n:Int64,_ unit:UnitOfMeasure = .count,_ basis:UnitBasis? = nil) throws ->Quantity { Quantity(amount:try Rational(n),unit:unit,originalLiteral:"entered",confirmedConversion:basis) }
- func scenario(_ dinner:AcceptedDinner,_ needs:[DinnerDemand],_ commitments:DinnerCommitmentSet,_ packs:[DinnerPackSelection]) -> DinnerScenario {
-  DinnerScenario(commitments:commitments,acceptedDinnerIDs:[dinner.id],demands:needs,packs:packs,baselineComplete:true,fees:[],tax:.exact(.zero),deposits:.exact(.zero),context:.init(storeID:"A",branchID:"A",mode:.pickup,slot:"today",commitmentsID:commitments.id,observedAt:Date(),source:"reviewed"),preparation:.init(handsOnMinutes:5,remainingLeadMinutes:5,availableMinutes:20))
+ func scenario(_ dinner:AcceptedDinner,_ needs:[DinnerDemand],_ commitments:DinnerCommitmentSet,_ packs:[DinnerPackSelection], stock: [ConfirmedStockLot] = []) -> DinnerScenario {
+  DinnerScenario(commitments:commitments,acceptedDinnerIDs:[dinner.id],demands:needs,stock:stock,packs:packs,baselineComplete:true,fees:[],tax:.exact(.zero),deposits:.exact(.zero),context:.init(storeID:"A",branchID:"A",mode:.pickup,slot:"today",commitmentsID:commitments.id,observedAt:Date(),source:"reviewed"),preparation:.init(handsOnMinutes:5,remainingLeadMinutes:5,availableMinutes:20))
  }
  func testOmittedRequiredIngredientCannotClaimCoverage() throws {
   let dinner=AcceptedDinner(id: UUID(), template:MealTemplate(title:"Bean wraps",servings:try Rational(1),ingredients:[MealIngredient(name:"wraps",quantity:try q(1)),MealIngredient(name:"beans",quantity:try q(1))]),acceptedAt:Date())
@@ -66,6 +66,30 @@ final class DinnerCompletenessTests: XCTestCase {
   let pack=DinnerPackSelection(foodID:food,offer:.init(id:"wraps",label:"Wraps",usableQuantity:try q(8),price:Money(minorUnits:100)),availability:.confirmed(maximumPacks:1))
   let result=try DinnerScenarioEngine.evaluate(scenario(dinner,[demand],c,[pack]),acceptedDinners:[dinner])
   XCTAssertFalse(result.foodCoverageComplete); XCTAssertNil(result.checkout.total.exact)
+ }
+
+ func testExcludedPackLabelCannotHideBehindBenignDemand() throws {
+  let dinner=AcceptedDinner(id:UUID(),template:MealTemplate(title:"Wraps",ingredients:[MealIngredient(name:"wraps",quantity:try q(1),exclusions:["peanut"])]),acceptedAt:Date())
+  let c=DinnerCommitmentSet(commitments:[.init(name:"Dinner",kind:.dinner,portions:try Rational(1))]);let food=UUID()
+  let demand=DinnerDemand(commitmentID:c.commitments[0].id,foodID:food,name:"wraps",quantity:try q(1),acceptedDinnerID:dinner.id,ingredientID:dinner.template.ingredients[0].id)
+  let pack=DinnerPackSelection(foodID:food,offer:.init(id:"wraps",label:"Peanut wraps",usableQuantity:try q(1),price:Money(minorUnits:100)),availability:.confirmed(maximumPacks:1))
+  XCTAssertThrowsError(try DinnerScenarioEngine.evaluate(scenario(dinner,[demand],c,[pack]),acceptedDinners:[dinner]))
+ }
+ func testExcludedStockLabelCannotHideBehindBenignDemand() throws {
+  let dinner=AcceptedDinner(id:UUID(),template:MealTemplate(title:"Wraps",ingredients:[MealIngredient(name:"wraps",quantity:try q(1))],exclusions:["peanut"]),acceptedAt:Date())
+  let c=DinnerCommitmentSet(commitments:[.init(name:"Dinner",kind:.dinner,portions:try Rational(1))]);let food=UUID()
+  let demand=DinnerDemand(commitmentID:c.commitments[0].id,foodID:food,name:"wraps",quantity:try q(1),acceptedDinnerID:dinner.id,ingredientID:dinner.template.ingredients[0].id)
+  let lot=ConfirmedStockLot(id:UUID(),foodID:food,name:"Peanut wraps",usable:try q(1),confirmedAt:Date())
+  XCTAssertThrowsError(try DinnerScenarioEngine.evaluate(scenario(dinner,[demand],c,[],stock:[lot]),acceptedDinners:[dinner]))
+ }
+ func testUnrelatedStockDoesNotAcquireAnotherFoodsExclusion() throws {
+  let dinner=AcceptedDinner(id:UUID(),template:MealTemplate(title:"Wraps",ingredients:[MealIngredient(name:"wraps",quantity:try q(1),exclusions:["peanut"])]),acceptedAt:Date())
+  let c=DinnerCommitmentSet(commitments:[.init(name:"Dinner",kind:.dinner,portions:try Rational(1))]);let food=UUID()
+  let demand=DinnerDemand(commitmentID:c.commitments[0].id,foodID:food,name:"wraps",quantity:try q(1),acceptedDinnerID:dinner.id,ingredientID:dinner.template.ingredients[0].id)
+  let pack=DinnerPackSelection(foodID:food,offer:.init(id:"wraps",label:"Plain wraps",usableQuantity:try q(1),price:Money(minorUnits:100)),availability:.confirmed(maximumPacks:1))
+  let unrelated=ConfirmedStockLot(id:UUID(),foodID:UUID(),name:"Peanut snacks",usable:try q(1),confirmedAt:Date())
+  let result=try DinnerScenarioEngine.evaluate(scenario(dinner,[demand],c,[pack],stock:[unrelated]),acceptedDinners:[dinner])
+  XCTAssertTrue(result.foodCoverageComplete)
  }
 
 }

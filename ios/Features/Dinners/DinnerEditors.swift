@@ -1,6 +1,23 @@
 import SwiftUI
 import CoreDomain
 
+/// SwiftUI may retain a row binding while a collection is removed/reordered or
+/// its editor is torn down. Resolve identity on every access, never a saved index.
+/// The outgoing row can finish reading its snapshot; late writes cannot resurrect
+/// it, change its identity, or accidentally edit the row now at its former index.
+func dinnerDraftBinding<Element: Identifiable>(_ snapshot: Element, in collection: Binding<[Element]>) -> Binding<Element> {
+    let id = snapshot.id
+    return Binding(get: {
+        collection.wrappedValue.first { $0.id == id } ?? snapshot
+    }, set: { updated, transaction in
+        guard updated.id == id else { return }
+        var current = collection.wrappedValue
+        guard let index = current.firstIndex(where: { $0.id == id }) else { return }
+        current[index] = updated
+        collection.transaction(transaction).wrappedValue = current
+    })
+}
+
 enum DinnerEditorPurpose { case manual, reusable, idea }
 struct DinnerTemplateEditor: View {
     @ObservedObject var model: DinnerFeatureModel
@@ -22,6 +39,7 @@ struct DinnerTemplateEditor: View {
     init(model: DinnerFeatureModel, purpose: DinnerEditorPurpose, initial: MealTemplate? = nil, idea: DinnerIdeaDraft? = nil) {
         self.model = model; self.purpose = purpose; originalIdea = idea
         _draft = State(initialValue: DinnerTemplateDraft(idea?.template ?? initial))
+        _acceptedID = State(initialValue: model.state.acceptedDinners.first(where: { $0.sourceIdeaID == idea?.id && idea != nil })?.id ?? UUID())
         _yieldConfirmed = State(initialValue: idea?.yieldConfirmed ?? false)
         _availabilityConfirmed = State(initialValue: idea?.availabilityConfirmed ?? false)
         _assumptions = State(initialValue: idea?.assumptions.joined(separator: "\n") ?? "")
@@ -54,7 +72,7 @@ struct DinnerTemplateEditor: View {
                         Button(dinnerText("Save editable draft")) { Task { completed = await model.saveIdea(idea) } }.disabled(!model.editable)
                     } else {
                         Button(dinnerText("Save accepted dinner")) { Task { completed = await model.accept(reviewed, id: acceptedID, fallback: fallback) } }
-                            .disabled(!model.editable)
+                            .disabled(!model.editable).accessibilityIdentifier("ledgerSaveDinner")
                     }
                     Button(dinnerText("Continue editing")) { self.reviewed = nil; reviewedIdea = nil }
                 }
@@ -85,7 +103,7 @@ struct DinnerTemplateEditor: View {
                         Text(dinnerText("Review every ingredient and quantity. Accepted ideas remain separate from chosen dinners."))
                     }
                 }
-                Section { Button(dinnerText("Review"), action: review).disabled(!model.editable).accessibilityIdentifier("dinnerReview") }
+                Section { Button(dinnerText("Review"), action: review).disabled(!model.editable).accessibilityIdentifier("ledgerReviewDinner") }
             }
             DinnerFeedback(model: model)
         }.navigationTitle(purpose == .manual ? dinnerText("Manual dinner") : purpose == .idea ? dinnerText("Dinner idea") : dinnerText("Reusable dinner")).dinnerAccess(model)
@@ -110,8 +128,8 @@ struct DinnerTemplateFields: View {
     @Binding var draft: DinnerTemplateDraft
     var body: some View {
         Section(dinnerText("Dinner")) {
-            TextField(dinnerText("Dinner name"), text: $draft.title)
-            TextField(dinnerText("Total servings"), text: $draft.servings)
+            TextField(dinnerText("Dinner name"), text: $draft.title).accessibilityIdentifier("ledgerDinnerTitle")
+            TextField(dinnerText("Total servings"), text: $draft.servings).accessibilityIdentifier("ledgerDinnerServings")
             TextField(dinnerText("Notes"), text: $draft.notes, axis: .vertical)
             TextField(dinnerText("Source URL, optional"), text: $draft.source)
             TextField(dinnerText("Hard exclusions, one per line"), text: $draft.exclusions, axis: .vertical)
@@ -120,26 +138,30 @@ struct DinnerTemplateFields: View {
         }
         Section(dinnerText("Ingredients")) {
             Text(dinnerText("Enter exact amounts or leave them unresolved. Count means individual units, not packs."))
-            ForEach($draft.ingredients) { $ingredient in
+            ForEach(draft.ingredients) { ingredient in
+                let row = dinnerDraftBinding(ingredient, in: $draft.ingredients)
                 VStack(alignment: .leading, spacing: 8) {
-                    TextField(dinnerText("Ingredient name"), text: $ingredient.name)
-                    TextField(dinnerText("Amount, optional"), text: $ingredient.amount)
-                    DinnerUnitPicker(unit: $ingredient.unit)
-                    TextField(dinnerText("Ingredient notes"), text: $ingredient.notes, axis: .vertical)
-                    TextField(dinnerText("Ingredient exclusions, one per line"), text: $ingredient.exclusions, axis: .vertical)
+                    TextField(dinnerText("Ingredient name"), text: row.name)
+                    TextField(dinnerText("Amount, optional"), text: row.amount)
+                    DinnerUnitPicker(unit: row.unit)
+                    TextField(dinnerText("Ingredient notes"), text: row.notes, axis: .vertical)
+                    TextField(dinnerText("Ingredient exclusions, one per line"), text: row.exclusions, axis: .vertical)
                     Button(dinnerText("Remove ingredient"), role: .destructive) { draft.ingredients.removeAll { $0.id == ingredient.id } }
+                        .buttonStyle(.borderless)
                 }.padding(.vertical, 6)
             }
             Button(dinnerText("Add ingredient")) { draft.ingredients.append(DinnerIngredientDraft()) }.disabled(draft.ingredients.count >= 200)
         }
         Section(dinnerText("Serving groups")) {
             Text(dinnerText("Name each group explicitly. Protected groups keep their reviewed portions when guests change."))
-            ForEach($draft.groups) { $group in
+            ForEach(draft.groups) { group in
+                let row = dinnerDraftBinding(group, in: $draft.groups)
                 VStack(alignment: .leading, spacing: 8) {
-                    TextField(dinnerText("Group name"), text: $group.name)
-                    TextField(dinnerText("Group servings"), text: $group.servings)
-                    Toggle(dinnerText("Protected group"), isOn: $group.isProtected)
+                    TextField(dinnerText("Group name"), text: row.name)
+                    TextField(dinnerText("Group servings"), text: row.servings)
+                    Toggle(dinnerText("Protected group"), isOn: row.isProtected)
                     Button(dinnerText("Remove group"), role: .destructive) { draft.groups.removeAll { $0.id == group.id } }
+                        .buttonStyle(.borderless)
                 }.padding(.vertical, 6)
             }
             Button(dinnerText("Add serving group")) { draft.groups.append(DinnerGroupDraft()) }.disabled(draft.groups.count >= 100)
@@ -159,7 +181,7 @@ struct DinnerLibraryView: View {
         List {
             Section {
                 Text(dinnerText("One accepted dinner can be your Free reusable dinner. Changing this selection does not change dinners already chosen."))
-                NavigationLink(dinnerText("Save a familiar dinner")) { DinnerTemplateEditor(model: model, purpose: .reusable) }
+                NavigationLink(dinnerText("Save a familiar dinner")) { DinnerTemplateEditor(model: model, purpose: .reusable) }.accessibilityIdentifier("ledgerNewTemplate")
             }
             Section(dinnerText("Accepted dinners")) {
                 if model.state.acceptedDinners.isEmpty { Text(dinnerText("No accepted dinners yet.")) }
@@ -167,11 +189,14 @@ struct DinnerLibraryView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text(dinner.template.title).font(.headline)
                         Text(dinnerFormat("Servings: %@", dinner.template.servings.description))
+                        if let evidence = dinner.template.sourceEvidence {
+                            NavigationLink(captureText("Original recipe source")) { RecipeSourceReview(model: model, templateID: dinner.template.id, evidence: evidence) }
+                        }
                         if dinner.acceptedFallback { Text(dinnerText("Accepted fallback")) }
                         if model.state.freeReusableDinnerID == dinner.id { Text(dinnerText("Your Free reusable dinner")) }
                         else { Button(dinnerText("Use as Free reusable dinner")) { Task { _ = await model.selectFree(dinner.id) } } }
                         Button(dinnerText("Choose for this pickup")) { showPreview = model.choose(dinner, day: nil) }
-                            .disabled(!model.paid && model.state.freeReusableDinnerID != dinner.id)
+                            .disabled(!model.paid && model.state.freeReusableDinnerID != dinner.id).accessibilityIdentifier("ledgerChooseTemplate")
                         NavigationLink(dinnerText("Review as a new dinner version")) {
                             DinnerTemplateEditor(model: model, purpose: .reusable, initial: dinner.template)
                         }

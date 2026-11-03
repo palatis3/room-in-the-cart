@@ -31,13 +31,13 @@ enum PickupCookProjection {
             if !detail.completedSteps.isEmpty { lines.append("\(pCook("Steps already marked complete", language: language)): \(detail.completedSteps.joined(separator: "; "))") }
         }
         lines += value.repairs.map { "\($0.instruction)\n" + ($0.timingConfirmed ? (pCook("Entered preparation time fits the deadline", language: language)) : (pCook("Timing conditional or deadline missed · review before cooking", language: language))) }
-        if includeBudget, let result { lines.append("\(pCook("Private budget included", language: language)): \(budgetText(result))") }
+        if includeBudget, let result { lines.append("\(pCook("Private budget included", language: language)): \(budgetText(result, language: language))") }
         return lines.joined(separator: "\n\n")
     }
-    private static func budgetText(_ result: CheckoutResult) -> String {
+    private static func budgetText(_ result: CheckoutResult, language: String) -> String {
         if let exact = result.total.exact { return pMoney(exact) }
         if let upper = result.total.upperBound { return "\(pMoney(result.total.lowerBound)) – \(pMoney(upper))" }
-        return "\(pTr("At least")) \(pMoney(result.total.lowerBound)) · \(pTr("total unresolved"))"
+        return "\(pCook("At least", language: language)) \(pMoney(result.total.lowerBound)) · \(pCook("total unresolved", language: language))"
     }
 }
 

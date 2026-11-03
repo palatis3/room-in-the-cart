@@ -23,6 +23,16 @@ struct PickupSettlementView: View {
                     Text(pTr("A credit does not add food or repair a meal. A credit already included in a net charge is not subtracted again."))
                 }
             }
+            if let journey = model.journey, let workspaceID = model.sourceWorkspaceID {
+                NavigationLink(captureText("Receipt photos and reviewed lines")) {
+                    PrivateSourceReferenceEntry(target: CaptureTarget(workspaceID: workspaceID,
+                        containerID: journey.id, objectID: journey.id, revision: journey.revision, kind: .receiptEvidence),
+                        initialLabel: captureText("Receipt source"), sourceCurrent: {
+                            model.ready && !model.saving && !model.hasPendingSave && model.sourceWorkspaceID == workspaceID &&
+                            model.journey?.id == journey.id && model.journey?.revision == journey.revision
+                        })
+                }.accessibilityIdentifier("pickup.scanReceipt")
+            }
             Section(pTr("Record evidence")) {
                 Picker(pTr("Record type"), selection: $kind) {
                     Text(pTr("Posted charge")).tag(SettlementKind.postedCharge)
@@ -111,7 +121,7 @@ struct PickupNextShopView: View {
             if created {
                 Text(pTr("Fresh draft saved. Review its store, slot and prices before checkout."))
                 if let ledger, let journeyID = model.journey?.id {
-                    NavigationLink(pTr("Open next shopping list")) { PickupListBridgeView(model: model, ledger: ledger, journeyID: journeyID) }
+                    NavigationLink(pTr("Open next shopping list")) { PickupListBridgeView(model: model, ledger: ledger, journeyID: journeyID) }.accessibilityIdentifier("pickupOpenCreatedNextList")
                 } else { Text(pTr("Return to Shop to open the editable list for this saved draft.")) }
             }
         }.navigationTitle(pTr("Next shop"))

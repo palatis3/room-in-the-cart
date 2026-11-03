@@ -1,0 +1,5 @@
+{
+  "sourceCommit": "967df15",
+  "testPatch": "Select warning StaticText instead of decorative Image on iOS17; production views unchanged",
+  "testSourceSHA256": "697de2407e95c78352f56f0d72f8d48d4071533d246b2bd9c48722c0cd3788f5"
+}

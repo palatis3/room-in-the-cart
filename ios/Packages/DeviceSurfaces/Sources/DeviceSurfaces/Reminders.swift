@@ -95,10 +95,17 @@ public actor ReminderStore {
     private let database: SurfaceDatabase
     public init(url: URL) throws {
         database = try SurfaceDatabase(url: url, kind: "private-reminders", schema: "CREATE TABLE reminders(id TEXT PRIMARY KEY NOT NULL, version INTEGER NOT NULL, body TEXT NOT NULL, status TEXT NOT NULL);")
+        // Additive migration for existing validated v1 reminder stores. The trigger
+        // also protects a subsequently reopened older binary from replaying a retired ID.
+        try database.transaction {
+            try database.execute("CREATE TABLE IF NOT EXISTS reminder_retirements(id TEXT PRIMARY KEY NOT NULL)")
+            try database.script("CREATE TRIGGER IF NOT EXISTS prevent_retired_reminder BEFORE INSERT ON reminders WHEN EXISTS(SELECT 1 FROM reminder_retirements WHERE id=NEW.id) BEGIN SELECT RAISE(ABORT,'retired'); END;")
+        }
     }
     @discardableResult public func put(_ intent: ReminderIntent, expectedVersion: Int64?, now: Date) throws -> SavedReminder {
         try intent.validate(now: now)
         return try database.transaction {
+            guard try database.rows("SELECT id FROM reminder_retirements WHERE id=?", [.text(intent.id.uuidString)]).isEmpty else { throw SurfaceError.stale }
             let old = try get(intent.id)
             if let old, old.intent == intent, old.status != .cancelled, old.status != .expired,
                expectedVersion == old.version || expectedVersion == (old.version == 1 ? nil : old.version - 1) { return old }
@@ -127,6 +134,23 @@ public actor ReminderStore {
     @discardableResult public func mark(_ id: UUID, version: Int64, status: ReminderStatus) throws -> Bool {
         guard ![.desired, .cancelled].contains(status) else { throw SurfaceError.invalid }
         return try database.execute("UPDATE reminders SET status=? WHERE id=? AND version=? AND status NOT IN ('cancelled','expired')", [.text(status.rawValue), .text(id.uuidString), .integer(version)]) == 1
+    }
+    /// Removes private metadata while retaining only a bounded opaque-ID receipt.
+    /// A late initial save cannot resurrect this operation after successful erasure.
+    public func eraseCancelled(_ id: UUID, version: Int64) throws { try retire(id, expectedVersion: version) }
+    func eraseAbsent(_ id: UUID) throws { try retire(id, expectedVersion: nil) }
+    private func retire(_ id: UUID, expectedVersion: Int64?) throws {
+        try database.transaction {
+            if let row = try get(id) {
+                guard row.version == expectedVersion, row.status == .cancelled else { throw SurfaceError.stale }
+            }
+            let existing = try database.rows("SELECT id FROM reminder_retirements WHERE id=?", [.text(id.uuidString)])
+            if existing.isEmpty {
+                guard let count = Int(try database.rows("SELECT COUNT(*) FROM reminder_retirements")[0][0] ?? ""), count < 10_000 else { throw SurfaceError.capacity }
+                try database.execute("INSERT INTO reminder_retirements(id) VALUES(?)", [.text(id.uuidString)])
+            }
+            try database.execute("DELETE FROM reminders WHERE id=?", [.text(id.uuidString)])
+        }
     }
     private func decode(_ row: [String?]) throws -> SavedReminder {
         guard let id = UUID(uuidString: row[0] ?? ""), let version = Int64(row[1] ?? ""), version > 0,
@@ -172,6 +196,13 @@ public actor ReminderCoordinator {
     public func cancel(_ id: UUID) async throws {
         _ = try await store.cancel(id)
         await enqueue(id, requestPermission: false).value
+    }
+    /// Removal is idempotent. A concurrent new version fails rather than deleting it.
+    public func erase(_ id: UUID) async throws {
+        try await cancel(id)
+        guard let cancelled = try await store.get(id) else { try await store.eraseAbsent(id); return }
+        guard cancelled.status == .cancelled else { throw SurfaceError.stale }
+        try await store.eraseCancelled(id, version: cancelled.version)
     }
     public func current(_ id: UUID) async throws -> SavedReminder? { try await store.get(id) }
     public func reconcileAll() async throws {

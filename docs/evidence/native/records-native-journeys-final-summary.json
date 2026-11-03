@@ -1,0 +1,49 @@
+{
+  "devicesAndConfigurations": [
+    {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "65B8A2FE-51FE-44A5-A9C7-F2524E33179B",
+        "deviceName": "Room in the Cart iOS 17 Small",
+        "modelName": "iPhone SE",
+        "osBuildNumber": "21A328",
+        "osVersion": "17.0",
+        "platform": "iOS Simulator"
+      },
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "passedTests": 2,
+      "skippedTests": 0,
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription": "RoomInTheCart \u00b7 Built with macOS 27.2",
+  "expectedFailures": 0,
+  "failedTests": 0,
+  "finishTime": 1793709952.874,
+  "passedTests": 2,
+  "result": "Passed",
+  "runtimeWarnings": [],
+  "skippedTests": 0,
+  "startTime": 1793709749.662,
+  "statistics": [],
+  "testFailures": [],
+  "title": "Test - RoomInTheCart",
+  "topInsights": [],
+  "totalTestCount": 2,
+  "testIdentifiers": [
+    "RoomInTheCartUITests/testConfirmedComparisonDeletionSurvivesRestart()",
+    "RoomInTheCartUITests/testOwnerExportReviewAndCancelledDeletionPreserveComparisonAfterRestart()"
+  ],
+  "testedSourceHashesSHA256": {
+    "ios/Features/Records/RecordsToolsView.swift": "5700545aaac3d4d288489c163ae1b9321388249c0d8697fab56679e4496e5f3d",
+    "ios/UITests/RoomInTheCartUITests.swift": "030fe2ae8fae460f3aff246c12622d5115a2396ca2df754a14417f24b9b67b8c"
+  },
+  "provenance": "Built from .build/AccessibilityCandidateSnapshot with the two tested files subsequently copied byte-for-byte to shared source. Other concurrent development was outside this build.",
+  "resultBundle": ".build/RecordsExportRows.xcresult",
+  "initialFailure": "The labeled switch row was tapped at (187.5, 411.75) pt on iOS 17. The native switch remained off. The passing test locates the nested native switch and verifies both states.",
+  "productRegression": "On iOS 17, tapping the prepared preview label triggered competing automatic Form-row actions. The run logged \u201cAttempting to export a nil document\u201d and the prepared controls disappeared. Independent Form rows allow the preview to expand and keep the export until explicit discard."
+}

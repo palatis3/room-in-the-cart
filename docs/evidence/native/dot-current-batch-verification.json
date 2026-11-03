@@ -1,0 +1,183 @@
+{
+  "baselineCommit": "967df154da425c001e94d4c778f48d927a6e3bf6",
+  "sourceFileCount": 216,
+  "compiledDebugAppAndExtensions": "passed",
+  "compiledMetadataCheck": "passed",
+  "localization": {
+    "catalogs": 11,
+    "englishSpanishEntries": 1781,
+    "literalKeys": 1677,
+    "dynamicHelpersExcluded": 19,
+    "runtimeCompositionsExcluded": 42,
+    "result": "passed; human review still required"
+  },
+  "freeJourneyAttempts": [
+    {
+      "bundle": ".build/DotFreeJourneyIntegration.xcresult",
+      "result": "failed",
+      "sourceChanges": [],
+      "reason": "Ambiguous Start pickup selector; unique action identifier added."
+    },
+    {
+      "bundle": ".build/DotFreeJourneyIntegration2.xcresult",
+      "result": "failed",
+      "sourceChanges": [],
+      "reason": "Generic whole-app scrolling attempted keyboard-obscured content; test now drags in measured unobscured content."
+    },
+    {
+      "bundle": ".build/DotFreeJourneyIntegration3.xcresult",
+      "result": "failed",
+      "sourceChanges": [],
+      "reason": "App SIGTRAP on Save accepted dinner: array-index collection binding during Toggle update. Minimal repair under review; full journey remains unaccepted."
+    }
+  ],
+  "crash": {
+    "exception": {
+      "codes": "0x0000000000000001, 0x00000001c16c48c0",
+      "rawCodes": [
+        1,
+        7540066496
+      ],
+      "type": "EXC_BREAKPOINT",
+      "signal": "SIGTRAP"
+    },
+    "triggeredFrames": [
+      {
+        "image": "libswiftCore.dylib",
+        "symbol": "closure #1 in closure #1 in _assertionFailure(_:_:file:line:flags:)"
+      },
+      {
+        "image": "libswiftCore.dylib",
+        "symbol": "_assertionFailure(_:_:file:line:flags:)"
+      },
+      {
+        "image": "libswiftCore.dylib",
+        "symbol": "Array._checkSubscript(_:wasNativeTypeChecked:)"
+      },
+      {
+        "image": "libswiftCore.dylib",
+        "symbol": "Array.subscript.read"
+      },
+      {
+        "image": "libswiftCore.dylib",
+        "symbol": "protocol witness for Collection.subscript.read in conformance [A]"
+      },
+      {
+        "image": "SwiftUICore",
+        "symbol": "closure #1 in Binding<A>.subscript.getter"
+      },
+      {
+        "image": "SwiftUICore",
+        "symbol": "<deduplicated_symbol>"
+      },
+      {
+        "image": "SwiftUICore",
+        "symbol": "LocationBox.get()"
+      },
+      {
+        "image": "SwiftUICore",
+        "symbol": "protocol witness for Location.get() in conformance LocationBox<A>"
+      },
+      {
+        "image": "SwiftUICore",
+        "symbol": "ProjectedLocation.get()"
+      },
+      {
+        "image": "SwiftUICore",
+        "symbol": "LocationBox.get()"
+      },
+      {
+        "image": "SwiftUICore",
+        "symbol": "ToggleStateCollectionLocation.get()"
+      },
+      {
+        "image": "SwiftUICore",
+        "symbol": "LocationBox.get()"
+      },
+      {
+        "image": "SwiftUICore",
+        "symbol": "Binding.ScopedLocation.get()"
+      },
+      {
+        "image": "SwiftUICore",
+        "symbol": "LocationBox.get()"
+      },
+      {
+        "image": "SwiftUICore",
+        "symbol": "Binding.ScopedLocation.get()"
+      },
+      {
+        "image": "SwiftUICore",
+        "symbol": "LocationBox.get()"
+      },
+      {
+        "image": "SwiftUICore",
+        "symbol": "Binding.ScopedLocation.get()"
+      },
+      {
+        "image": "SwiftUICore",
+        "symbol": "LocationBox.get()"
+      },
+      {
+        "image": "SwiftUICore",
+        "symbol": "Binding.ScopedLocation.get()"
+      },
+      {
+        "image": "SwiftUICore",
+        "symbol": "LocationBox.get()"
+      },
+      {
+        "image": "SwiftUICore",
+        "symbol": "Binding.ScopedLocation.get()"
+      },
+      {
+        "image": "SwiftUICore",
+        "symbol": "LocationBox.get()"
+      },
+      {
+        "image": "SwiftUICore",
+        "symbol": "Binding.ScopedLocation.get()"
+      },
+      {
+        "image": "SwiftUICore",
+        "symbol": "LocationBox.get()"
+      },
+      {
+        "image": "SwiftUICore",
+        "symbol": "Binding.readValue()"
+      },
+      {
+        "image": "SwiftUI",
+        "symbol": "closure #1 in Switch.updateUIView(_:context:)"
+      },
+      {
+        "image": "SwiftUICore",
+        "symbol": "UpdateGroup.Action.callAsFunction()"
+      },
+      {
+        "image": "SwiftUICore",
+        "symbol": "dispatch #1 () in UpdateGroup.dispatchActions()"
+      }
+    ]
+  },
+  "localStoreKit": {
+    "bundle": ".build/DotStoreKitDeclineDiagnostic.xcresult",
+    "scope": "testAskToBuyDeclineGrantsNothing only; both configured languages",
+    "executionCount": 2,
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "sourceChanges": [],
+    "states": [
+      {
+        "configuration": "US English \u2014 local StoreKit",
+        "state": "purchaseFinished=true; modelBusy=false; pendingFlags=0; purchased=0; failed=1; deferred=0; current=0; verified=0; unverified=0; notice=Optional(RoomInTheCart.MembershipModel.Notice.pending)"
+      },
+      {
+        "configuration": "US Spanish app \u00b7 Spanish (Mexico) offer \u00b7 USA storefront",
+        "state": "purchaseFinished=true; modelBusy=false; pendingFlags=0; purchased=0; failed=1; deferred=0; current=0; verified=0; unverified=0; notice=Optional(RoomInTheCart.MembershipModel.Notice.pending)"
+      }
+    ],
+    "limit": "Earlier full-suite decline failure is not explained; no claim of a full fourteen-method rerun."
+  }
+}

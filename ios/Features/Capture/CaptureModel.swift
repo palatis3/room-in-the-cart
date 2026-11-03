@@ -1,4 +1,5 @@
 import Foundation
+import CoreDomain
 import Combine
 
 @MainActor final class CaptureModel: ObservableObject {
@@ -20,9 +21,9 @@ import Combine
     let localeIdentifier: String
 
     init(initialText: String = "", localeIdentifier: String = Locale.current.identifier, id: UUID = UUID(),
-         speech: any CaptureSpeechService, ocr: any CaptureOCRService) {
+         speech: any CaptureSpeechService, ocr: any CaptureOCRService, initialEvidence: CaptureEvidence? = nil) {
         text = initialText; self.localeIdentifier = localeIdentifier; self.id = id
-        self.speech = speech; self.ocr = ocr
+        self.speech = speech; self.ocr = ocr; self.acceptedEvidence = initialEvidence
     }
 
     var canContinue: Bool {
@@ -96,12 +97,12 @@ import Combine
         } catch { failure = error as? CaptureFailure ?? .recognitionFailed }
     }
     func discardCandidate() { guard !busy else { return }; candidate = nil; failure = nil }
-    func reviewed() -> ReviewedCapture? {
+    func reviewed(lines: [CaptureImportLine]? = nil, fieldDrafts: [CaptureLineDraft]? = nil) -> ReviewedCapture? {
         guard canContinue else { return nil }
         delivered = true
         return .init(id: id, text: text, originalText: acceptedEvidence?.text ?? text,
             source: acceptedEvidence?.source ?? .typed, localeIdentifier: localeIdentifier,
-            sourceImageData: acceptedEvidence?.sourceImageData)
+            sourceImageData: acceptedEvidence?.sourceImageData, previewImageData: acceptedEvidence?.previewImageData, lines: lines, fieldDrafts: fieldDrafts)
     }
     /// Call on route/scope exit or background. Late permission and recognition callbacks cannot restore data.
     func close() {

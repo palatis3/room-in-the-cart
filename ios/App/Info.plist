@@ -13,11 +13,18 @@
 	<key>RITCSurfaceURLScheme</key>
 	<string>$(RITC_SURFACE_URL_SCHEME)</string>
 	<key>CFBundleURLTypes</key>
-	<array><dict>
-		<key>CFBundleTypeRole</key><string>Editor</string>
-		<key>CFBundleURLName</key><string>$(PRODUCT_BUNDLE_IDENTIFIER).surface</string>
-		<key>CFBundleURLSchemes</key><array><string>$(RITC_SURFACE_URL_SCHEME)</string></array>
-	</dict></array>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>$(PRODUCT_BUNDLE_IDENTIFIER).surface</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>$(RITC_SURFACE_URL_SCHEME)</string>
+			</array>
+		</dict>
+	</array>
 	<key>SupabaseProjectURL</key>
 	<string>$(RITC_SUPABASE_URL)</string>
 	<key>SupabasePublishableKey</key>
@@ -61,5 +68,11 @@
 			</dict>
 		</dict>
 	</array>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Use the microphone to dictate grocery text for your review on this iPhone.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Turn dictated words into text on this iPhone so you can review them before adding anything.</string>
+<key>NSCameraUsageDescription</key>
+<string>Use the camera to review package, recipe or receipt photos on this iPhone. Photos are not uploaded.</string>
 </dict>
 </plist>

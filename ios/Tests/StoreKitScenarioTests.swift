@@ -142,10 +142,29 @@ import StoreKitTest
         else { XCTAssertTrue(model.isBusy) }
         assertFree(model)
         try session.declineAskToBuyTransaction(identifier: request.identifier)
-        try await eventually("Decline ends the purchase without a current entitlement") {
-            guard purchase.finished, !self.session.allTransactions().contains(where: { $0.pendingAskToBuyConfirmation }) else { return false }
-            return await storefront.currentTransactions().isEmpty
-        }
+        let deadline = ContinuousClock.now.advanced(by: .seconds(10))
+        var pendingCount = 0, purchasedCount = 0, failedCount = 0, deferredCount = 0
+        var currentCount = 0, verifiedCount = 0, unverifiedCount = 0
+        repeat {
+            let transactions = session.allTransactions()
+            pendingCount = transactions.filter { $0.pendingAskToBuyConfirmation }.count
+            purchasedCount = transactions.filter { $0.state == .purchased }.count
+            failedCount = transactions.filter { $0.state == .failed }.count
+            deferredCount = transactions.filter { $0.state == .deferred }.count
+            let current = await storefront.currentTransactions()
+            currentCount = current.count
+            verifiedCount = current.filter { if case .verified = $0 { return true }; return false }.count
+            unverifiedCount = current.filter { if case .unverified = $0 { return true }; return false }.count
+            if purchase.finished && pendingCount == 0 && currentCount == 0 { break }
+            try await Task.sleep(for: .milliseconds(100))
+        } while ContinuousClock.now < deadline
+        let diagnostic = "purchaseFinished=\(purchase.finished); modelBusy=\(model.isBusy); pendingFlags=\(pendingCount); purchased=\(purchasedCount); failed=\(failedCount); deferred=\(deferredCount); current=\(currentCount); verified=\(verifiedCount); unverified=\(unverifiedCount); notice=\(String(describing: model.notice))"
+        let attachment = XCTAttachment(string: diagnostic)
+        attachment.name = "Ask to Buy decline — structural state only"; attachment.lifetime = .keepAlways
+        add(attachment)
+        XCTAssertTrue(purchase.finished, "Purchase call did not finish after decline. " + diagnostic)
+        XCTAssertEqual(pendingCount, 0, "Declined request still carries a pending flag. " + diagnostic)
+        XCTAssertEqual(currentCount, 0, "Declined request must not be a current entitlement. " + diagnostic)
         XCTAssertTrue(model.notice == .pending || model.notice == .cancelled || model.notice == .failed(.unavailable))
         assertFree(model)
     }

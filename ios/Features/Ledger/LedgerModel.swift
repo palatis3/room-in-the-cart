@@ -120,7 +120,7 @@ private enum LedgerDeletionJournal {
         guard payload.count <= 4 * 1_024 * 1_024 else { throw LedgerModelError.unsupportedDocument }
         let document = try JSONDecoder().decode(LedgerDocument.self, from: payload)
         guard document.formatVersion == 1 else { throw LedgerModelError.unsupportedDocument }
-        try document.workspace.validate()
+        // LedgerWorkspace.init(from:) validates all decoded domain evidence.
         return document.workspace
     }
 
@@ -163,10 +163,7 @@ private enum LedgerDeletionJournal {
                 return
             }
             if let record = try await opened.load() {
-                let document = try JSONDecoder().decode(LedgerDocument.self, from: record.payload)
-                guard document.formatVersion == 1 else { throw LedgerModelError.unsupportedDocument }
-                try document.workspace.validate()
-                workspace = document.workspace
+                workspace = try Self.validatePayload(record.payload)
                 committedPayload = record.payload
                 revision = record.revision
                 savedAt = record.savedAt
@@ -236,10 +233,12 @@ private enum LedgerDeletionJournal {
             // No other mutation can start while saving, including during actor suspension.
             // Another store instance may have advanced after this operation's receipt.
             let current = try await store.load() ?? record
-            let document = try JSONDecoder().decode(LedgerDocument.self, from: current.payload)
-            guard document.formatVersion == 1 else { throw LedgerModelError.unsupportedDocument }
-            try document.workspace.validate()
-            workspace = document.workspace
+            // The pending value was fully validated before these exact bytes were
+            // encoded. Reuse it only when the durable head is byte-for-byte equal;
+            // another writer's payload still passes the complete decode/validation.
+            let recovered = current.payload == pending.payload
+                ? pending.workspace : try Self.validatePayload(current.payload)
+            workspace = recovered
             committedPayload = current.payload
             revision = current.revision
             savedAt = current.savedAt
@@ -268,10 +267,7 @@ private enum LedgerDeletionJournal {
         defer { saving = false }
         do {
             if let record = try await store.load() {
-                let document = try JSONDecoder().decode(LedgerDocument.self, from: record.payload)
-                guard document.formatVersion == 1 else { throw LedgerModelError.unsupportedDocument }
-                try document.workspace.validate()
-                workspace = document.workspace
+                workspace = try Self.validatePayload(record.payload)
                 committedPayload = record.payload
                 revision = record.revision
                 savedAt = record.savedAt

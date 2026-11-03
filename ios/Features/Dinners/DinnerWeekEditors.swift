@@ -16,6 +16,11 @@ struct DinnerOccurrenceView: View {
                     Text(dinnerFormat("Servings: %@", meal.servings.description))
                     Text(meal.scheduledDay.map(dinnerDay) ?? dinnerText("Unscheduled"))
                     if !meal.notes.isEmpty { Text(meal.notes) }
+                    if let evidence = meal.sourceEvidence {
+                        if let templateID = meal.templateID {
+                            NavigationLink(captureText("Original recipe source")) { RecipeSourceReview(model: model, templateID: templateID, evidence: evidence) }
+                        } else { RecipeSourceDisclosure(evidence: evidence) }
+                    }
                 }
                 Section(dinnerText("Move this dinner")) {
                     Toggle(dinnerText("Assign a date"), isOn: $scheduled)
@@ -76,10 +81,11 @@ struct DinnerManualAdjustmentView: View {
             }
             Section(dinnerText("Serving groups")) {
                 ForEach($groups) { $group in
-                    Text(group.name).font(.headline)
+                    TextField(dinnerText("Group name"), text: $group.name)
                     TextField(dinnerText("Group servings"), text: $group.servings)
                     if group.isProtected { Text(dinnerText("Protected group")) }
                 }
+                Button(dinnerText("Add serving group")) { groups.append(DinnerGroupDraft()) }.disabled(groups.count >= 100)
             }
             Section(dinnerText("Resulting grocery amounts")) {
                 ForEach($amounts) { $amount in
@@ -110,6 +116,20 @@ struct DinnerGuestsView: View {
     @State private var bindings: [DinnerBindingDraft]
     @State private var groups: [DinnerGroupDraft]
     @State private var showPreview = false
+    private struct GuestReview: Identifiable {
+        let id: UUID
+        let shopID: UUID
+        let scope: DinnerAccessContext.Scope
+        let actorID: String
+        let choice: CaptureGuestMealChoice
+    }
+    @State private var guestReview: GuestReview?
+    private func authorized(_ review: GuestReview) -> Bool {
+        guard model.editable, model.accessAvailable, model.shop?.id == review.shopID,
+              model.shop?.revisionID == review.id, let access = model.accessProvider(review.shopID) else { return false }
+        return access.scope == review.scope && access.actorID == review.actorID
+    }
+
     init(model: DinnerFeatureModel, meal: MealOccurrence) {
         self.model = model; self.meal = meal
         _groups = State(initialValue: meal.servingGroups.map(DinnerGroupDraft.init))
@@ -143,6 +163,13 @@ struct DinnerGuestsView: View {
                     }.disabled(!model.editable)
                 }
                 Section(dinnerText("New serving totals")) {
+                    Button(captureText("Review guest change")) {
+                        guard let shop = model.shop, let access = model.accessProvider(shop.id),
+                              let saved = shop.mealOccurrences.first(where: { $0.id == meal.id && $0.removedAt == nil }) else { return }
+                        let choice = CaptureGuestMealChoice(id: saved.id, title: saved.title,
+                            groups: saved.servingGroups.map { .init(id: $0.id, name: $0.name, currentServings: $0.servings, isProtected: $0.isProtected) })
+                        guestReview = GuestReview(id: shop.revisionID, shopID: shop.id, scope: access.scope, actorID: access.actorID, choice: choice)
+                    }.disabled(!model.editable || !model.accessAvailable || groups.allSatisfy(\.isProtected))
                     ForEach($groups) { $group in
                         Text(group.name).font(.headline)
                         if group.isProtected {
@@ -160,6 +187,15 @@ struct DinnerGuestsView: View {
             }
             DinnerFeedback(model: model)
         }.navigationTitle(dinnerText("Guests and protected portions")).dinnerAccess(model)
+            .sheet(item: $guestReview) { review in
+                NavigationStack {
+                    GuestCaptureReviewView(meals: [review.choice], authorize: { authorized(review) }) { result in
+                        guard authorized(review) else { return }
+                        showPreview = model.previewGuestTotal(occurrenceID: result.occurrenceID, groupID: result.groupID,
+                            total: result.total, reviewedRevision: review.id)
+                    }
+                }
+            }
             .navigationDestination(isPresented: $showPreview) { DinnerPreviewView(model: model) }
     }
 }

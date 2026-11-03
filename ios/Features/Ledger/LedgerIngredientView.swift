@@ -2,7 +2,7 @@ import SwiftUI
 import CoreDomain
 
 private enum IngredientSheet: Identifiable {
-    case line, contribution(UUID), link(UUID), protectedNeed, handle, trash
+    case line, contribution(UUID), link(UUID), protectedNeed, handle, trash, packs
     var id: String {
         switch self {
         case .line: return "line"
@@ -11,6 +11,7 @@ private enum IngredientSheet: Identifiable {
         case .protectedNeed: return "protected"
         case .handle: return "handle"
         case .trash: return "trash"
+        case .packs: return "packs"
         }
     }
 }
@@ -34,6 +35,29 @@ struct LedgerIngredientView: View {
                     if !line.aisle.isEmpty { Text(line.aisle) }
                     Button(ledgerText("Edit item and visible notes")) { sheet = .line }
                         .disabled(model.saving || model.hasPendingSave)
+                    if !line.isTrashed && !line.isHandled {
+                        if let workspaceID = model.sourceWorkspaceID,
+                           let selection = try? model.workspace.currentPackSelection(shopID: shopID, lineID: lineID, workspaceID: workspaceID) {
+                            Text(ledgerFormat("Reviewed pack choice: %@", selection.selectedOfferID == selection.request.offerA.id ? selection.request.offerA.label : selection.request.offerB.label))
+                            if let cost = selection.selectedResult.totalCost { Text(ledgerFormat("Item cost: %@", moneyText(cost))) }
+                        } else if model.workspace.packSelections.contains(where: { $0.shopID == shopID && $0.lineID == lineID }) {
+                            Text(ledgerText("The earlier pack choice needs a new review because this list changed."))
+                        }
+                        Button(ledgerText("Choose whole packs for this item")) { sheet = .packs }
+                            .disabled(model.saving || model.hasPendingSave).accessibilityIdentifier("ledgerPackChoice")
+                    }
+                }
+                if let workspaceID = model.sourceWorkspaceID, !line.isTrashed {
+                    NavigationLink(captureText("Package photos and barcode references")) {
+                        PrivateSourceReferenceEntry(target: CaptureTarget(workspaceID: workspaceID,
+                            containerID: shopID, objectID: lineID, revision: Int64(shop.revision), kind: .packageReference),
+                            initialLabel: line.name, sourceCurrent: {
+                                model.ready && !model.saving && !model.hasPendingSave && !model.hasPendingLedgerDeletion &&
+                                model.sourceWorkspaceID == workspaceID && model.workspace.selectedShopID == shopID &&
+                                model.workspace.shops.first(where: { $0.id == shopID })?.revision == shop.revision &&
+                                model.workspace.shops.first(where: { $0.id == shopID })?.lines.contains(where: { $0.id == lineID && !$0.isTrashed }) == true
+                            })
+                    }.accessibilityIdentifier("ledger.scanReferences")
                 }
                 Section(ledgerText("Where this need came from")) {
                     ForEach(shop.contributions(forLineID: lineID), id: \.id) { contribution in
@@ -65,7 +89,7 @@ struct LedgerIngredientView: View {
                     }
                 }.disabled(model.saving || model.hasPendingSave)
                 Section {
-                    Text(ledgerText("Linking uses the amount already listed. Adding demand increases the list. Package comparison is separate from these ingredient amounts."))
+                    Text(ledgerText("Linking uses the amount already listed. Adding demand increases the list. A whole-pack choice keeps these ingredient needs and supplies the purchased amount at checkout review."))
                         .font(.footnote).foregroundStyle(Theme.secondary)
                 }
             }
@@ -85,6 +109,7 @@ struct LedgerIngredientView: View {
                         case .protectedNeed: LedgerProtectedNeedView(model: model, shop: shop, line: line)
                         case .handle: LedgerHandleView(model: model, shopID: shopID, lineID: lineID)
                         case .trash: LedgerTrashView(model: model, shop: shop, line: line)
+                        case .packs: LedgerPackChoiceView(model: model, shopID: shopID, lineID: lineID)
                         }
                     }
                 }

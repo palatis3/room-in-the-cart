@@ -16,6 +16,69 @@ final class RoomInTheCartUITests: XCTestCase {
         app.terminate()
     }
 
+    func testOwnerExportReviewAndCancelledDeletionPreserveComparisonAfterRestart() throws {
+        let title = "Fictional recovery rice"
+        launch()
+        openEmptyComparison()
+        enterComparison(item: title, firstQuantity: "8", cap: "30")
+        compare()
+        saveAndAssertDurableStatus()
+        tap(app.tabBars.buttons["Records"])
+        tap(app.buttons["Recovery, exports and saved records"])
+        XCTAssertTrue(app.navigationBars["Data and recovery"].waitForExistence(timeout: 5))
+
+        tap(app.buttons["Delete this source"])
+        XCTAssertTrue(app.buttons["Delete from this iPhone"].waitForExistence(timeout: 5))
+        tap(app.buttons["Cancel"])
+        XCTAssertTrue(app.switches[title].exists, "Cancelling deletion must retain the source")
+        tap(app.buttons["Select all readable records"])
+
+        let ownerExport = app.buttons["Prepare readable owner export"]
+        reveal(ownerExport)
+        XCTAssertFalse(ownerExport.isEnabled, "Private export requires an explicit acknowledgement")
+        let acknowledgement = app.switches["I understand a readable owner export includes private record data."]
+        reveal(acknowledgement)
+        XCTAssertEqual(acknowledgement.value as? String, "0")
+        // On iOS 17 the switch accessibility frame spans the entire labeled row.
+        let nativeSwitch = acknowledgement.switches.firstMatch
+        (nativeSwitch.exists ? nativeSwitch : acknowledgement).tap()
+        XCTAssertEqual(acknowledgement.value as? String, "1")
+        XCTAssertTrue(ownerExport.isEnabled)
+        tap(ownerExport)
+        assertContains("Private owner file ready")
+        let previewRow = app.cells.containing(.staticText, identifier: "Preview readable copy").firstMatch
+        tap(previewRow)
+        let preview = app.staticTexts.containing(NSPredicate(format:
+            "label CONTAINS %@ AND label CONTAINS %@ AND label CONTAINS %@", title, "Source:", "Revision:")).firstMatch
+        XCTAssertTrue(preview.waitForExistence(timeout: 5), "The reviewed file must contain the selected source and revision")
+        screenshot("Private-owner-export-reviewed-with-fictional-data")
+        tap(app.buttons["Discard prepared file"])
+        XCTAssertFalse(app.buttons["Save file…"].exists, "Discard must remove the prepared export")
+        app.terminate()
+        launch(reset: false)
+        reopenSavedRecord(recordsLabel: "Records", item: title)
+        assertKnownTotals()
+    }
+
+    func testConfirmedComparisonDeletionSurvivesRestart() throws {
+        launch()
+        openEmptyComparison()
+        enterComparison(item: "Fictional record to delete", firstQuantity: "8")
+        compare()
+        saveAndAssertDurableStatus()
+        tap(app.tabBars.buttons["Records"])
+        tap(app.buttons["Recovery, exports and saved records"])
+        tap(app.buttons["Delete this source"])
+        tap(app.buttons["Delete from this iPhone"])
+        assertContains("The selected source was deleted from this iPhone.")
+        screenshot("Confirmed-fictional-source-deletion")
+        app.terminate()
+        launch(reset: false)
+        tap(app.tabBars.buttons["Records"])
+        assertContains("Your comparisons live here")
+        XCTAssertEqual(app.descendants(matching: .any).matching(identifier: "savedComparison").count, 0)
+    }
+
     func testKnownComparisonSavesAndReopensWithItemOnlyLimit() throws {
         launch()
         XCTAssertEqual(app.buttons["newComparison"].label, "Compare packs")
@@ -48,7 +111,9 @@ final class RoomInTheCartUITests: XCTestCase {
         enterComparison(item: "Unknown yield wraps", firstQuantity: nil)
         compare()
         assertScope("Item-only comparison")
-        let unknown = element("aIssue_usableQuantityUnknown")
+        // iOS 17 gives both the decorative Label image and its text this identifier.
+        // Inspect the readable warning, not the non-interactive image.
+        let unknown = app.staticTexts.matching(identifier: "aIssue_usableQuantityUnknown").firstMatch
         reveal(unknown)
         XCTAssertTrue(unknown.label.contains("How much usable food"))
         XCTAssertFalse(element("aTotal").exists)
@@ -60,7 +125,7 @@ final class RoomInTheCartUITests: XCTestCase {
         app.terminate()
         launch(reset: false)
         reopenSavedRecord(recordsLabel: "Records", item: "Unknown yield wraps")
-        reveal(element("aIssue_usableQuantityUnknown"))
+        reveal(app.staticTexts.matching(identifier: "aIssue_usableQuantityUnknown").firstMatch)
         XCTAssertFalse(element("aTotal").exists)
         XCTAssertFalse(element("aPacks").exists)
         assertMoney("bTotal", amount: "4.00")
@@ -112,6 +177,75 @@ final class RoomInTheCartUITests: XCTestCase {
         screenshot("Dark-largest-type-saved")
     }
 
+    func testLargestTextEditActionGrowsInContentAndReturnsToEntry() throws {
+        launch(largeDark: true)
+        openEmptyComparison()
+        enterComparison(item: "Accessible edit wraps", firstQuantity: "8", cap: "30")
+        compare()
+        let edit = element("editComparison")
+        revealFullyInComparison(edit)
+        XCTAssertFalse(app.navigationBars.buttons["editComparison"].exists,
+                       "Accessibility-sized Edit must use the expandable content row")
+        XCTAssertGreaterThan(edit.frame.height, 44, "The large text label must grow beyond the compact toolbar height")
+        captureComparisonFrames("Largest-text-Edit")
+        screenshot("Largest-text-Edit-fully-visible")
+        edit.tap()
+        let name = element("itemName")
+        reveal(name)
+        XCTAssertEqual(name.value as? String, "Accessible edit wraps")
+        compare()
+        assertKnownTotals()
+    }
+
+    func testLargestTextSourceAndSavedDetailsAreFullyReadableAboveTabs() throws {
+        launch(largeDark: true)
+        openEmptyComparison()
+        enterComparison(item: "Complete large text wraps", firstQuantity: "8", cap: "30")
+        compare()
+        for id in ["aHeader", "bHeader", "comparisonSourceNote", "saveComparison"] {
+            let target = element(id)
+            revealFullyInComparison(target)
+            XCTAssertGreaterThan(target.frame.height, 0)
+            captureComparisonFrames("Largest-text-complete-" + id)
+            screenshot("Largest-text-complete-" + id)
+        }
+        saveAndAssertDurableStatus()
+        let saved = element("comparisonSavedDetails")
+        revealFullyInComparison(saved)
+        XCTAssertTrue(saved.label.contains("Saved on this iPhone"))
+        XCTAssertGreaterThan(saved.label.count, "Saved on this iPhone".count,
+                             "The combined confirmation must include the saved date")
+        captureComparisonFrames("Largest-text-complete-saved-details")
+        screenshot("Largest-text-complete-saved-details")
+    }
+
+    func testShopRepairShortcutRemainsInsideViewportAndOpens() throws {
+        verifyShopRepairShortcut(largeDark: false)
+    }
+
+    func testLargestTextShopRepairShortcutRemainsInsideViewportAndOpens() throws {
+        verifyShopRepairShortcut(largeDark: true)
+    }
+
+    private func verifyShopRepairShortcut(largeDark: Bool) {
+        launch(largeDark: largeDark)
+        let shortcut = element("urgentRepairShortcut")
+        revealFullyInShop(shortcut)
+        let scroll = app.scrollViews["shopContentScroll"]
+        let tabs = app.tabBars.firstMatch
+        XCTAssertTrue(tabs.exists)
+        XCTAssertLessThanOrEqual(scroll.frame.maxY, tabs.frame.minY,
+                                 "Shop scrolling content must end above the tabs")
+        XCTAssertTrue(shopViewport.contains(shortcut.frame), "The entire repair shortcut must be visible")
+        XCTAssertTrue(shortcut.isHittable)
+        captureShopFrames(largeDark ? "Largest-Shop-repair-visible" : "Default-Shop-repair-visible")
+        screenshot(largeDark ? "Largest-Shop-repair-visible" : "Default-Shop-repair-visible")
+        shortcut.tap()
+        XCTAssertTrue(app.navigationBars["Something is missing"].waitForExistence(timeout: 5),
+                      "The visible shortcut must open the real repair screen")
+        screenshot(largeDark ? "Largest-urgent-repair-opened" : "Default-urgent-repair-opened")
+    }
+
     func testComparisonSaveStaysInsideViewportAboveTabBar() throws {
         launch()
         openEmptyComparison()
@@ -139,19 +273,134 @@ final class RoomInTheCartUITests: XCTestCase {
         // Collect failures from every viewport in this audit-only test.
         continueAfterFailure = true
         launch()
+        captureShopFrames("Initial-Shop-before-audit")
+        screenshot("Initial-Shop-before-audit")
+        XCTAssertNoThrow(try auditAccessibility())
+        // Retain the initial audit; add full-category coverage after the
+        // complete repair shortcut is visible above bottom navigation.
+        revealFullyInShop(element("urgentRepairShortcut"))
+        captureShopFrames("Complete-repair-shortcut-before-audit")
+        screenshot("Complete-repair-shortcut-before-audit")
         XCTAssertNoThrow(try auditAccessibility())
         openEmptyComparison()
         enterComparison(item: "Audit wraps", firstQuantity: "8", cap: "30")
         compare()
         // Cover both the initial viewport and the lower results after scrolling.
         screenshot("Initial-result-before-audit")
+        captureComparisonFrames("Initial-result-before-audit")
         // Keep audit failures separate from persistence so every functional
         // restart check still runs. No issue categories/elements are filtered.
         XCTAssertNoThrow(try auditAccessibility())
         assertKnownTotals()
         assertContains("Room within the item limit: $26.00")
         screenshot("Scrolled-result-before-audit")
+        captureComparisonFrames("Scrolled-result-before-audit")
         XCTAssertNoThrow(try auditAccessibility())
+        // Additional coverage: retain both earlier audits, then audit the complete
+        // Save control in the visible content area. No issue is suppressed.
+        revealFullyInComparison(element("saveComparison"))
+        captureComparisonFrames("Complete-Save-before-audit")
+        screenshot("Complete-Save-before-audit")
+        XCTAssertNoThrow(try auditAccessibility())
+    }
+
+    private var shopViewport: CGRect {
+        let scroll = app.scrollViews["shopContentScroll"].frame
+        let window = app.windows.firstMatch.frame
+        let navigation = app.navigationBars.firstMatch
+        let tabs = app.tabBars.firstMatch
+        let top = max(scroll.minY, window.minY, navigation.exists ? navigation.frame.maxY : window.minY)
+        let bottom = min(scroll.maxY, window.maxY, tabs.exists ? tabs.frame.minY : window.maxY)
+        return CGRect(x: max(scroll.minX, window.minX), y: top,
+                      width: max(0, min(scroll.maxX, window.maxX) - max(scroll.minX, window.minX)),
+                      height: max(0, bottom - top))
+    }
+
+    private func revealFullyInShop(_ target: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
+        let scroll = app.scrollViews["shopContentScroll"]
+        XCTAssertTrue(scroll.waitForExistence(timeout: 5), file: file, line: line)
+        for _ in 0..<36 {
+            let viewport = shopViewport
+            guard viewport.height > 0 else { break }
+            if !target.exists { scroll.swipeUp(velocity: .slow); continue }
+            let frame = target.frame
+            if target.isHittable && viewport.contains(frame) { return }
+            guard frame.height <= viewport.height, frame.width <= viewport.width else { break }
+            if frame.minY > viewport.maxY + viewport.height { scroll.swipeUp(velocity: .slow); continue }
+            if frame.maxY < viewport.minY - viewport.height { scroll.swipeDown(velocity: .slow); continue }
+            let limit = viewport.height * 0.3
+            let correction = min(limit, max(-limit, viewport.midY - frame.midY))
+            guard correction != 0 else { break }
+            let window = app.windows.firstMatch
+            let origin = window.coordinate(withNormalizedOffset: .zero)
+            let start = origin.withOffset(CGVector(dx: viewport.midX - window.frame.minX, dy: viewport.midY - window.frame.minY))
+            let end = origin.withOffset(CGVector(dx: viewport.midX - window.frame.minX, dy: viewport.midY - window.frame.minY + correction))
+            start.press(forDuration: 0.05, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.3)
+        }
+        captureShopFrames("Shop-full-visibility-failure")
+        XCTFail("The complete shortcut must be reachable inside the Shop viewport: \(target)", file: file, line: line)
+    }
+
+    private func captureShopFrames(_ name: String) {
+        let scroll = app.scrollViews["shopContentScroll"]
+        let target = element("urgentRepairShortcut")
+        let rows = ["Window: \(app.windows.firstMatch.frame)", "Shop scroll: \(scroll.frame)",
+                    "Navigation: \(app.navigationBars.firstMatch.frame)", "Tabs: \(app.tabBars.firstMatch.frame)",
+                    "Visible Shop: \(shopViewport)",
+                    target.exists ? "Repair shortcut: \(target.frame); hittable=\(target.isHittable); \(target.label)" : "Repair shortcut: absent"]
+        let attachment = XCTAttachment(string: rows.joined(separator: "\n"))
+        attachment.name = name + " — exact frames"; attachment.lifetime = .keepAlways; add(attachment)
+    }
+
+    private var comparisonViewport: CGRect {
+        let list = app.collectionViews.firstMatch.frame
+        let window = app.windows.firstMatch.frame
+        let navigation = app.navigationBars.firstMatch
+        let tabs = app.tabBars.firstMatch
+        let top = max(list.minY, window.minY, navigation.exists ? navigation.frame.maxY : window.minY)
+        let bottom = min(list.maxY, window.maxY, tabs.exists ? tabs.frame.minY : window.maxY)
+        return CGRect(x: max(list.minX, window.minX), y: top,
+                      width: min(list.maxX, window.maxX) - max(list.minX, window.minX), height: max(0, bottom - top))
+    }
+
+    private func revealFullyInComparison(_ target: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
+        let list = app.collectionViews.firstMatch
+        XCTAssertTrue(list.exists, file: file, line: line)
+        // First use native scrolling to bring the lazy row into the hierarchy.
+        reveal(target, file: file, line: line)
+        for _ in 0..<20 {
+            let viewport = comparisonViewport
+            guard target.exists, viewport.height > 0 else { break }
+            let frame = target.frame
+            if target.isHittable && viewport.contains(frame) { return }
+            guard frame.height <= viewport.height, frame.width <= viewport.width else { break }
+            // Center the measured row and hold before lifting to stop momentum.
+            // Default-velocity drags oscillated past this tall row in the first run.
+            let limit = viewport.height * 0.3
+            let correction = min(limit, max(-limit, viewport.midY - frame.midY))
+            guard correction != 0 else { break }
+            let window = app.windows.firstMatch
+            let origin = window.coordinate(withNormalizedOffset: .zero)
+            let start = origin.withOffset(CGVector(dx: viewport.midX - window.frame.minX,
+                                                  dy: viewport.midY - window.frame.minY))
+            let end = origin.withOffset(CGVector(dx: viewport.midX - window.frame.minX,
+                                                dy: viewport.midY - window.frame.minY + correction))
+            start.press(forDuration: 0.05, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.3)
+        }
+        captureComparisonFrames("Full-visibility-failure")
+        XCTFail("The complete control must fit in the visible results area: \(target)", file: file, line: line)
+    }
+
+    private func captureComparisonFrames(_ name: String) {
+        var rows = ["Window: \(app.windows.firstMatch.frame)", "List: \(app.collectionViews.firstMatch.frame)",
+                    "Navigation: \(app.navigationBars.firstMatch.frame)", "Tabs: \(app.tabBars.firstMatch.frame)",
+                    "Visible results: \(comparisonViewport)"]
+        for id in ["editComparison", "aHeader", "bHeader", "comparisonSourceNote", "saveComparison", "savedStatus", "comparisonSavedDetails"] {
+            let target = element(id)
+            rows.append(target.exists ? "\(id): \(target.frame); hittable=\(target.isHittable); \(target.label)" : "\(id): absent from current hierarchy")
+        }
+        let attachment = XCTAttachment(string: rows.joined(separator: "\n"))
+        attachment.name = name + " — exact frames"; attachment.lifetime = .keepAlways; add(attachment)
     }
 
     private func auditAccessibility() throws {

@@ -1,0 +1,12 @@
+Window: (0.0, 0.0, 375.0, 667.0)
+List: (0.0, 0.0, 375.0, 610.0)
+Navigation: (0.0, 20.0, 375.0, 44.0)
+Tabs: (0.0, 618.0, 375.0, 49.0)
+Visible results: (0.0, 64.0, 375.0, 546.0)
+editComparison: absent from current hierarchy
+aHeader: absent from current hierarchy
+bHeader: absent from current hierarchy
+comparisonSourceNote: (16.0, 259.0, 343.0, 457.5); hittable=true; Source: prices and usable amounts you entered. Estimates for this item only.
+saveComparison: absent from current hierarchy
+savedStatus: absent from current hierarchy
+comparisonSavedDetails: absent from current hierarchy

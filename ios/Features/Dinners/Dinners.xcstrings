@@ -49,6 +49,22 @@
         }
       }
     },
+    "%@ · confirmed stock allocated: %@ %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · confirmed stock allocated: %@ %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · existencias confirmadas asignadas: %@ %@"
+          }
+        }
+      }
+    },
     "A complete feasible fallback has not been confirmed.": {
       "localizations": {
         "en": {
@@ -93,6 +109,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Una rotación guarda versiones de cenas aceptadas y sus noches relativas. Selecciona las noches que quieres revisar antes de agregar alimentos."
+          }
+        }
+      }
+    },
+    "Accept a dinner before comparing scenarios": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accept a dinner before comparing scenarios"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acepta una cena antes de comparar escenarios"
           }
         }
       }
@@ -225,6 +257,22 @@
         }
       }
     },
+    "Add a reviewed food identity": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a reviewed food identity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agregar una identidad de alimento revisada"
+          }
+        }
+      }
+    },
     "Add a separate grocery need": {
       "localizations": {
         "en": {
@@ -269,6 +317,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Agregar ingrediente"
+          }
+        }
+      }
+    },
+    "Add meal commitment": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add meal commitment"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agregar compromiso de comida"
           }
         }
       }
@@ -353,6 +417,54 @@
         }
       }
     },
+    "All checkout fees in USD, optional": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All checkout fees in USD, optional"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todos los cargos de compra en USD, opcional"
+          }
+        }
+      }
+    },
+    "All chosen dinners": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All chosen dinners"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todas las cenas elegidas"
+          }
+        }
+      }
+    },
+    "All chosen dinners, including earlier dates": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All chosen dinners, including earlier dates"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todas las cenas elegidas, incluidas las fechas anteriores"
+          }
+        }
+      }
+    },
     "All required quantities match the commitments": {
       "localizations": {
         "en": {
@@ -369,6 +481,38 @@
         }
       }
     },
+    "Amount available for %@: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amount available for %@: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad disponible para %@: %@"
+          }
+        }
+      }
+    },
+    "Amount reserved for other needs, optional": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amount reserved for other needs, optional"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad reservada para otras necesidades, opcional"
+          }
+        }
+      }
+    },
     "Amount, optional": {
       "localizations": {
         "en": {
@@ -381,6 +525,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cantidad, opcional"
+          }
+        }
+      }
+    },
+    "An unselected recipe leaves that meal unresolved. Both plans use these same portions and dates.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An unselected recipe leaves that meal unresolved. Both plans use these same portions and dates."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una receta sin seleccionar deja esa comida sin resolver. Ambos planes usan las mismas porciones y fechas."
           }
         }
       }
@@ -461,6 +621,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Disponibilidad revisada"
+          }
+        }
+      }
+    },
+    "Available budget": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Available budget"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Presupuesto disponible"
+          }
+        }
+      }
+    },
+    "Available minutes, optional": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Available minutes, optional"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minutos disponibles, opcional"
           }
         }
       }
@@ -557,6 +749,102 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cancelar vista previa"
+          }
+        }
+      }
+    },
+    "Candidate accepted recipe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Candidate accepted recipe"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receta aceptada propuesta"
+          }
+        }
+      }
+    },
+    "Candidate dinners": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Candidate dinners"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cenas propuestas"
+          }
+        }
+      }
+    },
+    "Candidate hands-on minutes, optional": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Candidate hands-on minutes, optional"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minutos de trabajo de la propuesta, opcional"
+          }
+        }
+      }
+    },
+    "Candidate plan": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Candidate plan"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan propuesto"
+          }
+        }
+      }
+    },
+    "Candidate remaining lead minutes, optional": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Candidate remaining lead minutes, optional"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minutos restantes de preparación de la propuesta, opcional"
+          }
+        }
+      }
+    },
+    "Cap headroom is unresolved": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cap headroom is unresolved"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El margen del límite está sin resolver"
           }
         }
       }
@@ -705,6 +993,22 @@
         }
       }
     },
+    "Choosing uses the accepted recipe's saved servings. It does not apply scenario portions, stock allocations, pack purchases or quoted costs.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choosing uses the accepted recipe's saved servings. It does not apply scenario portions, stock allocations, pack purchases or quoted costs."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al elegir se usan las porciones guardadas de la receta aceptada. No se aplican las porciones del escenario, las asignaciones de existencias, las compras de paquetes ni los costos cotizados."
+          }
+        }
+      }
+    },
     "Choosing without a date keeps the same dinner and grocery needs when you schedule it later.": {
       "localizations": {
         "en": {
@@ -737,6 +1041,22 @@
         }
       }
     },
+    "Chosen dinners keep their original identities and grocery needs. Earlier reusable templates are available in the dinner library for review.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chosen dinners keep their original identities and grocery needs. Earlier reusable templates are available in the dinner library for review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las cenas elegidas conservan sus identidades originales y necesidades de compra. Las plantillas reutilizables anteriores están disponibles en la biblioteca de cenas para revisarlas."
+          }
+        }
+      }
+    },
     "Commitment name": {
       "localizations": {
         "en": {
@@ -765,6 +1085,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tipo de compromiso"
+          }
+        }
+      }
+    },
+    "Compare complete dinner plans using evidence you review here. Names alone never match ingredients, pantry food or packs.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare complete dinner plans using evidence you review here. Names alone never match ingredients, pantry food or packs."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compara planes completos de cenas con la información que revisas aquí. Los nombres por sí solos nunca vinculan ingredientes, alimentos de la despensa ni paquetes."
           }
         }
       }
@@ -817,6 +1153,38 @@
         }
       }
     },
+    "Compared recipe purchases are excluded from these remaining line costs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compared recipe purchases are excluded from these remaining line costs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las compras de las recetas comparadas están excluidas de estos costos restantes"
+          }
+        }
+      }
+    },
+    "Complete unchanged line cost in USD, optional": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Complete unchanged line cost in USD, optional"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Costo completo de la línea sin cambios en USD, opcional"
+          }
+        }
+      }
+    },
     "Completed steps, one per line": {
       "localizations": {
         "en": {
@@ -829,6 +1197,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pasos completados, uno por línea"
+          }
+        }
+      }
+    },
+    "Confirmed usable amount per pack, optional": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed usable amount per pack, optional"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad aprovechable confirmada por paquete, opcional"
+          }
+        }
+      }
+    },
+    "Confirmed usable stock": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed usable stock"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Existencias aprovechables confirmadas"
           }
         }
       }
@@ -865,6 +1265,22 @@
         }
       }
     },
+    "Create each food identity explicitly. A confirmed lot is shared once across every matched need; outside reservations are protected first.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create each food identity explicitly. A confirmed lot is shared once across every matched need; outside reservations are protected first."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crea cada identidad de alimento de forma explícita. Un lote confirmado se distribuye una sola vez entre las necesidades vinculadas; primero se protegen las reservas externas."
+          }
+        }
+      }
+    },
     "Create rotation": {
       "localizations": {
         "en": {
@@ -881,6 +1297,22 @@
         }
       }
     },
+    "Current accepted recipe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current accepted recipe"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receta aceptada actual"
+          }
+        }
+      }
+    },
     "Current amount for this group": {
       "localizations": {
         "en": {
@@ -893,6 +1325,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cantidad actual para este grupo"
+          }
+        }
+      }
+    },
+    "Current plan": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current plan"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan actual"
+          }
+        }
+      }
+    },
+    "Current plan hands-on minutes, optional": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current plan hands-on minutes, optional"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minutos de trabajo del plan actual, opcional"
+          }
+        }
+      }
+    },
+    "Current plan remaining lead minutes, optional": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current plan remaining lead minutes, optional"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minutos restantes de preparación del plan actual, opcional"
           }
         }
       }
@@ -941,6 +1421,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Entrega"
+          }
+        }
+      }
+    },
+    "Deposits in USD, optional": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deposits in USD, optional"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Depósitos en USD, opcional"
           }
         }
       }
@@ -1153,6 +1649,22 @@
         }
       }
     },
+    "Dinners only": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dinners only"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo cenas"
+          }
+        }
+      }
+    },
     "Done": {
       "localizations": {
         "en": {
@@ -1217,6 +1729,22 @@
         }
       }
     },
+    "Enter each remaining line cost after excluding the compared recipe purchases. Both plans reuse these exact lines. Review zero explicitly if a listed line is fully represented by the compared recipes.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter each remaining line cost after excluding the compared recipe purchases. Both plans reuse these exact lines. Review zero explicitly if a listed line is fully represented by the compared recipes."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe el costo restante de cada línea después de excluir las compras de las recetas comparadas. Ambos planes usan exactamente estas líneas. Revisa el cero de forma explícita si una línea ya está incluida por completo en las recetas comparadas."
+          }
+        }
+      }
+    },
     "Enter each resulting amount explicitly. This Free editor does not scale ingredients automatically.": {
       "localizations": {
         "en": {
@@ -1249,6 +1777,38 @@
         }
       }
     },
+    "Enter the remaining elapsed preparation after any completed steps. Missing timing cannot prove a plan is feasible.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the remaining elapsed preparation after any completed steps. Missing timing cannot prove a plan is feasible."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe el tiempo restante de preparación después de los pasos completados. Sin tiempos revisados no se puede confirmar que un plan sea viable."
+          }
+        }
+      }
+    },
+    "Every other dinner, lunch, side and staple is included once": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every other dinner, lunch, side and staple is included once"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada otra cena, almuerzo, acompañamiento y alimento básico está incluido una vez"
+          }
+        }
+      }
+    },
     "Evidence source": {
       "localizations": {
         "en": {
@@ -1261,6 +1821,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Fuente de la información"
+          }
+        }
+      }
+    },
+    "Existing chosen dinners remain. Review a separate removal when replacing a dinner.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Existing chosen dinners remain. Review a separate removal when replacing a dinner."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las cenas ya elegidas se conservan. Revisa su eliminación por separado al reemplazar una cena."
           }
         }
       }
@@ -1293,6 +1869,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Origen existente"
+          }
+        }
+      }
+    },
+    "Explicit recipe ingredient matches": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explicit recipe ingredient matches"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vínculos explícitos de ingredientes de recetas"
           }
         }
       }
@@ -1441,6 +2033,38 @@
         }
       }
     },
+    "Food evidence": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food evidence"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Información del alimento"
+          }
+        }
+      }
+    },
+    "Food identities, stock and usable packs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food identities, stock and usable packs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identidades de alimentos, existencias y paquetes aprovechables"
+          }
+        }
+      }
+    },
     "Food name": {
       "localizations": {
         "en": {
@@ -1469,6 +2093,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Para cada ingrediente, escribe la cantidad actual asignada a cada grupo. La suma debe coincidir con la necesidad actual del ingrediente. Escribe cero si un grupo no usa ese ingrediente."
+          }
+        }
+      }
+    },
+    "Freezer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Freezer"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Congelador"
           }
         }
       }
@@ -1597,6 +2237,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "Acepto un viaje adicional para una alternativa"
+          }
+        }
+      }
+    },
+    "I confirmed this dated usable amount": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I confirmed this dated usable amount"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmé esta cantidad aprovechable en la fecha indicada"
+          }
+        }
+      }
+    },
+    "I reviewed all outside reservations; blank means none": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed all outside reservations; blank means none"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé todas las reservas externas; en blanco significa ninguna"
+          }
+        }
+      }
+    },
+    "I reviewed recipe yields and the resulting ingredient quantities": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed recipe yields and the resulting ingredient quantities"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé el rendimiento de las recetas y las cantidades de ingredientes resultantes"
           }
         }
       }
@@ -1761,6 +2449,22 @@
         }
       }
     },
+    "Manual confirmation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manual confirmation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmación manual"
+          }
+        }
+      }
+    },
     "Manual dinner": {
       "localizations": {
         "en": {
@@ -1773,6 +2477,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cena manual"
+          }
+        }
+      }
+    },
+    "Manual dinner entry stays available without paid tools or price evidence.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manual dinner entry stays available without paid tools or price evidence."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puedes seguir introduciendo cenas manualmente sin herramientas de pago ni información de precios."
           }
         }
       }
@@ -1809,6 +2529,54 @@
         }
       }
     },
+    "Maximum available packs, optional": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maximum available packs, optional"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Máximo de paquetes disponibles, opcional"
+          }
+        }
+      }
+    },
+    "Minimum amount over cap: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minimum amount over cap: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad mínima por encima del límite: %@"
+          }
+        }
+      }
+    },
+    "Minimum cap headroom: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minimum cap headroom: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Margen mínimo del límite: %@"
+          }
+        }
+      }
+    },
     "Mode": {
       "localizations": {
         "en": {
@@ -1841,6 +2609,22 @@
         }
       }
     },
+    "Name and review this food": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name and review this food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombrar y revisar este alimento"
+          }
+        }
+      }
+    },
     "Name each group explicitly. Protected groups keep their reviewed portions when guests change.": {
       "localizations": {
         "en": {
@@ -1853,6 +2637,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Asigna un nombre a cada grupo. Los grupos protegidos conservan sus porciones revisadas cuando cambian los invitados."
+          }
+        }
+      }
+    },
+    "Need covered by confirmed stock": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Need covered by confirmed stock"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Necesidad cubierta por existencias confirmadas"
           }
         }
       }
@@ -1969,6 +2769,22 @@
         }
       }
     },
+    "No cap supplied": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No cap supplied"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se indicó un límite"
+          }
+        }
+      }
+    },
     "No dinner changes are waiting for review.": {
       "localizations": {
         "en": {
@@ -2029,6 +2845,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "No hay borradores de ideas guardados."
+          }
+        }
+      }
+    },
+    "Not yet selected": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not yet selected"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin seleccionar"
           }
         }
       }
@@ -2097,6 +2929,22 @@
         }
       }
     },
+    "One usable pack": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One usable pack"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un paquete aprovechable"
+          }
+        }
+      }
+    },
     "Only the changes listed here will be applied. Cancel keeps your saved pickup unchanged.": {
       "localizations": {
         "en": {
@@ -2113,6 +2961,102 @@
         }
       }
     },
+    "Outside reservations are allocated before these dinner demands and are counted only once.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outside reservations are allocated before these dinner demands and are counted only once."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las reservas externas se asignan antes que las necesidades de estas cenas y se cuentan una sola vez."
+          }
+        }
+      }
+    },
+    "Pack amount or coverage is unresolved": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pack amount or coverage is unresolved"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cantidad del paquete o la cobertura está sin resolver"
+          }
+        }
+      }
+    },
+    "Pack description": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pack description"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descripción del paquete"
+          }
+        }
+      }
+    },
+    "Pack purchase cost: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pack purchase cost: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Costo de compra de paquetes: %@"
+          }
+        }
+      }
+    },
+    "Packs to buy: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Packs to buy: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquetes por comprar: %@"
+          }
+        }
+      }
+    },
+    "Pairing and fallback evidence": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pairing and fallback evidence"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Información para combinaciones y alternativas"
+          }
+        }
+      }
+    },
     "Pairing review": {
       "localizations": {
         "en": {
@@ -2125,6 +3069,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Revisión de combinaciones"
+          }
+        }
+      }
+    },
+    "Pantry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pantry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Despensa"
           }
         }
       }
@@ -2257,6 +3217,22 @@
         }
       }
     },
+    "Preparation timing": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparation timing"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tiempo de preparación"
+          }
+        }
+      }
+    },
     "Preparation timing is unresolved or does not fit": {
       "localizations": {
         "en": {
@@ -2285,6 +3261,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Preparar idea editable"
+          }
+        }
+      }
+    },
+    "Prepare matches after choosing recipes and portions. Then explicitly select the same food identity only where those ingredients really are interchangeable.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prepare matches after choosing recipes and portions. Then explicitly select the same food identity only where those ingredients really are interchangeable."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prepara los vínculos después de elegir recetas y porciones. Después selecciona explícitamente la misma identidad de alimento solo si los ingredientes son intercambiables."
+          }
+        }
+      }
+    },
+    "Prepare required ingredient matches": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prepare required ingredient matches"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparar vínculos de ingredientes necesarios"
           }
         }
       }
@@ -2369,6 +3377,22 @@
         }
       }
     },
+    "Price of one pack in USD, optional": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price of one pack in USD, optional"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio de un paquete en USD, opcional"
+          }
+        }
+      }
+    },
     "Proposal saved on this device. It has not been sent or applied.": {
       "localizations": {
         "en": {
@@ -2413,6 +3437,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Proteger alimentos"
+          }
+        }
+      }
+    },
+    "Protect needs outside this comparison": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protect needs outside this comparison"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proteger necesidades fuera de esta comparación"
           }
         }
       }
@@ -2769,6 +3809,22 @@
         }
       }
     },
+    "Reserve recorded separately: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reserve recorded separately: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reserva registrada por separado: %@"
+          }
+        }
+      }
+    },
     "Resulting grocery amounts": {
       "localizations": {
         "en": {
@@ -2925,6 +3981,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Revisar antes de aplicar"
+          }
+        }
+      }
+    },
+    "Review candidate dinners separately": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review candidate dinners separately"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar las cenas propuestas por separado"
+          }
+        }
+      }
+    },
+    "Review complete scenarios": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review complete scenarios"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar escenarios completos"
           }
         }
       }
@@ -3169,6 +4257,22 @@
         }
       }
     },
+    "Reviewed food identity": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed food identity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identidad de alimento revisada"
+          }
+        }
+      }
+    },
     "Reviewed pairing alternatives": {
       "localizations": {
         "en": {
@@ -3293,6 +4397,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mismos compromisos en ambas tiendas"
+          }
+        }
+      }
+    },
+    "Same meal commitments": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Same meal commitments"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mismos compromisos de comidas"
           }
         }
       }
@@ -3489,6 +4609,22 @@
         }
       }
     },
+    "Scenario evidence": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scenario evidence"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Información del escenario"
+          }
+        }
+      }
+    },
     "Second store": {
       "localizations": {
         "en": {
@@ -3521,6 +4657,22 @@
         }
       }
     },
+    "Select a food identity": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select a food identity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seleccionar una identidad de alimento"
+          }
+        }
+      }
+    },
     "Select dinner": {
       "localizations": {
         "en": {
@@ -3549,6 +4701,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Selecciona solo las cenas que quieres agregar. Las cenas ya elegidas no cambian."
+          }
+        }
+      }
+    },
+    "Selected items only": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected items only"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo artículos seleccionados"
           }
         }
       }
@@ -3597,6 +4765,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Los cambios compartidos necesitan confirmación autorizada del servidor. Puedes guardar esta propuesta en este dispositivo."
+          }
+        }
+      }
+    },
+    "Shared store and evidence basis": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared store and evidence basis"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datos comunes de tienda e información"
           }
         }
       }
@@ -3681,6 +4865,38 @@
         }
       }
     },
+    "Stock confirmed at": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stock confirmed at"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha de confirmación de existencias"
+          }
+        }
+      }
+    },
+    "Stock source": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stock source"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Origen de las existencias"
+          }
+        }
+      }
+    },
     "Store label": {
       "localizations": {
         "en": {
@@ -3713,6 +4929,22 @@
         }
       }
     },
+    "Tax in USD, optional": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tax in USD, optional"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impuestos en USD, opcional"
+          }
+        }
+      }
+    },
     "That quantity is already reserved or exceeds the available amount.": {
       "localizations": {
         "en": {
@@ -3741,6 +4973,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "La vista previa asistida usa las porciones de ingredientes guardadas. Los grupos protegidos no cambian."
+          }
+        }
+      }
+    },
+    "The cap covers a different scope; no whole-shop headroom is claimed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The cap covers a different scope; no whole-shop headroom is claimed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El límite corresponde a otro alcance; no se afirma ningún margen para toda la compra."
+          }
+        }
+      }
+    },
+    "The entered cap is already the amount available for its scope. A recorded reserve is not subtracted again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The entered cap is already the amount available for its scope. A recorded reserve is not subtracted again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El límite introducido ya es la cantidad disponible para su alcance. No se vuelve a restar una reserva registrada."
           }
         }
       }
@@ -4049,6 +5313,38 @@
         }
       }
     },
+    "Unchanged basket costs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unchanged basket costs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Costos de la cesta sin cambios"
+          }
+        }
+      }
+    },
+    "Unconfirmed stock is not allocated. No pantry quantity is guessed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unconfirmed stock is not allocated. No pantry quantity is guessed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las existencias sin confirmar no se asignan. No se adivina ninguna cantidad de la despensa."
+          }
+        }
+      }
+    },
     "Unit": {
       "localizations": {
         "en": {
@@ -4077,6 +5373,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Desconocido"
+          }
+        }
+      }
+    },
+    "Unknown recipe amounts remain unresolved. For a protected serving group, accept a manually reviewed recipe version before changing its total yield.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown recipe amounts remain unresolved. For a protected serving group, accept a manually reviewed recipe version before changing its total yield."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las cantidades desconocidas de recetas quedan sin resolver. Para un grupo protegido, acepta una versión de receta revisada manualmente antes de cambiar su rendimiento total."
+          }
+        }
+      }
+    },
+    "Unnamed food identity": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unnamed food identity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identidad de alimento sin nombre"
           }
         }
       }
@@ -4125,6 +5453,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "Alternativas sin evaluar: %d"
+          }
+        }
+      }
+    },
+    "Usable amount at home, optional": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usable amount at home, optional"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad aprovechable en casa, opcional"
+          }
+        }
+      }
+    },
+    "Usable leftover: %@ %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usable leftover: %@ %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sobrante aprovechable: %@ %@"
+          }
+        }
+      }
+    },
+    "Usable pack yield reviewed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usable pack yield reviewed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rendimiento aprovechable del paquete revisado"
           }
         }
       }
@@ -4193,6 +5569,54 @@
         }
       }
     },
+    "Use reviewed usable quantities. Bone, peel, liquid loss and cooking yield are never inferred. Incompatible units remain unresolved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use reviewed usable quantities. Bone, peel, liquid loss and cooking yield are never inferred. Incompatible units remain unresolved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usa cantidades aprovechables revisadas. Nunca se deducen huesos, cáscaras, pérdida de líquido ni rendimiento de cocción. Las unidades incompatibles quedan sin resolver."
+          }
+        }
+      }
+    },
+    "Use this entry path for confirmed fixed charges. Threshold fees, discounts or incomplete retailer terms need a reviewed inclusive store quote instead.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use this entry path for confirmed fixed charges. Threshold fees, discounts or incomplete retailer terms need a reviewed inclusive store quote instead."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usa este formulario para cargos fijos confirmados. Los cargos por umbral, descuentos o condiciones incompletas del comercio requieren una cotización total de tienda revisada."
+          }
+        }
+      }
+    },
+    "Use this identity only for ingredients and packs you explicitly reviewed as the same food.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use this identity only for ingredients and packs you explicitly reviewed as the same food."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usa esta identidad solo para ingredientes y paquetes que hayas revisado explícitamente como el mismo alimento."
+          }
+        }
+      }
+    },
     "Week": {
       "localizations": {
         "en": {
@@ -4237,6 +5661,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Total de toda la compra en USD, opcional"
+          }
+        }
+      }
+    },
+    "Whole pickup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whole pickup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toda la recogida"
           }
         }
       }

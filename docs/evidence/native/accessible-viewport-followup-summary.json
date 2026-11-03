@@ -1,0 +1,66 @@
+{
+  "devicesAndConfigurations" : [
+    {
+      "device" : {
+        "architecture" : "arm64",
+        "deviceId" : "65B8A2FE-51FE-44A5-A9C7-F2524E33179B",
+        "deviceName" : "Room in the Cart iOS 17 Small",
+        "modelName" : "iPhone SE",
+        "osBuildNumber" : "21A328",
+        "osVersion" : "17.0",
+        "platform" : "iOS Simulator"
+      },
+      "expectedFailures" : 0,
+      "failedTests" : 1,
+      "passedTests" : 3,
+      "skippedTests" : 0,
+      "testPlanConfiguration" : {
+        "configurationId" : "1",
+        "configurationName" : "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription" : "RoomInTheCart · Built with macOS 27.2",
+  "expectedFailures" : 0,
+  "failedTests" : 1,
+  "finishTime" : 1793693042.35,
+  "passedTests" : 3,
+  "result" : "Failed",
+  "runtimeWarnings" : [
+
+  ],
+  "skippedTests" : 0,
+  "startTime" : 1793692798.923,
+  "statistics" : [
+
+  ],
+  "testFailures" : [
+    {
+      "failureText" : "Contrast failed",
+      "targetName" : "RoomInTheCartUITests",
+      "testIdentifier" : 1,
+      "testIdentifierString" : "RoomInTheCartUITests/testAutomatedAccessibilityAuditOnShopAndKnownResults()",
+      "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/RoomInTheCartUITests/testAutomatedAccessibilityAuditOnShopAndKnownResults",
+      "testName" : "testAutomatedAccessibilityAuditOnShopAndKnownResults()"
+    }
+  ],
+  "title" : "Test - RoomInTheCart",
+  "topInsights" : [
+    {
+      "category" : "Common Failures",
+      "impact" : "100% of failures",
+      "text" : "12 runs of 1 test failed with Dynamic Type font sizes are unsupported"
+    },
+    {
+      "category" : "Common Failures",
+      "impact" : "100% of failures",
+      "text" : "10 runs of 1 test failed with Text clipped"
+    },
+    {
+      "category" : "Common Failures",
+      "impact" : "100% of failures",
+      "text" : "6 runs of 1 test failed with Contrast failed"
+    }
+  ],
+  "totalTestCount" : 4
+}

@@ -1,6 +1,54 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Charges, credits and holds entered by the shopper for this shared shop.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Charges, credits and holds entered by the shopper for this shared shop."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargos, créditos y retenciones que ingresó la persona encargada de esta compra compartida."
+          }
+        }
+      }
+    },
+    "No financial evidence has been entered for this shop.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No financial evidence has been entered for this shop."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no se han ingresado registros financieros para esta compra."
+          }
+        }
+      }
+    },
+    "Shared financial evidence": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared financial evidence"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registros financieros compartidos"
+          }
+        }
+      }
+    },
     "A budget fact is unknown.": {
       "localizations": {
         "en": {
@@ -13,6 +61,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Se desconoce un dato del presupuesto."
+          }
+        }
+      }
+    },
+    "A reported order cannot be reopened as a draft.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A reported order cannot be reopened as a draft."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un pedido marcado como realizado no puede reabrirse como borrador."
           }
         }
       }
@@ -193,6 +258,23 @@
         }
       }
     },
+    "Add shared line": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add shared line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agregar artículo compartido"
+          }
+        }
+      }
+    },
     "Added to the plan": {
       "localizations": {
         "en": {
@@ -269,6 +351,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Después de esta decisión"
+          }
+        }
+      }
+    },
+    "All remaining items included": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All remaining items included"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se incluyen todos los artículos restantes"
           }
         }
       }
@@ -465,6 +564,23 @@
         }
       }
     },
+    "Cancel shared shop edit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel shared shop edit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar edición de la compra compartida"
+          }
+        }
+      }
+    },
     "Cap": {
       "localizations": {
         "en": {
@@ -481,6 +597,23 @@
         }
       }
     },
+    "Cap in USD, blank if unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cap in USD, blank if unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Límite en USD; deja en blanco si no se conoce"
+          }
+        }
+      }
+    },
     "Cap scope": {
       "localizations": {
         "en": {
@@ -493,6 +626,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Alcance del límite"
+          }
+        }
+      }
+    },
+    "Check current shop status": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check current shop status"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consulta el estado actual de la compra"
           }
         }
       }
@@ -657,6 +807,23 @@
         }
       }
     },
+    "Clear after reviewing current shop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear after reviewing current shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrar tras revisar la compra actual"
+          }
+        }
+      }
+    },
     "Clear this local retry?": {
       "localizations": {
         "en": {
@@ -669,6 +836,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "¿Eliminar este reintento local?"
+          }
+        }
+      }
+    },
+    "Clear this local shared-shop retry?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear this local shared-shop retry?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Borrar este reintento local de la compra compartida?"
           }
         }
       }
@@ -717,6 +901,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Eliminar un reintento no deshace un hogar ni una afiliación que el servicio ya haya creado."
+          }
+        }
+      }
+    },
+    "Clearing a retry does not undo a shop change already received by the service.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clearing a retry does not undo a shop change already received by the service."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrar un reintento no deshace un cambio de compra que el servicio ya haya recibido."
           }
         }
       }
@@ -945,6 +1146,23 @@
         }
       }
     },
+    "Create reviewed shared shop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create reviewed shared shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crear compra compartida revisada"
+          }
+        }
+      }
+    },
     "Create scoped invitation": {
       "localizations": {
         "en": {
@@ -1025,6 +1243,23 @@
         }
       }
     },
+    "Current shared shop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current shared shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compra compartida actual"
+          }
+        }
+      }
+    },
     "Decision confirmed by the household": {
       "localizations": {
         "en": {
@@ -1069,6 +1304,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Se desconocen los depósitos."
+          }
+        }
+      }
+    },
+    "Deposits in USD, blank if unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deposits in USD, blank if unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Depósitos en USD; deja en blanco si no se conocen"
           }
         }
       }
@@ -1121,6 +1373,23 @@
         }
       }
     },
+    "Discounts in USD, blank if unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discounts in USD, blank if unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descuentos en USD; deja en blanco si no se conocen"
+          }
+        }
+      }
+    },
     "Do not include": {
       "localizations": {
         "en": {
@@ -1133,6 +1402,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "No incluir"
+          }
+        }
+      }
+    },
+    "Does not count toward the retailer fee threshold": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Does not count toward the retailer fee threshold"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No cuenta para el umbral de la tarifa de la tienda"
           }
         }
       }
@@ -1169,6 +1455,23 @@
         }
       }
     },
+    "Draft shared shop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Draft shared shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrador de compra compartida"
+          }
+        }
+      }
+    },
     "Each request keeps its own outcome. Linking a line does not add another pack.": {
       "localizations": {
         "en": {
@@ -1197,6 +1500,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Editar solicitud"
+          }
+        }
+      }
+    },
+    "Edit shared items and quote": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit shared items and quote"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar artículos compartidos y cotización"
           }
         }
       }
@@ -1393,6 +1713,91 @@
         }
       }
     },
+    "Enter each actual pack separately from its price. A blank price remains unknown.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter each actual pack separately from its price. A blank price remains unknown."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresa cada paquete real por separado de su precio. Un precio en blanco sigue siendo desconocido."
+          }
+        }
+      }
+    },
+    "Enter shared shop details": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter shared shop details"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresar detalles de la compra compartida"
+          }
+        }
+      }
+    },
+    "Enter the items and quote you intend to share. You will review all fields before the service creates the shop and assigns you as shopper.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the items and quote you intend to share. You will review all fields before the service creates the shop and assigns you as shopper."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresa los artículos y la cotización que quieres compartir. Revisarás todos los campos antes de que el servicio cree la compra y te asigne como comprador."
+          }
+        }
+      }
+    },
+    "Entered quote and cap": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entered quote and cap"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cotización y límite ingresados"
+          }
+        }
+      }
+    },
+    "Entered shared items": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entered shared items"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artículos compartidos ingresados"
+          }
+        }
+      }
+    },
     "Existing line": {
       "localizations": {
         "en": {
@@ -1473,6 +1878,23 @@
         }
       }
     },
+    "Fee at or above threshold in USD, blank if unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fee at or above threshold in USD, blank if unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tarifa al alcanzar el umbral en USD; deja en blanco si no se conoce"
+          }
+        }
+      }
+    },
     "Fee below threshold": {
       "localizations": {
         "en": {
@@ -1489,6 +1911,40 @@
         }
       }
     },
+    "Fee below threshold in USD, blank if unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fee below threshold in USD, blank if unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tarifa por debajo del umbral en USD; deja en blanco si no se conoce"
+          }
+        }
+      }
+    },
+    "Fee depends on eligible subtotal": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fee depends on eligible subtotal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La tarifa depende del subtotal elegible"
+          }
+        }
+      }
+    },
     "Fee threshold": {
       "localizations": {
         "en": {
@@ -1501,6 +1957,91 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mínimo para determinar la tarifa"
+          }
+        }
+      }
+    },
+    "Fee threshold in USD": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fee threshold in USD"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Umbral de la tarifa en USD"
+          }
+        }
+      }
+    },
+    "Fixed fee": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fixed fee"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tarifa fija"
+          }
+        }
+      }
+    },
+    "Freeze reviewed shared shop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Freeze reviewed shared shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fijar compra compartida revisada"
+          }
+        }
+      }
+    },
+    "Freeze the displayed revision. This records a shared snapshot; it does not place an order with a retailer. Later requests go to next shop.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Freeze the displayed revision. This records a shared snapshot; it does not place an order with a retailer. Later requests go to next shop."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fija la revisión que se muestra. Esto guarda una copia compartida; no realiza un pedido en una tienda. Las solicitudes posteriores pasan a la próxima compra."
+          }
+        }
+      }
+    },
+    "Frozen shared shop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frozen shared shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compra compartida fijada"
           }
         }
       }
@@ -1745,6 +2286,40 @@
         }
       }
     },
+    "I reviewed the current shop; clear retry": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed the current shop; clear retry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé la compra actual; borrar reintento"
+          }
+        }
+      }
+    },
+    "I reviewed these exact shared fields and this action": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed these exact shared fields and this action"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé estos campos compartidos exactos y esta acción"
+          }
+        }
+      }
+    },
     "I reviewed these instructions for this recipient": {
       "localizations": {
         "en": {
@@ -1917,6 +2492,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Artículo"
+          }
+        }
+      }
+    },
+    "Item only": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item only"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo el artículo"
           }
         }
       }
@@ -2305,6 +2897,23 @@
         }
       }
     },
+    "Only enter zero when confirmed. Unknown or incomplete costs remain unresolved in request previews.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only enter zero when confirmed. Unknown or incomplete costs remain unresolved in request previews."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresa cero solo cuando esté confirmado. Los costos desconocidos o incompletos siguen sin resolverse en las vistas previas de solicitudes."
+          }
+        }
+      }
+    },
     "Only the assigned shopper can review these requests.": {
       "localizations": {
         "en": {
@@ -2369,6 +2978,23 @@
         }
       }
     },
+    "Only these entered fields will be sent. The service will assign this household's organizer as shopper for the new shop.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only these entered fields will be sent. The service will assign this household's organizer as shopper for the new shop."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo se enviarán estos campos ingresados. El servicio asignará al organizador de este hogar como comprador para la nueva compra."
+          }
+        }
+      }
+    },
     "Only this requester receives your question. Leave private costs and other requests out of it.": {
       "localizations": {
         "en": {
@@ -2381,6 +3007,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Solo quien hizo esta solicitud recibe tu pregunta. No incluyas costos privados ni otras solicitudes."
+          }
+        }
+      }
+    },
+    "Open shared household shop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open shared household shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir compra compartida del hogar"
+          }
+        }
+      }
+    },
+    "Order reported placed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Order reported placed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pedido marcado como realizado"
           }
         }
       }
@@ -2673,6 +3333,23 @@
         }
       }
     },
+    "Publish reviewed items and quote": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Publish reviewed items and quote"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Publicar artículos y cotización revisados"
+          }
+        }
+      }
+    },
     "Quantity, optional": {
       "localizations": {
         "en": {
@@ -2733,6 +3410,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cotización registrada"
+          }
+        }
+      }
+    },
+    "Quote scope": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quote scope"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alcance de la cotización"
           }
         }
       }
@@ -3041,6 +3735,23 @@
         }
       }
     },
+    "Refresh shared shop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh shared shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar compra compartida"
+          }
+        }
+      }
+    },
     "Refresh suggestions": {
       "localizations": {
         "en": {
@@ -3053,6 +3764,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Actualizar sugerencias"
+          }
+        }
+      }
+    },
+    "Refresh the current shared shop before clearing this retry and reviewing a fresh action.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh the current shared shop before clearing this retry and reviewing a fresh action."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualiza la compra compartida actual antes de borrar este reintento y revisar una nueva acción."
+          }
+        }
+      }
+    },
+    "Remaining items are not confirmed complete": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remaining items are not confirmed complete"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se ha confirmado que estén todos los artículos restantes"
           }
         }
       }
@@ -3121,6 +3866,57 @@
         }
       }
     },
+    "Remove this shared line": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this shared line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar este artículo compartido"
+          }
+        }
+      }
+    },
+    "Reopen reviewed shared shop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reopen reviewed shared shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reabrir compra compartida revisada"
+          }
+        }
+      }
+    },
+    "Reopen the frozen shop for review. Existing next-shop requests stay there until you explicitly review bringing them into this shop.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reopen the frozen shop for review. Existing next-shop requests stay there until you explicitly review bringing them into this shop."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reabre la compra fijada para revisarla. Las solicitudes para la próxima compra se quedan allí hasta que revises expresamente su incorporación a esta compra."
+          }
+        }
+      }
+    },
     "Reopen your protected household account": {
       "localizations": {
         "en": {
@@ -3185,6 +3981,23 @@
         }
       }
     },
+    "Requests received after freezing are saved for next shop. Reopening does not move them into this shop automatically.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Requests received after freezing are saved for next shop. Reopening does not move them into this shop automatically."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las solicitudes recibidas después de fijar la compra se guardan para la próxima. Reabrirla no las incorpora a esta compra automáticamente."
+          }
+        }
+      }
+    },
     "Resume saved account": {
       "localizations": {
         "en": {
@@ -3213,6 +4026,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tarifa de la tienda"
+          }
+        }
+      }
+    },
+    "Retailer fee in USD, blank if unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retailer fee in USD, blank if unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tarifa de la tienda en USD; deja en blanco si no se conoce"
+          }
+        }
+      }
+    },
+    "Retailer fee rule": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retailer fee rule"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regla de la tarifa de la tienda"
           }
         }
       }
@@ -3261,6 +4108,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reintentar la misma solicitud"
+          }
+        }
+      }
+    },
+    "Retry the same shared shop action": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry the same shared shop action"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar la misma acción de compra compartida"
           }
         }
       }
@@ -3345,6 +4209,40 @@
         }
       }
     },
+    "Review entered shared shop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review entered shared shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar compra compartida ingresada"
+          }
+        }
+      }
+    },
+    "Review every item and price. Leave unknown costs blank, enter a fee threshold when selected, and set a future quote expiry.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review every item and price. Leave unknown costs blank, enter a fee threshold when selected, and set a future quote expiry."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa cada artículo y precio. Deja en blanco los costos desconocidos, ingresa un umbral de tarifa si lo seleccionaste y establece una fecha futura de vencimiento de la cotización."
+          }
+        }
+      }
+    },
     "Review family requests": {
       "localizations": {
         "en": {
@@ -3357,6 +4255,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Revisar solicitudes de la familia"
+          }
+        }
+      }
+    },
+    "Review freezing this shop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review freezing this shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar antes de fijar esta compra"
           }
         }
       }
@@ -3393,6 +4308,23 @@
         }
       }
     },
+    "Review reopening this shop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review reopening this shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar antes de reabrir esta compra"
+          }
+        }
+      }
+    },
     "Review request": {
       "localizations": {
         "en": {
@@ -3425,6 +4357,23 @@
         }
       }
     },
+    "Review shared shop change": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review shared shop change"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar cambio de compra compartida"
+          }
+        }
+      }
+    },
     "Review suggestions": {
       "localizations": {
         "en": {
@@ -3453,6 +4402,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Revisa el nombre de la compra y cada instrucción. Los nombres y las acciones son obligatorios; usa cantidades y unidades breves."
+          }
+        }
+      }
+    },
+    "Revision": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revision"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisión"
           }
         }
       }
@@ -3713,6 +4679,91 @@
         }
       }
     },
+    "Shared household shop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared household shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compra compartida del hogar"
+          }
+        }
+      }
+    },
+    "Shared shop access has ended. Return to household settings.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared shop access has ended. Return to household settings."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El acceso a la compra compartida terminó. Vuelve a la configuración del hogar."
+          }
+        }
+      }
+    },
+    "Shared shop access required": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared shop access required"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se requiere acceso a la compra compartida"
+          }
+        }
+      }
+    },
+    "Shared shop action waiting": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared shop action waiting"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acción de compra compartida pendiente"
+          }
+        }
+      }
+    },
+    "Shared shop change confirmed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared shop change confirmed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambio de compra compartida confirmado"
+          }
+        }
+      }
+    },
     "Shopper access has ended. Return to household settings.": {
       "localizations": {
         "en": {
@@ -3841,6 +4892,23 @@
         }
       }
     },
+    "Start the first shared shop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start the first shared shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar la primera compra compartida"
+          }
+        }
+      }
+    },
     "Suggest a correction": {
       "localizations": {
         "en": {
@@ -3937,6 +5005,23 @@
         }
       }
     },
+    "Tax in USD, blank if unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tax in USD, blank if unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impuesto en USD; deja en blanco si no se conoce"
+          }
+        }
+      }
+    },
     "Tax is unknown.": {
       "localizations": {
         "en": {
@@ -3981,6 +5066,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "El límite y el total abarcan conceptos distintos."
+          }
+        }
+      }
+    },
+    "The current shop belongs to another assigned shopper. Contributor requests and household management keep their separate permissions.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The current shop belongs to another assigned shopper. Contributor requests and household management keep their separate permissions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La compra actual corresponde a otro comprador asignado. Las solicitudes de colaboradores y la gestión del hogar mantienen permisos separados."
           }
         }
       }
@@ -4049,6 +5151,23 @@
         }
       }
     },
+    "The organizer can start the first shared shop. Only its assigned shopper can change it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The organizer can start the first shared shop. Only its assigned shopper can change it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El organizador puede iniciar la primera compra compartida. Solo su comprador asignado puede cambiarla."
+          }
+        }
+      }
+    },
     "The result is not confirmed. Refresh current requests before creating another decision.": {
       "localizations": {
         "en": {
@@ -4081,6 +5200,23 @@
         }
       }
     },
+    "The result is not confirmed. Retry the same saved action to avoid creating another shop or repeating a change.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The result is not confirmed. Retry the same saved action to avoid creating another shop or repeating a change."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El resultado no está confirmado. Reintenta la misma acción guardada para evitar crear otra compra o repetir un cambio."
+          }
+        }
+      }
+    },
     "The result is not confirmed. Retry the same suggestion before writing another one.": {
       "localizations": {
         "en": {
@@ -4109,6 +5245,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Se desconoce la tarifa de la tienda."
+          }
+        }
+      }
+    },
+    "The reviewed quote expired. Update its evidence and review again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The reviewed quote expired. Update its evidence and review again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cotización revisada venció. Actualiza sus datos y vuelve a revisarla."
           }
         }
       }
@@ -4173,6 +5326,91 @@
           "stringUnit": {
             "state": "translated",
             "value": "El servicio no pudo confirmar esta decisión. Reintenta la decisión pendiente para evitar un duplicado."
+          }
+        }
+      }
+    },
+    "The shared shop change is not confirmed. Keep the pending action and retry it unchanged.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The shared shop change is not confirmed. Keep the pending action and retry it unchanged."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El cambio de compra compartida no está confirmado. Conserva la acción pendiente y reinténtala sin cambios."
+          }
+        }
+      }
+    },
+    "The shared shop change was confirmed. Local retry cleanup needs another attempt.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The shared shop change was confirmed. Local retry cleanup needs another attempt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El cambio de compra compartida se confirmó. Debes volver a intentar borrar el reintento local."
+          }
+        }
+      }
+    },
+    "The shared shop change was confirmed. Refresh the household to see the latest state.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The shared shop change was confirmed. Refresh the household to see the latest state."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El cambio de compra compartida se confirmó. Actualiza el hogar para ver el estado más reciente."
+          }
+        }
+      }
+    },
+    "The shared shop could not be opened for editing. Refresh before trying again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The shared shop could not be opened for editing. Refresh before trying again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo abrir la compra compartida para editarla. Actualiza antes de volver a intentarlo."
+          }
+        }
+      }
+    },
+    "The shop or shopper authority changed. Refresh the current shop and review again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The shop or shopper authority changed. Refresh the current shop and review again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La compra o la autorización del comprador cambió. Actualiza la compra actual y vuelve a revisarla."
           }
         }
       }
@@ -4257,6 +5495,23 @@
         }
       }
     },
+    "This includes all remaining items for the stated quote scope": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This includes all remaining items for the stated quote scope"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esto incluye todos los artículos restantes del alcance indicado de la cotización"
+          }
+        }
+      }
+    },
     "This invitation or record is unavailable, expired, or outside your access.": {
       "localizations": {
         "en": {
@@ -4269,6 +5524,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esta invitación o registro no está disponible, venció o queda fuera de tu acceso."
+          }
+        }
+      }
+    },
+    "This is the household service's shared shop. Private lists, meals and records on this phone are not uploaded.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is the household service's shared shop. Private lists, meals and records on this phone are not uploaded."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta es la compra compartida del servicio del hogar. Las listas, comidas y registros privados de este teléfono no se suben."
           }
         }
       }

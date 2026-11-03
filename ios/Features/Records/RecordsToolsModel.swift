@@ -12,6 +12,7 @@ import RecordArchive
 
     @Published private(set) var currentRecords: [ArchiveRecord] = []
     @Published private(set) var recoveredRecords: [RecoveredRecord] = []
+    @Published private(set) var unavailableRecords: [RecordsUnavailableRecord] = []
     @Published private(set) var review: RecoveryReview?
     @Published private(set) var recipeReport: RecipeImportReport?
     @Published private(set) var busy = false
@@ -26,6 +27,7 @@ import RecordArchive
     @Published private(set) var deleteUndo: RecoveryUndoToken?
     let registry: RecoveryRegistry
     private let snapshot: Snapshot
+    private let unavailableSnapshot: () -> [RecordsUnavailableRecord]
     private let validate: Validate
     private let open: Open
     private let deleteSource: Delete?
@@ -43,13 +45,19 @@ import RecordArchive
     static func selectionID(_ record: ArchiveRecord) -> String { record.origin + "/" + record.id + "/" + record.revision }
 
     init(registry: RecoveryRegistry, snapshot: @escaping Snapshot, validateNativePayload: @escaping Validate,
-         openRecovered: @escaping Open, deleteSource: Delete? = nil, undoSourceDeletion: (() async throws -> Void)? = nil, canDeleteSource: @escaping (ArchiveRecord) -> Bool = { _ in true }, cleanupRecoveredWorkspaces: (() async throws -> Void)? = nil, reviewWholeLedgerDeletion: (() async throws -> Void)? = nil) {
+         openRecovered: @escaping Open, deleteSource: Delete? = nil, undoSourceDeletion: (() async throws -> Void)? = nil, canDeleteSource: @escaping (ArchiveRecord) -> Bool = { _ in true }, cleanupRecoveredWorkspaces: (() async throws -> Void)? = nil, reviewWholeLedgerDeletion: (() async throws -> Void)? = nil, unavailableRecords: @escaping () -> [RecordsUnavailableRecord] = { [] }) {
         self.registry = registry; self.snapshot = snapshot; self.validate = validateNativePayload
         self.open = openRecovered; self.deleteSource = deleteSource; self.sourceUndo = undoSourceDeletion; self.deletable = canDeleteSource; self.cleanupRecovered = cleanupRecoveredWorkspaces; self.wholeLedgerDeletionAction = reviewWholeLedgerDeletion
+        self.unavailableSnapshot = unavailableRecords
+    }
+    private func readSnapshot() async throws -> [ArchiveRecord] {
+        let records = try await snapshot()
+        unavailableRecords = unavailableSnapshot()
+        return records
     }
     func refresh() async {
         do {
-            currentRecords = try await snapshot()
+            currentRecords = try await readSnapshot()
             recoveredRecords = try await registry.refreshList()
             selectedIDs.formIntersection(Set(currentRecords.map(Self.selectionID)))
         } catch { fail(error) }
@@ -62,7 +70,7 @@ import RecordArchive
         busy = true; error = nil; preparedDocument = nil
         defer { busy = false }
         do {
-            currentRecords = try await snapshot()
+            currentRecords = try await readSnapshot()
             let records = selectedSnapshot
             guard !records.isEmpty else { throw ArchiveError.unavailable }
             if choice == .helperJSON || choice == .helperText { guard records.count == 1 else { throw ArchiveError.unsupportedProjection } }
@@ -150,14 +158,14 @@ import RecordArchive
             let result = try await registry.apply(review)
             lastImportIDs = result.insertedCopyIDs
             self.review = nil; recipeReport = nil
-            currentRecords = try await snapshot()
+            currentRecords = try await readSnapshot()
             recoveredRecords = try await registry.refreshList()
             status = result.insertedCount == 0 ? recordsText("Opened the existing recovered copies. Nothing was duplicated.") : recordsText("Saved separate recovered copies. Your current work is unchanged.")
         } catch { fail(error) }
     }
     func undoImport() async {
         guard !lastImportIDs.isEmpty else { return }
-        do { try await registry.undoImport(insertedCopyIDs: lastImportIDs); lastImportIDs = []; try await cleanupRecovered?(); currentRecords = try await snapshot(); recoveredRecords = try await registry.refreshList(); status = recordsText("The imported batch was undone.") }
+        do { try await registry.undoImport(insertedCopyIDs: lastImportIDs); lastImportIDs = []; try await cleanupRecovered?(); currentRecords = try await readSnapshot(); recoveredRecords = try await registry.refreshList(); status = recordsText("The imported batch was undone.") }
         catch { fail(error) }
     }
     func openRecovered(_ record: RecoveredRecord) async {
@@ -175,7 +183,7 @@ import RecordArchive
                 deleteUndo = token
                 status = recordsText("Deleted from this iPhone. Undo is available until you leave the app.")
             }
-            currentRecords = try await snapshot()
+            currentRecords = try await readSnapshot()
             recoveredRecords = try await registry.refreshList()
         }
         catch { fail(error) }
@@ -206,7 +214,7 @@ import RecordArchive
     func invalidateForSourceErasure() {
         preparedDocument = nil; recoveryKey = ""; selectedIDs = []
         review = nil; recipeReport = nil; lastImportIDs = []; deleteUndo = nil
-        currentRecords = []; recoveredRecords = []; status = nil; error = nil
+        currentRecords = []; recoveredRecords = []; unavailableRecords = []; status = nil; error = nil
     }
     func dismissPreparedFile() { preparedDocument = nil }
     func reportFileError(_ error: Error) { fail(error) }

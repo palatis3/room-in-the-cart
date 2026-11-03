@@ -4,7 +4,7 @@ Native iPhone implementation of Foundation 2.1, with an account-free offline com
 
 Open [ios/RoomInTheCart.xcodeproj](ios/RoomInTheCart.xcodeproj), choose **RoomInTheCart**, and run on an iPhone simulator. Deployment target: **iOS 17.0**. No signing team is needed for simulator builds. Device distribution requires real bundle identifiers and signing configuration.
 
-The app has Shop, Dinners and Records tab roots. Shop includes staged list import, distinct manual/meal/protected contributions, exact comparison, checkout review and pickup reconciliation. Meals retain stable identities and dates; advanced dinner scenarios and optional capture are being added separately. Records supports comparison reopen and scoped encrypted export/recovery into isolated workspaces. Household and StoreKit membership adapters are integrated in source, with role-aware routing and a local device-owner gate after shared use. This is not a claim that every launch requirement or live provider flow has passed acceptance.
+The app has Shop, Dinners and Records tab roots. Shop includes staged list import, distinct manual/meal/protected contributions, exact comparison, checkout review and pickup reconciliation. Meals retain stable identities and dates; reviewed dinner planning and optional on-device capture are integrated in source, with additional acceptance work underway. Records supports comparison reopen and scoped encrypted export/recovery into isolated workspaces. Household and StoreKit membership adapters are integrated in source, with role-aware routing and a local device-owner gate after shared use. This is not a claim that every launch requirement or live provider flow has passed acceptance.
 
 ## First task
 
@@ -37,22 +37,25 @@ Tests use a separate DEBUG-only workspace and typed input, never the user's norm
 
 ## Structure
 
-- `ios/Packages/CoreDomain`: exact rational quantities, checked USD cents, ledger contributions, checkout and pickup policy; dinner planning is in active development.
-- `ios/Packages/LocalStore`: versioned SQLite comparison and ledger databases, serialized writes, immutable revisions and scoped comparison tombstones. Whole-ledger retirement is under development.
+- `ios/Packages/CoreDomain`: exact rational quantities, checked USD cents, ledger contributions, checkout, pickup policy, reviewed dinner planning and pack-selection evidence.
+- `ios/Packages/LocalStore`: versioned SQLite comparison and ledger databases, serialized writes, immutable revisions and scoped comparison tombstones. Whole-ledger retirement uses durable deletion intent and replay-safe cleanup.
 - `ios/Packages/HouseholdClient`, `ios/Packages/RecordArchive`: scoped network contracts/retry handling and encrypted recovery validation.
+- `ios/Packages/DeviceSurfaces`, `ios/Extensions`: isolated selected-text inbox, generic widget routes and local reminder primitives. App composition is undergoing integrated testing.
 - `ios/App`, `ios/Features`: native composition and comparison, ledger, pickup, records, household and membership views/models.
 - `shared/contracts`: fictional pack vectors and accepted Foundation semantic color tokens.
-- `service`: PostgreSQL/RLS-backed household and billing service, verified provider sessions, narrow projections and a reusable runtime/HTTP adapter. New lifecycle endpoints remain under regression testing.
-- `web`: invite, own-request and narrow helper clients with reviewed requests and identity-bound retries; initial managed-login/BFF and deployed end-to-end acceptance remain open.
+- `service`: PostgreSQL/RLS-backed household and billing service, verified provider sessions, narrow projections and a reusable runtime/HTTP adapter. Browser authentication is implemented but provider enablement is deliberately off; new privacy/maintenance migrations require separate deployment review.
+- `web`: invite, own-request and narrow helper clients with reviewed requests and identity-bound retries; the deployed client correctly reports unavailable email sign-in until provider configuration is enabled.
 - `.github/workflows/ci.yml`: package tests, localization/token/project checks, native build/UI test artifacts and unsigned device compilation. Workflow execution on a remote host is not yet verified.
 
 ## Current verification and staging
 
-Native integration compiles with ledger, pickup, records, household and membership composition. Focused native AppModel (14), LedgerAdapter (7), Pickup (15) and Records adapter (6) tests have passed. The membership coordinator's timing-sensitive test was made deterministic; its 36 isolated tests pass, with the main native rerun pending at this snapshot. Full UI/accessibility regressions remain active; these counts are not a complete launch acceptance claim.
+Checkpoint `967df15` passed **140 native model tests with zero skips and unchanged source hashes**, CoreDomain 115 tests, LocalStore 73 tests, and unsigned Release/compiled-metadata checks. The parent also tested that checkpoint plus the new large-list fixture on an iPhone SE (2nd generation) simulator running iOS 17.0: 141 model tests passed. Five minimum-iOS functional/viewport scenarios passed across two runs; the unfiltered accessibility audit still fails. The large-list Debug fixture found slow behavior under test; it is not a physical-device Release latency measurement.
 
-The web source passes TypeScript, a Vite production build and 41 tests. The service live-session slice passes 28 local PostgreSQL test entries with zero skips, including revocation, subject matching and expiry. [Supabase staging smoke evidence](docs/evidence/staging-service-smoke.json) records verified TLS and denial checks against the staging runtime. Migrations 001–005 are applied to staging with checksums preserved; 005 is immutable. The reported staging security advisor has no warnings or errors; its admin-only migration registry intentionally has RLS without a user policy. Migration 006 remains separate until its tests pass. These checks do not establish production deployment or real purchase/consent flows.
+The subsequent integration batch adds typed capture, whole-pack ledger evidence, shared-shop entry, surface composition and recovery cleanup. Its current actual CoreDomain suite passes 142 tests. These later files are **not covered by the checkpoint's native pass counts** until a new integrated run completes. [Native checkpoint evidence](docs/evidence/native/recovery-cook-models-summary.json) and the [requirement tracker](docs/IMPLEMENTATION.md) distinguish tested snapshots from work in progress. Local StoreKit's second run passed 26 of 28 executions; Ask to Buy decline diagnostics remain open. Real purchases and TestFlight are deferred by the owner.
 
-Vercel team/deployment setup and Apple signing are being handled by the project owner. No credentials belong in the repository. Child consent remains unavailable until an actual reviewed provider integration is configured.
+Staging is deployed at [room-in-the-cart-staging.vercel.app](https://room-in-the-cart-staging.vercel.app). [Public smoke evidence](docs/evidence/staging-public-smoke.json) records six checks, and real browser verification confirms fresh English/Spanish loads without a false save-error banner. Supabase migrations 001–008 are applied with preserved checksums; staging advisor checks reported no warnings or errors. New 009/010 privacy and maintenance work requires separate review/application before deploying code that depends on it. No live email, consent, account-deletion-provider or real StoreKit entitlement flow is claimed by these checks.
+
+The owner has deferred email-provider configuration and Apple membership/signing. Email sign-in remains explicitly unavailable, and child consent remains disabled pending its own actual provider configuration. No credentials belong in the repository.
 
 Debug/Staging/Release have separate provisional bundle IDs, the same product display name, and no embedded credentials. Logs accept enumerated structural failure events only. All food and financial data stay out of logs.
 

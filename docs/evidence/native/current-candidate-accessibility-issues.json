@@ -1,0 +1,122 @@
+[
+  {
+    "file": "F9BB7412-88C5-4B8C-AA99-F35EF85B48DA.txt",
+    "details": "Text of this element may be clipped at larger Dynamic Type sizes.\nNo element supplied"
+  },
+  {
+    "file": "363A211F-AEB8-476C-BBD2-EDF1CDE3D656.txt",
+    "details": "Text of this element may be clipped at larger Dynamic Type sizes.\nNo element supplied"
+  },
+  {
+    "file": "2456CD45-D2E2-40E7-BBB0-6DEB0CD20CAA.txt",
+    "details": "Contrast failed for element\nNo element supplied"
+  },
+  {
+    "file": "BB0BD459-72DC-4143-9F98-96EC67631042.txt",
+    "details": "Contrast failed for element\nAttributes: StaticText, 0x114e49b00, {{16.0, 275.5}, {343.0, 64.5}}, label: 'Maximum per pack for this item limit: $15.00'\nElement subtree:\n \u2192StaticText, 0x114e49b00, {{16.0, 275.5}, {343.0, 64.5}}, label: 'Maximum per pack for this item limit: $15.00'\nPath to element:\n \u2192Application, 0x114e3fc00, pid: 48952, label: 'Room in the Cart'\n  \u21b3Window (Main), 0x114e3cdd0, {{0.0, 0.0}, {375.0, 667.0}}\n   \u21b3Other, 0x114e3d5f0, {{0.0, 0.0}, {375.0, 667.0}}\n    \u21b3Other, 0x114e3c130, {{0.0, 0.0}, {375.0, 667.0}}\n     \u21b3Other, 0x114e45d00, {{0.0, 0.0}, {375.0, 667.0}}\n      \u21b3Other, 0x114e3b8d0, {{0.0, 0.0}, {375.0, 667.0}}\n       \u21b3Other, 0x114e37000, {{0.0, 0.0}, {375.0, 667.0}}\n        \u21b3Other, 0x114e45ac0, {{0.0, 0.0}, {375.0, 667.0}}\n         \u21b3Other, 0x114e45be0, {{0.0, 0.0}, {375.0, 667.0}}\n          \u21b3Other, 0x114e45e20, {{0.0, 0.0}, {375.0, 667.0}}\n           \u21b3Other, 0x114e45f40, {{0.0, 0.0}, {375.0, 667.0}}\n            \u21b3Other, 0x114e46080, {{0.0, 0.0}, {375.0, 667.0}}\n             \u21b3Other, 0x114e461a0, {{0.0, 0.0}, {375.0, 667.0}}\n              \u21b3Other, 0x114e46980, {{0.0, 0.0}, {375.0, 667.0}}\n               \u21b3Other, 0x114e46aa0, {{0.0, 0.0}, {375.0, 667.0}}\n                \u21b3Other, 0x114e46bc0, {{0.0, 0.0}, {375.0, 667.0}}\n                 \u21b3Other, 0x114e46ce0, {{0.0, 0.0}, {375.0, 667.0}}\n                  \u21b3CollectionView, 0x114e46e00, {{0.0, 0.0}, {375.0, 610.0}}\n                   \u21b3Cell, 0x114e49440, {{16.0, 275.5}, {343.0, 64.5}}\n                    \u21b3Other, 0x114e497a0, {{16.0, 275.5}, {343.0, 64.5}}\n                     \u21b3Other, 0x114e498c0, {{16.0, 275.5}, {343.0, 64.5}}\n                      \u21b3Other, 0x114e499e0, {{16.0, 275.5}, {343.0, 64.5}}\n                       \u21b3StaticText, 0x114e49b00, {{16.0, 275.5}, {343.0, 64.5}}, label: 'Maximum per pack for this item limit: $15.00'\nQuery chain:\n \u2192Find: Target Application 'dev.roominthecart.app.debug'\n  Output: {\n    Application, 0x10294f900, pid: 48952, label: 'Room in the Cart'\n  }\n  \u21aa\ufe0eFind: Descendant with identity binding to AX element pid: 48952, elementOrHash.elementID: 105553169992672.570\n    Output: {\n      StaticText, 0x114e60340, {{16.0, 275.5}, {343.0, 64.5}}, label: 'Maximum per pack for this item limit: $15.00'\n    }\n"
+  },
+  {
+    "file": "883F7CB5-2C9B-4C1E-B3D5-1573694CA282.txt",
+    "details": "Contrast failed for element\nAttributes: StaticText, 0x102950720, {{16.0, 187.5}, {343.0, 44.0}}, label: 'Left after the total need: 0 items'\nElement subtree:\n \u2192StaticText, 0x102950720, {{16.0, 187.5}, {343.0, 44.0}}, label: 'Left after the total need: 0 items'\nPath to element:\n \u2192Application, 0x102f399d0, pid: 48952, label: 'Room in the Cart'\n  \u21b3Window (Main), 0x102948e70, {{0.0, 0.0}, {375.0, 667.0}}\n   \u21b3Other, 0x102948b10, {{0.0, 0.0}, {375.0, 667.0}}\n    \u21b3Other, 0x102938e70, {{0.0, 0.0}, {375.0, 667.0}}\n     \u21b3Other, 0x102939560, {{0.0, 0.0}, {375.0, 667.0}}\n      \u21b3Other, 0x1029383a0, {{0.0, 0.0}, {375.0, 667.0}}\n       \u21b3Other, 0x1029391f0, {{0.0, 0.0}, {375.0, 667.0}}\n        \u21b3Other, 0x1029445e0, {{0.0, 0.0}, {375.0, 667.0}}\n         \u21b3Other, 0x102938040, {{0.0, 0.0}, {375.0, 667.0}}\n          \u21b3Other, 0x102943bd0, {{0.0, 0.0}, {375.0, 667.0}}\n           \u21b3Other, 0x102944270, {{0.0, 0.0}, {375.0, 667.0}}\n            \u21b3Other, 0x102944cc0, {{0.0, 0.0}, {375.0, 667.0}}\n             \u21b3Other, 0x1029468c0, {{0.0, 0.0}, {375.0, 667.0}}\n              \u21b3Other, 0x10293add0, {{0.0, 0.0}, {375.0, 667.0}}\n               \u21b3Other, 0x10293c290, {{0.0, 0.0}, {375.0, 667.0}}\n                \u21b3Other, 0x10293bf30, {{0.0, 0.0}, {375.0, 667.0}}\n                 \u21b3Other, 0x10293b830, {{0.0, 0.0}, {375.0, 667.0}}\n                  \u21b3CollectionView, 0x10293bbd0, {{0.0, 0.0}, {375.0, 610.0}}\n                   \u21b3Cell, 0x10294f230, {{16.0, 187.5}, {343.0, 44.0}}\n                    \u21b3Other, 0x10294fc90, {{16.0, 187.5}, {343.0, 44.0}}\n                     \u21b3Other, 0x102950030, {{16.0, 187.5}, {343.0, 44.0}}\n                      \u21b3Other, 0x102950390, {{16.0, 187.5}, {343.0, 44.0}}\n                       \u21b3StaticText, 0x102950720, {{16.0, 187.5}, {343.0, 44.0}}, label: 'Left after the total need: 0 items'\nQuery chain:\n \u2192Find: Target Application 'dev.roominthecart.app.debug'\n  Output: {\n    Application, 0x113751920, pid: 48952, label: 'Room in the Cart'\n  }\n  \u21aa\ufe0eFind: Descendant with identity binding to AX element pid: 48952, elementOrHash.elementID: 105553169958944.568\n    Output: {\n      StaticText, 0x102afa8a0, {{16.0, 187.5}, {343.0, 44.0}}, label: 'Left after the total need: 0 items'\n    }\n"
+  },
+  {
+    "file": "7BB8027F-2401-4EAF-9150-456BE660AFBB.txt",
+    "details": "Contrast failed for element\nAttributes: StaticText, 0x102bac070, {{16.0, -7.5}, {343.0, 63.0}}, identifier: 'bTotal', label: 'Item cost to buy enough: $4.00'\nElement subtree:\n \u2192StaticText, 0x102bac070, {{16.0, -7.5}, {343.0, 63.0}}, identifier: 'bTotal', label: 'Item cost to buy enough: $4.00'\nPath to element:\n \u2192Application, 0x100aef5a0, pid: 48952, label: 'Room in the Cart'\n  \u21b3Window (Main), 0x103045620, {{0.0, 0.0}, {375.0, 667.0}}\n   \u21b3Other, 0x1030459e0, {{0.0, 0.0}, {375.0, 667.0}}\n    \u21b3Other, 0x103045b00, {{0.0, 0.0}, {375.0, 667.0}}\n     \u21b3Other, 0x103045e60, {{0.0, 0.0}, {375.0, 667.0}}\n      \u21b3Other, 0x103045740, {{0.0, 0.0}, {375.0, 667.0}}\n       \u21b3Other, 0x103045860, {{0.0, 0.0}, {375.0, 667.0}}\n        \u21b3Other, 0x102bd3320, {{0.0, 0.0}, {375.0, 667.0}}\n         \u21b3Other, 0x102bcdeb0, {{0.0, 0.0}, {375.0, 667.0}}\n          \u21b3Other, 0x102bd04d0, {{0.0, 0.0}, {375.0, 667.0}}\n           \u21b3Other, 0x102bcb5a0, {{0.0, 0.0}, {375.0, 667.0}}\n            \u21b3Other, 0x102bbf750, {{0.0, 0.0}, {375.0, 667.0}}\n             \u21b3Other, 0x102ba2570, {{0.0, 0.0}, {375.0, 667.0}}\n              \u21b3Other, 0x102bab2f0, {{0.0, 0.0}, {375.0, 667.0}}\n               \u21b3Other, 0x102bab410, {{0.0, 0.0}, {375.0, 667.0}}\n                \u21b3Other, 0x102bab530, {{0.0, 0.0}, {375.0, 667.0}}\n                 \u21b3Other, 0x102bab650, {{0.0, 0.0}, {375.0, 667.0}}\n                  \u21b3CollectionView, 0x102bab770, {{0.0, 0.0}, {375.0, 610.0}}\n                   \u21b3Cell, 0x102bab9b0, {{16.0, -7.5}, {343.0, 63.0}}\n                    \u21b3Other, 0x102babd10, {{16.0, -7.5}, {343.0, 63.0}}\n                     \u21b3Other, 0x102babe30, {{16.0, -7.5}, {343.0, 63.0}}\n                      \u21b3Other, 0x102babf50, {{16.0, -7.5}, {343.0, 63.0}}\n                       \u21b3StaticText, 0x102bac070, {{16.0, -7.5}, {343.0, 63.0}}, identifier: 'bTotal', label: 'Item cost to buy enough: $4.00'\nQuery chain:\n \u2192Find: Target Application 'dev.roominthecart.app.debug'\n  Output: {\n    Application, 0x103a72390, pid: 48952, label: 'Room in the Cart'\n  }\n  \u21aa\ufe0eFind: Descendant with identity binding to AX element pid: 48952, elementOrHash.elementID: 105553169960704.575\n    Output: {\n      StaticText, 0x114e17cc0, {{16.0, -7.5}, {343.0, 63.0}}, identifier: 'bTotal', label: 'Item cost to buy enough: $4.00'\n    }\n"
+  },
+  {
+    "file": "B7184C0E-A431-4678-88A8-0C226E37DB0E.txt",
+    "details": "Text of this element may be clipped at larger Dynamic Type sizes.\nNo element supplied"
+  },
+  {
+    "file": "0C77D1BB-E690-4E8F-8DF4-977B775A1BF4.txt",
+    "details": "Text of this element may be clipped at larger Dynamic Type sizes.\nNo element supplied"
+  },
+  {
+    "file": "B0B839C7-222C-4E53-8783-C546FB267DF1.txt",
+    "details": "Text of this element may be clipped at larger Dynamic Type sizes.\nNo element supplied"
+  },
+  {
+    "file": "611872F2-E98D-4178-A389-A18F198E0398.txt",
+    "details": "Text of this element may be clipped at larger Dynamic Type sizes.\nNo element supplied"
+  },
+  {
+    "file": "465E2A7F-3D08-4480-A6F7-0855454D0356.txt",
+    "details": "Text of this element may be clipped at larger Dynamic Type sizes.\nNo element supplied"
+  },
+  {
+    "file": "3E516EB7-C2D9-4596-9A9D-F61174A57E6A.txt",
+    "details": "Text of this element may be clipped at larger Dynamic Type sizes.\nNo element supplied"
+  },
+  {
+    "file": "C79F23C0-EB4D-4A8B-8D52-A9F26F57C634.txt",
+    "details": "Text of this element may be clipped at larger Dynamic Type sizes.\nNo element supplied"
+  },
+  {
+    "file": "A7417BB5-A90C-4B44-92C1-64D7748E8FCD.txt",
+    "details": "Text of this element may be clipped at larger Dynamic Type sizes.\nNo element supplied"
+  },
+  {
+    "file": "E054DD96-24B0-4538-9EB6-B5F5F5C2E634.txt",
+    "details": "Contrast failed for element\nAttributes: Button, 0x102b22c40, {{40.0, 649.5}, {161.5, 20.5}}, label: 'Something is missing'\nElement subtree:\n \u2192Button, 0x102b22c40, {{40.0, 649.5}, {161.5, 20.5}}, label: 'Something is missing'\nPath to element:\n \u2192Application, 0x102b259b0, pid: 48952, label: 'Room in the Cart'\n  \u21b3Window (Main), 0x102b20d00, {{0.0, 0.0}, {375.0, 667.0}}\n   \u21b3Other, 0x102b1ab70, {{0.0, 0.0}, {375.0, 667.0}}\n    \u21b3Other, 0x102b1a0a0, {{0.0, 0.0}, {375.0, 667.0}}\n     \u21b3Other, 0x102b23ca0, {{0.0, 0.0}, {375.0, 667.0}}\n      \u21b3Other, 0x102b0eba0, {{0.0, 0.0}, {375.0, 667.0}}\n       \u21b3Other, 0x102b1f800, {{0.0, 0.0}, {375.0, 667.0}}\n        \u21b3Other, 0x102b19d20, {{0.0, 0.0}, {375.0, 667.0}}\n         \u21b3Other, 0x102b199a0, {{0.0, 0.0}, {375.0, 667.0}}\n          \u21b3Other, 0x102b18a10, {{0.0, 0.0}, {375.0, 667.0}}\n           \u21b3Other, 0x102b16b10, {{0.0, 0.0}, {375.0, 667.0}}\n            \u21b3Other, 0x102b117a0, {{0.0, 0.0}, {375.0, 667.0}}\n             \u21b3Other, 0x102b1cc60, {{0.0, 0.0}, {375.0, 667.0}}\n              \u21b3Other, 0x102b252b0, {{0.0, 0.0}, {375.0, 667.0}}\n               \u21b3Other, 0x102b25630, {{0.0, 0.0}, {375.0, 667.0}}\n                \u21b3Other, 0x102b26ea0, {{0.0, 0.0}, {375.0, 667.0}}\n                 \u21b3Other, 0x102b27220, {{0.0, 0.0}, {375.0, 667.0}}\n                  \u21b3ScrollView, 0x102b11b20, {{0.0, 0.0}, {375.0, 667.0}}\n                   \u21b3Other, 0x102b129d0, {{0.0, 116.0}, {375.0, 673.5}}\n                    \u21b3Button, 0x102b22c40, {{40.0, 649.5}, {161.5, 20.5}}, label: 'Something is missing'\nQuery chain:\n \u2192Find: Target Application 'dev.roominthecart.app.debug'\n  Output: {\n    Application, 0x102b414b0, pid: 48952, label: 'Room in the Cart'\n  }\n  \u21aa\ufe0eFind: Descendant with identity binding to AX element pid: 48952, elementOrHash.elementID: 105553169924096.38\n    Output: {\n      Button, 0x10292f210, {{40.0, 649.5}, {161.5, 20.5}}, label: 'Something is missing'\n    }\n"
+  },
+  {
+    "file": "9A052D8A-EBEC-4E8B-80E6-AAEC115BC4F6.txt",
+    "details": "Contrast failed for element"
+  },
+  {
+    "file": "20D2A10E-6510-469C-8645-DC6486B4147F.txt",
+    "details": "Text of this element may be clipped at larger Dynamic Type sizes."
+  },
+  {
+    "file": "BAB0F34A-DBAD-4F3F-869F-3752A7B9BCC2.txt",
+    "details": "Text of this element may be clipped at larger Dynamic Type sizes."
+  },
+  {
+    "file": "6835B8C2-4621-4E01-A275-87BB82EB8AA9.txt",
+    "details": "Text of this element may be clipped at larger Dynamic Type sizes."
+  },
+  {
+    "file": "0F2D19BB-26A3-4467-B5A0-4A9C814D7150.txt",
+    "details": "Text of this element may be clipped at larger Dynamic Type sizes."
+  },
+  {
+    "file": "75221A8C-8767-4B0D-8256-394C21CF530E.txt",
+    "details": "Text of this element may be clipped at larger Dynamic Type sizes."
+  },
+  {
+    "file": "86431DDC-A722-4385-836A-92F7AC133199.txt",
+    "details": "Text of this element may be clipped at larger Dynamic Type sizes."
+  },
+  {
+    "file": "FF98ABD9-9DCF-420C-97A7-815456712E1A.txt",
+    "details": "Text of this element may be clipped at larger Dynamic Type sizes."
+  },
+  {
+    "file": "3A5A0DC4-E69B-44E6-97CF-60FA1B7A910A.txt",
+    "details": "Text of this element may be clipped at larger Dynamic Type sizes."
+  },
+  {
+    "file": "0839C900-A339-44CE-8942-270733139846.txt",
+    "details": "Contrast failed for element"
+  },
+  {
+    "file": "9379B5A2-3B5F-4407-8292-881E50245B5C.txt",
+    "details": "Contrast failed for element"
+  },
+  {
+    "file": "EB388F71-D1C0-409A-B40F-F4D5DA50F89C.txt",
+    "details": "Contrast failed for element"
+  },
+  {
+    "file": "5DE05634-98FE-4ED0-B8C3-594DA7B8CC18.txt",
+    "details": "Contrast failed for element"
+  },
+  {
+    "file": "8D642218-B070-4E63-A8A1-5642382039EB.txt",
+    "details": "Text of this element may be clipped at larger Dynamic Type sizes."
+  },
+  {
+    "file": "612CAC1A-44AD-48F7-8AB2-C744C8F2DCA4.txt",
+    "details": "Text of this element may be clipped at larger Dynamic Type sizes."
+  }
+]

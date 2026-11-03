@@ -108,6 +108,10 @@ import CoreDomain
     @discardableResult func accept(_ template: MealTemplate, id: UUID, fallback: Bool) async -> Bool {
         guard let shop else { return false }
         return await mutate(key: "dinner-accept-\(id)", shopID: shop.id) { workspace, _, access, now in
+            if let existing = workspace.dinnerPlanning.acceptedDinners.first(where: { $0.id == id }) {
+                guard existing.template == template, existing.acceptedFallback == fallback else { throw DinnerPlanningError.operationConflict }
+                return
+            }
             try workspace.dinnerPlanning.accept(AcceptedDinner(id: id, template: template, acceptedAt: now, acceptedFallback: fallback), access: access, at: now)
         }
     }
@@ -154,6 +158,21 @@ import CoreDomain
             preview = try DinnerPlanningEngine.previewGuests(occurrenceID: occurrenceID, servingsByGroup: servings,
                 ledger: shop, state: state, access: access(for: shop.id), phase: phaseProvider(shop.id), at: clock(), isolated: isolated)
             error = nil; return true
+        } catch { preview = nil; fail(error); return false }
+    }
+    /// A structured voice review supplies a total for one explicitly selected group.
+    /// Capturing speech does not change this model's persisted workspace.
+    @discardableResult func previewGuestTotal(occurrenceID: UUID, groupID: UUID, total: Rational,
+                                              reviewedRevision: UUID) -> Bool {
+        guard editable, let shop else { return false }
+        do {
+            guard shop.revisionID == reviewedRevision else { throw DinnerPlanningError.stalePreview }
+            guard let meal = shop.mealOccurrences.first(where: { $0.id == occurrenceID && $0.removedAt == nil }),
+                  let group = meal.servingGroups.first(where: { $0.id == groupID }) else { throw DinnerPlanningError.notFound(groupID) }
+            guard !group.isProtected, total > .zero else { throw DinnerPlanningError.reviewRequired("guestGroup") }
+            var totals = Dictionary(uniqueKeysWithValues: meal.servingGroups.map { ($0.id, $0.servings) })
+            totals[groupID] = total
+            return previewGuests(occurrenceID: occurrenceID, servings: totals, isolated: !paid)
         } catch { preview = nil; fail(error); return false }
     }
     func newIdea(seed: UInt64, exclusions: [String], manual: MealTemplate? = nil) throws -> DinnerIdeaDraft {

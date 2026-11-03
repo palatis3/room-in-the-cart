@@ -42,6 +42,7 @@ struct HouseholdSettingsView: View {
                         Text(projection.household.label)
                         Text(ht("Access is checked by the household service."))
                         Button(ht("Refresh household")) { Task { await model.refresh() } }
+                        if model.sharedShop != nil { NavigationLink(ht("Open shared household shop")) { HouseholdShopView(model: model) } }
                         if model.canReviewHouseholdRequests {
                             NavigationLink(ht("Review family requests")) { HouseholdInboxView(model: model) }
                         }

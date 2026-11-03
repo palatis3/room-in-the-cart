@@ -94,8 +94,9 @@ public struct ReminderEditorContext {
         Task {
             defer { busy = false }
             do {
+                guard currentAuthorization() == generation else { clearReview(); return }
                 let saved = try await coordinator.save(value, expectedVersion: version, requestPermission: true)
-                guard currentAuthorization() == generation else { try? await coordinator.cancel(value.id); clearReview(); return }
+                guard currentAuthorization() == generation else { try? await coordinator.erase(value.id); clearReview(); return }
                 version = saved.version; reviewed = nil
                 switch saved.status {
                 case .scheduled: message = SurfaceCopy.text("Reminder scheduled.")

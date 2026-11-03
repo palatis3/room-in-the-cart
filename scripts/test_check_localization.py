@@ -50,4 +50,23 @@ Text("\(food.originalText)")''')
             self.assertEqual(len(dynamic),1)
             self.assertEqual(runtime,2)
 
+    def test_qualified_surface_helper_in_extension(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder); (root/'ios/Extensions/Widget').mkdir(parents=True)
+            (root/'ios/Extensions/Widget/View.swift').write_text('Text(SurfaceCopy.text("Open app"))\nSurfaceCopyXtext("Not a helper")')
+            keys,dynamic,runtime=c.source_keys(root)
+            self.assertEqual(keys['DeviceSurfaces'],{'Open app'})
+            self.assertEqual(keys['Localizable'],set())
+            self.assertEqual(dynamic,set())
+    def test_shortcut_variable_translation_must_preserve_name(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path=Path(folder)/'AppShortcuts.xcstrings'
+            def catalog(spanish):
+                return {'sourceLanguage':'en','strings':{'Open shortcut':{'localizations':{lang:{'stringUnit':{'state':'translated','value':value}} for lang,value in [('en','Open ${applicationName}'),('es',spanish)]}}}}
+            path.write_text(json.dumps(catalog('Abrir ${applicationName}')))
+            self.assertIn('Open shortcut',c.check_catalog(path))
+            path.write_text(json.dumps(catalog('Abrir ${appName}')))
+            with self.assertRaisesRegex(AssertionError,'template variable mismatch'):
+                c.check_catalog(path)
+
 if __name__=='__main__':unittest.main()

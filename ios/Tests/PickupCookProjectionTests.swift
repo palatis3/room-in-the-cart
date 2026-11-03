@@ -87,6 +87,22 @@ final class PickupCookProjectionTests: XCTestCase {
         XCTAssertNil(PickupCookReadbackBinding(journey: journey, allocation: allocation, result: money, language: "en-US", includeBudget: false,
             text: privateCopy, context: context(), at: now, timeZone: utc))
     }
+    func testUnresolvedPrivateBudgetUsesRecipientLanguage() throws {
+        let (journey, allocation) = try fixture()
+        let scope = CheckoutContext(storeID: "Private store", branchID: "Main", mode: .pickup,
+            slot: "Evening", commitmentsID: journey.id, observedAt: now, source: "Reviewed")
+        let unresolved = try CheckoutEngine.evaluate(CheckoutQuote(scope: .wholeCheckout,
+            context: scope, pricing: .inclusiveTotal(.unknown(reason: "Unreviewed amount"))), cap: nil)
+        let spanish = text(journey, allocation, language: "es-US", result: unresolved, budget: true)
+        XCTAssertTrue(spanish.contains("Como mínimo"), spanish)
+        XCTAssertTrue(spanish.contains("total sin resolver"), spanish)
+        XCTAssertFalse(spanish.contains("At least"), spanish)
+        let english = text(journey, allocation, language: "en-US", result: unresolved, budget: true)
+        XCTAssertTrue(english.contains("At least"), english)
+        XCTAssertTrue(english.contains("total unresolved"), english)
+        XCTAssertFalse(english.contains("Como mínimo"), english)
+        XCTAssertFalse(text(journey, allocation, language: "es-US", result: unresolved).contains("total sin resolver"))
+    }
     func testCarriedStockRemainsUnconfirmedAndSavedNotesDoNotSupplyInstruction() throws {
         var journey = PickupJourney(id: UUID(), savedAt: now)
         journey.urgent = [.init(id: UUID(), food: "Wraps", meal: "Tacos", required: quantity(6), available: quantity(99), due: nil,

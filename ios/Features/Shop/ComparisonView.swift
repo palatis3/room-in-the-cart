@@ -3,6 +3,7 @@ import CoreDomain
 
 struct ComparisonView: View {
     @EnvironmentObject private var app: AppModel
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @StateObject private var model: ComparisonModel
     @State private var reviewing: Bool
     private enum ResultFocus: Hashable { case summary, saved, error }
@@ -30,7 +31,7 @@ struct ComparisonView: View {
         .toolbarBackground(Theme.canvas, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbar {
-            if reviewing {
+            if reviewing && !dynamicTypeSize.isAccessibilitySize {
                 if #available(iOS 26.0, *) {
                     editToolbar.sharedBackgroundVisibility(.hidden)
                 } else {
@@ -47,7 +48,7 @@ struct ComparisonView: View {
 
     private var editToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
-            Button { reviewing = false; model.savedAt = nil } label: {
+            Button(action: editComparison) {
                 Text(tr("Edit")).font(.body.weight(.semibold))
                     .fixedSize(horizontal: true, vertical: false)
                     .foregroundStyle(Theme.ink).padding(.horizontal, 16)
@@ -56,6 +57,19 @@ struct ComparisonView: View {
             }.buttonStyle(.plain).accessibilityIdentifier("editComparison")
                 .disabled(model.saving).tint(Theme.ink)
         }
+    }
+
+    private func editComparison() { reviewing = false; model.savedAt = nil }
+
+    /// Accessibility text sizes need a content row whose height can grow with the label.
+    /// The navigation bar's compact toolbar host is retained only for standard text sizes.
+    private var accessibleEditRow: some View {
+        Button(action: editComparison) {
+            Text(tr("Edit")).font(.headline)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+        }.buttonStyle(.plain).foregroundStyle(Theme.ink)
+            .accessibilityIdentifier("editComparison").disabled(model.saving)
     }
 
     private var editor: some View {
@@ -143,6 +157,7 @@ struct ComparisonView: View {
 
     private func resultList(_ result: CoreDomain.ComparisonResult) -> some View {
         List {
+            if dynamicTypeSize.isAccessibilitySize { Section { accessibleEditRow } }
             Section {
                 VStack(alignment: .leading, spacing: 12) {
                     Text(model.draft.item.isEmpty ? tr("One item") : model.draft.item).font(.title.bold())
@@ -165,13 +180,15 @@ struct ComparisonView: View {
             Section {
                 Text(tr("Source: prices and usable amounts you entered. Estimates for this item only."))
                     .font(.body).fixedSize(horizontal: false, vertical: true).foregroundStyle(Theme.secondary)
+                    .accessibilityIdentifier("comparisonSourceNote")
                 if let date = model.savedAt {
                     VStack(alignment: .leading, spacing: 8) {
                         Label(tr("Saved on this iPhone"), systemImage: "checkmark.circle")
                             .font(.headline).accessibilityIdentifier("savedStatus")
                         Text(date.formatted(date: .complete, time: .shortened))
                             .font(.footnote)
-                    }.accessibilityElement(children: .combine).accessibilityFocused($resultFocused, equals: .saved)
+                    }.accessibilityElement(children: .combine).accessibilityIdentifier("comparisonSavedDetails")
+                        .accessibilityFocused($resultFocused, equals: .saved)
                 } else {
                     Button {
                         Task {
@@ -223,7 +240,7 @@ struct ComparisonView: View {
                     .foregroundStyle(Theme.warning)
                     .accessibilityIdentifier(result.offerID + "Issue_" + issue.rawValue)
             }
-        } header: { Text(name) }
+        } header: { Text(name).accessibilityIdentifier(result.offerID + "Header") }
     }
 
     private func errorRow(_ text: String) -> some View {

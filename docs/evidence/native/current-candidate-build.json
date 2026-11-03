@@ -1,0 +1,14 @@
+{
+  "recordedAt": "2026-11-03T07:44:44.054574+00:00",
+  "source": "Isolated216-file integration snapshot plus ComparisonView and UI accessibility candidate",
+  "sourceHashesFile": ".build/AccessibilityCandidateSnapshot/candidate-hashes.json",
+  "configuration": "Debug",
+  "buildLog": ".build/accessibility-candidate-build.log",
+  "buildResult": "TEST BUILD SUCCEEDED",
+  "metadataCommand": "python3 scripts/check_built_app.py .build/AccessibilityCandidateDerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app --configuration Debug",
+  "metadataResult": "pass",
+  "limits": [
+    "Compilation and bundle metadata only; runtime acceptance not yet recorded.",
+    "Email sign-in remains disabled by configuration; Apple membership deferred."
+  ]
+}

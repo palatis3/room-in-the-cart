@@ -1,4 +1,5 @@
 import XCTest
+import Combine
 import CoreDomain
 @testable import RoomInTheCart
 
@@ -228,6 +229,179 @@ import CoreDomain
         XCTAssertEqual(model.shop?.contributions, shop.contributions)
         XCTAssertEqual(store.workspace.dinnerPlanning.quotePairs, [pair])
         XCTAssertFalse(model.previewAdoption(pair, option: pair.first)); XCTAssertNil(model.preview)
+    }
+
+    func testRetryAcceptedDinnerPreservesOriginalTimestampAndOneCommit() async throws {
+        let (store, original) = fixture(); var clock = now
+        let model = DinnerFeatureModel(store: store, access: original.accessProvider, phase: { _ in .draft }, clock: { clock })
+        let id = UUID(); let template = try recipe()
+        let first = await model.accept(template, id: id, fallback: false); XCTAssertTrue(first)
+        clock = now.addingTimeInterval(60)
+        let retry = await model.accept(template, id: id, fallback: false); XCTAssertTrue(retry)
+        XCTAssertEqual(store.commits, 1); XCTAssertEqual(model.state.acceptedDinners.first?.acceptedAt, now)
+    }
+
+    func testLegacyTemplatesAndChosenOccurrencesRemainReadableWithoutAdoption() async throws {
+        let (store, model) = fixture(); var template = try recipe(); template.revision = 3
+        store.workspace.mealTemplates = [template]
+        _ = try store.workspace.shops[0].chooseMeal(template)
+        let savedShop = store.workspace.shops[0]
+        XCTAssertTrue(model.state.acceptedDinners.isEmpty)
+        let start = try MealDay(date: now, timeZoneIdentifier: savedShop.basis.timeZoneIdentifier)
+        XCTAssertEqual(try model.week(start: start).unscheduled.map(\.id), savedShop.mealOccurrences.map(\.id))
+        let accepted = await model.accept(template, id: UUID(), fallback: false); XCTAssertTrue(accepted)
+        XCTAssertEqual(model.state.acceptedDinners.first?.template, template)
+        XCTAssertEqual(model.workspace.mealTemplates, [template]); XCTAssertEqual(model.shop, savedShop)
+    }
+    func testRuntimePublisherRefreshesVisibleFeatureState() async {
+        let (_, model) = fixture(); let changes = PassthroughSubject<Void, Never>()
+        model.observeRuntime(changes.eraseToAnyPublisher())
+        let expectation = expectation(description: "Runtime change forwarded")
+        let subscription = model.objectWillChange.sink { expectation.fulfill() }
+        changes.send(())
+        await fulfillment(of: [expectation], timeout: 2)
+        withExtendedLifetime(subscription) {}
+    }
+
+    func testReviewedGuestTotalChangesOnlySelectedUnprotectedGroup() async throws {
+        let (_, model) = fixture(paid: true)
+        let dinner = ServingGroup(name: "Dinner", servings: try Rational(2))
+        let lunch = ServingGroup(name: "Lunch", servings: .one, isProtected: true)
+        var template = try recipe(); template.servings = try Rational(3); template.servingGroups = [dinner, lunch]
+        template.ingredients[0].quantity = Quantity(amount: try Rational(9), unit: .count, originalLiteral: "9")
+        XCTAssertTrue(model.prepare([.choose(PlannedDinner(template: template))])); _ = await model.applyPreview()
+        let meal = model.shop!.mealOccurrences[0]; let source = model.shop!.contributions[0]
+        let bindings = [DinnerPortionBinding(occurrenceID: meal.id, contributionID: source.id, groupID: dinner.id,
+            quantity: Quantity(amount: try Rational(6), unit: .count, originalLiteral: "6"), servings: dinner.servings),
+            DinnerPortionBinding(occurrenceID: meal.id, contributionID: source.id, groupID: lunch.id,
+                quantity: Quantity(amount: try Rational(3), unit: .count, originalLiteral: "3"), servings: lunch.servings)]
+        _ = await model.saveBindings(bindings, occurrenceID: meal.id)
+        let original = model.shop!; let revision = original.revisionID
+        XCTAssertTrue(model.previewGuestTotal(occurrenceID: meal.id, groupID: dinner.id, total: try Rational(4), reviewedRevision: revision))
+        XCTAssertEqual(model.shop, original)
+        XCTAssertEqual(model.preview?.projectedMeals[0].servingGroups.first { $0.id == lunch.id }?.servings, .one)
+        XCTAssertEqual(model.preview?.projectedContributions[0].quantity?.amount, try Rational(15))
+        XCTAssertFalse(model.previewGuestTotal(occurrenceID: meal.id, groupID: lunch.id, total: try Rational(2), reviewedRevision: revision))
+        XCTAssertNil(model.preview)
+        XCTAssertFalse(model.previewGuestTotal(occurrenceID: meal.id, groupID: dinner.id, total: try Rational(4), reviewedRevision: UUID()))
+        XCTAssertEqual(model.shop, original)
+    }
+
+}
+
+
+@MainActor final class DinnerScenarioDraftTests: XCTestCase {
+    private func fixture(exclusions: [String] = []) throws -> (ShoppingLedger, DinnerPlanningState, DinnerScenarioDraft) {
+        let shop = ShoppingLedger(title: "Actual shop", basis: ShopBasis(branch: "Branch", timeZoneIdentifier: "America/Los_Angeles"))
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        let access = DinnerAccessContext(scope: .local(workspaceID: UUID()), actorID: "a", shopID: shop.id, assignedShopperID: "a",
+            canPlan: true, canReadBudget: true, hasPaidTools: true, roleRevision: 0, verifiedAt: now, validUntil: now.addingTimeInterval(3600))
+        let wraps = MealIngredient(name: "Wraps", quantity: Quantity(amount: try Rational(6), unit: .count, originalLiteral: "6"))
+        let beans = MealIngredient(name: "Beans", quantity: Quantity(amount: try Rational(2), unit: .count, originalLiteral: "2"))
+        let first = AcceptedDinner(id: UUID(), template: MealTemplate(title: "Wrap dinner", servings: try Rational(2), ingredients: [wraps, beans], exclusions: exclusions), acceptedAt: now)
+        let second = AcceptedDinner(id: UUID(), template: MealTemplate(title: "Alternative", servings: try Rational(2), ingredients: [wraps, beans], exclusions: exclusions), acceptedAt: now, acceptedFallback: true)
+        var state = DinnerPlanningState(); try state.accept(first, access: access, at: now); try state.accept(second, access: access, at: now)
+        var draft = DinnerScenarioDraft(shop: shop, state: state)
+        draft.meals[0].name = "Dinner"; draft.meals[0].portions = "2"; draft.meals[0].currentDinnerID = first.id; draft.meals[0].candidateDinnerID = second.id
+        try draft.prepareMatches(accepted: state.acceptedDinners)
+        var wrapFood = DinnerFoodEvidenceDraft(); wrapFood.name = "Wraps"; wrapFood.packLabel = "Wrap pack"; wrapFood.packAmount = "10"; wrapFood.packPrice = "3"; wrapFood.yieldReviewed = true; wrapFood.availability = 1
+        var beanFood = DinnerFoodEvidenceDraft(); beanFood.name = "Beans"; beanFood.packLabel = "Bean pack"; beanFood.packAmount = "4"; beanFood.packPrice = "2"; beanFood.yieldReviewed = true; beanFood.availability = 1
+        draft.foods = [wrapFood, beanFood]
+        for index in draft.matches.indices {
+            // These assignments stand in for explicit picker choices, never a production name matcher.
+            draft.matches[index].foodID = draft.matches[index].ingredientID == wraps.id ? wrapFood.id : beanFood.id
+        }
+        draft.store = "Retailer"; draft.source = "Reviewed shelf observation"; draft.recipeYieldsReviewed = true
+        draft.baselineComplete = true; draft.baselineExcludesComparedRecipes = true
+        draft.fee = "0"; draft.tax = "0"; draft.deposits = "0"
+        draft.currentHands = "15"; draft.currentLead = "20"; draft.candidateHands = "15"; draft.candidateLead = "20"; draft.availableMinutes = "60"
+        return (shop, state, draft)
+    }
+    func testEveryDemandRetainsExplicitRecipeIngredientIdentity() throws {
+        let (shop, state, draft) = try fixture()
+        let review = try draft.build(shop: shop, state: state)
+        XCTAssertEqual(Set(review.current.demands.compactMap(\.ingredientID)), Set(state.acceptedDinners[0].template.ingredients.map(\.id)))
+        XCTAssertEqual(review.current.commitments, review.candidate.commitments)
+        XCTAssertEqual(review.current.baselineLines, review.candidate.baselineLines)
+        let result = try DinnerScenarioEngine.evaluate(review.candidate, acceptedDinners: state.acceptedDinners)
+        XCTAssertTrue(result.foodCoverageComplete); XCTAssertEqual(result.checkout.total.exact, Money(minorUnits: 500))
+    }
+    func testBlankFoodChoiceDoesNotGuessFromEqualNames() throws {
+        let (shop, state, original) = try fixture(); var draft = original; draft.matches[0].foodID = nil
+        XCTAssertThrowsError(try draft.build(shop: shop, state: state))
+    }
+    func testPortionChangeRequiresNewReviewAndScalesExactRecipeQuantities() throws {
+        let (shop, state, original) = try fixture(); var draft = original; draft.meals[0].portions = "3"
+        XCTAssertThrowsError(try draft.build(shop: shop, state: state))
+        try draft.prepareMatches(accepted: state.acceptedDinners)
+        XCTAssertTrue(draft.matches.allSatisfy { $0.foodID == nil })
+        let quantities = draft.matches.compactMap { $0.quantity?.amount }
+        XCTAssertTrue(quantities.contains(try Rational(9))); XCTAssertTrue(quantities.contains(try Rational(3)))
+    }
+    func testConfirmedStockCannotIgnoreUnreviewedOutsideReservations() throws {
+        let (shop, state, original) = try fixture(); var draft = original
+        draft.foods[0].stockAmount = "2"; draft.foods[0].stockConfirmed = true
+        XCTAssertThrowsError(try draft.build(shop: shop, state: state))
+        draft.foods[0].outsideReservationsReviewed = true; draft.foods[0].outsideAmount = "1"
+        let review = try draft.build(shop: shop, state: state)
+        let result = try DinnerScenarioEngine.evaluate(review.current, acceptedDinners: state.acceptedDinners)
+        XCTAssertEqual(review.current.stock.count, 1); XCTAssertEqual(review.current.otherReservations.count, 1)
+        let wrapNeed = review.current.demands.first { $0.foodID == draft.foods[0].id }!
+        XCTAssertEqual(result.stockAllocation.demands.first { $0.id == wrapNeed.id }?.allocated, .one)
+    }
+    func testUnknownPackYieldAndPriceNeverBecomeZeroOrCoverage() throws {
+        let (shop, state, original) = try fixture(); var draft = original
+        draft.foods[0].yieldReviewed = false; draft.foods[0].packPrice = ""
+        let review = try draft.build(shop: shop, state: state)
+        let result = try DinnerScenarioEngine.evaluate(review.candidate, acceptedDinners: state.acceptedDinners)
+        XCTAssertFalse(result.foodCoverageComplete); XCTAssertNil(result.checkout.total.exact)
+    }
+    func testIncompleteUnchangedBasketPreventsExactCheckout() throws {
+        let (shop, state, original) = try fixture(); var draft = original
+        draft.baselineExcludesComparedRecipes = false
+        let review = try draft.build(shop: shop, state: state)
+        XCTAssertNil(try DinnerScenarioEngine.evaluate(review.candidate, acceptedDinners: state.acceptedDinners).checkout.total.exact)
+    }
+    func testStaleLedgerBlocksEvidenceBuiltBeforeEdit() throws {
+        var (shop, state, draft) = try fixture()
+        _ = try shop.addManualLine(name: "New staple", quantity: nil)
+        XCTAssertThrowsError(try draft.build(shop: shop, state: state))
+    }
+    func testProtectedRecipeDoesNotAutomaticallyScaleAllGroups() throws {
+        var (shop, state, draft) = try fixture()
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        let access = DinnerAccessContext(scope: .local(workspaceID: UUID()), actorID: "a", shopID: shop.id, assignedShopperID: "a",
+            canPlan: true, canReadBudget: true, hasPaidTools: true, roleRevision: 0, verifiedAt: now, validUntil: now.addingTimeInterval(100))
+        var recipe = state.acceptedDinners[0].template; recipe.revision += 1; recipe.servingGroups = [ServingGroup(name: "Lunch", servings: .one, isProtected: true)]
+        let protected = AcceptedDinner(id: UUID(), template: recipe, acceptedAt: now)
+        try state.accept(protected, access: access, at: now)
+        draft = DinnerScenarioDraft(shop: shop, state: state); draft.meals[0].name = "Dinner"; draft.meals[0].portions = "3"; draft.meals[0].candidateDinnerID = protected.id
+        XCTAssertThrowsError(try draft.prepareMatches(accepted: state.acceptedDinners))
+    }
+    func testExcludedFoodAndPackLabelsCannotPassAnExplicitMatch() throws {
+        let (shop, state, original) = try fixture(exclusions: ["peanut"])
+        var draft = original; draft.foods[0].name = "Peanut wraps"
+        XCTAssertThrowsError(try draft.build(shop: shop, state: state)) { error in
+            guard case LedgerError.excludedIngredient = error else { return XCTFail("Expected exclusion rejection") }
+        }
+        draft = original; draft.foods[0].packLabel = "Peanut wrap pack"
+        XCTAssertThrowsError(try draft.build(shop: shop, state: state)) { error in
+            guard case LedgerError.excludedIngredient = error else { return XCTFail("Expected exclusion rejection") }
+        }
+    }
+    func testTwoDinnerDemandsUseOneConfirmedStockLotOnlyOnce() throws {
+        let (shop, state, original) = try fixture(); var draft = original
+        var next = DinnerScenarioMealDraft(); next.name = "Second dinner"; next.portions = "2"
+        next.currentDinnerID = draft.meals[0].currentDinnerID; next.candidateDinnerID = draft.meals[0].candidateDinnerID
+        draft.meals.append(next); try draft.prepareMatches(accepted: state.acceptedDinners); draft.recipeYieldsReviewed = true
+        let wrapIngredientID = state.acceptedDinners[0].template.ingredients[0].id
+        for index in draft.matches.indices { draft.matches[index].foodID = draft.matches[index].ingredientID == wrapIngredientID ? draft.foods[0].id : draft.foods[1].id }
+        draft.foods[0].stockAmount = "6"; draft.foods[0].stockConfirmed = true; draft.foods[0].outsideReservationsReviewed = true
+        let review = try draft.build(shop: shop, state: state)
+        let result = try DinnerScenarioEngine.evaluate(review.candidate, acceptedDinners: state.acceptedDinners)
+        let allocated = try result.stockAllocation.demands.filter { $0.foodID == draft.foods[0].id }.reduce(Rational.zero) { try $0.adding($1.allocated ?? .zero) }
+        XCTAssertEqual(allocated, try Rational(6))
+        XCTAssertEqual(result.packs.first { $0.foodID == draft.foods[0].id }?.result?.packsToBuy, 1)
     }
 
 }

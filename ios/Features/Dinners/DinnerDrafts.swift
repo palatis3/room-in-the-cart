@@ -71,7 +71,7 @@ struct DinnerTemplateDraft {
     func template(validate: Bool = true) throws -> MealTemplate {
         var value = MealTemplate(id: id, title: title, servings: try DinnerEntry.positive(servings), ingredients: try ingredients.map { try $0.ingredient() },
             notes: notes, sourceURL: source.isEmpty ? nil : source, exclusions: DinnerEntry.list(exclusions),
-            revision: original?.revision ?? 0, servingGroups: try groups.map { try $0.group() }, leadTimeMinutes: try DinnerEntry.minutes(lead), completedSteps: DinnerEntry.list(completed))
+            revision: original?.revision ?? 0, servingGroups: try groups.map { try $0.group() }, leadTimeMinutes: try DinnerEntry.minutes(lead), completedSteps: DinnerEntry.list(completed), sourceEvidence: original?.sourceEvidence)
         if let original, original != value {
             let (revision, overflow) = original.revision.addingReportingOverflow(1)
             guard !overflow else { throw DomainError.overflow }; value.revision = revision

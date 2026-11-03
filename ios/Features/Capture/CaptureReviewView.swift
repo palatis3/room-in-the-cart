@@ -1,11 +1,20 @@
 import SwiftUI
 import PhotosUI
+import CoreDomain
 
 func captureText(_ key: String) -> String { String(localized: String.LocalizationValue(key), table: "Capture") }
 
-/// Returns a reviewed draft to the existing staged ledger import. It has no ledger/store/network dependency.
+/// Returns a reviewed draft to the staged ledger import; never commits a list or sends its content to a service.
 @MainActor struct CaptureReviewView: View {
     @StateObject private var model: CaptureModel
+    @StateObject private var corrections = CaptureCorrectionsModel()
+    @State private var structuredLines: [CaptureLineDraft] = []
+    @State private var reviewingFields = false
+    @State private var guestDetected = false
+    @State private var structuredFailure = false
+    let destination: String
+    let correctionScope: CaptureCorrectionScope?
+    let authorize: () -> Bool
     let onReviewed: (ReviewedCapture) -> Void
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
@@ -14,19 +23,39 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
     @State private var photoTask: Task<Void, Never>?
     @AccessibilityFocusState private var reviewFocused: Bool
 
-    init(initialText: String = "", localeIdentifier: String = Locale.current.identifier, onReviewed: @escaping (ReviewedCapture) -> Void) {
-        _model = StateObject(wrappedValue: CaptureModel(initialText: initialText, localeIdentifier: localeIdentifier,
-            speech: OnDeviceSpeechCapture(), ocr: OnDeviceTextCapture()))
+    init(initialText: String = "", initialSource: CaptureSource = .typed, localeIdentifier: String = Locale.current.identifier,
+         destination: String = captureText("This pickup"), existingCapture: ReviewedCapture? = nil, correctionScope: CaptureCorrectionScope? = nil,
+         authorize: @escaping () -> Bool, onReviewed: @escaping (ReviewedCapture) -> Void) {
+        let evidence = existingCapture.map { CaptureEvidence(text: $0.originalText, source: $0.source,
+            uncertainLines: [], sourceImageData: $0.sourceImageData, previewImageData: $0.previewImageData) }
+            ?? (initialSource == .paste && !initialText.isEmpty ? CaptureEvidence(text: initialText, source: .paste,
+                uncertainLines: [], sourceImageData: nil, previewImageData: nil) : nil)
+        let model = CaptureModel(initialText: existingCapture?.text ?? initialText, localeIdentifier: localeIdentifier,
+            id: existingCapture?.id ?? UUID(), speech: OnDeviceSpeechCapture(), ocr: OnDeviceTextCapture(), initialEvidence: evidence)
+        if existingCapture != nil { model.confirmed = true }
+        _model = StateObject(wrappedValue: model)
+        _structuredLines = State(initialValue: existingCapture?.fieldDrafts ?? [])
+        _reviewingFields = State(initialValue: existingCapture?.fieldDrafts != nil)
         self.onReviewed = onReviewed
+        self.destination = destination; self.correctionScope = correctionScope; self.authorize = authorize
     }
 
     var body: some View {
         Form {
+            if reviewingFields {
+                StructuredCaptureReviewView(lines: $structuredLines, corrections: corrections, destination: destination,
+                    source: model.acceptedEvidence?.source ?? .typed, originalText: model.acceptedEvidence?.text ?? model.text,
+                    imageData: model.acceptedEvidence?.previewImageData ?? model.acceptedEvidence?.sourceImageData,
+                    authorize: authorize, onBack: { reviewingFields = false }) { lines in
+                        guard authorize(), let capture = model.reviewed(lines: lines, fieldDrafts: structuredLines) else { return }
+                        onReviewed(capture); dismiss()
+                    }
+            } else {
             Section {
                 Text(captureText("Capture is optional. You can always type your list."))
                 Text(captureText("Speech and photo text recognition run on this iPhone. Nothing is added until you review the list."))
                     .font(.footnote).foregroundStyle(.secondary)
-                Text(captureText("Destination: this pickup’s list review"))
+                Text(captureText("Actual destination") + ": " + destination)
             }
             if let candidate = model.candidate {
                 Section(captureText("Captured wording — check before using")) {
@@ -80,13 +109,16 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
             Section {
                 Toggle(captureText("I checked the wording, amounts, units and exclusions."), isOn: $model.confirmed)
                     .disabled(model.busy || loadingPhoto || model.candidate != nil || model.closed)
-                Button(captureText("Continue to list review")) {
-                    guard let capture = model.reviewed() else { return }
-                    onReviewed(capture)
-                    dismiss()
-                }.disabled(!model.canContinue || loadingPhoto).accessibilityIdentifier("capture.continue")
+                Button(captureText("Review captured fields")) { stageFields() }
+                    .disabled(!model.canContinue || loadingPhoto || !authorize()).accessibilityIdentifier("capture.reviewFields")
+                if guestDetected {
+                    Text(captureText("This may be a guest change. Open Guests and protected portions to choose the meal, group and new total before previewing."))
+                    Button(captureText("This is grocery wording — review it as items")) { stageFields(explicitlyTreatAsItems: true) }
+                }
+                if structuredFailure { Text(captureText("The draft could not be parsed. Keep typing or shorten the list, then review again.")) }
                 Text(captureText("The next screen reviews parsed quantities and duplicates. Captured text does not verify a price, a safe ingredient, a paid receipt or what arrived."))
                     .font(.footnote)
+            }
             }
         }
         .navigationTitle(captureText("Capture a list"))
@@ -94,6 +126,15 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
         .toolbar { ToolbarItem(placement: .cancellationAction) {
             Button(captureText("Cancel")) { close(); dismiss() }
         } }
+        .task(id: correctionScope) { await corrections.bind(correctionScope) }
+        .onChange(of: correctionScope) { _, _ in corrections.invalidate() }
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(250))
+                guard !Task.isCancelled else { return }
+                if !authorize() { close(); dismiss(); return }
+            }
+        }
         .onChange(of: photo) { _, item in load(item) }
         .onChange(of: scenePhase) { _, phase in if phase == .background { close(); dismiss() } }
         .onDisappear { close() }
@@ -125,7 +166,15 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
             }
         }
     }
-    private func close() { photoTask?.cancel(); photoTask = nil; model.close() }
+    private func stageFields(explicitlyTreatAsItems: Bool = false) {
+        guard model.canContinue, authorize() else { return }
+        do {
+            structuredLines = try StructuredCaptureParser.lines(model.text, destination: destination, explicitlyTreatAsItems: explicitlyTreatAsItems)
+            reviewingFields = true; guestDetected = false; structuredFailure = false
+        } catch StructuredCaptureFailure.guestReviewRequired { guestDetected = true }
+        catch { structuredFailure = true }
+    }
+    private func close() { photoTask?.cancel(); photoTask = nil; model.close(); corrections.invalidate(); structuredLines = [] }
     private func failureText(_ failure: CaptureFailure) -> String {
         switch failure {
         case .notConfigured: return captureText("Speech is not available in this build. Type or paste your list instead.")

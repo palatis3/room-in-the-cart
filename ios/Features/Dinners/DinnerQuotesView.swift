@@ -11,6 +11,13 @@ struct DinnerQuotesView: View {
     @State private var showPreview = false
     var body: some View {
         Form {
+            if model.budgetVisible, let basis = model.shop?.basis {
+                Section(dinnerText("Available budget")) {
+                    Text(dinnerFormat("Amount available for %@: %@", dinnerBudgetScope(basis.capScope), dinnerMoney(basis.cap)))
+                    if let reserve = basis.fixedReserve { Text(dinnerFormat("Reserve recorded separately: %@", dinnerMoney(reserve))) }
+                    Text(dinnerText("The entered cap is already the amount available for its scope. A recorded reserve is not subtracted again."))
+                }
+            }
             if let pair, let result, model.budgetVisible {
                 Section(dinnerText("Reviewed trip comparison")) {
                     Text(dinnerText("These are entered observations, not live prices or stock."))
@@ -83,6 +90,7 @@ struct DinnerQuotesView: View {
             Text(option.quote.context.source)
             Text(option.quote.context.observedAt.formatted(date: .abbreviated, time: .shortened))
             Text(dinnerFormat("Checkout: %@", dinnerMoney(value.checkout.total.exact)))
+            Text(dinnerCap(value.checkout.cap))
             Text(dinnerFormat("Checkout plus incremental trip cash: %@", dinnerMoney(value.tripInclusive.total.exact)))
             Text(value.coverageConfirmed ? dinnerText("Required availability reviewed") : dinnerText("Required availability unresolved"))
             if let minutes = value.extraMinutes { Text(dinnerFormat("Extra minutes: %d", minutes)) }

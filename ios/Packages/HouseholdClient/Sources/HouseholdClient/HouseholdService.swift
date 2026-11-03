@@ -94,6 +94,29 @@ public actor HouseholdService {
         guard start == generation else { throw ClientError.cancelled }
         return try await perform("shops/\(shopID)", method: "GET")
     }
+    public func shopperFinancialEvidence(shopID: String) async throws -> [ShopperFinancialEntry] {
+        let start = generation
+        try await authorizeShopper(shopID: shopID)
+        var entries: [ShopperFinancialEntry] = []
+        var seen = Set<UUID>()
+        var version: ShopperFinancialPage.Version?
+        var cursor: UUID?
+        repeat {
+            guard start == generation else { throw ClientError.cancelled }
+            let page: ShopperFinancialPage = try await perform("shops/\(shopID)/financial-evidence", method: "GET",
+                query: cursor.map { [.init(name: "cursor", value: $0.uuidString)] } ?? [])
+            guard page.shopId == UUID(uuidString: shopID), page.evidenceSource == "shopper_reported",
+                  page.entries.count <= 50, entries.count + page.entries.count <= 2000,
+                  page.entries.allSatisfy({ $0.currency == "USD" && $0.amountMinor >= 0 && seen.insert($0.id).inserted }),
+                  page.nextCursor == nil || (page.entries.count == 50 && page.nextCursor == page.entries.last?.id)
+            else { throw ClientError.invalidResponse }
+            if let version, version != page.sourceVersion { throw ClientError.service(status: 409, code: "source_changed", correlationID: nil, retryAfter: nil) }
+            version = page.sourceVersion
+            entries += page.entries
+            cursor = page.nextCursor
+        } while cursor != nil
+        return entries
+    }
     public func shopperInbox(shopID: String, cursor: String? = nil) async throws -> OwnRequestsPage {
         if let cursor, UUID(uuidString: cursor) == nil { throw ClientError.configuration }
         let start = generation
@@ -116,6 +139,23 @@ public actor HouseholdService {
         let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes)
         guard envelope.clientKey == operation.clientKey, ["request.apply", "request.clarify"].contains(envelope.kind) else { throw ClientError.configuration }
         try await authorizeShopper(shopID: envelope.shopId)
+        guard start == generation else { throw ClientError.cancelled }
+        guard operation.memberID == memberID else { throw ClientError.accessEnded }
+        return try await perform("commands", method: "POST", body: operation.bytes)
+    }
+    /// Shop creation is organizer-only; updates remain restricted to the currently assigned shopper.
+    /// A retry retains its original shop ID, replay window, base and exact command bytes.
+    public func executeSharedShop(_ operation: PendingOperation) async throws -> ShopperReceipt {
+        let start = generation
+        guard selectedGrantID == nil, let enrollment, operation.householdID == householdID,
+              operation.deviceID == enrollment.deviceId else { throw ClientError.accessEnded }
+        let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes)
+        guard envelope.clientKey == operation.clientKey, UUID(uuidString: envelope.shopId) != nil,
+              ["shop.create", "shop.patch", "shop.freeze", "shop.reopen"].contains(envelope.kind) else { throw ClientError.configuration }
+        if envelope.kind == "shop.create" {
+            guard envelope.base.shopRevision == 0, envelope.base.authorityEpoch == 0 else { throw ClientError.configuration }
+            try await authorizeAdmin()
+        } else { try await authorizeShopper(shopID: envelope.shopId) }
         guard start == generation else { throw ClientError.cancelled }
         guard operation.memberID == memberID else { throw ClientError.accessEnded }
         return try await perform("commands", method: "POST", body: operation.bytes)
@@ -162,7 +202,7 @@ public actor HouseholdService {
     }
     private func authorizeAdmin() async throws {
         let value = try await bootstrap()
-        guard value.capabilities.contains("household_admin"), selectedGrantID == nil else { throw ClientError.accessEnded }
+        guard ["organizer", "shopper"].contains(value.role), value.capabilities.contains("household_admin"), selectedGrantID == nil else { throw ClientError.accessEnded }
     }
     public func members() async throws -> HouseholdMembers {
         let start = generation; try await authorizeAdmin(); guard start == generation else { throw ClientError.cancelled }

@@ -1,4 +1,5 @@
 import Foundation
+import CoreDomain
 
 enum CaptureSource: String, Sendable { case typed, paste, speech, photoOCR }
 enum CaptureFailure: Error, Equatable { case notConfigured, permissionDenied, onDeviceUnavailable, audioUnavailable, recognitionFailed, imageUnavailable, inputTooLarge, noText }
@@ -19,6 +20,9 @@ struct ReviewedCapture: Equatable, Identifiable, Sendable {
     let source: CaptureSource
     let localeIdentifier: String
     let sourceImageData: Data?
+    var previewImageData: Data? = nil
+    var lines: [CaptureImportLine]? = nil
+    var fieldDrafts: [CaptureLineDraft]? = nil
 }
 
 struct SpeechCaptureUpdate: Sendable {

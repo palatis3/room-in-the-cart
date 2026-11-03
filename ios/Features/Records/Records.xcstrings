@@ -2346,6 +2346,150 @@
           }
         }
       }
+    },
+    "Unavailable records · excluded from export": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unavailable records · excluded from export"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registros no disponibles · excluidos de la exportación"
+          }
+        }
+      }
+    },
+    "These records remain saved on this iPhone, but this app could not read them. Only readable selected records are included in an export.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These records remain saved on this iPhone, but this app could not read them. Only readable selected records are included in an export."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estos registros siguen guardados en este iPhone, pero la app no pudo leerlos. La exportación solo incluye los registros seleccionados que se pueden leer."
+          }
+        }
+      }
+    },
+    "No readable source records are available for export.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No readable source records are available for export."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay registros de origen legibles disponibles para exportar."
+          }
+        }
+      }
+    },
+    "Select all readable records": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select all readable records"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seleccionar todos los registros legibles"
+          }
+        }
+      }
+    },
+    "Saved record could not be read. Its bytes were not replaced.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved record could not be read. Its bytes were not replaced."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo leer el registro guardado. Sus datos no se han reemplazado."
+          }
+        }
+      }
+    },
+    "This saved format needs a compatible app version.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This saved format needs a compatible app version."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este formato guardado necesita una versión compatible de la app."
+          }
+        }
+      }
+    },
+    "This record's content could not be validated. Other readable records are still available.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This record's content could not be validated. Other readable records are still available."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo validar el contenido de este registro. Los demás registros legibles siguen disponibles."
+          }
+        }
+      }
+    },
+    "Recovered copy": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recovered copy"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copia recuperada"
+          }
+        }
+      }
+    },
+    "Start a shopping list in this separate recovered workspace to review and choose from its dinner library.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start a shopping list in this separate recovered workspace to review and choose from its dinner library."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crea una lista de compras en este espacio recuperado separado para revisar y elegir cenas de su biblioteca."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

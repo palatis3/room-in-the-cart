@@ -40,13 +40,19 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                 Section { Text(dinnerText("Planning access changed or expired. Reconnect and review again.")) }
             } else {
                 Section(dinnerText("Plan")) {
+                    NavigationLink(dinnerText("All chosen dinners, including earlier dates")) { DinnerAllMealsView(model: model) }
                     NavigationLink(dinnerText("Add a manual dinner")) { DinnerTemplateEditor(model: model, purpose: .manual) }
                         .accessibilityIdentifier("dinnerManual")
-                    NavigationLink(dinnerText("Accepted dinners and Free reusable dinner")) { DinnerLibraryView(model: model) }
+                    NavigationLink(captureText("Review a recipe from text or photo")) { RecipeCaptureEntry(model: model) }
+                        .accessibilityIdentifier("dinner.scanRecipe")
+                    NavigationLink(dinnerText("Accepted dinners and Free reusable dinner")) { DinnerLibraryView(model: model) }.accessibilityIdentifier("dinnerLibrary")
                     NavigationLink(dinnerText("Review a dinner idea")) { DinnerIdeasView(model: model) }
                     NavigationLink(dinnerText("Dinner rotations")) { DinnerRotationsView(model: model, weekStart: weekStart) }
                     NavigationLink(dinnerText("Protect a lunch or side")) { DinnerReservationView(model: model) }
                     if model.budgetVisible {
+                        if let shop = model.shop {
+                            NavigationLink(dinnerText("Pairing and fallback evidence")) { DinnerScenarioEditor(model: model, shop: shop) }
+                        }
                         NavigationLink(dinnerText("Compare two store trips")) { DinnerQuotesView(model: model) }
                     }
                 }.disabled(!model.editable)
@@ -164,5 +170,26 @@ func dinnerNoteKind(_ kind: DinnerWeekNote.Kind) -> String {
     case .guests: return dinnerText("Guests")
     case .side: return dinnerText("Side")
     case .carryoverReview: return dinnerText("Carryover to review")
+    }
+}
+
+struct DinnerAllMealsView: View {
+    @ObservedObject var model: DinnerFeatureModel
+    var body: some View {
+        List {
+            Section {
+                Text(dinnerText("Chosen dinners keep their original identities and grocery needs. Earlier reusable templates are available in the dinner library for review."))
+                NavigationLink(dinnerText("Dinner library")) { DinnerLibraryView(model: model) }
+            }
+            ForEach((model.shop?.mealOccurrences ?? []).filter { $0.removedAt == nil }) { meal in
+                NavigationLink { DinnerOccurrenceView(model: model, occurrenceID: meal.id) } label: {
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text(meal.title).font(.headline)
+                        Text(meal.scheduledDay.map(dinnerDay) ?? dinnerText("Unscheduled"))
+                        if meal.isHidden { Text(dinnerText("Hidden dinner")) }
+                    }
+                }.accessibilityIdentifier("dinnerOccurrence-\(meal.id)")
+            }
+        }.navigationTitle(dinnerText("All chosen dinners")).dinnerAccess(model)
     }
 }

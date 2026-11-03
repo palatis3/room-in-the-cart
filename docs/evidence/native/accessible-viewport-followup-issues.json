@@ -1,0 +1,130 @@
+[
+  {
+    "file": "6E7CBCE1-8143-46A2-AEBA-8245D7352655.txt",
+    "details": "Contrast failed for element\nAttributes: StaticText, 0x11dc2a270, {{16.0, -7.5}, {343.0, 63.0}}, identifier: 'bTotal', label: 'Item cost to buy enough: $4.00'\nElement subtree:\n \u2192StaticText, 0x11dc2a270, {{16.0, -7.5}, {343.0, 63.0}}, identifier: 'bTotal', label: 'Item cost to buy enough: $4.00'\nPath to element:\n \u2192Application, 0x104f64810, pid: 52984, label: 'Room in the Cart'\n  \u21b3Window (Main), 0x104f7f5b0, {{0.0, 0.0}, {375.0, 667.0}}\n   \u21b3Other, 0x104f68470, {{0.0, 0.0}, {375.0, 667.0}}\n    \u21b3Other, 0x104f64eb0, {{0.0, 0.0}, {375.0, 667.0}}\n     \u21b3Other, 0x104f65210, {{0.0, 0.0}, {375.0, 667.0}}\n      \u21b3Other, 0x104f7f250, {{0.0, 0.0}, {375.0, 667.0}}\n       \u21b3Other, 0x104f63da0, {{0.0, 0.0}, {375.0, 667.0}}\n        \u21b3Other, 0x104f680f0, {{0.0, 0.0}, {375.0, 667.0}}\n         \u21b3Other, 0x104f66d40, {{0.0, 0.0}, {375.0, 667.0}}\n          \u21b3Other, 0x104f6e3b0, {{0.0, 0.0}, {375.0, 667.0}}\n           \u21b3Other, 0x104f6af60, {{0.0, 0.0}, {375.0, 667.0}}\n            \u21b3Other, 0x104f6b9c0, {{0.0, 0.0}, {375.0, 667.0}}\n             \u21b3Other, 0x104f6cbc0, {{0.0, 0.0}, {375.0, 667.0}}\n              \u21b3Other, 0x11dc294f0, {{0.0, 0.0}, {375.0, 667.0}}\n               \u21b3Other, 0x11dc29610, {{0.0, 0.0}, {375.0, 667.0}}\n                \u21b3Other, 0x11dc29730, {{0.0, 0.0}, {375.0, 667.0}}\n                 \u21b3Other, 0x11dc29850, {{0.0, 0.0}, {375.0, 667.0}}\n                  \u21b3CollectionView, 0x11dc29970, {{0.0, 0.0}, {375.0, 610.0}}\n                   \u21b3Cell, 0x11dc29bb0, {{16.0, -7.5}, {343.0, 63.0}}\n                    \u21b3Other, 0x11dc29f10, {{16.0, -7.5}, {343.0, 63.0}}\n                     \u21b3Other, 0x11dc2a030, {{16.0, -7.5}, {343.0, 63.0}}\n                      \u21b3Other, 0x11dc2a150, {{16.0, -7.5}, {343.0, 63.0}}\n                       \u21b3StaticText, 0x11dc2a270, {{16.0, -7.5}, {343.0, 63.0}}, identifier: 'bTotal', label: 'Item cost to buy enough: $4.00'\nQuery chain:\n \u2192Find: Target Application 'dev.roominthecart.app.debug'\n  Output: {\n    Application, 0x11dc41d70, pid: 52984, label: 'Room in the Cart'\n  }\n  \u21aa\ufe0eFind: Descendant with identity binding to AX element pid: 52984, elementOrHash.elementID: 105553169771616.608\n    Output: {\n      StaticText, 0x104f5c540, {{16.0, -7.5}, {343.0, 63.0}}, identifier: 'bTotal', label: 'Item cost to buy enough: $4.00'\n    }\n"
+  },
+  {
+    "file": "0D46B954-5D3E-47CF-AE92-5D168E2A64B4.txt",
+    "details": "Text of this element may be clipped at larger Dynamic Type sizes.\nNo element supplied"
+  },
+  {
+    "file": "6441A750-8966-4DA2-8292-B7C58E7F946E.txt",
+    "details": "Text of this element may be clipped at larger Dynamic Type sizes.\nNo element supplied"
+  },
+  {
+    "file": "B993AED5-911C-4497-8230-824AA6F68C0F.txt",
+    "details": "User will not be able to change the font size of this element\nNo element supplied"
+  },
+  {
+    "file": "5855142B-B8EF-4AE7-AC70-A02A51D04A2A.txt",
+    "details": "User will not be able to change the font size of this element\nNo element supplied"
+  },
+  {
+    "file": "D907CFC4-E8AB-43A7-9ECB-709E1F83EECE.txt",
+    "details": "User will not be able to change the font size of this element\nAttributes: Button, 0x11dc06b70, {{16.0, 439.5}, {343.0, 74.0}}, identifier: 'saveComparison', label: 'Save comparison'\nElement subtree:\n \u2192Button, 0x11dc06b70, {{16.0, 439.5}, {343.0, 74.0}}, identifier: 'saveComparison', label: 'Save comparison'\nPath to element:\n \u2192Application, 0x10d81db20, pid: 52984, label: 'Room in the Cart'\n  \u21b3Window (Main), 0x10d43d910, {{0.0, 0.0}, {375.0, 667.0}}\n   \u21b3Other, 0x119481000, {{0.0, 0.0}, {375.0, 667.0}}\n    \u21b3Other, 0x119480b50, {{0.0, 0.0}, {375.0, 667.0}}\n     \u21b3Other, 0x119486d30, {{0.0, 0.0}, {375.0, 667.0}}\n      \u21b3Other, 0x119486e50, {{0.0, 0.0}, {375.0, 667.0}}\n       \u21b3Other, 0x1194868b0, {{0.0, 0.0}, {375.0, 667.0}}\n        \u21b3Other, 0x1194869d0, {{0.0, 0.0}, {375.0, 667.0}}\n         \u21b3Other, 0x119486af0, {{0.0, 0.0}, {375.0, 667.0}}\n          \u21b3Other, 0x119486c10, {{0.0, 0.0}, {375.0, 667.0}}\n           \u21b3Other, 0x119486f70, {{0.0, 0.0}, {375.0, 667.0}}\n            \u21b3Other, 0x119487090, {{0.0, 0.0}, {375.0, 667.0}}\n             \u21b3Other, 0x1194871b0, {{0.0, 0.0}, {375.0, 667.0}}\n              \u21b3Other, 0x119489170, {{0.0, 0.0}, {375.0, 667.0}}\n               \u21b3Other, 0x119489290, {{0.0, 0.0}, {375.0, 667.0}}\n                \u21b3Other, 0x1194893b0, {{0.0, 0.0}, {375.0, 667.0}}\n                 \u21b3Other, 0x1194894d0, {{0.0, 0.0}, {375.0, 667.0}}\n                  \u21b3CollectionView, 0x1194895f0, {{0.0, 0.0}, {375.0, 610.0}}\n                   \u21b3Cell, 0x11dc06480, {{16.0, 439.5}, {343.0, 74.0}}\n                    \u21b3Other, 0x11dc06810, {{16.0, 439.5}, {343.0, 74.0}}\n                     \u21b3Other, 0x11dc06930, {{16.0, 439.5}, {343.0, 74.0}}\n                      \u21b3Other, 0x11dc06a50, {{16.0, 439.5}, {343.0, 74.0}}\n                       \u21b3Button, 0x11dc06b70, {{16.0, 439.5}, {343.0, 74.0}}, identifier: 'saveComparison', label: 'Save comparison'\nQuery chain:\n \u2192Find: Target Application 'dev.roominthecart.app.debug'\n  Output: {\n    Application, 0x10d67a420, pid: 52984, label: 'Room in the Cart'\n  }\n  \u21aa\ufe0eFind: Descendant with identity binding to AX element pid: 52984, elementOrHash.elementID: 105553170013856.566\n    Output: {\n      Button, 0x1194940e0, {{16.0, 439.5}, {343.0, 74.0}}, identifier: 'saveComparison', label: 'Save comparison'\n    }\n"
+  },
+  {
+    "file": "4A3C3546-77E1-4911-BAB7-9A6DD23241CB.txt",
+    "details": "User will not be able to change the font size of this element\nAttributes: StaticText, 0x1193b8140, {{16.0, 375.0}, {343.0, 64.5}}, identifier: 'comparisonSourceNote', label: 'Source: prices and usable amounts you entered. Estimates for this item only.'\nElement subtree:\n \u2192StaticText, 0x1193b8140, {{16.0, 375.0}, {343.0, 64.5}}, identifier: 'comparisonSourceNote', label: 'Source: prices and usable amounts you entered. Estimates for this item only.'\nPath to element:\n \u2192Application, 0x1192d9b50, pid: 52984, label: 'Room in the Cart'\n  \u21b3Window (Main), 0x1192d4dd0, {{0.0, 0.0}, {375.0, 667.0}}\n   \u21b3Other, 0x1192d9fe0, {{0.0, 0.0}, {375.0, 667.0}}\n    \u21b3Other, 0x1192da100, {{0.0, 0.0}, {375.0, 667.0}}\n     \u21b3Other, 0x1192d9e90, {{0.0, 0.0}, {375.0, 667.0}}\n      \u21b3Other, 0x1192d4570, {{0.0, 0.0}, {375.0, 667.0}}\n       \u21b3Other, 0x1192da220, {{0.0, 0.0}, {375.0, 667.0}}\n        \u21b3Other, 0x1192da340, {{0.0, 0.0}, {375.0, 667.0}}\n         \u21b3Other, 0x1192da460, {{0.0, 0.0}, {375.0, 667.0}}\n          \u21b3Other, 0x1192da580, {{0.0, 0.0}, {375.0, 667.0}}\n           \u21b3Other, 0x1192da6a0, {{0.0, 0.0}, {375.0, 667.0}}\n            \u21b3Other, 0x1192da7c0, {{0.0, 0.0}, {375.0, 667.0}}\n             \u21b3Other, 0x1192da8e0, {{0.0, 0.0}, {375.0, 667.0}}\n              \u21b3Other, 0x1192db0c0, {{0.0, 0.0}, {375.0, 667.0}}\n               \u21b3Other, 0x1192db1e0, {{0.0, 0.0}, {375.0, 667.0}}\n                \u21b3Other, 0x1192db300, {{0.0, 0.0}, {375.0, 667.0}}\n                 \u21b3Other, 0x1192db420, {{0.0, 0.0}, {375.0, 667.0}}\n                  \u21b3CollectionView, 0x1192db540, {{0.0, 0.0}, {375.0, 610.0}}\n                   \u21b3Cell, 0x1193b7a80, {{16.0, 375.0}, {343.0, 64.5}}\n                    \u21b3Other, 0x1193b7de0, {{16.0, 375.0}, {343.0, 64.5}}\n                     \u21b3Other, 0x1193b7f00, {{16.0, 375.0}, {343.0, 64.5}}\n                      \u21b3Other, 0x1193b8020, {{16.0, 375.0}, {343.0, 64.5}}\n                       \u21b3StaticText, 0x1193b8140, {{16.0, 375.0}, {343.0, 64.5}}, identifier: 'comparisonSourceNote', label: 'Source: prices and usable amounts you entered. Estimates for this item only.'\nQuery chain:\n \u2192Find: Target Application 'dev.roominthecart.app.debug'\n  Output: {\n    Application, 0x10d3399e0, pid: 52984, label: 'Room in the Cart'\n  }\n  \u21aa\ufe0eFind: Descendant with identity binding to AX element pid: 52984, elementOrHash.elementID: 105553169963904.558\n    Output: {\n      StaticText, 0x1194806e0, {{16.0, 375.0}, {343.0, 64.5}}, identifier: 'comparisonSourceNote', label: 'Source: prices and usable amounts you entered. Estimates for this item only.'\n    }\n"
+  },
+  {
+    "file": "6B5CFF4E-28E3-4C83-8784-B98BE2ED1F89.txt",
+    "details": "User will not be able to change the font size of this element\nNo element supplied"
+  },
+  {
+    "file": "224CA78C-4335-4345-82A0-F11078FE19FB.txt",
+    "details": "Text of this element may be clipped at larger Dynamic Type sizes.\nNo element supplied"
+  },
+  {
+    "file": "4FAC724D-E990-425F-A5CF-5AE44525963A.txt",
+    "details": "Text of this element may be clipped at larger Dynamic Type sizes.\nNo element supplied"
+  },
+  {
+    "file": "189DED0D-FFF3-4D27-872D-5C31437A56FB.txt",
+    "details": "Text of this element may be clipped at larger Dynamic Type sizes.\nNo element supplied"
+  },
+  {
+    "file": "C840278A-89ED-465F-A1E2-420553FD427E.txt",
+    "details": "Text of this element may be clipped at larger Dynamic Type sizes.\nNo element supplied"
+  },
+  {
+    "file": "657C3EF2-C210-4CB9-A099-0E7E428D2DEF.txt",
+    "details": "Text of this element may be clipped at larger Dynamic Type sizes.\nNo element supplied"
+  },
+  {
+    "file": "C876BA02-3A5D-4DFC-836A-A16303416863.txt",
+    "details": "Text of this element may be clipped at larger Dynamic Type sizes.\nNo element supplied"
+  },
+  {
+    "file": "B008A9CF-2A15-4B1C-9C80-8D50818C4D0A.txt",
+    "details": "User will not be able to change the font size of this element\nNo element supplied"
+  },
+  {
+    "file": "EB0D86C7-9BDC-43D9-B3F2-3FACB3976366.txt",
+    "details": "User will not be able to change the font size of this element\nNo element supplied"
+  },
+  {
+    "file": "9625B86E-26F6-4DBF-B94D-83A82F27A6A5.txt",
+    "details": "User will not be able to change the font size of this element\nNo element supplied"
+  },
+  {
+    "file": "BE5387E4-575F-4F7B-B7A5-54274A378E58.txt",
+    "details": "User will not be able to change the font size of this element\nAttributes: StaticText, 0x104f66d40, {{16.0, 375.0}, {343.0, 64.5}}, identifier: 'comparisonSourceNote', label: 'Source: prices and usable amounts you entered. Estimates for this item only.'\nElement subtree:\n \u2192StaticText, 0x104f66d40, {{16.0, 375.0}, {343.0, 64.5}}, identifier: 'comparisonSourceNote', label: 'Source: prices and usable amounts you entered. Estimates for this item only.'\nPath to element:\n \u2192Application, 0x10da34460, pid: 52984, label: 'Room in the Cart'\n  \u21b3Window (Main), 0x104ef4cb0, {{0.0, 0.0}, {375.0, 667.0}}\n   \u21b3Other, 0x11942bb90, {{0.0, 0.0}, {375.0, 667.0}}\n    \u21b3Other, 0x11942bcb0, {{0.0, 0.0}, {375.0, 667.0}}\n     \u21b3Other, 0x11942b7e0, {{0.0, 0.0}, {375.0, 667.0}}\n      \u21b3Other, 0x11942b900, {{0.0, 0.0}, {375.0, 667.0}}\n       \u21b3Other, 0x11942ba20, {{0.0, 0.0}, {375.0, 667.0}}\n        \u21b3Other, 0x11942bdd0, {{0.0, 0.0}, {375.0, 667.0}}\n         \u21b3Other, 0x11942bef0, {{0.0, 0.0}, {375.0, 667.0}}\n          \u21b3Other, 0x11942c010, {{0.0, 0.0}, {375.0, 667.0}}\n           \u21b3Other, 0x11942c130, {{0.0, 0.0}, {375.0, 667.0}}\n            \u21b3Other, 0x11942c250, {{0.0, 0.0}, {375.0, 667.0}}\n             \u21b3Other, 0x11942c370, {{0.0, 0.0}, {375.0, 667.0}}\n              \u21b3Other, 0x11942cb50, {{0.0, 0.0}, {375.0, 667.0}}\n               \u21b3Other, 0x11942cc70, {{0.0, 0.0}, {375.0, 667.0}}\n                \u21b3Other, 0x11942cd90, {{0.0, 0.0}, {375.0, 667.0}}\n                 \u21b3Other, 0x11942ceb0, {{0.0, 0.0}, {375.0, 667.0}}\n                  \u21b3CollectionView, 0x10d816b60, {{0.0, 0.0}, {375.0, 610.0}}\n                   \u21b3Cell, 0x104f64470, {{16.0, 375.0}, {343.0, 64.5}}\n                    \u21b3Other, 0x104f64eb0, {{16.0, 375.0}, {343.0, 64.5}}\n                     \u21b3Other, 0x104f65210, {{16.0, 375.0}, {343.0, 64.5}}\n                      \u21b3Other, 0x104f669e0, {{16.0, 375.0}, {343.0, 64.5}}\n                       \u21b3StaticText, 0x104f66d40, {{16.0, 375.0}, {343.0, 64.5}}, identifier: 'comparisonSourceNote', label: 'Source: prices and usable amounts you entered. Estimates for this item only.'\nQuery chain:\n \u2192Find: Target Application 'dev.roominthecart.app.debug'\n  Output: {\n    Application, 0x119441e70, pid: 52984, label: 'Room in the Cart'\n  }\n  \u21aa\ufe0eFind: Descendant with identity binding to AX element pid: 52984, elementOrHash.elementID: 105553169963904.558\n    Output: {\n      StaticText, 0x119374270, {{16.0, 375.0}, {343.0, 64.5}}, identifier: 'comparisonSourceNote', label: 'Source: prices and usable amounts you entered. Estimates for this item only.'\n    }\n"
+  },
+  {
+    "file": "C84F78A7-C3EE-4CCC-BE9D-ED820B93124E.txt",
+    "details": "User will not be able to change the font size of this element\nNo element supplied"
+  },
+  {
+    "file": "E1C4F497-2AB7-4064-B759-2E72EA9375C9.txt",
+    "details": "Contrast failed for element\nAttributes: StaticText, 0x119336380, {{16.0, 375.0}, {343.0, 64.5}}, identifier: 'comparisonSourceNote', label: 'Source: prices and usable amounts you entered. Estimates for this item only.'\nElement subtree:\n \u2192StaticText, 0x119336380, {{16.0, 375.0}, {343.0, 64.5}}, identifier: 'comparisonSourceNote', label: 'Source: prices and usable amounts you entered. Estimates for this item only.'\nPath to element:\n \u2192Application, 0x104ef4cb0, pid: 52984, label: 'Room in the Cart'\n  \u21b3Window (Main), 0x104ef7570, {{0.0, 0.0}, {375.0, 667.0}}\n   \u21b3Other, 0x104ef7930, {{0.0, 0.0}, {375.0, 667.0}}\n    \u21b3Other, 0x104ef7a50, {{0.0, 0.0}, {375.0, 667.0}}\n     \u21b3Other, 0x104ef7690, {{0.0, 0.0}, {375.0, 667.0}}\n      \u21b3Other, 0x104ef77b0, {{0.0, 0.0}, {375.0, 667.0}}\n       \u21b3Other, 0x104ef7b70, {{0.0, 0.0}, {375.0, 667.0}}\n        \u21b3Other, 0x104ef7c90, {{0.0, 0.0}, {375.0, 667.0}}\n         \u21b3Other, 0x104ef7db0, {{0.0, 0.0}, {375.0, 667.0}}\n          \u21b3Other, 0x104ef7ed0, {{0.0, 0.0}, {375.0, 667.0}}\n           \u21b3Other, 0x104ef8010, {{0.0, 0.0}, {375.0, 667.0}}\n            \u21b3Other, 0x104ef8130, {{0.0, 0.0}, {375.0, 667.0}}\n             \u21b3Other, 0x104ef8250, {{0.0, 0.0}, {375.0, 667.0}}\n              \u21b3Other, 0x104ef8a30, {{0.0, 0.0}, {375.0, 667.0}}\n               \u21b3Other, 0x104ef8b50, {{0.0, 0.0}, {375.0, 667.0}}\n                \u21b3Other, 0x104ef8c70, {{0.0, 0.0}, {375.0, 667.0}}\n                 \u21b3Other, 0x104ef8d90, {{0.0, 0.0}, {375.0, 667.0}}\n                  \u21b3CollectionView, 0x104ef8eb0, {{0.0, 0.0}, {375.0, 610.0}}\n                   \u21b3Cell, 0x119335cc0, {{16.0, 375.0}, {343.0, 64.5}}\n                    \u21b3Other, 0x119336020, {{16.0, 375.0}, {343.0, 64.5}}\n                     \u21b3Other, 0x119336140, {{16.0, 375.0}, {343.0, 64.5}}\n                      \u21b3Other, 0x119336260, {{16.0, 375.0}, {343.0, 64.5}}\n                       \u21b3StaticText, 0x119336380, {{16.0, 375.0}, {343.0, 64.5}}, identifier: 'comparisonSourceNote', label: 'Source: prices and usable amounts you entered. Estimates for this item only.'\nQuery chain:\n \u2192Find: Target Application 'dev.roominthecart.app.debug'\n  Output: {\n    Application, 0x10d816b60, pid: 52984, label: 'Room in the Cart'\n  }\n  \u21aa\ufe0eFind: Descendant with identity binding to AX element pid: 52984, elementOrHash.elementID: 105553169963904.558\n    Output: {\n      StaticText, 0x119282be0, {{16.0, 375.0}, {343.0, 64.5}}, identifier: 'comparisonSourceNote', label: 'Source: prices and usable amounts you entered. Estimates for this item only.'\n    }\n"
+  },
+  {
+    "file": "88063B33-F432-4D5F-825F-A93291FE71CF.txt",
+    "details": "Contrast failed for element\nNo element supplied"
+  },
+  {
+    "file": "13468909-5297-4E09-9CC8-DA19A45DE889.txt",
+    "details": "Contrast failed for element\nNo element supplied"
+  },
+  {
+    "file": "49C9F6E3-62E9-433D-9569-49581FA043AA.txt",
+    "details": "Text of this element may be clipped at larger Dynamic Type sizes.\nNo element supplied"
+  },
+  {
+    "file": "F732CD31-7593-4673-A90D-884793521551.txt",
+    "details": "Text of this element may be clipped at larger Dynamic Type sizes.\nNo element supplied"
+  },
+  {
+    "file": "305BE209-8C57-4644-9332-A75AE3E4B265.txt",
+    "details": "User will not be able to change the font size of this element\nNo element supplied"
+  },
+  {
+    "file": "8F88F71E-C9B2-48E8-A607-C1682AB88CB9.txt",
+    "details": "User will not be able to change the font size of this element\nNo element supplied"
+  },
+  {
+    "file": "4446C20D-0B05-4365-A1E9-46CBD9150471.txt",
+    "details": "User will not be able to change the font size of this element\nNo element supplied"
+  },
+  {
+    "file": "A3A7E147-31CC-4D6F-BF51-45A24044BB33.txt",
+    "details": "User will not be able to change the font size of this element\nNo element supplied"
+  },
+  {
+    "file": "5A774B52-D968-42CF-AB28-76F6C6A30557.txt",
+    "details": "User will not be able to change the font size of this element\nNo element supplied"
+  },
+  {
+    "file": "A36DA0F1-19A0-4827-AEDB-FCF45D9D0894.txt",
+    "details": "User will not be able to change the font size of this element\nAttributes: StaticText, 0x104eadce0, {{16.0, 335.5}, {343.0, 39.0}}, identifier: 'aHeader', label: 'PACK A'\nElement subtree:\n \u2192StaticText, 0x104eadce0, {{16.0, 335.5}, {343.0, 39.0}}, identifier: 'aHeader', label: 'PACK A'\nPath to element:\n \u2192Application, 0x104ea2010, pid: 52984, label: 'Room in the Cart'\n  \u21b3Window (Main), 0x104eaadf0, {{0.0, 0.0}, {375.0, 667.0}}\n   \u21b3Other, 0x104eab1b0, {{0.0, 0.0}, {375.0, 667.0}}\n    \u21b3Other, 0x104eab2d0, {{0.0, 0.0}, {375.0, 667.0}}\n     \u21b3Other, 0x104eaaf10, {{0.0, 0.0}, {375.0, 667.0}}\n      \u21b3Other, 0x104eab030, {{0.0, 0.0}, {375.0, 667.0}}\n       \u21b3Other, 0x104eab3f0, {{0.0, 0.0}, {375.0, 667.0}}\n        \u21b3Other, 0x104eab510, {{0.0, 0.0}, {375.0, 667.0}}\n         \u21b3Other, 0x104eab630, {{0.0, 0.0}, {375.0, 667.0}}\n          \u21b3Other, 0x104eab750, {{0.0, 0.0}, {375.0, 667.0}}\n           \u21b3Other, 0x104eab870, {{0.0, 0.0}, {375.0, 667.0}}\n            \u21b3Other, 0x104eab990, {{0.0, 0.0}, {375.0, 667.0}}\n             \u21b3Other, 0x104eabab0, {{0.0, 0.0}, {375.0, 667.0}}\n              \u21b3Other, 0x104eac290, {{0.0, 0.0}, {375.0, 667.0}}\n               \u21b3Other, 0x104eac420, {{0.0, 0.0}, {375.0, 667.0}}\n                \u21b3Other, 0x104eac540, {{0.0, 0.0}, {375.0, 667.0}}\n                 \u21b3Other, 0x104eac660, {{0.0, 0.0}, {375.0, 667.0}}\n                  \u21b3CollectionView, 0x104eac780, {{0.0, 0.0}, {375.0, 610.0}}\n                   \u21b3Cell, 0x104ead740, {{16.0, 335.5}, {343.0, 39.0}}\n                    \u21b3Other, 0x104ead980, {{16.0, 335.5}, {343.0, 39.0}}\n                     \u21b3Other, 0x104eadaa0, {{16.0, 335.5}, {343.0, 39.0}}\n                      \u21b3Other, 0x104eadbc0, {{16.0, 335.5}, {343.0, 39.0}}\n                       \u21b3StaticText, 0x104eadce0, {{16.0, 335.5}, {343.0, 39.0}}, identifier: 'aHeader', label: 'PACK A'\nQuery chain:\n \u2192Find: Target Application 'dev.roominthecart.app.debug'\n  Output: {\n    Application, 0x104f4fae0, pid: 52984, label: 'Room in the Cart'\n  }\n  \u21aa\ufe0eFind: Descendant with identity binding to AX element pid: 52984, elementOrHash.elementID: 105553169992192.453\n    Output: {\n      StaticText, 0x11922d860, {{16.0, 335.5}, {343.0, 39.0}}, identifier: 'aHeader', label: 'PACK A'\n    }\n"
+  },
+  {
+    "file": "5C77FB74-70DB-497C-BAC4-E60C71A6D731.txt",
+    "details": "Contrast failed for element\nAttributes: StaticText, 0x104f37ea0, {{40.0, 581.5}, {127.0, 44.0}}, label: 'Start pickup'\nElement subtree:\n \u2192StaticText, 0x104f37ea0, {{40.0, 581.5}, {127.0, 44.0}}, label: 'Start pickup'\nPath to element:\n \u2192Application, 0x10652c1e0, pid: 52984, label: 'Room in the Cart'\n  \u21b3Window (Main), 0x10652b8f0, {{0.0, 0.0}, {375.0, 667.0}}\n   \u21b3Other, 0x106560100, {{0.0, 0.0}, {375.0, 667.0}}\n    \u21b3Other, 0x1065706e0, {{0.0, 0.0}, {375.0, 667.0}}\n     \u21b3Other, 0x106549a60, {{0.0, 0.0}, {375.0, 667.0}}\n      \u21b3Other, 0x106579e10, {{0.0, 0.0}, {375.0, 667.0}}\n       \u21b3Other, 0x106578f50, {{0.0, 0.0}, {375.0, 667.0}}\n        \u21b3Other, 0x106566080, {{0.0, 0.0}, {375.0, 667.0}}\n         \u21b3Other, 0x106570b00, {{0.0, 0.0}, {375.0, 667.0}}\n          \u21b3Other, 0x1065544d0, {{0.0, 0.0}, {375.0, 667.0}}\n           \u21b3Other, 0x106579f30, {{0.0, 0.0}, {375.0, 667.0}}\n            \u21b3Other, 0x10657a050, {{0.0, 0.0}, {375.0, 667.0}}\n             \u21b3Other, 0x10657a170, {{0.0, 0.0}, {375.0, 667.0}}\n              \u21b3Other, 0x10657a910, {{0.0, 0.0}, {375.0, 667.0}}\n               \u21b3Other, 0x10657aa30, {{0.0, 0.0}, {375.0, 667.0}}\n                \u21b3Other, 0x10657ab50, {{0.0, 0.0}, {375.0, 667.0}}\n                 \u21b3Other, 0x10657ac70, {{0.0, 0.0}, {375.0, 667.0}}\n                  \u21b3ScrollView, 0x10657ad90, {{0.0, 0.0}, {375.0, 610.0}}, identifier: 'shopContentScroll'\n                   \u21b3Other, 0x10657aeb0, {{0.0, 116.0}, {375.0, 673.5}}\n                    \u21b3Button, 0x10657b7b0, {{40.0, 581.5}, {127.0, 44.0}}, identifier: 'openPickupList', label: 'Start pickup'\n                     \u21b3StaticText, 0x104f37ea0, {{40.0, 581.5}, {127.0, 44.0}}, label: 'Start pickup'\nQuery chain:\n \u2192Find: Target Application 'dev.roominthecart.app.debug'\n  Output: {\n    Application, 0x106592fc0, pid: 52984, label: 'Room in the Cart'\n  }\n  \u21aa\ufe0eFind: Descendant with identity binding to AX element pid: 52984, elementOrHash.elementID: 105553169918912.44\n    Output: {\n      StaticText, 0x10d772fd0, {{40.0, 581.5}, {127.0, 44.0}}, label: 'Start pickup'\n    }\n"
+  },
+  {
+    "file": "AB786C91-61D2-4F03-9772-875478FD1E3D.txt",
+    "details": "Contrast failed for element\nAttributes: Button, 0x10d73c9e0, {{40.0, 649.5}, {161.5, 20.5}}, identifier: 'urgentRepairShortcut', label: 'Something is missing'\nElement subtree:\n \u2192Button, 0x10d73c9e0, {{40.0, 649.5}, {161.5, 20.5}}, identifier: 'urgentRepairShortcut', label: 'Something is missing'\nPath to element:\n \u2192Application, 0x10d734010, pid: 52984, label: 'Room in the Cart'\n  \u21b3Window (Main), 0x10d73a460, {{0.0, 0.0}, {375.0, 667.0}}\n   \u21b3Other, 0x10d73a820, {{0.0, 0.0}, {375.0, 667.0}}\n    \u21b3Other, 0x10d73a940, {{0.0, 0.0}, {375.0, 667.0}}\n     \u21b3Other, 0x10d73a580, {{0.0, 0.0}, {375.0, 667.0}}\n      \u21b3Other, 0x10d73a6a0, {{0.0, 0.0}, {375.0, 667.0}}\n       \u21b3Other, 0x10d73aa60, {{0.0, 0.0}, {375.0, 667.0}}\n        \u21b3Other, 0x10d73ab80, {{0.0, 0.0}, {375.0, 667.0}}\n         \u21b3Other, 0x10d73aca0, {{0.0, 0.0}, {375.0, 667.0}}\n          \u21b3Other, 0x10d73adc0, {{0.0, 0.0}, {375.0, 667.0}}\n           \u21b3Other, 0x10d73aee0, {{0.0, 0.0}, {375.0, 667.0}}\n            \u21b3Other, 0x10d73b000, {{0.0, 0.0}, {375.0, 667.0}}\n             \u21b3Other, 0x10d73b120, {{0.0, 0.0}, {375.0, 667.0}}\n              \u21b3Other, 0x10d73b7e0, {{0.0, 0.0}, {375.0, 667.0}}\n               \u21b3Other, 0x10d73b900, {{0.0, 0.0}, {375.0, 667.0}}\n                \u21b3Other, 0x10d73ba20, {{0.0, 0.0}, {375.0, 667.0}}\n                 \u21b3Other, 0x10d73bb40, {{0.0, 0.0}, {375.0, 667.0}}\n                  \u21b3ScrollView, 0x10d73bc60, {{0.0, 0.0}, {375.0, 610.0}}, identifier: 'shopContentScroll'\n                   \u21b3Other, 0x10d73bd80, {{0.0, 116.0}, {375.0, 673.5}}\n                    \u21b3Button, 0x10d73c9e0, {{40.0, 649.5}, {161.5, 20.5}}, identifier: 'urgentRepairShortcut', label: 'Something is missing'\nQuery chain:\n \u2192Find: Target Application 'dev.roominthecart.app.debug'\n  Output: {\n    Application, 0x106530050, pid: 52984, label: 'Room in the Cart'\n  }\n  \u21aa\ufe0eFind: Descendant with identity binding to AX element pid: 52984, elementOrHash.elementID: 105553169919392.39\n    Output: {\n      Button, 0x104f35890, {{40.0, 649.5}, {161.5, 20.5}}, identifier: 'urgentRepairShortcut', label: 'Something is missing'\n    }\n"
+  }
+]
