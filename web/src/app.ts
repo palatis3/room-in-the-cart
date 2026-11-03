@@ -5,6 +5,10 @@ import { languageFor, translate, type Language } from './i18n.js';
 type Draft = {item:string; amount:string; route:'current'|'next'; editing:OwnRequest|null; followup:string|null};
 const blank = ():Draft => ({item:'',amount:'',route:'current',editing:null,followup:null});
 const statuses:Record<string,string> = {pending:'Received',clarified:'Needs clarification',added:'Added to the pickup',deferred:'Saved for next shop',handled:'Handled',dismissed:'Dismissed',withdrawn:'Withdrawn'};
+// A reviewed draft is valid only for the exact actor, role and destination that displayed it.
+function reviewScope(session: Session): string {
+  return JSON.stringify([session.household.id, session.memberId, session.role, session.shopId, session.grantId ?? null]);
+}
 export class WebApp {
   private session:Session|null = null;
   private browserAuth:BrowserAuthState|null=null;
@@ -12,7 +16,7 @@ export class WebApp {
   private loginCode='';
   private codeRequested=false;
   private identityLogoutPending:string|null=null;
-  private identityScope:string|null = null;
+  private reviewedScope:string|null = null;
   private logoutPending:Session|null = null;
   private requests:OwnRequest[] = [];
   private view:CookView|null = null;
@@ -52,7 +56,7 @@ export class WebApp {
   private supportedRoute():boolean {return ['/', '/requests', '/invite', '/view'].includes(this.root.ownerDocument.defaultView?.location.pathname??'/');}
   async start():Promise<void> { if(!this.supportedRoute()){this.render();return;} if(this.logoutPending){this.render();return;} await this.run(async()=>{await this.load();},'load'); }
   private clearPrivate():void {
-    this.session=null;this.identityScope=null;this.requests=[];this.view=null;this.pending=[];this.draft=blank();
+    this.session=null;this.reviewedScope=null;this.requests=[];this.view=null;this.pending=[];this.draft=blank();
     this.retryCommand=null;this.uncertainSend=false;this.consent=false;this.review=false;this.correction='';
     this.proposalKey=null;this.withdrawn=null;this.withdrawalCommand=null;this.confirmedOperations.clear();
   }
@@ -64,12 +68,13 @@ export class WebApp {
   }
   private async load():Promise<void> {
     const fresh=await this.api.session();
-    if(this.identityScope && fresh && this.identityScope!==scopeFor(fresh)) {
-      this.clearPrivate();this.notice='';await this.outbox.clear().catch(()=>{});
+    if(this.reviewedScope && fresh && this.reviewedScope!==reviewScope(fresh)) {
+      this.clearPrivate();this.notice='';
+      await this.outbox.retainScope(scopeFor(fresh)).catch(()=>{});
     }
     this.session=fresh;
     if(!fresh){this.requests=[];this.view=null;this.pending=[];this.consent=false;this.browserAuth=await this.api.authState();return;}
-    this.identityScope=scopeFor(fresh);
+    this.reviewedScope=reviewScope(fresh);
     if(fresh.role==='helper'||fresh.role==='editor') {
       this.requests=[];this.view=null;this.pending=[];this.draft=blank();this.retryCommand=null;this.uncertainSend=false;this.consent=false;
       await this.outbox.clear().catch(()=>{});this.view=await this.api.view(fresh);
@@ -83,7 +88,7 @@ export class WebApp {
   private async reauthenticate(command?:Command, grantId?:string):Promise<Session> {
     const fresh=await this.api.session();
     if(!fresh)throw new ApiError('session_needed',401);
-    if(!this.identityScope||scopeFor(fresh)!==this.identityScope)throw new ApiError('access_ended',403);
+    if(!this.reviewedScope||reviewScope(fresh)!==this.reviewedScope)throw new ApiError('access_ended',403);
     if(grantId ? fresh.role!=='editor'||fresh.grantId!==grantId : !isContributorSession(fresh))throw new ApiError('access_ended',403);
     if(command&&(fresh.replayWindow.id!==command.replayWindow||Date.parse(fresh.replayWindow.expiresAt)<=Date.now()))throw new ApiError('stale_replay_window',409);
     this.session=fresh;return fresh;
@@ -91,7 +96,7 @@ export class WebApp {
   private async signOut():Promise<void> {
     const old=this.logoutPending??this.session;
     if(!old)return;
-    this.logoutPending=old;this.clearPrivate();this.invitation=null;this.invitation=null;this.redemption=null;this.adultAttestation=false;this.inviteAlias='';this.render();
+    this.logoutPending=old;this.clearPrivate();this.invitation=null;this.redemption=null;this.adultAttestation=false;this.inviteAlias='';this.render();
     let cleared=true;try{await this.outbox.clear();}catch{cleared=false;}
     try {const result=await this.api.logout(old);this.logoutPending=null;this.browserAuth=null;this.notice=result?.providerRevoked===false?'Signed out of this browser. Provider sign-out could not be confirmed.':cleared?'You are signed out.':'You are signed out, but browser storage could not be cleared. Clear site data before sharing this browser.';}
     catch {this.notice='Sign-out could not be confirmed. Retry before sharing this browser.';}
@@ -121,7 +126,7 @@ export class WebApp {
     const lang=this.el('select');lang.id='language';lang.setAttribute('aria-label',this.t('Language'));
     for(const [v,k] of [['en','English'],['es','Spanish']]) {const o=this.el('option',this.t(k!));o.value=v!;o.selected=v===this.language;lang.append(o);}
     lang.addEventListener('change',()=>{this.language=lang.value as Language;this.render();});header.append(lang);this.root.append(header);
-    const main=this.el('main');this.root.append(main);
+    const main=this.el('main');main.setAttribute('aria-busy',String(this.busy));this.root.append(main);
     const status=this.el('p',this.busy?this.t('Loading…'):this.t(this.notice));status.className='notice';status.setAttribute('role','status');status.setAttribute('tabindex','-1');main.append(status);
     if(!this.supportedRoute()){main.append(this.el('h1',this.t('This page is not available.')));const link=this.el('a',this.t('Open your requests'));link.href='/requests';main.append(link);return;}
     if(this.identityLogoutPending){main.append(this.el('h1',this.t('Finish signing out')),this.button('Retry sign-out',()=>void this.run(()=>this.signOutIdentity()),true));return;}
@@ -260,7 +265,7 @@ export class WebApp {
   }
   private async retry(p:Pending):Promise<void>{
     const fresh=await this.api.session();
-    if(!fresh||scopeFor(fresh)!==p.scope||!isContributorSession(fresh)||!fresh.enrolled||!fresh.queueConsent)throw new ApiError('access_ended',403);
+    if(!fresh||reviewScope(fresh)!==this.reviewedScope||scopeFor(fresh)!==p.scope||!isContributorSession(fresh)||!fresh.enrolled||!fresh.queueConsent)throw new ApiError('access_ended',403);
     if(fresh.replayWindow.id!==p.command.replayWindow||Date.parse(fresh.replayWindow.expiresAt)<=Date.now()) {this.notice='This queued request needs a new review. It was not resent.';return;}
     await this.api.command(fresh,p.command);await this.outbox.remove(p.id);this.session=fresh;this.pending=this.pending.filter(x=>x.id!==p.id);this.notice='Received by the shopper.';await this.load();
   }
