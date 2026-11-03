@@ -51,6 +51,14 @@ final class StapleRecallTests: XCTestCase {
         XCTAssertThrowsError(try workspace.applyStaple(review,choice:.skip,quantity:nil,at:lastMonth))
     }
 
+    func testReopeningEarlierDraftDoesNotSuggestItemsFromAFutureShop() throws {
+        var (workspace, _, target) = try seed()
+        let original = try XCTUnwrap(workspace.priorStaples(for: target).first)
+        workspace.shops.swapAt(0, 1)
+        XCTAssertTrue(workspace.priorStaples(for: target).isEmpty)
+        XCTAssertThrowsError(try workspace.applyStaple(original, choice: .skip, quantity: nil, at: lastMonth))
+    }
+
     func testChangedOrForgottenApprovalInvalidatesOpenReviewAndStoreIsRequired() throws {
         var (workspace, line, target) = try seed()
         let old = try XCTUnwrap(workspace.priorStaples(for:target).first)

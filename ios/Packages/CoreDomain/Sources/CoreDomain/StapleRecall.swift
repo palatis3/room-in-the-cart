@@ -32,10 +32,12 @@ public struct ReviewedStaple: Identifiable, Equatable, Sendable {
 
 extension LedgerWorkspace {
     public func priorStaples(for targetID: UUID) -> [ReviewedStaple] {
-        guard let target = shops.first(where: { $0.id == targetID }) else { return [] }
+        guard let targetIndex = shops.firstIndex(where: { $0.id == targetID }) else { return [] }
+        let target = shops[targetIndex]
         let completed = Set((target.stapleReviews ?? []).map(\.source))
         var rows: [ReviewedStaple] = []
-        for source in shops where source.id != targetID {
+        // New shops append to the workspace. Reopening an older draft must not pull from a later trip.
+        for source in shops[..<targetIndex] {
             for line in source.lines where !line.isTrashed {
                 guard let approval = line.stapleApproval else { continue }
                 let key = StapleSource(shopID: source.id, lineID: line.id)
@@ -56,7 +58,7 @@ extension LedgerWorkspace {
     public mutating func applyStaple(_ review: ReviewedStaple, choice: StapleChoice, quantity: Quantity?, at date: Date) throws {
         guard (choice == .needed || quantity == nil), quantity.map({ $0.amount > .zero }) ?? true else { throw LedgerError.invalid("stapleQuantity") }
         guard selectedShopID == review.targetID, let index = shops.firstIndex(where: { $0.id == review.targetID }),
-              let source = shops.first(where: { $0.id == review.source.shopID }), source.id != review.targetID else { throw LedgerError.stalePreview }
+              let source = shops[..<index].first(where: { $0.id == review.source.shopID }) else { throw LedgerError.stalePreview }
         if let original = shops[index].stapleReviews?.first(where: { $0.source == review.source }) {
             guard original.choice == choice, original.quantity == quantity else { throw LedgerError.stalePreview }
             return
