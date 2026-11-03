@@ -33,15 +33,25 @@ struct DinnerLibraryPairings {
             guard let accepted = state.acceptedDinners.first(where: { $0.template.id == meal.templateID && $0.template.revision == meal.templateRevision }),
                   accepted.template.ingredients.count == meal.ingredientContributionIDs.count else { throw DinnerPlanningError.reviewRequired("currentRecipe") }
             let ratio = try meal.servings.divided(by: accepted.template.servings)
+            let bindings = state.portionBindings.filter { $0.occurrenceID == meal.id }
+            var groupAmounts: [UUID:[UUID:Quantity]] = [:]
             for (ingredient, contributionID) in zip(accepted.template.ingredients,meal.ingredientContributionIDs) {
                 guard let row = shop.contributions.first(where: { $0.id == contributionID && $0.removedAt == nil }),
                       row.productName == ingredient.name, let actual = row.quantity, let original = ingredient.quantity,
-                      try actual.converted(to: original.unit) == original.amount.multiplied(by: ratio),
                       Set(row.exclusions) == Set(meal.exclusions + ingredient.exclusions) else { throw DinnerPlanningError.reviewRequired("currentRecipe") }
-                for binding in state.portionBindings where binding.occurrenceID == meal.id && binding.contributionID == contributionID {
-                    guard let group = meal.servingGroups.first(where: { $0.id == binding.groupID }),
-                          try binding.quantity.converted(to: actual.unit) == actual.amount.multiplied(by: group.servings.divided(by: meal.servings))
-                    else { throw DinnerPlanningError.reviewRequired("portionBindings") }
+                if bindings.isEmpty {
+                    guard try actual.converted(to: original.unit) == original.amount.multiplied(by: ratio) else { throw DinnerPlanningError.reviewRequired("currentRecipe") }
+                } else {
+                    let assigned = bindings.filter { $0.contributionID == contributionID }
+                    guard Set(assigned.map(\.groupID)) == Set(meal.servingGroups.map(\.id)) else { throw DinnerPlanningError.reviewRequired("portionBindings") }
+                    var total = Rational.zero
+                    for binding in assigned {
+                        guard let group = meal.servingGroups.first(where: { $0.id == binding.groupID }), group.servings == binding.servings,
+                              let value = try binding.quantity.converted(to: actual.unit) else { throw DinnerPlanningError.reviewRequired("portionBindings") }
+                        total = try total.adding(value)
+                        groupAmounts[group.id,default: [:]][ingredient.id] = binding.quantity
+                    }
+                    guard total == actual.amount else { throw DinnerPlanningError.reviewRequired("portionBindings") }
                 }
             }
             func row(_ id: UUID, _ name: String, _ portions: Rational, protected: Bool) -> DinnerScenarioMealDraft {
@@ -56,14 +66,23 @@ struct DinnerLibraryPairings {
             for group in meal.servingGroups {
                 remainder = try remainder.subtracting(group.servings)
                 // Template group IDs may recur in different chosen occurrences.
-                let bytes = Array(SHA256.hash(data: Data("\(meal.id)/\(group.id)".utf8)).prefix(16))
-                let id = UUID(uuid: (bytes[0],bytes[1],bytes[2],bytes[3],bytes[4],bytes[5],bytes[6],bytes[7],bytes[8],bytes[9],bytes[10],bytes[11],bytes[12],bytes[13],bytes[14],bytes[15]))
-                meals.append(row(id,"\(meal.title) · \(group.name)",group.servings,protected: group.isProtected))
+                let id = groupSlotID(meal: meal.id, group: group.id)
+                var item = row(id,"\(meal.title) · \(group.name)",group.servings,protected: group.isProtected)
+                if let amounts = groupAmounts[group.id] {
+                    item.reviewedPortion = .init(occurrenceID: meal.id, groupID: group.id)
+                    item.reviewedAmounts = amounts
+                }
+                meals.append(item)
             }
-            guard remainder >= .zero else { throw DinnerPlanningError.reviewRequired("portions") }
+            guard remainder >= .zero, bindings.isEmpty || remainder == .zero else { throw DinnerPlanningError.reviewRequired("portions") }
             if remainder > .zero { meals.append(row(meal.id,meal.title,remainder,protected: false)) }
         }
         return meals
+    }
+
+    private static func groupSlotID(meal: UUID, group: UUID) -> UUID {
+        let bytes = Array(SHA256.hash(data: Data("\(meal)/\(group)".utf8)).prefix(16))
+        return UUID(uuid: (bytes[0],bytes[1],bytes[2],bytes[3],bytes[4],bytes[5],bytes[6],bytes[7],bytes[8],bytes[9],bytes[10],bytes[11],bytes[12],bytes[13],bytes[14],bytes[15]))
     }
 
     static func prepare(_ draft: inout DinnerScenarioDraft, target: UUID, shop: ShoppingLedger,
@@ -75,7 +94,8 @@ struct DinnerLibraryPairings {
         for source in scheduled {
             let expected = try DinnerScenarioMealDraftSnapshot(source, zone: draft.zone)
             guard commitments.contains(where: { $0.id == expected.id && $0.portions == expected.portions && $0.day == expected.day &&
-                $0.protected == expected.protected && $0.currentDinnerID == expected.currentDinnerID && $0.savedExclusions == expected.savedExclusions })
+                $0.protected == expected.protected && $0.currentDinnerID == expected.currentDinnerID && $0.savedExclusions == expected.savedExclusions &&
+                $0.reviewedPortion == expected.reviewedPortion && $0.reviewedAmounts == expected.reviewedAmounts })
             else { throw DinnerPlanningError.reviewRequired("currentSchedule") }
         }
         let excluded = chosen(in: shop, state: state).union(commitments.compactMap(\.currentDinnerID))
@@ -132,7 +152,7 @@ struct DinnerLibraryPairings {
             }
             do {
                 let reviewed = try version.build(shop: shop, state: state, candidateScenarioID: candidate.id)
-                _ = try DinnerScenarioEngine.evaluate(reviewed.candidate, acceptedDinners: state.acceptedDinners, cap: reviewed.cap)
+                _ = try DinnerScenarioEngine.evaluate(reviewed.candidate, acceptedDinners: state.acceptedDinners, cap: reviewed.cap, ledger: shop, state: state)
                 current = reviewed.current; cap = reviewed.cap; alternatives.append(reviewed.candidate)
             } catch LedgerError.excludedIngredient { conflicts.append(candidate.title) }
         }
@@ -158,27 +178,37 @@ extension DinnerLibraryPairings {
 }
 
 extension DinnerLibraryPairings {
-    /// A scenario row is safe to commit only if it names one complete current occurrence.
-    /// Group slices and priced stock/pack assumptions stay in the comparison.
+    /// Preserve each remaining demand and binding on its original occurrence.
     func replacement(for scenario: DinnerScenario, shop: ShoppingLedger, state: DinnerPlanningState) throws -> [DinnerLedgerChange] {
         guard shop.id == shopID, shop.revisionID == shopRevision, state.revisionID == planningRevision else { throw DinnerPlanningError.stalePreview }
         guard candidates.contains(where: { $0.id == scenario.id }),
               let candidate = state.acceptedDinners.first(where: { $0.id == scenario.id }),
-              let original = shop.mealOccurrences.first(where: { $0.id == target && $0.removedAt == nil }),
+              let original = shop.mealOccurrences.first(where: { meal in
+                  meal.removedAt == nil && (meal.id == target || meal.servingGroups.contains { Self.groupSlotID(meal: meal.id, group: $0.id) == target })
+              }),
               let slot = scenario.commitments.commitments.first(where: { $0.id == target }),
-              !slot.protected, slot.portions == original.servings, slot.day == original.scheduledDay,
-              slot.portions == candidate.template.servings, original.servingGroups.isEmpty, candidate.template.servingGroups.isEmpty,
+              !slot.protected, slot.day == original.scheduledDay,
+              slot.portions == candidate.template.servings, candidate.template.servingGroups.isEmpty,
               Set(original.exclusions).isSubset(of: Set(candidate.template.exclusions)),
-              !chosenTemplateIDs(shop).contains(candidate.template.id),
-              !state.portionBindings.contains(where: { $0.occurrenceID == original.id }),
-              !shop.allocations.contains(where: { original.ingredientContributionIDs.contains($0.demandContributionID) || original.ingredientContributionIDs.contains($0.supplyContributionID) })
+              !chosenTemplateIDs(shop).contains(candidate.template.id)
         else { throw DinnerPlanningError.reviewRequired("replaceWholeOccurrence") }
         let replacements = scenario.demands.filter { $0.commitmentID == slot.id }
         guard replacements.count == candidate.template.ingredients.count,
               candidate.template.ingredients.allSatisfy({ ingredient in
                   replacements.contains { $0.acceptedDinnerID == candidate.id && $0.ingredientID == ingredient.id && $0.quantity == ingredient.quantity }
               }) else { throw DinnerPlanningError.reviewRequired("replaceExactIngredients") }
-        return [.remove(occurrenceID: original.id), .choose(.init(acceptedDinnerID: candidate.id, template: candidate.template, day: slot.day))]
+        let choose = DinnerLedgerChange.choose(.init(acceptedDinnerID: candidate.id, template: candidate.template, day: slot.day))
+        if original.servingGroups.isEmpty {
+            guard original.id == target, slot.portions == original.servings,
+                  !shop.allocations.contains(where: { original.ingredientContributionIDs.contains($0.demandContributionID) || original.ingredientContributionIDs.contains($0.supplyContributionID) })
+            else { throw DinnerPlanningError.reviewRequired("linkedOccurrence") }
+            return [.remove(occurrenceID: original.id), choose]
+        }
+        guard let replaced = original.servingGroups.first(where: { Self.groupSlotID(meal: original.id, group: $0.id) == target }),
+              !replaced.isProtected, replaced.servings == slot.portions,
+              let adjustment = try DinnerPlanningEngine.removingServingGroup(replaced.id, from: original.id, ledger: shop, state: state)
+        else { throw DinnerPlanningError.reviewRequired("reviewPortionBindings") }
+        return [.adjust(adjustment), choose]
     }
 
     private func chosenTemplateIDs(_ shop: ShoppingLedger) -> Set<UUID> {

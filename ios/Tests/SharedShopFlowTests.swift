@@ -151,6 +151,8 @@ import HouseholdClient
         let shared = try XCTUnwrap(mia.sharedShop)
         enterShop(shared)
         await shared.applyReviewed()
+        await shared.load()
+        XCTAssertNotNil(shared.lastShopSync)
         await shared.loadFinancialEntries()
         let entries = try XCTUnwrap(shared.financialEntries)
         XCTAssertEqual(entries.map(\.kind), [.paymentHold])
@@ -159,6 +161,7 @@ import HouseholdClient
         fixture.shopperTransferred = true
         await mia.refresh()
         XCTAssertNil(shared.financialEntries)
+        XCTAssertNil(shared.lastShopSync)
         XCTAssertFalse(shared.canManage)
     }
 

@@ -55,6 +55,8 @@ struct StapleRecallView: View {
     @State private var store = ""
     @State private var purpose = ""
     @State private var review: ReviewedStaple?
+    @State private var showsMembership = false
+    @AccessibilityFocusState private var membershipFocused: Bool
     private var permitted: Bool {
         access.unlocked && !household.locked && (household.projection.map { ["shopper","organizer"].contains($0.role) && $0.grantId == nil } ?? true)
             && membership.model?.hasPaidAccess == true
@@ -70,7 +72,8 @@ struct StapleRecallView: View {
         List {
             if !permitted {
                 Text(ledgerText("Assisted staple recall requires an active adult planning seat. You can still review open deferrals and enter items manually."))
-                NavigationLink(ledgerText("Household membership")) { MembershipEntryView(household: household) }
+                Button(ledgerText("Household membership")) { showsMembership = true }
+                    .accessibilityFocused($membershipFocused)
             } else if !editable {
                 Text(ledgerText("Open a current draft pickup to review staples for it."))
             } else {
@@ -101,6 +104,16 @@ struct StapleRecallView: View {
         }.navigationTitle(ledgerText("Review prior staples"))
             .onAppear { store = ledger.shop?.basis.branch.trimmingCharacters(in:.whitespacesAndNewlines) ?? "" }
             .task { await pickup.load() }
+            .sheet(isPresented: $showsMembership, onDismiss: { membershipFocused = true }) {
+                NavigationStack {
+                    MembershipEntryView(household: household)
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button(tr("Done")) { showsMembership = false }
+                            }
+                        }
+                }.presentationDetents([.large])
+            }
             .sheet(item: $review) { item in
                 NavigationStack {
                     if permitted && editable {

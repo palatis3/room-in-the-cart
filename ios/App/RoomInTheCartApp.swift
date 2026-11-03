@@ -1,7 +1,7 @@
 import SwiftUI
 import DeviceSurfaces
 
-#if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
+#if DEBUG && (CONTRIBUTOR_CAPTURE_UI_FIXTURE || DINNER_DECISION_UI_FIXTURE)
 // The dedicated test build supplies its isolated @main from UITestSupport.
 #else
 @main struct RoomInTheCartApp: App {
@@ -90,6 +90,7 @@ struct RootView: View {
 }
 
 struct ShopView: View {
+    @EnvironmentObject private var household: HouseholdModel
     @EnvironmentObject private var surfaces: DeviceSurfacesComposition
     @EnvironmentObject private var model: AppModel
     @EnvironmentObject private var ledger: LedgerModel
@@ -113,6 +114,28 @@ struct ShopView: View {
     private var shopContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
+                if let journey = pickup.resumableJourney(for: ledger.shop?.id) {
+                    TimelineView(.explicit([Date()] + journey.offers.map(\.deadline.cutoff).filter { $0 > Date() }.sorted())) { context in
+                        if let offer = journey.nextUnfilledOffer(at: context.date) {
+                            let expired = context.date >= offer.deadline.cutoff
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text(pTr(expired ? "Await pickup · fill still unknown" : "Decision pending before cutoff")).font(.headline)
+                                    .accessibilityIdentifier("shop.resumeOfferStatus")
+                                Text(offer.replacement)
+                                Text("\(pTr("Cutoff")): \(pickupOfferCutoffText(offer)) · \(offer.deadline.timeZoneID)")
+                                NavigationLink(pTr(expired ? "Record what came home" : "Review a store offer")) {
+                                    Group {
+                                        if pickup.selectedID != journey.id { ProgressView() }
+                                        else if expired { PickupArrivalView(model: pickup) }
+                                        else { PickupOfferView(model: pickup) }
+                                    }
+                                    .onAppear { pickup.selectedID = journey.id }
+                                }.frame(minHeight: 44).accessibilityIdentifier("shop.resumeOffer")
+                            }.frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(16).background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
+                        }
+                    }
+                }
                 NavigationLink {
                     DeviceSurfacesEntry(composition: surfaces)
                 } label: {
@@ -130,7 +153,7 @@ struct ShopView: View {
                     .accessibilityIdentifier("deviceShortcuts")
                 VStack(alignment: .leading, spacing: 16) {
                     Text(tr("Make room for what matters.")).font(.largeTitle.bold())
-                    Text(tr("Start with one item. Compare two packs and see what it costs to bring home enough."))
+                    Text(tr("Compare packs for one item, or start a pickup to build your shopping list."))
                         .foregroundStyle(Theme.secondary)
                     NavigationLink { ComparisonView() } label: {
                         Label(tr("Compare packs"), systemImage: "arrow.left.arrow.right")
@@ -147,6 +170,9 @@ struct ShopView: View {
                     }.foregroundStyle(Theme.action).accessibilityIdentifier("openPickupList")
                     if let shop = ledger.shop {
                         Text(shop.title).font(.title2.bold())
+                        if let slot = shop.basis.slot, let zone = TimeZone(identifier: shop.basis.timeZoneIdentifier) {
+                            Text(slot.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened, timeZone: zone)) + " · " + zone.identifier)
+                        }
                         NavigationLink(tr("Review checkout")) {
                             LedgerCheckoutEntry(ledger: ledger, pickup: pickup)
                         }.frame(minHeight: 44)
@@ -157,6 +183,11 @@ struct ShopView: View {
                         Text(tr("Something is missing")).font(.body).fixedSize(horizontal: false, vertical: true)
                             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
                     }.foregroundStyle(Theme.action).accessibilityIdentifier("urgentRepairShortcut")
+                    if let saved = [ledger.savedAt, pickup.resumableJourney(for: ledger.shop?.id)?.savedAt].compactMap({ $0 }).max() {
+                        Text(tr("Last local save") + " · " + saved.formatted(date: .abbreviated, time: .shortened))
+                            .font(.footnote).accessibilityIdentifier("shop.localSave")
+                    }
+                    if !household.locked, let shared = household.sharedShop { ShopSyncStatus(model: shared) }
                     FamilyInboxContextLink()
                     if !pickup.journeys.isEmpty {
                         NavigationLink(tr("Pickup, repairs and handoffs")) { PickupHomeView(model: pickup).environment(\.pickupLedger, ledger) }
@@ -176,6 +207,16 @@ struct ShopView: View {
                 }
             }.padding(20)
         }.accessibilityIdentifier("shopContentScroll")
+    }
+}
+
+private struct ShopSyncStatus: View {
+    @ObservedObject var model: HouseholdShopModel
+    var body: some View {
+        if model.authorized, let date = model.lastShopSync {
+            Text(tr("Last shared shop sync") + " · " + date.formatted(date: .abbreviated, time: .shortened))
+                .font(.footnote).accessibilityIdentifier("shop.householdSync")
+        }
     }
 }
 

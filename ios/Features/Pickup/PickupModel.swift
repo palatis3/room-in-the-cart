@@ -155,6 +155,14 @@ struct PickupJourney: Codable, Equatable, Identifiable {
 // New optional local projections can be absent in an earlier version-one document.
 // Required identity/version/date still fail closed, and validate checks all links.
 extension PickupJourney {
+    func nextUnfilledOffer(at date: Date) -> PickupOffer? {
+        guard closedAt == nil else { return nil }
+        let observed = Set(pickup?.receipts.map(\.key.orderLineID) ?? [])
+        let outstanding = offers.filter { !observed.contains($0.lineID) }
+            .sorted { $0.deadline.cutoff < $1.deadline.cutoff }
+        return outstanding.first { date < $0.deadline.cutoff } ?? outstanding.last
+    }
+
     private enum CodingKeys: String, CodingKey {
         case recipientSends
         case id, savedAt, version, revision, basket, context, cap, quote, quotedRevisionID, frozenQuotes, pickup, needs, plannedNeeds, needDetails, ledgerBasis, ledgerSourceRevisionID, ledgerPackSelections, originShopID, nextShopReview, carriedMeals, urgent, stockLots, stockNeeds, repairs, deferred, flexible, proposals, undoneProposals, offers, offerActions, notes, cookShareEvents, settlement, closedAt, feedback
@@ -251,6 +259,10 @@ struct PickupPersistenceLocation {
     var reminderJourneys: [PickupJourney] {
         let previousTrips = Set(journeys.compactMap(\.originShopID))
         return journeys.filter { !previousTrips.contains($0.id) }
+    }
+    func resumableJourney(for shopID: UUID?) -> PickupJourney? {
+        let target = shopID ?? selectedID
+        return reminderJourneys.first { $0.id == target && $0.closedAt == nil }
     }
     var result: CheckoutResult? {
         guard let value = journey, let quote = value.quote, value.quotedRevisionID == value.basket?.current.id else { return nil }

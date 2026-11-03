@@ -56,7 +56,7 @@ import CoreDomain
         guard editable, canReviewPreview, let preview, !preview.needsPurchaseAmendment, !preview.proposal.isIsolatedPreview,
               let access = try? access(for: preview.proposal.shopID), case .local = access.scope,
               (try? access.validate(shopID: preview.proposal.shopID, at: clock(), applying: true)) != nil else { return false }
-        return true
+        return !preview.proposal.tool.requiresPaidAccess || access.hasPaidTools
     }
     var sharedPreview: Bool {
         guard let id = preview?.proposal.shopID, let access = try? access(for: id) else { return false }
@@ -85,6 +85,13 @@ import CoreDomain
         } catch { preview = nil; fail(error); return false }
     }
     func cancelPreview() { preview = nil; error = nil }
+    func endDecision(restoring previous: DinnerPreview?) {
+        cancelPreview()
+        guard let previous, shop?.id == previous.proposal.shopID, shop?.revisionID == previous.proposal.baseRevisionID,
+              state.revisionID == previous.proposal.planningRevisionID else { return }
+        preview = previous
+        if !canReviewPreview { preview = nil }
+    }
     @discardableResult func applyPreview() async -> Bool {
         guard canApply, let reviewed = preview else { fail(DinnerPlanningError.forbidden); return false }
         let ok = await mutate(key: "dinner-apply-\(reviewed.proposal.id)", shopID: reviewed.proposal.shopID) { workspace, index, access, now in
@@ -208,12 +215,12 @@ import CoreDomain
         guard let shop else { throw DinnerPlanningError.invalid("shop") }
         return try DinnerScenarioEngine.pair(current: current, alternatives: alternatives,
             selectedAcceptedDinnerIDs: selected, state: state, cap: cap,
-            access: access(for: shop.id), at: clock(), isolated: isolated)
+            access: access(for: shop.id), at: clock(), isolated: isolated, ledger: shop)
     }
     func recover(alternatives: [DinnerScenario], cap: CheckoutCap?, extraTripAccepted: Bool) throws -> DinnerRecoveryResult {
         guard let shop else { throw DinnerPlanningError.invalid("shop") }
         return try DinnerScenarioEngine.recover(alternatives: alternatives, state: state, cap: cap,
-            access: access(for: shop.id), at: clock(), extraTripAccepted: extraTripAccepted)
+            access: access(for: shop.id), at: clock(), extraTripAccepted: extraTripAccepted, ledger: shop)
     }
     func compare(_ pair: TwoStoreQuotePair) throws -> TwoStoreQuoteResult {
         try TwoStoreQuoteEngine.compare(pair, access: access(for: pair.shopID), at: clock())

@@ -62,6 +62,7 @@ struct SharedShopTransfer: Equatable {
 @MainActor final class HouseholdShopModel: ObservableObject {
     @Published private(set) var scope: HouseholdBootstrap
     @Published private(set) var financialEntries: [ShopperFinancialEntry]?
+    @Published private(set) var lastShopSync: Date?
     @Published private(set) var shop: ShopperShop?
     @Published private(set) var busy = false
     @Published private(set) var authorized = true
@@ -105,6 +106,7 @@ struct SharedShopTransfer: Equatable {
             draft = .init()
             editing = false; creatingAnother = false
             shop = nil
+            lastShopSync = nil
         }
         scope = value
     }
@@ -141,7 +143,8 @@ struct SharedShopTransfer: Equatable {
                 }
             }
             shop = value
-        } else { shop = nil }
+            lastShopSync = Date()
+        } else { shop = nil; lastShopSync = nil }
         requiresRefresh = false
     }
     func loadFinancialEntries() async {
@@ -267,7 +270,7 @@ struct SharedShopTransfer: Equatable {
             self.pending = nil; delivery = .none; review = nil; acknowledged = false; attempts = 0
         } catch { await handle(error, start: start) }
     }
-    func clear() { generation = UUID(); financialEntries = nil; authorized = false; shop = nil; review = nil; pending = nil; draft = .init(); notice = nil; editing = false; acknowledged = false; delivery = .none }
+    func clear() { generation = UUID(); lastShopSync = nil; financialEntries = nil; authorized = false; shop = nil; review = nil; pending = nil; draft = .init(); notice = nil; editing = false; acknowledged = false; delivery = .none }
     private func handle(_ error: Error, start: UUID) async {
         guard start == generation else { return }
         switch error as? ClientError {

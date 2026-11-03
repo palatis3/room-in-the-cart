@@ -219,6 +219,22 @@ import CoreDomain
         let second = ShoppingLedger(title: "Other pickup"); store.workspace.shops.append(second); store.workspace.selectedShopID = second.id
         XCTAssertFalse(model.canReviewPreview); XCTAssertFalse(model.canApply)
     }
+    func testCancellingContextualReviewRestoresOnlyTheStillCurrentPendingDecision() async throws {
+        let (store,model) = fixture()
+        XCTAssertTrue(model.prepare([.choose(PlannedDinner(template: try recipe()))]))
+        let pending = try XCTUnwrap(model.preview)
+        XCTAssertTrue(model.prepare([.choose(PlannedDinner(template: try recipe()))]))
+        XCTAssertNotEqual(model.preview?.proposal.id, pending.proposal.id)
+        model.endDecision(restoring: pending)
+        XCTAssertEqual(model.preview?.proposal.id,pending.proposal.id)
+        XCTAssertEqual(store.commits,0)
+        let applied = await model.applyPreview()
+        XCTAssertTrue(applied)
+        model.endDecision(restoring: pending)
+        XCTAssertNil(model.preview)
+        XCTAssertEqual(store.commits,1)
+    }
+
     func testInvalidReplacementPreviewClearsPreviousPendingPreview() throws {
         let (_, model) = fixture()
         XCTAssertTrue(model.prepare([.choose(PlannedDinner(template: try recipe()))]))

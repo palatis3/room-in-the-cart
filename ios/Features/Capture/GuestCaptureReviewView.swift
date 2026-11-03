@@ -4,6 +4,8 @@ import CoreDomain
 /// Returns an explicitly reviewed total to the existing dinner planner. Never applies a dinner change.
 @MainActor struct GuestCaptureReviewView: View {
     let meals: [CaptureGuestMealChoice]
+    let dismissAfterPreview: Bool
+    let cancelDecision: (() -> Void)?
     let authorize: () -> Bool
     let onPreview: (ReviewedGuestCapture) -> Void
     @StateObject private var capture: CaptureModel
@@ -15,7 +17,9 @@ import CoreDomain
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
     init(meals: [CaptureGuestMealChoice], localeIdentifier: String = Locale.current.identifier,
+         dismissAfterPreview: Bool = true, cancelDecision: (() -> Void)? = nil,
          authorize: @escaping () -> Bool, onPreview: @escaping (ReviewedGuestCapture) -> Void) {
+        self.dismissAfterPreview = dismissAfterPreview; self.cancelDecision = cancelDecision
         self.meals = meals; self.authorize = authorize; self.onPreview = onPreview
         _capture = StateObject(wrappedValue: CaptureModel(localeIdentifier: localeIdentifier, speech: OnDeviceSpeechCapture(), ocr: OnDeviceTextCapture()))
     }
@@ -71,13 +75,13 @@ import CoreDomain
                     delivered = true
                     onPreview(.init(id: words.id, originalText: words.originalText, occurrenceID: meal.id,
                         groupID: group.id, baselineServings: group.currentServings, total: total))
-                    dismiss()
+                    if dismissAfterPreview { dismiss() }
                 }.disabled(!authorize() || delivered || !confirmed || capture.busy || capture.candidate != nil || capture.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || group == nil || reviewedTotal == nil)
                     .accessibilityIdentifier("capture.guests.preview")
             }
         }
         .navigationTitle(captureText("Review guest change"))
-        .toolbar { ToolbarItem(placement: .cancellationAction) { Button(captureText("Cancel")) { capture.close(); dismiss() } } }
+        .toolbar { ToolbarItem(placement: .cancellationAction) { Button(captureText("Cancel")) { capture.close(); if let cancelDecision { cancelDecision() } else { dismiss() } } } }
         .onChange(of: capture.text) { _, _ in confirmed = false }
         .onChange(of: total) { _, _ in confirmed = false }
         .onChange(of: mealID) { _, _ in groupID = nil; total = ""; confirmed = false }

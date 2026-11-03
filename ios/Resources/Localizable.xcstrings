@@ -1573,20 +1573,20 @@
         }
       }
     },
-    "Start with one item. Compare two packs and see what it costs to bring home enough.": {
+    "Compare packs for one item, or start a pickup to build your shopping list.": {
       "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Start with one item. Compare two packs and see what it costs to bring home enough."
+            "value": "Compare packs for one item, or start a pickup to build your shopping list."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Empieza con un artículo. Compara dos paquetes y averigua cuánto cuesta llevar a casa la cantidad que necesitas."
+            "value": "Compara paquetes de un artículo o inicia un pedido para armar tu lista de compras."
           }
         }
       }
@@ -2241,6 +2241,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "No se pudo leer esta comparación. Sus datos guardados se han conservado. Las demás comparaciones siguen disponibles."
+          }
+        }
+      }
+    },
+    "Last local save": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last local save"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Última vez que se guardó en este iPhone"
+          }
+        }
+      }
+    },
+    "Last shared shop sync": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last shared shop sync"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Última sincronización de la compra compartida"
           }
         }
       }

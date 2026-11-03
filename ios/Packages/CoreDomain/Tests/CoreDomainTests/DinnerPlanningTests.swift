@@ -145,6 +145,38 @@ final class DinnerPlanningTests: XCTestCase {
         XCTAssertEqual(ledger.contributions, sources); XCTAssertEqual(week.days[3].meals.first?.id, chosen.occurrenceID)
         XCTAssertEqual(week.days[1].protectedContributionIDs, [reservation.contributionID]); XCTAssertEqual(week.days[3].day.iso8601, "2026-11-01")
     }
+    func testPairingRetainsProtectedBindingIdentityAndQuantityAfterReplacingNamedGroup() throws {
+        var ledger = ShoppingLedger(), state = DinnerPlanningState()
+        let supper = ServingGroup(name: "Supper", servings: try Rational(2))
+        let lunch = ServingGroup(name: "Lunch", servings: .one, isProtected: true)
+        let template = MealTemplate(title: "Rice", servings: try Rational(3),
+            ingredients: [.init(name: "Rice", quantity: try q(8))], servingGroups: [supper,lunch])
+        let occurrence = try ledger.chooseMeal(template, at: now)
+        let id = try XCTUnwrap(ledger.mealOccurrences.first?.ingredientContributionIDs.first)
+        let protected = DinnerPortionBinding(occurrenceID: occurrence, contributionID: id, groupID: lunch.id, quantity: try q(5), servings: .one)
+        let mutable = DinnerPortionBinding(occurrenceID: occurrence, contributionID: id, groupID: supper.id, quantity: try q(3), servings: supper.servings)
+        XCTAssertThrowsError(try DinnerPlanningEngine.removingServingGroup(supper.id, from: occurrence, ledger: ledger, state: state))
+        try state.setPortionBindings([protected,mutable], for: occurrence, ledger: ledger, access: access(ledger), at: now)
+        XCTAssertNil(try DinnerPlanningEngine.removingServingGroup(lunch.id, from: occurrence, ledger: ledger, state: state))
+        let keep = try XCTUnwrap(DinnerPlanningEngine.removingServingGroup(supper.id, from: occurrence, ledger: ledger, state: state))
+        let candidate = AcceptedDinner(id: UUID(), template: MealTemplate(title: "Soup", servings: supper.servings,
+            ingredients: [.init(name: "Peas", quantity: try q(2))]), acceptedAt: now)
+        try state.accept(candidate, access: access(ledger), at: now)
+        let changes: [DinnerLedgerChange] = [.adjust(keep), .choose(.init(acceptedDinnerID: candidate.id, template: candidate.template))]
+        let preview = try DinnerPlanningEngine.preview(changes: changes, tool: .pairing, ledger: ledger, state: state, access: access(ledger), phase: .draft, at: now)
+        XCTAssertEqual(ledger.contributions.first?.quantity?.amount, try Rational(8))
+        let original = ledger
+        let receipt = try DinnerPlanningEngine.apply(preview.proposal, ledger: &ledger, state: &state, access: access(original), phase: .draft, at: now)
+        XCTAssertEqual(ledger.mealOccurrences.map(\.servings), [.one,supper.servings])
+        XCTAssertEqual(ledger.mealOccurrences.first?.servingGroups,[lunch])
+        XCTAssertEqual(ledger.contributions.first?.id,id)
+        XCTAssertEqual(ledger.contributions.first?.quantity?.amount,try Rational(5))
+        XCTAssertEqual(state.portionBindings,[protected])
+        let retry = try DinnerPlanningEngine.apply(preview.proposal, ledger: &ledger, state: &state, access: access(original), phase: .draft, at: now)
+        XCTAssertEqual(receipt,retry)
+        try state.validate(shops: [ledger])
+    }
+
     func testGuestBindingPreservesProtectedPortionsAndCrossesWholePackBoundary() throws {
         var ledger = ShoppingLedger(), state = DinnerPlanningState()
         let dinnerGroup = ServingGroup(name: "Dinner", servings: try Rational(3))
@@ -306,6 +338,7 @@ final class DinnerPlanningTests: XCTestCase {
         let result = try TwoStoreQuoteEngine.compare(pair, access: access(ledger, paid: false), at: now)
         XCTAssertEqual(result.first.checkout.total.exact?.minorUnits, 3800); XCTAssertEqual(result.second.checkout.total.exact?.minorUnits, 3500)
         XCTAssertEqual(result.first.tripInclusive.total.exact?.minorUnits, 3800); XCTAssertEqual(result.second.tripInclusive.total.exact?.minorUnits, 3900)
+        XCTAssertEqual(result.itemSubtotalChange?.minorUnits, -200)
         XCTAssertEqual(result.checkoutChange?.minorUnits, -300); XCTAssertEqual(result.tripCashChange?.minorUnits, 100)
         XCTAssertEqual(result.extraMinutesChange, 18); XCTAssertEqual(result.preferredByTotalCash, pair.first.id)
         XCTAssertThrowsError(try CheckoutEngine.compare(before: pair.first.quote, after: pair.second.quote))

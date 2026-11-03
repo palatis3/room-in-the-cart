@@ -446,6 +446,9 @@ public struct DinnerPlanningState: Codable, Equatable, Sendable {
                             quantity: Quantity(amount: amount, unit: binding.quantity.unit, originalLiteral: binding.quantity.originalLiteral,
                                 confirmedConversion: binding.quantity.confirmedConversion), servings: group.servings)
                     }
+                } else if receipt.proposal.tool == .pairing {
+                    let retained = Set(adjustment.groups.map(\.id))
+                    portionBindings.removeAll { $0.occurrenceID == adjustment.occurrenceID && !retained.contains($0.groupID) }
                 } else { portionBindings.removeAll { $0.occurrenceID == adjustment.occurrenceID } }
             }
         }
@@ -495,10 +498,41 @@ public enum DinnerPlanningEngine {
             } else if proposal.tool != .manual { throw DinnerPlanningError.reviewRequired("acceptedDinner") }
         }
     }
+    /// A reviewed replacement retains the original group, occurrence and grocery identities
+    /// for every serving group except the one explicitly moved to another recipe.
+    public static func removingServingGroup(_ groupID: UUID, from occurrenceID: UUID, ledger: ShoppingLedger,
+                                             state: DinnerPlanningState) throws -> DinnerAdjustment? {
+        guard let meal = ledger.mealOccurrences.first(where: { $0.id == occurrenceID && $0.removedAt == nil }),
+              let removed = meal.servingGroups.first(where: { $0.id == groupID }), !removed.isProtected else { return nil }
+        let remaining = meal.servingGroups.filter { $0.id != groupID }
+        guard !remaining.isEmpty, try meal.servingGroups.reduce(Rational.zero, { try $0.adding($1.servings) }) == meal.servings
+        else { return nil }
+        let bindings = state.portionBindings.filter { $0.occurrenceID == occurrenceID }
+        try validateBindings(bindings, occurrenceID: occurrenceID, ledger: ledger)
+        let edits = try meal.ingredientContributionIDs.map { id in
+            let ingredient = bindings.filter { $0.contributionID == id }
+            guard Set(ingredient.map(\.groupID)) == Set(meal.servingGroups.map(\.id)),
+                  let original = ledger.contributions.first(where: { $0.id == id })?.quantity else { throw DinnerPlanningError.reviewRequired("portionBindings") }
+            let kept = try ingredient.filter { $0.groupID != groupID }.reduce(Rational.zero) { total, binding in
+                guard let value = try binding.quantity.converted(to: original.unit) else { throw DinnerPlanningError.reviewRequired("portionBindingUnit") }
+                return try total.adding(value)
+            }
+            return DinnerQuantityEdit(contributionID: id, quantity: Quantity(amount: kept, unit: original.unit,
+                originalLiteral: original.originalLiteral, confirmedConversion: original.confirmedConversion))
+        }
+        return DinnerAdjustment(occurrenceID: occurrenceID, servings: try meal.servings.subtracting(removed.servings), groups: remaining, quantities: edits)
+    }
+
     static func validateProtectedAdjustments(_ proposal: DinnerProposal, ledger: ShoppingLedger, state: DinnerPlanningState) throws {
         for change in proposal.changes {
             guard case .adjust(let adjustment) = change,
                   let meal = ledger.mealOccurrences.first(where: { $0.id == adjustment.occurrenceID }) else { continue }
+            if proposal.tool == .pairing {
+                let removed = meal.servingGroups.filter { group in !adjustment.groups.contains(where: { $0.id == group.id }) }
+                guard removed.count == 1,
+                      try removingServingGroup(removed[0].id, from: meal.id, ledger: ledger, state: state) == adjustment
+                else { throw DinnerPlanningError.reviewRequired("reviewPortionBindings") }
+            }
             let protectedGroups = Set(meal.servingGroups.filter(\.isProtected).map(\.id))
             guard !protectedGroups.isEmpty, !adjustment.quantities.isEmpty else { continue }
             let bindings = state.portionBindings.filter { $0.occurrenceID == meal.id }

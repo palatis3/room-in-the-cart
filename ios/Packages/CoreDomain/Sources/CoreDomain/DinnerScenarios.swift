@@ -1,5 +1,12 @@
 import Foundation
 
+/// References reviewed ingredient quantities for this group of a particular chosen dinner.
+public struct DinnerCommitmentPortion: Codable, Hashable, Sendable {
+    public let occurrenceID: UUID
+    public let groupID: UUID
+    public init(occurrenceID: UUID, groupID: UUID) { self.occurrenceID = occurrenceID; self.groupID = groupID }
+}
+
 public struct DinnerCommitment: Codable, Equatable, Sendable, Identifiable {
     public enum Kind: String, Codable, Sendable { case dinner, lunch, side, staple }
     public let id: UUID
@@ -7,8 +14,10 @@ public struct DinnerCommitment: Codable, Equatable, Sendable, Identifiable {
     public let kind: Kind
     public let portions: Rational
     public let protected: Bool
+    public let reviewedPortion: DinnerCommitmentPortion?
     public let day: MealDay?
-    public init(id: UUID = UUID(), name: String, kind: Kind, portions: Rational, protected: Bool = false, day: MealDay? = nil) {
+    public init(id: UUID = UUID(), name: String, kind: Kind, portions: Rational, protected: Bool = false, day: MealDay? = nil, reviewedPortion: DinnerCommitmentPortion? = nil) {
+        self.reviewedPortion = reviewedPortion
         self.id = id; self.name = name; self.kind = kind; self.portions = portions; self.protected = protected; self.day = day
     }
 }
@@ -19,6 +28,8 @@ public struct DinnerCommitmentSet: Codable, Equatable, Sendable, Identifiable {
     public func validate() throws {
         guard !commitments.isEmpty, commitments.count <= 500 else { throw DinnerPlanningError.invalid("commitments") }
         try dinnerUnique(commitments.map(\.id))
+        let portions = commitments.compactMap(\.reviewedPortion)
+        guard Set(portions).count == portions.count else { throw DinnerPlanningError.invalid("duplicateServingGroup") }
         for commitment in commitments {
             try dinnerText(commitment.name); try commitment.day?.validate()
             guard commitment.portions > .zero else { throw DinnerPlanningError.invalid("portions") }
@@ -137,7 +148,7 @@ public struct DinnerRecoveryResult: Equatable, Sendable {
 }
 
 public enum DinnerScenarioEngine {
-    public static func evaluate(_ scenario: DinnerScenario, acceptedDinners: [AcceptedDinner], cap: CheckoutCap? = nil) throws -> DinnerScenarioResult {
+    public static func evaluate(_ scenario: DinnerScenario, acceptedDinners: [AcceptedDinner], cap: CheckoutCap? = nil, ledger: ShoppingLedger? = nil, state: DinnerPlanningState? = nil) throws -> DinnerScenarioResult {
         try scenario.commitments.validate(); try scenario.preparation.validate()
         guard scenario.context.commitmentsID == scenario.commitments.id, scenario.acceptedChanges >= 0,
               scenario.demands.count <= 2_000, scenario.packs.count <= 1_000, scenario.stock.count <= 2_000,
@@ -207,6 +218,25 @@ public enum DinnerScenarioEngine {
                 guard let sourceID else { continue }
                 guard let dinner = acceptedDinners.first(where: { $0.id == sourceID }) else { throw DinnerPlanningError.notFound(sourceID) }
                 representedDinners.insert(sourceID)
+                var boundAmounts: [UUID: Quantity] = [:]
+                if let portion = commitment.reviewedPortion {
+                    guard let ledger, let state,
+                          let meal = ledger.mealOccurrences.first(where: { $0.id == portion.occurrenceID && $0.removedAt == nil }),
+                          let group = meal.servingGroups.first(where: { $0.id == portion.groupID }),
+                          group.servings == commitment.portions, group.isProtected == commitment.protected, meal.scheduledDay == commitment.day
+                    else { throw DinnerPlanningError.reviewRequired("currentServingGroup") }
+                    if meal.templateID == dinner.template.id {
+                        guard meal.templateRevision == dinner.template.revision,
+                              meal.ingredientContributionIDs.count == dinner.template.ingredients.count
+                        else { throw DinnerPlanningError.stalePreview }
+                        let bindings = state.portionBindings.filter { $0.occurrenceID == meal.id }
+                        try DinnerPlanningEngine.validateBindings(bindings, occurrenceID: meal.id, ledger: ledger)
+                        for (source,ingredient) in zip(meal.ingredientContributionIDs,dinner.template.ingredients) {
+                            guard let bound = bindings.first(where: { $0.groupID == group.id && $0.contributionID == source }) else { throw DinnerPlanningError.reviewRequired("portionBinding") }
+                            boundAmounts[ingredient.id] = bound.quantity
+                        }
+                    } else if group.isProtected { throw DinnerPlanningError.reviewRequired("protectedGroup") }
+                }
                 let required = Set(dinner.template.ingredients.map(\.id))
                 let supplied = Set(mealDemands.compactMap(\.ingredientID))
                 guard supplied.isSubset(of: required) else { throw DinnerPlanningError.invalid("demandIngredient") }
@@ -219,7 +249,11 @@ public enum DinnerScenarioEngine {
                         demandProofComplete = false
                         issues.append("Review unknown recipe quantity for \(ingredient.name)"); continue
                     }
-                    let expected = try recipeQuantity.amount.multiplied(by: commitment.portions.divided(by: dinner.template.servings))
+                    let expected: Rational
+                    if let bound = boundAmounts[ingredient.id] {
+                        guard let value = try bound.converted(to: recipeQuantity.unit) else { throw DinnerPlanningError.reviewRequired("portionBindingUnit") }
+                        expected = value
+                    } else { expected = try recipeQuantity.amount.multiplied(by: commitment.portions.divided(by: dinner.template.servings)) }
                     var entered = Rational.zero
                     var complete = true
                     for demand in mealDemands where demand.ingredientID == ingredient.id {
@@ -325,11 +359,11 @@ public enum DinnerScenarioEngine {
             packs: packResults, foodCoverageComplete: foodComplete, timingFeasible: scenario.preparation.isFeasible, issues: issues)
     }
     public static func pair(current: DinnerScenario, alternatives: [DinnerScenario], selectedAcceptedDinnerIDs: Set<UUID>,
-        state: DinnerPlanningState, cap: CheckoutCap?, access: DinnerAccessContext, at now: Date, isolated: Bool = false, searchLimit: Int = 32) throws -> DinnerPairingResult {
-        try access.validate(shopID: access.shopID, at: now, budget: true)
+        state: DinnerPlanningState, cap: CheckoutCap?, access: DinnerAccessContext, at now: Date, isolated: Bool = false, searchLimit: Int = 32, ledger: ShoppingLedger? = nil) throws -> DinnerPairingResult {
+        try access.validate(shopID: ledger?.id ?? access.shopID, at: now, budget: true)
         guard access.hasPaidTools || isolated else { throw DinnerPlanningError.paidAccessRequired }
         guard (1...128).contains(searchLimit), alternatives.count <= 500 else { throw DinnerPlanningError.invalid("searchLimit") }
-        let baseline = try evaluate(current, acceptedDinners: state.acceptedDinners, cap: cap)
+        let baseline = try evaluate(current, acceptedDinners: state.acceptedDinners, cap: cap, ledger: ledger, state: state)
         var compared: [(DinnerScenario, DinnerScenarioResult)] = []
         let alreadySelected = selectedAcceptedDinnerIDs.union(current.acceptedDinnerIDs)
         var newChoices = 0, examined = 0
@@ -340,7 +374,7 @@ public enum DinnerScenarioEngine {
                   scenario.baselineComplete == current.baselineComplete else { throw DinnerPlanningError.reviewRequired("changedOriginalItems") }
             if Set(scenario.acceptedDinnerIDs).isSubset(of: alreadySelected) { continue }
             newChoices += 1
-            let result = try evaluate(scenario, acceptedDinners: state.acceptedDinners, cap: cap)
+            let result = try evaluate(scenario, acceptedDinners: state.acceptedDinners, cap: cap, ledger: ledger, state: state)
             _ = try CheckoutEngine.compare(before: baseline.quote, after: result.quote, cap: cap)
             compared.append((scenario, result))
         }
@@ -350,8 +384,8 @@ public enum DinnerScenarioEngine {
             alternatives: compared.map { $0.1 }, preferredScenarioIDs: preferred, untestedCount: alternatives.count - examined)
     }
     public static func recover(alternatives: [DinnerScenario], state: DinnerPlanningState, cap: CheckoutCap?,
-        access: DinnerAccessContext, at now: Date, extraTripAccepted: Bool = false) throws -> DinnerRecoveryResult {
-        try access.validate(shopID: access.shopID, at: now, budget: true)
+        access: DinnerAccessContext, at now: Date, extraTripAccepted: Bool = false, ledger: ShoppingLedger? = nil) throws -> DinnerRecoveryResult {
+        try access.validate(shopID: ledger?.id ?? access.shopID, at: now, budget: true)
         guard access.hasPaidTools else { throw DinnerPlanningError.paidAccessRequired }
         guard alternatives.count <= 128 else { throw DinnerPlanningError.invalid("recoveryLimit") }
         if let first = alternatives.first {
@@ -361,7 +395,7 @@ public enum DinnerScenarioEngine {
         for alternative in alternatives {
             guard !alternative.acceptedDinnerIDs.isEmpty,
                   alternative.acceptedDinnerIDs.allSatisfy({ id in state.acceptedDinners.contains(where: { $0.id == id && $0.acceptedFallback }) }) else { continue }
-            evaluated.append((alternative, try evaluate(alternative, acceptedDinners: state.acceptedDinners, cap: cap)))
+            evaluated.append((alternative, try evaluate(alternative, acceptedDinners: state.acceptedDinners, cap: cap, ledger: ledger, state: state)))
         }
         let feasible = evaluated.filter { pair in
             guard pair.1.feasible else { return false }
@@ -420,9 +454,14 @@ public struct StoreQuoteOption: Codable, Equatable, Sendable, Identifiable {
     public let singleStore: Bool
     public let trip: StoreTripEvidence
     public let cap: CheckoutCap?
+    public let observedItemSubtotal: Money?
+    public let eligibilityTerms: String?
     public let adoptionBasis: ShopBasis?
     public init(id: UUID = UUID(), label: String, commitments: DinnerCommitmentSet, quote: CheckoutQuote,
-        available: Bool?, quantitiesMatched: Bool, singleStore: Bool = true, trip: StoreTripEvidence, cap: CheckoutCap? = nil, adoptionBasis: ShopBasis? = nil) {
+        available: Bool?, quantitiesMatched: Bool, singleStore: Bool = true, trip: StoreTripEvidence, cap: CheckoutCap? = nil, adoptionBasis: ShopBasis? = nil,
+        observedItemSubtotal: Money? = nil, eligibilityTerms: String? = nil) {
+        self.observedItemSubtotal = observedItemSubtotal
+        self.eligibilityTerms = eligibilityTerms
         self.id = id; self.label = label; self.commitments = commitments; self.quote = quote; self.available = available
         self.quantitiesMatched = quantitiesMatched; self.singleStore = singleStore; self.trip = trip; self.cap = cap; self.adoptionBasis = adoptionBasis
     }
@@ -444,6 +483,10 @@ public struct TwoStoreQuotePair: Codable, Equatable, Sendable, Identifiable {
             try dinnerText(option.label); try option.commitments.validate()
             guard option.quote.context.commitmentsID == option.commitments.id,
                   option.trip.extraMinutes.map({ (0...525_600).contains($0) }) ?? true else { throw DinnerPlanningError.invalid("quoteOption") }
+            if let terms = option.eligibilityTerms { try dinnerText(terms) }
+            if let subtotal = option.observedItemSubtotal {
+                guard case .inclusiveTotal = option.quote.pricing, subtotal >= .zero else { throw DinnerPlanningError.invalid("quoteItemSubtotal") }
+            }
             try option.adoptionBasis?.validate()
             if let basis = option.adoptionBasis {
                 guard basis.branch == option.quote.context.branchID, basis.mode.rawValue == option.quote.context.mode.rawValue else { throw DinnerPlanningError.invalid("quoteAdoptionBasis") }
@@ -464,6 +507,7 @@ public struct TwoStoreQuoteResult: Equatable, Sendable {
     public let first: StoreQuoteResult
     public let second: StoreQuoteResult
     public let comparable: Bool
+    public let itemSubtotalChange: Money?
     public let checkoutChange: Money?
     public let tripCashChange: Money?
     public let extraMinutesChange: Int?
@@ -473,6 +517,21 @@ public struct TwoStoreQuoteResult: Equatable, Sendable {
     public let issues: [String]
 }
 public enum TwoStoreQuoteEngine {
+    public static func itemSubtotal(_ option: StoreQuoteOption) throws -> Money? {
+        switch option.quote.pricing {
+        case .inclusiveTotal:
+            return option.observedItemSubtotal
+        case let .components(lines, complete, _, _, _, _):
+            guard complete else { return nil }
+            var cents: Int64 = 0
+            for line in lines {
+                guard case let .exact(amount) = line.cost else { return nil }
+                cents = try checkedAdd(cents, amount.minorUnits)
+            }
+            return Money(minorUnits: cents)
+        }
+    }
+
     static func tripTotal(_ option: StoreQuoteOption) throws -> CheckoutResult {
         let checkout = try CheckoutEngine.evaluate(option.quote).total
         let checkoutEvidence: CostEvidence
@@ -508,6 +567,9 @@ public enum TwoStoreQuoteEngine {
         let ar = try CheckoutEngine.evaluate(a.quote, cap: a.cap), br = try CheckoutEngine.evaluate(b.quote, cap: b.cap)
         let at = try tripTotal(a), bt = try tripTotal(b)
         let coverage = a.available == true && b.available == true
+        let items = try comparable ? itemSubtotal(a).flatMap { first in
+            try itemSubtotal(b).map { try $0.subtracting(first) }
+        } : nil
         let checkoutDelta = try comparable ? ar.total.exact.flatMap { av in try br.total.exact.map { try $0.subtracting(av) } } : nil
         let tripDelta = try comparable ? at.total.exact.flatMap { av in try bt.total.exact.map { try $0.subtracting(av) } } : nil
         let minutes = comparable ? a.trip.extraMinutes.flatMap { av in b.trip.extraMinutes.map { $0 - av } } : nil
@@ -523,7 +585,7 @@ public enum TwoStoreQuoteEngine {
         if at.total.exact == nil || bt.total.exact == nil { issues.append("Total trip cash is unresolved") }
         return TwoStoreQuoteResult(first: .init(optionID: a.id, checkout: ar, tripInclusive: at, extraMinutes: a.trip.extraMinutes, coverageConfirmed: a.available == true),
             second: .init(optionID: b.id, checkout: br, tripInclusive: bt, extraMinutes: b.trip.extraMinutes, coverageConfirmed: b.available == true),
-            comparable: comparable, checkoutChange: checkoutDelta, tripCashChange: tripDelta, extraMinutesChange: minutes,
+            comparable: comparable, itemSubtotalChange: items, checkoutChange: checkoutDelta, tripCashChange: tripDelta, extraMinutesChange: minutes,
             preferredByTotalCash: preferred, secondTripCashBreakEven: breakEven, issues: issues)
     }
     public static func previewAdoption(_ pair: TwoStoreQuotePair, optionID: UUID, basis: ShopBasis,

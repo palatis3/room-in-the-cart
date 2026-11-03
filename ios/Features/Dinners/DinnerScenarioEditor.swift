@@ -14,7 +14,28 @@ struct DinnerScenarioEditor: View {
     @State private var library: DinnerLibraryPairings?
     @State private var libraryAlternatives: [DinnerScenario] = []
     init(model: DinnerFeatureModel, shop: ShoppingLedger) {
-        self.model = model; _draft = State(initialValue: DinnerScenarioDraft(shop: shop, state: model.state))
+        self.model = model
+        var initial = DinnerScenarioDraft(shop: shop, state: model.state)
+        #if DEBUG && DINNER_DECISION_UI_FIXTURE
+        let reviewedLibrary = try? DinnerDecisionUIFixture.seed(&initial, shop: shop, state: model.state)
+        _library = State(initialValue: reviewedLibrary); _target = State(initialValue: reviewedLibrary?.target)
+        #endif
+        _draft = State(initialValue: initial)
+    }
+    private func reviewScenarios() {
+        do {
+            guard let shop = model.shop else { return }
+            guard leftoversCurrent else { throw DinnerPlanningError.stalePreview }
+            if let library {
+                guard target == library.target else { throw DinnerPlanningError.stalePreview }
+                let (baseline, alternatives, cap, excluded) = try library.build(draft, shop: shop, state: model.state)
+                guard let first = alternatives.first else { return }
+                conflicts = excluded; libraryAlternatives = alternatives
+                reviewed = DinnerReviewedScenarios(shopID: shop.id, baseRevision: shop.revisionID, planningRevision: model.state.revisionID,
+                                                  current: baseline, candidate: first, cap: cap)
+            } else { conflicts = []; libraryAlternatives = []; reviewed = try draft.build(shop: shop, state: model.state) }
+            showReview = true
+        } catch { model.report(error) }
     }
     private func findCandidates(offset: Int) {
         guard let target, let shop = model.shop else { return }
@@ -138,24 +159,19 @@ struct DinnerScenarioEditor: View {
                 }
                 Section {
                     Button(dinnerText("Review complete scenarios")) {
-                        do {
-                            guard let shop = model.shop else { return }
-                            guard leftoversCurrent else { throw DinnerPlanningError.stalePreview }
-                            if let library {
-                                guard target == library.target else { throw DinnerPlanningError.stalePreview }
-                                let (baseline, alternatives, cap, excluded) = try library.build(draft, shop: shop, state: model.state)
-                                guard let first = alternatives.first else { return }
-                                conflicts = excluded; libraryAlternatives = alternatives
-                                reviewed = DinnerReviewedScenarios(shopID: shop.id, baseRevision: shop.revisionID, planningRevision: model.state.revisionID,
-                                                                  current: baseline, candidate: first, cap: cap)
-                            } else { conflicts = []; libraryAlternatives = []; reviewed = try draft.build(shop: shop, state: model.state) }
-                            showReview = true
-                        } catch { model.report(error) }
+                        reviewScenarios()
                     }.disabled(!model.editable)
                 }
             }
             DinnerFeedback(model: model)
         }.navigationTitle(dinnerText("Scenario evidence")).dinnerAccess(model, budget: true)
+             .toolbar {
+                if library != nil {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button(dinnerText("Review"), action: reviewScenarios).accessibilityIdentifier("dinnerScenarioReview")
+                    }
+                }
+            }
             .navigationDestination(isPresented: $showReview) {
                 if leftoversCurrent, let reviewed, let shop = model.shop, reviewed.shopID == shop.id, reviewed.baseRevision == shop.revisionID,
                    reviewed.planningRevision == model.state.revisionID {

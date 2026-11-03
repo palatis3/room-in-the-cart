@@ -35,7 +35,7 @@ struct DinnerOccurrenceView: View {
                 }
                 Section(dinnerText("Portions and needs")) {
                     NavigationLink(dinnerText("Edit quantities manually")) { DinnerManualAdjustmentView(model: model, meal: meal) }
-                    NavigationLink(dinnerText("Review ingredient portions and guests")) { DinnerGuestsView(model: model, meal: meal) }
+                    DinnerDecisionButton(model: model, title: dinnerText("Review ingredient portions and guests"), identifier: "dinnerGuests") { DinnerGuestsView(model: model, meal: meal) }
                     ForEach(meal.ingredientContributionIDs, id: \.self) { id in
                         if let source = model.shop?.contributions.first(where: { $0.id == id && $0.removedAt == nil }) {
                             VStack(alignment: .leading) { Text(source.productName); Text(dinnerQuantity(source.quantity)) }
@@ -52,7 +52,7 @@ struct DinnerOccurrenceView: View {
             DinnerFeedback(model: model)
         }.navigationTitle(dinnerText("Chosen dinner")).dinnerAccess(model)
             .onAppear { if let day = meal?.scheduledDay { scheduled = true; date = day.date ?? date } }
-            .navigationDestination(isPresented: $showPreview) { DinnerPreviewView(model: model) }
+            .dinnerApplyPresentation(model, presented: $showPreview)
     }
 }
 struct DinnerManualAdjustmentView: View {
@@ -107,18 +107,25 @@ struct DinnerManualAdjustmentView: View {
             }
             DinnerFeedback(model: model)
         }.navigationTitle(dinnerText("Manual quantities")).dinnerAccess(model)
-            .navigationDestination(isPresented: $showPreview) { DinnerPreviewView(model: model) }
+            .dinnerApplyPresentation(model, presented: $showPreview)
     }
 }
 struct DinnerGuestsView: View {
     @ObservedObject var model: DinnerFeatureModel
     let meal: MealOccurrence
+    @State private var baseRevision: UUID?
+    @State private var planningRevision: UUID
     @State private var bindings: [DinnerBindingDraft]
     @State private var groups: [DinnerGroupDraft]
     @State private var showPreview = false
-    private struct GuestReview: Identifiable {
+    @Environment(\.closeDinnerDecision) private var closeDecision
+    @State private var showCapturedPreview = false
+    private struct GuestReview: Identifiable, Hashable {
+        static func == (lhs: Self, rhs: Self) -> Bool { lhs.id == rhs.id && lhs.shopID == rhs.shopID && lhs.actorID == rhs.actorID }
+        func hash(into hasher: inout Hasher) { hasher.combine(id); hasher.combine(shopID); hasher.combine(actorID) }
         let id: UUID
         let shopID: UUID
+        let planningRevision: UUID
         let scope: DinnerAccessContext.Scope
         let actorID: String
         let choice: CaptureGuestMealChoice
@@ -126,18 +133,36 @@ struct DinnerGuestsView: View {
     @State private var guestReview: GuestReview?
     private func authorized(_ review: GuestReview) -> Bool {
         guard model.editable, model.accessAvailable, model.shop?.id == review.shopID,
-              model.shop?.revisionID == review.id, let access = model.accessProvider(review.shopID) else { return false }
+              model.shop?.revisionID == review.id, model.state.revisionID == review.planningRevision, let access = model.accessProvider(review.shopID) else { return false }
         return access.scope == review.scope && access.actorID == review.actorID
     }
 
     init(model: DinnerFeatureModel, meal: MealOccurrence) {
         self.model = model; self.meal = meal
+        _baseRevision = State(initialValue: model.shop?.revisionID)
+        _planningRevision = State(initialValue: model.state.revisionID)
         _groups = State(initialValue: meal.servingGroups.map(DinnerGroupDraft.init))
         let sources = meal.ingredientContributionIDs.compactMap { id in model.shop?.contributions.first { $0.id == id && $0.removedAt == nil } }
         _bindings = State(initialValue: sources.flatMap { source in meal.servingGroups.map { group in
             DinnerBindingDraft(contribution: source, group: group,
                 existing: model.state.portionBindings.first { $0.occurrenceID == meal.id && $0.contributionID == source.id && $0.groupID == group.id })
         } })
+    }
+    @FocusState private var enteringServings: Bool
+    @State private var keyboardVisible = false
+    @State private var reviewAfterTyping = false
+    private func reviewGuestTotals() {
+        if enteringServings && keyboardVisible {
+            reviewAfterTyping = true
+            enteringServings = false
+        } else { prepareGuestTotals() }
+    }
+    private func prepareGuestTotals() {
+        do {
+            guard model.shop?.revisionID == baseRevision, model.state.revisionID == planningRevision else { throw DinnerPlanningError.stalePreview }
+            let values = try Dictionary(uniqueKeysWithValues: groups.map { ($0.id, try DinnerEntry.positive($0.servings)) })
+            showPreview = model.previewGuests(occurrenceID: meal.id, servings: values, isolated: !model.paid)
+        } catch { model.report(error) }
     }
     var body: some View {
         Form {
@@ -157,7 +182,12 @@ struct DinnerGuestsView: View {
                     }
                     Button(dinnerText("Save reviewed ingredient bindings")) {
                         Task {
-                            do { _ = await model.saveBindings(try bindings.map { try $0.binding(occurrenceID: meal.id) }, occurrenceID: meal.id) }
+                            do {
+                                guard model.shop?.revisionID == baseRevision, model.state.revisionID == planningRevision else { throw DinnerPlanningError.stalePreview }
+                                if await model.saveBindings(try bindings.map { try $0.binding(occurrenceID: meal.id) }, occurrenceID: meal.id) {
+                                    planningRevision = model.state.revisionID
+                                }
+                            }
                             catch { model.report(error) }
                         }
                     }.disabled(!model.editable)
@@ -168,35 +198,44 @@ struct DinnerGuestsView: View {
                               let saved = shop.mealOccurrences.first(where: { $0.id == meal.id && $0.removedAt == nil }) else { return }
                         let choice = CaptureGuestMealChoice(id: saved.id, title: saved.title,
                             groups: saved.servingGroups.map { .init(id: $0.id, name: $0.name, currentServings: $0.servings, isProtected: $0.isProtected) })
-                        guestReview = GuestReview(id: shop.revisionID, shopID: shop.id, scope: access.scope, actorID: access.actorID, choice: choice)
+                        guestReview = GuestReview(id: shop.revisionID, shopID: shop.id, planningRevision: model.state.revisionID, scope: access.scope, actorID: access.actorID, choice: choice)
                     }.disabled(!model.editable || !model.accessAvailable || groups.allSatisfy(\.isProtected))
                     ForEach($groups) { $group in
                         Text(group.name).font(.headline)
                         if group.isProtected {
                             Text(dinnerFormat("Protected: %@ servings", group.servings))
-                        } else { TextField(dinnerText("New total servings for this group"), text: $group.servings) }
+                        } else { TextField(dinnerText("New total servings for this group"), text: $group.servings).focused($enteringServings).accessibilityIdentifier("dinnerGuestServings") }
                     }
                     Text(dinnerText("The assisted preview uses saved ingredient bindings. Protected groups remain unchanged."))
                     Button(model.paid ? dinnerText("Preview guest changes") : dinnerText("Explore guest changes without applying")) {
-                        do {
-                            let values = try Dictionary(uniqueKeysWithValues: groups.map { ($0.id, try DinnerEntry.positive($0.servings)) })
-                            showPreview = model.previewGuests(occurrenceID: meal.id, servings: values, isolated: !model.paid)
-                        } catch { model.report(error) }
+                        reviewGuestTotals()
                     }.disabled(!model.editable)
                 }
             }
             DinnerFeedback(model: model)
         }.navigationTitle(dinnerText("Guests and protected portions")).dinnerAccess(model)
-            .sheet(item: $guestReview) { review in
-                NavigationStack {
-                    GuestCaptureReviewView(meals: [review.choice], authorize: { authorized(review) }) { result in
-                        guard authorized(review) else { return }
-                        showPreview = model.previewGuestTotal(occurrenceID: result.occurrenceID, groupID: result.groupID,
-                            total: result.total, reviewedRevision: review.id)
+            .scrollDismissesKeyboard(.immediately)
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidShowNotification)) { _ in keyboardVisible = true }
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidHideNotification)) { _ in
+                keyboardVisible = false
+                if reviewAfterTyping { reviewAfterTyping = false; prepareGuestTotals() }
+            }
+             .toolbar {
+                if groups.contains(where: { !$0.isProtected }) {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button(dinnerText("Review"), action: reviewGuestTotals)
+                            .disabled(!model.editable).accessibilityIdentifier("dinnerGuestPreview")
                     }
                 }
             }
-            .navigationDestination(isPresented: $showPreview) { DinnerPreviewView(model: model) }
+            .navigationDestination(item: $guestReview) { review in
+                    GuestCaptureReviewView(meals: [review.choice], dismissAfterPreview: false, cancelDecision: closeDecision, authorize: { authorized(review) }) { result in
+                        guard authorized(review) else { return }
+                        showCapturedPreview = model.previewGuestTotal(occurrenceID: result.occurrenceID, groupID: result.groupID,
+                            total: result.total, reviewedRevision: review.id)
+                    }.dinnerApplyPresentation(model, presented: $showCapturedPreview)
+            }
+            .dinnerApplyPresentation(model, presented: $showPreview)
     }
 }
 struct DinnerNoteView: View {
@@ -271,6 +310,6 @@ struct DinnerReservationView: View {
             }
             DinnerFeedback(model: model)
         }.navigationTitle(dinnerText("Protect food")).dinnerAccess(model)
-            .navigationDestination(isPresented: $showPreview) { DinnerPreviewView(model: model) }
+            .dinnerApplyPresentation(model, presented: $showPreview)
     }
 }

@@ -1,0 +1,51 @@
+{
+  "feature": "S15, S16 and S17 contextual dinner reviews and group replacement",
+  "verified": "2026-11-03",
+  "device": "iPhone SE (2nd generation), iOS Simulator 17.0",
+  "nativeResult": ".build/DinnerSheetAcceptance.xcresult",
+  "counts": {
+    "total": 45,
+    "passed": 45,
+    "skipped": 0,
+    "failed": 0
+  },
+  "suites": {
+    "AcceptedDinnerOptionsTests": 7,
+    "DinnerFeatureModelTests": 25,
+    "DinnerScenarioDraftTests": 10,
+    "DinnerDecisionSheetUITests": 3
+  },
+  "host": {
+    "suite": "CoreDomain",
+    "passed": 155,
+    "failed": 0,
+    "log": ".build/dinner-sheet-final-host.log"
+  },
+  "ui": [
+    "Normal Dinners workspace rendered with a dedicated offline test store, a current named adult seat evaluated by MembershipSnapshot, and reviewed food evidence. All actions use production controls and planner.",
+    "English and Spanish each open and cancel S15, change two guest servings to 22, preview 23 with the lunch preserved, cancel, compare, preview one remaining lunch and five ingredient units, explicitly apply and reopen both meals.",
+    "Largest accessibility text size on SE opens the full-height sheet, reaches Review and Cancel, and returns to the visible initiating control."
+  ],
+  "checked": [
+    "Exact partial replacement preserves the occurrence, retained group and grocery identities and the original five-unit lunch binding. Estimated packs before/after are two/three. Replay and stale proofs are tested.",
+    "A partial replacement requires confirmed ingredient bindings for the named source groups. The candidate must match the target yield without introducing another group allocation. Unreviewed and incompatible portions stay available for manual review."
+  ],
+  "limits": [
+    "The paid seat and pre-reviewed quote inputs are fictional. Human VoiceOver focus, human Spanish copy review, StoreKit and physical-device behavior were not exercised."
+  ],
+  "attachments": {
+    "S15-retained-lunch-en": ".build/DinnerSheetAcceptanceAttachments/CF88B299-23E3-45D2-9992-95E6E3ABC908.png",
+    "S15-S17-en": ".build/DinnerSheetAcceptanceAttachments/E26C245A-9550-49C2-AAF6-B0B81069FAB0.png",
+    "S16-S17-en": ".build/DinnerSheetAcceptanceAttachments/6D65B5E5-D7E7-4C8B-9D3C-0D04ACE5E387.png",
+    "S15-largest-text": ".build/DinnerSheetAcceptanceAttachments/220CBF8E-7584-432E-889E-EDBC6AD7B9EC.png",
+    "S15-retained-lunch-es": ".build/DinnerSheetAcceptanceAttachments/077391B3-BAB9-4966-9B7A-A30F5FFC831D.png",
+    "S15-S17-es": ".build/DinnerSheetAcceptanceAttachments/D7EDC1DB-9598-4614-83D6-869AC9546F79.png",
+    "S16-S17-es": ".build/DinnerSheetAcceptanceAttachments/448944A0-8ED3-47C5-8B3F-344541B52868.png"
+  },
+  "releaseBuild": {
+    "configuration": "Release",
+    "destination": "Generic iOS Simulator (arm64)",
+    "log": ".build/dinner-sheet-release.log",
+    "result": "BUILD SUCCEEDED"
+  }
+}

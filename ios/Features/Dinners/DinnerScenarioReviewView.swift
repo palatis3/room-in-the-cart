@@ -6,6 +6,7 @@ import CoreDomain
 /// food/ingredient identities, stock, pack offers and the complete unchanged basket.
 struct DinnerScenarioReviewView: View {
     @ObservedObject var model: DinnerFeatureModel
+    @Environment(\.closeDinnerDecision) private var closeDecision
     let current: DinnerScenario
     let alternatives: [DinnerScenario]
     let selectedAcceptedDinnerIDs: Set<UUID>
@@ -24,6 +25,7 @@ struct DinnerScenarioReviewView: View {
                     do { pairing = try model.pair(current: current, alternatives: alternatives, selected: selectedAcceptedDinnerIDs, cap: cap, isolated: !model.paid); recovery = nil }
                     catch { model.report(error) }
                 }
+                .accessibilityIdentifier("dinnerComparePairings")
                 Toggle(dinnerText("I accept an extra trip for a fallback"), isOn: $acceptsExtraTrip)
                 Button(dinnerText("Review accepted fallbacks")) {
                     do { recovery = try model.recover(alternatives: alternatives, cap: cap, extraTripAccepted: acceptsExtraTrip); pairing = nil }
@@ -47,6 +49,9 @@ struct DinnerScenarioReviewView: View {
                                         showReplacement = model.prepare(changes, tool: .pairing, isolated: !model.paid, expectedRevision: library.shopRevision)
                                     } catch { model.report(error) }
                                 }
+                                .accessibilityLabel(dinnerFormat("Preview %@ for %@",library.candidates.first(where: { $0.id == candidate.id })?.title ?? dinnerText("Candidate plan"),
+                                    candidate.commitments.commitments.first(where: { $0.id == library.target })?.name ?? dinnerText("Current plan")))
+                                .accessibilityIdentifier("dinnerReplacement-\(candidate.id)")
                             } else { Text(dinnerText("This comparison changes a serving group or a linked recipe. Review a manual edit to keep the other portions.")) }
                         }
                     }
@@ -68,7 +73,14 @@ struct DinnerScenarioReviewView: View {
             }
             DinnerFeedback(model: model)
         }.navigationTitle(dinnerText("Dinner scenarios")).dinnerAccess(model, budget: true)
-            .navigationDestination(isPresented: $showReplacement) { DinnerPreviewView(model: model) }
+            .toolbar {
+                if let closeDecision {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button(dinnerText("Cancel"), action: closeDecision).accessibilityIdentifier("dinnerDecisionCancel")
+                    }
+                }
+            }
+            .dinnerApplyPresentation(model, presented: $showReplacement)
     }
     private func scenario(_ result: DinnerScenarioResult) -> some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -148,6 +160,6 @@ private struct DinnerScenarioChoicesView: View {
             }
             DinnerFeedback(model: model)
         }.navigationTitle(dinnerText("Candidate dinners")).dinnerAccess(model)
-            .navigationDestination(isPresented: $showPreview) { DinnerPreviewView(model: model) }
+            .dinnerApplyPresentation(model, presented: $showPreview)
     }
 }

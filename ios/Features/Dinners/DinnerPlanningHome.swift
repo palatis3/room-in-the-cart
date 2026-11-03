@@ -59,7 +59,7 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                     NavigationLink(dinnerText("Protect a lunch or side")) { DinnerReservationView(model: model) }
                     if model.budgetVisible {
                         if let shop = model.shop {
-                            NavigationLink(dinnerText("Pairing and fallback evidence")) { DinnerScenarioEditor(model: model, shop: shop) }
+                            DinnerDecisionButton(model: model, title: dinnerText("Pairing and fallback evidence"), identifier: "dinnerPairings") { DinnerScenarioEditor(model: model, shop: shop) }
                         }
                         NavigationLink(dinnerText("Compare two store trips")) { DinnerQuotesView(model: model) }
                     }
@@ -93,7 +93,7 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                     } else { Text(dinnerText("The week could not be read. Check access and the pickup time zone.")) }
                 }
                 if model.preview != nil {
-                    Section { NavigationLink(dinnerText("Review pending dinner changes")) { DinnerPreviewView(model: model) } }
+                    Section { DinnerDecisionButton(model: model, title: dinnerText("Review pending dinner changes"), identifier: "dinnerPending", preservePending: false) { DinnerPreviewView(model: model) } }
                 }
             }
             DinnerFeedback(model: model)
@@ -122,6 +122,8 @@ struct DinnerFeedback: View {
 struct DinnerPreviewView: View {
     @ObservedObject var model: DinnerFeatureModel
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.closeDinnerDecision) private var close
+    private func finish() { if let close { close() } else { dismiss() } }
     var body: some View {
         List {
             if let preview = model.preview, model.canReviewPreview {
@@ -138,7 +140,10 @@ struct DinnerPreviewView: View {
                             Text(meal.title).font(.headline)
                             Text(meal.removedAt == nil ? dinnerFormat("Servings: %@", meal.servings.description) : dinnerText("Remove chosen dinner"))
                             Text(meal.scheduledDay.map(dinnerDay) ?? dinnerText("Unscheduled"))
-                        }.accessibilityElement(children: .combine)
+                            ForEach(meal.servingGroups.filter(\.isProtected)) { group in
+                                Text(dinnerFormat("Protected: %@ · %@", group.name, group.servings.description))
+                            }
+                        }.accessibilityElement(children: .combine).accessibilityIdentifier("dinnerPreviewMeal-\(meal.id)")
                     }
                 }
                 Section(dinnerText("Grocery needs")) {
@@ -150,7 +155,7 @@ struct DinnerPreviewView: View {
                             } else { Text(dinnerText("New need")) }
                             Text(source.removedAt == nil ? dinnerFormat("After: %@", dinnerQuantity(source.quantity)) : dinnerText("Remove this dinner need"))
                             if source.source.isProtected { Text(dinnerText("Protected need")) }
-                        }.accessibilityElement(children: .combine)
+                        }.accessibilityElement(children: .combine).accessibilityIdentifier("dinnerPreviewNeed-\(source.id)")
                     }
                 }
                 if model.budgetVisible, let basis = preview.budgetBasis,
@@ -161,11 +166,11 @@ struct DinnerPreviewView: View {
                     }
                 }
                 Section {
-                    Button(dinnerText("Apply once")) { Task { if await model.applyPreview() { dismiss() } } }
+                    Button(dinnerText("Apply once")) { Task { if await model.applyPreview() { finish() } } }
                         .disabled(!model.canApply).accessibilityIdentifier("dinnerApply")
                     Button(dinnerText("Save proposal on this device")) { Task { _ = await model.savePreviewAsProposal() } }
                         .disabled(!model.editable || preview.proposal.isIsolatedPreview)
-                    Button(dinnerText("Cancel preview"), role: .cancel) { model.cancelPreview(); dismiss() }
+                    Button(dinnerText("Cancel preview"), role: .cancel) { model.cancelPreview(); finish() }.accessibilityIdentifier("dinnerCancelPreview")
                 }
             } else { Section { Text(dinnerText("No dinner changes are waiting for review.")) } }
             DinnerFeedback(model: model)

@@ -113,7 +113,7 @@ struct DinnerTemplateEditor: View {
             }
             DinnerFeedback(model: model)
         }.navigationTitle(purpose == .manual ? dinnerText("Manual dinner") : purpose == .idea ? dinnerText("Dinner idea") : dinnerText("Reusable dinner")).dinnerAccess(model)
-            .navigationDestination(isPresented: $showPreview) { DinnerPreviewView(model: model) }
+            .dinnerApplyPresentation(model, presented: $showPreview)
     }
     private func review() {
         do {
@@ -219,7 +219,7 @@ struct DinnerLibraryView: View {
             }
             DinnerFeedback(model: model)
         }.navigationTitle(dinnerText("Dinner library")).dinnerAccess(model).disabled(!model.editable)
-            .navigationDestination(isPresented: $showPreview) { DinnerPreviewView(model: model) }
+            .dinnerApplyPresentation(model, presented: $showPreview)
     }
 }
 struct DinnerIdeasView: View {

@@ -9,6 +9,8 @@ struct DinnerScenarioMealDraft: Identifiable {
     var candidateDinnerID: UUID?
     var protected = false
     var isReviewedServingGroup = false
+    var reviewedPortion: DinnerCommitmentPortion?
+    var reviewedAmounts: [UUID:Quantity] = [:]
     var savedExclusions: [String] = []
     var scheduled = false
     var date = Date()
@@ -111,7 +113,8 @@ struct DinnerScenarioDraft {
                     throw DinnerPlanningError.reviewRequired("protectedRecipeVersion")
                 }
                 for ingredient in dinner.template.ingredients {
-                    let quantity = try ingredient.quantity.map { value in
+                    let bound = dinnerID == meal.currentDinnerID ? meal.reviewedAmounts[ingredient.id] : nil
+                    let quantity = try bound ?? ingredient.quantity.map { value in
                         Quantity(amount: try value.amount.multiplied(by: ratio), unit: value.unit,
                             originalLiteral: value.originalLiteral, confirmedConversion: value.confirmedConversion)
                     }
@@ -130,7 +133,7 @@ struct DinnerScenarioDraft {
         let snapshots = try meals.map { try DinnerScenarioMealDraftSnapshot($0, zone: zone) }
         guard snapshots == matchedMeals, !matches.isEmpty, recipeYieldsReviewed else { throw DinnerPlanningError.reviewRequired("recipeMatches") }
         let commitments = DinnerCommitmentSet(id: commitmentSetID, commitments: snapshots.map {
-            DinnerCommitment(id: $0.id, name: $0.name, kind: .dinner, portions: $0.portions, protected: $0.protected, day: $0.day)
+            DinnerCommitment(id: $0.id, name: $0.name, kind: .dinner, portions: $0.portions, protected: $0.protected, day: $0.day, reviewedPortion: $0.reviewedPortion)
         })
         try commitments.validate()
         let foodIDs = Set(foods.map(\.id))
@@ -218,10 +221,13 @@ struct DinnerScenarioMealDraftSnapshot: Equatable {
     let candidateDinnerID: UUID?
     let protected: Bool
     let day: MealDay?
+    let reviewedPortion: DinnerCommitmentPortion?
+    let reviewedAmounts: [UUID:Quantity]
     let isReviewedServingGroup: Bool
     let savedExclusions: [String]
     init(_ draft: DinnerScenarioMealDraft, zone: String) throws {
         id = draft.id; name = draft.name; portions = try DinnerEntry.positive(draft.portions)
+        reviewedPortion = draft.reviewedPortion; reviewedAmounts = draft.reviewedAmounts
         isReviewedServingGroup = draft.isReviewedServingGroup; savedExclusions = draft.savedExclusions
         currentDinnerID = draft.currentDinnerID; candidateDinnerID = draft.candidateDinnerID; protected = draft.protected
         day = try DinnerEntry.date(draft.date, zone: zone, scheduled: draft.scheduled)

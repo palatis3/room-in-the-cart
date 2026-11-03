@@ -146,6 +146,41 @@ final class AcceptedDinnerOptionsTests: XCTestCase {
         XCTAssertTrue(try ranked(f).isEmpty, "Five fallback peppers cannot complete a sixth pepper owed to lunch")
     }
 
+    func testReviewedUnequalGroupsPriceTheSameProtectedFiveUnitsThatApplyRetains() throws {
+        var shop = ShoppingLedger(title:"Pickup",basis:.init(branch:"Main")), state = DinnerPlanningState()
+        let family = ServingGroup(name:"Dinner",servings:try Rational(2)), lunch = ServingGroup(name:"Lunch",servings:.one,isProtected:true)
+        let rice = MealTemplate(title:"Rice",servings:try Rational(3),ingredients:[.init(name:"Peppers",quantity:q(6))],servingGroups:[family,lunch])
+        let tacos = MealTemplate(title:"Tacos",servings:family.servings,ingredients:[.init(name:"Peppers",quantity:q(4))])
+        let original = AcceptedDinner(id:UUID(),template:rice,acceptedAt:now), candidate = AcceptedDinner(id:UUID(),template:tacos,acceptedAt:now)
+        for item in [original,candidate] { try state.accept(item,access:access(shop.id,paid:true),at:now) }
+        let meal = try shop.chooseMeal(rice,at:now), source = try XCTUnwrap(shop.mealOccurrences.first?.ingredientContributionIDs.first)
+        let protected = DinnerPortionBinding(occurrenceID:meal,contributionID:source,groupID:lunch.id,quantity:q(5),servings:.one)
+        try state.setPortionBindings([protected,.init(occurrenceID:meal,contributionID:source,groupID:family.id,quantity:q(1),servings:family.servings)],for:meal,ledger:shop,access:access(shop.id,paid:true),at:now)
+        var draft = DinnerScenarioDraft(shop:shop,state:state)
+        draft.meals = try DinnerLibraryPairings.scheduledMeals(shop:shop,state:state)
+        let slot = try XCTUnwrap(draft.meals.first(where:{ !$0.protected })?.id)
+        var library = try DinnerLibraryPairings.prepare(&draft,target:slot,shop:shop,state:state)
+        var food = DinnerFoodEvidenceDraft(name:"Peppers"); food.packLabel = "Three"; food.packAmount = "3"; food.packPrice = "3"; food.availability = 1; food.yieldReviewed = true
+        draft.foods = [food]; for index in draft.matches.indices { draft.matches[index].foodID = food.id }
+        library.candidates[0].hands = "10"; library.candidates[0].lead = "10"
+        draft.currentHands = "10"; draft.currentLead = "10"; draft.availableMinutes = "30"; draft.recipeYieldsReviewed = true
+        draft.store = "Market"; draft.source = "Reviewed"; draft.fee = "0"; draft.tax = "0"; draft.deposits = "0"
+        draft.baseline[0].cost = "0"; draft.baselineComplete = true; draft.baselineExcludesComparedRecipes = true
+        let (current,options,cap,_) = try library.build(draft,shop:shop,state:state)
+        XCTAssertThrowsError(try DinnerScenarioEngine.evaluate(current,acceptedDinners:state.acceptedDinners,cap:cap))
+        let result = try DinnerScenarioEngine.pair(current:current,alternatives:options,selectedAcceptedDinnerIDs:[original.id],state:state,cap:cap,access:access(shop.id,paid:true),at:now,ledger:shop)
+        XCTAssertTrue(try XCTUnwrap(result.alternatives.first).feasible)
+        XCTAssertEqual(result.baseline.packs.first?.result?.packsToBuy,2)
+        XCTAssertEqual(result.alternatives.first?.packs.first?.result?.packsToBuy,3)
+        let replacement = try library.replacement(for:XCTUnwrap(options.first),shop:shop,state:state)
+        let buyer = access(shop.id,paid:true)
+        let preview = try DinnerPlanningEngine.preview(changes:replacement,tool:.pairing,ledger:shop,state:state,access:buyer,phase:.draft,at:now)
+        _ = try DinnerPlanningEngine.apply(preview.proposal,ledger:&shop,state:&state,access:buyer,phase:.draft,at:now)
+        XCTAssertEqual(state.portionBindings,[protected])
+        XCTAssertEqual(shop.contributions.first?.quantity?.amount,try Rational(5))
+        XCTAssertEqual(try DinnerLibraryPairings.scheduledMeals(shop:shop,state:state).first?.reviewedAmounts[rice.ingredients[0].id],q(5))
+    }
+
     func testExactReplacementRequiresUnchangedWholeOccurrenceAndAppliesOnceWithoutAnExtraDinner() throws {
         var shop = ShoppingLedger(title:"Two dinners"), state = DinnerPlanningState()
         let old = dinner("Old dinner",count:1), new = dinner("New dinner",count:2), other = dinner("Other dinner",count:1)

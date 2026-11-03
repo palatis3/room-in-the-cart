@@ -104,6 +104,7 @@ struct DinnerStoreDraft {
     var id = UUID(); var label = ""; var storeID = ""; var branch = ""; var mode = ShoppingMode.pickup
     var slot = Date(); var observedAt = Date(); var source = ""; var total = ""; var allChargesIncluded = false
     var quantitiesMatched = false; var availability = 0; var singleStore = false
+    var itemSubtotal = ""; var eligibilityTerms = ""
     var tripCash = ""; var extraMinutes = ""; var alreadyPlanned = false
     func option(commitments: DinnerCommitmentSet, basis: ShopBasis) throws -> StoreQuoteOption {
         let amount = try DinnerEntry.money(total)
@@ -117,6 +118,7 @@ struct DinnerStoreDraft {
             quote: CheckoutQuote(scope: .wholeCheckout, context: context, pricing: .inclusiveTotal(evidence)),
             available: availability == 0 ? nil : availability == 1, quantitiesMatched: quantitiesMatched, singleStore: singleStore,
             trip: StoreTripEvidence(incrementalCash: try DinnerEntry.money(tripCash).map(CostEvidence.exact) ?? .unknown(reason: "Trip cash is unknown"),
-                extraMinutes: try DinnerEntry.minutes(extraMinutes), tripAlreadyPlanned: alreadyPlanned), cap: cap, adoptionBasis: adopted)
+                extraMinutes: try DinnerEntry.minutes(extraMinutes), tripAlreadyPlanned: alreadyPlanned), cap: cap, adoptionBasis: adopted, observedItemSubtotal: try DinnerEntry.money(itemSubtotal),
+            eligibilityTerms: eligibilityTerms.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : eligibilityTerms)
     }
 }

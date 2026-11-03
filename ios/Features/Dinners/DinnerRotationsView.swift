@@ -115,6 +115,6 @@ struct DinnerRotationReview: View {
             }
             DinnerFeedback(model: model)
         }.navigationTitle(rotation.title).dinnerAccess(model)
-            .navigationDestination(isPresented: $showPreview) { DinnerPreviewView(model: model) }
+            .dinnerApplyPresentation(model, presented: $showPreview)
     }
 }

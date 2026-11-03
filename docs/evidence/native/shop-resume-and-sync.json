@@ -1,0 +1,33 @@
+{
+  "tested": "2026-11-03",
+  "device": "iPhone 17e simulator, iOS 27.0",
+  "resultBundle": ".build/HomeResumeIntegrated.xcresult",
+  "native": {
+    "passed": 358,
+    "failed": 0,
+    "skipped": 0
+  },
+  "coldLaunch": {
+    "source": "Read-only SQLite backups of the existing S07 simulator UI test pickup and matching ledger, restored into the separate QA phone’s UITestWorkspace. The saved retailer offer had one expired deadline and zero observed receipts.",
+    "visible": [
+      "Await pickup · fill still unknown",
+      "Large wrap pack",
+      "Cutoff: Nov 3, 2026 at 10:48 AM · America/New_York",
+      "Record what came home"
+    ],
+    "screenshot": "shop-resume-expired-offer.png",
+    "sha256": "dbd1c65537b50f7fdb48dd964f4d1a082d1bdfe5c1a09f0e7570a12eb830bbbd"
+  },
+  "release": {
+    "archive": ".build/RoomInTheCart-LocalReview.xcarchive",
+    "platform": "arm64 iphoneos, unsigned",
+    "metadata": "Icon, privacy resource, environment isolation and service configuration passed."
+  },
+  "sourceSHA256": {
+    "ios/App/RoomInTheCartApp.swift": "fefe408e623b548b3745a59d53ae15d6722f5a66cab302ee0de004afedc0cea2",
+    "ios/Features/Pickup/PickupModel.swift": "38e9973198251cba520d6fedd860922b7eef1275bdf950cbddae0e628beba56e",
+    "ios/Features/Household/HouseholdShopModel.swift": "c22bd6089dbe0ee851a1eb4d12bae53d5fbbb593435955bf31234c910b9f1ee4",
+    "ios/Tests/PickupOfferReviewTests.swift": "c7b157f5e0ba7b324d6a07fad779264f435fc29fb7fa6ed1fac15e96f0ab0180",
+    "ios/Tests/SharedShopFlowTests.swift": "280b7b5fc1b5c8f6efd93f10d07d7f400846d8b23bfa1065a869718bca964969"
+  }
+}

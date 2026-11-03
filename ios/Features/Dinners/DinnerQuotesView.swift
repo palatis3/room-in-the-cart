@@ -23,6 +23,7 @@ struct DinnerQuotesView: View {
                     Text(dinnerText("These are entered observations, not live prices or stock."))
                     quoteResult(pair.first, result.first)
                     quoteResult(pair.second, result.second)
+                    Text(dinnerFormat("Items before fees and discounts, second minus first: %@", dinnerMoney(result.itemSubtotalChange)))
                     Text(dinnerFormat("Checkout change, second minus first: %@", dinnerMoney(result.checkoutChange)))
                     Text(dinnerFormat("Trip cash change, second minus first: %@", dinnerMoney(result.tripCashChange)))
                     if let minutes = result.extraMinutesChange { Text(dinnerFormat("Extra minutes change: %d", minutes)) }
@@ -81,12 +82,15 @@ struct DinnerQuotesView: View {
             } else { Text(dinnerText("Budget access is required to review store quotes.")) }
             DinnerFeedback(model: model)
         }.navigationTitle(dinnerText("Two store trips")).dinnerAccess(model, budget: true)
-            .navigationDestination(isPresented: $showPreview) { DinnerPreviewView(model: model) }
+            .dinnerApplyPresentation(model, presented: $showPreview)
     }
     private func quoteResult(_ option: StoreQuoteOption, _ value: StoreQuoteResult) -> some View {
         VStack(alignment: .leading, spacing: 5) {
             Text(option.label).font(.headline)
-            Text(option.quote.context.branchID)
+            Text(dinnerFormat("Store and branch: %@ · %@", option.quote.context.storeID, option.quote.context.branchID))
+            Text(dinnerFormat("Store slot: %@", ISO8601DateFormatter().date(from: option.quote.context.slot)?.formatted(date: .abbreviated, time: .shortened) ?? option.quote.context.slot))
+            if let terms = option.eligibilityTerms { Text(dinnerFormat("Price conditions: %@", terms)) }
+            Text(dinnerFormat("Items before fees and discounts: %@", dinnerMoney(try? TwoStoreQuoteEngine.itemSubtotal(option))))
             Text(option.quote.context.source)
             Text(option.quote.context.observedAt.formatted(date: .abbreviated, time: .shortened))
             Text(dinnerFormat("Checkout: %@", dinnerMoney(value.checkout.total.exact)))
@@ -114,6 +118,8 @@ struct DinnerStoreFields: View {
             DatePicker(dinnerText("Store slot"), selection: $draft.slot)
             TextField(dinnerText("Evidence source"), text: $draft.source)
             DatePicker(dinnerText("Observed at"), selection: $draft.observedAt)
+            TextField(dinnerText("Items before fees and discounts in USD, optional"), text: $draft.itemSubtotal)
+            TextField(dinnerText("Price conditions, such as a loyalty card"), text: $draft.eligibilityTerms)
             TextField(dinnerText("Whole checkout total in USD, optional"), text: $draft.total)
             Toggle(dinnerText("Total includes every item, fee, discount, tax and deposit"), isOn: $draft.allChargesIncluded)
             Toggle(dinnerText("All required quantities match the commitments"), isOn: $draft.quantitiesMatched)
