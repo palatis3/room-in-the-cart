@@ -1,0 +1,42 @@
+{
+  "scope": "after parent compatibility install; preserves prior actual manual-drill snapshot instead of relabeling it current",
+  "changedComparedWithFrozenManualDrill": [
+    {
+      "file": "service/scripts/test-database.mjs",
+      "frozenTestedSHA256": "ffe9df1faa7c189d4b4b18f220811392e27f4ba68a5e58960ae0d86b5458c72e",
+      "currentLiveSHA256": "6f18608fa9725e6c69159d5570bbb76ccf652c2f9cf54c7f04d0ba203935b724"
+    },
+    {
+      "file": "service/scripts/test-guardian.mjs",
+      "frozenTestedSHA256": "8a33d38cbe5bd4a93c28e322e7d4d068fba92da0140d485f6a1732354f193305",
+      "currentLiveSHA256": "1b20e33b6f10a11c9e883be9ec98ad06d79f968edf304c0af682efdc55c4c9d3"
+    },
+    {
+      "file": "service/tests/device-management.integration.mjs",
+      "frozenTestedSHA256": "0618d0040060c4eb0bbb3cd3486dde643ac24435994cff549353c3e9183cae53",
+      "currentLiveSHA256": "c684652270bb590f8daa970d0d1a1866b0ed45fdaf2404da05c40823f0a202cf"
+    },
+    {
+      "file": "service/tests/guardian.integration.mjs",
+      "frozenTestedSHA256": "27efbf01ca165b4c74aa3483f03122ae1b0c7aec060537266aaf8a1bcab350b2",
+      "currentLiveSHA256": "d37b16222c8f39acb200332cf774aace766df3704bdc99540d7bd38825a3d897"
+    },
+    {
+      "file": "service/tests/privacy.integration.mjs",
+      "frozenTestedSHA256": "da7570a786466699205f0ad40487f4d0085d392cde9d17239056f07c68a859b3",
+      "currentLiveSHA256": "fec3028f1031cfdcec290b1f91a0f726a706de835b092465efe6de257b41c4b9"
+    },
+    {
+      "file": "service/tests/shared-store-quotes.integration.mjs",
+      "frozenTestedSHA256": "15503f67f135ad4d9652a599f6f93249754b10fa5e6be6e690a38d7f563ffc39",
+      "currentLiveSHA256": "690d11021f1d4f7222ffbc154219ce616f6f7230537434dfbc60f0fcc34d68d7"
+    }
+  ],
+  "newCurrentFiles": [
+    "service/tests/privacy-journal-fixture.mjs"
+  ],
+  "snapshotOnlyManualFixture": [
+    "service/scripts/journal-full-023-drill.mjs"
+  ],
+  "runtimeOrMigrationDrift": []
+}

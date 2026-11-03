@@ -1,0 +1,35 @@
+{
+  "scope": "proposal only, parent-owned files not edited, no runner execution",
+  "files": [
+    {
+      "relative": "scripts/test-database.mjs",
+      "baseSHA256": "ffe9df1faa7c189d4b4b18f220811392e27f4ba68a5e58960ae0d86b5458c72e",
+      "candidateSHA256": "7382a38b287faad4aa13c05e423b81a226f74e625e4b1a965e611dad3bbffa81"
+    },
+    {
+      "relative": "tests/privacy.integration.mjs",
+      "baseSHA256": "da7570a786466699205f0ad40487f4d0085d392cde9d17239056f07c68a859b3",
+      "candidateSHA256": "fec3028f1031cfdcec290b1f91a0f726a706de835b092465efe6de257b41c4b9"
+    },
+    {
+      "relative": "tests/shared-store-quotes.integration.mjs",
+      "baseSHA256": "15503f67f135ad4d9652a599f6f93249754b10fa5e6be6e690a38d7f563ffc39",
+      "candidateSHA256": "690d11021f1d4f7222ffbc154219ce616f6f7230537434dfbc60f0fcc34d68d7"
+    },
+    {
+      "relative": "tests/guardian.integration.mjs",
+      "baseSHA256": "27efbf01ca165b4c74aa3483f03122ae1b0c7aec060537266aaf8a1bcab350b2",
+      "candidateSHA256": "d37b16222c8f39acb200332cf774aace766df3704bdc99540d7bd38825a3d897"
+    },
+    {
+      "relative": "tests/privacy-journal-fixture.mjs",
+      "baseSHA256": null,
+      "candidateSHA256": "c8cb0f33315eb06eaa6e529873419cabb4eed7064982595e4b8f8a03e78ea2bb"
+    },
+    {
+      "relative": "tests/device-management.integration.mjs",
+      "baseSHA256": "0618d0040060c4eb0bbb3cd3486dde643ac24435994cff549353c3e9183cae53",
+      "candidateSHA256": "c684652270bb590f8daa970d0d1a1866b0ed45fdaf2404da05c40823f0a202cf"
+    }
+  ]
+}

@@ -6,18 +6,24 @@ import {generateKeyPair,exportJWK,createLocalJWKSet,SignJWT} from 'jose';
 import {HouseholdRepository} from '../dist/repository.js';
 import {JWTIdentityVerifier,SupabaseSessionVerifier} from '../dist/auth.js';
 import {PrivacyService,PrivacyMaintenance} from '../dist/privacy.js';
+import {openPrivacyJournalFixture} from './privacy-journal-fixture.mjs';
 import {createHTTPServer} from '../dist/http.js';
 const admin=new pg.Pool({connectionString:process.env.TEST_ADMIN_DATABASE_URL}),runtime=new pg.Pool({connectionString:process.env.TEST_DATABASE_URL});
 const workerURL=new URL(process.env.TEST_DATABASE_URL);workerURL.username='ritc_test_worker';const worker=new pg.Pool({connectionString:process.env.TEST_WORKER_DATABASE_URL??workerURL.toString()});
 const issuer='https://privacy.fixture.invalid',audience='authenticated';
 const {publicKey,privateKey}=await generateKeyPair('ES256'),jwk=await exportJWK(publicKey);jwk.kid='privacy';
 const verifier=new JWTIdentityVerifier({issuer,audience,jwksUrl:issuer+'/jwks'},createLocalJWKSet({keys:[jwk]})),repo=new HouseholdRepository(runtime,{allowChildNetwork:false,noticeVersion:'fixture',sessionStatus:new SupabaseSessionVerifier(issuer)});
+const journal=await openPrivacyJournalFixture(admin);
 let providerFailure=false,providerCalls=0;
 const provider={assertAvailable:async()=>{},deleteAccount:async subject=>{providerCalls++;if(providerFailure)throw Error('PRIVATE provider failure');await admin.query('DELETE FROM auth.sessions WHERE user_id=$1',[subject]);}};
-const service=new PrivacyService(repo,{provider,policy:{receiptRetentionDays:1,erasureMarkerRetentionDays:2,verifiedBackupRetentionDays:1}}),maintenance=new PrivacyMaintenance(worker,{provider});
+const service=new PrivacyService(repo,{provider,journal:journal.port,policy:{receiptRetentionDays:1,erasureMarkerRetentionDays:2,verifiedBackupRetentionDays:1}}),maintenance=new PrivacyMaintenance(worker,{provider,journal:journal.port});
 const server=createHTTPServer({repository:repo,verifier,privacy:service,maxRequestsPerMinute:10000});let origin;
-before(async()=>{await admin.query("DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='ritc_test_worker') THEN CREATE ROLE ritc_test_worker LOGIN NOSUPERUSER NOBYPASSRLS; END IF; END $$;GRANT ritc_worker TO ritc_test_worker");await new Promise(r=>server.listen(0,'127.0.0.1',r));origin='http://127.0.0.1:'+server.address().port;});
-after(async()=>{await new Promise(r=>server.close(r));await Promise.all([admin.end(),runtime.end(),worker.end()]);});
+before(async()=>{
+ const role=(await admin.query("SELECT rolcanlogin,rolsuper,rolbypassrls,pg_has_role(oid,'ritc_worker','MEMBER') AS worker,pg_has_role(oid,'ritc_app','MEMBER') AS app FROM pg_roles WHERE rolname='ritc_test_worker'")).rows[0];
+ assert.ok(role?.rolcanlogin&&role.worker&&!role.app&&!role.rolsuper&&!role.rolbypassrls,'Configure the distinct existing local worker before running this fixture; no roles or memberships are changed.');
+ await new Promise(r=>server.listen(0,'127.0.0.1',r));origin='http://127.0.0.1:'+server.address().port;
+});
+after(async()=>{await new Promise(r=>server.close(r));await journal.close();await Promise.all([admin.end(),runtime.end(),worker.end()]);});
 async function actor(age=0){const subject=randomUUID(),session=randomUUID();await admin.query('INSERT INTO auth.sessions(id,user_id) VALUES($1,$2)',[session,subject]);const token=await new SignJWT({session_id:session,amr:[{method:'otp',timestamp:Math.floor(Date.now()/1000)-age}]}).setProtectedHeader({alg:'ES256',kid:jwk.kid}).setIssuer(issuer).setSubject(subject).setAudience(audience).setIssuedAt().setExpirationTime('1h').sign(privateKey);return{subject,session,token};}
 async function call(actor,path,method='GET',body,headers={}){const r=await fetch(origin+path,{method,headers:{...(actor?{Authorization:'Bearer '+actor.token}:{}),...(actor?.deviceToken?{'X-Device-Token':actor.deviceToken}:{}),...(body===undefined?{}:{'Content-Type':'application/json'}),...headers},...(body===undefined?{}:{body:JSON.stringify(body)})});return{status:r.status,data:await r.json()};}
 function ok(r,status=200){assert.equal(r.status,status,JSON.stringify(r.data));return r.data;}

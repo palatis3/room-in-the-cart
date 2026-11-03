@@ -1,0 +1,23 @@
+- banner:
+  - paragraph: Room in the Cart
+  - combobox "Language":
+    - option "English" [selected]
+    - option "Spanish"
+- main:
+  - status [active]
+  - paragraph: Fixture household
+  - button "Refresh"
+  - button "Sign out"
+  - heading "Ask the shopper" [level=1]
+  - generic: Item
+  - textbox "Item"
+  - paragraph: Keep the food name and any restrictions as written.
+  - generic: Amount or pack count (optional)
+  - textbox "Amount or pack count (optional)"
+  - generic: Intended trip
+  - combobox "Intended trip":
+    - option "This pickup" [selected]
+    - option "Next shop"
+  - button "Review request"
+  - heading "Your requests" [level=2]
+  - paragraph: No requests yet.

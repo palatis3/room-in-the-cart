@@ -50,7 +50,7 @@ Deletion takes an exclusive identity lock, checks all affected households under 
 
 The client creates and retains `clientKey` and `statusToken` **before** sending. Only the token hash is stored. A lost response is recovered with `GET /v1/privacy/jobs/{clientKey}` and `X-Deletion-Token: <statusToken>`, even after the identity and cookies have been revoked. Do not put this token in URLs, analytics or logs. This capability can only read its own minimal job status. Unknown/wrong/expired receipts return 404. It cannot authorize other requests or cancel deletion.
 
-Acceptance returns HTTP 202 and the same safe status DTO as the status route:
+Acceptance returns HTTP 202 only after its SQL-resolved intent is durably journaled before commit and the committed event has a durable external checkpoint acknowledgement. The response is the same safe status DTO as the status route:
 
 ```ts
 {jobId: UUID, status: 'pending'|'complete', appDataErased: boolean,
@@ -64,7 +64,7 @@ All of the subject's memberships, including previously revoked memberships, are 
 
 `POST /v1/households/{householdId}/exit` accepts `{clientKey,confirm:true,disposition:<one household choice above>}`. It returns `{householdId,left:true,accountDeleted:false}`. It requires recent authentication, closes that membership/grants/windows and preserves the service identity, other memberships and records. Same-identity exact-key retries return the same result without needing the revoked device. It does not erase records or child profiles; `eraseChildProfiles` must be empty, and unresolved sole guardianship returns `guardian_disposition_required`.
 
-Errors include `reauthentication_required` (401), `deletion_unavailable` (503), `organizer_disposition_required`, `shop_disposition_stale`, `guardian_disposition_required` (409), and `unavailable` (404). Missing privileged provider or numeric retention policy rejects deletion before any job or access mutation. An outage after acceptance leaves a durable pending job, never a false completion.
+Errors include `reauthentication_required` (401), `deletion_unavailable` (503), `organizer_disposition_required`, `shop_disposition_stale`, `guardian_disposition_required` (409), and `unavailable` (404). Missing privileged provider, numeric retention policy or trusted journal port rejects deletion before any job or access mutation. An outage after acceptance leaves a durable pending job, never a false completion.
 
 ## Runtime ports
 
@@ -78,6 +78,7 @@ const provider = new SupabaseAccountDeletionProvider({
 });
 const privacy = new PrivacyService(repository, {
   provider,
+  journal: reviewedLocalJournal.port, // explicit trusted signer/exporter; no default
   policy: {
     receiptRetentionDays,
     erasureMarkerRetentionDays,
@@ -87,7 +88,7 @@ const privacy = new PrivacyService(repository, {
 createHTTPServer({ /* existing options */, privacy });
 ```
 
-Omit `provider`/`policy` to keep deletion honestly unavailable; household exit and preview remain implemented. There are no numeric production defaults. Marker retention must cover the verified backup horizon and receipt retention. The owner must approve the actual deployment policy before enabling deletion. An HTTPS fixed-origin provider adapter performs bounded server-only admin lookups, rejects mismatched subjects, uses hard deletion (`should_soft_delete:false`) and verifies 404 afterward. It never sends the privileged key to clients or logs provider bodies.
+Omit `provider`, `policy` or `journal` to keep deletion honestly unavailable; household exit and preview remain implemented. There are no numeric production defaults. Marker retention must cover the verified backup horizon and receipt retention. The owner must approve the actual deployment policy before enabling deletion. An HTTPS fixed-origin provider adapter performs bounded server-only admin lookups, rejects mismatched subjects, uses hard deletion (`should_soft_delete:false`) and verifies 404 afterward. It never sends the privileged key to clients or logs provider bodies.
 
 The separate non-owner, non-superuser, non-bypass worker login inherits `ritc_worker`, not `ritc_app`. It gets only narrow SECURITY DEFINER function execution, no raw auth/session/household table SELECT or mutation. Use a distinct verified-TLS worker pool and an authenticated cron adapter.
 
@@ -110,6 +111,8 @@ Auth maintenance clears expired temporary email ciphertext, expired challenge ro
 Privacy maintenance removes own request text/quantity/clarification, disposable receipts/previews, own helper proposals/view payloads, consent/proof links, identity aliases and bindings, browser credentials, and purchaser billing payloads. It retains de-identified structural IDs needed by other members' references. Shopper-adopted personal source labels are redacted from basket/snapshot projections while other authors' private request text remains. Household labels created by the erased account become a generic label. Shared grants/seats are revoked; another member's Free records remain. Deleting an account does not cancel App Store renewal.
 
 A retired Apple original transaction is retained only as SHA-256 of canonical environment plus original ID, without signed payload, purchaser or household fields. Billing checks it **after** verified Apple resolution and before binding, under a shared transaction-key serialization boundary with erasure. It is not automatically purged by generic deletion retention: no safe Apple renewal/replay horizon has yet been approved. It cannot grant access or consent.
+
+The [local privacy journal contract](PRIVACY-JOURNAL.md) describes the required port, source progress barriers, owner-only exact-preimage restore plans, atomic leased receipts and quarantine gate. Replay never marks a provider account deleted or a restored public status complete.
 
 ## Remaining release evidence
 

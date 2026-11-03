@@ -1,0 +1,65 @@
+TAP version 13
+# Subtest: organizer inventory projects opaque enrollment metadata, current device and exact member aliases only
+ok 1 - organizer inventory projects opaque enrollment metadata, current device and exact member aliases only
+  ---
+  duration_ms: 90.777333
+  ...
+# Subtest: ordinary contributor/helper, scoped organizer editor, child and foreign actor cannot inspect or revoke devices
+ok 2 - ordinary contributor/helper, scoped organizer editor, child and foreign actor cannot inspect or revoke devices
+  ---
+  duration_ms: 79.653833
+  ...
+# Subtest: actual guardian sees and revokes only verified children; revoked relationship removes management authority
+ok 3 - actual guardian sees and revokes only verified children; revoked relationship removes management authority
+  ---
+  duration_ms: 47.355042
+  ...
+# Subtest: current device uses separate sign out; repeated precise revocation preserves siblings, provider session, membership and shopper authority
+ok 4 - current device uses separate sign out; repeated precise revocation preserves siblings, provider session, membership and shopper authority
+  ---
+  duration_ms: 72.538291
+  ...
+# Subtest: revocation commits before queued reads/writes recheck enrollment; a stored old success is never replayed
+ok 5 - revocation commits before queued reads/writes recheck enrollment; a stored old success is never replayed
+  ---
+  duration_ms: 38.885333
+  ...
+# Subtest: stable pagination covers all actual enrollments without leaking an inaccessible or foreign cursor
+ok 6 - stable pagination covers all actual enrollments without leaking an inaccessible or foreign cursor
+  ---
+  duration_ms: 58.585042
+  ...
+# Subtest: lost-device bearer cannot replace enrollment through devices or browser session; fresh provider login can
+ok 7 - lost-device bearer cannot replace enrollment through devices or browser session; fresh provider login can
+  ---
+  duration_ms: 18.496584
+  ...
+# Subtest: new fence is owner-only, cannot accept supplied hashes, and guarded SQL rejects wrong actors/sessions/targets
+ok 8 - new fence is owner-only, cannot accept supplied hashes, and guarded SQL rejects wrong actors/sessions/targets
+  ---
+  duration_ms: 30.748208
+  ...
+# Subtest: both enrollment/revocation lock orderings preserve a prior sibling and reject replacement after revocation
+ok 9 - both enrollment/revocation lock orderings preserve a prior sibling and reject replacement after revocation
+  ---
+  duration_ms: 25.1195
+  ...
+# Subtest: owner erasure drops only the erased member fence and restore reapplication removes reintroduced pseudonyms
+ok 10 - owner erasure drops only the erased member fence and restore reapplication removes reintroduced pseudonyms
+  ---
+  duration_ms: 11.08
+  ...
+# Subtest: a legitimate separately leased privacy worker erases session fences while preserving another member fence
+ok 11 - a legitimate separately leased privacy worker erases session fences while preserving another member fence
+  ---
+  duration_ms: 31.820541
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 608.441583

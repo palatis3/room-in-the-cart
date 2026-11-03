@@ -1,0 +1,97 @@
+{
+  "scope": "frozen001\u2013023 runtime/migrations plus dedicated actual SQL/HTTP/device-inventory-wire/journal stale-backup drill; parent shared integration suite and native wire are separate",
+  "sourceManifestSHA256": "bffb53fdbf0b1d40d0899094a9454a89c75b7dd66e81faf8f4e6ecc3e3222c2c",
+  "sourceDatabase": "ritc_b11_j022_src_20261103_v023",
+  "restoreDatabase": "ritc_b11_j022_restore_20261103_v023",
+  "restoreOID": 143099,
+  "sourceRuntimeOrMigrationDriftAfterParentCompatibilityInstall": [],
+  "parentCurrentFixtureChanges": 6,
+  "parentNewFixtureHelper": [
+    "service/tests/privacy-journal-fixture.mjs"
+  ],
+  "build": "passed",
+  "unitTests": {
+    "passed": 220,
+    "failed": 0,
+    "skipped": 1,
+    "skipReason": "optional PostgreSQL billing test not configured by pure unit invocation"
+  },
+  "actualDrillCheckpoints": 15,
+  "sourceSyntheticAdultProviderCalls": 2,
+  "restoreProviderCalls": 0,
+  "childProviderCalls": 0,
+  "receipts": [
+    {
+      "count": 1,
+      "result": "absent_no_effect"
+    },
+    {
+      "count": 3,
+      "result": "erased"
+    }
+  ],
+  "providerIncompleteReplayJobs": 2,
+  "retainedUnrelatedFenceCount": 2,
+  "zeroRemainingFixtureClients": true,
+  "allTablesForceRLS": true,
+  "roleMutation": false,
+  "preservedDatabaseMutation": false,
+  "newDatabaseACLFootprint": "new *_v023 DBs only; PUBLIC CONNECT revoked; app/worker/existing verifier CONNECT; PUBLIC TEMPORARY remains; no other-DB denial claim",
+  "keyCustody": "private signing key remains outside DB/dumps/evidence/source in owner-only temporary directory",
+  "process": {
+    "toolSession": 26416,
+    "exitCode": 0,
+    "activeJournalJobs": 0
+  },
+  "sourceIdentityNegatives": {
+    "sourceFrozenFileCount": 134,
+    "sourceDrift": [],
+    "syntheticMigrationCopyDriftDetected": true,
+    "negativeMigrationApplied": false,
+    "actualCLIVerifyCases": [
+      {
+        "case": "valid-fixed-source",
+        "exitCode": 0,
+        "expectedRejected": false
+      },
+      {
+        "case": "changed-schema-digest",
+        "exitCode": 1,
+        "expectedRejected": true
+      },
+      {
+        "case": "changed-source-lineage",
+        "exitCode": 1,
+        "expectedRejected": true
+      },
+      {
+        "case": "truncated-complete-prefix",
+        "exitCode": 1,
+        "expectedRejected": true
+      }
+    ],
+    "databaseMutation": false,
+    "scope": "offline real CLI verifier; fixed-source/schema/prefix rejection before any DB operation"
+  },
+  "remaining": [
+    "parent-owned full shared integration runner/guardian runner and native wire after compatibility fixture install",
+    "durable production runtime port design, real provider/policy/key custody and independent-host disaster proof are outside this local rehearsal"
+  ],
+  "productionReady": false,
+  "hashes": {
+    "full23-build.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "full23-unit-tests.tap": "1ba925d52c6885a18eccf62e0881f19ec422beaa59c6187861b8f97c4c6d9c39",
+    "full23-drill.log": "db2f42f064e73219641c83b783db1843c8f8fd3e8c0a1e0fd3e4d504dd99291c",
+    "full-001-023-source-freeze.json": "bffb53fdbf0b1d40d0899094a9454a89c75b7dd66e81faf8f4e6ecc3e3222c2c",
+    "full-001-023-source-freeze.tar.gz": "9281f3828b9858f0f3c19611935926602f2d0659cbe04222ac83aafa279a72ca",
+    "full23/result.json": "b3b9e359491dbf304fbff4258b5ca0815b2173045a06bf2ceb2a3738eed9fb8b",
+    "full23/post-drill-catalog.json": "a990f2dfe38fbb9ea5d5ec7366d790508d5feaa2698a8615dce644fb798a677e",
+    "full23/source-and-verifier-negatives.json": "fe91ba141f3d777d1bda1bce0c6769f5a87f150f7b23eacd57cb2b903231b597",
+    "full23/post-compatibility-source-drift.json": "29c9c1e3ef140de38e0fb1d670906fb58f76ac0f8e1e134e72a6af05230ffa3d",
+    "full23/before-authorized-deletion.dump": "172f0730727b48c177295af98f7c469628b5675b1922ed84b80f0d3d502d5d33",
+    "full23/after-source-erasure.dump": "4ae3fba4b5c61ede1da9a848ee020a700797752e102761e9a41251135cbecaab",
+    "full23/checkpoint.json": "5369fdf265b2dde302f9e5db1a3954cc16408c2d5376af7fd2faf1e42d5bacec",
+    "full23/journal/journal.ndjson": "55e021d997e605eee1d04d8cc3f10a661fe8eae9e6d72f8ec86818bef5525add",
+    "run-full23-reviewed-alternative.sh": "8914498c7fad76bd35d98e54176376692d6b98b881d27d8b955ebb33b88dad95"
+  }
+}

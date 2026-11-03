@@ -1,0 +1,121 @@
+{
+  "scope": "Actual local desktop in-app browser UI against isolated HTTP fixture; not Android/current mobile or real SMTP/provider acceptance.",
+  "origin": "http://127.0.0.1:4188",
+  "date": "2026-11-03",
+  "runtimeSource": {
+    "web/src/child-invitation.ts": "0a5c5026b02fe04d4c3c965254146375834246e4ec9f88930c3fc0732f190b8c",
+    "web/src/child-invitation-page.ts": "bd0518aad59d7a852628c3d63cd32d36a525988ac30c18c35fc8e41ba0a83cda"
+  },
+  "scenarios": [
+    {
+      "name": "covered happy path, active reload, existing own requests",
+      "passed": true,
+      "counts": {
+        "starts": 1,
+        "verifies": 1,
+        "claimPosts": 1,
+        "claims": 1,
+        "finishPosts": 1,
+        "finishes": 1,
+        "ownReads": 1,
+        "forbidden": 0
+      },
+      "notes": "One visible click for each explicit step; full reload ready; own-only request screen visible."
+    },
+    {
+      "name": "claim socket loss, approved cold reload, Spanish limits, finish socket loss, wrong household",
+      "passed": true,
+      "counts": {
+        "starts": 2,
+        "verifies": 2,
+        "claimPosts": 3,
+        "claims": 2,
+        "finishPosts": 2,
+        "finishes": 1,
+        "ownReads": 0,
+        "forbidden": 0,
+        "exactClaimRetries": 1,
+        "exactFinishRetries": 1
+      },
+      "notes": "One visible Claim/Finish click each produced exact duplicate POST under dropped socket; cause not asserted. Approved reload no form/pairing/Finish or newPOST; Spanish copy visible. Foreign household status ended with no request link."
+    },
+    {
+      "name": "accepted malformed finish without cookie, cold reload, generic-auth rejection",
+      "passed": true,
+      "counts": {
+        "starts": 1,
+        "verifies": 1,
+        "claimPosts": 1,
+        "claims": 1,
+        "finishPosts": 1,
+        "finishes": 1,
+        "ownReads": 0,
+        "forbidden": 0,
+        "exactClaimRetries": 0,
+        "exactFinishRetries": 0
+      },
+      "fixtureSHA256": "f8e3cb7b2ba827fb84fffadb4dc942eaf91a1cf71950f9749e92aa26f3f677f1",
+      "notes": "Unconfirmed with original retry while memory remains; cold reload no requests/retry/form; generic authenticated without invitation admission denied."
+    }
+  ],
+  "foundIssue": "Duplicate status message corrected in rendering only; exact final production page rechecked actual IAB in English and Spanish, both single message. Original screenshots retained.",
+  "limitations": [
+    "Pending/approved full reload cannot recover original in-memory pairing/device secret; visibly requests original page or newly reviewed guardian setup.",
+    "No actual account, credentials, email, database, provider callbacks or deployment.",
+    "Transport is loopback HTTP synthetic fixture, not backend integration."
+  ],
+  "artifacts": {
+    "06-finish-body-lost.png": "51afd143143c0b794db9cfeeb7cfa1d2a939befb27e9d0be5790174a9b36f162",
+    "09-final-single-unconfirmed.png": "869d855e157561a5e4c4a7a2290e4b4bd45fc59840667cf42df7a372f0a0a94b",
+    "03-approved-reload-spanish.png": "7b83b18cf0741f74bf12c871612bfb13d073b653f2bc5aeb954ba6960bf0e746",
+    "10-final-single-no-cookie.txt": "ede21e954573e6083119f94ddf1b23f8f2ecc814093c31d9341e765de6416fab",
+    "01-own-requests.txt": "d44116814464082b11eb7856eebdf380074651250e4520dc844eb58815a295bb",
+    "06-finish-body-lost.txt": "e21dac1a8f2bb12f1ce414554d55e62f06a1e33277766f544b36727bb918b8d4",
+    "09-final-single-unconfirmed.txt": "f06c92901ad8b5e6a57e3da94d2bec6d4bd933503575feb7410e0ee89eb9b913",
+    "01-own-requests.png": "78f41d4faae43e1d1bd072cbd3d981630bf84ae5466f313cacc6076ef3ef8465",
+    "10-final-single-no-cookie.png": "f5753f5a46ba64de0fc09fdea3f78dd5bba3e37217c808404838f1bb053d0f64",
+    "11-final-no-cookie-spanish.png": "a056781ffc2679c576698a7f65d9b0a213f2e95adb02685252be8cb33201a73c",
+    "08-generic-auth-denied.png": "caf453c96aeaccd246291eeb436a2ae14319fe84a4a90aafc480ea8aeb4b33f8",
+    "07-no-cookie-cold-reload.txt": "bbc6d65188b65dc3447e83a2cc9585a6be941287daaa5687e7bad96315153c5d",
+    "05-wrong-household-denied.txt": "247cb64c18593486932dd43d5f9a3ad5958a77d00cf4c4217dd4d9c10b6c9963",
+    "04-finish-drop-exact-recovery.txt": "a7a55647f2668b1cd12141537560904b5a95d9b877e895c55df7de20d0be3f39",
+    "02-approved-cold-reload.txt": "7881af2e9b23d1ff6c036dd6bbf473573cf086522492713d66a5a4a57e0e46a5",
+    "08-generic-auth-denied.txt": "0697f110fe8e4975695e2b681349f6b5defb0131cb996ccf6f2268852620ba82",
+    "11-final-no-cookie-spanish.txt": "e8054bcc9003ad77557ee925edce2ca1263d8d5dffd161a068da67ce637cf8ed",
+    "07-no-cookie-cold-reload.png": "3f5ac6e37420905800066921dd5769d5f8ff4e86251f7a8fa4686f25897050a8",
+    "05-wrong-household-denied.png": "28a6a8d2d4885337dd26ac842ec280a70c9d7bd68ded2ec474a37703fb924d9c",
+    "04-finish-drop-exact-recovery.png": "02e3d62a5b531baf2032b21968988283361e4810043823a3b9f0b1faf8795abe",
+    "02-approved-cold-reload.png": "4fe71b094d4eece7039f421a1c560eeb33c87187dd2c9a6b30b461235571e834"
+  },
+  "finalDisplaySourceSHA256": "13ca45d25e4748ab7db2dc0fe8d5098a8d4fea7924f1f391e94dd991853375d2",
+  "finalRecheck": {
+    "passed": true,
+    "case": "malformed accepted finish/no cookie -> unconfirmed once -> cold reload denies request access and shows explanation once -> Spanish once",
+    "countsCumulative": {
+      "starts": 2,
+      "verifies": 2,
+      "claimPosts": 2,
+      "claims": 2,
+      "finishPosts": 2,
+      "finishes": 2,
+      "ownReads": 0,
+      "forbidden": 0,
+      "exactClaimRetries": 0,
+      "exactFinishRetries": 0
+    },
+    "deltaFromPriorCase": {
+      "starts": 1,
+      "verifies": 1,
+      "claimPosts": 1,
+      "claims": 1,
+      "finishPosts": 1,
+      "finishes": 1
+    }
+  },
+  "cleanup": {
+    "ownedBrowserTabClosed": true,
+    "ownedFixtureStopped": true,
+    "simulatorUsed": false,
+    "providerCalls": 0
+  }
+}

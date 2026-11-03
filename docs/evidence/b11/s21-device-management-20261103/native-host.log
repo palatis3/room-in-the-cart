@@ -1,0 +1,36 @@
+Building for debugging...
+[Planning deferred tasks]
+[2 / 9] RoomInTheCart
+[6 / 13] RoomInTheCart
+[10 / 16] RoomInTheCart
+[14 / 18] DeviceModelTests-product
+[16 / 20] DeviceModelTests-product
+[18 / 20] DeviceModelTests-product
+Build complete! (1.87 sec)
+Test Suite 'All tests' started at 2026-11-03 17:01:24.722.
+Test Suite 'DeviceModelTests.xctest' started at 2026-11-03 17:01:24.722.
+Test Suite 'HouseholdDevicesTests' started at 2026-11-03 17:01:24.723.
+Test Case '-[DeviceModelTests.HouseholdDevicesTests testBackgroundClearsProtectedRowsAndResumesWithSameAuthorizedRetry]' started.
+Test Case '-[DeviceModelTests.HouseholdDevicesTests testBackgroundClearsProtectedRowsAndResumesWithSameAuthorizedRetry]' passed (0.007 seconds).
+Test Case '-[DeviceModelTests.HouseholdDevicesTests testCurrentDeviceAndUnlistedTargetNeverSend]' started.
+Test Case '-[DeviceModelTests.HouseholdDevicesTests testCurrentDeviceAndUnlistedTargetNeverSend]' passed (0.001 seconds).
+Test Case '-[DeviceModelTests.HouseholdDevicesTests testLostResponseRetainsExactIntentAndFreshModelReconcilesSameTarget]' started.
+Test Case '-[DeviceModelTests.HouseholdDevicesTests testLostResponseRetainsExactIntentAndFreshModelReconcilesSameTarget]' passed (0.002 seconds).
+Test Case '-[DeviceModelTests.HouseholdDevicesTests testPurgeDuringSendCannotResurrectReceiptOrPendingAction]' started.
+Test Case '-[DeviceModelTests.HouseholdDevicesTests testPurgeDuringSendCannotResurrectReceiptOrPendingAction]' passed (0.001 seconds).
+Test Case '-[DeviceModelTests.HouseholdDevicesTests testRevokedContextDropsInventoryAndPendingWithoutShowingPriorReceipt]' started.
+Test Case '-[DeviceModelTests.HouseholdDevicesTests testRevokedContextDropsInventoryAndPendingWithoutShowingPriorReceipt]' passed (0.001 seconds).
+Test Case '-[DeviceModelTests.HouseholdDevicesTests testScopeChangeDuringInventoryOrPreparationCannotExposeRowsOrSend]' started.
+Test Case '-[DeviceModelTests.HouseholdDevicesTests testScopeChangeDuringInventoryOrPreparationCannotExposeRowsOrSend]' passed (0.001 seconds).
+Test Case '-[DeviceModelTests.HouseholdDevicesTests testScopedPurgeInvalidatesAlreadyPreparedRetryBeforeTransmission]' started.
+Test Case '-[DeviceModelTests.HouseholdDevicesTests testScopedPurgeInvalidatesAlreadyPreparedRetryBeforeTransmission]' passed (0.002 seconds).
+Test Suite 'HouseholdDevicesTests' passed at 2026-11-03 17:01:24.737.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.014 (0.015) seconds
+Test Suite 'DeviceModelTests.xctest' passed at 2026-11-03 17:01:24.737.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.014 (0.015) seconds
+Test Suite 'All tests' passed at 2026-11-03 17:01:24.737.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.014 (0.015) seconds
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

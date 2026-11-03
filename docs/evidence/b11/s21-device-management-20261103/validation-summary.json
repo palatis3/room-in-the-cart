@@ -1,0 +1,146 @@
+{
+  "date": "2026-11-03T22:01:25.978060+00:00",
+  "scope": "Foundation2.1 S21 actual enrolled-device inventory and precise revocation",
+  "sourceSHA256": {
+    "service/migrations/023_device_enrollment_fence.sql": "16f737590b2d90c6ae2942b2e4983d1455f42077d477382320773b15a6629b5d",
+    "service/src/device-management.ts": "835833b5c1ab2917457296a8a5ae6fc0564fe54d8d3b96965a53942ea304300c",
+    "service/src/http.ts": "6928640510b24775b48ab1fec4a437a0583f78fcf88937109bc4ea6260791fa0",
+    "service/src/repository.ts": "0d18c353c4a0c6cdf136f7a4b3968923be7835ecbd27b076dfa8a58c37eb9828",
+    "service/tests/device-management.integration.mjs": "fd798d4cb54053760dabc1fae2cf97776e53e7fce9bbfea274a9b0213c4bae6b",
+    "service/API-DEVICES.md": "624e0d57cdd5f9dd5f7a84e4bf6b98d032438dd8e5acabcc9ac05d5f1dc5e57d",
+    "ios/Packages/HouseholdClient/Sources/HouseholdClient/DeviceManagement.swift": "0491d7f2204f74cdde96c614a35ad5d3c5243c8013be35895fd5762b14b63f3f",
+    "ios/Packages/HouseholdClient/Tests/HouseholdClientTests/DeviceManagementTests.swift": "6aabd8a05486652a4c9037e7615e38fbb33834a6bada6b41457e484d42849e6d",
+    "ios/Features/Household/HouseholdDevicesModel.swift": "652a18e28e51852c1d6c44f1b81c0c48c356c9dacfebcd0248ff3bc6df8429da",
+    "ios/Features/Household/HouseholdDevicesView.swift": "4a4ac2b1df7569afaa8ad898c474a80c675d30098924c4c5c53d99c36a85fd31",
+    "ios/Features/Household/DeviceManagement.xcstrings": "670980e95a0f849d4512708062e2cc9dbf966c98e599604e1a266fe08b10050d",
+    "ios/Tests/HouseholdDevicesTests.swift": "6f24a61dba4116219e05c93b7928747131736d8513b1cfb9327eee7afc18a1a8",
+    "ios/UITestSupport/HouseholdDevicesUIFixture.swift": "38df85c16fb0811d3faa4ea76e411d0545c6a8c7844f51c3cd897d607a178274",
+    "ios/UITests/HouseholdDevicesUITests.swift": "a8ed2d03bc22245c0727caaf9fda4e75c9da828c544dd82a9316d4b9e70c4de0"
+  },
+  "checks": [
+    {
+      "command": [
+        "/Users/palatis/Room in the Cart/.tools/node-v22.14.0-darwin-arm64/bin/node",
+        "--test",
+        "service/tests/device-management.integration.mjs"
+      ],
+      "log": "postgres-http.log",
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "swift",
+        "test",
+        "--package-path",
+        "ios/Packages/HouseholdClient",
+        "--scratch-path",
+        "/tmp/ritc-device-management-client-build",
+        "--filter",
+        "HouseholdClientTests.testDevice|HouseholdClientTests.testScopedHelperCannotUseDeviceManagement"
+      ],
+      "log": "client.log",
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "swift",
+        "test",
+        "--package-path",
+        "/tmp/ritc-device-management-model-check",
+        "--scratch-path",
+        "/tmp/ritc-device-management-model-build",
+        "-Xswiftc",
+        "-DCONTRIBUTOR_CAPTURE_UI_FIXTURE"
+      ],
+      "log": "native-host.log",
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "xcrun",
+        "swiftc",
+        "-frontend",
+        "-parse",
+        "ios/Features/Household/HouseholdDevicesView.swift",
+        "ios/UITestSupport/HouseholdDevicesUIFixture.swift",
+        "ios/UITests/HouseholdDevicesUITests.swift"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/check_localization.py"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "results": {
+    "postgresHTTP": {
+      "passed": 11,
+      "failed": 0,
+      "runtime": "non-owner ritc_test_runtime",
+      "database": "ritc_device_management_023_reviewed",
+      "migrations": [
+        "001_household_requests.sql",
+        "002_apple_billing.sql",
+        "003_web_session.sql",
+        "004_household_lock.sql",
+        "005_session_and_policy_hardening.sql",
+        "006_household_lifecycle.sql",
+        "007_selected_helper_session.sql",
+        "008_browser_email_auth.sql",
+        "009_auth_maintenance.sql",
+        "010_account_lifecycle.sql",
+        "011_helper_review_and_shop_selection.sql",
+        "012_price_budget_history.sql",
+        "013_shared_meal_occurrences.sql",
+        "014_shared_meal_moves.sql",
+        "015_family_decisions.sql",
+        "016_shared_meal_changes.sql",
+        "017_shared_meal_ideas.sql",
+        "018_shared_store_quotes.sql",
+        "019_optional_measurement.sql",
+        "020_operations_health.sql",
+        "021_guardian_enrollment.sql",
+        "023_device_enrollment_fence.sql"
+      ]
+    },
+    "client": {
+      "passed": 5,
+      "failed": 0
+    },
+    "nativeModel": {
+      "passed": 7,
+      "failed": 0,
+      "host": "macOS SwiftPM isolated model/view/fixture typecheck; not a signed/native device build"
+    },
+    "localization": "18 catalogs, 3668 en/es entries, 3510 literal source keys, matching format arguments."
+  },
+  "preparedNotExecuted": [
+    "HouseholdDevicesUITests English precise revoke/cancel/page journey",
+    "HouseholdDevicesUITests Spanish accessibility5 journey"
+  ],
+  "pending": [
+    "Root integrated001\u2013023 migration/restore after journal022 lands",
+    "Root actual simulator/UI execution and visualinspection",
+    "Physical iPhone VoiceOver/large-text signoff",
+    "Independent SQL authority review outcome"
+  ],
+  "uiFixture": {
+    "compilationGuard": "DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE",
+    "routeFlag": "--household-devices-fixture",
+    "root": "HouseholdDevicesFixtureRoot()",
+    "largestTextFlag": "--device-fixture-largest-text"
+  },
+  "sharedHooks": "http devices list/revoke routes + repository.enroll fence check only; lifecycle whole-member revocation unchanged",
+  "remoteActions": "None; no provider calls, deployment, index or commits"
+}

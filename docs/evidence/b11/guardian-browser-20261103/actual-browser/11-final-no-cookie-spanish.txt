@@ -1,0 +1,12 @@
+- banner:
+  - paragraph: Room in the Cart
+  - combobox "Idioma" [active]:
+    - option "Inglés"
+    - option "Español" [selected]
+- main:
+  - heading "Invitación para menores" [level=1]
+  - status: La configuración está activa, pero no se pudo confirmar el acceso en este navegador. Continúa en la página original para reintentar su configuración original o pide a tu tutor que revise una configuración nueva.
+  - button "Consultar estado actual"
+  - button "Cerrar sesión"
+  - link "Ayuda":
+    - /url: /help

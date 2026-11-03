@@ -1,0 +1,16 @@
+- banner:
+  - paragraph: Room in the Cart
+  - combobox "Language":
+    - option "English" [selected]
+    - option "Spanish"
+- main:
+  - heading "Child invitation" [level=1]
+  - status: The setup response is unconfirmed. Check current status or retry the original setup from this page.
+  - heading "Your pairing code" [level=2]
+  - paragraph: 5BYWA4HZ
+  - paragraph: The setup response is unconfirmed. Check current status or retry the original setup from this page.
+  - button "Retry original setup"
+  - button "Check current status"
+  - button "Sign out"
+  - link "Help":
+    - /url: /help

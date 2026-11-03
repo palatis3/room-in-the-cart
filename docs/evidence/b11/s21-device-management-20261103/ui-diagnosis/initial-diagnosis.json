@@ -1,0 +1,20 @@
+{
+  "frozenSource": ".build/IntegratedFixtureSource-20261103T223750Z",
+  "deviceTestSHA256": "a8ed2d03bc22245c0727caaf9fda4e75c9da828c544dd82a9316d4b9e70c4de0",
+  "deviceViewSHA256": "4a4ac2b1df7569afaa8ad898c474a80c675d30098924c4c5c53d99c36a85fd31",
+  "observedFailures": {
+    "English": "Native PlatformAlertController appears; SwiftUI Cancel accessibility ID lookup fails at frozen test line40. Native action selector still awaiting completed result snapshots.",
+    "Spanish": "Fails frozen test line15 waiting Refresh existence, before any scroll gesture; Refresh follows two paragraphs in a lazy Form at accessibility5."
+  },
+  "artifactExport": "Result bundle Info.plist not yet present while parent batch is active; do not treat dialog selector as verified until completed bundle attachments are inspected.",
+  "changesPrepared": [
+    "Capture failure app screenshot and complete AX before test termination",
+    "Container-local reveal for lazy rows; wait fixture footer then reveal Refresh and current Mia alias; no whole-app reverse swipes"
+  ],
+  "untouched": [
+    "Frozen source",
+    "Running simulator",
+    "Parent Xcode build/test process",
+    "Product behavior"
+  ]
+}

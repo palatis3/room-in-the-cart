@@ -65,6 +65,7 @@ test('optional measurement PostgreSQL identities, RLS, consent and verified bill
    // Only identity-provider verification is replaced; device enrollment, authorization,
    // transport parsing, RLS and all measurement writes use the real implementations.
    const identity={issuer:'test-only',subject:adult,sessionId:randomUUID(),expiresAt:new Date(Date.now()+3600000)};
+   await admin.query('INSERT INTO auth.sessions(id,user_id) VALUES($1,$2)',[identity.sessionId,identity.subject]);
    const httpRepo=new HouseholdRepository(runtime,{allowChildNetwork:false,noticeVersion:'test',sessionStatus:{async assertLive(){}}});
    const device=await httpRepo.enroll(h,identity),server=createHTTPServer({repository:httpRepo,verifier:{async verify(){return identity;}}});
    await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));

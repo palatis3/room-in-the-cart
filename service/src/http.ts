@@ -17,6 +17,7 @@ import {MealMoves,grantChange,moveRequest,dismissMove} from './meal-moves.js';
 import {HelperReview} from './helper-review.js';
 import {PlacementReports} from './placement-reports.js';
 import {HouseholdLifecycle} from './lifecycle.js';
+import {HouseholdDeviceManagement,deviceRevocationSchema} from './device-management.js';
 import {PrivacyService,deletionSchema,exitSchema} from './privacy.js';
 import {GuardianEnrollmentService,guardianCreateSchema,guardianActionSchema,guardianConsentSchema,guardianInvitationSchema,guardianConfirmSchema,childClaimSchema,childFinishSchema,childAuthStartSchema,childNativeStartSchema,childNativeAdmitSchema} from './guardian.js';
 import {viewReplacementSchema,proposalResolutionSchema,householdCreateSchema,inviteCreateSchema,inviteRedeemSchema,viewCreateSchema,viewUpdateSchema,proposalSchema,revocationSchema, parseCommand,previewSchema,uuid } from './contracts.js';
@@ -43,6 +44,7 @@ export function createHTTPServer(options:HTTPOptions) {
   const storeQuotes = new SharedStoreQuotes(repository);
   const measurement = new HouseholdMeasurement(repository);
   const placementReports = new PlacementReports(repository);
+  const devices = new HouseholdDeviceManagement();
   const guardian = options.guardian??new GuardianEnrollmentService(repository);
   const limits=new Map<string,{count:number;until:number}>();
   return createServer(async(req,res)=>{
@@ -188,6 +190,9 @@ export function createHTTPServer(options:HTTPOptions) {
       const output=await repository.authorized(householdId,scopedAuth,async ctx=>{
         if(ownPlacement&&method==='GET')return placementReports.own(ctx,uuid.parse(ownPlacement[1]),uuid.parse(ownPlacement[2]),z.string().regex(/^[0-9a-f]{64}$/).parse(url.searchParams.get('commandDigest')));
         if(path==='/devices/current'&&method==='DELETE')return repository.logout(ctx);
+        if(path==='/devices'&&method==='GET'){const cursor=url.searchParams.get('cursor');if(cursor)uuid.parse(cursor);return devices.list(ctx,cursor);}
+        const deviceRevocation=/^\/devices\/([^/]+)\/revocation$/.exec(path);
+        if(deviceRevocation&&method==='POST')return devices.revoke(ctx,auth.identity,uuid.parse(deviceRevocation[1]),deviceRevocationSchema.parse(payload));
         if(options.billing){
           if(path==='/entitlements'&&method==='GET')return options.billing.snapshot(ctx);
           if(path==='/billing/seat-candidates'&&method==='GET')return options.billing.seatCandidates(ctx);

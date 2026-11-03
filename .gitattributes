@@ -1,0 +1,3 @@
+# Preserve byte-for-byte captured evidence, including unified-diff context prefixes.
+docs/evidence/b11/privacy-journal-20261103/api-privacy-live.diff whitespace=-blank-at-eol
+docs/evidence/b11/s21-device-management-20261103/source-checks.log whitespace=-blank-at-eof

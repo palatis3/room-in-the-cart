@@ -1,0 +1,13 @@
+PASS actual synthetic guardian evidence, covered child admission, pairing activation and pending BFF challenge
+PASS actual app/worker private table/function denials
+PASS original missing dependency/recent auth/foreign target gates before any journal event
+PASS stale backup taken before authorized acceptance with private rows present
+PASS source full erasure/progress acknowledgement and later accepted deletion fence
+PASS restored stale private rows/credentials present and pre-replay probe gate denied
+PASS changed identity, guardian binding/principal and shop preimages quarantine before staging
+PASS owner verified plan stages exact targets, guardian after-image skips and missing-target no-effect receipt
+PASS original accepted close timestamp preserved in owner transaction context
+PASS target rollback atomic and committed receipt resumes after lost output
+PASS repeat import/replay stable,018/019/financial scope isolated, post-backup purchase marker applied and provider false
+PASS post-replay loopback runtime blocks erased actor despite restored provider session and retains independent adult
+PASS all private/application tables retain FORCE RLS

@@ -1,0 +1,133 @@
+Test Suite 'HouseholdDevicesUITests' started at 2026-11-03 17:40:19.612.
+Test Case '-[RoomInTheCartUITests.HouseholdDevicesUITests testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess]' started.
+    t =     0.01s Start Test at 2026-11-03 17:40:19.622
+    t =     0.31s Set Up
+    t =     0.32s Open dev.roominthecart.app.debug
+    t =     0.32s     Launch dev.roominthecart.app.debug
+2026-11-03 17:40:20.066 xcodebuild[92309:9392728] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-03 17:40:20.066 xcodebuild[92309:9392728] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-03 17:40:20.107 xcodebuild[92309:9392728] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+    t =     0.67s         Setting up automation session
+objc[93960]: Class UIAccessibilityLoaderWebShared is implemented in both /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.cRwd7q/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x1065e8398) and /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.cRwd7q/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x107200310). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     5.17s         Wait for dev.roominthecart.app.debug to idle
+    t =     7.30s Waiting 15.0s for "household.devices.refresh" Any to exist
+    t =     8.34s     Checking `Expect predicate `existsNoRetry == 1` for object "household.devices.refresh" Any`
+    t =     8.34s         Checking existence of `"household.devices.refresh" Any`
+    t =     8.57s Waiting 10.0s for "household.devices.alias.30000000-0000-4000-8000-000000000004" Any to exist
+    t =     9.60s     Checking `Expect predicate `existsNoRetry == 1` for object "household.devices.alias.30000000-0000-4000-8000-000000000004" Any`
+    t =     9.60s         Checking existence of `"household.devices.alias.30000000-0000-4000-8000-000000000004" Any`
+    t =     9.72s Checking existence of `"household.devices.revoke.30000000-0000-4000-8000-000000000004" Any`
+    t =     9.86s Checking existence of `"household.devices.revoke.30000000-0000-4000-8000-000000000005" Any`
+    t =    10.03s Checking existence of `"household.devices.revoke.30000000-0000-4000-8000-000000000005" Any`
+    t =    10.17s Swipe up Target Application 'dev.roominthecart.app.debug'
+    t =    10.17s     Wait for dev.roominthecart.app.debug to idle
+    t =    10.19s     Find the Target Application 'dev.roominthecart.app.debug'
+    t =    10.23s     Check for interrupting elements affecting "Room in the Cart" Application
+    t =    10.27s     Synthesize event
+    t =    10.82s     Wait for dev.roominthecart.app.debug to idle
+    t =    11.46s Checking existence of `"household.devices.revoke.30000000-0000-4000-8000-000000000005" Any`
+    t =    11.66s Find the "household.devices.revoke.30000000-0000-4000-8000-000000000005" Any
+    t =    11.97s Find the "household.devices.revoke.30000000-0000-4000-8000-000000000005" Button
+    t =    12.14s Find the NavigationBar (First Match)
+    t =    12.17s Find the "household.devices.revoke.30000000-0000-4000-8000-000000000005" Button
+    t =    12.34s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    12.38s Tap "household.devices.revoke.30000000-0000-4000-8000-000000000005" Button
+    t =    12.38s     Wait for dev.roominthecart.app.debug to idle
+    t =    12.38s     Find the "household.devices.revoke.30000000-0000-4000-8000-000000000005" Button
+    t =    12.53s     Check for interrupting elements affecting "household.devices.revoke.30000000-0000-4000-8000-000000000005" Button
+    t =    12.62s     Synthesize event
+    t =    12.93s     Wait for dev.roominthecart.app.debug to idle
+    t =    13.64s Waiting 5.0s for "household.devices.cancel" Any to exist
+    t =    14.67s     Checking `Expect predicate `existsNoRetry == 1` for object "household.devices.cancel" Any`
+    t =    14.67s         Checking existence of `"household.devices.cancel" Any`
+    t =    14.86s         Capturing element debug description
+    t =    15.68s     Checking `Expect predicate `existsNoRetry == 1` for object "household.devices.cancel" Any`
+    t =    15.68s         Checking existence of `"household.devices.cancel" Any`
+    t =    15.87s         Capturing element debug description
+    t =    16.69s     Checking `Expect predicate `existsNoRetry == 1` for object "household.devices.cancel" Any`
+    t =    16.69s         Checking existence of `"household.devices.cancel" Any`
+    t =    16.87s         Capturing element debug description
+    t =    17.69s     Checking `Expect predicate `existsNoRetry == 1` for object "household.devices.cancel" Any`
+    t =    17.69s         Checking existence of `"household.devices.cancel" Any`
+    t =    17.87s         Capturing element debug description
+    t =    18.64s     Checking `Expect predicate `existsNoRetry == 1` for object "household.devices.cancel" Any`
+    t =    18.64s         Checking existence of `"household.devices.cancel" Any`
+    t =    18.84s         Capturing element debug description
+    t =    18.85s     Checking existence of `"household.devices.cancel" Any`
+    t =    19.07s Collecting debug information to assist test failure triage
+    t =    19.07s     Requesting snapshot of accessibility hierarchy for app with pid 93999
+/Users/palatis/Room in the Cart/.build/IntegratedFixtureSource-20261103T223750Z/ios/UITests/HouseholdDevicesUITests.swift:40: error: -[RoomInTheCartUITests.HouseholdDevicesUITests testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess] : XCTAssertTrue failed
+    t =    19.64s Tear Down
+    t =    19.64s     Terminate dev.roominthecart.app.debug:93999
+2026-11-03 17:40:39.287 xcodebuild[92309:9392728] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-03 17:40:39.288 xcodebuild[92309:9392728] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-03 17:40:39.290 xcodebuild[92309:9392728] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+Test Case '-[RoomInTheCartUITests.HouseholdDevicesUITests testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess]' failed (20.708 seconds).
+Test Case '-[RoomInTheCartUITests.HouseholdDevicesUITests testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke]' started.
+    t =     0.00s Start Test at 2026-11-03 17:40:40.331
+    t =     0.03s Set Up
+    t =     0.03s Open dev.roominthecart.app.debug
+    t =     0.03s     Launch dev.roominthecart.app.debug
+2026-11-03 17:40:40.366 xcodebuild[92309:9392728] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-03 17:40:40.367 xcodebuild[92309:9392728] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-03 17:40:40.416 xcodebuild[92309:9392728] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+    t =     0.25s         Setting up automation session
+    t =     4.67s         Wait for dev.roominthecart.app.debug to idle
+    t =     6.85s Waiting 15.0s for "household.devices.refresh" Any to exist
+    t =     7.88s     Checking `Expect predicate `existsNoRetry == 1` for object "household.devices.refresh" Any`
+    t =     7.88s         Checking existence of `"household.devices.refresh" Any`
+    t =     8.01s         Capturing element debug description
+    t =     8.94s     Checking `Expect predicate `existsNoRetry == 1` for object "household.devices.refresh" Any`
+    t =     8.94s         Checking existence of `"household.devices.refresh" Any`
+    t =     9.00s         Capturing element debug description
+    t =     9.92s     Checking `Expect predicate `existsNoRetry == 1` for object "household.devices.refresh" Any`
+    t =     9.92s         Checking existence of `"household.devices.refresh" Any`
+    t =     9.95s         Capturing element debug description
+    t =    10.87s     Checking `Expect predicate `existsNoRetry == 1` for object "household.devices.refresh" Any`
+    t =    10.87s         Checking existence of `"household.devices.refresh" Any`
+    t =    10.90s         Capturing element debug description
+    t =    11.94s     Checking `Expect predicate `existsNoRetry == 1` for object "household.devices.refresh" Any`
+    t =    11.94s         Checking existence of `"household.devices.refresh" Any`
+    t =    12.00s         Capturing element debug description
+    t =    12.93s     Checking `Expect predicate `existsNoRetry == 1` for object "household.devices.refresh" Any`
+    t =    12.93s         Checking existence of `"household.devices.refresh" Any`
+    t =    12.99s         Capturing element debug description
+    t =    13.92s     Checking `Expect predicate `existsNoRetry == 1` for object "household.devices.refresh" Any`
+    t =    13.92s         Checking existence of `"household.devices.refresh" Any`
+    t =    13.95s         Capturing element debug description
+    t =    14.88s     Checking `Expect predicate `existsNoRetry == 1` for object "household.devices.refresh" Any`
+    t =    14.88s         Checking existence of `"household.devices.refresh" Any`
+    t =    14.94s         Capturing element debug description
+    t =    15.87s     Checking `Expect predicate `existsNoRetry == 1` for object "household.devices.refresh" Any`
+    t =    15.87s         Checking existence of `"household.devices.refresh" Any`
+    t =    15.91s         Capturing element debug description
+    t =    16.90s     Checking `Expect predicate `existsNoRetry == 1` for object "household.devices.refresh" Any`
+    t =    16.90s         Checking existence of `"household.devices.refresh" Any`
+    t =    16.93s         Capturing element debug description
+    t =    17.85s     Checking `Expect predicate `existsNoRetry == 1` for object "household.devices.refresh" Any`
+    t =    17.85s         Checking existence of `"household.devices.refresh" Any`
+    t =    17.89s         Capturing element debug description
+    t =    18.92s     Checking `Expect predicate `existsNoRetry == 1` for object "household.devices.refresh" Any`
+    t =    18.92s         Checking existence of `"household.devices.refresh" Any`
+    t =    18.98s         Capturing element debug description
+    t =    19.89s     Checking `Expect predicate `existsNoRetry == 1` for object "household.devices.refresh" Any`
+    t =    19.89s         Checking existence of `"household.devices.refresh" Any`
+    t =    19.95s         Capturing element debug description
+    t =    20.87s     Checking `Expect predicate `existsNoRetry == 1` for object "household.devices.refresh" Any`
+    t =    20.87s         Checking existence of `"household.devices.refresh" Any`
+    t =    20.90s         Capturing element debug description
+    t =    21.85s     Checking `Expect predicate `existsNoRetry == 1` for object "household.devices.refresh" Any`
+    t =    21.86s         Checking existence of `"household.devices.refresh" Any`
+    t =    21.91s         Capturing element debug description
+    t =    21.91s     Checking existence of `"household.devices.refresh" Any`
+    t =    21.95s Collecting debug information to assist test failure triage
+    t =    21.95s     Requesting snapshot of accessibility hierarchy for app with pid 94065
+/Users/palatis/Room in the Cart/.build/IntegratedFixtureSource-20261103T223750Z/ios/UITests/HouseholdDevicesUITests.swift:15: error: -[RoomInTheCartUITests.HouseholdDevicesUITests testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke] : XCTAssertTrue failed
+    t =    21.97s Tear Down
+    t =    21.97s     Terminate dev.roominthecart.app.debug:94065
+2026-11-03 17:41:02.319 xcodebuild[92309:9392728] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-03 17:41:02.319 xcodebuild[92309:9392728] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-03 17:41:02.320 xcodebuild[92309:9392728] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+Test Case '-[RoomInTheCartUITests.HouseholdDevicesUITests testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke]' failed (23.067 seconds).
+Test Suite 'HouseholdDevicesUITests' failed at 2026-11-03 17:41:03.398.
+	 Executed 2 tests, with 2 failures (0 unexpected) in 43.775 (43.786) seconds

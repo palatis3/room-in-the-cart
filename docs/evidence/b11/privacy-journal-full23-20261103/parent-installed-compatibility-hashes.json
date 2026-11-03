@@ -1,0 +1,42 @@
+{
+  "status": "parent reports all6 installed; parent separately changes runner verifier setup to read-only and guardian runner to all migrations/real journal/final fence",
+  "sharedSuiteStatus": "parent-owned pending, not executed by journal lane",
+  "rows": [
+    {
+      "relative": "scripts/test-database.mjs",
+      "proposedSHA256": "7382a38b287faad4aa13c05e423b81a226f74e625e4b1a965e611dad3bbffa81",
+      "currentParentInstalledSHA256": "6f18608fa9725e6c69159d5570bbb76ccf652c2f9cf54c7f04d0ba203935b724",
+      "matchesProposal": false
+    },
+    {
+      "relative": "tests/privacy.integration.mjs",
+      "proposedSHA256": "fec3028f1031cfdcec290b1f91a0f726a706de835b092465efe6de257b41c4b9",
+      "currentParentInstalledSHA256": "fec3028f1031cfdcec290b1f91a0f726a706de835b092465efe6de257b41c4b9",
+      "matchesProposal": true
+    },
+    {
+      "relative": "tests/shared-store-quotes.integration.mjs",
+      "proposedSHA256": "690d11021f1d4f7222ffbc154219ce616f6f7230537434dfbc60f0fcc34d68d7",
+      "currentParentInstalledSHA256": "690d11021f1d4f7222ffbc154219ce616f6f7230537434dfbc60f0fcc34d68d7",
+      "matchesProposal": true
+    },
+    {
+      "relative": "tests/guardian.integration.mjs",
+      "proposedSHA256": "d37b16222c8f39acb200332cf774aace766df3704bdc99540d7bd38825a3d897",
+      "currentParentInstalledSHA256": "d37b16222c8f39acb200332cf774aace766df3704bdc99540d7bd38825a3d897",
+      "matchesProposal": true
+    },
+    {
+      "relative": "tests/privacy-journal-fixture.mjs",
+      "proposedSHA256": "c8cb0f33315eb06eaa6e529873419cabb4eed7064982595e4b8f8a03e78ea2bb",
+      "currentParentInstalledSHA256": "c8cb0f33315eb06eaa6e529873419cabb4eed7064982595e4b8f8a03e78ea2bb",
+      "matchesProposal": true
+    },
+    {
+      "relative": "tests/device-management.integration.mjs",
+      "proposedSHA256": "c684652270bb590f8daa970d0d1a1866b0ed45fdaf2404da05c40823f0a202cf",
+      "currentParentInstalledSHA256": "c684652270bb590f8daa970d0d1a1866b0ed45fdaf2404da05c40823f0a202cf",
+      "matchesProposal": true
+    }
+  ]
+}

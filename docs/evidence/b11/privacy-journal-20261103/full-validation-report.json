@@ -1,0 +1,56 @@
+{
+  "scope": "complete frozen001\u2013022/stable021 local synthetic exact-preimage proof only; not023 or production",
+  "sourceManifestSHA256": "b4b6c4aea838aae20fb9eb8c69a7b4fba004ca79f2bbdfafef6e82dc54d85cbc",
+  "sourceDatabase": "ritc_b11_j022_src_20261103",
+  "restoreDatabase": "ritc_b11_j022_restore_20261103",
+  "restoreOID": 139636,
+  "build": "passed",
+  "unitTests": {
+    "passed": 220,
+    "failed": 0,
+    "skipped": 1,
+    "skipReason": "optional PostgreSQL billing test not selected by pure unit invocation"
+  },
+  "actualDrillCheckpoints": 13,
+  "providerSourceSyntheticAdultCalls": 2,
+  "providerRestoreCalls": 0,
+  "providerChildCalls": 0,
+  "receipts": [
+    {
+      "count": 1,
+      "result": "absent_no_effect"
+    },
+    {
+      "count": 3,
+      "result": "erased"
+    }
+  ],
+  "zeroRemainingFixtureClients": true,
+  "allTablesForceRLS": true,
+  "roleMutation": false,
+  "preservedDatabaseMutation": false,
+  "newDatabaseACLFootprint": "CONNECT only existing app/worker/proof fixture logins; PUBLIC CONNECT revoked, PUBLIC TEMPORARY remains; no denial claimed elsewhere",
+  "keyCustody": "private signing key outside database/dumps/evidence/source in separate owner-only temporary directory",
+  "initialAttempt": "read-only membership name[] decoding assertion stopped before DB creation; fixed query cast text[], retained original log",
+  "review": "independent source reviewer P1 fixed exact browser after-image and actual pending challenge SQL proof passed; tentative newline concern retracted without source change",
+  "remaining": [
+    "final stable023 owner identity and full001\u2013023 replay/HTTP/wire validation",
+    "root coordinated source install and shared integration fixture adaptation",
+    "production policy/provider/key custody/independent-host disaster proof remain out of scope"
+  ],
+  "productionReady": false,
+  "hashes": {
+    "full-build-current.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "full-unit-tests-current.tap": "c70c053247ded727e5a5c9745afa7cc5bebf2f1dc99d3304bc65abc32862bbe1",
+    "full-drill.log": "18c360c0bd0376d3e0f1eb19f9e84a6ffb71b94b68d901c84b83ee55f631b788",
+    "full-drill-attempt1-preflight-name-array.log": "53a98253118140d22f80134d05a53694b09a203402addf65dbe22b42c9b51371",
+    "full-001-022-source-freeze.json": "b4b6c4aea838aae20fb9eb8c69a7b4fba004ca79f2bbdfafef6e82dc54d85cbc",
+    "full-001-022-source-freeze.tar.gz": "4a2351298deb257fe104728ec83932d9fe00be779cd87ad3fecbe7aff185f44b",
+    "full/result.json": "e276538ef76c02abc5e3cbd640f0cf0af551dc6937f7f5d0234b7aea2cf7599f",
+    "full/post-drill-catalog.json": "4b42192cf92d69e4d67b1e05fa9b5227ed343174987ecad63b8c7b522f2e6d85",
+    "full/before-authorized-deletion.dump": "cab62dc13b9017e6bd14728b7591654ebb430e720a55af0b6410539109c295c0",
+    "full/after-source-erasure.dump": "575edcf7750f29e3ec92401e8132f96ef444d6d7d2cfff36ebdab02d134291d9",
+    "full/checkpoint.json": "975ebadfd922b1b0bada15e1231397a4318e6966e7d175b58570bc9c5d488f5a",
+    "full/journal/journal.ndjson": "7df301dfcf6de2d49995ff83fec4e188741c5cd3633750a76533738cb3a35521"
+  }
+}

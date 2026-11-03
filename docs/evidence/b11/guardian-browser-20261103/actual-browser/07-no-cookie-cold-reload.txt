@@ -1,0 +1,13 @@
+- banner:
+  - paragraph: Room in the Cart
+  - combobox "Language":
+    - option "English" [selected]
+    - option "Spanish"
+- main:
+  - heading "Child invitation" [level=1]
+  - status: Setup is active, but access on this browser could not be confirmed. Continue on the original page to retry its original setup, or ask your guardian to review a new setup.
+  - paragraph: Setup is active, but access on this browser could not be confirmed. Continue on the original page to retry its original setup, or ask your guardian to review a new setup.
+  - button "Check current status"
+  - button "Sign out"
+  - link "Help":
+    - /url: /help

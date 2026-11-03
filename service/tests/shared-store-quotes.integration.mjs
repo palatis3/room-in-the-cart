@@ -9,6 +9,7 @@ import {assertRuntimeRole} from '../dist/database.js';
 import {JWTIdentityVerifier,SupabaseSessionVerifier} from '../dist/auth.js';
 import {createHTTPServer} from '../dist/http.js';
 import {PrivacyService,PrivacyMaintenance} from '../dist/privacy.js';
+import {openPrivacyJournalFixture} from './privacy-journal-fixture.mjs';
 
 const admin=new pg.Pool({connectionString:process.env.TEST_ADMIN_DATABASE_URL});
 const runtime=new pg.Pool({connectionString:process.env.TEST_DATABASE_URL});
@@ -18,9 +19,10 @@ const issuer='https://store-quotes.fixture.invalid',audience='authenticated';
 const {publicKey,privateKey}=await generateKeyPair('ES256'),jwk=await exportJWK(publicKey);jwk.kid='store-quotes';
 const verifier=new JWTIdentityVerifier({issuer,audience,jwksUrl:issuer+'/keys'},createLocalJWKSet({keys:[jwk]}));
 const repo=new HouseholdRepository(runtime,{allowChildNetwork:false,noticeVersion:'fixture',sessionStatus:new SupabaseSessionVerifier(issuer)});
+const journal=await openPrivacyJournalFixture(admin);
 const provider={assertAvailable:async()=>{},deleteAccount:async subject=>{await admin.query('DELETE FROM auth.sessions WHERE user_id=$1',[subject]);}};
-const privacy=new PrivacyService(repo,{provider,policy:{receiptRetentionDays:1,erasureMarkerRetentionDays:2,verifiedBackupRetentionDays:1}});
-const maintenance=new PrivacyMaintenance(worker,{provider});
+const privacy=new PrivacyService(repo,{provider,journal:journal.port,policy:{receiptRetentionDays:1,erasureMarkerRetentionDays:2,verifiedBackupRetentionDays:1}});
+const maintenance=new PrivacyMaintenance(worker,{provider,journal:journal.port});
 const server=createHTTPServer({repository:repo,verifier,privacy,maxRequestsPerMinute:20000});let origin;
 before(async()=>{
  for(const value of [process.env.TEST_ADMIN_DATABASE_URL,process.env.TEST_DATABASE_URL]){
@@ -29,10 +31,11 @@ before(async()=>{
  }
  await admin.query('CREATE SCHEMA IF NOT EXISTS auth; CREATE TABLE IF NOT EXISTS auth.sessions(id uuid PRIMARY KEY,user_id uuid NOT NULL,not_after timestamptz)');
  await migrate(process.env.TEST_ADMIN_DATABASE_URL);await assertRuntimeRole(runtime);
- await admin.query("DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='ritc_test_worker') THEN CREATE ROLE ritc_test_worker LOGIN NOSUPERUSER NOBYPASSRLS; END IF; END $$; GRANT ritc_worker TO ritc_test_worker");
+ const workerRole=(await admin.query("SELECT rolcanlogin,rolsuper,rolbypassrls,pg_has_role(oid,'ritc_worker','MEMBER') AS worker,pg_has_role(oid,'ritc_app','MEMBER') AS app FROM pg_roles WHERE rolname='ritc_test_worker'")).rows[0];
+ assert.ok(workerRole?.rolcanlogin&&workerRole.worker&&!workerRole.app&&!workerRole.rolsuper&&!workerRole.rolbypassrls,'Configure the distinct existing local worker before running this fixture; no roles or memberships are changed.');
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));origin='http://127.0.0.1:'+server.address().port;
 });
-after(async()=>{await new Promise(resolve=>server.close(resolve));await Promise.all([admin.end(),runtime.end(),worker.end()]);});
+after(async()=>{await new Promise(resolve=>server.close(resolve));await journal.close();await Promise.all([admin.end(),runtime.end(),worker.end()]);});
 async function actor(){
  const subject=randomUUID(),session=randomUUID();await admin.query('INSERT INTO auth.sessions(id,user_id) VALUES($1,$2)',[session,subject]);
  const token=await new SignJWT({session_id:session,amr:[{method:'otp',timestamp:Math.floor(Date.now()/1000)}]}).setProtectedHeader({alg:'ES256',kid:jwk.kid}).setIssuer(issuer).setSubject(subject).setAudience(audience).setIssuedAt().setExpirationTime('1h').sign(privateKey);

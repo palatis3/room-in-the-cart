@@ -1,4 +1,4 @@
-import {randomUUID} from 'node:crypto';
+import {randomUUID,createHash} from 'node:crypto';
 import {decodeJwt} from 'jose';
 import {z} from 'zod';
 import type {VerifiedIdentity} from './auth.js';
@@ -6,6 +6,7 @@ import {HouseholdRepository} from './repository.js';
 import {type Database,digest,tokenHash} from './database.js';
 import {ServiceError} from './errors.js';
 import {assertWorkerRole,workerQuery} from './maintenance.js';
+import type {PrivacyJournalPort} from './privacy-journal.js';
 const id=z.string().uuid(),secret=z.string().regex(/^[A-Za-z0-9_-]{43}$/);
 const shopChoice=z.discriminatedUnion('action',[
  z.object({shopId:id,revision:z.number().int().positive(),authorityEpoch:z.number().int().positive(),action:z.literal('close')}).strict(),
@@ -41,6 +42,8 @@ export class SupabaseAccountDeletionProvider implements AccountDeletionProvider 
 }
 export interface DeletionPolicy {receiptRetentionDays:number;erasureMarkerRetentionDays:number;verifiedBackupRetentionDays:number}
 function policy(value:DeletionPolicy){z.object({receiptRetentionDays:z.number().int().min(1).max(365),erasureMarkerRetentionDays:z.number().int().min(1).max(3650),verifiedBackupRetentionDays:z.number().int().min(0).max(3650)}).strict().parse(value);if(value.erasureMarkerRetentionDays<Math.max(value.receiptRetentionDays,value.verifiedBackupRetentionDays))throw Error('Erasure markers must cover receipts and the verified backup horizon');return value;}
+async function journalDeadline<T>(work:Promise<T>):Promise<T>{let timer:ReturnType<typeof setTimeout>|undefined;try{return await Promise.race([work,new Promise<never>((_,reject)=>{timer=setTimeout(()=>reject(unavailable()),5000);})]);}finally{if(timer)clearTimeout(timer);}}
+function digestSession(identity:VerifiedIdentity){return createHash('sha256').update(identity.issuer+'\n'+identity.subject+'\n'+identity.sessionId).digest('hex');}
 function recent(identity:VerifiedIdentity){const time=identity.authenticatedAt?.getTime();if(!time||time>Date.now()+5000||Date.now()-time>5*60_000)throw new ServiceError(401,'reauthentication_required','Sign in again, then confirm this account action within five minutes.');}
 function mapped(error:unknown):never{
  const message=error instanceof Error?error.message:'';
@@ -52,27 +55,33 @@ function mapped(error:unknown):never{
 }
 export class PrivacyService {
  private readonly policy:DeletionPolicy|undefined;
- constructor(private readonly repo:HouseholdRepository,private readonly options:{provider?:AccountDeletionProvider;policy?:DeletionPolicy}={}){this.policy=options.policy?policy(options.policy):undefined;}
+ constructor(private readonly repo:HouseholdRepository,private readonly options:{provider?:AccountDeletionProvider;policy?:DeletionPolicy;journal?:PrivacyJournalPort}={}){this.policy=options.policy?policy(options.policy):undefined;}
  private async authenticated(identity:VerifiedIdentity){const db=await this.repo.pool.connect();try{await db.query('BEGIN');await this.repo.assertSession(db,identity,new Date());await db.query('COMMIT');}catch(e){await db.query('ROLLBACK');throw e;}finally{db.release();}}
  async preview(identity:VerifiedIdentity){
   await this.authenticated(identity);
   try{const result=(await workerQuery(this.repo.pool,'SELECT ritc.privacy_preview($1,$2,$3::uuid) AS value',[identity.issuer,identity.subject,identity.sessionId])).rows[0].value;
-   return{...result,verifiedBackupRetentionDays:this.policy?.verifiedBackupRetentionDays??null,deletionAvailable:Boolean(this.options.provider&&this.policy),reauthenticationRequired:!identity.authenticatedAt||Date.now()-identity.authenticatedAt.getTime()>300000,subscriptionManagementURL:'https://apps.apple.com/account/subscriptions/',subscriptionCancelledByDeletion:false};
+   return{...result,verifiedBackupRetentionDays:this.policy?.verifiedBackupRetentionDays??null,deletionAvailable:Boolean(this.options.provider&&this.policy&&this.options.journal),reauthenticationRequired:!identity.authenticatedAt||Date.now()-identity.authenticatedAt.getTime()>300000,subscriptionManagementURL:'https://apps.apple.com/account/subscriptions/',subscriptionCancelledByDeletion:false};
   }catch(e){return mapped(e);}
  }
  async request(identity:VerifiedIdentity,input:z.infer<typeof deletionSchema>){
-  recent(identity);await this.authenticated(identity);if(!this.options.provider||!this.policy)throw unavailable();
+  recent(identity);await this.authenticated(identity);if(!this.options.provider||!this.policy||!this.options.journal||!identity.authenticatedMethod)throw unavailable();
   await this.options.provider.assertAvailable(identity.subject);
-  try{await workerQuery(this.repo.pool,'SELECT ritc.privacy_request($1,$2,$3::uuid,$4::uuid,$5,$6,$7::jsonb,$8,$9)',[identity.issuer,identity.subject,identity.sessionId,input.clientKey,tokenHash(input.statusToken),digest({...input,statusToken:undefined}),JSON.stringify(input.households),this.policy.receiptRetentionDays,this.policy.erasureMarkerRetentionDays]);}catch(e){mapped(e);}
+  const db=await this.repo.pool.connect();let eventId:string;
+  try{
+   await db.query('BEGIN');await db.query("SET LOCAL statement_timeout='10s'; SET LOCAL lock_timeout='2s'; SET LOCAL idle_in_transaction_session_timeout='7s'");
+   const event=(await db.query('SELECT ritc.privacy_journal_request($1,$2,$3::uuid,$4::uuid,$5,$6,$7::jsonb,$8,$9,$10::jsonb) AS event',[identity.issuer,identity.subject,identity.sessionId,input.clientKey,tokenHash(input.statusToken),digest({...input,statusToken:undefined}),JSON.stringify(input.households),this.policy.receiptRetentionDays,this.policy.erasureMarkerRetentionDays,JSON.stringify({configurationId:this.options.journal.configurationId,authenticatedAt:identity.authenticatedAt!.toISOString(),authenticatedMethod:identity.authenticatedMethod,providerAvailability:'configured_adapter_passed',appleGate:'availability_contract_passed',policy:this.policy,sessionBindingHash:digestSession(identity),checkedAt:new Date().toISOString()})])).rows[0].event;
+   eventId=event.eventId;await journalDeadline(this.options.journal.beforeCommit(event));await db.query('COMMIT');
+  }catch(e){await db.query('ROLLBACK').catch(()=>{});mapped(e);}finally{db.release();}
+  await journalDeadline(this.options.journal.afterCommit(eventId!));
   return this.status(input.clientKey,input.statusToken);
  }
- async status(jobId:string,statusToken:string){id.parse(jobId);secret.parse(statusToken);const value=(await workerQuery(this.repo.pool,'SELECT ritc.privacy_status($1,$2) AS value',[jobId,tokenHash(statusToken)])).rows[0].value;if(!value)throw new ServiceError(404,'unavailable','Use the deletion receipt from this device.');return value;}
+ async status(jobId:string,statusToken:string){id.parse(jobId);secret.parse(statusToken);let value=(await workerQuery(this.repo.pool,'SELECT ritc.privacy_status($1,$2) AS value',[jobId,tokenHash(statusToken)])).rows[0].value;if(!value)throw new ServiceError(404,'unavailable','Use the deletion receipt from this device.');if(this.options.journal){await journalDeadline(this.options.journal.acknowledgeJob(jobId));value=(await workerQuery(this.repo.pool,'SELECT ritc.privacy_status($1,$2) AS value',[jobId,tokenHash(statusToken)])).rows[0].value;if(!value)throw new ServiceError(404,'unavailable','Use the deletion receipt from this device.');}return value;}
  async leave(identity:VerifiedIdentity,householdId:string,input:z.infer<typeof exitSchema>){recent(identity);await this.authenticated(identity);if(input.disposition.householdId!==householdId||input.disposition.eraseChildProfiles.length)throw new ServiceError(422,'invalid_candidate','Leaving a household does not erase child profiles. Resolve guardian responsibility first.');
   try{await workerQuery(this.repo.pool,'SELECT ritc.leave_household($1,$2,$3::uuid,$4::uuid,$5::uuid,$6,$7::jsonb)',[identity.issuer,identity.subject,identity.sessionId,householdId,input.clientKey,digest(input),JSON.stringify(input.disposition)]);return{householdId,left:true as const,accountDeleted:false as const};}catch(e){return mapped(e);}
  }
 }
 export class PrivacyMaintenance {
- constructor(private readonly pool:Database,private readonly options:{provider?:AccountDeletionProvider}={}){}
+ constructor(private readonly pool:Database,private readonly options:{provider?:AccountDeletionProvider;journal?:PrivacyJournalPort}={}){}
  // Production may retire already-completed receipts using their persisted dates
  // without granting permission to claim, erase, or delete any pending account.
  async cleanup(input:{batchSize?:number;signal?:AbortSignal}={}){
@@ -82,6 +91,7 @@ export class PrivacyMaintenance {
   input.signal?.throwIfAborted();return{receiptsCleared:row.receipts_cleared as number,jobsPurged:row.jobs_purged as number};
  }
  async run(input:{batchSize?:number;timeBudgetMs?:number}={}){
+  if(!this.options.journal)throw unavailable();
   await assertWorkerRole(this.pool);const batch=z.number().int().min(1).max(100).parse(input.batchSize??25),budget=z.number().int().min(1000).max(25000).parse(input.timeBudgetMs??20000),start=Date.now();
   const cleanup=(await workerQuery(this.pool,'SELECT * FROM ritc.privacy_cleanup($1)',[batch])).rows[0];
   const result={completed:0,retryScheduled:0,leaseLost:0,receiptsCleared:cleanup.receipts_cleared as number,jobsPurged:cleanup.jobs_purged as number};
@@ -90,10 +100,11 @@ export class PrivacyMaintenance {
    try{
     let erased=job.app_erased;
     // At most 100 target profiles per leased run; remaining work is durably retried.
-    for(let n=0;n<100&&!erased&&Date.now()-start<budget;n++)erased=(await workerQuery(this.pool,'SELECT ritc.privacy_erase_target($1,$2) AS erased',[job.job_id,lease])).rows[0].erased;
-    if(erased){if(!this.options.provider)failure='provider_configuration';else{try{await this.options.provider.deleteAccount(job.subject);deleted=true;}catch{failure='provider_unavailable';}}}
+    for(let n=0;n<100&&!erased&&Date.now()-start<budget;n++){erased=(await workerQuery(this.pool,'SELECT ritc.privacy_erase_target($1,$2) AS erased',[job.job_id,lease])).rows[0].erased;await journalDeadline(this.options.journal.acknowledgeJob(job.job_id));}
+    if(erased){await journalDeadline(this.options.journal.acknowledgeJob(job.job_id));if(!this.options.provider)failure='provider_configuration';else{try{await this.options.provider.deleteAccount(job.subject);deleted=true;}catch{failure='provider_unavailable';}}}
    }catch{failure='storage_unavailable';}
    const committed=(await this.pool.query('SELECT ritc.privacy_finish($1,$2,$3,$4) AS committed',[job.job_id,lease,deleted,failure])).rows[0].committed;
+   if(committed)await journalDeadline(this.options.journal.acknowledgeJob(job.job_id));
    if(!committed)result.leaseLost++;else if(deleted)result.completed++;else result.retryScheduled++;
   }return result;
  }

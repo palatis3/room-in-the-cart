@@ -1,0 +1,20 @@
+{
+  "APPROVAL-BLOCKER.md": "7b3d48294704b46d4371cf7e24cb555deea0235e5cadd41f85233a45e10b3b0e",
+  "IMPLEMENTATION-DESIGN.md": "dea6a032a175909f45b13b4dc8459c088efc61c97d0dead0fb99ceeb0222abbe",
+  "INSTALL-MANIFEST.json": "6b3c3b2fc3823c760fa9fafabcd937e92d2470a7dbb36355308a561b579b553c",
+  "README.md": "5ca5a87c42c4a9c0502d1c8e4d534e8b3521dc6dbd0655939c87e0aa279f65ee",
+  "REVIEWED-ALTERNATIVE-COMMAND.md": "0122301c17d8375fe787496f3654b32a5795f95e7bc36ff4c3af2d3f9cb47de6",
+  "api-privacy-live.diff": "fb2672d9d4527c4ec29a8dd210bdb001a92c74a946eb9c805c8864910903d0b8",
+  "full-001-022-source-freeze.json": "b4b6c4aea838aae20fb9eb8c69a7b4fba004ca79f2bbdfafef6e82dc54d85cbc",
+  "full-build-current.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "full-drill-attempt1-preflight-name-array.log": "53a98253118140d22f80134d05a53694b09a203402addf65dbe22b42c9b51371",
+  "full-drill.log": "18c360c0bd0376d3e0f1eb19f9e84a6ffb71b94b68d901c84b83ee55f631b788",
+  "full-post-drill-catalog.json": "4b42192cf92d69e4d67b1e05fa9b5227ed343174987ecad63b8c7b522f2e6d85",
+  "full-result.json": "e276538ef76c02abc5e3cbd640f0cf0af551dc6937f7f5d0234b7aea2cf7599f",
+  "full-unit-tests-current.tap": "c70c053247ded727e5a5c9745afa7cc5bebf2f1dc99d3304bc65abc32862bbe1",
+  "full-validation-report.json": "0a6cadebb0f704d60d31c7a0bd5f415dbc40379daf7260516e552a58f4059207",
+  "full-validation-report.md": "72494be41508b7f36ecd85e1d23faa28e68ca9bf6132a385627434bbe2f323fa",
+  "installed-manifest.json": "d37336c0ddea6cd3812c9df475127442324ece35920ea859ecd76eb6f66bd488",
+  "installed-typecheck.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "privacy-service-live.diff": "5656ece971d79732898ef31e0386b12687f9c9873cb1d6046c0d5c0f32f30b62"
+}

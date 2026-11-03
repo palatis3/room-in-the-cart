@@ -1,0 +1,12 @@
+- banner:
+  - paragraph: Room in the Cart
+  - combobox "Language":
+    - option "English" [selected]
+    - option "Spanish"
+- main:
+  - heading "Child invitation" [level=1]
+  - status: This account has no current child admission for this invitation. Sign out before using the guardian-approved child sign-in.
+  - button "Check current status"
+  - button "Sign out"
+  - link "Help":
+    - /url: /help

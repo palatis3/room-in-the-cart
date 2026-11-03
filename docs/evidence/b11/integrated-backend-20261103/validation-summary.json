@@ -1,0 +1,67 @@
+{
+  "recordedAtUTC": "2026-11-03T22:46:48.635129+00:00",
+  "sourceRoot": "/Users/palatis/Room in the Cart/.build/BackendIntegratedSource-20261103T223522Z",
+  "sourceSHA256": "ab420cc557cc0f6b79ac84a98f1ec0fbb7ffedab9ff833c0269bb8a9feb42479",
+  "sourceDrift": [],
+  "shared": {
+    "tests": 175,
+    "pass": 175,
+    "fail": 0,
+    "skipped": 0,
+    "durationMs": 33567.807375,
+    "actualSwiftWireChecks": [
+      "history Free",
+      "history paid fixture",
+      "planner proposal and separate shopper",
+      "store quote proposal and adoption"
+    ],
+    "webWire": "Actual compiled WebApp/API plus real local PostgreSQL; browser engine acceptance remains separately scoped.",
+    "billingPostgreSQL": "Included, no skip."
+  },
+  "unit": {
+    "tests": 221,
+    "pass": 220,
+    "fail": 0,
+    "skipped": 1,
+    "skip": "Optional separate billing PostgreSQL fixture in pure unit invocation; included in successful shared invocation."
+  },
+  "focusedGuardianCurrentHarness": {
+    "tests": 29,
+    "pass": 29,
+    "fail": 0,
+    "skipped": 0,
+    "migrations": "All current001\u2013023; real journal/final fence; readonly existing-role preflights."
+  },
+  "initialSharedAttempt": {
+    "tests": 175,
+    "pass": 171,
+    "fail": 4,
+    "skipped": 0,
+    "source": ".build/BackendIntegratedSource-20261103T223015Z",
+    "log": ".build/BackendIntegrated-20261103.log",
+    "notes": [
+      "Worker fixture URL had query-only port; explicit worker connection deliberately ignores query overrides, so harness now names localhost:55432.",
+      "Existing combined-role negative test needed CONNECT on the new owned fixture DB to reach the verifier-only rejection; no global privileges changed.",
+      "Legacy measurement identity fixture needed a real auth.sessions row under023 enrollment fencing.",
+      "Additional old fixture role CREATE/GRANT statements were replaced with readonly preflights; production authorization was not relaxed."
+    ]
+  },
+  "combinedRestoreEvidence": "../privacy-journal-full23-20261103/validation-report.json (15 dedicated checkpoints, separate exact source/restore pair)",
+  "authorityReview": {
+    "reviewer": "root source review plus independently executed combined shared suite and Lumpy dedicated full23 drill",
+    "findingFixed": "Ordinary broad UPDATE on device could indirectly invoke owner fence cleanup;023 grants only UPDATE(revoked_at), with direct/indirect denials and legitimate leased worker erasure tested.",
+    "separateAgentReview": "An automated reviewer subtask did not complete; no result attributed to it."
+  },
+  "runtimeDefaults": {
+    "hostedDeployment": false,
+    "realProviderDeletion": false,
+    "actualEmail": false,
+    "productionJournalReady": false
+  },
+  "remaining": [
+    "Independently durable production journal composition/key custody",
+    "Approved operator policies and actual provider configuration",
+    "Hosted deployment authorization and verification",
+    "Native/UI/device and external release gates are separately tracked."
+  ]
+}

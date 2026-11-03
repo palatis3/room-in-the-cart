@@ -1,0 +1,157 @@
+TAP version 13
+# Subtest: KWS authenticates original UTF-8 bytes, exact scope and rotating secrets
+ok 1 - KWS authenticates original UTF-8 bytes, exact scope and rotating secrets
+  ---
+  duration_ms: 7.446
+  ...
+# Subtest: organization webhook scope accepts only null product, product scope only its exact product
+ok 2 - organization webhook scope accepts only null product, product scope only its exact product
+  ---
+  duration_ms: 0.402375
+  ...
+# Subtest: documented OAuth token and PV request use fixed origins, Basic/Bearer and strict accepted response
+ok 3 - documented OAuth token and PV request use fixed origins, Basic/Bearer and strict accepted response
+  ---
+  duration_ms: 17.202417
+  ...
+# Subtest: ambiguous PV reply is never retried and 202 is never considered verified proof
+ok 4 - ambiguous PV reply is never retried and 202 is never considered verified proof
+  ---
+  duration_ms: 0.65825
+  ...
+# Subtest: OAuth rejects oversized/invalid token replies without returning provider content
+ok 5 - OAuth rejects oversized/invalid token replies without returning provider content
+  ---
+  duration_ms: 0.291417
+  ...
+# Subtest: definitive KWS 401 renews token once, while ambiguous responses never trigger retries
+ok 6 - definitive KWS 401 renews token once, while ambiguous responses never trigger retries
+  ---
+  duration_ms: 1.102625
+  ...
+# Subtest: notice/create/verification exact retry binds notice and exact current guardian session/device
+ok 7 - notice/create/verification exact retry binds notice and exact current guardian session/device
+  ---
+  duration_ms: 123.609333
+  ...
+# Subtest: unconfirmed email, client email/boolean, wrong provider body and spoofed redirect cannot create proof
+ok 8 - unconfirmed email, client email/boolean, wrong provider body and spoofed redirect cannot create proof
+  ---
+  duration_ms: 76.637709
+  ...
+# Subtest: signed event exact retry is idempotent; changed transaction evidence and wrong nonce are rejected
+ok 9 - signed event exact retry is idempotent; changed transaction evidence and wrong nonce are rejected
+  ---
+  duration_ms: 40.197625
+  ...
+# Subtest: separate permission, authenticated child claim and guardian pairing are all required before activation
+ok 10 - separate permission, authenticated child claim and guardian pairing are all required before activation
+  ---
+  duration_ms: 130.985958
+  ...
+# Subtest: forwarded invitation cannot change an already claimed child subject, session, code or retry payload
+ok 11 - forwarded invitation cannot change an already claimed child subject, session, code or retry payload
+  ---
+  duration_ms: 55.67525
+  ...
+# Subtest: current email change, exact guardian session loss and notice drift invalidate later authority
+ok 12 - current email change, exact guardian session loss and notice drift invalidate later authority
+  ---
+  duration_ms: 119.212625
+  ...
+# Subtest: uncertain delivery persists once, permits only signed callback completion, and never resends on exact retry
+ok 13 - uncertain delivery persists once, permits only signed callback completion, and never resends on exact retry
+  ---
+  duration_ms: 26.765666
+  ...
+# Subtest: withdrawal retires device/window/invite/claim generation and cannot be undone through HTTP or SQL
+ok 14 - withdrawal retires device/window/invite/claim generation and cannot be undone through HTTP or SQL
+  ---
+  duration_ms: 93.529959
+  ...
+# Subtest: ordinary runtime role cannot record provider proof or mint another child device from active consent
+ok 15 - ordinary runtime role cannot record provider proof or mint another child device from active consent
+  ---
+  duration_ms: 88.414375
+  ...
+# Subtest: cancelled and expired setup callbacks cannot revive authority
+ok 16 - cancelled and expired setup callbacks cannot revive authority
+  ---
+  duration_ms: 56.825042
+  ...
+# Subtest: pending child erasure purges claim identity and same live provider principal stays classified after marker expiry
+ok 17 - pending child erasure purges claim identity and same live provider principal stays classified after marker expiry
+  ---
+  duration_ms: 60.538792
+  ...
+# Subtest: native child signup is authorized before OTP, retries once, and requires fresh signed OTP AMR
+ok 18 - native child signup is authorized before OTP, retries once, and requires fresh signed OTP AMR
+  ---
+  duration_ms: 58.377959
+  ...
+# Subtest: browser covered child OTP installs scoped HttpOnly session and omits credentials from finish JSON
+ok 19 - browser covered child OTP installs scoped HttpOnly session and omits credentials from finish JSON
+  ---
+  duration_ms: 78.463292
+  ...
+# Subtest: non-organizer cannot create child membership and organizer role loss blocks pending finalization
+ok 20 - non-organizer cannot create child membership and organizer role loss blocks pending finalization
+  ---
+  duration_ms: 51.719416
+  ...
+# Subtest: guardian revoke and adult rejoin cannot revive a child consent/device generation
+ok 21 - guardian revoke and adult rejoin cannot revive a child consent/device generation
+  ---
+  duration_ms: 48.499958
+  ...
+# {"event":"operations_result","mode":"run","durationMs":11,"batchSize":25,"logoutProviderConfigured":false,"privacyJobProcessingEnabled":false,"auth":{"expiredQueued":0,"emailsCleared":0,"authPurged":1,"rateBucketsPurged":0,"logoutCompleted":0,"logoutRetryScheduled":0,"logoutExpiredUnconfirmed":0,"leaseLost":0},"privacy":{"receiptsCleared":0,"jobsPurged":0},"guardian":{"expired":1,"purged":0,"retentionConfigured":false},"health":{"authDue":0,"authRetryPending":0,"authExpiredUnconfirmed":0,"privacyPending":1,"privacyDue":1},"attentionRequired":true}
+# {"event":"operations_result","mode":"run","durationMs":8,"batchSize":25,"logoutProviderConfigured":false,"privacyJobProcessingEnabled":false,"auth":{"expiredQueued":0,"emailsCleared":0,"authPurged":0,"rateBucketsPurged":0,"logoutCompleted":0,"logoutRetryScheduled":0,"logoutExpiredUnconfirmed":0,"leaseLost":0},"privacy":{"receiptsCleared":0,"jobsPurged":0},"guardian":{"expired":0,"purged":1,"retentionConfigured":true},"health":{"authDue":0,"authRetryPending":0,"authExpiredUnconfirmed":0,"privacyPending":1,"privacyDue":1},"attentionRequired":true}
+# Subtest: production operations HTTP performs bounded technical expiry and policy-gated pending purge without provider calls
+ok 22 - production operations HTTP performs bounded technical expiry and policy-gated pending purge without provider calls
+  ---
+  duration_ms: 30.925416
+  ...
+# Subtest: bound OTP verification racing guardian cancellation has no browser/household deadlock or post-cancel admission
+ok 23 - bound OTP verification racing guardian cancellation has no browser/household deadlock or post-cancel admission
+  ---
+  duration_ms: 38.738208
+  ...
+# Subtest: application SQL writer cannot use copied email digests to admit or finalize child authority
+ok 24 - application SQL writer cannot use copied email digests to admit or finalize child authority
+  ---
+  duration_ms: 21.832333
+  ...
+# Subtest: reconsent is a fresh guardian generation; organizer-revoked membership cannot be restored by a non-organizer guardian
+ok 25 - reconsent is a fresh guardian generation; organizer-revoked membership cannot be restored by a non-organizer guardian
+  ---
+  duration_ms: 66.768375
+  ...
+# Subtest: enrolled child submits only own request and never receives basket, budget, roster or another author request
+ok 26 - enrolled child submits only own request and never receives basket, budget, roster or another author request
+  ---
+  duration_ms: 41.500584
+  ...
+# Subtest: trusted finish and pending-child identity deletion serialize in both deterministic lock orders
+ok 27 - trusted finish and pending-child identity deletion serialize in both deterministic lock orders
+  ---
+  duration_ms: 118.095584
+  ...
+# Subtest: real privacy worker erases guardian plus child profile, retains independent provider account and lifetime negative authority
+ok 28 - real privacy worker erases guardian plus child profile, retains independent provider account and lifetime negative authority
+  ---
+  duration_ms: 184.655959
+  ...
+# Subtest: production readiness cannot be enabled by flags, partial notices, missing onboarding or a combined verifier role
+ok 29 - production readiness cannot be enabled by flags, partial notices, missing onboarding or a combined verifier role
+  ---
+  duration_ms: 24.488
+  ...
+1..29
+# tests 29
+# suites 0
+# pass 29
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2008.74

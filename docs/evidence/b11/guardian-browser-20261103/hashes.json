@@ -1,0 +1,9 @@
+{
+  "web/src/child-invitation.ts": "0a5c5026b02fe04d4c3c965254146375834246e4ec9f88930c3fc0732f190b8c",
+  "web/src/child-invitation-page.ts": "13ca45d25e4748ab7db2dc0fe8d5098a8d4fea7924f1f391e94dd991853375d2",
+  "web/src/main.ts": "421dd7f626e94c3e38a0597098046a5fd654c460f27c2e93aa6c6d7b848a6893",
+  "web/tests/child-invitation.test.mjs": "add6059984f09e1261ea3cdecd0eae091084aa4a943bfdf32f2489779f9e3f74",
+  "web/tests/child-invitation-page.test.mjs": "2945484d1d52dd07a87d86ac09bfd1213e357b7afd627a3d65e579247b221879",
+  "web/tests/fixtures/child-invitation.mjs": "f8e3cb7b2ba827fb84fffadb4dc942eaf91a1cf71950f9749e92aa26f3f677f1",
+  "web/README.md": "fe4dc3a502ab6027c7d9c8ef7dae47ac6644e47ae8458d96c67c7e8bfad699e6"
+}

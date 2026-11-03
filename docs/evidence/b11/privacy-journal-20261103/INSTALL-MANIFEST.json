@@ -1,0 +1,55 @@
+{
+  "scope": "only owned dedicated files plus approved narrow privacy.ts and API documentation; no parent runtime/http/lifecycle/repository/auth/test-runner edits",
+  "files": [
+    {
+      "relative": "migrations/022_privacy_journal.sql",
+      "candidateSHA256": "d64716764dd1e9b1131c7aab53faa1e67cf518875011271452ee0120d4ead5cb",
+      "liveSHA256": null
+    },
+    {
+      "relative": "src/privacy-journal.ts",
+      "candidateSHA256": "5bc1944554aa6057805b087bd77adad128aff795458d8a17eb30ddda213f8c1c",
+      "liveSHA256": null
+    },
+    {
+      "relative": "src/privacy.ts",
+      "candidateSHA256": "723670077537ff014e7137b213cd6876579996577842baa9bf1c223f8b048f17",
+      "liveSHA256": "e9644d5582f8ae9e8d86ba9f3164ac5f43cb1d167cceaa08c9749bae9b869c6f"
+    },
+    {
+      "relative": "scripts/privacy-journal.mjs",
+      "candidateSHA256": "0bfa557d63e7870328cd2849506bd29f39cd293ffee1e30831ca79ef7b704f7f",
+      "liveSHA256": null
+    },
+    {
+      "relative": "tests/privacy-journal.test.mjs",
+      "candidateSHA256": "9f07698743e34c5d830f3fcfc42215ae57a043b185fcfe7c33e60a9df1ef381b",
+      "liveSHA256": null
+    },
+    {
+      "relative": "tests/privacy-journal-writer.test.mjs",
+      "candidateSHA256": "4a2383ba0a7f5272446c7c843a4a9fc33c1a7cae117ea0a0152f53b70f000b62",
+      "liveSHA256": null
+    },
+    {
+      "relative": "tests/privacy-journal-semantics.test.mjs",
+      "candidateSHA256": "eb0bb9b38abbc251bbbbcf278a404cad8d6e28b5dd607163592083cdd5edf547",
+      "liveSHA256": null
+    },
+    {
+      "relative": "tests/privacy-journal-io.test.mjs",
+      "candidateSHA256": "438d538895d565d83eec4645d2bf33e7fac86b0ccd53b6a1be1a7d6f622bf36f",
+      "liveSHA256": null
+    },
+    {
+      "relative": "PRIVACY-JOURNAL.md",
+      "candidateSHA256": "d3de62d47f3ce5891c575d06f0f0cb0d1b0f829b092f55e619727af610d03e78",
+      "liveSHA256": null
+    },
+    {
+      "relative": "API-PRIVACY.md",
+      "candidateSHA256": "32c244d7cc1555eca4087627f1529de3611ba5c3079981c2e5455327a35e2c4a",
+      "liveSHA256": "07a8313083ad7d21560c13e09da18dba492c6788036b026904f73a202d75e579"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+Command: ['xcrun', 'swiftc', '-frontend', '-parse', 'ios/Features/Household/HouseholdDevicesView.swift', 'ios/UITestSupport/HouseholdDevicesUIFixture.swift', 'ios/UITests/HouseholdDevicesUITests.swift']
+
+Command: ['python3', 'scripts/check_localization.py']
+Localization checks passed: 18 catalogs, 3668 en/es entries, 3510 literal source keys, matching format arguments.
+Static coverage excludes 32 dynamic helper expressions and 113 runtime SwiftUI compositions; these require runtime review.
+US Spanish copy still requires human language review; this check verifies structure only.
+
+Command: ['git', 'diff', '--check']
+

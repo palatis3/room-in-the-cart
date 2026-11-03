@@ -1,0 +1,9 @@
+# Local privacy journal001–022 evidence
+
+The frozen complete backend/shared001–022 candidate built cleanly. Current pure tests220 passed,0 failed,1 optional PostgreSQL skip. Thirteen actual SQL/HTTP stale-backup checkpoints passed, including exact guardian pending-challenge ciphertext handling, wrong-preimage quarantine, atomic target/receipt rollback and resume, source progress acknowledgement, missing-target no-effect, original close time, retained independent data and post-replay runtime isolation. Source called only2 synthetic adult provider stubs; replay called none. Restored jobs remain provider/completion incomplete.
+
+The ten reviewed source files were installed only after exact live precondition checks. A read-only installed-source typecheck passed. Parent-owned runtime/http/lifecycle/repository/auth/test runners and in-progress023 were untouched. Shared integration compatibility patches remain separate proposals. Full stable023 integration remains required.
+
+This directory contains source/artifact identities, summaries and test logs only. Retained private dumps, journal and local fixture databases are under the task workspace/existing local PostgreSQL; signing private keys are separately owner-only outside source, evidence and dumps. No remote/provider/production policy action occurred. This is local synthetic exact-preimage progress, not production readiness or arbitrary historical-backup certification.
+
+The rejected new-login operation was never executed. The separately reviewed existing-fixture-verifier command passed automatic approval, changed no existing role/password/membership, and changed ACLs only on its two new owned fixture databases. First attempt safely stopped during read-only name[] decoding; the corrected type-cast preflight and subsequent full drill passed.

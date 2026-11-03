@@ -1,0 +1,13 @@
+- banner:
+  - paragraph: Room in the Cart
+  - combobox "Language":
+    - option "English" [selected]
+    - option "Spanish"
+- main:
+  - heading "Child invitation" [level=1]
+  - status: This invitation already has a pending pairing.
+  - paragraph: The original pairing and retry details were kept only on the original page. Continue there, or ask your guardian to cancel this setup and review a new invitation. This page cannot replace those details.
+  - button "Check current status"
+  - button "Sign out"
+  - link "Help":
+    - /url: /help

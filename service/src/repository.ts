@@ -98,6 +98,8 @@ export class HouseholdRepository {
       await this.assertSession(db,identity,now);
       const member=await this.member(db,householdId,identity);
       if(member.kind==='child')throw new ServiceError(403,'guardian_reenrollment_required','A guardian must approve a fresh child device.');
+      const enrollment=(await db.query('SELECT ritc.device_enrollment_permitted($1,$2,$3,$4,$5) AS permitted',[householdId,member.member_id,identity.issuer,identity.subject,identity.sessionId])).rows[0];
+      if(!enrollment?.permitted)throw new ServiceError(401,'session_needed','Sign in again with a fresh session before enrolling another device.');
       const count=(await db.query('SELECT count(*)::integer AS count FROM ritc.device WHERE household_id=$1 AND member_id=$2 AND revoked_at IS NULL',[householdId,member.member_id])).rows[0].count;
       if(count>=20)throw new ServiceError(429,'device_limit','Revoke an old device before enrolling again.');
       const deviceId=randomUUID(),deviceToken=randomBytes(32).toString('base64url');

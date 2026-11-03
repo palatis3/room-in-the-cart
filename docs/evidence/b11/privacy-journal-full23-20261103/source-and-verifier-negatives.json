@@ -1,0 +1,30 @@
+{
+  "sourceFrozenFileCount": 134,
+  "sourceDrift": [],
+  "syntheticMigrationCopyDriftDetected": true,
+  "negativeMigrationApplied": false,
+  "actualCLIVerifyCases": [
+    {
+      "case": "valid-fixed-source",
+      "exitCode": 0,
+      "expectedRejected": false
+    },
+    {
+      "case": "changed-schema-digest",
+      "exitCode": 1,
+      "expectedRejected": true
+    },
+    {
+      "case": "changed-source-lineage",
+      "exitCode": 1,
+      "expectedRejected": true
+    },
+    {
+      "case": "truncated-complete-prefix",
+      "exitCode": 1,
+      "expectedRejected": true
+    }
+  ],
+  "databaseMutation": false,
+  "scope": "offline real CLI verifier; fixed-source/schema/prefix rejection before any DB operation"
+}
