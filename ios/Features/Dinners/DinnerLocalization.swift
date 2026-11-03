@@ -5,19 +5,20 @@ func dinnerText(_ key: String) -> String { String(localized: String.Localization
 func dinnerFormat(_ key: String, _ arguments: CVarArg...) -> String { String(format: dinnerText(key), locale: .current, arguments: arguments) }
 func dinnerQuantity(_ quantity: Quantity?) -> String {
     guard let quantity else { return dinnerText("Quantity unresolved") }
-    return "\(quantity.amount.description) \(dinnerUnit(quantity.unit))"
+    let unit = quantity.unit == .count && quantity.amount != .one ? dinnerText("units") : dinnerUnit(quantity.unit, singular: quantity.amount == .one)
+    return "\(quantity.amount.description) \(unit)"
 }
-func dinnerUnit(_ unit: UnitOfMeasure) -> String {
+func dinnerUnit(_ unit: UnitOfMeasure, singular: Bool = false) -> String {
     switch unit {
-    case .count: return dinnerText("count")
-    case .gram: return dinnerText("grams")
-    case .kilogram: return dinnerText("kilograms")
-    case .ounce: return dinnerText("ounces by weight")
-    case .pound: return dinnerText("pounds")
-    case .milliliter: return dinnerText("milliliters")
-    case .liter: return dinnerText("liters")
-    case .fluidOunce: return dinnerText("fluid ounces")
-    case .cup: return dinnerText("cups")
+    case .count: return singular ? dinnerText("unit") : dinnerText("count")
+    case .gram: return singular ? dinnerText("gram") : dinnerText("grams")
+    case .kilogram: return singular ? dinnerText("kilogram") : dinnerText("kilograms")
+    case .ounce: return singular ? dinnerText("ounce by weight") : dinnerText("ounces by weight")
+    case .pound: return singular ? dinnerText("pound") : dinnerText("pounds")
+    case .milliliter: return singular ? dinnerText("milliliter") : dinnerText("milliliters")
+    case .liter: return singular ? dinnerText("liter") : dinnerText("liters")
+    case .fluidOunce: return singular ? dinnerText("fluid ounce") : dinnerText("fluid ounces")
+    case .cup: return singular ? dinnerText("cup") : dinnerText("cups")
     }
 }
 func dinnerDay(_ day: MealDay) -> String {

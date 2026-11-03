@@ -31,6 +31,8 @@ struct DinnerTemplateEditor: View {
     @State private var availabilityConfirmed = false
     @State private var assumptions = ""
     @State private var reviewed: MealTemplate?
+    @State private var originalIdentity: DinnerFeatureModel.EditorIdentity?
+    @State private var supplyEvidence: [DinnerIdeaFoodEvidence]
     @State private var reviewedIdea: DinnerIdeaDraft?
     @State private var acceptedID = UUID()
     @State private var showPreview = false
@@ -38,6 +40,8 @@ struct DinnerTemplateEditor: View {
     @Environment(\.dismiss) private var dismiss
     init(model: DinnerFeatureModel, purpose: DinnerEditorPurpose, initial: MealTemplate? = nil, idea: DinnerIdeaDraft? = nil) {
         self.model = model; self.purpose = purpose; originalIdea = idea
+        _originalIdentity = State(initialValue: model.editorIdentity)
+        _supplyEvidence = State(initialValue: idea?.supplyEvidence ?? [])
         _draft = State(initialValue: DinnerTemplateDraft(idea?.template ?? initial))
         _acceptedID = State(initialValue: model.state.acceptedDinners.first(where: { $0.sourceIdeaID == idea?.id && idea != nil })?.id ?? UUID())
         _yieldConfirmed = State(initialValue: idea?.yieldConfirmed ?? false)
@@ -45,6 +49,13 @@ struct DinnerTemplateEditor: View {
         _assumptions = State(initialValue: idea?.assumptions.joined(separator: "\n") ?? "")
     }
     var body: some View {
+        if let originalIdentity, model.editorIdentity == originalIdentity {
+            editor
+        } else {
+            Text(dinnerText("Planning access changed or expired. Reconnect and review again.")).padding()
+        }
+    }
+    private var editor: some View {
         Form {
             if completed {
                 Section {
@@ -67,6 +78,11 @@ struct DinnerTemplateEditor: View {
                         let review = DinnerIdeaEngine.review(idea)
                         ForEach(review.issues, id: \.self) { Text(dinnerIssue($0)) }
                         Text(review.canClaimCoverage ? dinnerText("Yield and availability were marked reviewed. Pack prices still need separate evidence.") : dinnerText("Acceptance does not confirm food coverage, stock or checkout cost."))
+                        DinnerIdeaSupplyViews(model: model, idea: idea) { value, ingredientID in
+                            supplyEvidence.removeAll { $0.id == ingredientID }
+                            if let value { supplyEvidence.append(value) }
+                            reviewedIdea?.supplyEvidence = supplyEvidence
+                        }
                         Button(dinnerText("Accept idea")) { Task { completed = await model.acceptIdea(idea, acceptedID: acceptedID) } }
                             .disabled(!review.canAccept || !model.editable).accessibilityIdentifier("dinnerAcceptIdea")
                         Button(dinnerText("Save editable draft")) { Task { completed = await model.saveIdea(idea) } }.disabled(!model.editable)
@@ -125,6 +141,11 @@ struct DinnerTemplateEditor: View {
             } else if purpose == .idea {
                 var idea = try originalIdea ?? model.newIdea(seed: 0, exclusions: DinnerEntry.list(draft.exclusions), manual: template)
                 idea.template = template; idea.yieldConfirmed = yieldConfirmed; idea.availabilityConfirmed = availabilityConfirmed
+                supplyEvidence = supplyEvidence.filter { row in
+                    row.workspaceID == model.localIdeaWorkspaceID && row.shopID == model.shop?.id &&
+                    template.ingredients.contains { $0.id == row.id && $0.name == row.ingredientName }
+                }
+                idea.supplyEvidence = supplyEvidence.isEmpty ? nil : supplyEvidence
                 idea.assumptions = DinnerEntry.list(assumptions); reviewedIdea = idea; reviewed = template
             } else { reviewed = template }
         } catch { model.report(error) }

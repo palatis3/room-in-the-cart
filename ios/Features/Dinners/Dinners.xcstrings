@@ -7316,50 +7316,370 @@
         }
       }
     },
-    "Package and checkout effects": {
+    "Stock and whole packs": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Package and checkout effects"
+            "value": "Stock and whole packs"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cambios en los paquetes y el total"
+            "value": "Existencias y paquetes enteros"
           }
         }
       }
     },
-    "Whole packages: %@ → %@": {
+    "Only explicitly matched food is credited. Reviewing an idea leaves the shopping list and reservations unchanged.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Whole packages: %@ → %@"
+            "value": "Only explicitly matched food is credited. Reviewing an idea leaves the shopping list and reservations unchanged."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Paquetes enteros: %@ → %@"
+            "value": "Solo se cuenta la comida que vinculaste. Revisar una idea conserva la lista y las porciones reservadas."
           }
         }
       }
     },
-    "Item cost: %@ → %@": {
+    "Recipe needs: %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Item cost: %@ → %@"
+            "value": "Recipe needs: %@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Costo del artículo: %@ → %@"
+            "value": "La receta necesita: %@"
+          }
+        }
+      }
+    },
+    "Protected for %@: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protected for %@: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protegido para %@: %@"
+          }
+        }
+      }
+    },
+    "Reserved for %@: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reserved for %@: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reservado para %@: %@"
+          }
+        }
+      }
+    },
+    "Confirmed stock free for this idea: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed stock free for this idea: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Existencias confirmadas disponibles para esta idea: %@"
+          }
+        }
+      }
+    },
+    "Still to cover: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Still to cover: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falta por cubrir: %@"
+          }
+        }
+      }
+    },
+    "Usable in one pack: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usable in one pack: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad aprovechable en un paquete: %@"
+          }
+        }
+      }
+    },
+    "Whole packs for the remainder: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whole packs for the remainder: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquetes enteros para lo que falta: %@"
+          }
+        }
+      }
+    },
+    "Estimated item cost: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estimated item cost: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Costo estimado del artículo: %@"
+          }
+        }
+      }
+    },
+    "These pack observations differ. Review one pack for this food.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These pack observations differ. Review one pack for this food."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los datos de los paquetes difieren. Revisa un paquete para este alimento."
+          }
+        }
+      }
+    },
+    "Review stock and pack for %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review stock and pack for %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar existencias y paquete de %@"
+          }
+        }
+      }
+    },
+    "Review quantities and units before using this estimate.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review quantities and units before using this estimate."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa las cantidades y unidades antes de usar esta estimación."
+          }
+        }
+      }
+    },
+    "Private pantry and pack evidence is available in the local shopper workspace.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private pantry and pack evidence is available in the local shopper workspace."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los datos privados de despensa y paquetes están en el espacio local de quien compra."
+          }
+        }
+      }
+    },
+    "Matched shopping list or pantry food": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Matched shopping list or pantry food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimento vinculado de la lista o despensa"
+          }
+        }
+      }
+    },
+    "No confirmed match": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No confirmed match"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin coincidencia confirmada"
+          }
+        }
+      }
+    },
+    "Check the food identity and exclusions before matching it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the food identity and exclusions before matching it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirma el alimento y las exclusiones antes de vincularlo."
+          }
+        }
+      }
+    },
+    "Observed pack, optional": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Observed pack, optional"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquete observado, opcional"
+          }
+        }
+      }
+    },
+    "Price per pack in USD": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price per pack in USD"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio por paquete en USD"
+          }
+        }
+      }
+    },
+    "Leave missing pack terms blank. An existing current pack review can be used for the matched list food.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave missing pack terms blank. An existing current pack review can be used for the matched list food."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deja en blanco los datos del paquete que desconozcas. Si el alimento de la lista tiene una revisión de paquete vigente, se puede usar."
+          }
+        }
+      }
+    },
+    "Use these reviewed details": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use these reviewed details"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar estos datos revisados"
+          }
+        }
+      }
+    },
+    "Review ingredient supply": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review ingredient supply"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar el abastecimiento del ingrediente"
+          }
+        }
+      }
+    },
+    "Check the usable quantity, price and evidence source.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the usable quantity, price and evidence source."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa la cantidad aprovechable, el precio y la fuente."
           }
         }
       }
@@ -7376,22 +7696,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Revisa un paquete de este artículo para calcular el cambio."
-          }
-        }
-      }
-    },
-    "Pickup fees: %@ → %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pickup fees: %@ → %@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cargos de recogida: %@ → %@"
           }
         }
       }
@@ -7428,6 +7732,54 @@
         }
       }
     },
+    "Pickup fees: %@ → %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pickup fees: %@ → %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargos de recogida: %@ → %@"
+          }
+        }
+      }
+    },
+    "Whole packages: %@ → %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whole packages: %@ → %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquetes enteros: %@ → %@"
+          }
+        }
+      }
+    },
+    "Item cost: %@ → %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item cost: %@ → %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Costo del artículo: %@ → %@"
+          }
+        }
+      }
+    },
     "Reopen the current dinner and review its package and checkout terms.": {
       "localizations": {
         "en": {
@@ -7440,6 +7792,246 @@
           "stringUnit": {
             "state": "translated",
             "value": "Vuelve a abrir la cena actual para revisar sus paquetes y las condiciones de pago."
+          }
+        }
+      }
+    },
+    "Package and checkout effects": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Package and checkout effects"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambios en los paquetes y el total"
+          }
+        }
+      }
+    },
+    "Matched food: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Matched food: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimento vinculado: %@"
+          }
+        }
+      }
+    },
+    "This food or pack conflicts with the exclusions. Review the match.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This food or pack conflicts with the exclusions. Review the match."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este alimento o paquete no cumple con las exclusiones. Revisa el vínculo."
+          }
+        }
+      }
+    },
+    "Confirmed stock": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed stock"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Existencias confirmadas"
+          }
+        }
+      }
+    },
+    "Shopping list item %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shopping list item %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artículo %@ de la lista de compras"
+          }
+        }
+      }
+    },
+    "unit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "unit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "unidad"
+          }
+        }
+      }
+    },
+    "units": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "units"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "unidades"
+          }
+        }
+      }
+    },
+    "gram": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "gram"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "gramo"
+          }
+        }
+      }
+    },
+    "kilogram": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kilogram"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kilogramo"
+          }
+        }
+      }
+    },
+    "ounce by weight": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ounce by weight"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "onza de peso"
+          }
+        }
+      }
+    },
+    "pound": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pound"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "libra"
+          }
+        }
+      }
+    },
+    "milliliter": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "milliliter"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mililitro"
+          }
+        }
+      }
+    },
+    "liter": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "liter"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "litro"
+          }
+        }
+      }
+    },
+    "fluid ounce": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "fluid ounce"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "onza líquida"
+          }
+        }
+      }
+    },
+    "cup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "taza"
           }
         }
       }

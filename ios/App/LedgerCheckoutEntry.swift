@@ -65,34 +65,10 @@ enum LedgerCheckoutAdapter {
         var needs: [AllocationNeed] = [], details: [PickupNeedDetail] = []
         for line in lines {
             guard let sourceQuantity = try shop.quantity(forLineID: line.id), let sourceAmount = try sourceQuantity.converted(to: line.quantity.unit) else { throw LedgerCheckoutError.missingQuantity }
-            var namedAmount = Rational.zero
-            for contribution in shop.contributions(forLineID: line.id) {
-                guard contribution.source.isMeal || contribution.source.isProtected else { continue }
-                guard let quantity = contribution.quantity, let amount = try quantity.converted(to: line.quantity.unit) else { throw LedgerCheckoutError.missingQuantity }
-                namedAmount = try namedAmount.adding(amount)
-                let normalized = Quantity(amount: amount, unit: line.quantity.unit, originalLiteral: quantity.originalLiteral)
-                switch contribution.source {
-                case let .protectedNeed(purpose):
-                    needs.append(AllocationNeed(id: contribution.id, orderLineID: line.id, name: purpose, amount: normalized, priority: .protected))
-                    details.append(PickupNeedDetail(id: contribution.id, mealName: purpose, exclusions: contribution.exclusions, scheduledDay: nil, leadTimeMinutes: nil, completedSteps: []))
-                case let .meal(occurrenceID):
-                    guard let meal = shop.mealOccurrences.first(where: { $0.id == occurrenceID && $0.removedAt == nil }) else { throw LedgerCheckoutError.staleSource }
-                    let portions = try LedgerMealPortions.review(meal: meal, contribution: contribution, in: shop, unit: line.quantity.unit, bindings: bindings)
-                    for group in meal.servingGroups {
-                        guard let portion = portions.groups[group.id] else { throw LedgerCheckoutError.ambiguousServingGroups }
-                        guard portion > .zero else { continue }
-                        let id = compositeID(contribution.id, group.id)
-                        needs.append(AllocationNeed(id: id, orderLineID: line.id, name: "\(meal.title) · \(group.name)", amount: Quantity(amount: portion, unit: line.quantity.unit, originalLiteral: quantity.originalLiteral), priority: group.isProtected ? .protected : .required))
-                        details.append(PickupNeedDetail(id: id, mealName: meal.title, exclusions: contribution.exclusions, scheduledDay: meal.scheduledDay, leadTimeMinutes: meal.leadTimeMinutes, completedSteps: meal.completedSteps, sourceContributionID: contribution.id))
-                    }
-                    let portion = portions.unassigned
-                    if portion > .zero {
-                        needs.append(AllocationNeed(id: contribution.id, orderLineID: line.id, name: meal.title, amount: Quantity(amount: portion, unit: line.quantity.unit, originalLiteral: quantity.originalLiteral), priority: .required))
-                        details.append(PickupNeedDetail(id: contribution.id, mealName: meal.title, exclusions: contribution.exclusions, scheduledDay: meal.scheduledDay, leadTimeMinutes: meal.leadTimeMinutes, completedSteps: meal.completedSteps, sourceContributionID: contribution.id))
-                    }
-                default: break
-                }
-            }
+            let named = try namedReservations(shop: shop, lineID: line.id, unit: line.quantity.unit, bindings: bindings)
+            let namedAmount = named.amount
+            needs += named.needs
+            details += named.details
             guard namedAmount <= sourceAmount else { throw LedgerCheckoutError.ambiguousServingGroups }
             // Unassigned manual/import quantities remain one separate purpose.
             // Twelve typed wraps with 6 + 4 + 2 linked portions have no residual.
@@ -127,6 +103,40 @@ enum LedgerCheckoutAdapter {
         return LedgerCheckoutReview(source: shop, workspaceRevision: workspaceRevision,
             previousJourneyRevision: previous?.revision, previousBasketRevision: previous?.basket?.current.id,
             lines: lines, needs: needs, details: details, packSelections: currentPacks, context: context, cap: cap, proposal: proposal, needsApplication: !unchanged)
+    }
+
+    static func namedReservations(shop: ShoppingLedger, lineID: UUID, unit: UnitOfMeasure, bindings: [DinnerPortionBinding]) throws
+        -> (amount: Rational, needs: [AllocationNeed], details: [PickupNeedDetail]) {
+        var needs: [AllocationNeed] = [], details: [PickupNeedDetail] = []
+        var namedAmount = Rational.zero
+        for contribution in shop.contributions(forLineID: lineID) {
+            guard contribution.source.isMeal || contribution.source.isProtected else { continue }
+            guard let quantity = contribution.quantity, let amount = try quantity.converted(to: unit) else { throw LedgerCheckoutError.missingQuantity }
+            namedAmount = try namedAmount.adding(amount)
+            let normalized = Quantity(amount: amount, unit: unit, originalLiteral: quantity.originalLiteral)
+            switch contribution.source {
+            case let .protectedNeed(purpose):
+                needs.append(AllocationNeed(id: contribution.id, orderLineID: lineID, name: purpose, amount: normalized, priority: .protected))
+                details.append(PickupNeedDetail(id: contribution.id, mealName: purpose, exclusions: contribution.exclusions, scheduledDay: nil, leadTimeMinutes: nil, completedSteps: []))
+            case let .meal(occurrenceID):
+                guard let meal = shop.mealOccurrences.first(where: { $0.id == occurrenceID && $0.removedAt == nil }) else { throw LedgerCheckoutError.staleSource }
+                let portions = try LedgerMealPortions.review(meal: meal, contribution: contribution, in: shop, unit: unit, bindings: bindings)
+                for group in meal.servingGroups {
+                    guard let portion = portions.groups[group.id] else { throw LedgerCheckoutError.ambiguousServingGroups }
+                    guard portion > .zero else { continue }
+                    let id = compositeID(contribution.id, group.id)
+                    needs.append(AllocationNeed(id: id, orderLineID: lineID, name: "\(meal.title) · \(group.name)", amount: Quantity(amount: portion, unit: unit, originalLiteral: quantity.originalLiteral), priority: group.isProtected ? .protected : .required))
+                    details.append(PickupNeedDetail(id: id, mealName: meal.title, exclusions: contribution.exclusions, scheduledDay: meal.scheduledDay, leadTimeMinutes: meal.leadTimeMinutes, completedSteps: meal.completedSteps, sourceContributionID: contribution.id))
+                }
+                let portion = portions.unassigned
+                if portion > .zero {
+                    needs.append(AllocationNeed(id: contribution.id, orderLineID: lineID, name: meal.title, amount: Quantity(amount: portion, unit: unit, originalLiteral: quantity.originalLiteral), priority: .required))
+                    details.append(PickupNeedDetail(id: contribution.id, mealName: meal.title, exclusions: contribution.exclusions, scheduledDay: meal.scheduledDay, leadTimeMinutes: meal.leadTimeMinutes, completedSteps: meal.completedSteps, sourceContributionID: contribution.id))
+                }
+            default: break
+            }
+        }
+        return (namedAmount, needs, details)
     }
 
     @MainActor static func apply(_ review: LedgerCheckoutReview, ledger: LedgerModel, pickup: PickupModel) async throws -> Bool {

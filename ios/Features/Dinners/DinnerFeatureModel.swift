@@ -46,6 +46,19 @@ import CoreDomain
     var paid: Bool { guard let shop else { return false }; return (try? access(for: shop.id).hasPaidTools) == true }
     var budgetVisible: Bool { guard let shop else { return false }; return (try? access(for: shop.id).canReadBudget) == true }
     var accessAvailable: Bool { guard let shop else { return false }; return (try? access(for: shop.id)) != nil }
+    struct EditorIdentity: Equatable {
+        let scope: DinnerAccessContext.Scope
+        let actorID: String
+        let shopID: UUID
+    }
+    var editorIdentity: EditorIdentity? {
+        guard let shop, let context = try? access(for: shop.id) else { return nil }
+        return EditorIdentity(scope: context.scope, actorID: context.actorID, shopID: shop.id)
+    }
+    var localIdeaWorkspaceID: UUID? {
+        guard let shop, let context = try? access(for: shop.id), case .local(let workspaceID) = context.scope else { return nil }
+        return workspaceID
+    }
     var canReviewPreview: Bool {
         guard let preview, shop?.id == preview.proposal.shopID, let access = try? access(for: preview.proposal.shopID) else { return false }
         let namespace: String

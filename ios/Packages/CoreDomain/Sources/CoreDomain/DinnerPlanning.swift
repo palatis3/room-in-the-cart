@@ -231,6 +231,7 @@ public struct DinnerIdeaDraft: Codable, Equatable, Sendable, Identifiable {
     public let hardExclusions: [String]
     public var yieldConfirmed: Bool
     public var availabilityConfirmed: Bool
+    public var supplyEvidence: [DinnerIdeaFoodEvidence]? = nil
     public let createdAt: Date
     public init(id: UUID = UUID(), requestID: UUID, catalogVersion: String, template: MealTemplate,
                 assumptions: [String] = [], hardExclusions: [String] = [], yieldConfirmed: Bool = false, availabilityConfirmed: Bool = false, createdAt: Date) {
@@ -389,6 +390,11 @@ public struct DinnerPlanningState: Codable, Equatable, Sendable {
     }
     public mutating func saveIdea(_ draft: DinnerIdeaDraft, access: DinnerAccessContext, at now: Date) throws {
         try access.validate(shopID: access.shopID, at: now); try DinnerIdeaEngine.validateDraft(draft)
+        if let rows = draft.supplyEvidence, !rows.isEmpty {
+            guard case .local(let workspaceID) = access.scope,
+                  rows.allSatisfy({ $0.workspaceID == workspaceID && $0.shopID == access.shopID &&
+                      ($0.pack?.price == nil || access.canReadBudget) }) else { throw DinnerPlanningError.forbidden }
+        }
         var next = self
         if let index = next.ideas.firstIndex(where: { $0.requestID == draft.requestID }) {
             guard next.ideas[index].id == draft.id, next.ideas[index].createdAt == draft.createdAt,
@@ -667,6 +673,14 @@ public enum DinnerIdeaEngine {
         structural.ingredients = structural.ingredients.map { MealIngredient(id: $0.id, name: $0.name, quantity: $0.quantity, notes: $0.notes) }
         try structural.validate()
         guard draft.assumptions.count <= 100, draft.template.exclusions.count <= 100, draft.hardExclusions.count <= 100 else { throw DinnerPlanningError.invalid("idea") }
+        if let evidence = draft.supplyEvidence {
+            try dinnerUnique(evidence.map(\.id))
+            let ingredients = draft.template.ingredients
+            for row in evidence {
+                guard ingredients.contains(where: { $0.id == row.id && $0.name == row.ingredientName }) else { throw DinnerPlanningError.invalid("ideaIngredient") }
+                try row.validate()
+            }
+        }
         for text in draft.assumptions + draft.template.exclusions + draft.hardExclusions + draft.template.ingredients.flatMap(\.exclusions) { try dinnerText(text) }
     }
     public static func review(_ draft: DinnerIdeaDraft) -> DinnerIdeaReview {

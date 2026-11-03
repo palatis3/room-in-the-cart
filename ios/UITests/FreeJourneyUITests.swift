@@ -393,24 +393,46 @@ import XCTest
     }
 
     func testFirstPickupCanStartFromDinnersAndReviewAnEditablePattern() {
-        launch(reset: true)
-        tap(app.tabBars.buttons["Dinners"])
+        reviewAndApprovePattern(spanish: false)
+    }
+    func testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval() {
+        reviewAndApprovePattern(spanish: true)
+    }
+    private func reviewAndApprovePattern(spanish: Bool) {
+        func copy(_ english: String, _ translation: String) -> String { spanish ? translation : english }
+        launch(reset: true, spanish: spanish)
+        tap(app.tabBars.buttons[copy("Dinners", "Cenas")])
         tap(element("dinnerStartPickup"))
-        fill("First dinner pickup", into: "ledgerShopName")
+        fill(copy("First dinner pickup", "Primera compra para la cena"), into: "ledgerShopName")
         tap(element("ledgerCreateShop"))
-        tap(app.buttons["Review a dinner idea"])
-        choose("Starting meal", value: "Bean and cabbage wraps")
-        tap(app.buttons["Prepare editable idea"])
-        tap(app.buttons["Review prepared idea"])
+        tap(app.buttons[copy("Review a dinner idea", "Revisar una idea para cenar")])
+        choose(copy("Starting meal", "Comida que usarás como base"), value: copy("Bean and cabbage wraps", "Tortillas rellenas de frijoles y repollo"))
+        tap(app.buttons[copy("Prepare editable idea", "Preparar idea editable")])
+        tap(app.buttons[copy("Review prepared idea", "Revisar idea preparada")])
         tap(element("ledgerReviewDinner"))
-        assertText("Bean and cabbage wraps")
-        assertText("Shredded cabbage")
-        assertText("Usable yield is unconfirmed")
+        assertText(copy("Bean and cabbage wraps", "Tortillas rellenas de frijoles y repollo"))
+        assertText(copy("Shredded cabbage", "Repollo rallado"))
+        assertText(copy("Usable yield is unconfirmed", "El rendimiento aprovechable no está confirmado"))
         capture("First-pickup-editable-dinner-pattern")
+        tap(app.buttons[copy("Review stock and pack for Tortillas", "Revisar existencias y paquete de Tortillas")])
+        fill("8", into: "ideaSupplyYield")
+        fill("2.50", into: "ideaSupplyPrice")
+        fill("Bag label", into: "ideaSupplySource")
+        tap(element("ideaSupplyConfirm"))
+        assertText(copy("Usable in one pack: 8 units", "Cantidad aprovechable en un paquete: 8 unidades"))
+        assertText(copy("Whole packs for the remainder: 1", "Paquetes enteros para lo que falta: 1"))
+        assertText(copy("Estimated item cost: $2.50", "Costo estimado del artículo: $2.50"))
+        capture(spanish ? "Primera-compra-paquete-revisado" : "First-pickup-reviewed-tortilla-pack")
+        assertText(copy("Recipe needs: 1 cup", "La receta necesita: 1 taza"))
+        tap(element("dinnerAcceptIdea"))
+        assertText(copy("Dinner saved. Choose it separately to add grocery needs.", "Cena guardada. Elígela por separado para agregar sus necesidades de compra."))
+        app.terminate(); launch(reset: false, spanish: spanish)
+        tap(element("openPickupList"))
+        assertText(copy("Add the groceries you need for this pickup.", "Añade los alimentos que necesitas para esta compra."))
     }
 
-    private func launch(reset: Bool) {
-        app.launchArguments = ["--ui-testing", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+    private func launch(reset: Bool, spanish: Bool = false) {
+        app.launchArguments = ["--ui-testing", "-AppleLanguages", spanish ? "(es)" : "(en)", "-AppleLocale", spanish ? "es_US" : "en_US"]
         if reset { app.launchArguments.append("--reset-test-workspace") }
         app.launch()
         XCTAssertTrue(element("newComparison").waitForExistence(timeout: 15))
@@ -434,7 +456,7 @@ import XCTest
         let field = element(id); tap(field)
         if replacing, let old = field.value as? String, old != field.placeholderValue { app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
         app.typeText(text)
-        let done = app.buttons.matching(NSPredicate(format: "label == %@", "Done")).firstMatch
+        let done = app.buttons.matching(NSPredicate(format: "label IN %@", ["Done", "Listo"])).firstMatch
         if done.exists && done.isHittable { done.tap() }
     }
     private func reveal(_ target: XCUIElement) {
@@ -450,9 +472,21 @@ import XCTest
         XCTAssertTrue(target.exists && target.isHittable, "Missing actionable UI element: \(target.debugDescription)")
     }
     private func scrollableArea() -> CGRect {
-        let bounds = app.frame
-        let keyboardTop = app.keyboards.allElementsBoundByIndex.filter { $0.exists }.map { $0.frame.minY }.min() ?? bounds.maxY
-        let barBottom = app.navigationBars.allElementsBoundByIndex.filter { $0.exists && $0.isHittable }.map { $0.frame.maxY }.max() ?? bounds.minY + 88
+        // Navigation and sheet transitions can replace a bar between separate
+        // XCUI queries. Measure the keyboard and bars from one captured tree.
+        let snapshot = try? app.snapshot()
+        let bounds = snapshot?.frame ?? app.frame
+        var keyboardTop = bounds.maxY
+        var barBottom = bounds.minY + 88
+        var elements = snapshot.map { [$0] } ?? []
+        while let element = elements.popLast() {
+            let frame = element.frame
+            if frame.height > 0 && frame.intersects(bounds) {
+                if element.elementType == .keyboard { keyboardTop = min(keyboardTop, frame.minY) }
+                if element.elementType == .navigationBar { barBottom = max(barBottom, frame.maxY) }
+            }
+            elements.append(contentsOf: element.children)
+        }
         let top = max(bounds.minY + 88, min(barBottom + 12, keyboardTop - 140))
         let bottom = min(bounds.maxY - 100, keyboardTop - 16)
         return CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))

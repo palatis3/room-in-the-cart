@@ -1,0 +1,75 @@
+{
+  "feature": "S26 local shopper dinner-idea review",
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "deviceName": "iPhone 17e",
+    "modelName": "iPhone 17e",
+    "osBuildNumber": "24A434",
+    "osVersion": "27.0",
+    "platform": "iOS Simulator"
+  },
+  "approvalRun": {
+    "bundle": ".build/IdeaSupplyApprovalComplete.xcresult",
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": [
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      }
+    ]
+  },
+  "earlierIntegratedRun": {
+    "bundle": ".build/IdeaSupplyAcceptance.xcresult",
+    "passed": 367,
+    "failed": 0,
+    "scope": "364 native tests plus recipe pack editing, the unfiltered Shop/pack accessibility audit, and the largest-text save confirmation."
+  },
+  "workflow": [
+    "Create a pickup from Dinners and prepare the supplied bean-and-cabbage wraps. The original review flags unknown yield and availability.",
+    "Enter an observed pack of eight tortillas at $2.50 and give its source. A four-tortilla recipe shows one pack at $2.50.",
+    "Approve the idea, restart the app, and open the shopping list. The list still shows its empty state."
+  ],
+  "modelChecks": [
+    "Three confirmed units minus two for a named protected lunch leave one free. Four requested units leave three uncovered. At two units per $1.25 pack, the estimate is two packs at $2.50.",
+    "Named list reservations count before checkout. Repeated ingredient rows for the same explicitly matched food draw stock once and round only the combined remainder.",
+    "Unknown price, incompatible units, stale pack observations, excluded food, and mismatched workspace evidence cannot produce a priced coverage claim.",
+    "Accepting the same reviewed idea twice does not duplicate the accepted meal or change stock, reservations, or the shopping list."
+  ],
+  "screenshot": "dinner-idea-reviewed-pack.png",
+  "scope": "The data and approval belong to the private local shopper. Shared household authorization, cross-device delivery, and physical-device assessment require separate evidence.",
+  "finalEnglishRun": {
+    "bundle": ".build/IdeaSupplyCandidate.xcresult",
+    "passed": 365,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": [
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      }
+    ],
+    "includes": [
+      "Whole pack, estimated USD cost, 8 units and 1 cup in the rendered normal app",
+      "Explicit idea approval, relaunch and still-empty shopping list"
+    ]
+  },
+  "spanishRun": {
+    "device": "iPhone 17e, iOS 27.0",
+    "locale": "es_US",
+    "bundle": ".build/IdeaSupplySpanish.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": [
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      }
+    ],
+    "screenshot": "dinner-idea-reviewed-pack-es.png",
+    "scope": "The localized entry, pack yield, singular and plural units, USD price, explicit approval and empty list after restarting were verified through the normal controls."
+  }
+}
