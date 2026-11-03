@@ -264,9 +264,15 @@ public actor HouseholdService {
         guard view.canPropose else { throw ClientError.accessEnded }
         return try await perform("v1/views/\(intent.grantID)/proposals", method: "POST", body: intent.bytes, absolutePath: true)
     }
-    public func helperProposals(grantID: String) async throws -> HelperProposals {
+    public func helperProposals(grantID: String, cursor: String? = nil) async throws -> HelperProposals {
         guard UUID(uuidString: grantID) != nil, selectedGrantID == nil else { throw ClientError.configuration }
-        return try await perform("views/\(grantID)/proposals", method: "GET")
+        if let cursor, UUID(uuidString: cursor) == nil { throw ClientError.configuration }
+        let page: HelperProposals = try await perform("views/\(grantID)/proposals", method: "GET",
+            query: cursor.map { [.init(name: "cursor", value: $0)] } ?? [])
+        guard page.proposals.count <= 100, page.proposals.allSatisfy({ $0.grantId == grantID }),
+              page.nextCursor == nil || (page.nextCursor != cursor && page.nextCursor == page.proposals.last?.id)
+        else { throw ClientError.invalidResponse }
+        return page
     }
     public func guardianConsents() async throws -> GuardianConsents {
         guard selectedGrantID == nil else { throw ClientError.accessEnded }

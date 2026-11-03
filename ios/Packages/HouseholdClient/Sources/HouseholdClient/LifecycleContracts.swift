@@ -79,7 +79,10 @@ public struct HelperProposal: Codable, Equatable, Identifiable, Sendable {
     public let proposalId: String; public let grantId: String; public let baseRevision: Int; public let correction: String
     public let status: String; public let createdAt: String
 }
-public struct HelperProposals: Codable, Equatable, Sendable { public let proposals: [HelperProposal] }
+public struct HelperProposals: Codable, Equatable, Sendable {
+    public let proposals: [HelperProposal]
+    public let nextCursor: String?
+}
 public struct HelperProposalIntent: Codable, Equatable, Identifiable, Sendable {
     public let id: String; public let householdID: String; public let memberID: String; public let deviceID: String
     public let grantID: String; public let bytes: Data

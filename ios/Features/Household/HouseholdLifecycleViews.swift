@@ -257,8 +257,16 @@ private struct HouseholdHelperProposalsView: View {
                             Text(proposal.correction)
                             LabeledContent(ht("Received"), value: householdTime(proposal.createdAt))
                             LabeledContent(ht("Instruction revision reviewed"), value: proposal.baseRevision.formatted())
-                            Text(proposal.status == "pending" ? ht("Pending review") : ht("Check current status"))
+                            switch proposal.status {
+                            case "pending": Text(ht("Pending review"))
+                            case "reviewed": Text(ht("Suggestion reviewed"))
+                            case "dismissed": Text(ht("Suggestion dismissed"))
+                            default: Text(ht("Check current status"))
+                            }
                         }
+                    }
+                    if model.proposalCursor != nil {
+                        Button(ht("Load more suggestions")) { Task { await model.loadProposals(grantID: grantID, more: true) } }
                     }
                     if model.proposals.isEmpty { Text(ht("No suggestions have been received.")) }
                 }

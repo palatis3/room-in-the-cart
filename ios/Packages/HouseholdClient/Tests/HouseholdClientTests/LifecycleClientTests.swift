@@ -132,3 +132,35 @@ extension HouseholdClientTests {
         let purged = try await LifecycleIntentStore(url: url).read(); XCTAssertNil(purged.membership)
     }
 }
+
+extension HouseholdClientTests {
+    func testShopperSuggestionPagesStayBoundToGrantAndCursor() async throws {
+        let auth = try auth()
+        let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!),
+            auth: auth, deviceVault: MemoryVault(), transport: transport())
+        let cursor = UUID().uuidString
+        var wrongGrant = false
+        MockURLProtocol.handler = { request in
+            if let result = self.authResponse(request) { return result }
+            let url = try XCTUnwrap(request.url)
+            if url.path.hasSuffix("/devices") { return (200, Data(#"{"deviceId":"device","deviceToken":"token"}"#.utf8)) }
+            if url.path.hasSuffix("/bootstrap") {
+                return (200, try JSONSerialization.data(withJSONObject: ["household":["id":self.household,"label":"Home"],
+                    "memberId":self.member,"role":"shopper","shopId":self.lifecycleShop,"enrolled":true,"queueConsent":false,"capabilities":["shopper_commands"]]))
+            }
+            XCTAssertTrue(url.path.hasSuffix("/views/\(self.lifecycleGrant)/proposals"))
+            XCTAssertEqual(URLComponents(url:url,resolvingAgainstBaseURL:false)?.queryItems, [URLQueryItem(name:"cursor",value:cursor)])
+            let row: [String:Any] = ["proposalId":UUID().uuidString,"grantId":wrongGrant ? self.lifecycleShop : self.lifecycleGrant,
+                "baseRevision":2,"correction":"Two portions","status":"dismissed","createdAt":"2026-01-01T00:00:00Z"]
+            // A legacy server can omit the final cursor.
+            return (200, try JSONSerialization.data(withJSONObject:["proposals":[row]]))
+        }
+        _ = try await auth.verifyEmailCode(email:"adult@example.test",code:"123456")
+        _ = try await service.enroll(householdID:household)
+        let page = try await service.helperProposals(grantID:lifecycleGrant,cursor:cursor)
+        XCTAssertEqual(page.proposals.first?.status,"dismissed"); XCTAssertNil(page.nextCursor)
+        wrongGrant = true
+        do { _ = try await service.helperProposals(grantID:lifecycleGrant,cursor:cursor); XCTFail("Accepted another grant") }
+        catch { XCTAssertEqual(error as? ClientError,.invalidResponse) }
+    }
+}

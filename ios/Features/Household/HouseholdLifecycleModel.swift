@@ -19,6 +19,7 @@ import HouseholdClient
     @Published private(set) var helperView: HelperView?
     @Published private(set) var pendingProposal: HelperProposalIntent?
     @Published private(set) var proposalReceipt: HelperProposalReceipt?
+    @Published private(set) var proposalCursor: String?
     @Published private(set) var proposals: [HelperProposal] = []
     @Published var householdLabel = ""
     @Published var alias = ""
@@ -49,7 +50,7 @@ import HouseholdClient
     func setScope(_ value: HouseholdBootstrap) { clearScope(); scope = value }
     func clearScope() {
         scopeGeneration = UUID(); scope = nil; members = []; invitations = []; managedViews = []; managementReviewed = false
-        proposalsGrantID = nil; consents = []; issued = nil; helperView = nil
+        proposalsGrantID = nil; proposalCursor = nil; consents = []; issued = nil; helperView = nil
         pendingProposal = nil; proposalReceipt = nil; proposals = []; correction = ""; notice = nil; issuanceUncertain = false
     }
     func clear() {
@@ -241,12 +242,20 @@ import HouseholdClient
             guard start == scopeGeneration else { return }; self.pendingProposal = nil; helperView = fresh; correction = ""
         } catch { if start == scopeGeneration { await handle(error) } }
     }
-    func loadProposals(grantID: String) async {
+    func loadProposals(grantID: String, more: Bool = false) async {
         guard canShare, !busy else { return }
+        if more && (proposalsGrantID != grantID || proposalCursor == nil) { return }
         busy = true; defer { busy = false }; let start = scopeGeneration
-        proposals = []; proposalsGrantID = nil
-        do { let result = try await service.helperProposals(grantID: grantID); guard start == scopeGeneration else { return }; proposals = result.proposals; proposalsGrantID = grantID }
-        catch { if start == scopeGeneration { await handle(error) } }
+        if !more { proposals = []; proposalsGrantID = nil; proposalCursor = nil }
+        do {
+            let page = try await service.helperProposals(grantID: grantID, cursor: proposalCursor)
+            guard start == scopeGeneration else { return }
+            let received = Set(page.proposals.map(\.id))
+            proposals.removeAll { received.contains($0.id) }
+            proposals += page.proposals
+            proposalsGrantID = grantID
+            proposalCursor = page.nextCursor
+        } catch { if start == scopeGeneration { await handle(error) } }
     }
     func expireHelperIfNeeded() async {
         guard let helperView, let expiry = serviceDate(helperView.expiresAt), Date() >= expiry else { return }
