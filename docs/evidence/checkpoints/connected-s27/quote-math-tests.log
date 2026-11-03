@@ -1,0 +1,40 @@
+TAP version 13
+# Subtest: separates item, checkout, incremental trip and elapsed time
+ok 1 - separates item, checkout, incremental trip and elapsed time
+  ---
+  duration_ms: 1.276458
+  ...
+# Subtest: unknown travel keeps the winner open and yields a conditional break-even
+ok 2 - unknown travel keeps the winner open and yields a conditional break-even
+  ---
+  duration_ms: 0.503458
+  ...
+# Subtest: unreviewed charges leave checkout and winner unknown
+ok 3 - unreviewed charges leave checkout and winner unknown
+  ---
+  duration_ms: 0.182875
+  ...
+# Subtest: unavailable or unknown availability gives no winner
+ok 4 - unavailable or unknown availability gives no winner
+  ---
+  duration_ms: 0.183708
+  ...
+# Subtest: unmatched quantities and multistore packages are incomparable
+ok 5 - unmatched quantities and multistore packages are incomparable
+  ---
+  duration_ms: 0.612917
+  ...
+# Subtest: ties and missing minutes remain explicit
+ok 6 - ties and missing minutes remain explicit
+  ---
+  duration_ms: 0.333209
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 299.804709
