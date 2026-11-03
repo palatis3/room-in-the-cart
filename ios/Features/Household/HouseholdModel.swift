@@ -38,6 +38,7 @@ import HouseholdClient
     private let sharedShopOutbox: OperationOutbox
     private let lifecycleStore: LifecycleIntentStore
     private let historyStore: HistoryPendingStore
+    private let quotePendingStore: StoreQuotesPendingStore
     private let placementStore: PlacementPendingStore
     @Published private(set) var placementEvidenceUnlocked = false
     @Published private(set) var placementEvidenceNotice: String?
@@ -60,6 +61,7 @@ import HouseholdClient
         lifecycleStore = LifecycleIntentStore(url: queueURL.deletingPathExtension().appendingPathExtension("lifecycle.json"))
         historyStore = HistoryPendingStore(url: queueURL.deletingPathExtension().appendingPathExtension("history.json"))
         placementStore = PlacementPendingStore(url: queueURL.deletingPathExtension().appendingPathExtension("placement.json"))
+        quotePendingStore = StoreQuotesPendingStore(url: queueURL.deletingPathExtension().appendingPathExtension("store-quotes.json"))
         if let auth, let service {
             self.auth = auth; self.service = service; configured = true
             householdExit = HouseholdExitModel(service: service, vault: exitVault ?? KeychainRefreshTokenVault(service: "RoomInTheCart.injected", account: "household-exits"))
@@ -386,6 +388,7 @@ import HouseholdClient
         do { try await lifecycleStore.purge(householdID: householdID, memberID: intent.memberID, subject: subject) } catch { cleanupFailed = true }
         do { try await historyStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
         do { try await placementStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
+        do { try await quotePendingStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
         guard start == generation, self.identity?.subject == subject, !locked else { return }
         do {
             let list = try await service.workspaces()
@@ -431,6 +434,7 @@ import HouseholdClient
         do { try await lifecycleStore.purge() } catch { failed = true }
         do { try await historyStore.purge() } catch { failed = true }
         do { try await placementStore.purge() } catch { failed = true }
+        do { try await quotePendingStore.purge() } catch { failed = true }
         do {
             if alreadyRevoked { try await auth?.clearLocalSession() }
             else { try await auth?.signOut(allDevices: allDevices) }
@@ -507,6 +511,8 @@ import HouseholdClient
             catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
             do { try await placementStore.purge() }
             catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
+            do { try await quotePendingStore.purge() }
+            catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
         case .service(let status, _, _, _) where status == 409:
             notice = ht("This request needs review against the current household state. It has not been applied again.")
         case .service(let status, _, _, _) where status == 429:
@@ -520,6 +526,16 @@ func ht(_ key: String) -> String { String(localized: String.LocalizationValue(ke
 
 // E09 uses the active native session; recovered files never supply this authority.
 extension HouseholdModel {
+    var storeQuotesPendingStore: StoreQuotesPendingStore { quotePendingStore }
+    var storeQuoteScope: StoreQuoteScope? {
+        guard !locked, let identity, let projection, projection.grantId == nil,
+              projection.enrolled, projection.capabilities.contains("store_quotes"),
+              let id = projection.shopId, let shopID = UUID(uuidString: id) else { return nil }
+        return StoreQuoteScope(generation: generation, enrollmentRevision: contributorEnrollmentRevision,
+            subject: identity.subject, householdID: projection.household.id, memberID: projection.memberId,
+            shopID: shopID, authorityStamp: projection.role + "/" + projection.capabilities.sorted().joined(separator: ","))
+    }
+
     var decisionStore: HistoryPendingStore { historyStore }
     var decisionAccess: FamilyDecisionAccess? {
         guard !locked, let identity, let scope = projection, scope.enrolled, scope.grantId == nil,

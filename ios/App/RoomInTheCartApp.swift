@@ -12,6 +12,7 @@ import DeviceSurfaces
     @StateObject private var access = WorkspaceAccess()
     @StateObject private var membership = MembershipCoordinator()
     @StateObject private var surfaces = DeviceSurfacesComposition()
+    @StateObject private var navigation = NavigationRestorationModel()
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("appearance") private var appearance = "system"
     init() {
@@ -28,16 +29,17 @@ import DeviceSurfaces
                 .environmentObject(model)
                 .environmentObject(ledger).environmentObject(pickup)
                 .environmentObject(household).environmentObject(access)
-                .environmentObject(membership).environmentObject(surfaces)
+                .environmentObject(membership).environmentObject(surfaces).environmentObject(navigation)
                 .tint(Theme.action)
                 .preferredColorScheme(appearance == "dark" ? .dark : appearance == "light" ? .light : nil)
                 .task {
+                    navigation.bind(app: model, ledger: ledger, household: household, access: access)
                     membership.bind(to: household)
                     surfaces.bind(ledger: ledger, pickup: pickup, household: household, access: access)
                     await model.open(); await ledger.open(); await pickup.load()
                     await surfaces.foreground()
                 }
-                .onOpenURL { surfaces.handle(url: $0) }
+                .onOpenURL { navigation.preferIncomingLink(); surfaces.handle(url: $0) }
                 .sheet(item: Binding(get: { scenePhase == .active ? surfaces.destination : nil },
                                      set: { surfaces.destination = $0 })) { destination in
                     NavigationStack {
@@ -46,7 +48,7 @@ import DeviceSurfaces
                     }.environment(\.pickupLedger, ledger)
                         .environmentObject(ledger).environmentObject(pickup)
                         .environmentObject(household).environmentObject(access)
-                        .environmentObject(membership).environmentObject(surfaces)
+                        .environmentObject(membership).environmentObject(surfaces).environmentObject(navigation)
                 }
                 .onChange(of: household.identity?.subject) { _, subject in
                     if subject != nil { access.protect() }
@@ -57,8 +59,8 @@ import DeviceSurfaces
                     surfaces.scopeChanged()
                 }
                 .onChange(of: scenePhase) { _, phase in
-                    if phase == .background { surfaces.background(); access.background(); household.lock() }
-                    if phase == .active { membership.foreground(); Task { await surfaces.foreground() } }
+                    if phase == .background { navigation.suspend(); surfaces.background(); access.background(); household.lock() }
+                    if phase == .active { navigation.resume(); membership.foreground(); Task { await surfaces.foreground() } }
                 }
         }
     }
@@ -77,16 +79,7 @@ struct RootView: View {
             WorkspaceUnlockView(access: access, household: household)
         } else { tabs }
     }
-    private var tabs: some View {
-        TabView {
-            NavigationStack { ShopView() }
-                .tabItem { Label(tr("Shop"), systemImage: "cart") }
-            NavigationStack { DinnerPlanningEntry().settingsButton() }
-                .tabItem { Label(tr("Dinners"), systemImage: "fork.knife") }
-            NavigationStack { RecordsView() }
-                .tabItem { Label(tr("Records"), systemImage: "clock.arrow.circlepath") }
-        }
-    }
+    private var tabs: some View { RestorableAdultTabs() }
 }
 
 struct ShopView: View {
@@ -167,9 +160,7 @@ struct ShopView: View {
                     Text(tr("Works offline. No account needed.")).font(.footnote).foregroundStyle(Theme.secondary)
                 }.padding(20).background(Theme.surface, in: RoundedRectangle(cornerRadius: 24))
                 VStack(alignment: .leading, spacing: 12) {
-                    NavigationLink {
-                        LedgerHomeView(model: ledger).navigationTitle(ledger.shop?.title ?? tr("Shop"))
-                    } label: {
+                    RestorableShoppingListLink {
                         Label(ledger.shop == nil ? ledgerText("Start pickup") : ledgerText("Shopping list"), systemImage: "list.bullet")
                             .font(.headline).fixedSize(horizontal: false, vertical: true)
                             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
@@ -248,13 +239,7 @@ struct SavedRow: View {
     @EnvironmentObject private var model: AppModel
     let record: SavedComparison
     var body: some View {
-        NavigationLink {
-            if let draft = try? model.decode(record) {
-                ComparisonView(draft: draft, savedAt: record.savedAt)
-            } else {
-                ContentUnavailableView(tr("This comparison could not be opened"), systemImage: "doc.badge.ellipsis", description: Text(tr("The saved record is still on this iPhone. A newer app version may be needed.")))
-            }
-        } label: {
+        RestorableSavedComparisonLink(record: record) {
             VStack(alignment: .leading, spacing: 8) {
                 Text(record.title.isEmpty ? tr("One item") : record.title).font(.headline).foregroundStyle(Theme.ink)
                 Text(tr("Saved on this iPhone")).font(.subheadline).foregroundStyle(Theme.secondary)
@@ -326,7 +311,8 @@ private struct SettingsButton: ViewModifier {
 extension View { func settingsButton() -> some View { modifier(SettingsButton()) } }
 
 struct SettingsView: View {
-    @AppStorage(PickupFeedbackSection.consentKey) private var feedbackEnabled = false
+    @ObservedObject private var feedbackConsent = LocalPickupFeedbackConsent.shared
+    @EnvironmentObject private var pickup: PickupModel
     @EnvironmentObject private var surfaces: DeviceSurfacesComposition
     @EnvironmentObject private var household: HouseholdModel
     @Environment(\.dismiss) private var dismiss
@@ -355,8 +341,13 @@ struct SettingsView: View {
                     NavigationLink(SurfaceCopy.text("Device shortcuts")) { DeviceSurfacesEntry(composition: surfaces) }
                 }
             }
+            HelpSettingsSection()
             Section(tr("Your data")) {
-                Toggle(pTr("Offer optional feedback after a pickup"), isOn: $feedbackEnabled)
+                Toggle(pTr("Offer optional feedback after a pickup"), isOn: Binding(get: { feedbackConsent.enabled(for: pickup.sourceWorkspaceID) }, set: { feedbackConsent.setEnabled($0, for: pickup.sourceWorkspaceID) }))
+                Text(pTr("Local feedback stays on this iPhone. Your choice applies only to this local workspace and notice version. Nothing is sent."))
+                if household.identity != nil, household.projection?.grantId == nil, !household.locked {
+                    NavigationLink(pTr("Optional household measurement")) { MeasurementSettingsView(household: household) }
+                }
                 Text(tr("Private comparisons and planning stay on this iPhone. Joining a household does not upload existing work."))
             }
             #if DEBUG

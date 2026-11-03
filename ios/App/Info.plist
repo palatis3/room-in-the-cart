@@ -4,6 +4,18 @@
 <dict>
 	<key>HouseholdServiceURL</key>
 	<string>$(RITC_SERVICE_URL)</string>
+	<key>RITCBuildEnvironment</key>
+	<string>$(RITC_BUILD_ENVIRONMENT)</string>
+	<key>HouseholdSubscriptionProductID</key>
+	<string>$(RITC_HOUSEHOLD_SUBSCRIPTION_PRODUCT_ID)</string>
+	<key>PrivacyPolicyURL</key>
+	<string>$(RITC_PRIVACY_POLICY_URL)</string>
+	<key>TermsOfUseURL</key>
+	<string>$(RITC_TERMS_OF_USE_URL)</string>
+	<key>SupportURL</key>
+	<string>$(RITC_SUPPORT_URL)</string>
+	<key>HelpURL</key>
+	<string>$(RITC_HELP_URL)</string>
 	<key>RITCEmailOTPEnabled</key>
 	<string>$(RITC_EMAIL_OTP_ENABLED)</string>
 	<key>RITCWidgetAppGroup</key>

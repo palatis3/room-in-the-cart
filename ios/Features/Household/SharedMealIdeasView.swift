@@ -85,6 +85,8 @@ private struct SharedMealIdeaEditor: View {
                     number(ht("Usable yield denominator"), value: $ingredient.usableDenominator)
                     Text(ht("Use the same unit throughout. Enter 1 / 1 only when the whole pack is usable. Blank evidence remains unknown."))
                     TextField(ht("Household stock and package evidence"), text: $ingredient.evidence, axis: .vertical)
+                        .accessibilityLabel(ht("Household stock and package evidence"))
+                        .accessibilityIdentifier("household-idea-evidence")
                     Button(ht("Remove ingredient"), role: .destructive) { draft.ingredients.removeAll { $0.id == ingredient.id } }.disabled(draft.ingredients.count == 1)
                 }.disabled(!own || model.pending != nil)
             }

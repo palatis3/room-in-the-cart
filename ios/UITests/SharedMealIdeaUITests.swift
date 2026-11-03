@@ -9,7 +9,11 @@ import XCTest
         app = XCUIApplication(bundleIdentifier: "dev.roominthecart.app.debug")
     }
     override func tearDownWithError() throws {
-        if testRun?.failureCount ?? 0 > 0 { capture("S26-household-idea-failure") }
+        if testRun?.failureCount ?? 0 > 0 {
+            capture("S26-household-idea-failure")
+            let hierarchy = XCTAttachment(string: app.debugDescription)
+            hierarchy.name = "S26-household-idea-failure-accessibility"; hierarchy.lifetime = .keepAlways; add(hierarchy)
+        }
         app.terminate()
     }
     func testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview() {
@@ -40,7 +44,8 @@ import XCTest
         fill("1", into: "Whole package quantity", replacing: true)
         fill("1", into: "Usable yield numerator", replacing: true)
         fill("2", into: "Usable yield denominator", replacing: true)
-        fill("Household measured cup and reviewed drained yield", into: "Household stock and package evidence", replacing: true)
+        fill("Household measured cup and reviewed drained yield", into: "household-idea-evidence", replacing: true)
+        XCTAssertEqual(app.textFields["household-idea-evidence"].value as? String, "Household measured cup and reviewed drained yield")
         tap(element("household-idea-save"))
         waitCounter("ideas", "Fixture idea writes: 1")
         assertText("Remaining household stock")
@@ -84,6 +89,17 @@ import XCTest
         reveal(publish); XCTAssertFalse(publish.isEnabled)
         waitCounter("basket", "Fixture basket writes: 0")
         capture("S26-separate-shopper-review-requires-explicit-approval")
+        enableSwitch("I reviewed these exact shared fields and this action")
+        tap(publish)
+        waitCounter("basket", "Fixture basket writes: 1")
+        assertText("Shared shop change confirmed")
+        assertText("Fixture shared soup")
+        assertText("Fractional chickpea supper")
+        assertText("1/2 cup")
+        waitCounter("ideas", "Fixture idea writes: 2")
+        waitCounter("proposals", "Fixture meal proposals: 1")
+        waitCounter("basket", "Fixture basket writes: 1")
+        capture("S26-shopper-applied-once-original-and-half-cup-meals-retained")
     }
     private func waitCounter(_ id: String, _ label: String) {
         let reached = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND label == %@", label), object: element("fixture.s26." + id))
@@ -101,7 +117,8 @@ import XCTest
         XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
     }
     private func fill(_ text: String, into id: String, replacing: Bool = false) {
-        let field = app.textFields.matching(identifier: id).firstMatch; tap(field)
+        let field = app.textFields.matching(identifier: id).firstMatch
+        tap(field)
         if replacing, let old = field.value as? String, old != field.placeholderValue { app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
         app.typeText(text)
         let done = app.buttons.matching(NSPredicate(format: "label == %@", "Done")).firstMatch

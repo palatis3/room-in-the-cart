@@ -2,6 +2,11 @@ import Foundation
 import CryptoKit
 import Darwin
 
+struct CaptureMediaArchiveListing: Sendable {
+    var records: [SourceMediaRecord] = []
+    var unavailableCount = 0
+}
+
 /// Sidecar evidence only. Saved bytes are never recovered as access, payment, food receipt or meal approval.
 actor CaptureMediaStore {
     static let shared = CaptureMediaStore()
@@ -59,6 +64,39 @@ actor CaptureMediaStore {
         }
         guard await authorize() else { throw ScanFailure.stale }
         return result
+    }
+    /// Records supplies a domain-owned namespace and filters targets against its
+    /// scoped typed snapshot. This does not accept a decoded document as authority.
+    func archiveListing(workspaceID: UUID, authorize: @MainActor @Sendable () -> Bool) async throws -> CaptureMediaArchiveListing {
+        guard await authorize() else { throw ScanFailure.stale }
+        let result = try withLock {
+            let directory = try workspaceDirectory(workspaceID)
+            guard FileManager.default.fileExists(atPath: directory.path) else { return CaptureMediaArchiveListing() }
+            try ensureNotLink(directory)
+            let files = try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
+            guard files.count <= ScanLimits.maximumWorkspaceRecords else { throw ScanFailure.tooLarge }
+            var listing = CaptureMediaArchiveListing()
+            for file in files.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
+                do {
+                    guard file.pathExtension == "json", let id = UUID(uuidString: file.deletingPathExtension().lastPathComponent),
+                          file.lastPathComponent == id.uuidString.lowercased() + ".json" else { throw ScanFailure.storage }
+                    // Retired IDs remain excluded even if corrupted bytes survive cleanup.
+                    guard !FileManager.default.fileExists(atPath: try mediaMarker(workspaceID, id).path),
+                          !FileManager.default.fileExists(atPath: try workspaceMarker(workspaceID).path) else { continue }
+                    let record = try readUnlocked(file)
+                    guard record.id == id, record.target.workspaceID == workspaceID else { throw ScanFailure.storage }
+                    if try !retired(record.target, mediaID: record.id) { listing.records.append(record) }
+                } catch { listing.unavailableCount += 1 }
+            }
+            return listing
+        }
+        guard await authorize() else { throw ScanFailure.stale }
+        return result
+    }
+    /// Known removal markers also apply to a backup brought back to this device.
+    /// This reads tombstones only and never opens an old source namespace.
+    func isRetired(_ record: SourceMediaRecord) throws -> Bool {
+        try withLock { try retired(record.target, mediaID: record.id) }
     }
     func eraseWorkspace(_ workspaceID: UUID) async throws {
         try withLock {

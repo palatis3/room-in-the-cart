@@ -65,7 +65,9 @@ import XCTest
     func testAssignedShopperMapsLocalSeedWithoutPlannerPostAndCanCancel() {
         launch(shopperSeed: true); chooseOccurrence()
         tap(element("meal-change-shopper-seed"))
-        assertText("Fixture guest soup"); tap(app.buttons["Cancel shared shop edit"])
+        let enteredMeal = app.textFields["Meal name"]
+        reveal(enteredMeal); XCTAssertEqual(enteredMeal.value as? String, "Fixture guest soup")
+        tap(app.buttons["Cancel shared shop edit"])
         XCTAssertEqual(element("fixture.s17.proposals").label, "Fixture shared proposals: 0")
         XCTAssertEqual(element("fixture.s17.applications").label, "Fixture shared applications: 0")
         tap(element("fixture.s17.seed")); chooseOccurrence(); tap(element("meal-change-shopper-seed"))
@@ -76,7 +78,7 @@ import XCTest
     private func tap(_ target: XCUIElement) { reveal(target); XCTAssertTrue(target.isHittable, target.debugDescription); target.tap() }
     private func enableSwitch(_ label: String) {
         let control = app.switches[label]
-        reveal(control)
+        reveal(control, fullyVisible: true)
         if control.value as? String == "0" {
             // The accessibility frame includes the Form label. Tap the trailing switch itself.
             control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
@@ -90,10 +92,11 @@ import XCTest
         let done = app.buttons.matching(NSPredicate(format: "label == %@", "Done")).firstMatch
         if done.exists && done.isHittable { done.tap() }
     }
-    private func reveal(_ target: XCUIElement) {
+    private func reveal(_ target: XCUIElement, fullyVisible: Bool = false) {
         for attempt in 0..<24 {
-            if target.exists && target.isHittable { return }
             let area = scrollableArea()
+            if target.exists && target.isHittable,
+               !fullyVisible || (target.frame.minY >= area.minY && target.frame.maxY <= area.maxY) { return }
             let upward: Bool
             if target.exists && !target.frame.isEmpty {
                 upward = target.frame.midY > area.midY
@@ -121,8 +124,10 @@ import XCTest
         start.press(forDuration: 0.05, thenDragTo: end)
     }
     private func assertText(_ text: String) {
-        let target = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
-        reveal(target); XCTAssertTrue(target.exists && target.isHittable, "Missing visible text: \(text)")
+        let matches = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", text))
+        if matches.allElementsBoundByIndex.contains(where: { $0.exists && $0.isHittable }) { return }
+        reveal(matches.firstMatch)
+        XCTAssertTrue(matches.allElementsBoundByIndex.contains(where: { $0.exists && $0.isHittable }), "Missing visible text: \(text)")
     }
     private func assertElementContains(_ id: String, _ text: String) {
         let target = element(id); reveal(target); XCTAssertTrue(target.label.contains(text), target.label)

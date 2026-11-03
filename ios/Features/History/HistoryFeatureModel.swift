@@ -11,6 +11,7 @@ struct HistoryRuntimeScope: Equatable, Sendable {
 }
 protocol HistoryServing: Sendable {
     func historyOwnedShops(cursor: String?) async throws -> HistoryOwnedShopPage
+    func historyReadableShops(cursor: String?) async throws -> HistoryReadableShopPage
     func priceObservations(cursor: String?) async throws -> HistoryPriceObservationPage
     func priceObservation(observationID: String) async throws -> HistoryPriceObservation
     func budgetPeriods(cursor: String?) async throws -> HistoryBudgetPeriodPage
@@ -37,6 +38,7 @@ enum HistoryReviewedWrite: Equatable {
     @Published var filter = HistoryPriceFilter()
     @Published private(set) var ownedShops: [HistoryOwnedShop] = []
     @Published private(set) var ownedShopCursor: String?
+    @Published private(set) var readableShopCursor: String?
     @Published private(set) var observations: [HistoryPriceObservation] = []
     @Published private(set) var observationCursor: String?
     @Published private(set) var savedObservationIDs: [String] = []
@@ -62,6 +64,8 @@ enum HistoryReviewedWrite: Equatable {
     private var seenPriceCursors = Set<String>()
     private var seenPeriodCursors = Set<String>()
     private var seenShopCursors = Set<String>()
+    private var readableShopIDs = Set<String>()
+    private var seenReadableCursors = Set<String>()
 
     init(service: any HistoryServing, store: any HistoryPersisting, runtime: @escaping () -> HistoryRuntimeScope?, onAccessEnded: @escaping () async -> Void = {}) {
         self.service = service; self.store = store; self.runtime = runtime; self.onAccessEnded = onAccessEnded
@@ -74,10 +78,10 @@ enum HistoryReviewedWrite: Equatable {
     func cancelReview() { reviewed = nil; approved = false }
     func invalidate() {
         generation = UUID(); scope = nil; storeEpoch = nil
-        ownedShops = []; ownedShopCursor = nil; observations = []; observationCursor = nil; savedObservationIDs = []
+        ownedShops = []; ownedShopCursor = nil; readableShopIDs = []; readableShopCursor = nil; observations = []; observationCursor = nil; savedObservationIDs = []
         selectedObservation = nil; periods = []; periodCursor = nil; selectedPeriod = nil; periodAnalysis = nil
         observationDraft = .init(); periodDraft = nil; filter = .init(); pending = nil; hasUnresolvedWrite = false; confirmedID = nil; references = []
-        cancelReview(); notice = nil; seenPriceCursors = []; seenPeriodCursors = []; seenShopCursors = []
+        cancelReview(); notice = nil; seenPriceCursors = []; seenPeriodCursors = []; seenShopCursors = []; seenReadableCursors = []
     }
     func enforceRuntime() { if scope != nil && !authorized { invalidate() } }
     private func live(_ start: UUID) -> Bool { generation == start && authorized }
@@ -87,12 +91,14 @@ enum HistoryReviewedWrite: Equatable {
         do {
             let epoch = await store.epoch()
             let shops = try await service.historyOwnedShops(cursor: nil)
+            let readable = try await service.historyReadableShops(cursor: nil)
             let page = try await service.budgetPeriods(cursor: nil)
             let saved = try await store.read()
             guard live(start) else { return }
             let candidate = saved.pending.first { $0.matches(current) }
             hasUnresolvedWrite = candidate != nil
             ownedShops = shops.shops; ownedShopCursor = shops.nextCursor
+            readableShopIDs = Set(readable.shopIds); readableShopCursor = readable.nextCursor
             periods = page.periods; periodCursor = page.nextCursor
             storeEpoch = epoch; references = saved.observations.filter { $0.matches(current) }
             refreshReferences(); observationDraft.shopID = current.currentShopID ?? ""
@@ -110,6 +116,18 @@ enum HistoryReviewedWrite: Equatable {
             try validatePage(ids: page.shops.map(\.shopId), existing: more ? ownedShops.map(\.shopId) : [], next: page.nextCursor, cursor: cursor, seen: seenShopCursors)
             ownedShops += page.shops; ownedShopCursor = page.nextCursor; if let cursor { seenShopCursors.insert(cursor) }; refreshReferences()
         } catch { if live(start) { ownedShops = []; ownedShopCursor = nil; savedObservationIDs = []; await fail(error) } }
+    }
+    func loadReadableShops(more: Bool = false) async {
+        guard authorized, !busy, !more || readableShopCursor != nil else { return }
+        busy = true; defer { busy = false }; let start = generation; let cursor = more ? readableShopCursor : nil
+        if !more { readableShopIDs = []; readableShopCursor = nil; savedObservationIDs = []; seenReadableCursors = [] }
+        do {
+            let page = try await service.historyReadableShops(cursor: cursor)
+            guard live(start) else { return }
+            try validatePage(ids: page.shopIds, existing: more ? Array(readableShopIDs) : [], next: page.nextCursor, cursor: cursor, seen: seenReadableCursors)
+            readableShopIDs.formUnion(page.shopIds); readableShopCursor = page.nextCursor
+            if let cursor { seenReadableCursors.insert(cursor) }; refreshReferences()
+        } catch { if live(start) { readableShopIDs = []; readableShopCursor = nil; savedObservationIDs = []; await fail(error) } }
     }
     func loadPriceHistory(more: Bool = false) async {
         guard authorized, !busy, !more || observationCursor != nil else { return }
@@ -250,7 +268,7 @@ enum HistoryReviewedWrite: Equatable {
     private func authorize(_ value: HistoryPendingWrite) async throws {
         switch value { case .observation(let intent): try await service.authorizePriceObservation(intent); case .period(let intent): try await service.authorizeBudgetPeriod(intent) }
     }
-    private func refreshReferences() { let allowed = Set(ownedShops.map(\.shopId)); savedObservationIDs = references.filter { allowed.contains($0.shopID) }.map(\.observationID) }
+    private func refreshReferences() { savedObservationIDs = references.filter { readableShopIDs.contains($0.shopID) }.map(\.observationID) }
     private func validatePage(ids: [String], existing: [String], next: String?, cursor: String?, seen: Set<String>) throws {
         guard Set(ids).count == ids.count, Set(ids).isDisjoint(with: existing), next == nil || (next != cursor && !seen.contains(next!) && ids.contains(next!)) else { throw ClientError.invalidResponse }
     }

@@ -10,6 +10,7 @@ struct RecordsToolsView: View {
     @State private var showManualRecipe = false
     @State private var acknowledgedPrivate = false
     @State private var savedKey = false
+    @State private var acknowledgedMedia = false
     @State private var deletion: Deletion?
     private struct Deletion: Identifiable {
         let id = UUID()
@@ -56,7 +57,7 @@ struct RecordsToolsView: View {
                     }
                     Text(recordsText("This separate action reviews the entire local ledger and its history before deletion.")).font(.footnote)
                 }
-                Text(recordsText("No photos, recordings or media are included. No file is uploaded automatically. Shared copies cannot be recalled from someone else's device."))
+                Text(recordsText("Only explicitly selected source references are included in encrypted recovery. Readable and helper copies contain no attachment bytes. No file is uploaded automatically. Shared copies cannot be recalled."))
                     .font(.footnote)
                 ShareLink(item: model.supportText) { Label(recordsText("Share redacted support details"), systemImage: "lifepreserver") }
                 Text(recordsText("Support details include only format, record count and an error code. They omit food names, receipts, account details and file paths."))
@@ -66,7 +67,8 @@ struct RecordsToolsView: View {
         .navigationTitle(recordsText("Data and recovery"))
         .task { await model.refresh() }
         .disabled(model.busy)
-        .onChange(of: model.selectedIDs) { _, _ in acknowledgedPrivate = false; savedKey = false; model.dismissPreparedFile() }
+        .onChange(of: model.selectedIDs) { _, _ in acknowledgedPrivate = false; acknowledgedMedia = false; savedKey = false; model.dismissPreparedFile() }
+        .onChange(of: model.selectedMediaIDs) { _, _ in acknowledgedMedia = false; model.dismissPreparedFile() }
         .onChange(of: model.recoveryKey) { _, _ in savedKey = false }
         .fileImporter(isPresented: $importing, allowedContentTypes: [.json, .roomRecovery, .roomHelper, .data], allowsMultipleSelection: false) { result in
             switch result {
@@ -130,7 +132,8 @@ struct RecordsToolsView: View {
             Toggle(recordsText("I understand a readable owner export includes private record data."), isOn: $acknowledgedPrivate)
             Button(recordsText("Prepare readable owner export")) { Task { await model.prepareExport(.ownerText) } }.disabled(model.selectedCount == 0 || !acknowledgedPrivate)
             DisclosureGroup(recordsText("Encrypted personal recovery")) {
-                Text(recordsText("A recovery file includes selected private records and their saved history. It excludes photos, voice, credentials, membership, consent and live permissions."))
+                Text(recordsText("A recovery file restores selected private records, saved history and the source references you choose below as separate copies. It excludes raw voice, credentials, membership, consent and live permissions."))
+                selectedMedia
                 Button(recordsText("Generate recovery key")) { model.generateRecoveryKey(); savedKey = false }
                 TextField(recordsText("Recovery key"), text: $model.recoveryKey, axis: .vertical)
                     .font(.caption.monospaced()).textInputAutocapitalization(.never).autocorrectionDisabled()
@@ -138,7 +141,7 @@ struct RecordsToolsView: View {
                     .font(.footnote)
                 Toggle(recordsText("I have saved my recovery key separately."), isOn: $savedKey)
                 Button(recordsText("Prepare encrypted recovery file")) { Task { await model.prepareExport(.encryptedRecovery) } }
-                    .disabled(!savedKey || model.recoveryKey.isEmpty || model.selectedCount == 0)
+                    .disabled(!savedKey || model.recoveryKey.isEmpty || model.selectedCount == 0 || (model.selectedMediaCount > 0 && !acknowledgedMedia))
             }
             if let document = model.preparedDocument {
                 Label(model.preparedIsPrivate ? recordsText("Private owner file ready") : recordsText("Redacted copy ready"), systemImage: model.preparedIsPrivate ? "lock.doc" : "doc.text")
@@ -151,6 +154,33 @@ struct RecordsToolsView: View {
                     DisclosureGroup(recordsText("Preview readable copy")) { Text(text).textSelection(.enabled) }
                 }
                 Button(recordsText("Discard prepared file")) { model.dismissPreparedFile() }
+            }
+        }
+    }
+    private var selectedMedia: some View {
+        Group {
+            Text(recordsText("Choose source references · optional")).font(.headline)
+            Text(recordsText("References are off by default. Selected reduced photos, original wording, manually matched codes and receipt notes may contain private details. They remain evidence and do not change payments, food received or meal decisions.")).font(.footnote)
+            Text(recordsText("Only saved reduced references are available. Full-size originals and missing photos cannot be recovered.")).font(.footnote)
+            ForEach(model.currentRecords.filter { model.selectedIDs.contains(RecordsToolsModel.selectionID($0)) }, id: \.selfSelectionID) { record in
+                if let media = record.media, !media.isEmpty {
+                    Text(record.title).font(.subheadline.bold())
+                    ForEach(media) { attachment in
+                        VStack(alignment: .leading, spacing: 6) {
+                            Toggle(isOn: Binding(get: { model.selectedMediaIDs.contains(RecordsToolsModel.mediaSelectionID(attachment, record: record)) }, set: { selected in
+                                let key = RecordsToolsModel.mediaSelectionID(attachment, record: record)
+                                if selected { model.selectedMediaIDs.insert(key) } else { model.selectedMediaIDs.remove(key) }
+                            })) { Text((try? RecordsMediaCodec.decode(attachment).reviewedLabel) ?? recordsText("Source reference")) }
+                            RecordsMediaPreview(attachment: attachment)
+                        }
+                    }
+                }
+            }
+            Text(String(format: recordsText("%lld selected references · %@"), Int64(model.selectedMediaCount), ByteCountFormatter.string(fromByteCount: Int64(model.selectedMediaBytes), countStyle: .file)))
+                .font(.footnote)
+            Text(recordsText("Up to twelve references and 4.2 MB of source evidence per recovery file; the encrypted file must be under 8 MB. Choose fewer references if the file is too large.")).font(.footnote)
+            if model.selectedMediaCount > 0 {
+                Toggle(recordsText("I reviewed the selected references and understand they include private source details."), isOn: $acknowledgedMedia)
             }
         }
     }
@@ -183,7 +213,12 @@ struct RecordsToolsView: View {
                     Text(dispositionLabel(row.disposition))
                     Text(recordsText("Revision: ") + row.record.revision).font(.caption).textSelection(.enabled)
                     if let parent = row.record.parentRevision { Text(recordsText("Parent: ") + parent).font(.caption).textSelection(.enabled) }
+                    ForEach(row.record.media ?? []) { RecordsMediaPreview(attachment: $0) }
                 }
+            }
+            if let media = review.envelope.mediaManifest {
+                Text(String(format: recordsText("%lld selected references · %@"), Int64(media.entries.count), ByteCountFormatter.string(fromByteCount: Int64(media.totalBytes), countStyle: .file)))
+                Text(recordsText("Selected references recover with these separate copies. They do not reopen the original photo store or restore access to another workspace.")).font(.footnote)
             }
             Text(recordsText("Current and newer work stays in place. Different revisions become separate copies; identical imports reopen the saved copy. A conflicting digest or erased identity blocks this batch."))
                 .font(.footnote)
@@ -211,6 +246,7 @@ struct RecordsToolsView: View {
                         Text(ReadableArchive.text([saved.record], owner: false)).textSelection(.enabled)
                         Text(recordsText("This helper projection has no private payload and cannot replace an owner record.")).font(.footnote)
                     }
+                    ForEach(saved.record.media ?? []) { RecordsMediaPreview(attachment: $0) }
                     Button(recordsText("Delete this recovered copy"), role: .destructive) { deletion = Deletion(title: saved.record.title, source: nil, recovered: .copy(saved.id)) }
                     Button(recordsText("Delete recovered copies from this source"), role: .destructive) { deletion = Deletion(title: saved.record.origin, source: nil, recovered: .origin(saved.record.origin)) }
                 }
@@ -256,6 +292,43 @@ struct RecordsToolsView: View {
         case .staleReview: return recordsText("Your local copies changed during review. Select the file again before importing.")
         case .invalidRecipe: return recordsText("Check the recipe title, source URL and text. Use a supported Recipe JSON-LD file or enter it manually.")
         case .unavailable: return recordsText("The local operation could not finish. Your current records are still available. Try again.")
+        }
+    }
+}
+
+/// The preview opens only bytes already validated and committed with this copy.
+/// It never follows recovered namespace references into a live media store.
+@MainActor private struct RecordsMediaPreview: View {
+    let attachment: ArchiveMediaAttachment
+    var body: some View {
+        if let source = try? RecordsMediaCodec.decode(attachment) {
+            DisclosureGroup(recordsText("Preview source reference")) {
+                Text(source.reviewedLabel).font(.headline)
+                Text(kindLabel).font(.caption)
+                Text(ByteCountFormatter.string(fromByteCount: Int64(attachment.data.count), countStyle: .file)).font(.caption)
+                Text(source.capturedAt, format: .dateTime.year().month().day().hour().minute()).font(.caption)
+                if let data = source.imageJPEG, let image = UIImage(data: data) {
+                    Image(uiImage: image).resizable().scaledToFit().frame(maxHeight: 260)
+                        .accessibilityLabel(recordsText("Selected reduced source photo"))
+                }
+                Text(source.originalText).textSelection(.enabled)
+                if let barcode = source.barcode { Text(barcode.value).textSelection(.enabled) }
+                ForEach(source.receiptLines) { row in
+                    VStack(alignment: .leading) {
+                        Text(row.originalText).font(.footnote)
+                        Text(row.reviewedText)
+                        if !row.quantityNote.isEmpty { Text(row.quantityNote) }
+                        if !row.priceNote.isEmpty { Text(row.priceNote) }
+                    }
+                }
+            }
+        }
+    }
+    private var kindLabel: String {
+        switch attachment.kind {
+        case .packageReference: return recordsText("Package reference")
+        case .recipeSource: return recordsText("Recipe source")
+        case .receiptEvidence: return recordsText("Receipt evidence")
         }
     }
 }

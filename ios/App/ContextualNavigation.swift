@@ -2,7 +2,7 @@ import SwiftUI
 import Combine
 import CoreDomain
 
-@MainActor private func contextualScope(_ household: HouseholdModel) -> ContextualHouseholdScope? {
+@MainActor func contextualScope(_ household: HouseholdModel) -> ContextualHouseholdScope? {
     guard !household.locked, let identity = household.identity, let scope = household.projection,
           scope.enrolled, scope.grantId == nil, ["shopper", "organizer"].contains(scope.role) else { return nil }
     return ContextualHouseholdScope(subject: identity.subject, householdID: scope.household.id,
@@ -13,9 +13,9 @@ struct FamilyInboxContextLink: View {
     @EnvironmentObject private var household: HouseholdModel
     var body: some View {
         if let scope = contextualScope(household), scope.permits(.inbox), household.canReviewHouseholdRequests {
-            NavigationLink(ht("Review family requests")) {
-                ContextualHouseholdEntry(destination: .inbox, scope: scope)
-            }.frame(minHeight: 44).accessibilityIdentifier("shop.familyInbox")
+            NavigationLink(ht("Review family requests"), value:
+                RestorableDestination.household(.inbox, HouseholdNavigationIdentity(scope)))
+                .frame(minHeight: 44).accessibilityIdentifier("shop.familyInbox")
         }
     }
 }
@@ -23,13 +23,12 @@ struct ManagedViewsContextLink: View {
     @EnvironmentObject private var household: HouseholdModel
     var body: some View {
         if let scope = contextualScope(household), scope.permits(.managedViews) {
-            NavigationLink(ht("Manage shared views")) {
-                ContextualHouseholdEntry(destination: .managedViews, scope: scope)
-            }.accessibilityIdentifier("records.managedViews")
+            NavigationLink(ht("Manage shared views"), value:
+                RestorableDestination.household(.managedViews, HouseholdNavigationIdentity(scope))).accessibilityIdentifier("records.managedViews")
         }
     }
 }
-private struct ContextualHouseholdEntry: View {
+struct ContextualHouseholdEntry: View {
     @EnvironmentObject private var household: HouseholdModel
     let destination: ContextualHouseholdDestination
     @State private var originalScope: ContextualHouseholdScope
@@ -136,12 +135,17 @@ struct ContextualDinnerFeature: View {
 }
 struct CheckoutQuotesContextLink: View {
     @ObservedObject var pickup: PickupModel
+    @EnvironmentObject private var household: HouseholdModel
     @Environment(\.pickupLedger) private var ledger
     var body: some View {
         if let ledger, let journeyID = pickup.journey?.id, ledger.shop?.id == journeyID {
             NavigationLink(dinnerText("Compare two store trips")) {
                 DinnerPlanningEntry(destination: .quotes, expectedShopID: journeyID)
             }.accessibilityIdentifier("checkout.twoStoreQuotes")
+        }
+        if household.storeQuoteScope != nil {
+            NavigationLink(StoreQuoteCopy.text("Two entered store quotes")) { SharedStoreQuotesView(household: household) }
+                .accessibilityIdentifier("checkout.sharedStoreQuotes")
         }
     }
 }

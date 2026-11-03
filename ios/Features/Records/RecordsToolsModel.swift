@@ -9,6 +9,7 @@ import RecordArchive
     typealias Validate = (ArchiveRecord) async throws -> Void
     typealias Open = (RecoveredRecord) async throws -> Void
     typealias Delete = (ArchiveRecord) async throws -> Void
+    typealias Authorization = @MainActor @Sendable () -> Bool
 
     @Published private(set) var currentRecords: [ArchiveRecord] = []
     @Published private(set) var recoveredRecords: [RecoveredRecord] = []
@@ -19,6 +20,8 @@ import RecordArchive
     @Published private(set) var status: String?
     @Published private(set) var error: ArchiveError?
     @Published var selectedIDs: Set<String> = []
+    /// Attachment disclosure is separate from record selection and defaults off.
+    @Published var selectedMediaIDs: Set<String> = []
     @Published var recoveryKey = ""
     @Published private(set) var preparedDocument: RecordsFileDocument?
     @Published private(set) var preparedName = "Room-in-the-Cart"
@@ -35,20 +38,25 @@ import RecordArchive
     private let cleanupRecovered: (() async throws -> Void)?
     private let deletable: (ArchiveRecord) -> Bool
     private let sourceUndo: (() async throws -> Void)?
+    private let beginAuthorization: () -> Authorization?
     @Published private(set) var canUndoSourceDeletion = false
     private var selectedSnapshot: [ArchiveRecord] { currentRecords.filter { selectedIDs.contains(Self.selectionID($0)) } }
     var selectedCount: Int { selectedSnapshot.count }
+    var selectedMediaCount: Int { selectedSnapshot.reduce(0) { count, record in count + (record.media ?? []).filter { selectedMediaIDs.contains(Self.mediaSelectionID($0, record: record)) }.count } }
+    var selectedMediaBytes: Int { selectedSnapshot.reduce(0) { count, record in count + (record.media ?? []).filter { selectedMediaIDs.contains(Self.mediaSelectionID($0, record: record)) }.reduce(0) { $0 + $1.data.count } } }
     func canDeleteSource(_ record: ArchiveRecord) -> Bool { deleteSource != nil && deletable(record) }
     var canReviewWholeLedgerDeletion: Bool { wholeLedgerDeletionAction != nil }
     var recoveredDeletionAllowsUndo: Bool { cleanupRecovered == nil }
     var supportText: String { ReadableArchive.supportReport(error: error, recordCount: currentRecords.count + recoveredRecords.count) }
     static func selectionID(_ record: ArchiveRecord) -> String { record.origin + "/" + record.id + "/" + record.revision }
+    static func mediaSelectionID(_ media: ArchiveMediaAttachment, record: ArchiveRecord) -> String { selectionID(record) + "/media/" + media.id }
 
     init(registry: RecoveryRegistry, snapshot: @escaping Snapshot, validateNativePayload: @escaping Validate,
-         openRecovered: @escaping Open, deleteSource: Delete? = nil, undoSourceDeletion: (() async throws -> Void)? = nil, canDeleteSource: @escaping (ArchiveRecord) -> Bool = { _ in true }, cleanupRecoveredWorkspaces: (() async throws -> Void)? = nil, reviewWholeLedgerDeletion: (() async throws -> Void)? = nil, unavailableRecords: @escaping () -> [RecordsUnavailableRecord] = { [] }) {
+         openRecovered: @escaping Open, deleteSource: Delete? = nil, undoSourceDeletion: (() async throws -> Void)? = nil, canDeleteSource: @escaping (ArchiveRecord) -> Bool = { _ in true }, cleanupRecoveredWorkspaces: (() async throws -> Void)? = nil, reviewWholeLedgerDeletion: (() async throws -> Void)? = nil, unavailableRecords: @escaping () -> [RecordsUnavailableRecord] = { [] }, beginAuthorization: @escaping () -> Authorization? = { { true } }) {
         self.registry = registry; self.snapshot = snapshot; self.validate = validateNativePayload
         self.open = openRecovered; self.deleteSource = deleteSource; self.sourceUndo = undoSourceDeletion; self.deletable = canDeleteSource; self.cleanupRecovered = cleanupRecoveredWorkspaces; self.wholeLedgerDeletionAction = reviewWholeLedgerDeletion
         self.unavailableSnapshot = unavailableRecords
+        self.beginAuthorization = beginAuthorization
     }
     private func readSnapshot() async throws -> [ArchiveRecord] {
         let records = try await snapshot()
@@ -57,9 +65,13 @@ import RecordArchive
     }
     func refresh() async {
         do {
+            let authorize = try authorization()
             currentRecords = try await readSnapshot()
+            try requireAuthorization(authorize)
             recoveredRecords = try await registry.refreshList()
+            try requireAuthorization(authorize)
             selectedIDs.formIntersection(Set(currentRecords.map(Self.selectionID)))
+            selectedMediaIDs.formIntersection(Set(currentRecords.flatMap { record in (record.media ?? []).map { Self.mediaSelectionID($0, record: record) } }))
         } catch { fail(error) }
     }
     func selectAll() { selectedIDs = Set(currentRecords.map(Self.selectionID)) }
@@ -70,11 +82,18 @@ import RecordArchive
         busy = true; error = nil; preparedDocument = nil
         defer { busy = false }
         do {
+            let authorize = try authorization()
             currentRecords = try await readSnapshot()
-            let records = selectedSnapshot
+            try requireAuthorization(authorize)
+            let records = selectedSnapshot.map { source -> ArchiveRecord in
+                var record = source
+                record.media = choice == .encryptedRecovery ? source.media?.filter { selectedMediaIDs.contains(Self.mediaSelectionID($0, record: source)) } : nil
+                if record.media?.isEmpty == true { record.media = nil }
+                return record
+            }
             guard !records.isEmpty else { throw ArchiveError.unavailable }
             if choice == .helperJSON || choice == .helperText { guard records.count == 1 else { throw ArchiveError.unsupportedProjection } }
-            for record in records { try await validateRecord(record) }
+            for record in records { try await validateRecord(record); try requireAuthorization(authorize) }
             switch choice {
             case .encryptedRecovery, .helperJSON:
                 let kind: ArchiveKind = choice == .encryptedRecovery ? .personalRecovery : .helperShop
@@ -93,16 +112,18 @@ import RecordArchive
                 preparedName = choice == .ownerText ? "Private-readable-records" : "Cook-copy"
                 preparedIsPrivate = choice == .ownerText
             }
+            try requireAuthorization(authorize)
             status = recordsText("Your file is ready to review and save.")
         } catch { fail(error) }
     }
     func importFile(_ url: URL, recipes: Bool) async {
         guard !busy else { return }
-        busy = true; review = nil; recipeReport = nil; error = nil
+        busy = true; review = nil; reviewAuthorization = nil; recipeReport = nil; error = nil
         defer { busy = false }
         let scoped = url.startAccessingSecurityScopedResource()
         defer { if scoped { url.stopAccessingSecurityScopedResource() } }
         do {
+            let authorize = try authorization()
             let data = try RecoveryRegistry.boundedRead(url)
             try ArchiveCodec.preflight(data)
             if recipes {
@@ -115,11 +136,11 @@ import RecordArchive
                 let records = try report.recipes.map { try $0.archiveRecord(origin: "recipe-library-v1", savedAt: Date(timeIntervalSince1970: 0)) }
                 if records.isEmpty { status = recordsText("These recipes are already saved."); return }
                 let envelope = try ArchiveCodec.make(records: records, kind: .personalRecovery, origin: "recipe-library-v1", revision: ArchiveCodec.digest(try ArchiveCodec.canonical(report.recipes)))
-                try await stage(envelope)
+                try await stage(envelope, authorize: authorize)
             } else {
                 let object = try JSONSerialization.jsonObject(with: data) as? [String: Any]
                 let envelope = object?["algorithm"] != nil ? try EncryptedArchive.open(data, key: recoveryKey) : try ArchiveCodec.decode(data)
-                try await stage(envelope)
+                try await stage(envelope, authorize: authorize)
             }
         } catch { fail(error) }
     }
@@ -128,16 +149,22 @@ import RecordArchive
         busy = true; error = nil; review = nil; recipeReport = nil
         defer { busy = false }
         do {
+            let authorize = try authorization()
             let record = try recipe.archiveRecord(origin: "recipe-library-v1", savedAt: Date(timeIntervalSince1970: 0))
-            try await stage(ArchiveCodec.make(records: [record], kind: .personalRecovery, origin: "recipe-library-v1", revision: recipe.id))
+            try await stage(ArchiveCodec.make(records: [record], kind: .personalRecovery, origin: "recipe-library-v1", revision: recipe.id), authorize: authorize)
         } catch { fail(error) }
     }
-    private func stage(_ envelope: ArchiveEnvelope) async throws {
-        for record in envelope.payload.records { try await validateRecord(record) }
-        review = try await registry.review(envelope)
+    private var reviewAuthorization: Authorization?
+    private func stage(_ envelope: ArchiveEnvelope, authorize: @escaping Authorization) async throws {
+        for record in envelope.payload.records { try await validateRecord(record); try requireAuthorization(authorize) }
+        let staged = try await registry.review(envelope)
+        try requireAuthorization(authorize)
+        reviewAuthorization = authorize
+        review = staged
         status = nil
     }
     private func validateRecord(_ record: ArchiveRecord) async throws {
+        try RecordsMediaCodec.validate(record)
         if record.kind == .recipe, let data = record.nativePayload {
             do {
                 let recipe = try JSONDecoder().decode(ImportedRecipe.self, from: data)
@@ -148,18 +175,29 @@ import RecordArchive
         // Every projection must reconcile erasure, including helper-only records.
         try await validate(record)
     }
-    func cancelReview() { review = nil; recipeReport = nil; status = recordsText("Import cancelled. Your records are unchanged.") }
+    func cancelReview() { review = nil; reviewAuthorization = nil; recipeReport = nil; status = recordsText("Import cancelled. Your records are unchanged.") }
     func applyReviewedImport() async {
         guard !busy, let review else { return }
         busy = true; error = nil
         defer { busy = false }
         do {
-            for record in review.envelope.payload.records { try await validateRecord(record) }
+            let authorize = try authorization()
+            guard reviewAuthorization?() == true else { invalidateForSourceErasure(); throw ArchiveError.unavailable }
+            for record in review.envelope.payload.records {
+                try await validateRecord(record); try requireAuthorization(authorize)
+                guard reviewAuthorization?() == true else { invalidateForSourceErasure(); throw ArchiveError.unavailable }
+            }
             let result = try await registry.apply(review)
+            guard authorize(), reviewAuthorization?() == true else {
+                if !result.insertedCopyIDs.isEmpty { try await registry.undoImport(insertedCopyIDs: result.insertedCopyIDs) }
+                invalidateForSourceErasure(); throw ArchiveError.unavailable
+            }
             lastImportIDs = result.insertedCopyIDs
-            self.review = nil; recipeReport = nil
+            self.review = nil; reviewAuthorization = nil; recipeReport = nil
             currentRecords = try await readSnapshot()
+            try requireAuthorization(authorize)
             recoveredRecords = try await registry.refreshList()
+            try requireAuthorization(authorize)
             status = result.insertedCount == 0 ? recordsText("Opened the existing recovered copies. Nothing was duplicated.") : recordsText("Saved separate recovered copies. Your current work is unchanged.")
         } catch { fail(error) }
     }
@@ -169,7 +207,12 @@ import RecordArchive
         catch { fail(error) }
     }
     func openRecovered(_ record: RecoveredRecord) async {
-        do { try await open(record); if record.record.kind != .recipe { lastImportIDs = [] } } catch { fail(error) }
+        do {
+            let authorize = try authorization()
+            try await validateRecord(record.record); try requireAuthorization(authorize)
+            try await open(record); try requireAuthorization(authorize)
+            if record.record.kind != .recipe { lastImportIDs = [] }
+        } catch { fail(error) }
     }
     func deleteRecovered(_ scope: RecoveryDeleteScope) async {
         do {
@@ -212,11 +255,18 @@ import RecordArchive
     /// Clear cached disclosures and pending imports before retiring a source. A new
     /// snapshot can only repopulate them after composition rechecks tombstones.
     func invalidateForSourceErasure() {
-        preparedDocument = nil; recoveryKey = ""; selectedIDs = []
-        review = nil; recipeReport = nil; lastImportIDs = []; deleteUndo = nil
+        preparedDocument = nil; recoveryKey = ""; selectedIDs = []; selectedMediaIDs = []
+        review = nil; reviewAuthorization = nil; recipeReport = nil; lastImportIDs = []; deleteUndo = nil
         currentRecords = []; recoveredRecords = []; unavailableRecords = []; status = nil; error = nil
     }
     func dismissPreparedFile() { preparedDocument = nil }
+    private func authorization() throws -> Authorization {
+        guard let authorize = beginAuthorization(), authorize() else { invalidateForSourceErasure(); throw ArchiveError.unavailable }
+        return authorize
+    }
+    private func requireAuthorization(_ authorize: Authorization) throws {
+        guard authorize() else { invalidateForSourceErasure(); throw ArchiveError.unavailable }
+    }
     func reportFileError(_ error: Error) { fail(error) }
     private func fail(_ error: Error) {
         self.error = error as? ArchiveError ?? .unavailable

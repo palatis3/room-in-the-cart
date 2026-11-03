@@ -1,0 +1,1179 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Help and privacy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Help and privacy"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayuda y privacidad"
+          }
+        }
+      }
+    },
+    "Help": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Help"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayuda"
+          }
+        }
+      }
+    },
+    "Privacy and data": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacy and data"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacidad y datos"
+          }
+        }
+      }
+    },
+    "Support": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Support"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Soporte"
+          }
+        }
+      }
+    },
+    "Start with a pack comparison. No account or connection is needed for your private shopping tools.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start with a pack comparison. No account or connection is needed for your private shopping tools."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empieza con una comparación de paquetes. No necesitas una cuenta ni conexión para usar tus herramientas privadas de compra."
+          }
+        }
+      }
+    },
+    "Using Room in the Cart": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Using Room in the Cart"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cómo usar Room in the Cart"
+          }
+        }
+      }
+    },
+    "Online help": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Online help"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayuda en línea"
+          }
+        }
+      }
+    },
+    "Compare two packs": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare two packs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparar dos paquetes"
+          }
+        }
+      }
+    },
+    "Build a list and check the budget": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Build a list and check the budget"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crear una lista y revisar el presupuesto"
+          }
+        }
+      }
+    },
+    "Plan dinners and protect lunches": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan dinners and protect lunches"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planificar cenas y reservar almuerzos"
+          }
+        }
+      }
+    },
+    "Hand off a pickup and record what arrived": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hand off a pickup and record what arrived"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartir la lista de recogida y registrar lo que llegó"
+          }
+        }
+      }
+    },
+    "Requests, shared shops and cook views": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Requests, shared shops and cook views"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicitudes, compras compartidas y vistas para quien cocina"
+          }
+        }
+      }
+    },
+    "Export, recover and delete records": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export, recover and delete records"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exportar, recuperar y eliminar registros"
+          }
+        }
+      }
+    },
+    "Capture, reminders and device shortcuts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture, reminders and device shortcuts"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captura, recordatorios y accesos del dispositivo"
+          }
+        }
+      }
+    },
+    "Free tools and Household membership": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free tools and Household membership"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Herramientas gratuitas y membresía del hogar"
+          }
+        }
+      }
+    },
+    "Review the whole packs needed, the usable food and the cost. An unknown usable amount or missing price stays unresolved. Save the comparison to reopen it in Records.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the whole packs needed, the usable food and the cost. An unknown usable amount or missing price stays unresolved. Save the comparison to reopen it in Records."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa los paquetes completos necesarios, la comida aprovechable y el costo. Si la cantidad aprovechable es desconocida o falta un precio, el resultado sigue sin resolverse. Guarda la comparación para volver a abrirla en Historial."
+          }
+        }
+      }
+    },
+    "A pack comparison covers that item only. To judge the whole pickup, review the shopping list and its checkout costs.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A pack comparison covers that item only. To judge the whole pickup, review the shopping list and its checkout costs."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La comparación de paquetes abarca solo ese artículo. Para evaluar toda la recogida, revisa la lista de compra y sus costos al pagar."
+          }
+        }
+      }
+    },
+    "In Shop, open your shopping list. Type items or review pasted text before adding it. Review possible duplicates; meal needs and everyday staples remain separate.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Shop, open your shopping list. Type items or review pasted text before adding it. Review possible duplicates; meal needs and everyday staples remain separate."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En Compras, abre tu lista de compra. Escribe artículos o revisa el texto pegado antes de agregarlo. Revisa los posibles duplicados; las necesidades de las comidas y los productos habituales se mantienen separados."
+          }
+        }
+      }
+    },
+    "Set a spending cap and review the expected checkout with known fees, taxes and discounts. Missing prices remain visible. A payment hold and a posted charge are separate amounts.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set a spending cap and review the expected checkout with known fees, taxes and discounts. Missing prices remain visible. A payment hold and a posted charge are separate amounts."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Establece un límite de gasto y revisa el total previsto con las tarifas, impuestos y descuentos conocidos. Los precios que faltan siguen visibles. Una retención de pago y un cargo contabilizado son cantidades separadas."
+          }
+        }
+      }
+    },
+    "To compare stores, enter two quotes for the same needs. Include fees, extra travel cost and time, and check when each quote was observed. This is a manual comparison, not live retailer pricing.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To compare stores, enter two quotes for the same needs. Include fees, extra travel cost and time, and check when each quote was observed. This is a manual comparison, not live retailer pricing."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para comparar tiendas, ingresa dos cotizaciones para las mismas necesidades. Incluye las tarifas, el costo adicional del viaje y el tiempo, y revisa cuándo se observó cada cotización. Es una comparación manual; no son precios de la tienda en tiempo real."
+          }
+        }
+      }
+    },
+    "In Dinners, save a familiar meal with its portions, ingredients, source, exclusions and any known prep lead time. Review an idea before choosing it for this shop. Choosing an idea and assigning a night are separate steps.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Dinners, save a familiar meal with its portions, ingredients, source, exclusions and any known prep lead time. Review an idea before choosing it for this shop. Choosing an idea and assigning a night are separate steps."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En Cenas, guarda una comida conocida con sus porciones, ingredientes, fuente, exclusiones y cualquier tiempo de preparación previo conocido. Revisa una idea antes de elegirla para esta compra. Elegir una idea y asignarle una noche son pasos separados."
+          }
+        }
+      }
+    },
+    "Use the meal week for guests, away nights and protected lunches. Preview a change before saving it. Editing this week does not rewrite your reusable dinner or rotation.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use the meal week for guests, away nights and protected lunches. Preview a change before saving it. Editing this week does not rewrite your reusable dinner or rotation."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usa la semana de comidas para invitados, noches fuera y almuerzos reservados. Revisa el cambio antes de guardarlo. Editar esta semana no modifica tu cena reutilizable ni tu rotación."
+          }
+        }
+      }
+    },
+    "Count pantry or freezer food only after confirming its usable quantity and matching it to the need. If food falls short, protect lunch reservations and review each affected dinner. Leave an unresolved need open until you choose a repair.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Count pantry or freezer food only after confirming its usable quantity and matching it to the need. If food falls short, protect lunch reservations and review each affected dinner. Leave an unresolved need open until you choose a repair."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuenta la comida de la despensa o del congelador solo después de confirmar su cantidad aprovechable y vincularla con la necesidad. Si falta comida, protege las reservas para el almuerzo y revisa cada cena afectada. Deja abierta una necesidad sin resolver hasta elegir una solución."
+          }
+        }
+      }
+    },
+    "Review the basket and prepare a dated retailer handoff in Shop. Copy or share that reviewed list, then place the order with your retailer. Copying or sharing does not place an order.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the basket and prepare a dated retailer handoff in Shop. Copy or share that reviewed list, then place the order with your retailer. Copying or sharing does not place an order."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa la cesta y prepara una lista con fecha para la tienda en Compras. Copia o comparte esa lista revisada y luego realiza el pedido en tu tienda. Copiar o compartir no realiza un pedido."
+          }
+        }
+      }
+    },
+    "Report placement separately. Record substitutions and the usable quantities that actually came home, then review meal shortages. Keep a pending credit pending until it posts; do not record a refund twice.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report placement separately. Record substitutions and the usable quantities that actually came home, then review meal shortages. Keep a pending credit pending until it posts; do not record a refund twice."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registra por separado que realizaste el pedido. Anota las sustituciones y las cantidades aprovechables que llegaron a casa, y luego revisa lo que falta para las comidas. Mantén pendiente un crédito hasta que se contabilice; no registres un reembolso dos veces."
+          }
+        }
+      }
+    },
+    "Prepare a dated cook instruction showing portions, what to set aside and what remains unresolved. Choose the recipient language and review any private wording. Marking a copy sent and reporting acknowledgment are separate actions.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prepare a dated cook instruction showing portions, what to set aside and what remains unresolved. Choose the recipient language and review any private wording. Marking a copy sent and reporting acknowledgment are separate actions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prepara una instrucción con fecha para quien cocina que muestre las porciones, lo que debe reservar y lo que sigue sin resolverse. Elige el idioma del destinatario y revisa cualquier texto privado. Marcar una copia como enviada y registrar una confirmación de recepción son acciones separadas."
+          }
+        }
+      }
+    },
+    "Open Household requests in Settings to sign in or manage connected access. Signing in does not upload your existing private workspace. If sign-in is unavailable in this build, keep using the private tools.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Household requests in Settings to sign in or manage connected access. Signing in does not upload your existing private workspace. If sign-in is unavailable in this build, keep using the private tools."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre Solicitudes del hogar en Configuración para iniciar sesión o administrar el acceso conectado. Iniciar sesión no sube tu espacio privado existente. Si esta versión no permite iniciar sesión, sigue usando las herramientas privadas."
+          }
+        }
+      }
+    },
+    "A request is received only after the household confirms it. If the response is uncertain, retry the same request. A contributor sees their own request and outcome; household budgets stay private.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A request is received only after the household confirms it. If the response is uncertain, retry the same request. A contributor sees their own request and outcome; household budgets stay private."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una solicitud se considera recibida solo después de que el hogar lo confirme. Si no hay una respuesta segura, reintenta la misma solicitud. Quien colabora ve su propia solicitud y su resultado; los presupuestos del hogar siguen siendo privados."
+          }
+        }
+      }
+    },
+    "Only the assigned shopper can commit a shared basket change. Another authorized adult can propose a change for review. A membership seat does not grant shopper authority or budget access.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the assigned shopper can commit a shared basket change. Another authorized adult can propose a change for review. A membership seat does not grant shopper authority or budget access."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo la persona asignada para comprar puede confirmar un cambio en la cesta compartida. Otro adulto autorizado puede proponer un cambio para revisión. Una plaza de membresía no otorga autoridad de compra ni acceso al presupuesto."
+          }
+        }
+      }
+    },
+    "A current cook view is limited to one shop, selected fields and its expiry. Manage or revoke it through household controls. A dated static message remains a separate copy. Child enrollment requires the configured guardian consent process.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A current cook view is limited to one shop, selected fields and its expiry. Manage or revoke it through household controls. A dated static message remains a separate copy. Child enrollment requires the configured guardian consent process."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una vista actual para quien cocina se limita a una compra, los campos seleccionados y su vencimiento. Adminístrala o revócala en los controles del hogar. Un mensaje estático con fecha sigue siendo una copia separada. La inscripción de menores requiere el proceso configurado de consentimiento del tutor."
+          }
+        }
+      }
+    },
+    "In Records, open Recovery, exports and saved records. Select readable records, then preview a helper copy, a readable owner export or a structured recovery file. Owner files can include private data. Choose where to save or share them.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Records, open Recovery, exports and saved records. Select readable records, then preview a helper copy, a readable owner export or a structured recovery file. Owner files can include private data. Choose where to save or share them."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En Historial, abre Recuperación, exportaciones y registros guardados. Selecciona los registros que se pueden leer y revisa una copia para ayudante, una exportación legible para el propietario o un archivo estructurado de recuperación. Los archivos del propietario pueden incluir datos privados. Elige dónde guardarlos o compartirlos."
+          }
+        }
+      }
+    },
+    "To recover a file, review its source, date, identity, revision and conflicts before importing. A recovery copy opens separately from newer work. A malformed or unsupported file must not replace your saved records.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To recover a file, review its source, date, identity, revision and conflicts before importing. A recovery copy opens separately from newer work. A malformed or unsupported file must not replace your saved records."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para recuperar un archivo, revisa su origen, fecha, identidad, revisión y conflictos antes de importarlo. Una copia de recuperación se abre por separado del trabajo más reciente. Un archivo dañado o no compatible no debe reemplazar tus registros guardados."
+          }
+        }
+      }
+    },
+    "Deletion names its scope before confirmation. Deleting one record, recovered copies or the entire local ledger has different effects. Use undo only when it is offered. Account deletion is a separate household control; copies already exported or sent remain with their recipients.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deletion names its scope before confirmation. Deleting one record, recovered copies or the entire local ledger has different effects. Use undo only when it is offered. Account deletion is a separate household control; copies already exported or sent remain with their recipients."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La eliminación indica su alcance antes de confirmarla. Eliminar un registro, copias recuperadas o todo el registro local tiene efectos diferentes. Usa Deshacer solo cuando se ofrezca. La eliminación de la cuenta es un control separado del hogar; las copias ya exportadas o enviadas permanecen con sus destinatarios."
+          }
+        }
+      }
+    },
+    "Typed entry is always available. Camera, photo, barcode and speech capture create an editable preview. Review names, units, matches and amounts before saving; recognition is not a confirmed fact.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Typed entry is always available. Camera, photo, barcode and speech capture create an editable preview. Review names, units, matches and amounts before saving; recognition is not a confirmed fact."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Siempre puedes escribir los datos. La captura con cámara, fotos, códigos de barras y voz crea una vista previa editable. Revisa los nombres, unidades, coincidencias y cantidades antes de guardar; el reconocimiento no es un dato confirmado."
+          }
+        }
+      }
+    },
+    "Device shortcuts in Settings contains optional share, widget and reminder tools. Review incoming shared text before adding it. Widgets use a narrow view and hide private notes and money.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Device shortcuts in Settings contains optional share, widget and reminder tools. Review incoming shared text before adding it. Widgets use a narrow view and hide private notes and money."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accesos del dispositivo en Configuración contiene herramientas opcionales para compartir, widgets y recordatorios. Revisa el texto compartido recibido antes de agregarlo. Los widgets usan una vista limitada y ocultan las notas privadas y el dinero."
+          }
+        }
+      }
+    },
+    "Choose a specific reminder before allowing notifications. Check local time, quiet hours and expiry. Local reminders do not guarantee live household status while this iPhone is offline.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a specific reminder before allowing notifications. Check local time, quiet hours and expiry. Local reminders do not guarantee live household status while this iPhone is offline."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige un recordatorio específico antes de permitir las notificaciones. Revisa la hora local, las horas de silencio y el vencimiento. Los recordatorios locales no garantizan el estado del hogar en tiempo real cuando este iPhone no tiene conexión."
+          }
+        }
+      }
+    },
+    "Free covers an ordinary pickup, manual planning, one reusable dinner, saved records and exports. Household adds repeated planning tools for up to two named adults. Groceries are purchased from your retailer.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free covers an ordinary pickup, manual planning, one reusable dinner, saved records and exports. Household adds repeated planning tools for up to two named adults. Groceries are purchased from your retailer."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El plan gratuito cubre una recogida habitual, la planificación manual, una cena reutilizable, los registros guardados y las exportaciones. Household agrega herramientas de planificación recurrente para hasta dos adultos designados. Los comestibles se compran en tu tienda."
+          }
+        }
+      }
+    },
+    "Open Household membership in Settings for Apple’s actual localized offer, Restore Purchases and Manage Subscription. If the offer or account setup is unavailable, continue with Free.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Household membership in Settings for Apple’s actual localized offer, Restore Purchases and Manage Subscription. If the offer or account setup is unavailable, continue with Free."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre Membresía del hogar en Configuración para ver la oferta localizada real de Apple, Restaurar compras y Administrar suscripción. Si la oferta o la configuración de la cuenta no está disponible, continúa con el plan gratuito."
+          }
+        }
+      }
+    },
+    "Restore with the original purchasing account and household. A pending or unverified purchase adds no paid access. If delivery is uncertain, retry delivery or restore rather than buying again. Ending membership preserves permitted Free work.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore with the original purchasing account and household. A pending or unverified purchase adds no paid access. If delivery is uncertain, retry delivery or restore rather than buying again. Ending membership preserves permitted Free work."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restaura con la cuenta compradora y el hogar originales. Una compra pendiente o sin verificar no agrega acceso de pago. Si no se confirma la entrega, reintenta la entrega o restaura la compra en vez de comprar otra vez. Al terminar la membresía se conserva el trabajo gratuito permitido."
+          }
+        }
+      }
+    },
+    "Your private workspace": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your private workspace"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu espacio privado"
+          }
+        }
+      }
+    },
+    "Private comparisons, lists, dinners, capture reviews and pickup records are stored on this iPhone. Joining a household does not upload that existing work. An owner export can include private content and recipient history.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private comparisons, lists, dinners, capture reviews and pickup records are stored on this iPhone. Joining a household does not upload that existing work. An owner export can include private content and recipient history."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las comparaciones privadas, listas, cenas, revisiones de captura y registros de recogida se guardan en este iPhone. Unirte a un hogar no sube ese trabajo existente. Una exportación para el propietario puede incluir contenido privado e historial de destinatarios."
+          }
+        }
+      }
+    },
+    "Optional pickup feedback stays in your local pickup record. It is not sent to an analytics service. You can turn the prompt off in Settings and remove a saved response from its pickup.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional pickup feedback stays in your local pickup record. It is not sent to an analytics service. You can turn the prompt off in Settings and remove a saved response from its pickup."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los comentarios opcionales sobre una recogida permanecen en su registro local. No se envían a un servicio de análisis. Puedes desactivar la pregunta en Configuración y quitar una respuesta guardada desde su recogida."
+          }
+        }
+      }
+    },
+    "When you connect or share": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When you connect or share"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuando te conectas o compartes"
+          }
+        }
+      }
+    },
+    "Account sign-in sends account information to the identity provider. Explicit household actions send the account, request, shop, budget or instruction fields needed for that action. The service checks the household, role and shop permissions.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account sign-in sends account information to the identity provider. Explicit household actions send the account, request, shop, budget or instruction fields needed for that action. The service checks the household, role and shop permissions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al iniciar sesión se envía información de la cuenta al proveedor de identidad. Las acciones explícitas del hogar envían los campos de cuenta, solicitud, compra, presupuesto o instrucciones necesarios para esa acción. El servicio verifica los permisos del hogar, del rol y de la compra."
+          }
+        }
+      }
+    },
+    "A cook link exposes only its granted fields. A static message or exported file is a separate copy under the recipient’s control. Review the destination and private fields before sharing.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A cook link exposes only its granted fields. A static message or exported file is a separate copy under the recipient’s control. Review the destination and private fields before sharing."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un enlace para quien cocina muestra solo los campos autorizados. Un mensaje estático o un archivo exportado es una copia separada bajo el control del destinatario. Revisa el destino y los campos privados antes de compartir."
+          }
+        }
+      }
+    },
+    "Apple handles subscription payment credentials. The app and household service use transaction evidence to deliver and restore membership; they do not receive your payment card or bank account number.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple handles subscription payment credentials. The app and household service use transaction evidence to deliver and restore membership; they do not receive your payment card or bank account number."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple administra las credenciales de pago de la suscripción. La app y el servicio del hogar usan pruebas de la transacción para entregar y restaurar la membresía; no reciben el número de tu tarjeta de pago ni de tu cuenta bancaria."
+          }
+        }
+      }
+    },
+    "Photos and speech": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photos and speech"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotos y voz"
+          }
+        }
+      }
+    },
+    "Export and deletion": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export and deletion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exportación y eliminación"
+          }
+        }
+      }
+    },
+    "Open Records, then Recovery, exports and saved records to preview an export, recover a file or review local deletion. Removing local work does not remove copies you already saved or sent.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Records, then Recovery, exports and saved records to preview an export, recover a file or review local deletion. Removing local work does not remove copies you already saved or sent."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre Historial y luego Recuperación, exportaciones y registros guardados para revisar una exportación, recuperar un archivo o revisar una eliminación local. Quitar trabajo local no elimina las copias que ya guardaste o enviaste."
+          }
+        }
+      }
+    },
+    "Household account deletion has its own scope and status. Review it in household controls. Signing out or leaving a household is separate from deleting an account, and deleting an account does not cancel an Apple subscription. Manage that subscription through Apple.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household account deletion has its own scope and status. Review it in household controls. Signing out or leaving a household is separate from deleting an account, and deleting an account does not cancel an Apple subscription. Manage that subscription through Apple."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La eliminación de una cuenta del hogar tiene su propio alcance y estado. Revísala en los controles del hogar. Cerrar sesión o salir de un hogar es distinto de eliminar una cuenta, y eliminar una cuenta no cancela una suscripción de Apple. Administra esa suscripción con Apple."
+          }
+        }
+      }
+    },
+    "Open household and account controls": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open household and account controls"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir controles del hogar y de la cuenta"
+          }
+        }
+      }
+    },
+    "Policy and terms": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Policy and terms"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Política y términos"
+          }
+        }
+      }
+    },
+    "This guide describes the app’s data controls. The operator’s privacy policy and terms are separate pages.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This guide describes the app’s data controls. The operator’s privacy policy and terms are separate pages."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta guía describe los controles de datos de la app. La política de privacidad y los términos del operador son páginas separadas."
+          }
+        }
+      }
+    },
+    "Privacy policy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacy policy"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Política de privacidad"
+          }
+        }
+      }
+    },
+    "The privacy policy link is unavailable in this build.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The privacy policy link is unavailable in this build."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El enlace a la política de privacidad no está disponible en esta versión."
+          }
+        }
+      }
+    },
+    "Terms of use": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terms of use"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Términos de uso"
+          }
+        }
+      }
+    },
+    "The terms link is unavailable in this build.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The terms link is unavailable in this build."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El enlace a los términos no está disponible en esta versión."
+          }
+        }
+      }
+    },
+    "Get help": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get help"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obtener ayuda"
+          }
+        }
+      }
+    },
+    "Describe the steps, what you expected and what happened. Leave out grocery details, budgets, names, receipts, sign-in codes and invitation links.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Describe the steps, what you expected and what happened. Leave out grocery details, budgets, names, receipts, sign-in codes and invitation links."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Describe los pasos, lo que esperabas y lo que ocurrió. Omite detalles de comestibles, presupuestos, nombres, recibos, códigos de inicio de sesión y enlaces de invitación."
+          }
+        }
+      }
+    },
+    "Open support": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open support"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir soporte"
+          }
+        }
+      }
+    },
+    "An online support destination is unavailable in this build. Offline help and the support summary are still available.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An online support destination is unavailable in this build. Offline help and the support summary are still available."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay un destino de soporte en línea disponible en esta versión. La ayuda sin conexión y el resumen de soporte siguen disponibles."
+          }
+        }
+      }
+    },
+    "Read offline help": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read offline help"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leer ayuda sin conexión"
+          }
+        }
+      }
+    },
+    "Review support summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review support summary"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar resumen de soporte"
+          }
+        }
+      }
+    },
+    "This summary contains only the app version, build, iOS version, interface language, build environment and whether service and membership configuration are present. It contains no groceries, money, account or device identifiers, credentials, logs or photos.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This summary contains only the app version, build, iOS version, interface language, build environment and whether service and membership configuration are present. It contains no groceries, money, account or device identifiers, credentials, logs or photos."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este resumen contiene solo la versión de la app, la compilación, la versión de iOS, el idioma de la interfaz, el entorno de compilación y si existe configuración del servicio y de la membresía. No contiene comestibles, dinero, identificadores de cuenta o dispositivo, credenciales, registros técnicos ni fotos."
+          }
+        }
+      }
+    },
+    "Share support summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share support summary"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartir resumen de soporte"
+          }
+        }
+      }
+    },
+    "Nothing is sent automatically. Review the summary and choose its destination in the share sheet. A personal recovery file is a separate private export; support does not need it by default.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing is sent automatically. Review the summary and choose its destination in the share sheet. A personal recovery file is a separate private export; support does not need it by default."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se envía nada automáticamente. Revisa el resumen y elige su destino en la hoja para compartir. Un archivo personal de recuperación es una exportación privada separada; soporte no lo necesita de forma predeterminada."
+          }
+        }
+      }
+    },
+    "Open Compare packs in Shop. Enter the amount you need, each pack’s usable amount and its price. Keep the same unit for the need and both packs.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Compare packs in Shop. Enter the amount you need, each pack’s usable amount and its price. Keep the same unit for the need and both packs."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre Comparar paquetes en Compras. Ingresa la cantidad que necesitas, la cantidad aprovechable de cada paquete y su precio. Usa la misma unidad para la cantidad necesaria y ambos paquetes."
+          }
+        }
+      }
+    },
+    "The app’s capture tools process speech and images on this iPhone. Raw voice recordings are not retained or uploaded by the app. Saved evidence photos stay in protected local storage. Readable and helper exports exclude photos. An encrypted recovery file can include evidence photos only after you select and review them. Apple may download a photo you select from iCloud before delivering it to the app.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The app’s capture tools process speech and images on this iPhone. Raw voice recordings are not retained or uploaded by the app. Saved evidence photos stay in protected local storage. Readable and helper exports exclude photos. An encrypted recovery file can include evidence photos only after you select and review them. Apple may download a photo you select from iCloud before delivering it to the app."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las herramientas de captura de la app procesan la voz y las imágenes en este iPhone. La app no conserva ni sube las grabaciones de voz originales. Las fotos guardadas como evidencia permanecen en almacenamiento local protegido. Las exportaciones legibles y para ayudantes excluyen las fotos. Un archivo de recuperación cifrado puede incluir fotos de evidencia solo después de que las selecciones y revises. Apple puede descargar de iCloud una foto que selecciones antes de entregarla a la app."
+          }
+        }
+      }
+    },
+    "Optional household measurement is separate. With explicit consent, the service stores the response codes you review, the shop identity, eligible week and notice version, and can match membership status to study retention. Existing local feedback, grocery text, prices and member names are not sent. Manage or withdraw that consent in Settings.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional household measurement is separate. With explicit consent, the service stores the response codes you review, the shop identity, eligible week and notice version, and can match membership status to study retention. Existing local feedback, grocery text, prices and member names are not sent. Manage or withdraw that consent in Settings."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La medición opcional del hogar es independiente. Con consentimiento explícito, el servicio guarda los códigos de respuesta que revises, la identidad de la compra, la semana elegible y la versión del aviso, y puede vincular el estado de membresía para estudiar la retención. No se envían los comentarios locales existentes, el texto de comestibles, los precios ni los nombres de miembros. Administra o retira ese consentimiento en Configuración."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

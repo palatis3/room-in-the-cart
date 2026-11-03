@@ -5,6 +5,7 @@ import hashlib
 import json
 import plistlib
 from pathlib import Path
+from app_configuration import build_settings, load_configuration
 
 ROOT = Path(__file__).resolve().parents[1]
 IOS = ROOT / "ios"
@@ -59,16 +60,7 @@ def config_list(key, base, is_project=False):
             settings["PRODUCT_BUNDLE_IDENTIFIER"] = "dev.roominthecart.app" + {"Debug": ".debug", "Staging": ".staging", "Release": ""}[name]
             settings["INFOPLIST_KEY_CFBundleDisplayName"] = "Room in the Cart"
             settings["ASSETCATALOG_COMPILER_APPICON_NAME"] = "AppIcon"
-            settings["RITC_EMAIL_OTP_ENABLED"] = "NO"
-            for setting in ("RITC_SUPABASE_URL", "RITC_SUPABASE_PUBLISHABLE_KEY", "RITC_SERVICE_URL"):
-                settings[setting] = ""
-            if name in ("Debug", "Staging"):
-                config_path = ROOT / "config/staging.json"
-                config = json.loads(config_path.read_text()) if config_path.exists() else {}
-                settings["RITC_EMAIL_OTP_ENABLED"] = "YES" if config.get("emailOTPEnabled") is True else "NO"
-                for setting, config_key in (("RITC_SUPABASE_URL", "supabaseURL"), ("RITC_SUPABASE_PUBLISHABLE_KEY", "publishableKey"), ("RITC_SERVICE_URL", "serviceURL")):
-                    if config.get(config_key):
-                        settings[setting] = config[config_key]
+            settings.update(build_settings(load_configuration(ROOT, name), name))
         configs.append(obj(f"config:{key}:{name}", "XCBuildConfiguration", buildSettings=settings, name=name))
     return obj("configs:" + key, "XCConfigurationList", buildConfigurations=configs, defaultConfigurationIsVisible="0", defaultConfigurationName="Release")
 

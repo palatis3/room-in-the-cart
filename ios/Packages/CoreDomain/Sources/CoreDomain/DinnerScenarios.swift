@@ -560,7 +560,13 @@ public enum TwoStoreQuoteEngine {
                 discounts: [], tax: .exact(.zero), deposits: .exact(.zero))))
     }
     public static func compare(_ pair: TwoStoreQuotePair, access: DinnerAccessContext, at now: Date) throws -> TwoStoreQuoteResult {
-        try access.validate(shopID: pair.shopID, at: now, budget: true); try pair.validate()
+        try access.validate(shopID: pair.shopID, at: now, budget: true)
+        return try evaluateEnteredQuotes(pair)
+    }
+    /// Pure arithmetic for evidence already authorized by its caller. This grants no data or mutation rights.
+    /// Connected manual store quotes have their own shop budget permission, independent of meal planning.
+    public static func evaluateEnteredQuotes(_ pair: TwoStoreQuotePair) throws -> TwoStoreQuoteResult {
+        try pair.validate()
         let a = pair.first, b = pair.second
         let comparable = a.commitments == b.commitments && a.quote.scope == b.quote.scope
             && a.quantitiesMatched && b.quantitiesMatched && a.singleStore && b.singleStore

@@ -31,6 +31,33 @@ import HouseholdClient
         XCTAssertEqual(model.selectedObservation?.price, .exact(minor: 349))
         let saved = await store.read(); XCTAssertEqual(saved.observations.count, 1); XCTAssertTrue(saved.pending.isEmpty)
     }
+    func testSavedObservationReferencesUseReadGrantsWithoutAddingWritableShops() async throws {
+        let (model, service, store, _) = try await setup()
+        let granted = "10000000-0000-4000-8000-000000000004", observation = UUID().uuidString.lowercased()
+        await store.addReference(.init(subject: "adult", householdID: household, memberID: member, shopID: granted, observationID: observation))
+        service.readablePages[nilKey] = .init(shopIds: [granted], nextCursor: nil)
+        await model.load()
+        XCTAssertEqual(model.savedObservationIDs, [observation])
+        XCTAssertEqual(model.ownedShops.map(\.shopId), [shop])
+        XCTAssertFalse(model.ownedShops.contains { $0.shopId == granted })
+        service.readablePages[nilKey] = .init(shopIds: [], nextCursor: nil)
+        await model.loadReadableShops()
+        XCTAssertTrue(model.savedObservationIDs.isEmpty)
+        XCTAssertEqual(model.ownedShops.map(\.shopId), [shop])
+    }
+    func testSavedReferenceAccessPaginationAndRevokedRecordClearVisibleFacts() async throws {
+        let (model, service, store, _) = try await setup()
+        let granted = "10000000-0000-4000-8000-000000000004", observation = UUID().uuidString.lowercased()
+        await store.addReference(.init(subject: "adult", householdID: household, memberID: member, shopID: granted, observationID: observation))
+        service.readablePages[nilKey] = .init(shopIds: [shop], nextCursor: shop)
+        service.readablePages[shop] = .init(shopIds: [granted], nextCursor: nil)
+        await model.load(); XCTAssertTrue(model.savedObservationIDs.isEmpty)
+        await model.loadReadableShops(more: true)
+        XCTAssertEqual(model.savedObservationIDs, [observation]); XCTAssertNil(model.readableShopCursor)
+        service.observationReadError = ClientError.service(status: 404, code: "unavailable", correlationID: nil, retryAfter: nil)
+        await model.openObservation(observation)
+        XCTAssertNil(model.selectedObservation); XCTAssertTrue(model.savedObservationIDs.isEmpty)
+    }
     func testLostResponseRestoresExactIntentWithoutAutomaticSend() async throws {
         let (model, service, store, box) = try await setup(); enterObservation(model); model.approved = true
         service.loseObservationResponse = true; await model.applyReviewed()
@@ -206,6 +233,7 @@ private let nilKey = "initial"
     let subtotal: HistoryPermittedSubtotal
     var analysis: HistoryPeriodResponse
     var pricePages: [String: HistoryPriceObservationPage] = [:]
+    var readablePages: [String: HistoryReadableShopPage] = [:]
     var priceError: Error?, analysisError: Error?, authorizationError: Error?, observationReadError: Error?
     var beforePrepare: (() async throws -> Void)?, beforePeriodRead: (() async -> Void)?
     var beforeObservationSend: ((PriceObservationIntent) async throws -> Void)?
@@ -222,6 +250,7 @@ private let nilKey = "initial"
         try .init(shopId: shop, itemName: "Oats", packLabel: "12 oz", usablePack: nil, price: .exact(minor: 349), store: "Store", branch: branch, channel: channel, mode: mode, eligibility: "", observedAt: "2025-01-02T12:00:00Z", sourceText: "Shelf label", sourceLocale: "en-US")
     }
     func historyOwnedShops(cursor: String?) async throws -> HistoryOwnedShopPage { .init(shops: [.init(shopId: shop, createdAt: "2025-01-01T00:00:00Z", phase: "closed", revision: 1, authorityEpoch: 1)], nextCursor: nil) }
+    func historyReadableShops(cursor: String?) async throws -> HistoryReadableShopPage { readablePages[cursor ?? nilKey] ?? .init(shopIds: [shop], nextCursor: nil) }
     func priceObservations(cursor: String?) async throws -> HistoryPriceObservationPage { if let priceError { throw priceError }; return pricePages[cursor ?? nilKey] ?? .init(observations: [], nextCursor: nil) }
     func priceObservation(observationID: String) async throws -> HistoryPriceObservation { if let observationReadError { throw observationReadError }; var value = try observation(); value.id = observationID; return value }
     func budgetPeriods(cursor: String?) async throws -> HistoryBudgetPeriodPage { .init(periods: [.init(periodId: saved.periodId, revision: saved.revision, updatedAt: "2025-01-01T00:00:00Z")], nextCursor: nil) }
@@ -241,6 +270,7 @@ private actor HistoryFixtureStore: HistoryPersisting {
     func read() -> HistoryStoredState { state }
     func setSaveFailure(_ value: Bool) { saveFailure = value }
     func setCompleteFailure(_ value: Bool) { completeFailure = value }
+    func addReference(_ value: HistoryStoredReference) { state.observations.append(value) }
     func purge() { generation = UUID(); state = .init() }
     func save(_ pending: HistoryPendingWrite, expectedEpoch: UUID) throws {
         guard generation == expectedEpoch else { throw ClientError.cancelled }; if saveFailure { throw ClientError.configuration }; state.pending = [pending]

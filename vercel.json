@@ -4,15 +4,97 @@
   "installCommand": "npm --prefix service ci --ignore-scripts && npm --prefix web ci --ignore-scripts",
   "buildCommand": "npm --prefix service run build && npm --prefix web run build",
   "outputDirectory": "web/public-build",
-  "regions": ["pdx1"],
-  "functions": { "api/index.js": { "maxDuration": 30 } },
-  "rewrites": [
-    { "source": "/v1/:path*", "destination": "/api" },
-    { "source": "/health", "destination": "/api" }
+  "regions": [
+    "pdx1"
   ],
-  "headers": [{ "source": "/(.*)", "headers": [
-    { "key": "X-Content-Type-Options", "value": "nosniff" },
-    { "key": "Referrer-Policy", "value": "no-referrer" },
-    { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" }
-  ] }]
+  "functions": {
+    "api/index.js": {
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/help",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/help/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/privacy",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/privacy/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/terms",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/terms/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/support",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/support/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/requests",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/requests/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/invite",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/invite/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/view",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/view/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/v1/:path*",
+      "destination": "/api"
+    },
+    {
+      "source": "/health",
+      "destination": "/api"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        }
+      ]
+    }
+  ]
 }

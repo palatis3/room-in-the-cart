@@ -26,4 +26,4 @@ struct ContextualHouseholdScope: Equatable {
         }
     }
 }
-enum ContextualHouseholdDestination { case inbox, managedViews, composer }
+enum ContextualHouseholdDestination: String, Codable, Hashable { case inbox, managedViews, composer }

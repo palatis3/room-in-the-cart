@@ -7,6 +7,7 @@ fi
 python3 scripts/generate_theme.py --check
 python3 scripts/check_localization.py
 python3 scripts/test_check_localization.py
+python3 scripts/test_app_configuration.py
 python3 scripts/generate_xcode_project.py --check
 for manifest in ios/Packages/*/Package.swift; do
   swift test --package-path "$(dirname "$manifest")"

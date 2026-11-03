@@ -166,6 +166,11 @@ private struct PickupNextShopSelection: View {
                         Text(pTr("Already handled · no new purchase")).tag(NextShopDisposition.handled)
                         Text(pTr("Dismiss this need")).tag(NextShopDisposition.dismissed)
                     }
+                    if (choices[need.id] ?? .keep) == .keep, let workspaceID = model.sourceWorkspaceID {
+                        ContextualReminderLink(request: .init(target: .deferral(workspaceID: workspaceID, journeyID: source.id, needID: need.id),
+                            sourceRevision: source.revision, sourceSavedAt: source.savedAt))
+                            .disabled(model.saving || model.hasPendingSave)
+                    }
                 }
             }
             NavigationLink(HistoryCopy.text("Family decision history")) { FamilyDecisionsEntry(localShopID: source.id) }

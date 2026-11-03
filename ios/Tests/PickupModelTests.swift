@@ -4,6 +4,34 @@ import LocalStore
 @testable import RoomInTheCart
 
 final class PickupModelTests: XCTestCase {
+    @MainActor func testLocalFeedbackConsentIsVersionedWorkspaceScopedAndCannotComeFromLegacyBoolean() throws {
+        let suite = "measurement-consent-test-" + UUID().uuidString
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        defaults.set(true, forKey: PickupFeedbackSection.consentKey)
+        let first = UUID(), second = UUID()
+        let consent = LocalPickupFeedbackConsent(defaults: defaults, storageKey: "versioned")
+        XCTAssertFalse(consent.enabled(for: first))
+        consent.setEnabled(true, for: first)
+        XCTAssertTrue(consent.enabled(for: first))
+        XCTAssertFalse(consent.enabled(for: second))
+        XCTAssertTrue(LocalPickupFeedbackConsent(defaults: defaults, storageKey: "versioned").enabled(for: first))
+        defaults.set([first.uuidString.lowercased(): "old-notice"], forKey: "versioned")
+        XCTAssertFalse(LocalPickupFeedbackConsent(defaults: defaults, storageKey: "versioned").enabled(for: first))
+        consent.setEnabled(false, for: first)
+        XCTAssertFalse(consent.enabled(for: first))
+    }
+
+    func testLegacyFeedbackDecodePreservesChoicesWithoutManufacturingConsent() throws {
+        let data = Data(#"{"decision":"alreadyKnew","baseline":"list","comparison":"different"}"#.utf8)
+        let answer = try JSONDecoder().decode(PickupFeedback.self, from: data)
+        XCTAssertEqual(answer.decision, .alreadyKnew)
+        XCTAssertEqual(answer.incrementalBenefit, 0)
+        let saved = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(answer)) as? [String: String])
+        XCTAssertEqual(Set(saved.keys), ["decision", "baseline", "comparison"])
+        XCTAssertNil(saved["consentVersion"])
+    }
+
     @MainActor func testFeedbackRequiresClosedPlacedPickupAndConsentAndSurvivesRestart() async throws {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: url) }

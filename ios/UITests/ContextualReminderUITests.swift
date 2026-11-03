@@ -1,0 +1,252 @@
+import XCTest
+
+/// Ordinary visible Shop navigation on the isolated UI-test workspace.
+@MainActor final class ContextualReminderUITests: XCTestCase {
+    private var app: XCUIApplication!
+    override func setUpWithError() throws {
+        continueAfterFailure = false
+        app = XCUIApplication(bundleIdentifier: "dev.roominthecart.app.debug")
+    }
+    override func tearDownWithError() throws {
+        if testRun?.failureCount ?? 0 > 0 { capture("Contextual-reminder-failure") }
+        app.terminate()
+    }
+
+    func testNextShopDeferralRequestsReminderOnlyAfterExplicitScheduleAndCanCancel() {
+        launch(reset: true)
+        tap(element("openPickupList")); tap(element("ledgerStartShop"))
+        fill("Deferred coffee pickup", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
+        tap(element("ledgerImport")); fill("1 coffee\n2 wraps", into: "ledgerImportText")
+        tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
+        shopRoot(); tap(app.buttons["Review checkout"])
+        tap(app.buttons["Continue to checkout review"]); tap(app.buttons["Apply reviewed checkout copy"])
+        tap(app.buttons["Review whole checkout"])
+        fill("Family market", into: "Store", replacing: true)
+        fill("Main branch", into: "Branch", replacing: true)
+        fill("Tuesday 5 PM", into: "Pickup or delivery slot", replacing: true)
+        fill("Retailer preview", into: "Source of these prices", replacing: true)
+        fill("4.00", into: "coffee"); fill("3.00", into: "wraps")
+        for label in ["Fee below threshold or fixed fee", "Eligible discount", "Tax", "Deposits and other charges"] { fill("0", into: label) }
+        tap(app.buttons["Save and evaluate checkout"])
+        enableSwitch("coffee"); enableSwitch("Include in deferral preview")
+        tap(app.buttons["Preview deferrals together"]); tap(app.buttons["Apply reviewed deferral"])
+        back(to: "Start the next shop"); tap(app.buttons["Start the next shop"])
+        tap(app.buttons["Request a reminder for this deferral"])
+        XCTAssertEqual(element("reminder.subject").label, "coffee")
+        assertText("Pickup last saved")
+        assertText("Opening or reviewing this reminder does not schedule a notification.")
+        XCTAssertFalse(element("reminder.schedule").exists)
+        XCTAssertFalse(app.alerts.firstMatch.exists)
+        enableSwitch("reminder.expiry.confirm"); tap(element("reminder.openEditor"))
+        assertElementContains("reminder.status", "Nothing is scheduled")
+        let quiet = element("reminder.quietHours"); reveal(quiet)
+        if quiet.value as? String == "1" { quiet.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap() }
+        tap(element("reminder.review"))
+        assertText("Nothing is scheduled until you confirm")
+        XCTAssertFalse(app.alerts.firstMatch.exists)
+        capture("S12-deferral-reminder-reviewed-unscheduled")
+        tap(element("reminder.schedule"))
+        assertElementContains("reminder.status", "Reminder not scheduled. Notifications are off")
+        tap(element("reminder.turnOff"))
+        assertElementContains("reminder.status", "Nothing is scheduled")
+        tap(element("reminder.close"))
+        XCTAssertTrue(app.navigationBars["Next shop"].waitForExistence(timeout: 8))
+        choose("For this trip", value: "Already handled · no new purchase")
+        XCTAssertFalse(app.buttons["Request a reminder for this deferral"].exists)
+        tap(app.buttons["Cancel"])
+        tap(app.buttons["Start the next shop"])
+        reveal(app.buttons["Request a reminder for this deferral"])
+        capture("S12-reminder-off-and-cancel-keeps-deferral")
+        tap(app.buttons["Cancel"])
+    }
+
+    func testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending() {
+        launch(reset: true)
+        tap(element("openPickupList")); tap(element("ledgerStartShop"))
+        fill("Offer reminder pickup", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
+        tap(element("ledgerImport")); fill("2 wraps", into: "ledgerImportText")
+        tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
+        shopRoot(); tap(app.buttons["Review checkout"])
+        tap(app.buttons["Continue to checkout review"]); tap(app.buttons["Apply reviewed checkout copy"])
+        tap(app.buttons["Review whole checkout"])
+        fill("Family market", into: "Store", replacing: true)
+        fill("Main branch", into: "Branch", replacing: true)
+        fill("Tuesday 5 PM", into: "Pickup or delivery slot", replacing: true)
+        fill("Retailer preview", into: "Source of these prices", replacing: true)
+        enableSwitch("Retailer total already includes all charges"); fill("3.00", into: "Inclusive total")
+        tap(app.buttons["Save and evaluate checkout"])
+        back(to: "Prepare retailer handoff"); tap(app.buttons["Prepare retailer handoff"])
+        tap(app.buttons["Freeze reviewed basket"]); tap(app.buttons["I placed this order"])
+        back(to: "Review a store offer"); tap(app.buttons["Review a store offer"])
+        tap(element("pickup.offer.new")); choose("Original line", value: "wraps")
+        fill("Large wrap pack", into: "pickup.offer.replacement")
+        fill("2", into: "pickup.offer.required"); fill("0", into: "pickup.offer.remaining")
+        fill("4.00", into: "pickup.offer.price")
+        let forecast = element("pickup.offer.forecast.enabled"); reveal(forecast)
+        if forecast.value as? String == "1" { forecast.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap() }
+        chooseFutureOfferCutoff()
+        tap(element("pickup.offer.review")); enableSwitch("pickup.offer.approve"); tap(element("pickup.offer.save"))
+        tap(app.buttons["Request an offer deadline reminder"])
+        XCTAssertEqual(element("reminder.subject").label, "Large wrap pack")
+        assertText("Offer cutoff")
+        tap(element("reminder.openEditor"))
+        assertElementContains("reminder.status", "Nothing is scheduled")
+        XCTAssertTrue(element("reminder.time").exists)
+        XCTAssertFalse(app.alerts.firstMatch.exists)
+        capture("S07-offer-deadline-reminder-unscheduled")
+        tap(element("reminder.close"))
+        XCTAssertTrue(app.navigationBars["Review store offer"].waitForExistence(timeout: 8))
+        assertText("Retailer response: Pending")
+        reveal(app.buttons["Request an offer deadline reminder"])
+        capture("S07-cancel-reminder-keeps-pending-store-offer")
+    }
+
+    private func chooseFutureOfferCutoff() {
+        let picker = element("pickup.offer.cutoff"); reveal(picker)
+        // Compact native date controls expose the date and time as separate buttons.
+        let dateButton = picker.buttons.firstMatch
+        XCTAssertTrue(dateButton.exists, app.debugDescription)
+        dateButton.tap()
+        let next = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] %@ OR identifier CONTAINS[c] %@", "Next Month", "NextMonth")).firstMatch
+        XCTAssertTrue(next.waitForExistence(timeout: 5), app.debugDescription)
+        next.tap()
+        let firstDay = app.buttons.matching(NSPredicate(format: "label == %@ OR label BEGINSWITH %@", "1", "1, ")).firstMatch
+        XCTAssertTrue(firstDay.exists, app.debugDescription)
+        firstDay.tap()
+        if app.buttons["Done"].exists && app.buttons["Done"].isHittable { app.buttons["Done"].tap() }
+    }
+
+    private func launch(reset: Bool) {
+        // Xcode's newer snapshot instrumentation floods iOS 17 unified logging
+        // and crashes inside its logging-quarantine callback. Preserve XCTest
+        // action/assertion logs while suppressing this app-process log transport.
+        app.launchEnvironment["OS_ACTIVITY_MODE"] = "disable"
+        app.launchArguments = ["--ui-testing", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        if reset { app.launchArguments.append("--reset-test-workspace") }
+        app.launch()
+        XCTAssertTrue(element("newComparison").waitForExistence(timeout: 15))
+    }
+    private func restart() { app.terminate(); launch(reset: false) }
+    private func element(_ id: String) -> XCUIElement { app.descendants(matching: .any).matching(identifier: id).firstMatch }
+    private func tap(_ target: XCUIElement) { reveal(target); XCTAssertTrue(target.isHittable, target.debugDescription); target.tap() }
+    private func enableSwitch(_ label: String) {
+        let control = app.switches[label]
+        reveal(control)
+        if control.value as? String == "0" {
+            // The accessibility frame includes the Form label. Tap the trailing switch itself.
+            control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        }
+        reveal(control)
+        XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
+    }
+    private func fill(_ text: String, into id: String, replacing: Bool = false) {
+        let field = element(id); tap(field)
+        if replacing, let old = field.value as? String, old != field.placeholderValue { app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
+        app.typeText(text)
+        let done = app.buttons.matching(NSPredicate(format: "label == %@", "Done")).firstMatch
+        if done.exists && done.isHittable { done.tap() }
+    }
+    private func reveal(_ target: XCUIElement) {
+        for attempt in 0..<64 {
+            let area = scrollableArea()
+            if target.exists && target.isHittable {
+                let center = CGPoint(x: target.frame.midX, y: target.frame.midY)
+                // Native Form rows can be partially tappable while their center
+                // lies underneath the tab bar. Scroll the actual touch point into
+                // the visible content before tapping a row or its trailing switch.
+                if touchableArea().contains(center) { return }
+                if ["Cancel", "Done"].contains(target.label) { return }
+            }
+            let upward: Bool
+            if target.exists && !target.frame.isEmpty {
+                upward = target.frame.midY > area.midY
+            } else { upward = attempt < 32 }
+            scrollContent(upward: upward)
+        }
+        let area = touchableArea()
+        XCTAssertTrue(target.exists && target.isHittable && area.contains(CGPoint(x: target.frame.midX, y: target.frame.midY)),
+            "Missing a visible touch point for UI element: \(target.debugDescription)")
+    }
+    private func touchableArea() -> CGRect {
+        let bounds = app.frame
+        let keyboard = app.keyboards.firstMatch
+        let keyboardTop = keyboard.exists ? keyboard.frame.minY : bounds.maxY
+        let tabs = app.tabBars.firstMatch
+        let tabTop = tabs.exists ? tabs.frame.minY : bounds.maxY
+        let navigationBar = app.navigationBars.firstMatch
+        let top = navigationBar.exists && navigationBar.isHittable ? navigationBar.frame.maxY : bounds.minY + 88
+        return CGRect(x: bounds.minX, y: top, width: bounds.width, height: max(0, min(keyboardTop, tabTop) - 4 - top))
+    }
+    private func scrollableArea() -> CGRect {
+        let bounds = app.frame
+        let keyboard = app.keyboards.firstMatch
+        let keyboardTop = keyboard.exists ? keyboard.frame.minY : bounds.maxY
+        // During a sheet dismissal the navigation-bar count can change between
+        // snapshots. A firstMatch query follows the current bar without retaining
+        // an index into the disappearing sheet's hierarchy.
+        let navigationBar = app.navigationBars.firstMatch
+        let barBottom = navigationBar.exists && navigationBar.isHittable ? navigationBar.frame.maxY : bounds.minY + 88
+        let top = max(bounds.minY + 88, min(barBottom + 12, keyboardTop - 140))
+        let bottom = min(bounds.maxY - 100, keyboardTop - 16)
+        return CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))
+    }
+    private func scrollContent(upward: Bool) {
+        // Whole-app swipes can start on the software keyboard. Drag only in
+        // the observed unobscured content, and still require real hittability.
+        let area = scrollableArea(), bounds = app.frame
+        let high = area.minY + area.height * 0.2, low = area.minY + area.height * 0.8
+        let origin = app.coordinate(withNormalizedOffset: .zero)
+        let start = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: (upward ? low : high) - bounds.minY))
+        let end = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: (upward ? high : low) - bounds.minY))
+        start.press(forDuration: 0.05, thenDragTo: end)
+    }
+    private func assertText(_ text: String) {
+        let target = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
+        reveal(target); XCTAssertTrue(target.exists && target.isHittable, "Missing visible text: \(text)")
+    }
+    private func assertElementContains(_ id: String, _ text: String) {
+        let target = element(id); reveal(target); XCTAssertTrue(target.label.contains(text), target.label)
+    }
+    private func choose(_ label: String, value: String) {
+        tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", label)).firstMatch)
+        tap(app.buttons[value])
+    }
+    private func dinnerRoot() { returnToVisibleAnchor(element("dinnerLibrary")) }
+    private func shopRoot() {
+        app.tabBars.buttons["Shop"].tap()
+        returnToVisibleAnchor(element("newComparison"))
+    }
+    private func back(to label: String) {
+        returnToVisibleAnchor(app.buttons.matching(identifier: label).firstMatch)
+    }
+    private func returnToVisibleAnchor(_ target: XCUIElement) {
+        for _ in 0..<8 {
+            if target.exists {
+                // A covered parent can still exist in the accessibility tree.
+                // Scroll only to reveal it, and return only if it is actionable.
+                for _ in 0..<2 {
+                    if target.isHittable { return }
+                    scrollContent(upward: true)
+                }
+                for _ in 0..<4 {
+                    if target.isHittable { return }
+                    scrollContent(upward: false)
+                }
+                if target.isHittable { return }
+            }
+            let leading = app.navigationBars.buttons.allElementsBoundByAccessibilityElement.filter {
+                $0.exists && $0.isHittable && $0.identifier != "settings" && $0.frame.midX < app.frame.midX
+            }.sorted { $0.frame.minX < $1.frame.minX }
+            guard let button = leading.first else {
+                XCTFail("No visible back control while returning to \(target)")
+                return
+            }
+            button.tap()
+        }
+        XCTAssertTrue(target.exists && target.isHittable, "Root or destination is not visible: \(target)")
+    }
+    private func capture(_ name: String) {
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = name; attachment.lifetime = .keepAlways; add(attachment)
+    }
+}

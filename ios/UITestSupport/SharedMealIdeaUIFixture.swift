@@ -18,8 +18,11 @@ private final class S26FixtureServer: @unchecked Sendable {
     static let occurrence = "55555555-5555-4555-8555-555555555555"
     private let lock = NSRecursiveLock()
     private var revision = 2
+    private let quoteObservedAt = Date().addingTimeInterval(-60)
+    private let quoteExpiresAt = Date().addingTimeInterval(3600)
     private var meal: [String:Any] = ["title":"Fixture shared soup","day":"2026-11-05","kind":"dinner","portions":4,"protected":false]
     private var proposals: [[String:Any]] = []
+    private var createdMeals: [[String:Any]] = []
     private var receipts: [String:[String:Any]] = [:]
     private var posts = 0
     private var ideas: [[String:Any]] = []
@@ -50,7 +53,8 @@ private final class S26FixtureServer: @unchecked Sendable {
         if path.hasSuffix("/bootstrap") { return try json(["household":["id":Self.household,"label":"Isolated household ideas"],"memberId":shopper ? Self.shopper:Self.planner,"role":shopper ? "shopper":"contributor","shopId":Self.shop,"enrolled":true,"queueConsent":false,"capabilities":shopper ? ["shopper_commands","shopper_inbox","request_preview"]:["meal_proposals"]]) }
         if path.hasSuffix("/inbox") { return try json(["requests":[],"nextCursor":NSNull()]) }
         if path.hasSuffix("/requests/mine") { return try json(["requests":[],"nextCursor":NSNull()]) }
-        let occurrence: [String:Any] = ["occurrenceId":Self.occurrence,"revision":revision,"meal":meal]
+        let occurrence: [String:Any] = ["occurrenceId":Self.occurrence,"revision":2,"meal":meal]
+        let projectedMeals = [occurrence] + createdMeals
         if path.hasSuffix("/meal-plan/ideas") { return try ideaResponse(input, method: request.httpMethod, shopper: shopper) }
         if path.hasSuffix("/meal-plan/changes"), request.httpMethod == "POST" {
             proposalPosts += 1; changed?(proposalPosts, posts)
@@ -64,25 +68,29 @@ private final class S26FixtureServer: @unchecked Sendable {
             changed?(proposalPosts,posts)
             return try json(["saved":true,"proposalId":id])
         }
-        if path.hasSuffix("/meal-plan/changes") { return try json(["shopId":Self.shop,"shopRevision":revision,"authorityEpoch":1,"grantRevision":1,"phase":"draft","shopper":shopper,"meals":[occurrence],"proposals":proposals]) }
-        if path.hasSuffix("/meal-plan") { return try json(["shopId":Self.shop,"shopRevision":revision,"authorityEpoch":1,"grantRevision":1,"shopper":shopper,"plannerId":Self.planner,"adults":[["id":Self.planner,"label":"Fixture planner"]],"meals":[occurrence],"proposals":[]]) }
+        if path.hasSuffix("/meal-plan/changes") { return try json(["shopId":Self.shop,"shopRevision":revision,"authorityEpoch":1,"grantRevision":1,"phase":"draft","shopper":shopper,"meals":projectedMeals,"proposals":proposals]) }
+        if path.hasSuffix("/meal-plan") { return try json(["shopId":Self.shop,"shopRevision":revision,"authorityEpoch":1,"grantRevision":1,"shopper":shopper,"plannerId":Self.planner,"adults":[["id":Self.planner,"label":"Fixture planner"]],"meals":projectedMeals,"proposals":[]]) }
         if path.hasSuffix("/shops/"+Self.shop) {
             guard shopper else { return try denied() }
-            let quote = try ShopperQuote(scope:"wholeCheckout",complete:true,capMinor:1000,capScope:"wholeCheckout",fee:.fixed(0),taxesMinor:0,depositsMinor:0,discountsMinor:0,observedAt:Date().addingTimeInterval(-60),expiresAt:Date().addingTimeInterval(3600))
-            return try json(["shopId":Self.shop,"shopRevision":revision,"authorityEpoch":1,"phase":"draft","meals":[occurrence],"quote":try JSONSerialization.jsonObject(with:JSONEncoder().encode(quote)),"lines":[["lineId":"66666666-6666-4666-8666-666666666666","originalItem":"Entered soup packs","packs":1,"unitPriceMinor":500,"feeEligible":true]]])
+            let quote = try ShopperQuote(scope:"wholeCheckout",complete:true,capMinor:1000,capScope:"wholeCheckout",fee:.fixed(0),taxesMinor:0,depositsMinor:0,discountsMinor:0,observedAt:quoteObservedAt,expiresAt:quoteExpiresAt)
+            return try json(["shopId":Self.shop,"shopRevision":revision,"authorityEpoch":1,"phase":"draft","meals":projectedMeals,"quote":try JSONSerialization.jsonObject(with:JSONEncoder().encode(quote)),"lines":[["lineId":"66666666-6666-4666-8666-666666666666","originalItem":"Entered soup packs","packs":1,"unitPriceMinor":500,"feeEligible":true]]])
         }
         if path.hasSuffix("/replay-windows") { return try json(["id":"77777777-7777-4777-8777-777777777777","expiresAt":"2099-01-01T00:00:00Z"]) }
         if path.hasSuffix("/commands"), let key = input["clientKey"] as? String {
-            posts += 1; changed?(proposalPosts,posts)
             guard shopper else { return try denied() }
             if let receipt = receipts[key] { return try json(receipt) }
             guard input["kind"] as? String == "shop.patch", let body = input["body"] as? [String:Any], let edit = body["mealEdit"] as? [String:Any],
-                  let next = edit["meal"] as? [String:Any], (input["base"] as? [String:Any])?["shopRevision"] as? Int == revision else { return try denied() }
-            if let id = edit["changeProposalId"] as? String {
-                guard let index = proposals.firstIndex(where: { ($0["proposalId"] as? String)?.lowercased() == id.lowercased() }) else { return try denied() }
-                proposals[index]["state"] = "applied"
-            }
-            meal = next; revision += 1
+                  let next = edit["meal"] as? [String:Any], let occurrenceID = edit["occurrenceId"] as? String,
+                  (input["base"] as? [String:Any])?["shopRevision"] as? Int == revision,
+                  let id = edit["changeProposalId"] as? String,
+                  let index = proposals.firstIndex(where: { ($0["proposalId"] as? String)?.lowercased() == id.lowercased() }),
+                  let proposed = proposals[index]["request"] as? [String:Any], proposed["baseMealRevision"] is NSNull,
+                  (proposed["occurrenceId"] as? String)?.lowercased() == occurrenceID.lowercased(),
+                  let proposedMeal = proposed["meal"] as? [String:Any], NSDictionary(dictionary: proposedMeal).isEqual(to: next),
+                  !createdMeals.contains(where: { ($0["occurrenceId"] as? String)?.lowercased() == occurrenceID.lowercased() }) else { return try denied() }
+            proposals[index]["state"] = "applied"
+            createdMeals.append(["occurrenceId":occurrenceID,"revision":1,"meal":next])
+            revision += 1; posts += 1
             let receipt: [String:Any] = ["operationId":UUID().uuidString,"kind":"shop.patch","shopId":Self.shop,"shopRevision":revision,"authorityEpoch":1,"disposition":"patched"]
             receipts[key] = receipt; changed?(proposalPosts,posts); return try json(receipt)
         }

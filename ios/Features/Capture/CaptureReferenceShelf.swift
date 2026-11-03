@@ -18,7 +18,7 @@ import SwiftUI
         Form {
             Section {
                 Text(captureText("References are private source evidence. They do not change quantities, prices, payments or arrivals."))
-                Text(captureText("Saved references stay on this device until removed or their saved pickup or grocery workspace is deleted. Current exports do not include image bytes."))
+                Text(captureText("Saved references stay on this device until removed or their saved pickup or grocery workspace is deleted. You can choose references separately for an encrypted recovery file in Records."))
                 Button(captureText("Add a source photo or typed reference")) {
                     mode = Mode(kind: target.kind == .receiptEvidence ? .receipt : .packageReference)
                 }.disabled(!authorize() || saving || pending != nil)

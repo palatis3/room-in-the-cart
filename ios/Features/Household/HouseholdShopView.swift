@@ -21,6 +21,10 @@ private struct SharedShopContent: View {
                     Text(model.scope.household.label).font(.headline)
                     Text(ht("This is the household service's shared shop. Private lists, meals and records on this phone are not uploaded."))
                     Button(ht("Refresh shared shop")) { Task { await model.load() } }
+                    if household.storeQuoteScope != nil {
+                        NavigationLink(StoreQuoteCopy.text("Two entered store quotes")) { SharedStoreQuotesView(household: household) }
+                            .accessibilityIdentifier("sharedShop.storeQuotes")
+                    }
                     NavigationLink(PlacementCopy.text("Shared placement reports")) { PlacementRecordsEntryView(household: household) }
                         .accessibilityIdentifier("sharedShop.placementReports")
                 }
@@ -30,6 +34,9 @@ private struct SharedShopContent: View {
                         Section(ht("Current shared shop")) {
                             LabeledContent(ht("Revision"), value: shop.shopRevision.formatted())
                             Text(phaseName(shop.phase))
+                            if shop.storeReviewRequired == true {
+                                Text(StoreQuoteCopy.text("Prices from the former store are invalid. Review a fresh checkout quote before freezing."))
+                            }
                             SharedShopFields(quote: shop.quote, lines: shop.lines)
                             if shop.meals != nil, shop.phase == "draft", model.canManage {
                                 NavigationLink(ht("Meal planning access and proposals")) { SharedMealMovesView(household: household) }
@@ -40,6 +47,9 @@ private struct SharedShopContent: View {
                             }
                             if model.canManage {
                                 NavigationLink(ht("Shared financial evidence")) { SharedFinancialEvidenceView(model: model) }
+                            }
+                            if model.canManage, shop.phase == "closed", shop.placedRevision != nil, let id = UUID(uuidString: shop.shopId) {
+                                NavigationLink(pTr("Optional pickup feedback")) { SharedMeasurementFeedbackView(household: household, shopID: id) }
                             }
                             if household.canReviewHouseholdRequests { NavigationLink(ht("Review family requests")) { HouseholdInboxView(model: household) } }
                             if shop.phase == "draft", model.canManage {

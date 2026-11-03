@@ -4033,6 +4033,22 @@
           }
         }
       }
+    },
+    "Check access for more saved records": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check access for more saved records"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comprobar el acceso a más registros guardados"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

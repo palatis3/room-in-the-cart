@@ -2,9 +2,11 @@ import { WebApp } from './app.js';
 import { consumeInvitation } from './api.js';
 import './theme.css';
 import './style.css';
-const token=consumeInvitation(window.location,window.history);
+import { mountPublicPage } from './public-pages.js';
+import './public-pages.css';
 const root=document.getElementById('app');
-if(root) {
+if(root && !mountPublicPage(root)) {
+  const token=consumeInvitation(window.location,window.history);
   const app=new WebApp(root,undefined,undefined,token);
   void app.start();
   window.setInterval(()=>app.checkExpiry(),1000);

@@ -1184,6 +1184,150 @@
           }
         }
       }
+    },
+    "Checking the saved reminder…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking the saved reminder…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comprobando el recordatorio guardado…"
+          }
+        }
+      }
+    },
+    "Current reminder": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current reminder"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recordatorio actual"
+          }
+        }
+      }
+    },
+    "Opening or reviewing this reminder does not schedule a notification. Your shop and retailer decision stay unchanged.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opening or reviewing this reminder does not schedule a notification. Your shop and retailer decision stay unchanged."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir o revisar este recordatorio no programa una notificación. Tu compra y tu decisión sobre la tienda se mantienen sin cambios."
+          }
+        }
+      }
+    },
+    "Pickup last saved": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pickup last saved"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Último guardado de la recogida"
+          }
+        }
+      }
+    },
+    "Reminder off. Nothing is scheduled.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminder off. Nothing is scheduled."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recordatorio desactivado. No hay nada programado."
+          }
+        }
+      }
+    },
+    "Reminder pending. Not yet scheduled.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminder pending. Not yet scheduled."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recordatorio pendiente. Aún no se ha programado."
+          }
+        }
+      }
+    },
+    "Reminder update pending. Wait for the saved result.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminder update pending. Wait for the saved result."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualización del recordatorio pendiente. Espera el resultado guardado."
+          }
+        }
+      }
+    },
+    "Request a reminder for this deferral": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request a reminder for this deferral"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicitar un recordatorio para este artículo pospuesto"
+          }
+        }
+      }
+    },
+    "Request an offer deadline reminder": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request an offer deadline reminder"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicitar un recordatorio del límite de la oferta"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

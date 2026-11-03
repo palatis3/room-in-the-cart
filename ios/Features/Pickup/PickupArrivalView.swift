@@ -130,6 +130,11 @@ struct PickupOfferView: View {
                             editor = OfferEditorSelection(journey: journey, original: offer)
                         }.accessibilityIdentifier("pickup.offer.edit.\(offer.id.uuidString)")
                             .frame(minHeight: 44).disabled(model.saving || model.hasPendingSave)
+                        if let workspaceID = model.sourceWorkspaceID {
+                            ContextualReminderLink(request: .init(target: .offer(workspaceID: workspaceID, journeyID: journey.id, offerID: offer.id),
+                                sourceRevision: journey.revision, sourceSavedAt: journey.savedAt))
+                                .disabled(model.saving || model.hasPendingSave)
+                        }
                         let copyCurrent = offer.evaluation == nil || (try? PickupOfferEvaluation.isCurrent(offer: offer, journey: journey)) == true
                         if copyCurrent {
                             Text(pickupOfferRetailerNote(offer)).textSelection(.enabled)

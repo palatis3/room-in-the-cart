@@ -1,0 +1,12 @@
+{
+  "environment": "production",
+  "emailOTPEnabled": false,
+  "supabaseURL": "",
+  "publishableKey": "",
+  "serviceURL": "",
+  "householdSubscriptionProductID": "",
+  "privacyPolicyURL": "",
+  "termsOfUseURL": "",
+  "supportURL": "",
+  "helpURL": ""
+}

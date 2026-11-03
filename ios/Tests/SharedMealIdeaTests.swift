@@ -70,4 +70,75 @@ private actor IdeaServiceFixture: SharedMealIdeasServing {
         XCTAssertTrue(value.planning?.groups.isEmpty == true)
         XCTAssertFalse(String(decoding: try JSONEncoder().encode(value), as: UTF8.self).contains("Shared stock checked"))
     }
+
+    private func fractionalDraft() -> SharedMealIdeaDraft {
+        .init(title: "Half cup chickpeas", ingredients: [.init(name: "Chickpeas", required: .init(1, 2), unit: "cup",
+            stock: .init(1, 4), reservations: [.init(name: "Protected lunch", amount: .init(1, 8))], pack: 1,
+            usableNumerator: 1, usableDenominator: 2, evidence: "Household measured cup and drained yield")])
+    }
+    func testFractionalEvidenceSurvivesLostResponseRetryExactly() async throws {
+        let scope = scope(), service = IdeaServiceFixture(page: try page(scope))
+        let model = SharedMealIdeaModel(scope: scope, service: service, runtime: { scope })
+        await model.load(); await service.setLost(true)
+        let id = UUID(), original = fractionalDraft()
+        await model.write(ideaID: id, draft: original, approve: false, reviewed: false)
+        let pending = try XCTUnwrap(model.pending)
+        var edited = original; edited.ingredients[0].required = .init(3, 4)
+        await model.write(ideaID: id, draft: edited, approve: false, reviewed: false)
+        await service.setLost(false); await model.retry()
+        let requests = await service.sent()
+        XCTAssertEqual(requests, [pending, pending])
+        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+        XCTAssertEqual(try encoder.encode(requests[0]), try encoder.encode(requests[1]))
+        let roundTrip = try JSONDecoder().decode(SharedMealIdeaWrite.self, from: encoder.encode(requests[1]))
+        XCTAssertEqual(roundTrip.draft, original)
+        XCTAssertEqual(roundTrip.action, "save"); XCTAssertFalse(roundTrip.reviewedHouseholdEvidence)
+        XCTAssertNil(model.pending); XCTAssertEqual(model.savedID, id)
+    }
+    func testApprovedFractionalPageRetainsExactSupplyAndProposedQuantity() throws {
+        let scope = scope(), draft = fractionalDraft(), ideaID = UUID()
+        let rawDraft = try JSONSerialization.jsonObject(with: JSONEncoder().encode(draft))
+        let payload: [String: Any] = ["shopId": scope.shopID.uuidString, "shopRevision": 1, "authorityEpoch": 1,
+            "grantRevision": 1, "shopper": false, "ideas": [["ideaId": ideaID.uuidString, "revision": 2,
+            "actorId": scope.memberID, "state": "approved", "draft": rawDraft,
+            "preview": ["canApprove": true, "ingredients": [["ingredientId": draft.ingredients[0].id.uuidString,
+                "excluded": false, "reserved": ["numerator": 1, "denominator": 8],
+                "remaining": ["numerator": 1, "denominator": 8], "shortage": ["numerator": 3, "denominator": 8],
+                "wholePacks": 1, "unresolvedPrice": true]]]]]]
+        let page = try JSONDecoder().decode(SharedMealIdeaPage.self, from: JSONSerialization.data(withJSONObject: payload))
+        try page.validate()
+        let idea = try XCTUnwrap(page.ideas.first), preview = try XCTUnwrap(idea.preview.ingredients.first)
+        XCTAssertEqual(preview.reserved?.text, "1/8"); XCTAssertEqual(preview.remaining?.text, "1/8")
+        XCTAssertEqual(preview.shortage?.text, "3/8"); XCTAssertEqual(preview.wholePacks, 1)
+        let meal = try idea.draft.proposedMeal(day: "2026-11-09")
+        let quantity = try XCTUnwrap(meal.planning?.ingredients.first?.quantity)
+        XCTAssertEqual(quantity.amount, .init(numerator: 1, denominator: 2)); XCTAssertEqual(quantity.unit, "cup")
+        XCTAssertEqual(quantity.originalLiteral, "1/2 cup")
+        let encodedMeal = String(decoding: try JSONEncoder().encode(meal), as: UTF8.self)
+        XCTAssertFalse(encodedMeal.contains("Protected lunch")); XCTAssertFalse(encodedMeal.contains("drained yield"))
+        XCTAssertFalse(encodedMeal.contains("stock")); XCTAssertFalse(encodedMeal.contains("price"))
+    }
+    func testOunceAndFluidOunceStayDistinctAcrossHouseholdAndProposalRoundTrip() throws {
+        let draft = SharedMealIdeaDraft(title: "Measured ingredients", ingredients: [
+            .init(name: "Dry ingredient", required: .init(3, 2), unit: "ounce", evidence: "Household scale"),
+            .init(name: "Liquid ingredient", required: .init(1, 2), unit: "fluidOunce", evidence: "Household jug")])
+        let decoded = try JSONDecoder().decode(SharedMealIdeaDraft.self, from: JSONEncoder().encode(draft))
+        let meal = try decoded.proposedMeal(day: "2026-11-09")
+        let ingredients = try XCTUnwrap(meal.planning?.ingredients)
+        XCTAssertEqual(ingredients.map { $0.quantity?.unit }, ["ounce", "fluidOunce"])
+        XCTAssertEqual(ingredients.map { $0.quantity?.amount }, [.init(numerator: 3, denominator: 2), .init(numerator: 1, denominator: 2)])
+        XCTAssertNotEqual(ingredients[0].quantity?.unit, ingredients[1].quantity?.unit)
+    }
+    func testFractionEntryRejectsInvalidOrOutOfRangeEvidenceWithoutRounding() throws {
+        for input in ["1/0", "-1/2", "1/2/3", "0.5", "1/1000001", "1000001/2", "1/"] {
+            XCTAssertNil(SharedMealIdeaAmount.parse(input), input)
+        }
+        XCTAssertEqual(SharedMealIdeaAmount.parse(" 1 / 2 ")?.text, "1/2")
+        let legacy = try JSONDecoder().decode(SharedMealIdeaAmount.self, from: Data("300".utf8))
+        XCTAssertEqual(String(decoding: try JSONEncoder().encode(legacy), as: UTF8.self), "300")
+        var invalid = fractionalDraft(); invalid.ingredients[0].required = .init(1, 0)
+        XCTAssertThrowsError(try invalid.validate())
+        invalid = fractionalDraft(); invalid.ingredients[0].usableNumerator = 3
+        XCTAssertThrowsError(try invalid.validate())
+    }
 }

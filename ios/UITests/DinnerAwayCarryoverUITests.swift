@@ -9,7 +9,11 @@ import XCTest
         app = XCUIApplication(bundleIdentifier: "dev.roominthecart.app.debug")
     }
     override func tearDownWithError() throws {
-        if testRun?.failureCount ?? 0 > 0 { capture("S25-carryover-failure") }
+        if testRun?.failureCount ?? 0 > 0 {
+            capture("S25-carryover-failure")
+            let hierarchy = XCTAttachment(string: app.debugDescription)
+            hierarchy.name = "S25-carryover-failure-accessibility"; hierarchy.lifetime = .keepAlways; add(hierarchy)
+        }
         app.terminate()
     }
     func testPhysicalCarryoverCancelApplyAndRestartKeepOriginalPurchase() {
@@ -22,6 +26,13 @@ import XCTest
         fill("6", into: "awayCarryover.counted")
         fill("2", into: "awayCarryover.reserved")
         fill("1", into: "awayCarryover.servings")
+        // The focused single-line field has the observed Return key; submit it
+        // before moving back to the physical-evidence switch above this field.
+        if app.keyboards.firstMatch.exists {
+            app.typeText(XCUIKeyboardKey.return.rawValue)
+            let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.keyboards.firstMatch)
+            XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
+        }
         enableSwitch("awayCarryover.checked")
         tap(element("awayCarryover.review"))
         assertText("Reserved for carryover: 2")
@@ -67,12 +78,16 @@ import XCTest
         reveal(control)
         for _ in 0..<20 {
             let area = scrollableArea(), frame = control.frame
-            if control.isHittable && frame.minY >= area.minY && frame.maxY <= area.maxY { break }
-            scrollContent(upward: frame.maxY > area.maxY)
+            let switchCenter = CGPoint(x: frame.minX + frame.width * 0.92, y: frame.midY)
+            if control.isHittable && area.insetBy(dx: 0, dy: 8).contains(switchCenter) { break }
+            scrollContent(upward: switchCenter.y > area.maxY)
         }
-        let area = scrollableArea()
-        XCTAssertTrue(control.isHittable && control.frame.minY >= area.minY && control.frame.maxY <= area.maxY,
-                      "The switch itself must be clear of the keyboard and toolbar")
+        let area = scrollableArea(), frame = control.frame
+        let switchCenter = CGPoint(x: frame.minX + frame.width * 0.92, y: frame.midY)
+        // Toggle's accessibility frame includes its multiline label. Its trailing
+        // control must be clear of the keyboard; the whole label need not fit.
+        XCTAssertTrue(control.isHittable && area.insetBy(dx: 0, dy: 8).contains(switchCenter),
+                      "The switch tap point must be clear of the keyboard and toolbar")
         if control.value as? String == "0" {
             // The accessibility frame includes the Form label. Tap the trailing switch itself.
             control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()

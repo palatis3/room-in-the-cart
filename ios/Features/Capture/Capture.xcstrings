@@ -2908,23 +2908,6 @@
         }
       }
     },
-    "The original source stays with this recipe. Any saved photo stays only on this device until its grocery workspace is deleted; exports do not contain image bytes.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The original source stays with this recipe. Any saved photo stays only on this device until its grocery workspace is deleted; exports do not contain image bytes."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La fuente original se conserva con esta receta. Las fotos guardadas permanecen solo en este dispositivo hasta que se elimine su espacio de compras; las exportaciones no incluyen las imágenes."
-          }
-        }
-      }
-    },
     "Accept reviewed recipe": {
       "extractionState": "manual",
       "localizations": {
@@ -3006,23 +2989,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Fuente original de la receta"
-          }
-        }
-      }
-    },
-    "The source photo is local evidence and is not included in exports.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The source photo is local evidence and is not included in exports."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La foto de origen es evidencia local y no se incluye en las exportaciones."
           }
         }
       }
@@ -3227,23 +3193,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Referencia de origen guardada en tamaño reducido"
-          }
-        }
-      }
-    },
-    "Saved references stay on this device until removed or their saved pickup or grocery workspace is deleted. Current exports do not include image bytes.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Saved references stay on this device until removed or their saved pickup or grocery workspace is deleted. Current exports do not include image bytes."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Las referencias guardadas permanecen en este dispositivo hasta que las elimines o se elimine su recogida o espacio de compras. Las exportaciones actuales no incluyen las imágenes."
           }
         }
       }
@@ -3506,6 +3455,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "Confirma el destino que se muestra para la solicitud, o cancela y elige el hogar deseado."
+          }
+        }
+      }
+    },
+    "Saved references stay on this device until removed or their saved pickup or grocery workspace is deleted. You can choose references separately for an encrypted recovery file in Records.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved references stay on this device until removed or their saved pickup or grocery workspace is deleted. You can choose references separately for an encrypted recovery file in Records."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las referencias guardadas permanecen en este dispositivo hasta que se eliminen o se borre su recogida o espacio de compras. Puedes elegir referencias por separado para un archivo de recuperación cifrado en Registros."
+          }
+        }
+      }
+    },
+    "The original source stays with this recipe. Saved photos stay on this device unless you choose them for an encrypted recovery file in Records.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The original source stays with this recipe. Saved photos stay on this device unless you choose them for an encrypted recovery file in Records."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El origen original permanece con esta receta. Las fotos guardadas permanecen en este dispositivo a menos que las elijas para un archivo de recuperación cifrado en Registros."
+          }
+        }
+      }
+    },
+    "The source photo is local evidence. Encrypted recovery includes it only when you select it in Records.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The source photo is local evidence. Encrypted recovery includes it only when you select it in Records."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La foto de origen es evidencia local. La recuperación cifrada la incluye solo si la seleccionas en Registros."
           }
         }
       }

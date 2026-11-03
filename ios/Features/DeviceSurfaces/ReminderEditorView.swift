@@ -20,6 +20,8 @@ public struct ReminderEditorContext {
 @MainActor public struct ReminderEditorView: View {
     private let context: ReminderEditorContext
     private let coordinator: ReminderCoordinator
+    private let sourceTitle: String?
+    private let sourceSavedAt: Date?
     /// Root returns a generation only when both current persona AND current subject revision are permitted.
     private let currentAuthorization: () -> UUID?
     @Environment(\.locale) private var locale
@@ -34,43 +36,81 @@ public struct ReminderEditorContext {
     @State private var version: Int64?
     @State private var busy = false
     @State private var message: String?
-    public init(context: ReminderEditorContext, coordinator: ReminderCoordinator, currentAuthorization: @escaping () -> UUID?) {
-        self.context = context; self.coordinator = coordinator; self.currentAuthorization = currentAuthorization
+    @State private var saved: SavedReminder?
+    @State private var statusLoaded = false
+    @State private var statusLoadFailed = false
+    public init(context: ReminderEditorContext, coordinator: ReminderCoordinator, sourceTitle: String? = nil, sourceSavedAt: Date? = nil, currentAuthorization: @escaping () -> UUID?) {
+        self.context = context; self.coordinator = coordinator; self.sourceTitle = sourceTitle; self.sourceSavedAt = sourceSavedAt; self.currentAuthorization = currentAuthorization
         _fireAt = State(initialValue: context.initialFireAt); _timeZoneID = State(initialValue: context.timeZoneID); _version = State(initialValue: context.expectedVersion)
     }
     public var body: some View {
         Form {
+            if let sourceTitle {
+                Section {
+                    Text(sourceTitle).font(.headline).accessibilityIdentifier("reminder.subject")
+                    if let sourceSavedAt { LabeledContent(SurfaceCopy.text("Pickup last saved"), value: display(sourceSavedAt)) }
+                }
+            }
+            Section(SurfaceCopy.text("Current reminder")) {
+                Text(statusText).accessibilityIdentifier("reminder.status").accessibilityAddTraits(.updatesFrequently)
+                if let saved, saved.status == .scheduled {
+                    Text(display(saved.intent.fireAt, timeZone: saved.intent.localTime.timeZoneID))
+                    Text(saved.intent.localTime.timeZoneID)
+                }
+            }
             Section {
                 Text(SurfaceCopy.text("Choose a reminder for this item. The notification contains no grocery or budget details."))
                 DatePicker(SurfaceCopy.text("Reminder time"), selection: $fireAt).environment(\.timeZone, TimeZone(identifier: timeZoneID) ?? .gmt)
+                    .accessibilityIdentifier("reminder.time")
                 TextField(SurfaceCopy.text("Time zone"), text: $timeZoneID).textInputAutocapitalization(.never).autocorrectionDisabled()
-                Toggle(SurfaceCopy.text("Quiet hours"), isOn: $quiet)
+                Toggle(SurfaceCopy.text("Quiet hours"), isOn: $quiet).accessibilityIdentifier("reminder.quietHours")
                 if quiet {
                     Stepper(SurfaceCopy.text("Quiet hours start") + ": \(quietStart):00", value: $quietStart, in: 0...23)
                     Stepper(SurfaceCopy.text("Quiet hours end") + ": \(quietEnd):00", value: $quietEnd, in: 0...23)
                 }
                 LabeledContent(SurfaceCopy.text("Expires"), value: display(context.expiresAt))
                 if let cutoff = context.cutoff { LabeledContent(SurfaceCopy.text("Offer cutoff"), value: display(cutoff)) }
-                Button(SurfaceCopy.text("Review reminder")) { prepare() }.frame(minHeight: 44)
+                Button(SurfaceCopy.text("Review reminder")) { prepare() }.frame(minHeight: 44).accessibilityIdentifier("reminder.review")
             }
             if let reviewed {
                 Section(SurfaceCopy.text("Review reminder")) {
                     Text(display(reviewed.fireAt)); Text(reviewed.localTime.timeZoneID)
                     Text(SurfaceCopy.text("Nothing is scheduled until you confirm. Quiet hours never move the chosen time automatically."))
-                    Button(SurfaceCopy.text("Schedule reminder")) { save(reviewed) }.frame(minHeight: 44)
+                    Button(SurfaceCopy.text("Schedule reminder")) { save(reviewed) }.frame(minHeight: 44).accessibilityIdentifier("reminder.schedule")
                 }
             }
             if let message { Text(message).accessibilityAddTraits(.updatesFrequently) }
-            Button(SurfaceCopy.text("Turn off this reminder"), role: .destructive) { turnOff() }.frame(minHeight: 44)
+            Button(SurfaceCopy.text("Turn off this reminder"), role: .destructive) { turnOff() }.frame(minHeight: 44).accessibilityIdentifier("reminder.turnOff")
         }.disabled(busy).navigationTitle(SurfaceCopy.text("Reminder"))
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(SurfaceCopy.text("Done")) { dismiss() }.disabled(busy) } }
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(SurfaceCopy.text(saved?.status == .scheduled ? "Done" : "Cancel")) { dismiss() }.disabled(busy).accessibilityIdentifier("reminder.close") } }
             .interactiveDismissDisabled(busy)
+            .task(id: context.reminderID) {
+                guard currentAuthorization() != nil else { return }
+                do {
+                    let current = try await coordinator.current(context.reminderID)
+                    guard currentAuthorization() != nil else { return }
+                    saved = current; statusLoaded = true; statusLoadFailed = false
+                } catch { statusLoaded = true; statusLoadFailed = true }
+            }
             .onChange(of: fireAt) { _, _ in clearReview() }.onChange(of: timeZoneID) { _, _ in clearReview() }
             .onChange(of: quiet) { _, _ in clearReview() }.onChange(of: quietStart) { _, _ in clearReview() }.onChange(of: quietEnd) { _, _ in clearReview() }
     }
+    private var statusText: String {
+        if busy { return SurfaceCopy.text("Reminder update pending. Wait for the saved result.") }
+        if !statusLoaded { return SurfaceCopy.text("Checking the saved reminder…") }
+        if statusLoadFailed { return SurfaceCopy.text("This reminder needs a fresh review.") }
+        switch saved?.status {
+        case .scheduled: return SurfaceCopy.text("Reminder scheduled.")
+        case .desired: return SurfaceCopy.text("Reminder pending. Not yet scheduled.")
+        case .denied, .permissionRequired: return SurfaceCopy.text("Reminder not scheduled. Notifications are off; your shop is still available.")
+        case .expired: return SurfaceCopy.text("That reminder time has passed. Review the current item.")
+        case .retryNeeded: return SurfaceCopy.text("Reminder not scheduled. Review and try again.")
+        case .cancelled, nil: return SurfaceCopy.text("Reminder off. Nothing is scheduled.")
+        }
+    }
     private func clearReview() { reviewed = nil; reviewedGeneration = nil; message = nil }
-    private func display(_ date: Date) -> String {
-        let formatter = DateFormatter(); formatter.locale = locale; formatter.timeZone = TimeZone(identifier: timeZoneID) ?? .gmt
+    private func display(_ date: Date, timeZone: String? = nil) -> String {
+        let formatter = DateFormatter(); formatter.locale = locale; formatter.timeZone = TimeZone(identifier: timeZone ?? timeZoneID) ?? .gmt
         formatter.dateStyle = .full; formatter.timeStyle = .long; return formatter.string(from: date)
     }
     private func prepare() {
@@ -97,13 +137,7 @@ public struct ReminderEditorContext {
                 guard currentAuthorization() == generation else { clearReview(); return }
                 let saved = try await coordinator.save(value, expectedVersion: version, requestPermission: true)
                 guard currentAuthorization() == generation else { try? await coordinator.erase(value.id); clearReview(); return }
-                version = saved.version; reviewed = nil
-                switch saved.status {
-                case .scheduled: message = SurfaceCopy.text("Reminder scheduled.")
-                case .denied, .permissionRequired: message = SurfaceCopy.text("Reminder not scheduled. Notifications are off; your shop is still available.")
-                case .expired: message = SurfaceCopy.text("That reminder time has passed. Review the current item.")
-                default: message = SurfaceCopy.text("Reminder not scheduled. Review and try again.")
-                }
+                version = saved.version; self.saved = saved; statusLoaded = true; statusLoadFailed = false; reviewed = nil; message = nil
             } catch { message = errorText(error) }
         }
     }
@@ -112,7 +146,7 @@ public struct ReminderEditorContext {
         busy = true
         Task {
             defer { busy = false }
-            do { try await coordinator.cancel(context.reminderID); version = try await coordinator.current(context.reminderID)?.version; clearReview(); message = SurfaceCopy.text("Reminder turned off.") }
+            do { try await coordinator.cancel(context.reminderID); saved = try await coordinator.current(context.reminderID); version = saved?.version; statusLoaded = true; statusLoadFailed = false; clearReview(); message = SurfaceCopy.text("Reminder turned off.") }
             catch { message = SurfaceCopy.text("Could not turn off the reminder. Try again.") }
         }
     }

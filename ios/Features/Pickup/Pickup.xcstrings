@@ -10594,6 +10594,310 @@
           }
         }
       }
+    },
+    "This response counts as zero additional benefit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This response counts as zero additional benefit."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta respuesta cuenta como cero beneficio adicional."
+          }
+        }
+      }
+    },
+    "Local feedback stays on this iPhone. Choose again after reopening the app. Nothing is sent.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Local feedback stays on this iPhone. Choose again after reopening the app. Nothing is sent."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los comentarios locales permanecen en este iPhone. Elige de nuevo al volver a abrir la app. No se envía nada."
+          }
+        }
+      }
+    },
+    "Optional household measurement": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional household measurement"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Medición opcional del hogar"
+          }
+        }
+      }
+    },
+    "If you choose to participate, the household service stores your response codes, shop identity, eligible week and this notice version. It can match verified membership status once per household to study purchase retention. Grocery text, prices, member names and existing local responses are not sent.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you choose to participate, the household service stores your response codes, shop identity, eligible week and this notice version. It can match verified membership status once per household to study purchase retention. Grocery text, prices, member names and existing local responses are not sent."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si decides participar, el servicio del hogar guarda los códigos de respuesta, la identidad de la compra, la semana elegible y la versión de este aviso. Puede vincular el estado verificado de la membresía una vez por hogar para estudiar la permanencia de las compras. No se envían textos de alimentos, precios, nombres de miembros ni respuestas locales existentes."
+          }
+        }
+      }
+    },
+    "Participation is optional. You can keep using the entire pickup without sending feedback. Withdrawal removes responses sent under that consent and stops counting your participation.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Participation is optional. You can keep using the entire pickup without sending feedback. Withdrawal removes responses sent under that consent and stops counting your participation."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La participación es opcional. Puedes seguir usando toda la recogida sin enviar comentarios. Retirar el consentimiento elimina las respuestas enviadas con ese consentimiento y deja de contar tu participación."
+          }
+        }
+      }
+    },
+    "Household measurement is enabled": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household measurement is enabled"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La medición del hogar está activada"
+          }
+        }
+      }
+    },
+    "Withdraw household measurement consent": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Withdraw household measurement consent"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retirar el consentimiento de medición del hogar"
+          }
+        }
+      }
+    },
+    "I agree to optional household measurement": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I agree to optional household measurement"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acepto la medición opcional del hogar"
+          }
+        }
+      }
+    },
+    "Refresh measurement consent": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh measurement consent"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar el consentimiento de medición"
+          }
+        }
+      }
+    },
+    "The service result is unconfirmed. Refresh before trying again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The service result is unconfirmed. Refresh before trying again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El resultado del servicio no está confirmado. Actualiza antes de volver a intentarlo."
+          }
+        }
+      }
+    },
+    "Return to the current authenticated adult household.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Return to the current authenticated adult household."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve al hogar actual con la sesión de adulto autenticada."
+          }
+        }
+      }
+    },
+    "Only the choices entered here are sent to the household service. Your local pickup feedback stays on this device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the choices entered here are sent to the household service. Your local pickup feedback stays on this device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo se envían al servicio del hogar las opciones que introduces aquí. Tus comentarios locales de la recogida permanecen en este dispositivo."
+          }
+        }
+      }
+    },
+    "Eligible week": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eligible week"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Semana elegible"
+          }
+        }
+      }
+    },
+    "Household response recorded": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household response recorded"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Respuesta del hogar registrada"
+          }
+        }
+      }
+    },
+    "Remove household response": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove household response"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar la respuesta del hogar"
+          }
+        }
+      }
+    },
+    "Send this coded household response": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send this coded household response"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar esta respuesta codificada del hogar"
+          }
+        }
+      }
+    },
+    "Review optional household measurement": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review optional household measurement"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la medición opcional del hogar"
+          }
+        }
+      }
+    },
+    "Refresh household response": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh household response"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar la respuesta del hogar"
+          }
+        }
+      }
+    },
+    "Local feedback stays on this iPhone. Your choice applies only to this local workspace and notice version. Nothing is sent.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Local feedback stays on this iPhone. Your choice applies only to this local workspace and notice version. Nothing is sent."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los comentarios locales permanecen en este iPhone. Tu elección solo se aplica a este espacio local y a esta versión del aviso. No se envía nada."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

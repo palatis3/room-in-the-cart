@@ -1,0 +1,11 @@
+# Native help, privacy and support
+
+`HelpSettingsSection()` is a direct child of the native Settings Form. It exposes independent Help, Privacy and data, and Support destinations; all eight core-flow articles are available without an account or connection. `HelpPrivacyView` uses the existing `HouseholdModel` environment object only to open the already permission-checked household/account controls. It does not read or export household data.
+
+`HelpConfiguration` reads `HelpURL`, `PrivacyPolicyURL`, `TermsOfUseURL` and `SupportURL` from compiled metadata. Missing or invalid values render explicit unavailable text for policy/terms/support while native help stays available. The project generator maps the public environment config into the app's Info.plist; no guessed domain, support email or test product is substituted.
+
+`SupportDiagnostics` accepts only bundle/runtime metadata. It has no model, record, error, log, receipt, URL, credential or user-text input. The complete fixed-field summary is visible before an explicit system-share action. It includes version/build/iOS/language/build environment and configuration-presence booleans. Values are bounded and syntax-checked to prevent arbitrary strings or extra lines. It does not transmit anything automatically. The metadata and no-private-input boundaries have dedicated tests in `HelpConfigurationTests.swift`.
+
+`Help.xcstrings` contains English and US-Spanish draft copy. The structural localization checker includes `helpText`; native catalog compilation and static parity do not establish linguistic review. Before release, have a US-Spanish reviewer verify all articles, privacy distinctions, account-deletion wording and support unavailable states against the final submitted behavior. In particular, local feedback and separately consented household measurement are distinct, and evidence photos enter encrypted recovery only after explicit selection/review.
+
+The [reviewer/demo handoff](../../../docs/APP-REVIEW-WALKTHROUGH.md) describes the current free local path and gated connected review. The [configuration guide](../../../config/README.md) names the actual owner-supplied release inputs. No signed distribution, live policy publication, successful Apple purchase, verified guardian provider or human-language acceptance is asserted by these files.

@@ -12,6 +12,7 @@ struct HouseholdSettingsView: View {
     }
     var body: some View {
         Form {
+            HelpSettingsSection().environmentObject(model)
             Section {
                 Text(ht("Your private work stays on this phone. Signing in does not upload it."))
                     .foregroundStyle(.secondary)
@@ -52,6 +53,10 @@ struct HouseholdSettingsView: View {
                         }
                         Button(ht("Refresh household")) { Task { await model.refresh() } }
                         if model.sharedShop != nil { NavigationLink(ht("Open shared household shop")) { HouseholdShopView(model: model) } }
+                        if model.storeQuoteScope != nil {
+                            NavigationLink(StoreQuoteCopy.text("Two entered store quotes")) { SharedStoreQuotesView(household: model) }
+                                .accessibilityIdentifier("sharedShop.storeQuotes")
+                        }
                         if projection.capabilities.contains("meal_proposals") {
                             NavigationLink(ht("Propose a meal move")) { SharedMealMovesView(household: model) }
                         }

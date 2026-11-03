@@ -249,7 +249,7 @@ import XCTest
         app.launchArguments = ["--ui-testing", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         if reset { app.launchArguments.append("--reset-test-workspace") }
         app.launch()
-        XCTAssertTrue(element("newComparison").waitForExistence(timeout: 15))
+        XCTAssertTrue(app.tabBars.buttons["Shop"].waitForExistence(timeout: 15))
     }
     private func restart() { app.terminate(); launch(reset: false) }
     private func element(_ id: String) -> XCUIElement { app.descendants(matching: .any).matching(identifier: id).firstMatch }
@@ -319,7 +319,8 @@ import XCTest
     private func backOnce(from source: String, to destination: String) {
         let sourceBar = app.navigationBars[source]
         XCTAssertTrue(sourceBar.waitForExistence(timeout: 8))
-        let back = sourceBar.buttons["BackButton"]
+        let destinationLabel = sourceBar.buttons[destination]
+        let back = destinationLabel.exists ? destinationLabel : sourceBar.buttons["BackButton"]
         XCTAssertTrue(back.waitForExistence(timeout: 8))
         XCTAssertTrue(back.isHittable, back.debugDescription)
         back.tap()

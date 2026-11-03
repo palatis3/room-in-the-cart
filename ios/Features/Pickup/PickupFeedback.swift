@@ -1,4 +1,5 @@
 import SwiftUI
+import HouseholdClient
 
 enum PickupDecision: String, Codable, CaseIterable {
     case acted, unchanged, tooLate, unknown, alreadyKnew, wrong
@@ -46,7 +47,9 @@ struct PickupFeedback: Codable, Equatable {
     let comparison: PickupComparison
 
     // A different self-reported result alone does not establish a verified benefit.
-    var incrementalBenefit: Int? { comparison == .same ? 0 : nil }
+    var incrementalBenefit: Int? {
+        comparison == .same || [.unchanged, .tooLate, .alreadyKnew, .wrong].contains(decision) ? 0 : nil
+    }
 }
 
 extension PickupJourney {
@@ -61,6 +64,36 @@ extension PickupModel {
     }
 }
 
+/// Versioned local-workspace preference, separate from pickup/archive payloads,
+/// billing and household service consent. Legacy unversioned booleans confer nothing.
+@MainActor final class LocalPickupFeedbackConsent: ObservableObject {
+    static let shared = LocalPickupFeedbackConsent()
+    static let noticeVersion = "local-pickup-feedback-2026-11-03.v1"
+    @Published private var acceptedVersions: [String: String]
+    private let defaults: UserDefaults
+    private let storageKey: String
+    init(defaults: UserDefaults = .standard, storageKey: String? = nil) {
+        self.defaults = defaults
+        #if DEBUG
+        let prefix = ProcessInfo.processInfo.arguments.contains("--ui-testing") ? "uiTest." : ""
+        #else
+        let prefix = ""
+        #endif
+        self.storageKey = storageKey ?? prefix + "pickup.optionalFeedback.versionedConsents"
+        acceptedVersions = defaults.dictionary(forKey: self.storageKey) as? [String: String] ?? [:]
+    }
+    func enabled(for workspaceID: UUID?) -> Bool {
+        guard let workspaceID else { return false }
+        return acceptedVersions[workspaceID.uuidString.lowercased()] == Self.noticeVersion
+    }
+    func setEnabled(_ value: Bool, for workspaceID: UUID?) {
+        guard let workspaceID else { return }
+        acceptedVersions[workspaceID.uuidString.lowercased()] = value ? Self.noticeVersion : nil
+        defaults.set(acceptedVersions, forKey: storageKey)
+    }
+    func resetForUITest() { acceptedVersions = [:]; defaults.removeObject(forKey: storageKey) }
+}
+
 struct PickupFeedbackSection: View {
     static let consentKey: String = {
         #if DEBUG
@@ -68,7 +101,7 @@ struct PickupFeedbackSection: View {
         #endif
         return "pickup.optionalFeedback.enabled"
     }()
-    @AppStorage(Self.consentKey) private var enabled = false
+    @ObservedObject private var consent = LocalPickupFeedbackConsent.shared
     @ObservedObject var model: PickupModel
     let journey: PickupJourney
 
@@ -80,19 +113,19 @@ struct PickupFeedbackSection: View {
                     LabeledContent(pTr("Usual workflow"), value: answer.baseline.label)
                     LabeledContent(pTr("Compared with your usual workflow"), value: answer.comparison.label)
                     if answer.incrementalBenefit == 0 {
-                        Text(pTr("You reported the same result. This pickup counts as zero additional benefit."))
+                        Text(answer.comparison == .same ? pTr("You reported the same result. This pickup counts as zero additional benefit.") : pTr("This response counts as zero additional benefit."))
                             .font(.footnote)
                     }
                     Button(pTr("Remove this response"), role: .destructive) {
-                        Task { _ = await model.recordFeedback(nil, shopID: journey.id, revision: journey.revision, consent: enabled) }
+                        Task { _ = await model.recordFeedback(nil, shopID: journey.id, revision: journey.revision, consent: consent.enabled(for: model.sourceWorkspaceID)) }
                     }
                 }
-            } else if enabled {
+            } else if consent.enabled(for: model.sourceWorkspaceID) {
                 Section(pTr("Optional pickup feedback")) {
                     NavigationLink(pTr("Record how this pickup turned out")) {
                         PickupFeedbackEditor(model: model, shopID: journey.id, revision: journey.revision)
                     }
-                    Button(pTr("Stop offering feedback")) { enabled = false }
+                    Button(pTr("Stop offering feedback")) { consent.setEnabled(false, for: model.sourceWorkspaceID) }
                 }
             }
         }
@@ -101,7 +134,7 @@ struct PickupFeedbackSection: View {
 
 private struct PickupFeedbackEditor: View {
     @Environment(\.dismiss) private var dismiss
-    @AppStorage(PickupFeedbackSection.consentKey) private var enabled = false
+    @ObservedObject private var consent = LocalPickupFeedbackConsent.shared
     @ObservedObject var model: PickupModel
     @State private var shopID: UUID
     @State private var revision: Int64
@@ -136,11 +169,144 @@ private struct PickupFeedbackEditor: View {
                 guard let decision, let baseline, let comparison else { return }
                 Task {
                     let answer = PickupFeedback(decision: decision, baseline: baseline, comparison: comparison)
-                    if await model.recordFeedback(answer, shopID: shopID, revision: revision, consent: enabled) { dismiss() }
+                    if await model.recordFeedback(answer, shopID: shopID, revision: revision, consent: consent.enabled(for: model.sourceWorkspaceID)) { dismiss() }
                     else { failed = true }
                 }
-            }.disabled(!current || !enabled || decision == nil || baseline == nil || comparison == nil || model.saving)
-            Button(pTr("Stop offering feedback")) { enabled = false; dismiss() }
+            }.disabled(!current || !consent.enabled(for: model.sourceWorkspaceID) || decision == nil || baseline == nil || comparison == nil || model.saving)
+            Button(pTr("Stop offering feedback")) { consent.setEnabled(false, for: model.sourceWorkspaceID); dismiss() }
         }.navigationTitle(pTr("Optional pickup feedback"))
+    }
+}
+
+/// Separate opt-in for the authenticated household service. This view never reads
+/// local feedback, shopping lists, receipts, grocery text, prices or membership files.
+struct MeasurementSettingsView: View {
+    @ObservedObject var household: HouseholdModel
+    @State private var status: MeasurementStatus?
+    @State private var busy = false
+    @State private var failed = false
+    private var scope: String? {
+        guard !household.locked, let identity = household.identity, let projection = household.projection,
+              projection.grantId == nil else { return nil }
+        return identity.subject + "/" + projection.household.id + "/" + projection.memberId
+    }
+    var body: some View {
+        Form {
+            if scope != nil {
+                Section(pTr("Optional household measurement")) {
+                    Text(pTr("If you choose to participate, the household service stores your response codes, shop identity, eligible week and this notice version. It can match verified membership status once per household to study purchase retention. Grocery text, prices, member names and existing local responses are not sent."))
+                    Text(pTr("Participation is optional. You can keep using the entire pickup without sending feedback. Withdrawal removes responses sent under that consent and stops counting your participation."))
+                    Text(MeasurementNotice.currentVersion).font(.caption).textSelection(.enabled)
+                    if let status {
+                        if let consent = status.consent {
+                            Label(pTr("Household measurement is enabled"), systemImage: "checkmark.circle")
+                            Button(pTr("Withdraw household measurement consent"), role: .destructive) {
+                                perform { service in try await service.withdrawMeasurementConsent(consent); return try await service.measurementStatus() }
+                            }
+                        } else {
+                            Button(pTr("I agree to optional household measurement")) {
+                                perform { try await $0.grantMeasurementConsent(noticeVersion: MeasurementNotice.currentVersion) }
+                            }
+                        }
+                    }
+                    Button(pTr("Refresh measurement consent")) { perform { try await $0.measurementStatus() } }
+                }
+                if failed { Text(pTr("The service result is unconfirmed. Refresh before trying again.")) }
+                if busy { ProgressView() }
+            } else { Text(pTr("Return to the current authenticated adult household.")) }
+        }
+        .navigationTitle(pTr("Optional household measurement"))
+        .disabled(busy)
+        .task(id: scope) { status = nil; if scope != nil { perform { try await $0.measurementStatus() } } }
+    }
+    private func perform(_ operation: @escaping (HouseholdService) async throws -> MeasurementStatus) {
+        guard !busy, let expected = scope, let service = household.service else { return }
+        busy = true; failed = false
+        Task {
+            defer { busy = false }
+            do { let result = try await operation(service); guard scope == expected else { status = nil; return }; status = result }
+            catch { guard scope == expected else { status = nil; return }; failed = true }
+        }
+    }
+}
+
+/// Entered from a closed, placed shared shop. Every send is a new explicit choice;
+/// no historical local response is populated or uploaded here.
+struct SharedMeasurementFeedbackView: View {
+    @ObservedObject var household: HouseholdModel
+    let shopID: UUID
+    @State private var status: MeasurementStatus?
+    @State private var page: MeasurementFeedbackPage?
+    @State private var decision: PickupDecision?
+    @State private var baseline: PickupBaseline?
+    @State private var comparison: PickupComparison?
+    @State private var busy = false
+    @State private var failed = false
+    private var scope: String? {
+        guard !household.locked, let identity = household.identity, let projection = household.projection,
+              projection.grantId == nil, projection.shopId?.lowercased() == shopID.uuidString.lowercased(), projection.role == "shopper" else { return nil }
+        return identity.subject + "/" + projection.household.id + "/" + projection.memberId + "/" + shopID.uuidString
+    }
+    var body: some View {
+        Form {
+            if scope != nil {
+                Text(pTr("Only the choices entered here are sent to the household service. Your local pickup feedback stays on this device."))
+                if let page {
+                    LabeledContent(pTr("Eligible week"), value: page.eligibleWeek)
+                    if let feedback = page.feedback {
+                        Text(pTr("Household response recorded"))
+                        Text(localDecision(feedback.outcome).label)
+                        if feedback.incrementalBenefit == 0 { Text(pTr("This response counts as zero additional benefit.")) }
+                        Button(pTr("Remove household response"), role: .destructive) {
+                            run { service in try await service.removeMeasurementFeedback(shopID: shopID, feedbackID: feedback.feedbackId) }
+                        }
+                    } else if status?.consent != nil {
+                        Picker(pTr("What happened?"), selection: $decision) {
+                            Text(pTr("Choose a response")).tag(nil as PickupDecision?)
+                            ForEach(PickupDecision.allCases, id: \.self) { Text($0.label).tag(Optional($0)) }
+                        }
+                        Picker(pTr("Usual workflow"), selection: $baseline) {
+                            Text(pTr("Choose a response")).tag(nil as PickupBaseline?)
+                            ForEach(PickupBaseline.allCases, id: \.self) { Text($0.label).tag(Optional($0)) }
+                        }
+                        Picker(pTr("Compared with your usual workflow"), selection: $comparison) {
+                            Text(pTr("Choose a response")).tag(nil as PickupComparison?)
+                            ForEach(PickupComparison.allCases, id: \.self) { Text($0.label).tag(Optional($0)) }
+                        }
+                        Button(pTr("Send this coded household response")) {
+                            guard let decision, let baseline, let comparison, let consent = status?.consent else { return }
+                            let outcome: MeasurementAnswer.Outcome = decision == .tooLate ? .late : decision == .alreadyKnew ? .alreadyKnew : MeasurementAnswer.Outcome(rawValue: decision.rawValue)!
+                            let answer = MeasurementAnswer(outcome: outcome, baseline: MeasurementAnswer.Baseline(rawValue: baseline.rawValue)!, comparison: MeasurementAnswer.Comparison(rawValue: comparison.rawValue)!)
+                            run { service in _ = try await service.sendMeasurementFeedback(shopID: shopID, answer: answer, consent: consent) }
+                        }.disabled(decision == nil || baseline == nil || comparison == nil)
+                    }
+                }
+                if status?.consent == nil {
+                    NavigationLink(pTr("Review optional household measurement")) { MeasurementSettingsView(household: household) }
+                }
+                Button(pTr("Refresh household response")) { run { _ in } }
+                if failed { Text(pTr("The service result is unconfirmed. Refresh before trying again.")) }
+                if busy { ProgressView() }
+            } else { Text(pTr("Return to the current authenticated adult household.")) }
+        }.navigationTitle(pTr("Optional pickup feedback"))
+            .disabled(busy)
+            .task(id: scope) { status = nil; page = nil; if scope != nil { run { _ in } } }
+    }
+    private func run(_ operation: @escaping (HouseholdService) async throws -> Void) {
+        guard !busy, let expected = scope, let service = household.service else { return }
+        busy = true; failed = false
+        Task {
+            defer { busy = false }
+            do {
+                try await operation(service)
+                let currentStatus = try await service.measurementStatus()
+                let currentPage = try await service.measurementFeedback(shopID: shopID)
+                guard scope == expected else { status = nil; page = nil; return }
+                status = currentStatus; page = currentPage
+            } catch { guard scope == expected else { status = nil; page = nil; return }; failed = true }
+        }
+    }
+    private func localDecision(_ value: MeasurementAnswer.Outcome) -> PickupDecision {
+        value == .late ? .tooLate : value == .alreadyKnew ? .alreadyKnew : PickupDecision(rawValue: value.rawValue)!
     }
 }

@@ -71,7 +71,7 @@ struct CapturePrivateIdentity: Equatable {
                         Text(ingredient.name + " · " + dinnerQuantity(ingredient.quantity))
                     }
                     if let evidence = reviewed.sourceEvidence { RecipeSourceDisclosure(evidence: evidence) }
-                    Text(captureText("The original source stays with this recipe. Any saved photo stays only on this device until its grocery workspace is deleted; exports do not contain image bytes."))
+                    Text(captureText("The original source stays with this recipe. Saved photos stay on this device unless you choose them for an encrypted recovery file in Records."))
                     Button(captureText("Accept reviewed recipe")) { Task { await accept() } }
                         .disabled(!authorized() || !model.editable || saving)
                         .accessibilityIdentifier("dinner.acceptScannedRecipe")
@@ -157,7 +157,7 @@ struct RecipeSourceDisclosure: View {
         DisclosureGroup(captureText("Original recipe source")) {
             Text(evidence.originalText).textSelection(.enabled)
             if evidence.localMedia != nil {
-                Text(captureText("The source photo is local evidence and is not included in exports."))
+                Text(captureText("The source photo is local evidence. Encrypted recovery includes it only when you select it in Records."))
                     .font(.footnote)
             }
         }

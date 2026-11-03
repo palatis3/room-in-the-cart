@@ -2490,6 +2490,261 @@
           }
         }
       }
+    },
+    "%lld selected references · %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld selected references · %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld referencias seleccionadas · %@"
+          }
+        }
+      }
+    },
+    "A recovery file restores selected private records, saved history and the source references you choose below as separate copies. It excludes raw voice, credentials, membership, consent and live permissions.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A recovery file restores selected private records, saved history and the source references you choose below as separate copies. It excludes raw voice, credentials, membership, consent and live permissions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un archivo de recuperación restaura los registros privados seleccionados, su historial y las referencias de origen que elijas abajo como copias separadas. Excluye grabaciones de voz, credenciales, membresía, consentimiento y permisos vigentes."
+          }
+        }
+      }
+    },
+    "Choose source references · optional": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose source references · optional"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige referencias de origen · opcional"
+          }
+        }
+      }
+    },
+    "I reviewed the selected references and understand they include private source details.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed the selected references and understand they include private source details."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé las referencias seleccionadas y entiendo que incluyen detalles privados del origen."
+          }
+        }
+      }
+    },
+    "Only explicitly selected source references are included in encrypted recovery. Readable and helper copies contain no attachment bytes. No file is uploaded automatically. Shared copies cannot be recalled.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only explicitly selected source references are included in encrypted recovery. Readable and helper copies contain no attachment bytes. No file is uploaded automatically. Shared copies cannot be recalled."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo las referencias de origen que selecciones se incluyen en la recuperación cifrada. Las copias legibles y para ayudantes no incluyen archivos adjuntos. Ningún archivo se sube automáticamente. Las copias compartidas no se pueden retirar."
+          }
+        }
+      }
+    },
+    "Package reference": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Package reference"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referencia del paquete"
+          }
+        }
+      }
+    },
+    "Preview source reference": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview source reference"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vista previa de la referencia de origen"
+          }
+        }
+      }
+    },
+    "Receipt evidence": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt evidence"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evidencia del recibo"
+          }
+        }
+      }
+    },
+    "Recipe source": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipe source"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Origen de la receta"
+          }
+        }
+      }
+    },
+    "References are off by default. Selected reduced photos, original wording, manually matched codes and receipt notes may contain private details. They remain evidence and do not change payments, food received or meal decisions.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "References are off by default. Selected reduced photos, original wording, manually matched codes and receipt notes may contain private details. They remain evidence and do not change payments, food received or meal decisions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las referencias están desactivadas de forma predeterminada. Las fotos reducidas, el texto original, los códigos vinculados manualmente y las notas de recibos que selecciones pueden contener datos privados. Siguen siendo evidencia y no cambian pagos, alimentos recibidos ni decisiones de comidas."
+          }
+        }
+      }
+    },
+    "Selected reduced source photo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected reduced source photo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foto de origen reducida seleccionada"
+          }
+        }
+      }
+    },
+    "Selected references recover with these separate copies. They do not reopen the original photo store or restore access to another workspace.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected references recover with these separate copies. They do not reopen the original photo store or restore access to another workspace."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las referencias seleccionadas se recuperan con estas copias separadas. No abren el almacenamiento original de fotos ni restablecen el acceso a otro espacio de trabajo."
+          }
+        }
+      }
+    },
+    "Source reference": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source reference"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referencia de origen"
+          }
+        }
+      }
+    },
+    "Up to twelve references and 4.2 MB of source evidence per recovery file; the encrypted file must be under 8 MB. Choose fewer references if the file is too large.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Up to twelve references and 4.2 MB of source evidence per recovery file; the encrypted file must be under 8 MB. Choose fewer references if the file is too large."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hasta doce referencias y 4.2 MB de evidencia de origen por archivo de recuperación; el archivo cifrado debe tener menos de 8 MB. Elige menos referencias si el archivo es demasiado grande."
+          }
+        }
+      }
+    },
+    "Only saved reduced references are available. Full-size originals and missing photos cannot be recovered.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only saved reduced references are available. Full-size originals and missing photos cannot be recovered."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo están disponibles las referencias reducidas guardadas. No se pueden recuperar los originales de tamaño completo ni las fotos que faltan."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

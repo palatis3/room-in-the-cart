@@ -113,36 +113,6 @@ private struct SurfaceReminderList: View {
         }.navigationTitle(SurfaceCopy.text("Local reminders"))
     }
 }
-private struct SurfaceReminderSetup: View {
-    @ObservedObject var composition: DeviceSurfacesComposition
-    let target: SurfaceReminderTarget
-    @State private var expiry = Date().addingTimeInterval(86_400)
-    @State private var reviewedExpiry = false
-    @State private var context: ReminderEditorContext?
-    @State private var failure = false
-    var body: some View {
-        Group {
-            if composition.reminderAuthorization(target) == nil { SurfaceUnavailableView() }
-            else if let context, let coordinator = composition.reminders {
-                ReminderEditorView(context: context, coordinator: coordinator, currentAuthorization: { composition.reminderAuthorization(target) })
-            } else {
-                Form {
-                    Text(target.title)
-                    if let cutoff = target.cutoff { LabeledContent(SurfaceCopy.text("Offer cutoff"), value: cutoff.formatted()) }
-                    else {
-                        DatePicker(SurfaceCopy.text("Reminder expiry"), selection: $expiry)
-                        Toggle(SurfaceCopy.text("Use this expiry for this reminder"), isOn: $reviewedExpiry)
-                        Text(SurfaceCopy.text("This sets a reminder expiry. It does not date a meal or change the shopping list."))
-                    }
-                    Button(SurfaceCopy.text("Review reminder")) {
-                        Task { do { context = try await composition.reminderContext(target, expiresAt: expiry); failure = false } catch { failure = true } }
-                    }.disabled(target.cutoff == nil && !reviewedExpiry)
-                    if failure { Text(SurfaceCopy.text("This reminder needs a fresh review.")) }
-                }.onChange(of: expiry) { _, _ in reviewedExpiry = false }
-            }
-        }.navigationTitle(SurfaceCopy.text("Reminder"))
-    }
-}
 struct SurfaceUnavailableView: View {
     var body: some View { ContentUnavailableView(SurfaceCopy.text("Open the app to review this item"), systemImage: "lock", description: Text(SurfaceCopy.text("This shortcut is unavailable in the current workspace. Unlock or choose an authorized workspace in the app."))) }
 }

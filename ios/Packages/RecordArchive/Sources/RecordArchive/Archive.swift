@@ -37,10 +37,13 @@ public struct ArchiveRecord: Codable, Equatable, Sendable, Identifiable {
     public var savedAtMilliseconds: Int64
     public var helperLines: [HelperLine]
     public var nativePayload: Data?
-    public init(id: String, origin: String, revision: String, parentRevision: String? = nil, kind: ArchiveRecordKind, title: String, savedAtMilliseconds: Int64, helperLines: [HelperLine] = [], nativePayload: Data? = nil) {
+    /// Explicitly selected owner evidence. Omitted from v1.0 and every helper projection.
+    public var media: [ArchiveMediaAttachment]?
+    public init(id: String, origin: String, revision: String, parentRevision: String? = nil, kind: ArchiveRecordKind, title: String, savedAtMilliseconds: Int64, helperLines: [HelperLine] = [], nativePayload: Data? = nil, media: [ArchiveMediaAttachment]? = nil) {
         self.id = id; self.origin = origin; self.revision = revision; self.parentRevision = parentRevision
         self.kind = kind; self.title = title; self.savedAtMilliseconds = savedAtMilliseconds
         self.helperLines = helperLines; self.nativePayload = nativePayload
+        self.media = media
     }
 }
 
@@ -63,6 +66,7 @@ public struct ArchiveEnvelope: Codable, Equatable, Sendable {
     public let lastSavedAtMilliseconds: Int64
     public let canonicalPayloadDigest: String
     public let payload: ArchivePayload
+    public let mediaManifest: ArchiveMediaManifest?
 }
 
 public struct ArchiveIdentity: Codable, Hashable, Sendable {
@@ -109,9 +113,11 @@ public enum ArchiveCodec {
         guard records.count <= maximumRecords else { throw ArchiveError.tooLarge }
         let projected = records.map { record -> ArchiveRecord in
             var copy = record
-            if kind == .helperShop { copy.nativePayload = nil }
+            if kind == .helperShop { copy.nativePayload = nil; copy.media = nil }
+            else { copy.media = copy.media?.sorted { $0.id < $1.id }; if copy.media?.isEmpty == true { copy.media = nil } }
             return copy
         }.sorted { ($0.origin, $0.id, $0.revision) < ($1.origin, $1.id, $1.revision) }
+        let manifest = try ArchiveMediaManifest.make(records: projected)
         // Bound the total before joining native payloads into one canonical buffer.
         var payloadBytes = 0
         for record in projected {
@@ -122,7 +128,7 @@ public enum ArchiveCodec {
             payloadBytes += count
         }
         let payload = ArchivePayload(records: projected)
-        let envelope = ArchiveEnvelope(formatMajor: 1, formatMinor: 0, documentKind: kind, originNamespace: origin, shopID: shopID, sourceRevisionID: revision, parentRevisionID: parent, projectionID: projection(for: kind), producerBuild: producerBuild, exportedAtMilliseconds: milliseconds(exportedAt), lastSavedAtMilliseconds: records.map(\.savedAtMilliseconds).max() ?? milliseconds(exportedAt), canonicalPayloadDigest: digest(try canonical(payload)), payload: payload)
+        let envelope = ArchiveEnvelope(formatMajor: 1, formatMinor: manifest == nil ? 0 : 1, documentKind: kind, originNamespace: origin, shopID: shopID, sourceRevisionID: revision, parentRevisionID: parent, projectionID: projection(for: kind), producerBuild: producerBuild, exportedAtMilliseconds: milliseconds(exportedAt), lastSavedAtMilliseconds: records.map(\.savedAtMilliseconds).max() ?? milliseconds(exportedAt), canonicalPayloadDigest: digest(try canonical(payload)), payload: payload, mediaManifest: manifest)
         try validate(envelope)
         return envelope
     }
@@ -138,7 +144,8 @@ public enum ArchiveCodec {
         let value: ArchiveEnvelope
         do { value = try JSONDecoder().decode(ArchiveEnvelope.self, from: data) }
         catch { throw ArchiveError.malformed }
-        // v1.0 is the first public schema. Pre-release v0 and future minor versions
+        // v1.0 is the first public schema; v1.1 adds explicitly selected media.
+        // Pre-release v0 and future minor versions
         // are explicitly unsupported, rather than guessed or silently downgraded.
         try validate(value)
         return value
@@ -149,20 +156,29 @@ public enum ArchiveCodec {
         let root: [String: Any]
         do { guard let object = try JSONSerialization.jsonObject(with: data) as? [String: Any] else { throw ArchiveError.malformed }; root = object }
         catch { throw ArchiveError.malformed }
-        try allowedKeys(root, ["formatMajor", "formatMinor", "documentKind", "originNamespace", "shopID", "sourceRevisionID", "parentRevisionID", "projectionID", "producerBuild", "exportedAtMilliseconds", "lastSavedAtMilliseconds", "canonicalPayloadDigest", "payload"])
+        try allowedKeys(root, ["formatMajor", "formatMinor", "documentKind", "originNamespace", "shopID", "sourceRevisionID", "parentRevisionID", "projectionID", "producerBuild", "exportedAtMilliseconds", "lastSavedAtMilliseconds", "canonicalPayloadDigest", "payload", "mediaManifest"])
         guard let payload = root["payload"] as? [String: Any], let records = payload["records"] as? [[String: Any]] else { throw ArchiveError.malformed }
         try allowedKeys(payload, ["records"])
         for record in records {
-            try allowedKeys(record, ["id", "origin", "revision", "parentRevision", "kind", "title", "savedAtMilliseconds", "helperLines", "nativePayload"])
+            try allowedKeys(record, ["id", "origin", "revision", "parentRevision", "kind", "title", "savedAtMilliseconds", "helperLines", "nativePayload", "media"])
+            if let attachments = record["media"] {
+                guard let media = attachments as? [[String: Any]] else { throw ArchiveError.malformed }
+                for attachment in media { try allowedKeys(attachment, ["id", "kind", "contentType", "data"]) }
+            }
             guard let lines = record["helperLines"] as? [[String: Any]] else { throw ArchiveError.malformed }
             for line in lines { try allowedKeys(line, ["label", "originalAmount", "originalUnit", "originalLanguage", "purpose", "action", "foodStatus"]) }
+        }
+        if let value = root["mediaManifest"] {
+            guard let manifest = value as? [String: Any], let entries = manifest["entries"] as? [[String: Any]] else { throw ArchiveError.malformed }
+            try allowedKeys(manifest, ["formatMajor", "entries"])
+            for entry in entries { try allowedKeys(entry, ["origin", "recordID", "revision", "mediaID", "kind", "contentType", "byteCount", "digest"]) }
         }
     }
     static func allowedKeys(_ object: [String: Any], _ allowed: Set<String>) throws {
         guard Set(object.keys).isSubset(of: allowed) else { throw ArchiveError.unsupportedRecord }
     }
     public static func validate(_ value: ArchiveEnvelope) throws {
-        guard value.formatMajor == 1, value.formatMinor == 0 else { throw ArchiveError.unsupportedVersion }
+        guard value.formatMajor == 1, (0...1).contains(value.formatMinor) else { throw ArchiveError.unsupportedVersion }
         guard value.projectionID == projection(for: value.documentKind) else { throw ArchiveError.unsupportedProjection }
         guard identifier(value.originNamespace), identifier(value.sourceRevisionID), value.parentRevisionID.map(identifier) ?? true,
               value.shopID.map(identifier) ?? true, value.producerBuild.utf8.count <= 128 else { throw ArchiveError.invalidIdentity }
@@ -173,15 +189,19 @@ public enum ArchiveCodec {
             guard record.title.utf8.count <= 4096, !record.title.contains("\0"), record.helperLines.count <= 2000,
                   (record.nativePayload?.count ?? 0) <= maximumNativeBytes else { throw ArchiveError.tooLarge }
             guard identities.insert(identity(record, projection: value.projectionID)).inserted else { throw ArchiveError.invalidIdentity }
-            if value.documentKind == .helperShop, record.nativePayload != nil { throw ArchiveError.unsupportedProjection }
+            if value.documentKind == .helperShop, record.nativePayload != nil || record.media != nil { throw ArchiveError.unsupportedProjection }
             for line in record.helperLines {
                 guard [line.label, line.originalAmount, line.originalUnit, line.originalLanguage ?? "", line.purpose ?? "", line.action ?? "", line.foodStatus ?? ""].allSatisfy({ $0.utf8.count <= 8192 && !$0.contains("\0") }) else { throw ArchiveError.tooLarge }
             }
         }
+        if let manifest = value.mediaManifest, manifest.formatMajor != 1 { throw ArchiveError.unsupportedVersion }
+        let expectedManifest = try ArchiveMediaManifest.make(records: value.payload.records)
+        guard value.mediaManifest == expectedManifest,
+              value.formatMinor == (expectedManifest == nil ? 0 : 1) else { throw ArchiveError.integrity }
         guard digest(try canonical(value.payload)) == value.canonicalPayloadDigest else { throw ArchiveError.integrity }
     }
     public static func identity(_ record: ArchiveRecord, projection: String) -> ArchiveIdentity {
-        ArchiveIdentity(origin: record.origin, recordID: record.id, revision: record.revision, projection: projection)
+        ArchiveIdentity(origin: record.origin, recordID: record.id, revision: record.revision, projection: recordProjection(record, base: projection))
     }
     public static func receipt(_ record: ArchiveRecord, projection: String, localCopyID: String) throws -> ArchiveReceipt {
         ArchiveReceipt(identity: identity(record, projection: projection), digest: digest(try canonical(record)), localCopyID: localCopyID, parentRevision: record.parentRevision, savedAtMilliseconds: record.savedAtMilliseconds)

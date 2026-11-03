@@ -7,6 +7,7 @@ import CoreDomain
     @Published var unavailableRecords: [UnavailableComparison] = []
     @Published var error: String?
     @Published var ready = false
+    @Published private(set) var hasLoadedRecords = false
     private(set) var store: ComparisonStore?
     private let databaseURL: URL
 
@@ -30,6 +31,7 @@ import CoreDomain
             #if DEBUG
             if ProcessInfo.processInfo.arguments.contains("--reset-test-workspace"), directory.lastPathComponent == "UITestWorkspace" {
                 UserDefaults.standard.removeObject(forKey: PickupFeedbackSection.consentKey)
+                LocalPickupFeedbackConsent.shared.resetForUITest()
                 for suffix in ["", "-wal", "-shm"] {
                     let file = URL(fileURLWithPath: databaseURL.path + suffix)
                     if FileManager.default.fileExists(atPath: file.path) { try FileManager.default.removeItem(at: file) }
@@ -49,6 +51,7 @@ import CoreDomain
             records = listing.records
             unavailableRecords = listing.unavailable
             error = nil
+            hasLoadedRecords = true
         }
         catch { Diagnostics.record(.localReadFailed); self.error = tr("Could not open saved comparisons. Your records have not been removed. Try again.") }
     }

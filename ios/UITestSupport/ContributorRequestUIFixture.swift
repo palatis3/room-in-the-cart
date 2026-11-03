@@ -20,6 +20,8 @@ import HouseholdClient
     }
     @ViewBuilder private var otherFixtureContent: some View {
         if ProcessInfo.processInfo.arguments.contains("--shared-meal-fixture") { S17SharedMealFixtureRoot() }
+        else if ProcessInfo.processInfo.arguments.contains("--shared-store-quotes-fixture") { S27StoreQuotesFixtureRoot() }
+        else if ProcessInfo.processInfo.arguments.contains("--shared-idea-fixture") { S26SharedMealIdeaFixtureRoot() }
         else if ProcessInfo.processInfo.arguments.contains("--request-pack-fixture") { S24RequestPackFixtureRoot() }
         else { ContributorRequestUIFixtureRoot() }
     }

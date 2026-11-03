@@ -107,6 +107,10 @@ struct HistoryEntryView: View {
                     }
                 }.frame(minHeight: 44).disabled(model.busy)
             }
+            if model.readableShopCursor != nil {
+                Button(HistoryCopy.text("Check access for more saved records")) { Task { await model.loadReadableShops(more: true) } }
+                    .disabled(model.busy).frame(minHeight: 44).accessibilityIdentifier("history.moreSavedRecordAccess")
+            }
         }
         if let observation = model.selectedObservation {
             Section(HistoryCopy.text("Saved observation")) { HistoryObservationDetails(observation: observation) }

@@ -173,7 +173,9 @@ struct SharedShopTransfer: Equatable {
         guard authorized, !busy, pending == nil, editing else { return }
         do {
             guard draft.expiresAt > Date(), draft.observedAt <= Date().addingTimeInterval(300) else { throw ClientError.configuration }
-            let candidate = try draft.candidate()
+            let enteredCandidate = try draft.candidate()
+            let candidate = try ShopperShopCandidate(quote: enteredCandidate.quote, lines: enteredCandidate.lines,
+                                                     reviewedStoreBasisRevision: shop?.storeBasisRevision)
             if canCreate || (creatingAnother && canStartAnother) { review = .init(shopID: UUID().uuidString.lowercased(), kind: "shop.create", base: .init(shopRevision: 0, authorityEpoch: 0), candidate: candidate) }
             else if canManage, let shop, shop.phase == "draft" {
                 var reviewedMeal = draft.mealEdit

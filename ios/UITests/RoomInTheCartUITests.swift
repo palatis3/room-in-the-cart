@@ -462,7 +462,7 @@ final class RoomInTheCartUITests: XCTestCase {
                                     "-UIUserInterfaceStyle", "Dark"]
         }
         app.launch()
-        XCTAssertTrue(app.buttons["newComparison"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.tabBars.buttons[language == "es" ? "Compras" : "Shop"].waitForExistence(timeout: 15))
     }
 
     private func openEmptyComparison() {
@@ -530,6 +530,16 @@ final class RoomInTheCartUITests: XCTestCase {
 
     private func reopenSavedRecord(recordsLabel: String, item: String) {
         tap(app.tabBars.buttons[recordsLabel])
+        // Persistence checks intentionally reopen from the records list. A
+        // restored comparison remains open until the person uses native Back.
+        for _ in 0..<4 {
+            if app.navigationBars[recordsLabel].exists { break }
+            let destinationLabel = app.navigationBars.buttons[recordsLabel].firstMatch
+            let back = destinationLabel.exists ? destinationLabel : app.navigationBars.buttons["BackButton"].firstMatch
+            XCTAssertTrue(back.waitForExistence(timeout: 5), "Return from the restored destination through its native Back control")
+            tap(back)
+        }
+        XCTAssertTrue(app.navigationBars[recordsLabel].waitForExistence(timeout: 5))
         let rows = app.descendants(matching: .any).matching(identifier: "savedComparison")
         let row = rows.firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 10))

@@ -157,7 +157,25 @@ private struct RecordsPlanningProjection: Codable {
         object.removeValue(forKey: "ledgerPackSelections")
         return try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys, .withoutEscapingSlashes])
     }
+    /// Re-export an edited independent workspace with only the historical source
+    /// references still owned by this emitted shop/library. The original registry
+    /// snapshot keeps its own historical evidence unchanged.
+    static func revised(_ original: ArchiveRecord, nativePayload bytes: Data, id: String, title: String,
+                        date: Date, lines: [HelperLine]) throws -> ArchiveRecord {
+        var record = original
+        record.id = id; record.title = title; record.helperLines = lines; record.nativePayload = bytes
+        let unchanged = bytes == original.nativePayload && id == original.id
+        record.revision = unchanged ? original.revision : ArchiveCodec.digest(bytes)
+        record.parentRevision = unchanged ? original.parentRevision : original.revision
+        record.savedAtMilliseconds = unchanged ? original.savedAtMilliseconds : ArchiveCodec.milliseconds(date)
+        let ownedMedia = try (original.media ?? []).filter {
+            try RecordsMediaCodec.belongs(RecordsMediaCodec.decode($0), to: record)
+        }
+        record.media = ownedMedia.isEmpty ? nil : ownedMedia
+        return record
+    }
     static func validate(_ record: ArchiveRecord) throws {
+        try RecordsMediaCodec.validate(record)
         guard let bytes = record.nativePayload else { return }
         let normalized: Data
         switch record.kind {
@@ -208,6 +226,9 @@ struct RecordsErasureCleanup {
 
 struct RecordsToolsEntryView: View {
     @StateObject private var composition: RecordsComposition
+    @EnvironmentObject private var access: WorkspaceAccess
+    @EnvironmentObject private var household: HouseholdModel
+    @Environment(\.scenePhase) private var scenePhase
     init(app: AppModel, ledger: LedgerModel, pickup: PickupModel, erasureCleanup: RecordsErasureCleanup) {
         _composition = StateObject(wrappedValue: RecordsComposition(app: app, ledger: ledger, pickup: pickup, erasureCleanup: erasureCleanup))
     }
@@ -224,7 +245,17 @@ struct RecordsToolsEntryView: View {
                 }
             } else { ProgressView(recordsText("Opening records…")) }
         }
-        .task { await composition.load() }
+        .task {
+            composition.bind(access: access, household: household, active: scenePhase == .active)
+            await composition.load()
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(250))
+                guard !Task.isCancelled else { return }
+                composition.checkAccess()
+            }
+        }
+        .onChange(of: scenePhase) { _, phase in composition.bind(access: access, household: household, active: phase == .active) }
+        .onDisappear { composition.clearPrivatePreviews() }
         .sheet(item: $composition.destination, onDismiss: { Task { await composition.tools?.refresh() } }) { destination in
             NavigationStack {
                 Group {
@@ -294,6 +325,34 @@ private struct RecordsRecoveredDinnersView: View {
     private var loading = false
     private var pickupOrigin: String?
     private var unavailableRecords: [RecordsUnavailableRecord] = []
+    private weak var access: WorkspaceAccess?
+    private weak var household: HouseholdModel?
+    private var active = false
+    private var visibleIdentity: CapturePrivateIdentity?
+    private var authorizationGeneration = UUID()
+    func bind(access: WorkspaceAccess, household: HouseholdModel, active: Bool) {
+        self.access = access; self.household = household; self.active = active
+        checkAccess()
+    }
+    func checkAccess() {
+        let identity = active ? privateIdentity() : nil
+        if identity != visibleIdentity { clearPrivatePreviews(); visibleIdentity = identity }
+    }
+    func clearPrivatePreviews() { authorizationGeneration = UUID(); tools?.invalidateForSourceErasure(); destination = nil }
+    private func privateIdentity() -> CapturePrivateIdentity? {
+        guard let access, let household else { return nil }
+        return CapturePrivateIdentity.current(access: access, household: household)
+    }
+    private func captureAuthorization() -> RecordsToolsModel.Authorization? {
+        guard active, let identity = privateIdentity() else { return nil }
+        let ledgerID = ledger.sourceWorkspaceID, comparisonID = app.store?.workspaceID
+        let generation = authorizationGeneration
+        return { [weak self] in
+            guard let self else { return false }
+            return self.active && self.authorizationGeneration == generation && self.privateIdentity() == identity &&
+                self.ledger.sourceWorkspaceID == ledgerID && self.app.store?.workspaceID == comparisonID
+        }
+    }
     init(app: AppModel, ledger: LedgerModel, pickup: PickupModel, erasureCleanup: RecordsErasureCleanup) {
         self.app = app; self.ledger = ledger; self.pickup = pickup; self.erasureCleanup = erasureCleanup
     }
@@ -333,13 +392,17 @@ private struct RecordsRecoveredDinnersView: View {
                 guard let self else { throw ArchiveError.unavailable }
                 let review = try await self.ledger.reviewWholeLedgerDeletion()
                 self.destination = Destination(id: "whole-ledger-deletion", content: .ledgerDeletion(review))
-            }, unavailableRecords: { [weak self] in self?.unavailableRecords ?? [] })
+            }, unavailableRecords: { [weak self] in self?.unavailableRecords ?? [] }, beginAuthorization: { [weak self] in self?.captureAuthorization() })
             error = nil
         } catch { self.error = error as? ArchiveError ?? .unavailable }
     }
     private func protectDirectory(_ url: URL) throws {
         try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true,
-            attributes: [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication])
+            attributes: [.protectionKey: FileProtectionType.complete])
+        try FileManager.default.setAttributes([.protectionKey: FileProtectionType.complete], ofItemAtPath: url.path)
+        var directory = url, values = URLResourceValues()
+        values.isExcludedFromBackup = true
+        try directory.setResourceValues(values)
     }
     private func synchronizeErasure() async throws {
         guard let registry, let store = app.store else { throw ArchiveError.unavailable }
@@ -350,6 +413,16 @@ private struct RecordsRecoveredDinnersView: View {
         try await registry.registerErasedSources(erased)
         for tombstone in pickupTombstones { try await erasureCleanup.erasePickupRecord(tombstone.workspaceID, tombstone.id) }
         try await synchronizeLedgerErasure()
+        var erasedMedia: [ArchiveMediaSourceIdentity] = []
+        for saved in try await registry.refreshList() {
+            for attachment in saved.record.media ?? [] {
+                let source = try RecordsMediaCodec.decode(attachment)
+                if try await CaptureMediaStore.shared.isRetired(source) {
+                    erasedMedia.append(ArchiveMediaSourceIdentity(origin: saved.record.origin, mediaID: attachment.id))
+                }
+            }
+        }
+        try await registry.registerErasedMedia(erasedMedia)
     }
     private func synchronizeLedgerErasure() async throws {
         guard let registry else { throw ArchiveError.unavailable }
@@ -368,7 +441,9 @@ private struct RecordsRecoveredDinnersView: View {
         }
     }
     private func snapshot() async throws -> [ArchiveRecord] {
+        guard let authorize = captureAuthorization(), authorize() else { throw ArchiveError.unavailable }
         try await synchronizeErasure()
+        guard authorize() else { throw ArchiveError.unavailable }
         guard let store = app.store else { throw ArchiveError.unavailable }
         var result: [ArchiveRecord] = []
         unavailableRecords = []
@@ -426,8 +501,48 @@ private struct RecordsRecoveredDinnersView: View {
                 result += try await recoveredSnapshot(saved)
             }
         }
-        var seen = Set<String>()
-        return result.filter { seen.insert(RecordsToolsModel.selectionID($0)).inserted }
+        guard authorize() else { throw ArchiveError.unavailable }
+        // Never scan a namespace supplied by a recovered file. Only live app stores
+        // provide namespace authority; typed owner binding filters each attachment.
+        var sourceMedia: [SourceMediaRecord] = []
+        if ledger.ready, !ledger.hasPendingLedgerDeletion, let id = ledger.sourceWorkspaceID {
+            let listing = try await mediaListing(workspaceID: id, authorize: authorize)
+            sourceMedia += listing.records
+        }
+        guard authorize() else { throw ArchiveError.unavailable }
+        sourceMedia += try await mediaListing(workspaceID: pickupSnapshot.workspaceID, authorize: authorize).records
+        guard authorize() else { throw ArchiveError.unavailable }
+        for index in result.indices {
+            result[index] = try RecordsMediaCodec.attaching(sourceMedia, to: result[index])
+        }
+        var merged: [ArchiveRecord] = [], indices: [String: Int] = [:]
+        for record in result {
+            let key = RecordsToolsModel.selectionID(record)
+            guard let index = indices[key] else { indices[key] = merged.count; merged.append(record); continue }
+            var attachments = merged[index].media ?? []
+            for attachment in record.media ?? [] {
+                if let existing = attachments.first(where: { $0.id == attachment.id }) {
+                    guard existing == attachment else { throw ArchiveError.conflict }
+                } else { attachments.append(attachment) }
+            }
+            merged[index].media = attachments.isEmpty ? nil : attachments.sorted { $0.id < $1.id }
+        }
+        return merged
+    }
+    private func mediaListing(workspaceID: UUID, authorize: @escaping RecordsToolsModel.Authorization) async throws -> CaptureMediaArchiveListing {
+        let listing: CaptureMediaArchiveListing
+        do { listing = try await CaptureMediaStore.shared.archiveListing(workspaceID: workspaceID, authorize: authorize) }
+        catch {
+            guard authorize() else { throw ArchiveError.unavailable }
+            // Optional source-store failure does not hide healthy domain records.
+            listing = CaptureMediaArchiveListing(unavailableCount: 1)
+        }
+        guard authorize() else { throw ArchiveError.unavailable }
+        for index in 0..<listing.unavailableCount {
+            unavailableRecords.append(RecordsUnavailableRecord(origin: "media/" + workspaceID.uuidString, recordID: "unavailable-\(index)",
+                title: recordsText("Source reference"), reason: .unreadableStorage))
+        }
+        return listing
     }
     private func recoveredSnapshot(_ saved: RecoveredRecord) async throws -> [ArchiveRecord] {
         guard let directory, UUID(uuidString: saved.id) != nil else { throw ArchiveError.invalidIdentity }
@@ -446,14 +561,6 @@ private struct RecordsRecoveredDinnersView: View {
             do { try RecordsNativeCodec.validate(saved.record); return [saved.record] }
             catch { return omitRecovered(saved, reason: .invalidNative) }
         }
-        func revised(_ bytes: Data, id: String, title: String, date: Date, lines: [HelperLine]) -> ArchiveRecord {
-            var record = saved.record
-            record.id = id; record.title = title; record.helperLines = lines; record.nativePayload = bytes
-            record.revision = ArchiveCodec.digest(bytes)
-            record.parentRevision = record.revision == saved.record.revision ? saved.record.parentRevision : saved.record.revision
-            record.savedAtMilliseconds = record.revision == saved.record.revision ? saved.record.savedAtMilliseconds : ArchiveCodec.milliseconds(date)
-            return record
-        }
         if saved.record.kind == .ledger {
             let store = try LedgerStore(url: url)
             let current = try await store.load()
@@ -467,11 +574,11 @@ private struct RecordsRecoveredDinnersView: View {
                 let lines = shop.contributions.filter { $0.removedAt == nil }.map {
                     HelperLine(label: $0.productName, originalAmount: $0.quantity?.originalLiteral ?? "", originalUnit: $0.quantity?.unit.rawValue ?? "")
                 }
-                return revised(bytes, id: shop.id.uuidString, title: shop.title, date: current.savedAt, lines: lines)
+                return try RecordsNativeCodec.revised(saved.record, nativePayload: bytes, id: shop.id.uuidString, title: shop.title, date: current.savedAt, lines: lines)
             }
             if let library = try RecordsNativeCodec.ledgerLibrary(workspace) {
                 let bytes = try RecordsNativeCodec.canonical(RecordsLedgerDocument(formatVersion: 1, workspace: library))
-                result.append(revised(bytes, id: "meal-library", title: "Reusable dinners", date: current.savedAt, lines: []))
+                result.append(try RecordsNativeCodec.revised(saved.record, nativePayload: bytes, id: "meal-library", title: "Reusable dinners", date: current.savedAt, lines: []))
             }
             return result
             } catch { return omitRecovered(saved, reason: .invalidNative) }
@@ -484,13 +591,13 @@ private struct RecordsRecoveredDinnersView: View {
             if saved.record.kind == .comparison {
                 let value = try RecordsNativeCodec.comparison(current.payload), bytes = try RecordsNativeCodec.canonical(value)
                 guard value.draft.id == current.id else { throw ArchiveError.invalidIdentity }
-                return revised(bytes, id: current.id.uuidString, title: value.draft.item, date: current.savedAt,
+                return try RecordsNativeCodec.revised(saved.record, nativePayload: bytes, id: current.id.uuidString, title: value.draft.item, date: current.savedAt,
                     lines: [HelperLine(label: value.draft.item, originalAmount: value.draft.needed, originalUnit: value.draft.unit.rawValue)])
             }
             let value = try RecordsNativeCodec.pickup(current.payload), bytes = try RecordsNativeCodec.canonical(value)
             guard value.id == current.id else { throw ArchiveError.invalidIdentity }
             let lines = (value.basket?.current.lines ?? []).map { HelperLine(label: $0.name, originalAmount: $0.quantity.originalLiteral, originalUnit: $0.quantity.unit.rawValue) }
-            return revised(bytes, id: current.id.uuidString, title: current.title, date: current.savedAt, lines: lines)
+            return try RecordsNativeCodec.revised(saved.record, nativePayload: bytes, id: current.id.uuidString, title: current.title, date: current.savedAt, lines: lines)
         }
         unavailableRecords += batch.unavailable
         return batch.records
@@ -500,7 +607,15 @@ private struct RecordsRecoveredDinnersView: View {
         return []
     }
     private func validate(_ record: ArchiveRecord) async throws {
+        guard let authorize = captureAuthorization(), authorize() else { throw ArchiveError.unavailable }
         try await synchronizeErasure()
+        guard authorize() else { throw ArchiveError.unavailable }
+        for attachment in record.media ?? [] {
+            let source = try RecordsMediaCodec.decode(attachment)
+            let retired = try await CaptureMediaStore.shared.isRetired(source)
+            guard !retired else { throw ArchiveError.conflict }
+            guard authorize() else { throw ArchiveError.unavailable }
+        }
         if let pending = ledger.pendingLedgerDeletionReview, record.origin == "ledger/" + pending.workspaceID.uuidString {
             throw ArchiveError.unavailable
         }
@@ -542,9 +657,12 @@ private struct RecordsRecoveredDinnersView: View {
         await app.refresh()
     }
     private func open(_ saved: RecoveredRecord) async throws {
+        guard let authorize = captureAuthorization(), authorize() else { throw ArchiveError.unavailable }
         try await validate(saved.record)
+        guard authorize() else { throw ArchiveError.unavailable }
         guard let registry, let directory, let current = try await registry.refreshList().first(where: { $0.id == saved.id }), current == saved,
               let localID = UUID(uuidString: saved.id), let bytes = saved.record.nativePayload else { throw ArchiveError.unavailable }
+        guard authorize() else { throw ArchiveError.unavailable }
         if saved.record.kind == .recipe {
             let recipe = try JSONDecoder().decode(ImportedRecipe.self, from: bytes).validated()
             destination = Destination(id: saved.id, content: .recipe(recipe)); return
@@ -561,7 +679,7 @@ private struct RecordsRecoveredDinnersView: View {
             }
             try await store.close()
             let isolated = AppModel(databaseURL: url); await isolated.open()
-            guard isolated.ready, let record = isolated.records.first else { throw ArchiveError.unavailable }
+            guard authorize(), isolated.ready, let record = isolated.records.first else { throw ArchiveError.unavailable }
             destination = Destination(id: saved.id, content: .comparison(isolated, try isolated.decode(record), record.savedAt))
         case .ledger:
             _ = try RecordsNativeCodec.ledger(bytes)
@@ -569,14 +687,14 @@ private struct RecordsRecoveredDinnersView: View {
             if try await store.load() == nil { try await store.save(payload: bytes, expectedRevision: 0, operationID: UUID(), savedAt: Date(timeIntervalSince1970: Double(saved.record.savedAtMilliseconds) / 1000)) }
             try await store.close()
             let isolated = LedgerModel(databaseURL: url); await isolated.open()
-            guard isolated.ready else { throw ArchiveError.unavailable }
+            guard authorize(), isolated.ready else { throw ArchiveError.unavailable }
             destination = Destination(id: saved.id, content: .ledger(isolated))
         case .pickup:
             let value = try RecordsNativeCodec.pickup(bytes)
             let url = folder.appendingPathComponent("pickup.sqlite"), store = try ComparisonStore(url: folder.appendingPathComponent("pickup.sqlite"))
             if try await store.load(id: value.id) == nil { try await store.save(id: value.id, title: saved.record.title, payload: bytes, savedAt: value.savedAt) }
             let isolated = PickupModel(store: store, databaseURL: url); await isolated.load()
-            guard isolated.ready else { throw ArchiveError.unavailable }
+            guard authorize(), isolated.ready else { throw ArchiveError.unavailable }
             isolated.selectedID = value.id
             destination = Destination(id: saved.id, content: .pickup(isolated))
         case .recipe: break

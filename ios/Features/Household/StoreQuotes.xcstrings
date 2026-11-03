@@ -1,0 +1,1110 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "%d whole packs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d whole packs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d paquetes enteros"
+          }
+        }
+      }
+    },
+    "Adopt reviewed store for this draft": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adopt reviewed store for this draft"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adoptar tienda revisada para este borrador"
+          }
+        }
+      }
+    },
+    "Adopted store": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adopted store"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tienda adoptada"
+          }
+        }
+      }
+    },
+    "Adopting revises the open shared draft and clears former store prices and checkout charges. It preserves the original quote proof and requires fresh checkout review.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adopting revises the open shared draft and clears former store prices and checkout charges. It preserves the original quote proof and requires fresh checkout review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adoptar revisa el borrador compartido abierto y borra los precios y cargos anteriores. Conserva la evidencia original y requiere una nueva revisión del total de compra."
+          }
+        }
+      }
+    },
+    "Applicable cap in USD, optional": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applicable cap in USD, optional"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Límite aplicable en USD, opcional"
+          }
+        }
+      }
+    },
+    "Applicable cap: %@ · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applicable cap: %@ · %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Límite aplicable: %@ · %@"
+          }
+        }
+      }
+    },
+    "Cap scope": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cap scope"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alcance del límite"
+          }
+        }
+      }
+    },
+    "Chosen store": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chosen store"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tienda elegida"
+          }
+        }
+      }
+    },
+    "Clear local retry?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear local retry?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Borrar el reintento local?"
+          }
+        }
+      }
+    },
+    "Clearing cannot undo a comparison, proposal, grant, or store adoption already received. Review the refreshed household result.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clearing cannot undo a comparison, proposal, grant, or store adoption already received. Review the refreshed household result."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrar no deshace una comparación, propuesta, permiso o adopción de tienda ya recibida. Revisa el resultado actualizado del hogar."
+          }
+        }
+      }
+    },
+    "Comparison saved privately for you. Proposing is a separate action.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparison saved privately for you. Proposing is a separate action."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparación guardada de forma privada para ti. Proponer es una acción separada."
+          }
+        }
+      }
+    },
+    "Confirm named adult budget access": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm named adult budget access"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar acceso al presupuesto del adulto identificado"
+          }
+        }
+      }
+    },
+    "Earlier revision or shopper assignment. Keep this proof; enter a fresh comparison for the current draft.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Earlier revision or shopper assignment. Keep this proof; enter a fresh comparison for the current draft."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corresponde a una revisión o asignación anterior. Conserva esta evidencia e ingresa una comparación nueva para el borrador actual."
+          }
+        }
+      }
+    },
+    "Eligibility and price conditions reviewed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eligibility and price conditions reviewed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Requisitos y condiciones de precios revisados"
+          }
+        }
+      }
+    },
+    "Eligibility reviewed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eligibility reviewed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Requisitos revisados"
+          }
+        }
+      }
+    },
+    "Eligibility unresolved": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eligibility unresolved"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Requisitos sin resolver"
+          }
+        }
+      }
+    },
+    "Enter both stores, branches, sources, dates and valid amounts. Blank costs and unreviewed availability remain unknown.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter both stores, branches, sources, dates and valid amounts. Blank costs and unreviewed availability remain unknown."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresa ambas tiendas, sucursales, fuentes, fechas e importes válidos. Los costos en blanco y la disponibilidad sin revisar siguen siendo desconocidos."
+          }
+        }
+      }
+    },
+    "Enter two store quotes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter two store quotes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresar dos cotizaciones de tiendas"
+          }
+        }
+      }
+    },
+    "Exact saved retry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exact saved retry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintento guardado exacto"
+          }
+        }
+      }
+    },
+    "Exact shared basket commitments": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exact shared basket commitments"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compromisos exactos de la cesta compartida"
+          }
+        }
+      }
+    },
+    "Explicit proposal for your shopper review": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explicit proposal for your shopper review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Propuesta explícita para tu revisión como comprador"
+          }
+        }
+      }
+    },
+    "First store conditions and cap": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First store conditions and cap"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Condiciones y límite de la primera tienda"
+          }
+        }
+      }
+    },
+    "Grant budget access for this shop and current shopper assignment": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grant budget access for this shop and current shopper assignment"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dar acceso al presupuesto de esta compra y asignación actual"
+          }
+        }
+      }
+    },
+    "Granting access shares this shop's budget and allows private comparisons and proposals. It does not grant meal planning, household administration, a paid seat, or shopper authority.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Granting access shares this shop's budget and allows private comparisons and proposals. It does not grant meal planning, household administration, a paid seat, or shopper authority."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dar acceso comparte el presupuesto de esta compra y permite comparaciones y propuestas privadas. No otorga planificación de comidas, administración del hogar, una plaza de pago ni autoridad para comprar."
+          }
+        }
+      }
+    },
+    "I reviewed these exact quotes, conditions, and shared commitments": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed these exact quotes, conditions, and shared commitments"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé estas cotizaciones, condiciones y compromisos compartidos exactos"
+          }
+        }
+      }
+    },
+    "Items before fees and discounts only": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Items before fees and discounts only"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo artículos antes de cargos y descuentos"
+          }
+        }
+      }
+    },
+    "Load earlier comparisons": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load earlier comparisons"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargar comparaciones anteriores"
+          }
+        }
+      }
+    },
+    "Local retry cleared after refreshing. A change already received by the household is preserved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Local retry cleared after refreshing. A change already received by the household is preserved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se borró el reintento local después de actualizar. Se conserva cualquier cambio ya recibido por el hogar."
+          }
+        }
+      }
+    },
+    "Lower confirmed total cash": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lower confirmed total cash"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menor costo total confirmado"
+          }
+        }
+      }
+    },
+    "Manual observations only. Enter two complete single-store plans for the same shared basket. No retailer, route, order, or location is contacted.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manual observations only. Enter two complete single-store plans for the same shared basket. No retailer, route, order, or location is contacted."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo observaciones manuales. Ingresa dos planes completos, cada uno de una tienda, para la misma cesta compartida. No se contacta ninguna tienda, ruta, pedido ni ubicación."
+          }
+        }
+      }
+    },
+    "Named adult": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Named adult"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adulto identificado"
+          }
+        }
+      }
+    },
+    "Named adult budget access for this shop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Named adult budget access for this shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acceso al presupuesto de esta compra para adultos identificados"
+          }
+        }
+      }
+    },
+    "No comparisons are available in your current scope.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No comparisons are available in your current scope."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay comparaciones disponibles con tu acceso actual."
+          }
+        }
+      }
+    },
+    "No confirmed cheaper complete trip. Review the unresolved facts or equal totals.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No confirmed cheaper complete trip. Review the unresolved facts or equal totals."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay un viaje completo más barato confirmado. Revisa los datos pendientes o los totales iguales."
+          }
+        }
+      }
+    },
+    "Prices from the former store are invalid. Review a fresh checkout quote before freezing.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prices from the former store are invalid. Review a fresh checkout quote before freezing."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los precios de la tienda anterior ya no son válidos. Revisa una cotización nueva antes de congelar la compra."
+          }
+        }
+      }
+    },
+    "Proposal sent to the assigned shopper. The shared basket is unchanged.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proposal sent to the assigned shopper. The shared basket is unchanged."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Propuesta enviada a la persona asignada para comprar. La cesta compartida no cambió."
+          }
+        }
+      }
+    },
+    "Refresh and clear local retry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh and clear local retry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar y borrar el reintento local"
+          }
+        }
+      }
+    },
+    "Refresh store quote access": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh store quote access"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar acceso a cotizaciones"
+          }
+        }
+      }
+    },
+    "Retry exact saved action": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry exact saved action"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar la acción guardada exacta"
+          }
+        }
+      }
+    },
+    "Review adopting %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review adopting %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar adopción de %@"
+          }
+        }
+      }
+    },
+    "Review exact action": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review exact action"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la acción exacta"
+          }
+        }
+      }
+    },
+    "Review granting access": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review granting access"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar concesión de acceso"
+          }
+        }
+      }
+    },
+    "Review private comparison save": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review private comparison save"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar guardado de comparación privada"
+          }
+        }
+      }
+    },
+    "Review proposing %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review proposing %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar propuesta de %@"
+          }
+        }
+      }
+    },
+    "Review revoking access": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review revoking access"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar revocación de acceso"
+          }
+        }
+      }
+    },
+    "Revoke this adult's budget access and pending quote proposals": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revoke this adult's budget access and pending quote proposals"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revocar el acceso de este adulto al presupuesto y sus propuestas pendientes"
+          }
+        }
+      }
+    },
+    "Save private comparison": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save private comparison"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar comparación privada"
+          }
+        }
+      }
+    },
+    "Saved comparisons and shopper proposals": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved comparisons and shopper proposals"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparaciones guardadas y propuestas para quien compra"
+          }
+        }
+      }
+    },
+    "Saved privately by you": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved privately by you"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardada de forma privada por ti"
+          }
+        }
+      }
+    },
+    "Saving creates private proof only. It leaves the shared basket, prices, and store unchanged.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving creates private proof only. It leaves the shared basket, prices, and store unchanged."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar solo crea evidencia privada. La cesta compartida, los precios y la tienda no cambian."
+          }
+        }
+      }
+    },
+    "Second store conditions and cap": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Second store conditions and cap"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Condiciones y límite de la segunda tienda"
+          }
+        }
+      }
+    },
+    "Select a shared shop and refresh your adult budget access.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select a shared shop and refresh your adult budget access."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selecciona una compra compartida y actualiza tu acceso adulto al presupuesto."
+          }
+        }
+      }
+    },
+    "Send reviewed store proposal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send reviewed store proposal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar propuesta de tienda revisada"
+          }
+        }
+      }
+    },
+    "Sending this proposal shares the comparison with the assigned shopper. It does not change the basket.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sending this proposal shares the comparison with the assigned shopper. It does not change the basket."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar esta propuesta comparte la comparación con la persona asignada para comprar. No cambia la cesta."
+          }
+        }
+      }
+    },
+    "Store choice adopted once. Review every item price and checkout charge before freezing the shared shop.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Store choice adopted once. Review every item price and checkout charge before freezing the shared shop."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tienda adoptada una sola vez. Revisa cada precio y cargo antes de congelar la compra compartida."
+          }
+        }
+      }
+    },
+    "The assigned shopper must review a shared basket before comparing stores.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The assigned shopper must review a shared basket before comparing stores."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La persona asignada debe revisar una cesta compartida antes de comparar tiendas."
+          }
+        }
+      }
+    },
+    "The comparison is unresolved. Review both complete quotes.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The comparison is unresolved. Review both complete quotes."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La comparación está sin resolver. Revisa ambas cotizaciones completas."
+          }
+        }
+      }
+    },
+    "The household result is not confirmed. Refresh access or retry the exact saved action. Changed revisions need a new review.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The household result is not confirmed. Refresh access or retry the exact saved action. Changed revisions need a new review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El resultado del hogar no está confirmado. Actualiza el acceso o reintenta la acción guardada exacta. Las revisiones cambiadas requieren una revisión nueva."
+          }
+        }
+      }
+    },
+    "The result is unconfirmed. Retrying keeps the original identifier and reviewed revision through reconnect or app restart.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The result is unconfirmed. Retrying keeps the original identifier and reviewed revision through reconnect or app restart."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El resultado no está confirmado. El reintento conserva el identificador y la revisión originales al reconectar o reiniciar la app."
+          }
+        }
+      }
+    },
+    "This adult's budget access was updated for this shop and shopper assignment.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This adult's budget access was updated for this shop and shopper assignment."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se actualizó el acceso de este adulto al presupuesto de esta compra y asignación."
+          }
+        }
+      }
+    },
+    "This shop is frozen or placed. Saved proof is read-only; it cannot change the order.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This shop is frozen or placed. Saved proof is read-only; it cannot change the order."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta compra está congelada o tiene un pedido realizado. La evidencia guardada es de solo lectura; no puede cambiar el pedido."
+          }
+        }
+      }
+    },
+    "Two entered store quotes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Two entered store quotes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dos cotizaciones ingresadas"
+          }
+        }
+      }
+    },
+    "Whole checkout": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whole checkout"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total de compra"
+          }
+        }
+      }
+    },
+    "You are the assigned shopper. Only you can adopt a reviewed store choice.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You are the assigned shopper. Only you can adopt a reviewed store choice."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eres la persona asignada para comprar. Solo tú puedes adoptar una tienda revisada."
+          }
+        }
+      }
+    },
+    "You explicitly sent this comparison to the shopper": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You explicitly sent this comparison to the shopper"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviaste esta comparación explícitamente a quien compra"
+          }
+        }
+      }
+    },
+    "Your saved comparisons stay private until you explicitly propose one to the assigned shopper.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your saved comparisons stay private until you explicitly propose one to the assigned shopper."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus comparaciones guardadas son privadas hasta que propones una explícitamente a la persona asignada para comprar."
+          }
+        }
+      }
+    },
+    "Review shared checkout after store choice": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review shared checkout after store choice"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar total compartido después de elegir tienda"
+          }
+        }
+      }
+    },
+    "Originally reviewed revision": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Originally reviewed revision"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisión originalmente revisada"
+          }
+        }
+      }
+    },
+    "Two store quotes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Two store quotes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dos cotizaciones"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

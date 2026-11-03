@@ -1,0 +1,152 @@
+{
+  "recordedAt": "2026-11-03T18:47:24.589928+00:00",
+  "scope": "Native offline help/privacy/support, public information source routes, environment-isolated app metadata and reviewer/demo handoff. Local source checks; not complete release acceptance.",
+  "verification": [
+    {
+      "kind": "macOS-host-XCTest",
+      "suite": "HelpConfigurationTests",
+      "passed": 3,
+      "failed": 0,
+      "scope": "Actual HelpConfiguration and MembershipDomain source copied unchanged to an isolated host Swift package; bundle metadata, URL validation, fixed-field summary privacy."
+    },
+    {
+      "kind": "Python-unittest",
+      "suite": "test_app_configuration.py",
+      "passed": 6,
+      "failed": 0,
+      "scope": "Release isolation, explicit production file, public-field allowlist, invalid URLs/placeholders and metadata gate."
+    },
+    {
+      "kind": "iOS17-simulator-SDK-typecheck",
+      "result": "pass",
+      "scope": "HelpView with actual configuration/domain and minimal composition stubs; no simulator boot or UI journey."
+    },
+    {
+      "kind": "localization-structure",
+      "result": "pass",
+      "entries": 69,
+      "literalKeys": 69,
+      "languages": [
+        "en",
+        "es"
+      ],
+      "humanReview": false
+    },
+    {
+      "kind": "xcstringstool-compile",
+      "result": "pass",
+      "catalog": "ios/Features/Help/Help.xcstrings"
+    },
+    {
+      "kind": "web-production-build",
+      "result": "pass",
+      "modules": 13,
+      "javascriptBytesApprox": 91820,
+      "javascriptGzipBytesApprox": 27600
+    },
+    {
+      "kind": "Node-jsdom",
+      "suite": "public-pages.test.mjs",
+      "passed": 6,
+      "failed": 0,
+      "scope": "Exact routes, both-language structure, focus-preserving language changes, no API/cookie/storage access, private-query removal, explicit policy/contact gaps and safe support configuration."
+    },
+    {
+      "kind": "Vite-production-preview-HTTP",
+      "result": "pass",
+      "routes": [
+        {
+          "path": "/help?lang=en",
+          "status": 200,
+          "kind": "production-static-entry-shell"
+        },
+        {
+          "path": "/help?lang=es",
+          "status": 200,
+          "kind": "production-static-entry-shell"
+        },
+        {
+          "path": "/privacy?lang=en",
+          "status": 200,
+          "kind": "production-static-entry-shell"
+        },
+        {
+          "path": "/privacy?lang=es",
+          "status": 200,
+          "kind": "production-static-entry-shell"
+        },
+        {
+          "path": "/terms?lang=en",
+          "status": 200,
+          "kind": "production-static-entry-shell"
+        },
+        {
+          "path": "/terms?lang=es",
+          "status": 200,
+          "kind": "production-static-entry-shell"
+        },
+        {
+          "path": "/support?lang=en",
+          "status": 200,
+          "kind": "production-static-entry-shell"
+        },
+        {
+          "path": "/support?lang=es",
+          "status": 200,
+          "kind": "production-static-entry-shell"
+        }
+      ],
+      "scope": "Static entry shells and bundled assets only; DOM rendering separately covered by jsdom. Not a physical browser acceptance."
+    },
+    {
+      "kind": "integrated-localization-structure",
+      "result": "pass",
+      "catalogs": 15,
+      "entries": 3416,
+      "literalKeys": 3273,
+      "dynamicHelperExpressionsExcluded": 32,
+      "runtimeCompositionsExcluded": 106,
+      "humanReview": false
+    },
+    {
+      "kind": "git-diff-whitespace",
+      "result": "pass"
+    }
+  ],
+  "deploymentProbe": {
+    "origin": "https://room-in-the-cart-staging.vercel.app",
+    "paths": {
+      "/help": 404,
+      "/privacy": 404,
+      "/terms": 404,
+      "/support": 404
+    },
+    "date": "2026-11-03",
+    "consequence": "Native URL metadata remains blank until pages are published and reviewed."
+  },
+  "remainingGates": [
+    "Human US-Spanish and device accessibility review",
+    "Operating legal identity, monitored contact, operator-approved policy/terms and production retention review",
+    "Owner-supplied actual product and production configuration",
+    "Publication, real signing/distribution and connected-provider/App Store device acceptance"
+  ],
+  "externalMutations": [],
+  "sourceSHA256": {
+    "ios/Features/Help/HelpConfiguration.swift": "5645e9a57fb5225f17fe66db816bfa0fc192bde2f9b336606578da927a8835f3",
+    "ios/Features/Help/HelpView.swift": "4c58640d7813079916aae039554a290ca36dd3f533616b5ae7688b8c07e04851",
+    "ios/Features/Help/Help.xcstrings": "8ed35cbc1ca743cae2b9a14b74a28967338bc76727cd5bf9c9ee58652a50dd0d",
+    "ios/Tests/HelpConfigurationTests.swift": "5e645549a00e54d22d6d12fffbdc4ac72f5f32e701722c6803d6e3d1b186d194",
+    "ios/App/Info.plist": "c1f1e2e23ab5545242e404dde1947011e848ede1553245646bb8fa5b58cf8342",
+    "scripts/app_configuration.py": "3ef94f0b692b9f10ebc40697b77a79da6675d12aab551c78145e13143ebc9dce",
+    "scripts/test_app_configuration.py": "d95b68ae4e36d475ea3ed4a99281000f18e5600014c29bf80ab081ab57a99cc5",
+    "scripts/generate_xcode_project.py": "558df086c2165a2e3752e52478581d862d9635c8ec9d1ae2a6f2a7ee9b478941",
+    "scripts/check_built_app.py": "664a1ec22d00e9ed760fb9fcc0ae267dc9bce2fec93d58f9eef8e27a0d474323",
+    "web/src/public-pages.ts": "0669358be48d2114639eb28904c51d7b506b5b5801cf2b94181de93e4c0d347d",
+    "web/src/public-pages-content.ts": "6906089427837013a638800beaf7e7fbc4b4564908d87e9601b96b9ae4ae39a2",
+    "web/src/public-pages.css": "5720c8c6d112e728eb9341f220e313a5ca6e3cd646819de02ce5459a526d85e3",
+    "web/src/public-site-configuration.ts": "975d6416df318c727ae01a4a141ac36529ef529b3c8e54adbe35079a919fe495",
+    "web/tests/public-pages.test.mjs": "058ca6fc613aaf243759012385596a18adcacb46359397337c942cd7e318f3a0",
+    "web/src/main.ts": "4499b025ea187beae9bf031d4860d9b6db361a8f54b527d9a18e922db4fca09b",
+    "vercel.json": "1859f3f7ed482df34f232b3f1bf5269b384f3fd84d24d0fa6feb4c6f0169a16e"
+  }
+}

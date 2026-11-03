@@ -178,6 +178,7 @@ struct PickupOfferEditorView: View {
         Section(pTr("Retailer response")) {
             DatePicker(pTr("Retailer response cutoff"), selection: $draft.deadline)
                 .environment(\.timeZone, TimeZone(identifier: draft.zone) ?? .current)
+                .accessibilityIdentifier("pickup.offer.cutoff")
             TextField(pTr("Time zone"), text: $draft.zone)
             TextField(pTr("Fallback if short"), text: $draft.fallback)
             TextField(pTr("Household preference (not retailer acceptance)"), text: $draft.preference).accessibilityIdentifier("pickup.offer.preference")

@@ -17,6 +17,8 @@ private final class S17FixtureServer: @unchecked Sendable {
     static let occurrence = "55555555-5555-4555-8555-555555555555"
     private let lock = NSRecursiveLock()
     private var revision = 2
+    private let quoteObservedAt = Date().addingTimeInterval(-60)
+    private let quoteExpiresAt = Date().addingTimeInterval(3600)
     private var meal: [String:Any] = ["title":"Fixture shared soup","day":"2026-11-05","kind":"dinner","portions":4,"protected":false]
     private var proposals: [[String:Any]] = []
     private var receipts: [String:[String:Any]] = [:]
@@ -56,7 +58,7 @@ private final class S17FixtureServer: @unchecked Sendable {
         if path.hasSuffix("/meal-plan") { return try json(["shopId":Self.shop,"shopRevision":revision,"authorityEpoch":1,"grantRevision":1,"shopper":shopper,"plannerId":Self.planner,"adults":[["id":Self.planner,"label":"Fixture planner"]],"meals":[occurrence],"proposals":[]]) }
         if path.hasSuffix("/shops/"+Self.shop) {
             guard shopper else { return try denied() }
-            let quote = try ShopperQuote(scope:"wholeCheckout",complete:true,capMinor:1000,capScope:"wholeCheckout",fee:.fixed(0),taxesMinor:0,depositsMinor:0,discountsMinor:0,observedAt:Date().addingTimeInterval(-60),expiresAt:Date().addingTimeInterval(3600))
+            let quote = try ShopperQuote(scope:"wholeCheckout",complete:true,capMinor:1000,capScope:"wholeCheckout",fee:.fixed(0),taxesMinor:0,depositsMinor:0,discountsMinor:0,observedAt:quoteObservedAt,expiresAt:quoteExpiresAt)
             return try json(["shopId":Self.shop,"shopRevision":revision,"authorityEpoch":1,"phase":"draft","meals":[occurrence],"quote":try JSONSerialization.jsonObject(with:JSONEncoder().encode(quote)),"lines":[["lineId":"66666666-6666-4666-8666-666666666666","originalItem":"Entered soup packs","packs":1,"unitPriceMinor":500,"feeEligible":true]]])
         }
         if path.hasSuffix("/replay-windows") { return try json(["id":"77777777-7777-4777-8777-777777777777","expiresAt":"2099-01-01T00:00:00Z"]) }

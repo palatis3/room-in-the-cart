@@ -390,6 +390,10 @@ final class DinnerPlanningTests: XCTestCase {
     func testTwoStoreCheckoutVersusTravelCashAndTimeVector() throws {
         let ledger = ShoppingLedger(); let pair = try quotes(ledger)
         let result = try TwoStoreQuoteEngine.compare(pair, access: access(ledger, paid: false), at: now)
+        XCTAssertEqual(try TwoStoreQuoteEngine.evaluateEnteredQuotes(pair), result)
+        XCTAssertThrowsError(try TwoStoreQuoteEngine.compare(pair, access: access(ledger, actor: "", canPlan: false), at: now),
+            "The pure calculator must not weaken the authorized planning entry point")
+        XCTAssertThrowsError(try TwoStoreQuoteEngine.compare(pair, access: access(ledger, budget: false), at: now))
         XCTAssertEqual(result.first.checkout.total.exact?.minorUnits, 3800); XCTAssertEqual(result.second.checkout.total.exact?.minorUnits, 3500)
         XCTAssertEqual(result.first.tripInclusive.total.exact?.minorUnits, 3800); XCTAssertEqual(result.second.tripInclusive.total.exact?.minorUnits, 3900)
         XCTAssertEqual(result.itemSubtotalChange?.minorUnits, -200)

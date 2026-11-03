@@ -20,7 +20,7 @@ import XCTest
         XCTAssertEqual(consent.value as? String, "0")
         enableSwitch("Offer optional feedback after a pickup")
         tap(app.buttons["Done"])
-        tap(element("openPickupList"))
+        openShoppingList()
         tap(element("ledgerStartShop"))
         fill("Tuesday family pickup", into: "ledgerShopName")
         tap(app.buttons["ledgerCreateShop"])
@@ -52,7 +52,7 @@ import XCTest
         assertText("Unscheduled")
 
         shopRoot()
-        tap(element("openPickupList"))
+        openShoppingList()
         tap(app.buttons["Inspect Wraps"])
         tap(element("ledgerPackChoice"))
         fill("Four wraps", into: "First pack label")
@@ -318,7 +318,7 @@ import XCTest
 
     func testStagedListCanReturnToOriginalAndMergeADuplicateAfterRestart() throws {
         launch(reset: true)
-        tap(element("openPickupList"))
+        openShoppingList()
         tap(element("ledgerStartShop"))
         fill("Saturday market", into: "ledgerShopName")
         tap(element("ledgerCreateShop"))
@@ -333,7 +333,7 @@ import XCTest
         reveal(line)
         let id = line.identifier
         restart()
-        tap(element("openPickupList"))
+        openShoppingList()
         reveal(element(id))
         tap(element("ledgerImport"))
         fill("2 wraps", into: "ledgerImportText")
@@ -363,7 +363,7 @@ import XCTest
         tap(app.buttons["Review removing this item"])
         tap(app.buttons["Move item to Trash"])
         restart()
-        tap(element("openPickupList"))
+        openShoppingList()
         XCTAssertFalse(element(id).exists)
         tap(element("ledgerHistory"))
         tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Restore ")).firstMatch)
@@ -373,14 +373,14 @@ import XCTest
 
     func testManualListOrderSurvivesRestartAndOpensLargePrint() throws {
         launch(reset: true)
-        tap(element("openPickupList")); tap(element("ledgerStartShop"))
+        openShoppingList(); tap(element("ledgerStartShop"))
         fill("Market walk", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
         tap(element("ledgerImport")); fill("Apples\nMilk", into: "ledgerImportText")
         tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
         tap(element("ledgerListOptions")); tap(app.buttons["List order and aisles"])
         choose("List order", value: "Manual item order")
         tap(app.buttons["Move Milk up"]); tap(element("saveListOrder"))
-        restart(); tap(element("openPickupList"))
+        restart(); openShoppingList()
         let items = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "ledgerInspect-"))
         XCTAssertTrue(items.firstMatch.waitForExistence(timeout: 10))
         XCTAssertTrue(items.firstMatch.label.contains("Milk"))
@@ -427,7 +427,7 @@ import XCTest
         tap(element("dinnerAcceptIdea"))
         assertText(copy("Dinner saved. Choose it separately to add grocery needs.", "Cena guardada. Elígela por separado para agregar sus necesidades de compra."))
         app.terminate(); launch(reset: false, spanish: spanish)
-        tap(element("openPickupList"))
+        openShoppingList()
         assertText(copy("Add the groceries you need for this pickup.", "Añade los alimentos que necesitas para esta compra."))
     }
 
@@ -435,7 +435,7 @@ import XCTest
         app.launchArguments = ["--ui-testing", "-AppleLanguages", spanish ? "(es)" : "(en)", "-AppleLocale", spanish ? "es_US" : "en_US"]
         if reset { app.launchArguments.append("--reset-test-workspace") }
         app.launch()
-        XCTAssertTrue(element("newComparison").waitForExistence(timeout: 15))
+        XCTAssertTrue(app.tabBars.buttons[spanish ? "Compras" : "Shop"].waitForExistence(timeout: 15))
     }
     private func restart() { app.terminate(); launch(reset: false) }
     private func element(_ id: String) -> XCUIElement { app.descendants(matching: .any).matching(identifier: id).firstMatch }
@@ -514,8 +514,15 @@ import XCTest
     }
     private func dinnerRoot() { returnToVisibleAnchor(element("dinnerLibrary")) }
     private func shopRoot() {
-        tap(app.tabBars.buttons["Shop"])
+        let tab = app.tabBars.buttons.matching(NSPredicate(format: "label IN %@", ["Shop", "Compras"])).firstMatch
+        tap(tab)
         returnToVisibleAnchor(element("newComparison"))
+    }
+    private func openShoppingList() {
+        // The caller requests this source through Shop. A restart may already
+        // have restored a detail, so use the native Back controls to the root.
+        shopRoot()
+        tap(element("openPickupList"))
     }
     private func back(to label: String) {
         returnToVisibleAnchor(app.buttons.matching(identifier: label).firstMatch)

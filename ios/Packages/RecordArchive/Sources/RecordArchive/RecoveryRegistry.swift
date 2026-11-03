@@ -43,6 +43,7 @@ public actor RecoveryRegistry {
         var erasedIdentities: [ArchiveIdentity] = []
         var erasedSources: [ArchiveSourceIdentity]? = []
         var erasedOrigins: [String]? = []
+        var erasedMediaSources: [ArchiveMediaSourceIdentity]? = []
     }
     private let url: URL
     private var manifest: Manifest
@@ -82,7 +83,7 @@ public actor RecoveryRegistry {
             let exact = manifest.records.first { $0.receipt.identity == identity }
             let related = manifest.records.first { $0.record.origin == record.origin && $0.record.id == record.id }
             let disposition: RecoveryDisposition
-            if (manifest.erasedOrigins ?? []).contains(record.origin) || manifest.erasedIdentities.contains(identity) || (manifest.erasedSources ?? []).contains(ArchiveSourceIdentity(origin: record.origin, recordID: record.id)) { disposition = .erased }
+            if (manifest.erasedOrigins ?? []).contains(record.origin) || manifest.erasedIdentities.contains(identity) || (manifest.erasedSources ?? []).contains(ArchiveSourceIdentity(origin: record.origin, recordID: record.id)) || (record.media ?? []).contains(where: { (manifest.erasedMediaSources ?? []).contains(ArchiveMediaSourceIdentity(origin: record.origin, mediaID: $0.id)) }) { disposition = .erased }
             else if let exact { disposition = exact.receipt.digest == digest ? .identical : .quarantined }
             else { disposition = related == nil ? .absent : .sibling }
             return RecoveryReviewRow(id: identity, record: record, disposition: disposition, existingCopyID: exact?.id)
@@ -171,6 +172,37 @@ public actor RecoveryRegistry {
         try persist(&next)
         undo = undo.filter { !$0.value.contains { all.contains($0.record.origin) } }
     }
+    /// A source-reference removal also scrubs embedded evidence in earlier copies.
+    /// Preserve each copy ID and its isolated edited workspace. The sanitized copy
+    /// becomes a deterministic local child revision; original media cannot return
+    /// through retry, older backups or deletion undo.
+    public func registerErasedMedia(_ sources: [ArchiveMediaSourceIdentity]) throws {
+        guard sources.allSatisfy({ ArchiveCodec.identifier($0.origin) && ArchiveCodec.identifier($0.mediaID) }) else { throw ArchiveError.invalidIdentity }
+        let lock = try acquireLock()
+        defer { releaseLock(lock) }
+        try refreshFromDisk()
+        let known = Set(manifest.erasedMediaSources ?? []), incoming = Set(sources)
+        guard !incoming.isSubset(of: known) else { return }
+        let all = known.union(incoming)
+        func scrub(_ saved: RecoveredRecord) throws -> RecoveredRecord {
+            guard let media = saved.record.media else { return saved }
+            let remaining = media.filter { !all.contains(ArchiveMediaSourceIdentity(origin: saved.record.origin, mediaID: $0.id)) }
+            guard remaining.count != media.count else { return saved }
+            var record = saved.record
+            record.media = remaining.isEmpty ? nil : remaining
+            record.parentRevision = record.revision
+            // The former receipt distinguishes different original projections.
+            record.revision = "media-erasure/" + ArchiveCodec.digest(try ArchiveCodec.canonical([saved.receipt.digest, ArchiveCodec.digest(try ArchiveCodec.canonical(record))]))
+            let receipt = try ArchiveCodec.receipt(record, projection: ArchiveCodec.projection(for: saved.documentKind), localCopyID: saved.id)
+            return RecoveredRecord(receipt: receipt, record: record, documentKind: saved.documentKind, recoveredAtMilliseconds: saved.recoveredAtMilliseconds)
+        }
+        var next = manifest
+        next.erasedMediaSources = Array(all)
+        next.records = try next.records.map(scrub)
+        let scrubbedUndo = try undo.mapValues { try $0.map(scrub) }
+        try persist(&next)
+        undo = scrubbedUndo
+    }
     public func discardUndo() { undo.removeAll() }
     /// Roll back only snapshots inserted by this reviewed batch; identical pre-existing
     /// copies survive. Removing receipts permits a later intentional import retry.
@@ -210,19 +242,21 @@ public actor RecoveryRegistry {
         guard origins.allSatisfy(ArchiveCodec.identifier) else { throw ArchiveError.integrity }
         let sources = Set(current.erasedSources ?? [])
         guard sources.allSatisfy({ ArchiveCodec.identifier($0.origin) && ArchiveCodec.identifier($0.recordID) }) else { throw ArchiveError.integrity }
+        let erasedMedia = Set(current.erasedMediaSources ?? [])
+        guard erasedMedia.allSatisfy({ ArchiveCodec.identifier($0.origin) && ArchiveCodec.identifier($0.mediaID) }) else { throw ArchiveError.integrity }
         let erased = Set(current.erasedIdentities)
         guard erased.count == current.erasedIdentities.count else { throw ArchiveError.integrity }
         for identity in erased {
             guard ArchiveCodec.identifier(identity.origin), ArchiveCodec.identifier(identity.recordID),
                   ArchiveCodec.identifier(identity.revision),
-                  [ArchiveKind.personalRecovery, .helperShop].contains(where: { ArchiveCodec.projection(for: $0) == identity.projection }) else { throw ArchiveError.integrity }
+                  ArchiveCodec.validProjectionDigest(identity.projection) else { throw ArchiveError.integrity }
         }
         for saved in current.records {
             guard identities.insert(saved.receipt.identity).inserted, copies.insert(saved.id).inserted,
                   ArchiveCodec.identifier(saved.id), !erased.contains(saved.receipt.identity), !origins.contains(saved.record.origin),
                   !sources.contains(ArchiveSourceIdentity(origin: saved.record.origin, recordID: saved.record.id)),
-                  saved.receipt.identity.projection == ArchiveCodec.projection(for: saved.documentKind),
-                  try ArchiveCodec.receipt(saved.record, projection: saved.receipt.identity.projection, localCopyID: saved.id) == saved.receipt else { throw ArchiveError.integrity }
+                  !(saved.record.media ?? []).contains(where: { erasedMedia.contains(ArchiveMediaSourceIdentity(origin: saved.record.origin, mediaID: $0.id)) }),
+                  try ArchiveCodec.receipt(saved.record, projection: ArchiveCodec.projection(for: saved.documentKind), localCopyID: saved.id) == saved.receipt else { throw ArchiveError.integrity }
             _ = try ArchiveCodec.make(records: [saved.record], kind: saved.documentKind, origin: saved.record.origin, revision: saved.record.revision)
             if saved.documentKind == .helperShop, saved.record.nativePayload != nil { throw ArchiveError.integrity }
         }
@@ -234,7 +268,7 @@ public actor RecoveryRegistry {
         guard bytes.count <= Self.maximumRegistryBytes else { throw ArchiveError.tooLarge }
         do {
             #if os(iOS)
-            try bytes.write(to: url, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+            try bytes.write(to: url, options: [.atomic, .completeFileProtection])
             #else
             try bytes.write(to: url, options: .atomic)
             #endif
