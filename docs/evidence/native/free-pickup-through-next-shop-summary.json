@@ -44,5 +44,30 @@
   "topInsights" : [
 
   ],
-  "totalTestCount" : 1
+  "totalTestCount" : 1,
+  "integratedRepeat" : {
+    "bundle": ".build/CombinedFreeJourney.xcresult",
+    "device": {
+      "architecture": "arm64",
+      "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+      "deviceName": "iPhone 17e",
+      "modelName": "iPhone 17e",
+      "osBuildNumber": "24A434",
+      "osVersion": "27.0",
+      "platform": "iOS Simulator"
+    },
+    "passedTests": 360,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "nativeModelTests": 359,
+    "uiTest": "FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop",
+    "uiDurationSeconds": 596.419,
+    "runtimeWarnings": [
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      }
+    ],
+    "scope": "Combined app snapshot before the latest dinner-idea supply editor and comparison layout changes."
+  }
 }
