@@ -17,7 +17,7 @@ npm --prefix service ci --ignore-scripts
 npm --prefix service test
 xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart \
   -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
-  -derivedDataPath .build/DerivedData CODE_SIGNING_ALLOWED=NO build
+  -derivedDataPath .build/DerivedData CODE_SIGN_IDENTITY=- build
 python3 scripts/check_built_app.py .build/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app --configuration Debug
 if [ "${RUN_UI_TESTS:-0}" = "1" ]; then
   : "${IOS_SIMULATOR_DESTINATION:?Set IOS_SIMULATOR_DESTINATION, e.g. platform=iOS Simulator,id=<device UUID>}"
@@ -25,5 +25,5 @@ if [ "${RUN_UI_TESTS:-0}" = "1" ]; then
   xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart \
     -configuration Debug -destination "$IOS_SIMULATOR_DESTINATION" \
     -derivedDataPath .build/DerivedData -resultBundlePath "$result_bundle" -collect-test-diagnostics never \
-    CODE_SIGNING_ALLOWED=NO test
+    CODE_SIGN_IDENTITY=- test
 fi

@@ -25,7 +25,7 @@
         {
           "description": "Solo para pruebas locales de StoreKit; no es un producto del App Store.",
           "displayName": "Prueba de Household",
-          "locale": "es_US"
+          "locale": "es_MX"
         }
       ],
       "name": "LOCAL TEST ONLY — Household annual hypothesis",
@@ -48,11 +48,6 @@
               "description": "Planificación de prueba para dos adultos. Precio hipotético local.",
               "displayName": "Household (prueba local)",
               "locale": "es_MX"
-            },
-            {
-              "description": "Planificación de prueba para dos adultos. Precio hipotético local.",
-              "displayName": "Household (prueba local)",
-              "locale": "es_US"
             }
           ],
           "productID": "local.testing.household.annual",

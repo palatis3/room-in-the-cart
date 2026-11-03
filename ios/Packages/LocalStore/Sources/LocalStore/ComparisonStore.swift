@@ -9,6 +9,19 @@ public struct SavedComparison: Equatable, Sendable, Identifiable {
     public let revision: Int64
 }
 
+/// Readable identity for a source whose envelope cannot be opened. Listing never
+/// repairs, overwrites or discards its bytes. A newer envelope may need a newer app.
+public struct UnavailableComparison: Equatable, Sendable, Identifiable {
+    public let id: UUID
+    public let title: String?
+    public let reason: ComparisonStoreError
+}
+
+public struct ComparisonListing: Equatable, Sendable {
+    public let records: [SavedComparison]
+    public let unavailable: [UnavailableComparison]
+}
+
 /// Permanent erasure evidence. Contains no title, payload, or payload digest.
 /// Its origin is `comparisons/{workspaceID.uuidString}` and its source identity is `id`.
 public struct ComparisonTombstone: Equatable, Sendable, Identifiable {
@@ -119,6 +132,13 @@ public actor ComparisonStore {
 
     public func list() throws -> [SavedComparison] {
         try database.records(Self.select + " ORDER BY r.saved_at DESC, c.id ASC", values: [])
+    }
+
+    /// Use for interactive browsing. Individual envelope failures are explicit;
+    /// database/identity failures still throw rather than return a partial result.
+    /// `list()` remains strict for callers that require a complete snapshot.
+    public func listing() throws -> ComparisonListing {
+        try database.listing(Self.select + " ORDER BY r.saved_at DESC, c.id ASC")
     }
 
     public func load(id: UUID) throws -> SavedComparison? {
@@ -474,6 +494,37 @@ private final class Database: @unchecked Sendable {
             let result = sqlite3_step(statement)
             if result == SQLITE_DONE { return records }
             guard result == SQLITE_ROW else { throw ComparisonStoreError.database(result) }
+            let record = try record(statement)
+            if keepingRecords { records.append(record) }
+        }
+    }
+
+    func listing(_ sql: String) throws -> ComparisonListing {
+        let statement = try statement(sql)
+        defer { sqlite3_finalize(statement) }
+        var records: [SavedComparison] = []
+        var unavailable: [UnavailableComparison] = []
+        while true {
+            let status = sqlite3_step(statement)
+            if status == SQLITE_DONE { return ComparisonListing(records: records, unavailable: unavailable) }
+            guard status == SQLITE_ROW else { throw ComparisonStoreError.database(status) }
+            guard let id = UUID(uuidString: try text(statement, column: 0)) else {
+                throw ComparisonStoreError.corruptRecord
+            }
+            do { records.append(try record(statement)) }
+            catch let error as ComparisonStoreError {
+                switch error {
+                case .corruptRecord, .unsupportedEnvelope:
+                    let title = try? text(statement, column: 1)
+                    unavailable.append(UnavailableComparison(id: id,
+                        title: title.flatMap { $0.utf8.count <= 4096 ? $0 : nil }, reason: error))
+                default: throw error
+                }
+            }
+        }
+    }
+
+    private func record(_ statement: OpaquePointer) throws -> SavedComparison {
             guard let id = UUID(uuidString: try text(statement, column: 0)),
                   sqlite3_column_type(statement, 2) == SQLITE_BLOB,
                   let pointer = sqlite3_column_blob(statement, 2)
@@ -492,10 +543,7 @@ private final class Database: @unchecked Sendable {
             let time = sqlite3_column_double(statement, 3)
             let revision = sqlite3_column_int64(statement, 4)
             guard time.isFinite, revision > 0 else { throw ComparisonStoreError.corruptRecord }
-            if keepingRecords {
-                records.append(SavedComparison(id: id, title: title, payload: envelope.payload,
-                                               savedAt: Date(timeIntervalSinceReferenceDate: time), revision: revision))
-            }
-        }
+            return SavedComparison(id: id, title: title, payload: envelope.payload,
+                                   savedAt: Date(timeIntervalSinceReferenceDate: time), revision: revision)
     }
 }

@@ -283,3 +283,10 @@ test('helper session activation sends and verifies the selected grant',async()=>
  await api.activateSession('household-a','csrf-test','selected-grant');assert.deepEqual(JSON.parse(calls[0].options.body),{householdId:'household-a',grantId:'selected-grant'});
  await assert.rejects(api.activateSession('household-a','csrf-test','another-grant'),e=>e.code==='invalid_response');
 });
+
+test('successful Refresh preserves an actual failed-save notice and unsent draft',async()=>{
+ const {root,dom}=await setup(fakeAPI({command:async()=>{throw new ApiError('network',0);}}));
+ type(dom,'item','Unsent oats');submit(root,dom);submit(root,dom);await tick();
+ assert.match(root.textContent,/Not saved/);assert.match(root.textContent,/Unsent oats/);
+ click(root,'Refresh');await tick();assert.match(root.textContent,/Not saved/);assert.match(root.textContent,/Unsent oats/);
+});

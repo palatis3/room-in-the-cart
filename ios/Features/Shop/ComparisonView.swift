@@ -125,6 +125,23 @@ struct ComparisonView: View {
     }
 
     private func results(_ result: CoreDomain.ComparisonResult) -> some View {
+        GeometryReader { viewport in
+            VStack(spacing: 0) {
+                resultList(result)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .clipped()
+                // Reserve a real layout boundary above the floating tab bar.
+                // The opaque footer continues behind it, so quantities cannot
+                // be painted into the navigation region while scrolling.
+                Theme.canvas.frame(height: 8)
+                    .background(Theme.canvas.ignoresSafeArea(edges: .bottom))
+                    .accessibilityHidden(true)
+            }
+            .frame(width: viewport.size.width, height: viewport.size.height)
+        }
+    }
+
+    private func resultList(_ result: CoreDomain.ComparisonResult) -> some View {
         List {
             Section {
                 VStack(alignment: .leading, spacing: 12) {

@@ -180,6 +180,43 @@ final class ComparisonStoreTests: XCTestCase {
         try await reopened.close()
     }
 
+    func testListingPreservesDamagedAndFutureEnvelopesBesideHealthyRecords() async throws {
+        let store = try ComparisonStore(url: url)
+        let healthy = try await store.save(id: UUID(), title: "Healthy", payload: Data([1]), savedAt: Date())
+        let damaged = try await store.save(id: UUID(), title: "Damaged", payload: Data([2]), savedAt: Date())
+        let future = try await store.save(id: UUID(), title: "Future", payload: Data([3]), savedAt: Date())
+        try await store.close()
+        try sql("""
+            DROP TRIGGER immutable_revision_update;
+            UPDATE comparison_revisions SET envelope = x'7B' WHERE comparison_id = '\(damaged.id.uuidString)';
+            UPDATE comparison_revisions SET envelope = CAST('{"version":42,"payload":"Aw=="}' AS BLOB)
+                WHERE comparison_id = '\(future.id.uuidString)';
+            """)
+        let before = try Data(contentsOf: url)
+        let reopened = try ComparisonStore(url: url)
+        let listing = try await reopened.listing()
+        XCTAssertEqual(listing.records, [healthy])
+        XCTAssertEqual(Set(listing.unavailable.map(\.id)), [damaged.id, future.id])
+        XCTAssertEqual(listing.unavailable.first { $0.id == damaged.id }?.reason, .corruptRecord)
+        XCTAssertEqual(listing.unavailable.first { $0.id == future.id }?.reason, .unsupportedEnvelope(42))
+        XCTAssertEqual(listing.unavailable.first { $0.id == damaged.id }?.title, "Damaged")
+        let loaded = try await reopened.load(id: healthy.id)
+        XCTAssertEqual(loaded, healthy)
+        do { _ = try await reopened.list(); XCTFail("Complete snapshot must still fail explicitly") }
+        catch let error as ComparisonStoreError {
+            XCTAssertTrue(error == .corruptRecord || error == .unsupportedEnvelope(42))
+        }
+        try await reopened.close()
+        XCTAssertEqual(try Data(contentsOf: url), before, "Browsing must preserve every source byte")
+    }
+
+    func testListingDoesNotSwallowConnectionFailures() async throws {
+        let store = try ComparisonStore(url: url)
+        try await store.close()
+        do { _ = try await store.listing(); XCTFail("Closed database must not look empty") }
+        catch { XCTAssertEqual(error as? ComparisonStoreError, .closed) }
+    }
+
     func testMalformedDatabaseIsNotRecreated() throws {
         let garbage = Data("This is not a SQLite database".utf8)
         try garbage.write(to: url)

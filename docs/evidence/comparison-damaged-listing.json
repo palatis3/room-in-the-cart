@@ -1,0 +1,15 @@
+{
+  "at": "2026-11-03T06:56:13.964089+00:00",
+  "result": "73 LocalStore tests passed; native test added but not yet run",
+  "log": ".build/local-store-damaged-listing.log",
+  "scope": "Healthy comparison listing beside corrupt or future envelopes; explicit unavailable rows; source bytes preserved; strict complete-snapshot API unchanged",
+  "sourceSHA256": {
+    "ios/Packages/LocalStore/Sources/LocalStore/ComparisonStore.swift": "a6e1edea9696b4414d7792ee01586740f033bd00bf4303085bb004c989cc8d10",
+    "ios/Packages/LocalStore/Tests/LocalStoreTests/ComparisonStoreTests.swift": "bd2229f553597b3ff4ad67315c2689a0e77eed93388066d4d38b5ad2d52a8f92",
+    "ios/App/AppModel.swift": "04c936a2b285e3415da4a8f35f0ab44532c3b657effe32efdf47e0c2e0e2f6cf",
+    "ios/App/RoomInTheCartApp.swift": "ab59d4990f2437d1ef2b12c035a430cccc5476a604ad794e7738d63b46691db0",
+    "ios/Tests/AppModelTests.swift": "a3459bfdfbcae6f30eed5aedb788745cbe87346776c0887ba8faa3b346c8c0ed"
+  },
+  "nativeResult": "PASS: AppModel damaged-sibling restart and byte preservation; full native model run140/140",
+  "nativeEvidence": "native/recovery-cook-models-summary.json"
+}

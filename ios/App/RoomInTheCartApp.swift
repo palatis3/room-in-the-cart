@@ -145,10 +145,22 @@ struct RecordsView: View {
             NavigationLink(tr("Recovery, exports and saved records")) {
                 RecordsToolsEntryView(app: model, ledger: ledger, pickup: pickup)
             }
-            if model.records.isEmpty {
+            if model.records.isEmpty && model.unavailableRecords.isEmpty {
                 ContentUnavailableView(tr("Your comparisons live here"), systemImage: "tray", description: Text(tr("Save a pack comparison to return to the same amounts and prices, even offline.")))
             }
             ForEach(model.records, id: \.id) { SavedRow(record: $0) }
+            if !model.unavailableRecords.isEmpty {
+                Section(tr("Comparisons that need attention")) {
+                    ForEach(model.unavailableRecords) { record in
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(record.title.flatMap { $0.isEmpty ? nil : $0 } ?? tr("One item")).font(.headline)
+                            Text(tr("This comparison could not be read. Its saved data has been kept. Other comparisons are still available."))
+                                .font(.subheadline).foregroundStyle(Theme.secondary)
+                        }.accessibilityElement(children: .combine)
+                    }
+                    Button(tr("Try again")) { Task { await model.refresh() } }.frame(minHeight: 44)
+                }
+            }
             if !pickup.journeys.isEmpty {
                 NavigationLink(tr("Pickup, repairs and handoffs")) { PickupHomeView(model: pickup).environment(\.pickupLedger, ledger) }
             }

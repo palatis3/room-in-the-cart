@@ -14,11 +14,13 @@ ROOT = Path(__file__).resolve().parents[1]
 TABLES = {'tr': 'Localizable', 'message': 'Localizable',
           'entry': 'Localizable', 'unitPicker': 'Localizable', 'offerSection': 'Localizable',
           'ledgerText': 'Ledger', 'ledgerFormat': 'Ledger', 'mtr': 'Membership',
-          'ht': 'Household', 'recordsText': 'Records', 'pTr': 'Pickup', 'pCook': 'Pickup'}
+          'ht': 'Household', 'recordsText': 'Records', 'pTr': 'Pickup', 'pCook': 'Pickup',
+          'captureText': 'Capture', 'dinnerText': 'Dinners', 'dinnerFormat': 'Dinners',
+          'SurfaceCopy.text': 'DeviceSurfaces'}
 UI_CALLS = {'Text', 'Label', 'Button', 'Toggle', 'Section', 'Picker',
             'NavigationLink', 'ContentUnavailableView'}
 STRING = re.compile(r'"(?:\\.|[^"\\])*"')
-CALL = re.compile(r'\b(' + '|'.join(TABLES.keys() | UI_CALLS) + r')\s*\(')
+CALL = re.compile(r'\b(' + '|'.join(re.escape(name) for name in TABLES.keys() | UI_CALLS) + r')\s*\(')
 FORMAT = re.compile(r'%(?:(\d+)\$)?[-+ #0]*(?:\d+)?(?:\.\d+)?(hh|ll|h|l|q|z|t|j)?([@diuoxXfFeEgGaAcCsSp])')
 
 
@@ -96,7 +98,7 @@ def source_keys(root=ROOT):
     keys = {table: set() for table in set(TABLES.values())}
     dynamic = set()
     runtime_strings = 0
-    for folder in ('ios/App', 'ios/Features'):
+    for folder in ('ios/App', 'ios/Features', 'ios/Extensions'):
         for path in (root / folder).rglob('*.swift'):
             text = path.read_text()
             for call in CALL.finditer(text):
@@ -168,6 +170,7 @@ def check_catalog(path):
             values[language] = unit['value']
         # Symbolic catalog keys (InfoPlist keys and enum values) need not equal
         # English copy. Translation arguments must match the English value.
+        assert set(re.findall(r'\$\{[^}]+\}', values['en'])) == set(re.findall(r'\$\{[^}]+\}', values['es'])), f'{path.name}: template variable mismatch: {key}'
         assert signature(values['en']) == signature(values['es']), f'{path.name}: placeholder mismatch: {key}'
         if '%' in key:
             assert signature(key) == signature(values['en']), f'{path.name}: source placeholder mismatch: {key}'

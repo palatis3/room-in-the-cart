@@ -103,7 +103,16 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
             createdAt: now, extraTripAgreed: false, repeatMealAgreed: false, elapsedMinutes: 20, due: now.addingTimeInterval(3600))
         try requireSaved(await pickup.change { $0.repairs.append(repair) })
         XCTAssertEqual(try totalShortfall(pickup), try Rational(2), "A repair note is not new food")
-        let note = PickupCookNote(id: UUID(), text: repair.instruction, language: "en-US", createdAt: now, revision: try XCTUnwrap(pickup.journey?.revision))
+        let beforeCook = try XCTUnwrap(pickup.journey)
+        let cookText = PickupCookProjection.text(journey: beforeCook, allocation: pickup.allocation,
+            result: pickup.result, language: "en-US", at: now, timeZone: TimeZone(secondsFromGMT: 0)!)
+        XCTAssertTrue(cookText.contains("set aside first"))
+        XCTAssertTrue(cookText.contains("No sesame"))
+        XCTAssertTrue(cookText.contains("Short or unverified amount. Review."))
+        XCTAssertTrue(cookText.contains(repair.instruction))
+        XCTAssertFalse(cookText.contains("Private budget included"))
+        XCTAssertEqual(pickup.journey, beforeCook, "Preparing a cook copy cannot mutate food or send history")
+        let note = PickupCookNote(id: UUID(), text: cookText, language: "en-US", createdAt: now, revision: beforeCook.revision)
         try requireSaved(await pickup.change { $0.notes.append(note) })
         try requireSaved(await pickup.change { $0.cookShareEvents.append(PickupCookShareEvent(id: UUID(), noteID: note.id, occurredAt: self.now, action: .shareCancelled, destination: nil)) })
         XCTAssertNil(pickup.journey?.notes.first?.sentAt)
@@ -249,6 +258,70 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
         XCTAssertEqual(reopened.journey, next)
         XCTAssertEqual(reopened.journeys.first { $0.id == origin }, before)
         XCTAssertEqual(reopened.journeys.count, 2)
+    }
+
+    @MainActor func testCurrentDinnerFeatureFreeReusableChoiceProjectsLunchAndSurvivesNewShopRestart() async throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let ledgerURL = directory.appendingPathComponent("ledger.sqlite")
+        var ledger = LedgerModel(databaseURL: ledgerURL)
+        let pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"))
+        await ledger.open(); await pickup.load()
+        try requireSaved(await ledger.startShop(title: "First shop"))
+        var feature = dinnerFeature(ledger: ledger, pickup: pickup)
+        let acceptedID = UUID()
+        let template = MealTemplate(title: "Wrap dinner", servings: try Rational(6),
+            ingredients: [MealIngredient(name: "Wraps", quantity: quantity(6), exclusions: ["No sesame"])],
+            sourceURL: "https://example.test/wrap-dinner",
+            servingGroups: [ServingGroup(name: "Lunch", servings: try Rational(2), isProtected: true)])
+        XCTAssertFalse(feature.paid)
+        try requireSaved(await feature.accept(template, id: acceptedID, fallback: false))
+        XCTAssertTrue(ledger.shop?.lines.isEmpty == true, "Accepting a library dinner does not add groceries")
+        let accepted = try XCTUnwrap(feature.state.acceptedDinners.first)
+        XCTAssertEqual(feature.state.freeReusableDinnerID, acceptedID)
+        XCTAssertTrue(feature.choose(accepted, day: nil))
+        XCTAssertTrue(ledger.shop?.lines.isEmpty == true, "Preview leaves the saved list intact")
+        try requireSaved(await feature.applyPreview())
+        let firstShop = try XCTUnwrap(ledger.shop)
+        let firstOccurrence = try XCTUnwrap(firstShop.mealOccurrences.first)
+        XCTAssertNil(firstOccurrence.scheduledDay)
+        XCTAssertEqual(firstOccurrence.templateID, template.id)
+        ledger = LedgerModel(databaseURL: ledgerURL)
+        await ledger.open()
+        feature = dinnerFeature(ledger: ledger, pickup: pickup)
+        XCTAssertEqual(ledger.shop, firstShop)
+        XCTAssertEqual(feature.state.acceptedDinners.first?.template.sourceURL, template.sourceURL)
+        let review = try LedgerCheckoutAdapter.review(shop: XCTUnwrap(ledger.shop), workspaceRevision: ledger.revision, previous: nil)
+        XCTAssertEqual(review.lines.count, 1)
+        XCTAssertEqual(review.lines.first?.quantity.amount, try Rational(6))
+        XCTAssertEqual(review.needs.first { $0.priority == .protected }?.amount.amount, try Rational(2))
+        XCTAssertEqual(review.needs.first { $0.priority == .required }?.amount.amount, try Rational(4))
+        XCTAssertEqual(Set(review.details.flatMap(\.exclusions)), ["No sesame"])
+        try requireSaved(try await LedgerCheckoutAdapter.apply(review, ledger: ledger, pickup: pickup))
+        try requireSaved(await pickup.startNextShop(accept: []))
+        let next = try XCTUnwrap(pickup.journey)
+        try requireSaved(await LedgerCheckoutAdapter.openNextShop(next, ledger: ledger))
+        feature = dinnerFeature(ledger: ledger, pickup: pickup)
+        XCTAssertTrue(feature.choose(accepted, day: nil))
+        try requireSaved(await feature.applyPreview())
+        let nextOccurrence = try XCTUnwrap(ledger.shop?.mealOccurrences.first)
+        XCTAssertNotEqual(nextOccurrence.id, firstOccurrence.id)
+        XCTAssertEqual(nextOccurrence.templateID, firstOccurrence.templateID)
+        XCTAssertEqual(ledger.workspace.shops.first { $0.id == firstShop.id }, firstShop)
+        let reopened = LedgerModel(databaseURL: ledgerURL)
+        await reopened.open()
+        XCTAssertEqual(reopened.shop?.mealOccurrences.first, nextOccurrence)
+        XCTAssertEqual(reopened.workspace.dinnerPlanning.acceptedDinners.count, 1)
+    }
+
+    @MainActor private func dinnerFeature(ledger: LedgerModel, pickup: PickupModel) -> DinnerFeatureModel {
+        DinnerFeatureModel(store: ledger, access: { shopID in
+            guard ledger.ready, pickup.ready, let workspaceID = ledger.sourceWorkspaceID else { return nil }
+            let current = Date()
+            return DinnerAccessContext(scope: .local(workspaceID: workspaceID), actorID: "local-free-adult",
+                shopID: shopID, assignedShopperID: "local-free-adult", canPlan: true, canReadBudget: true,
+                hasPaidTools: false, roleRevision: 0, verifiedAt: current, validUntil: current.addingTimeInterval(30), sharedCommitAuthorized: false)
+        }, phase: { id in pickup.journeys.first { $0.id == id }?.basket?.phase ?? .draft })
     }
 
     @MainActor private func totalShortfall(_ pickup: PickupModel) throws -> Rational {

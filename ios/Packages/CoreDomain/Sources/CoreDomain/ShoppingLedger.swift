@@ -408,7 +408,10 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         }
     }
 
-    public func stageImport(text: String, source: ImportSource = .typed) -> StagedListImport {
+    /// External capture/inbox callers persist the returned preview before Apply.
+    /// Reuse its full bytes for retries; re-staging a new preview with this ID is
+    /// deliberately not equivalent to replaying an already committed preview.
+    public func stageImport(text: String, source: ImportSource = .typed, importID: UUID = UUID()) -> StagedListImport {
         var staged: [StagedImportLine] = []
         for original in text.components(separatedBy: .newlines) where !original.trimmingCharacters(in: .whitespaces).isEmpty {
             let parsed = Self.parseLine(original)
@@ -417,7 +420,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
             staged.append(StagedImportLine(id: UUID(), proposedLineID: UUID(), originalText: original,
                 name: parsed.name, quantity: parsed.quantity, unresolvedReason: parsed.reason, duplicateLineIDs: candidates))
         }
-        return StagedListImport(id: UUID(), shopID: id, baseRevision: revision, source: source, originalText: text, lines: staged)
+        return StagedListImport(id: importID, shopID: id, baseRevision: revision, source: source, originalText: text, lines: staged)
     }
 
     /// Refresh suggestions after editing a staged product name without changing

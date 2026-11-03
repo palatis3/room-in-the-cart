@@ -95,7 +95,7 @@ function parseBrowserAuth(value:unknown):BrowserAuthState {
   return{available,authenticated,csrf};
 }
 export class API {
-  constructor(private readonly fetcher: typeof fetch = fetch) {}
+  constructor(private readonly fetcher: typeof fetch = (input, init) => globalThis.fetch(input, init)) {}
   private async call(path: string, method = 'GET', body?: unknown, csrf?: string): Promise<unknown> {
     const headers: Record<string, string> = { Accept: 'application/json' };
     if (body !== undefined) headers['Content-Type'] = 'application/json';

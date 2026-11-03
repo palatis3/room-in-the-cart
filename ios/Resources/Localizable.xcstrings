@@ -2210,6 +2210,40 @@
           }
         }
       }
+    },
+    "Comparisons that need attention": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparisons that need attention"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparaciones que necesitan atención"
+          }
+        }
+      }
+    },
+    "This comparison could not be read. Its saved data has been kept. Other comparisons are still available.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This comparison could not be read. Its saved data has been kept. Other comparisons are still available."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo leer esta comparación. Sus datos guardados se han conservado. Las demás comparaciones siguen disponibles."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

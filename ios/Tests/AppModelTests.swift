@@ -1,9 +1,42 @@
 import XCTest
 import CoreDomain
 import LocalStore
+import SQLite3
 @testable import RoomInTheCart
 
 final class AppModelTests: XCTestCase {
+    @MainActor
+    func testDamagedComparisonDoesNotHideHealthyRecordAfterRelaunch() async throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("local.sqlite")
+        let store = try ComparisonStore(url: url)
+        let draft = makeDraft(unknownSecondYield: false)
+        let healthy = try await store.save(id: draft.id, title: draft.item,
+            payload: JSONEncoder().encode(SavedPayload(draft: draft)), savedAt: Date())
+        let damagedID = UUID()
+        try await store.save(id: damagedID, title: "Damaged", payload: Data([1]), savedAt: Date())
+        try await store.close()
+        var db: OpaquePointer?
+        XCTAssertEqual(sqlite3_open(url.path, &db), SQLITE_OK)
+        let query = "DROP TRIGGER immutable_revision_update; UPDATE comparison_revisions SET envelope = x'7B' WHERE comparison_id = '\(damagedID.uuidString)'"
+        let status = sqlite3_exec(db, query, nil, nil, nil)
+        sqlite3_close(db)
+        XCTAssertEqual(status, SQLITE_OK)
+        let before = try Data(contentsOf: url)
+        let app = AppModel(databaseURL: url)
+        await app.open()
+        XCTAssertTrue(app.ready)
+        XCTAssertNil(app.error)
+        XCTAssertEqual(app.records, [healthy])
+        XCTAssertEqual(app.unavailableRecords.map(\.id), [damagedID])
+        XCTAssertEqual(try app.decode(try XCTUnwrap(app.records.first)), draft)
+        await app.refresh()
+        XCTAssertEqual(app.unavailableRecords.count, 1)
+        try await app.store?.close()
+        XCTAssertEqual(try Data(contentsOf: url), before)
+    }
+
     @MainActor
     func testDecimalQuantityParsingIsExactAndRetainsSourceLiteral() throws {
         let cases: [(String, Int64, Int64)] = [

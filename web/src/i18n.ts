@@ -1,5 +1,8 @@
 /** US Spanish draft; human language review remains a release gate. */
 const es: Record<string, string> = {
+  'Could not load your account. Refresh to try again.':'No se pudo cargar tu cuenta. Actualiza para volver a intentarlo.',
+  'Connect to load sign-in options.':'Conéctate para cargar las opciones de inicio de sesión.',
+  'Email sign-in is not available yet.':'El inicio de sesión por correo aún no está disponible.',
   'Sign in to continue':'Inicia sesión para continuar',
   'Email sign-in is not available yet. Your invitation stays on this page.':'El inicio de sesión por correo aún no está disponible. Tu invitación permanece en esta página.',
   'Use your email code. Signing in does not join a household.':'Usa el código de tu correo. Iniciar sesión no te une a una familia.',

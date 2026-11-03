@@ -1,0 +1,12 @@
+{
+  "at": "2026-11-03T06:56:13.965184+00:00",
+  "deployment": "https://room-in-the-cart-staging-998uadgdg-doorframe-staging.vercel.app",
+  "alias": "https://room-in-the-cart-staging.vercel.app",
+  "checks": {
+    "initialLoadEnglish": "PASS: sign-in unavailable; no false save failure",
+    "refreshEnglish": "PASS: loading transitions back to correct unavailable state",
+    "languageSpanish": "PASS: translated unavailable state; no false save failure",
+    "publicServiceSmoke": "6/6 PASS"
+  },
+  "limits": "Email provider intentionally disabled; no authenticated or invitation redemption flow tested"
+}

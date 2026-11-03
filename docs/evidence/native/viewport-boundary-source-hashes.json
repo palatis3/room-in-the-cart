@@ -1,0 +1,15 @@
+{
+  "commit": "7cee53b6c80278052217ca394534668b66116c2a",
+  "sourceHashes": {
+    "ios/Features/Shop/ComparisonView.swift": "4347218960e7adc0e0c41803bee9cc4c93adfaaf3f8180b116af934331968b41",
+    "ios/App/Theme.swift": "914a8b569f5299036f81ce846d59ea71cb35267a0c50b495c26252e7e4595fb9",
+    "ios/UITests/RoomInTheCartUITests.swift": "906774ade2b92bfcd6e68b5c0661b9e751aa01ae1c972574fbba7062b7d20ae1"
+  },
+  "testBundle": ".build/ViewportBoundaryFocused2.xcresult",
+  "afterHashes": {
+    "ios/Features/Shop/ComparisonView.swift": "4347218960e7adc0e0c41803bee9cc4c93adfaaf3f8180b116af934331968b41",
+    "ios/App/Theme.swift": "914a8b569f5299036f81ce846d59ea71cb35267a0c50b495c26252e7e4595fb9",
+    "ios/UITests/RoomInTheCartUITests.swift": "906774ade2b92bfcd6e68b5c0661b9e751aa01ae1c972574fbba7062b7d20ae1"
+  },
+  "relevantSourcesUnchangedDuringRun": true
+}

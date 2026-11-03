@@ -43,3 +43,28 @@ test('auth API sends only same-origin code requests and ignores unexpected priva
   await assert.rejects(api.verifyEmailCode('12345','csrf'),e=>e.status===422);
   const invalid=new API(async()=>Response.json({available:false,authenticated:true,csrf:null}));await assert.rejects(invalid.authState(),e=>e.code==='invalid_response');
 });
+
+test('fresh root with disabled email has no draft-save failure or invented invitation',async()=>{
+  const dom=new JSDOM('<div id="app"></div>',{url:'https://food.example/'}),root=dom.window.document.getElementById('app');
+  const api={session:async()=>null,authState:async()=>({available:false,authenticated:false,csrf:null})};
+  const app=new WebApp(root,api,new Outbox(new IDBFactory()));await app.start();
+  assert.equal(root.querySelector('[role="status"]').textContent,'');assert.match(root.textContent,/Email sign-in is not available yet\./);
+  assert.doesNotMatch(root.textContent,/Not saved|Your text|Your invitation/);
+});
+test('transient bootstrap failure describes loading and clears after successful Refresh into disabled email',async()=>{
+  let failed=true;const dom=new JSDOM('<div id="app"></div>',{url:'https://food.example/'}),root=dom.window.document.getElementById('app');
+  const api={session:async()=>{if(failed)throw new ApiError('network',0);return null;},authState:async()=>({available:false,authenticated:false,csrf:null})};
+  const app=new WebApp(root,api,new Outbox(new IDBFactory()));await app.start();
+  assert.match(root.querySelector('[role="status"]').textContent,/Could not load your account/);assert.doesNotMatch(root.textContent,/Not saved|Your text|Your invitation/);
+  failed=false;[...root.querySelectorAll('button')].find(button=>button.textContent==='Refresh').click();await tick();
+  assert.equal(root.querySelector('[role="status"]').textContent,'');assert.match(root.textContent,/Email sign-in is not available yet/);assert.doesNotMatch(root.textContent,/Could not load|Not saved/);
+});
+
+test('default API fetch preserves the browser global receiver instead of binding the API instance',async()=>{
+  const original=globalThis.fetch;let called=0;
+  globalThis.fetch=function(_input,_init){
+    assert.equal(this,globalThis,'native browser fetch requires its global receiver');called++;
+    return Promise.resolve(Response.json({available:false,authenticated:false,csrf:null}));
+  };
+  try{assert.deepEqual(await new API().authState(),{available:false,authenticated:false,csrf:null});assert.equal(called,1);}finally{globalThis.fetch=original;}
+});

@@ -25,7 +25,7 @@ import StoreKitTest
         let requestedLocale = ProcessInfo.processInfo.environment["RITC_STOREKIT_LOCALE"] ?? "en_US"
         session.locale = Locale(identifier: requestedLocale)
         XCTAssertEqual(session.locale.identifier.replacingOccurrences(of: "-", with: "_"), requestedLocale,
-                       "The local StoreKit environment must retain the requested locale; do not substitute Mexico for US Spanish.")
+                       "Use the explicit supported product-metadata locale from the plan; never silently change it.")
     }
 
     override func tearDown() async throws {
@@ -48,18 +48,24 @@ import StoreKitTest
         XCTAssertEqual(offer.displayPrice, product.displayPrice)
         XCTAssertEqual(product.price, Decimal(string: "49.99")) // Fixture hypothesis, never a production-price assertion.
         XCTAssertFalse(product.isFamilyShareable)
+        XCTAssertEqual(product.priceFormatStyle.currencyCode, "USD")
+        let storefrontCountry = await Storefront.current?.countryCode
+        XCTAssertEqual(storefrontCountry, "USA")
+        XCTAssertEqual(Locale.current.region?.identifier, "US")
+        let appLanguage = ProcessInfo.processInfo.environment["RITC_APP_LANGUAGE"] ?? "en-US"
+        XCTAssertEqual(Locale.current.language.languageCode?.identifier, String(appLanguage.prefix(2)))
     }
 
     func testPurchaseDoesNotFinishOrGrantAccessWithoutDurableServiceDelivery() async throws {
         let (storefront, model) = try await loadedModel()
         defer { model.stop() }
-        let outcome = try await storefront.purchase(appAccountToken: accountToken)
-        let transaction = try verified(outcome)
+        await model.purchase()
+        XCTAssertEqual(model.notice, .failed(.notConfigured))
+        let purchases = await storefront.currentTransactions()
+        let transaction = try verified(try XCTUnwrap(purchases.first))
         XCTAssertEqual(transaction.appAccountToken, accountToken)
         XCTAssertEqual(transaction.productID, productID)
         XCTAssertFalse(transaction.signedTransactionInfo.isEmpty)
-        let failure = await model.receive(outcome)
-        XCTAssertEqual(failure, .notConfigured)
         assertFree(model)
         let pending = await storefront.unfinishedTransactions()
         XCTAssertTrue(pending.contains { id($0) == transaction.transactionID })
@@ -100,18 +106,24 @@ import StoreKitTest
     func testAskToBuyApprovalRemainsUndelivered() async throws {
         session.askToBuyEnabled = true
         let (storefront, model) = try await loadedModel()
-        defer { model.stop() }
-        let outcome = try await storefront.purchase(appAccountToken: accountToken)
-        guard case .pending = outcome else { return XCTFail("Ask to Buy must report pending") }
-        await model.receive(outcome)
-        XCTAssertEqual(model.notice, .pending)
-        assertFree(model)
+        let purchase = beginPurchase(model)
+        defer { purchase.task?.cancel(); model.stop() }
+        try await eventually("A real Ask to Buy request reaches pending approval") {
+            self.session.allTransactions().contains { $0.pendingAskToBuyConfirmation }
+        }
         let request = try XCTUnwrap(session.allTransactions().first { $0.pendingAskToBuyConfirmation })
+        // The SDK may return .pending immediately or keep the purchase call open until resolution.
+        // Assert the actual deferred transaction before allowing either path to be approved.
+        if purchase.finished { XCTAssertEqual(model.notice, .pending) }
+        else { XCTAssertTrue(model.isBusy) }
+        assertFree(model)
         try session.approveAskToBuyTransaction(identifier: request.identifier)
+        try await eventually("Approval completes the purchase flow and attempts durable delivery") {
+            purchase.finished && model.notice == .failed(.notConfigured)
+        }
         try await eventually("Approved transaction appears in current entitlements") {
             await storefront.currentTransactions().contains { self.id($0) != nil }
         }
-        await model.refresh()
         assertFree(model)
         let unfinished = await storefront.unfinishedTransactions()
         XCTAssertFalse(unfinished.isEmpty)
@@ -120,15 +132,21 @@ import StoreKitTest
     func testAskToBuyDeclineGrantsNothing() async throws {
         session.askToBuyEnabled = true
         let (storefront, model) = try await loadedModel()
-        defer { model.stop() }
-        let outcome = try await storefront.purchase(appAccountToken: accountToken)
-        guard case .pending = outcome else { return XCTFail("Ask to Buy must report pending") }
-        await model.receive(outcome)
+        let purchase = beginPurchase(model)
+        defer { purchase.task?.cancel(); model.stop() }
+        try await eventually("A real Ask to Buy request reaches pending approval") {
+            self.session.allTransactions().contains { $0.pendingAskToBuyConfirmation }
+        }
         let request = try XCTUnwrap(session.allTransactions().first { $0.pendingAskToBuyConfirmation })
+        if purchase.finished { XCTAssertEqual(model.notice, .pending) }
+        else { XCTAssertTrue(model.isBusy) }
+        assertFree(model)
         try session.declineAskToBuyTransaction(identifier: request.identifier)
-        await model.refresh()
-        let current = await storefront.currentTransactions()
-        XCTAssertTrue(current.isEmpty)
+        try await eventually("Decline ends the purchase without a current entitlement") {
+            guard purchase.finished, !self.session.allTransactions().contains(where: { $0.pendingAskToBuyConfirmation }) else { return false }
+            return await storefront.currentTransactions().isEmpty
+        }
+        XCTAssertTrue(model.notice == .pending || model.notice == .cancelled || model.notice == .failed(.unavailable))
         assertFree(model)
     }
 
@@ -235,9 +253,23 @@ import StoreKitTest
     private func loadedModel() async throws -> (StoreKitMembershipStorefront, MembershipModel) {
         let storefront = StoreKitMembershipStorefront()
         let model = makeModel(storefront: storefront)
-        await model.loadOffer()
+        await model.start() // Production coordinator starts observation before the user can purchase.
+        await Task.yield() // Let the observer enter Transaction.updates before initiating a purchase.
         _ = try XCTUnwrap(model.offer, "The local fixture must load before checking transaction state")
         return (storefront, model)
+    }
+
+    private final class PurchaseProbe {
+        var finished = false
+        var task: Task<Void, Never>?
+    }
+    private func beginPurchase(_ model: MembershipModel) -> PurchaseProbe {
+        let probe = PurchaseProbe()
+        probe.task = Task { @MainActor [weak probe] in
+            await model.purchase()
+            probe?.finished = true
+        }
+        return probe
     }
 
     private func makeModel(storefront: StoreKitMembershipStorefront) -> MembershipModel {

@@ -22,6 +22,7 @@ export class WebApp {
   private review = false;
   private busy = false;
   private notice = '';
+  private failurePurpose:'load'|'mutation'|null=null;
   private language:Language;
   private consent = false;
   private adultAttestation = false;
@@ -43,13 +44,13 @@ export class WebApp {
   private button(key:string,action:()=>void,primary=false):HTMLButtonElement {
     const b=this.el('button',this.t(key)); b.type='button'; b.disabled=this.busy; if(primary)b.className='primary'; b.addEventListener('click',action); return b;
   }
-  private async run(action:()=>Promise<void>):Promise<void> {
+  private async run(action:()=>Promise<void>,purpose:'load'|'mutation'='mutation'):Promise<void> {
     if(this.busy)return; this.busy=true; this.render();
-    try { await action(); } catch(error) { await this.fail(error); }
+    try { await action(); if(purpose==='load'&&this.failurePurpose==='load'){this.notice='';this.failurePurpose=null;} } catch(error) { await this.fail(error,purpose); }
     finally {this.busy=false;this.render();this.root.querySelector<HTMLElement>('[role="status"]')?.focus();}
   }
   private supportedRoute():boolean {return ['/', '/requests', '/invite', '/view'].includes(this.root.ownerDocument.defaultView?.location.pathname??'/');}
-  async start():Promise<void> { if(!this.supportedRoute()){this.render();return;} if(this.logoutPending){this.render();return;} await this.run(async()=>{await this.load();}); }
+  async start():Promise<void> { if(!this.supportedRoute()){this.render();return;} if(this.logoutPending){this.render();return;} await this.run(async()=>{await this.load();},'load'); }
   private clearPrivate():void {
     this.session=null;this.identityScope=null;this.requests=[];this.view=null;this.pending=[];this.draft=blank();
     this.retryCommand=null;this.uncertainSend=false;this.consent=false;this.review=false;this.correction='';
@@ -95,7 +96,8 @@ export class WebApp {
     try {const result=await this.api.logout(old);this.logoutPending=null;this.browserAuth=null;this.notice=result?.providerRevoked===false?'Signed out of this browser. Provider sign-out could not be confirmed.':cleared?'You are signed out.':'You are signed out, but browser storage could not be cleared. Clear site data before sharing this browser.';}
     catch {this.notice='Sign-out could not be confirmed. Retry before sharing this browser.';}
   }
-  private async fail(error:unknown):Promise<void> {
+  private async fail(error:unknown,purpose:'load'|'mutation'='mutation'):Promise<void> {
+    this.failurePurpose=purpose;
     const e=error instanceof ApiError ? error:new ApiError('unavailable',500);
     if(e.status===403||e.code==='access_ended') {
       this.clearPrivate();
@@ -107,6 +109,7 @@ export class WebApp {
     else if(e.code==='consent_unavailable')this.notice='Child enrollment is not available here yet. Ask a guardian to use the verified setup.';
     else if(e.status===409) this.notice='This information changed. Refresh, review, and try again.';
     else if(e.status===422) this.notice='Check your entry and try again.';
+    else if(purpose==='load')this.notice='Could not load your account. Refresh to try again.';
     else this.notice=this.uncertainSend?'Not saved in this browser. Receipt is unconfirmed. Your text is still here. Retry to check.':'Not saved. Your text is still here. Reconnect and try again.';
   }
   private date(value:string):string {
@@ -125,7 +128,7 @@ export class WebApp {
     if(this.logoutPending){main.append(this.el('h1',this.t('Finish signing out')),this.button('Retry sign-out',()=>void this.run(()=>this.signOut()),true));return;}
     if(this.invitation!==null || !this.session) {this.renderInvite(main);return;}
     const context=this.el('section');context.append(this.el('p',this.session.household.label));
-    const actions=this.el('div');actions.className='actions';actions.append(this.button('Refresh',()=>void this.run(()=>this.load())),this.button('Sign out',()=>void this.run(()=>this.signOut())));context.append(actions);main.append(context);
+    const actions=this.el('div');actions.className='actions';actions.append(this.button('Refresh',()=>void this.run(()=>this.load(),'load')),this.button('Sign out',()=>void this.run(()=>this.signOut())));context.append(actions);main.append(context);
     if(this.session.role==='helper'||this.session.role==='editor'){
       if(this.view)this.renderCook(main);else main.append(this.el('p',this.t('No instructions are available.')));
     } else this.renderContributor(main);
@@ -140,7 +143,8 @@ export class WebApp {
   }
   private renderLogin(main:HTMLElement):void{
     main.append(this.el('h1',this.t('Sign in to continue')));
-    if(!this.browserAuth?.available){main.append(this.el('p',this.t('Email sign-in is not available yet. Your invitation stays on this page.')),this.button('Refresh',()=>void this.run(()=>this.load())));return;}
+    if(!this.browserAuth){main.append(this.el('p',this.t('Connect to load sign-in options.')),this.button('Refresh',()=>void this.run(()=>this.load(),'load')));return;}
+    if(!this.browserAuth.available){main.append(this.el('p',this.t(this.invitation?'Email sign-in is not available yet. Your invitation stays on this page.':'Email sign-in is not available yet.')),this.button('Refresh',()=>void this.run(()=>this.load(),'load')));return;}
     main.append(this.el('p',this.t('Use your email code. Signing in does not join a household.')));
     if(this.invitation)main.append(this.el('p',this.t('Your invitation stays on this page while you sign in.')));
     const form=this.el('form');
@@ -177,7 +181,7 @@ export class WebApp {
       if(!opened||opened.household.id!==accepted.householdId||opened.memberId!==accepted.memberId)throw new ApiError('session_needed',401);
       if(accepted.grantId&&opened.grantId!==accepted.grantId){this.view=null;this.requests=[];throw new ApiError('grant_context_changed',409);}
       this.invitation=null;this.redemption=null;this.adultAttestation=false;this.inviteAlias='';
-    });});main.append(form,this.el('p',this.t('An internet connection is needed to open an invitation.')),this.button('Refresh',()=>void this.run(()=>this.load())));
+    });});main.append(form,this.el('p',this.t('An internet connection is needed to open an invitation.')),this.button('Refresh',()=>void this.run(()=>this.load(),'load')));
     if(!this.session&&this.browserAuth?.authenticated)main.append(this.button('Sign out',()=>void this.run(()=>this.signOutIdentity())));
   }
   private field(form:HTMLElement,key:string,id:string,value:string,update:(value:string)=>void,multiline=false):void {

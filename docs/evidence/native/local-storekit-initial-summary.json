@@ -1,0 +1,241 @@
+{
+  "devicesAndConfigurations" : [
+    {
+      "device" : {
+        "architecture" : "arm64",
+        "deviceId" : "5FDE1E82-1FF7-4556-9C14-0746F6295944",
+        "deviceName" : "iPhone 17",
+        "modelName" : "iPhone 17",
+        "osBuildNumber" : "24A434",
+        "osVersion" : "27.0",
+        "platform" : "iOS Simulator"
+      },
+      "expectedFailures" : 0,
+      "failedTests" : 2,
+      "passedTests" : 12,
+      "skippedTests" : 0,
+      "testPlanConfiguration" : {
+        "configurationId" : "1",
+        "configurationName" : "US English — local StoreKit"
+      }
+    },
+    {
+      "device" : {
+        "architecture" : "arm64",
+        "deviceId" : "5FDE1E82-1FF7-4556-9C14-0746F6295944",
+        "deviceName" : "iPhone 17",
+        "modelName" : "iPhone 17",
+        "osBuildNumber" : "24A434",
+        "osVersion" : "27.0",
+        "platform" : "iOS Simulator"
+      },
+      "expectedFailures" : 0,
+      "failedTests" : 14,
+      "passedTests" : 0,
+      "skippedTests" : 0,
+      "testPlanConfiguration" : {
+        "configurationId" : "2",
+        "configurationName" : "US Spanish — local StoreKit"
+      }
+    }
+  ],
+  "environmentDescription" : "LocalStoreKit · Built with macOS 27.2",
+  "expectedFailures" : 0,
+  "failedTests" : 14,
+  "finishTime" : 1793688344,
+  "passedTests" : 0,
+  "result" : "Failed",
+  "runtimeWarnings" : [
+    {
+      "issueType" : "Runtime Warning",
+      "message" : "Making a purchase without listening for transaction updates risks missing successful purchases. Create a Task to iterate Transaction.updates at launch.",
+      "sourceURL" : "file:///Users/palatis/Room%20in%20the%20Cart/ios/Tests/StoreKitScenarioTests.swift"
+    },
+    {
+      "issueType" : "Runtime Warning",
+      "message" : "Making a purchase without listening for transaction updates risks missing successful purchases. Create a Task to iterate Transaction.updates at launch.",
+      "sourceURL" : "file:///Users/palatis/Room%20in%20the%20Cart/ios/Tests/StoreKitScenarioTests.swift"
+    },
+    {
+      "issueType" : "Runtime Warning",
+      "message" : "Making a purchase without listening for transaction updates risks missing successful purchases. Create a Task to iterate Transaction.updates at launch.",
+      "sourceURL" : "file:///Users/palatis/Room%20in%20the%20Cart/ios/Tests/StoreKitScenarioTests.swift"
+    },
+    {
+      "issueType" : "Runtime Warning",
+      "message" : "Making a purchase without listening for transaction updates risks missing successful purchases. Create a Task to iterate Transaction.updates at launch.",
+      "sourceURL" : "file:///Users/palatis/Room%20in%20the%20Cart/ios/Tests/StoreKitScenarioTests.swift"
+    },
+    {
+      "issueType" : "Runtime Warning",
+      "message" : "Making a purchase without listening for transaction updates risks missing successful purchases. Create a Task to iterate Transaction.updates at launch.",
+      "sourceURL" : "file:///Users/palatis/Room%20in%20the%20Cart/ios/Tests/StoreKitScenarioTests.swift"
+    },
+    {
+      "issueType" : "Runtime Warning",
+      "message" : "Making a purchase without listening for transaction updates risks missing successful purchases. Create a Task to iterate Transaction.updates at launch.",
+      "sourceURL" : "file:///Users/palatis/Room%20in%20the%20Cart/ios/Tests/StoreKitScenarioTests.swift"
+    },
+    {
+      "issueType" : "Runtime Warning",
+      "message" : "Making a purchase without listening for transaction updates risks missing successful purchases. Create a Task to iterate Transaction.updates at launch.",
+      "sourceURL" : "file:///Users/palatis/Room%20in%20the%20Cart/ios/Tests/StoreKitScenarioTests.swift"
+    },
+    {
+      "issueType" : "Runtime Warning",
+      "message" : "Making a purchase without listening for transaction updates risks missing successful purchases. Create a Task to iterate Transaction.updates at launch.",
+      "sourceURL" : "file:///Users/palatis/Room%20in%20the%20Cart/ios/Tests/StoreKitScenarioTests.swift"
+    },
+    {
+      "issueType" : "Runtime Warning",
+      "message" : "Making a purchase without listening for transaction updates risks missing successful purchases. Create a Task to iterate Transaction.updates at launch.",
+      "sourceURL" : "file:///Users/palatis/Room%20in%20the%20Cart/ios/Tests/StoreKitScenarioTests.swift"
+    },
+    {
+      "issueType" : "Runtime Warning",
+      "message" : "Making a purchase without listening for transaction updates risks missing successful purchases. Create a Task to iterate Transaction.updates at launch.",
+      "sourceURL" : "file:///Users/palatis/Room%20in%20the%20Cart/ios/Tests/StoreKitScenarioTests.swift"
+    }
+  ],
+  "skippedTests" : 0,
+  "startTime" : 1793688212.694,
+  "statistics" : [
+    {
+      "subtitle" : "28 test runs",
+      "title" : "14 tests ran on 2 configurations"
+    }
+  ],
+  "testFailures" : [
+    {
+      "failureText" : "Test exceeded execution time allowance of 1 minute",
+      "targetName" : "RoomInTheCartTests",
+      "testIdentifier" : 1,
+      "testIdentifierString" : "StoreKitScenarioTests/testAskToBuyApprovalRemainsUndelivered()",
+      "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/StoreKitScenarioTests/testAskToBuyApprovalRemainsUndelivered",
+      "testName" : "testAskToBuyApprovalRemainsUndelivered()"
+    },
+    {
+      "failureText" : "XCTAssertTrue failed",
+      "targetName" : "RoomInTheCartTests",
+      "testIdentifier" : 2,
+      "testIdentifierString" : "StoreKitScenarioTests/testAskToBuyDeclineGrantsNothing()",
+      "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/StoreKitScenarioTests/testAskToBuyDeclineGrantsNothing",
+      "testName" : "testAskToBuyDeclineGrantsNothing()"
+    },
+    {
+      "failureText" : "XCTAssertEqual failed: (\"es_MX\") is not equal to (\"es_US\") - The local StoreKit environment must retain the requested locale; do not substitute Mexico for US Spanish.",
+      "targetName" : "RoomInTheCartTests",
+      "testIdentifier" : 3,
+      "testIdentifierString" : "StoreKitScenarioTests/testBillingGraceStillRequiresServiceVerification()",
+      "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/StoreKitScenarioTests/testBillingGraceStillRequiresServiceVerification",
+      "testName" : "testBillingGraceStillRequiresServiceVerification()"
+    },
+    {
+      "failureText" : "XCTAssertEqual failed: (\"es_MX\") is not equal to (\"es_US\") - The local StoreKit environment must retain the requested locale; do not substitute Mexico for US Spanish.",
+      "targetName" : "RoomInTheCartTests",
+      "testIdentifier" : 4,
+      "testIdentifierString" : "StoreKitScenarioTests/testBillingRetryWithoutGraceDoesNotGrantPaidAccess()",
+      "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/StoreKitScenarioTests/testBillingRetryWithoutGraceDoesNotGrantPaidAccess",
+      "testName" : "testBillingRetryWithoutGraceDoesNotGrantPaidAccess()"
+    },
+    {
+      "failureText" : "XCTAssertEqual failed: (\"es_MX\") is not equal to (\"es_US\") - The local StoreKit environment must retain the requested locale; do not substitute Mexico for US Spanish.",
+      "targetName" : "RoomInTheCartTests",
+      "testIdentifier" : 5,
+      "testIdentifierString" : "StoreKitScenarioTests/testExpirationRemovesCurrentEntitlementAndPreservesFree()",
+      "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/StoreKitScenarioTests/testExpirationRemovesCurrentEntitlementAndPreservesFree",
+      "testName" : "testExpirationRemovesCurrentEntitlementAndPreservesFree()"
+    },
+    {
+      "failureText" : "XCTAssertEqual failed: (\"es_MX\") is not equal to (\"es_US\") - The local StoreKit environment must retain the requested locale; do not substitute Mexico for US Spanish.",
+      "targetName" : "RoomInTheCartTests",
+      "testIdentifier" : 6,
+      "testIdentifierString" : "StoreKitScenarioTests/testLocalAnnualOfferUsesStoreKitPriceAndLocale()",
+      "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/StoreKitScenarioTests/testLocalAnnualOfferUsesStoreKitPriceAndLocale",
+      "testName" : "testLocalAnnualOfferUsesStoreKitPriceAndLocale()"
+    },
+    {
+      "failureText" : "XCTAssertEqual failed: (\"es_MX\") is not equal to (\"es_US\") - The local StoreKit environment must retain the requested locale; do not substitute Mexico for US Spanish.",
+      "targetName" : "RoomInTheCartTests",
+      "testIdentifier" : 7,
+      "testIdentifierString" : "StoreKitScenarioTests/testPurchaseDoesNotFinishOrGrantAccessWithoutDurableServiceDelivery()",
+      "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/StoreKitScenarioTests/testPurchaseDoesNotFinishOrGrantAccessWithoutDurableServiceDelivery",
+      "testName" : "testPurchaseDoesNotFinishOrGrantAccessWithoutDurableServiceDelivery()"
+    },
+    {
+      "failureText" : "XCTAssertEqual failed: (\"es_MX\") is not equal to (\"es_US\") - The local StoreKit environment must retain the requested locale; do not substitute Mexico for US Spanish.",
+      "targetName" : "RoomInTheCartTests",
+      "testIdentifier" : 8,
+      "testIdentifierString" : "StoreKitScenarioTests/testRealTransactionObserverAttemptsDeliveryWithoutUnlock()",
+      "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/StoreKitScenarioTests/testRealTransactionObserverAttemptsDeliveryWithoutUnlock",
+      "testName" : "testRealTransactionObserverAttemptsDeliveryWithoutUnlock()"
+    },
+    {
+      "failureText" : "XCTAssertEqual failed: (\"es_MX\") is not equal to (\"es_US\") - The local StoreKit environment must retain the requested locale; do not substitute Mexico for US Spanish.",
+      "targetName" : "RoomInTheCartTests",
+      "testIdentifier" : 9,
+      "testIdentifierString" : "StoreKitScenarioTests/testRefundRevokesTransactionAndPreservesFree()",
+      "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/StoreKitScenarioTests/testRefundRevokesTransactionAndPreservesFree",
+      "testName" : "testRefundRevokesTransactionAndPreservesFree()"
+    },
+    {
+      "failureText" : "XCTAssertEqual failed: (\"es_MX\") is not equal to (\"es_US\") - The local StoreKit environment must retain the requested locale; do not substitute Mexico for US Spanish.",
+      "targetName" : "RoomInTheCartTests",
+      "testIdentifier" : 10,
+      "testIdentifierString" : "StoreKitScenarioTests/testRelaunchAndExplicitRestoreReplayUnfinishedWithoutUnlock()",
+      "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/StoreKitScenarioTests/testRelaunchAndExplicitRestoreReplayUnfinishedWithoutUnlock",
+      "testName" : "testRelaunchAndExplicitRestoreReplayUnfinishedWithoutUnlock()"
+    },
+    {
+      "failureText" : "XCTAssertEqual failed: (\"es_MX\") is not equal to (\"es_US\") - The local StoreKit environment must retain the requested locale; do not substitute Mexico for US Spanish.",
+      "targetName" : "RoomInTheCartTests",
+      "testIdentifier" : 11,
+      "testIdentifierString" : "StoreKitScenarioTests/testRenewalKeepsOriginalPurchaseAndNoLocalUnlock()",
+      "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/StoreKitScenarioTests/testRenewalKeepsOriginalPurchaseAndNoLocalUnlock",
+      "testName" : "testRenewalKeepsOriginalPurchaseAndNoLocalUnlock()"
+    },
+    {
+      "failureText" : "XCTAssertEqual failed: (\"es_MX\") is not equal to (\"es_US\") - The local StoreKit environment must retain the requested locale; do not substitute Mexico for US Spanish.",
+      "targetName" : "RoomInTheCartTests",
+      "testIdentifier" : 12,
+      "testIdentifierString" : "StoreKitScenarioTests/testSimulatedPurchaseCancellationGrantsNothing()",
+      "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/StoreKitScenarioTests/testSimulatedPurchaseCancellationGrantsNothing",
+      "testName" : "testSimulatedPurchaseCancellationGrantsNothing()"
+    },
+    {
+      "failureText" : "XCTAssertEqual failed: (\"es_MX\") is not equal to (\"es_US\") - The local StoreKit environment must retain the requested locale; do not substitute Mexico for US Spanish.",
+      "targetName" : "RoomInTheCartTests",
+      "testIdentifier" : 13,
+      "testIdentifierString" : "StoreKitScenarioTests/testUnavailableProductKeepsFreeRoute()",
+      "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/StoreKitScenarioTests/testUnavailableProductKeepsFreeRoute",
+      "testName" : "testUnavailableProductKeepsFreeRoute()"
+    },
+    {
+      "failureText" : "XCTAssertEqual failed: (\"es_MX\") is not equal to (\"es_US\") - The local StoreKit environment must retain the requested locale; do not substitute Mexico for US Spanish.",
+      "targetName" : "RoomInTheCartTests",
+      "testIdentifier" : 14,
+      "testIdentifierString" : "StoreKitScenarioTests/testUnverifiedLocalTransactionGrantsNothing()",
+      "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/StoreKitScenarioTests/testUnverifiedLocalTransactionGrantsNothing",
+      "testName" : "testUnverifiedLocalTransactionGrantsNothing()"
+    }
+  ],
+  "title" : "Test - RoomInTheCart-LocalStoreKit",
+  "topInsights" : [
+    {
+      "category" : "Common Failures",
+      "impact" : "100% of failures",
+      "text" : "14 runs of 14 tests failed with XCTAssertEqual failed: (\"es_MX\") is not equal to (\"es_US\") - The local StoreKit environment must retain the requested locale; do not substitute Mexico for US Spanish."
+    },
+    {
+      "category" : "Failure Distribution",
+      "impact" : "85% of failures",
+      "text" : "12 tests failed on iPhone 17 with the US Spanish — local StoreKit test plan configuration"
+    },
+    {
+      "category" : "Longest Test Runs",
+      "impact" : "98% of duration",
+      "text" : "1 longest test run with outlier durations exceeding 50.65s (three standard deviations)"
+    }
+  ],
+  "totalTestCount" : 14
+}

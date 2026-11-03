@@ -4,6 +4,7 @@ import CoreDomain
 
 @MainActor final class AppModel: ObservableObject {
     @Published var records: [SavedComparison] = []
+    @Published var unavailableRecords: [UnavailableComparison] = []
     @Published var error: String?
     @Published var ready = false
     private(set) var store: ComparisonStore?
@@ -42,7 +43,12 @@ import CoreDomain
 
     func refresh() async {
         guard let store else { return }
-        do { records = try await store.list(); error = nil }
+        do {
+            let listing = try await store.listing()
+            records = listing.records
+            unavailableRecords = listing.unavailable
+            error = nil
+        }
         catch { Diagnostics.record(.localReadFailed); self.error = tr("Could not open saved comparisons. Your records have not been removed. Try again.") }
     }
 

@@ -1,5 +1,7 @@
 # Accessibility follow-up — 2026-11-03
 
+This report records the baseline run before the later [viewport boundary improvement](VIEWPORT-BOUNDARY-FOLLOWUP.md).
+
 The accessibility audit remains **unresolved**. The final run has four passing functional UI tests and one failing audit test, with no skipped or expected failures. Production comparison UI and theme changes were reverted because the attempted changes did not establish a passing audit.
 
 Tested on iPhone 17 Simulator, iOS 27.0 (24A434), device `5FDE1E82-1FF7-4556-9C14-0746F6295944`. The local result bundle is `.build/AccessibilityFinalUI.xcresult`, with command/output in `.build/accessibility-final-ui.log`.

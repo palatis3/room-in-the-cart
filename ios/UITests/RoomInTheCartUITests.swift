@@ -112,6 +112,29 @@ final class RoomInTheCartUITests: XCTestCase {
         screenshot("Dark-largest-type-saved")
     }
 
+    func testComparisonSaveStaysInsideViewportAboveTabBar() throws {
+        launch()
+        openEmptyComparison()
+        enterComparison(item: "Viewport wraps", firstQuantity: "8", cap: "30")
+        compare()
+        let list = app.collectionViews.firstMatch
+        let tabs = app.tabBars.firstMatch
+        XCTAssertTrue(list.exists)
+        XCTAssertTrue(tabs.exists)
+        XCTAssertLessThanOrEqual(list.frame.maxY, tabs.frame.minY,
+                                 "The results viewport must end above the tab bar")
+        let save = element("saveComparison")
+        for _ in 0..<18 {
+            if save.exists && list.frame.contains(save.frame) { break }
+            list.swipeUp(velocity: .slow)
+        }
+        XCTAssertTrue(save.exists && save.isHittable)
+        XCTAssertTrue(list.frame.contains(save.frame), "The whole Save control must be visible")
+        XCTAssertLessThanOrEqual(save.frame.maxY, tabs.frame.minY)
+        screenshot("Save-fully-visible-above-tabs")
+        saveAndAssertDurableStatus()
+    }
+
     func testAutomatedAccessibilityAuditOnShopAndKnownResults() throws {
         // Collect failures from every viewport in this audit-only test.
         continueAfterFailure = true

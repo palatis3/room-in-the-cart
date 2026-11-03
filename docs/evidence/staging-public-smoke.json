@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-11-03T06:40:40.241623+00:00",
+  "checkedAt": "2026-11-03T06:54:08.552946+00:00",
   "url": "https://room-in-the-cart-staging.vercel.app",
   "checks": [
     {
@@ -12,6 +12,13 @@
     {
       "check": "session",
       "path": "/v1/session",
+      "status": 200,
+      "expected": 200,
+      "pass": true
+    },
+    {
+      "check": "email-availability",
+      "path": "/v1/auth/session",
       "status": 200,
       "expected": 200,
       "pass": true

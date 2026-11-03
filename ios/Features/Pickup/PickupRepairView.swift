@@ -184,6 +184,10 @@ struct PickupRepairView: View {
 
 struct PickupCookView: View {
     @ObservedObject var model: PickupModel
+    @EnvironmentObject private var access: WorkspaceAccess
+    @EnvironmentObject private var household: HouseholdModel
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var readback: PickupCookReadbackBinding?
     @State private var language = "en-US"
     @State private var includeBudget = false
     @State private var text = ""
@@ -200,6 +204,12 @@ struct PickupCookView: View {
             Toggle(pTr("Include private budget in this copy"), isOn: $includeBudget)
             Button(pTr("Prepare complete dated instruction")) { prepare() }
             TextEditor(text: $text).frame(minHeight: 220).accessibilityLabel(pTr("Editable cook instruction"))
+            if let readback {
+                Section {
+                    CookReadbackView(instruction: instruction(for: readback), authorize: authorizeReadback)
+                        .id(readback.authorityBindingID)
+                }
+            }
             Button(pTr("Save dated copy")) { Task { await saveNote() } }.disabled(text.isEmpty)
             if noteID != nil {
                 Button(pTr("Share saved dated copy")) { Task {
@@ -221,44 +231,53 @@ struct PickupCookView: View {
                 }
             }
         }.navigationTitle(pTr("Tell the cook"))
-            .onAppear { includeBudget = false }
+            .onAppear { includeBudget = false; readback = nil }
+            .onDisappear { readback = nil }
+            .onChange(of: text) { _, value in if value != readback?.text { readback = nil } }
+            .onChange(of: language) { _, _ in readback = nil }
+            .onChange(of: includeBudget) { _, _ in readback = nil }
+            .onChange(of: model.journey?.id) { _, _ in readback = nil }
+            .onChange(of: model.journey?.revision) { _, _ in readback = nil }
+            .onChange(of: readbackContext) { _, _ in readback = nil }
+            .onChange(of: scenePhase) { _, phase in if phase != .active { readback = nil } }
             .sheet(isPresented: $sharing) {
                 PickupActivitySheet(text: model.journey?.notes.first(where: { $0.id == noteID })?.text ?? "") { completed, destination in
                     Task { await recordShare(completed ? .intentionallySent : .shareCancelled, destination: destination) }
                 }
             }
     }
+    private var readbackContext: PickupCookReadbackContext {
+        .init(scope: .init(localActorID: access.localActorID, accountSubject: household.identity?.subject,
+            householdID: household.projection?.household.id, memberID: household.projection?.memberId, role: household.projection?.role),
+            workspaceUnlocked: access.unlocked, householdLocked: household.locked,
+            saving: model.saving, pendingSave: model.hasPendingSave)
+    }
+    private func instruction(for binding: PickupCookReadbackBinding) -> CookReadbackInstruction {
+        .init(authorityBindingID: binding.authorityBindingID, sourceID: binding.sourceID,
+            sourceRevision: binding.sourceRevision, createdAt: binding.createdAt, text: binding.text,
+            localeIdentifier: binding.localeIdentifier, excludesPrivateBudget: true)
+    }
+    private func authorizeReadback(_ requested: CookReadbackInstruction, at: Date) -> Bool {
+        guard let readback, requested == instruction(for: readback) else { return false }
+        return readback.isCurrent(journey: model.journey, allocation: model.allocation, result: model.result,
+            language: language, includeBudget: includeBudget, text: text, context: readbackContext, at: at)
+    }
     private func prepare() {
-        guard let value = model.journey else { return }
-        let formatter = DateFormatter(); formatter.locale = Locale(identifier: language)
-        formatter.dateStyle = .full; formatter.timeStyle = .short
-        var lines = [pCook("Cook instruction", language: language), "\(formatter.string(from: Date())) · \(pCook("Revision", language: language)) \(value.revision)"]
-        for need in value.urgent {
-            lines += ["\(need.meal): \(need.food)", "\(pCook("Required", language: language)): \(pQuantity(need.required, language: language)); \(pCook("Confirmed available", language: language)): \(need.carriedFromID == nil ? pQuantity(need.available, language: language) : (pCook("Reconfirmation required", language: language)))", need.due.map { "\(pCook("Needed by", language: language)): \(formatter.string(from: $0))" } ?? (pCook("Deadline unknown", language: language))]
-            if !need.resolved { lines.append(pCook("Open need: review before cooking.", language: language)) }
-        }
-        for need in value.needs {
-            lines.append("\(need.name): \(pQuantity(need.amount, language: language))\(need.priority == .protected ? (" — " + pCook("set aside first", language: language)) : "")")
-            if let coverage = model.allocation?.demands.first(where: { $0.id == need.id }) {
-                if let amount = coverage.allocated { lines.append("\(pCook("Allocated", language: language)): \(amount.numerator)/\(amount.denominator) \(coverage.unit.rawValue)") }
-                if coverage.shortfall != .zero { lines.append(pCook("Short or unverified amount. Review.", language: language)) }
-            }
-        }
-        for detail in value.needDetails where value.needs.contains(where: { $0.id == detail.id }) {
-            if !detail.exclusions.isEmpty { lines.append("\(detail.mealName) · \(pCook("Keep these exclusions", language: language)): \(detail.exclusions.joined(separator: ", "))") }
-            if let day = detail.scheduledDay { lines.append("\(detail.mealName): \(day.iso8601) · \(day.timeZoneIdentifier)") }
-            if let minutes = detail.leadTimeMinutes { lines.append("\(pCook("Saved elapsed preparation minutes", language: language)): \(minutes)") }
-            if !detail.completedSteps.isEmpty { lines.append("\(pCook("Steps already marked complete", language: language)): \(detail.completedSteps.joined(separator: "; "))") }
-        }
-        lines += value.repairs.map { "\($0.instruction)\n" + ($0.timingConfirmed ? (pCook("Entered preparation time fits the deadline", language: language)) : (pCook("Timing conditional or deadline missed · review before cooking", language: language))) }
-        if includeBudget, let result = model.result { lines.append("\(pCook("Private budget included", language: language)): \(pickupResultText(result))") }
-        text = lines.joined(separator: "\n\n"); noteID = nil
+        readback = nil
+        guard let value = model.journey, !model.saving, !model.hasPendingSave else { return }
+        let at = Date(), timeZone = TimeZone.current
+        text = PickupCookProjection.text(journey: value, allocation: model.allocation, result: model.result,
+            language: language, includeBudget: includeBudget, at: at, timeZone: timeZone)
+        noteID = nil
+        readback = PickupCookReadbackBinding(journey: value, allocation: model.allocation, result: model.result,
+            language: language, includeBudget: includeBudget, text: text, context: readbackContext, at: at, timeZone: timeZone)
     }
     @discardableResult private func recordShare(_ action: HandoffActionKind, destination: String?) async -> Bool {
         guard let noteID else { return false }
         return await model.change { value in value.cookShareEvents.append(PickupCookShareEvent(id: UUID(), noteID: noteID, occurredAt: Date(), action: action, destination: destination)) }
     }
     @discardableResult private func saveNote() async -> Bool {
+        readback = nil
         guard let value = model.journey else { return false }
         let id = UUID()
         let note = PickupCookNote(id: id, text: text, language: language, createdAt: Date(), revision: value.revision)
