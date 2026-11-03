@@ -2491,19 +2491,19 @@
         }
       }
     },
-    "%lld selected references · %@": {
+    "Selected references: %lld · %@": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld selected references · %@"
+            "value": "Selected references: %lld · %@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld referencias seleccionadas · %@"
+            "value": "Referencias seleccionadas: %lld · %@"
           }
         }
       }

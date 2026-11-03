@@ -208,7 +208,7 @@ struct RecordsToolsView: View {
                     }
                 }
             }
-            Text(String(format: recordsText("%lld selected references · %@"), Int64(model.selectedMediaCount), ByteCountFormatter.string(fromByteCount: Int64(model.selectedMediaBytes), countStyle: .file)))
+            Text(String(format: recordsText("Selected references: %lld · %@"), Int64(model.selectedMediaCount), ByteCountFormatter.string(fromByteCount: Int64(model.selectedMediaBytes), countStyle: .file)))
                 .font(.footnote)
                 .accessibilityIdentifier("records.mediaSummary")
             Text(recordsText("Up to twelve references and 4.2 MB of source evidence per recovery file; the encrypted file must be under 8 MB. Choose fewer references if the file is too large.")).font(.footnote)
@@ -251,7 +251,7 @@ struct RecordsToolsView: View {
                 }
             }
             if let media = review.envelope.mediaManifest {
-                Text(String(format: recordsText("%lld selected references · %@"), Int64(media.entries.count), ByteCountFormatter.string(fromByteCount: Int64(media.totalBytes), countStyle: .file)))
+                Text(String(format: recordsText("Selected references: %lld · %@"), Int64(media.entries.count), ByteCountFormatter.string(fromByteCount: Int64(media.totalBytes), countStyle: .file)))
                 Text(recordsText("Selected references recover with these separate copies. They do not reopen the original photo store or restore access to another workspace.")).font(.footnote)
             }
             Text(recordsText("Current and newer work stays in place. Different revisions become separate copies; identical imports reopen the saved copy. A conflicting digest or erased identity blocks this batch."))

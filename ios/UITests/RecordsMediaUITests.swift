@@ -45,7 +45,7 @@ import XCTest
         enableSwitch(selection, upward: true)
         let summary = element("records.mediaSummary")
         reveal(summary, requiresHitTarget: false)
-        XCTAssertTrue(summary.label.hasPrefix("1 selected references"))
+        XCTAssertTrue(summary.label.hasPrefix("Selected references: 1"))
         XCTAssertTrue(summary.label.contains("KB"), "The selected reference's nonzero size must be disclosed")
         capture("F07 selected source reference and disclosed size")
 
