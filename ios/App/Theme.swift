@@ -21,6 +21,12 @@ struct PrimaryAction: ButtonStyle {
 }
 
 extension View {
+    /// Navigation transitions can briefly propose an empty viewport.
+    func fittingViewport(_ size: CGSize) -> some View {
+        frame(width: size.width.isFinite ? max(0, size.width) : nil,
+              height: size.height.isFinite ? max(0, size.height) : nil)
+    }
+
     func workingSurface() -> some View {
         self.scrollContentBackground(.hidden).background(Theme.canvas).foregroundStyle(Theme.ink)
     }

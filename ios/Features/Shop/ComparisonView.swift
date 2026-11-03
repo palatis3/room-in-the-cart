@@ -151,112 +151,98 @@ struct ComparisonView: View {
                     .background(Theme.canvas.ignoresSafeArea(edges: .bottom))
                     .accessibilityHidden(true)
             }
-            .frame(width: viewport.size.width, height: viewport.size.height)
+            .fittingViewport(viewport.size)
         }
     }
 
     private func resultList(_ result: CoreDomain.ComparisonResult) -> some View {
-        ScrollView {
-            LazyVStack(alignment: .leading, spacing: 16) {
-                if dynamicTypeSize.isAccessibilitySize { accessibleEditRow }
-                VStack(alignment: .leading, spacing: 12) {
-                    Text(model.draft.item.isEmpty ? tr("One item") : model.draft.item).font(.title.bold())
-                    Text(tr("Item-only comparison")).font(.headline)
-                    Text(tr("Other groceries, fees and taxes are not included. This does not establish whether the whole pickup fits your budget."))
-                        .foregroundStyle(Theme.secondary)
-                    if !model.draft.needed.isEmpty {
-                        Text(message("Total need: %@ %@", model.draft.needed, model.draft.unit.displayName))
-                    }
-                    if !model.draft.protected.isEmpty {
-                        Text(message("Protected within that total: %@ %@", model.draft.protected, model.draft.unit.displayName))
-                    }
-                }.accessibilityElement(children: .combine).accessibilityFocused($resultFocused, equals: .summary)
-                    .comparisonPanel()
-                resultSection(result.offerA, name: model.draft.aLabel.isEmpty ? tr("Pack A") : model.draft.aLabel, preferred: result.preferredOfferID == "a")
-                resultSection(result.offerB, name: model.draft.bLabel.isEmpty ? tr("Pack B") : model.draft.bLabel, preferred: result.preferredOfferID == "b")
-                if result.offerA.isResolved && result.offerB.isResolved && result.preferredOfferID == nil {
-                    Text(tr("Both options cost the same for this need.")).comparisonPanel()
+        List {
+            if dynamicTypeSize.isAccessibilitySize { accessibleEditRow }
+            Section {
+                Text(model.draft.item.isEmpty ? tr("One item") : model.draft.item).font(.title.bold())
+                    .accessibilityAddTraits(.isHeader).accessibilityFocused($resultFocused, equals: .summary)
+                Text(tr("Item-only comparison")).font(.headline)
+                Text(tr("Other groceries, fees and taxes are not included. This does not establish whether the whole pickup fits your budget."))
+                    .foregroundStyle(Theme.secondary)
+                if !model.draft.needed.isEmpty {
+                    ComparisonMetric(message("Total need: %@ %@", model.draft.needed, model.draft.unit.displayName))
                 }
-                VStack(alignment: .leading, spacing: 12) {
-                    Text(tr("Source: prices and usable amounts you entered. Estimates for this item only."))
-                        .font(.body).fixedSize(horizontal: false, vertical: true).foregroundStyle(Theme.ink)
-                        .accessibilityIdentifier("comparisonSourceNote")
-                    if let date = model.savedAt {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Label(tr("Saved on this iPhone"), systemImage: "checkmark.circle")
-                                .font(.headline).accessibilityIdentifier("savedStatus")
-                            Text(date.formatted(date: .complete, time: .shortened))
-                                .font(.footnote)
-                        }.accessibilityElement(children: .combine).accessibilityIdentifier("comparisonSavedDetails")
-                            .accessibilityFocused($resultFocused, equals: .saved)
-                    } else {
-                        Button {
-                            Task {
-                                await model.save(in: app.store)
-                                await app.refresh()
-                                if model.savedAt != nil { resultFocused = .saved }
-                                else { resultFocused = .error }
-                            }
-                        } label: {
-                            Text(tr(model.saving ? "Saving…" : "Save comparison"))
-                                .font(.headline).foregroundStyle(Theme.onAction)
-                                .fixedSize(horizontal: false, vertical: true)
-                                .padding(.horizontal, 12).padding(.vertical, 8)
-                                .frame(maxWidth: .infinity, minHeight: 52)
-                                .contentShape(Rectangle())
+                if !model.draft.protected.isEmpty {
+                    ComparisonMetric(message("Protected within that total: %@ %@", model.draft.protected, model.draft.unit.displayName))
+                }
+            }
+            resultSection(result.offerA, name: model.draft.aLabel.isEmpty ? tr("Pack A") : model.draft.aLabel, preferred: result.preferredOfferID == "a")
+            resultSection(result.offerB, name: model.draft.bLabel.isEmpty ? tr("Pack B") : model.draft.bLabel, preferred: result.preferredOfferID == "b")
+            if result.offerA.isResolved && result.offerB.isResolved && result.preferredOfferID == nil {
+                Section { Text(tr("Both options cost the same for this need.")) }
+            }
+            Section {
+                ComparisonMetric(tr("Source: prices and usable amounts you entered. Estimates for this item only."), id: "comparisonSourceNote")
+                if let date = model.savedAt {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label(tr("Saved on this iPhone"), systemImage: "checkmark.circle")
+                            .font(.headline).accessibilityIdentifier("savedStatus")
+                        Text(date.formatted(date: .complete, time: .shortened))
+                            .font(.footnote)
+                    }.accessibilityElement(children: .combine).accessibilityIdentifier("comparisonSavedDetails")
+                        .accessibilityFocused($resultFocused, equals: .saved)
+                } else {
+                    ComparisonSaveButton(title: tr(model.saving ? "Saving…" : "Save comparison"), enabled: !model.saving) {
+                        Task {
+                            await model.save(in: app.store)
+                            await app.refresh()
+                            resultFocused = model.savedAt != nil ? .saved : .error
                         }
-                        .buttonStyle(.plain).disabled(model.saving)
-                        .background(Theme.action, in: RoundedRectangle(cornerRadius: 14))
-                        .accessibilityIdentifier("saveComparison")
                     }
-                }.comparisonPanel()
-                if let error = model.error {
-                    Label(error, systemImage: "exclamationmark.triangle")
-                        .foregroundStyle(Color("error")).accessibilityFocused($resultFocused, equals: .error)
                 }
-            }.padding(16)
-        }.accessibilityIdentifier("comparisonResultsScroll")
+            }
+            if let error = model.error {
+                Label(error, systemImage: "exclamationmark.triangle")
+                    .foregroundStyle(Color("error")).accessibilityFocused($resultFocused, equals: .error)
+            }
+        }
+        .listStyle(.insetGrouped)
+        .environment(\.defaultMinListRowHeight, 0)
+        .scrollContentBackground(.hidden)
+        .background(Theme.canvas)
+        .accessibilityIdentifier("comparisonResultsScroll")
     }
 
     private func resultSection(_ result: OfferResult, name: String, preferred: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(name).font(.headline).foregroundStyle(Theme.ink)
-                .fixedSize(horizontal: false, vertical: true)
-                .accessibilityAddTraits(.isHeader).accessibilityIdentifier(result.offerID + "Header")
+        Section {
+            ComparisonMetric(name, style: .headline, id: result.offerID + "Header", heading: true)
             if let cost = result.totalCost {
                 Text(moneyText(cost)).font(.largeTitle.bold()).monospacedDigit()
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityLabel(message("Item cost to buy enough: %@", moneyText(cost)))
                     .accessibilityIdentifier(result.offerID + "Total")
             } else { Label(tr("Cost unresolved"), systemImage: "questionmark.circle").font(.title2.bold()) }
-            if preferred { Text(tr("Lower cost to buy enough for this item")).font(.headline) }
+            if preferred { ComparisonMetric(tr("Lower cost to buy enough for this item"), style: .headline) }
             if let packs = result.packsToBuy {
-                Text(message("Whole packs to buy: %@", packs.formatted())).monospacedDigit()
-                    .accessibilityIdentifier(result.offerID + "Packs")
+                ComparisonMetric(message("Whole packs to buy: %@", packs.formatted()), id: result.offerID + "Packs")
             }
             if let purchased = result.purchasedAmount {
-                Text(message("Usable amount to buy: %@ %@", amountText(purchased), model.draft.unit.displayName))
+                ComparisonMetric(message("Usable amount to buy: %@ %@", amountText(purchased), model.draft.unit.displayName))
             }
             if let shortage = result.remainingNeed, shortage > .zero {
-                Text(message("Still needed: %@ %@", amountText(shortage), model.draft.unit.displayName)).font(.headline)
+                ComparisonMetric(message("Still needed: %@ %@", amountText(shortage), model.draft.unit.displayName), style: .headline)
             }
             if let leftover = result.leftover {
-                Text(message("Left after the total need: %@ %@", amountText(leftover), model.draft.unit.displayName))
+                ComparisonMetric(message("Left after the total need: %@ %@", amountText(leftover), model.draft.unit.displayName))
             }
             if let headroom = result.itemHeadroom {
-                Text(message(headroom.minorUnits < 0 ? "Over the item limit: %@" : "Room within the item limit: %@",
-                             moneyText(Money(minorUnits: headroom.minorUnits < 0 ? -headroom.minorUnits : headroom.minorUnits))))
-                    .font(.headline)
+                ComparisonMetric(message(headroom.minorUnits < 0 ? "Over the item limit: %@" : "Room within the item limit: %@",
+                             moneyText(Money(minorUnits: headroom.minorUnits < 0 ? -headroom.minorUnits : headroom.minorUnits))), style: .headline)
             }
             if let ceiling = result.unitCeiling {
-                Text(message("Maximum per pack for this item limit: %@", moneyText(ceiling)))
+                ComparisonMetric(message("Maximum per pack for this item limit: %@", moneyText(ceiling)))
             }
             ForEach(result.issues, id: \.self) { issue in
                 Label(issue.explanation, systemImage: "questionmark.circle")
                     .foregroundStyle(Theme.warning)
                     .accessibilityIdentifier(result.offerID + "Issue_" + issue.rawValue)
             }
-        }.comparisonPanel()
+        }
     }
 
     private func errorRow(_ text: String) -> some View {
@@ -278,10 +264,89 @@ extension ComparisonIssue {
     }
 }
 
-private extension View {
-    func comparisonPanel() -> some View {
-        frame(maxWidth: .infinity, alignment: .leading)
-            .padding(16)
-            .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
+/// A platform text label can remeasure a multiline result while the system changes
+/// the preferred content size, including while the results list is scrolled.
+private struct ComparisonMetric: UIViewRepresentable {
+    let text: String
+    let style: UIFont.TextStyle
+    let id: String?
+    let heading: Bool
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    init(_ text: String, style: UIFont.TextStyle = .body, id: String? = nil, heading: Bool = false) {
+        self.text = text
+        self.style = style
+        self.id = id
+        self.heading = heading
+    }
+
+    func makeUIView(context: Context) -> UILabel {
+        let label = UILabel()
+        label.numberOfLines = 0
+        label.adjustsFontForContentSizeCategory = true
+        label.lineBreakMode = .byWordWrapping
+        label.isAccessibilityElement = true
+        label.isOpaque = true
+        label.backgroundColor = .secondarySystemGroupedBackground
+        return label
+    }
+
+    func updateUIView(_ label: UILabel, context: Context) {
+        label.text = text
+        label.textColor = .label
+        let traits = UITraitCollection(preferredContentSizeCategory: UIContentSizeCategory(typeSize))
+        label.font = UIFont.preferredFont(forTextStyle: style, compatibleWith: traits)
+        label.accessibilityIdentifier = id
+        label.accessibilityTraits = heading ? [.header, .staticText] : .staticText
+    }
+
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView: UILabel, context: Context) -> CGSize? {
+        guard let width = proposal.width, width.isFinite else { return nil }
+        guard width > 0 else { return .zero }
+        let measured = uiView.sizeThatFits(CGSize(width: width, height: .greatestFiniteMagnitude))
+        return CGSize(width: width, height: ceil(measured.height))
+    }
+}
+
+/// Keep the title, hit target and VoiceOver button in the same native control as its font scales.
+private struct ComparisonSaveButton: UIViewRepresentable {
+    let title: String
+    let enabled: Bool
+    let save: () -> Void
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    final class Coordinator {
+        var action: (() -> Void)?
+        @objc func activate() { action?() }
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    func makeUIView(context: Context) -> UIButton {
+        let button = UIButton(type: .system)
+        button.titleLabel?.numberOfLines = 0
+        button.titleLabel?.lineBreakMode = .byWordWrapping
+        button.titleLabel?.textAlignment = .center
+        button.titleLabel?.adjustsFontForContentSizeCategory = true
+        button.layer.cornerRadius = 14
+        button.accessibilityIdentifier = "saveComparison"
+        button.addTarget(context.coordinator, action: #selector(Coordinator.activate), for: .primaryActionTriggered)
+        return button
+    }
+
+    func updateUIView(_ button: UIButton, context: Context) {
+        context.coordinator.action = save
+        let traits = UITraitCollection(preferredContentSizeCategory: UIContentSizeCategory(typeSize))
+        button.titleLabel?.font = UIFont.preferredFont(forTextStyle: .headline, compatibleWith: traits)
+        button.setTitle(title, for: .normal)
+        button.backgroundColor = UIColor(Theme.action)
+        button.setTitleColor(UIColor(Theme.onAction), for: .normal)
+        button.isEnabled = enabled
+    }
+
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView: UIButton, context: Context) -> CGSize? {
+        guard let width = proposal.width, width.isFinite, width > 0 else { return nil }
+        let height = uiView.titleLabel?.sizeThatFits(CGSize(width: max(1, width - 24), height: .greatestFiniteMagnitude)).height ?? 0
+        return CGSize(width: width, height: max(52, ceil(height) + 16))
     }
 }

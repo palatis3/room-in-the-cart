@@ -161,5 +161,62 @@
     "bundle": ".build/PlatformTextAuditSE.xcresult",
     "sourceSHA256": "301850f0d32aabb3c1451002fb16651778d8fa04f43317d10d0c519694b0289f",
     "scope": "Isolated iPhone SE (2nd generation), iOS 17.0. Unfiltered XCTest accessibility audit at five Shop and comparison viewports and a separate largest-text visible source, Save and saved-details walkthrough. Quantity labels use dynamic UIFont text styles with multiline measurement. This replaces the seven reported issues for this tested build and runtime. Human VoiceOver and other devices remain separate gates."
+  },
+  "opaqueListResults": {
+    "sourceSHA256": "f6bd476042280b68907e8cca58788975aed314f683616a5cfd9898384baeb0a7",
+    "checks": [
+      "Unfiltered XCTest accessibility audit on five Shop and comparison viewports",
+      "Largest accessibility text on SE, with source and Save fully visible above the tab bar and dated confirmation after durable storage"
+    ],
+    "devices": [
+      {
+        "device": "iPhone SE (2nd generation)",
+        "iOS": "17.0",
+        "bundle": ".build/ComparisonOpaqueLabelsSE.xcresult",
+        "passed": 2,
+        "failed": 0
+      },
+      {
+        "device": "iPhone 17e",
+        "iOS": "27.0",
+        "bundle": ".build/ComparisonOpaqueLabels27.xcresult",
+        "passed": 1,
+        "failed": 0,
+        "checks": [
+          "Unfiltered five-viewport audit"
+        ]
+      }
+    ],
+    "screenshots": [
+      "comparison-se-accessible-result.png",
+      "comparison-se-largest-save.png"
+    ],
+    "scope": "Simulator results from the named comparison source snapshot. Physical-device VoiceOver is pending."
+  },
+  "integratedOpaqueListResults": {
+    "bundle": ".build/IdeaSupplyAcceptance.xcresult",
+    "device": "iPhone 17e, iOS 27.0 simulator",
+    "comparisonSourceSHA256": "3222a441a513e73b4e46b4d5e062ff26d5741b52b3a6b587c6bae7940ff707e6",
+    "passedComparisonTests": [
+      "testAutomatedAccessibilityAuditOnShopAndKnownResults",
+      "testLargestTextSourceAndSavedDetailsAreFullyReadableAboveTabs"
+    ],
+    "suiteTotal": 367,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": [
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      },
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      },
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      }
+    ]
   }
 }

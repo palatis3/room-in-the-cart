@@ -107,10 +107,18 @@ struct ShopView: View {
                     .background(Theme.canvas.ignoresSafeArea(edges: .bottom))
                     .accessibilityHidden(true)
             }
-            .frame(width: viewport.size.width, height: viewport.size.height)
+            .fittingViewport(viewport.size)
         }.workingSurface().navigationTitle(tr("Shop")).navigationBarTitleDisplayMode(.inline).settingsButton()
             .task { await model.refresh() }
     }
+    private func pickupDestination<Content: View>(_ id: UUID, @ViewBuilder content: () -> Content) -> some View {
+        Group {
+            if pickup.selectedID == id { content() }
+            else { ProgressView() }
+        }
+        .onAppear { pickup.selectedID = id }
+    }
+
     private var shopContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
@@ -124,12 +132,10 @@ struct ShopView: View {
                                 Text(offer.replacement)
                                 Text("\(pTr("Cutoff")): \(pickupOfferCutoffText(offer)) · \(offer.deadline.timeZoneID)")
                                 NavigationLink(pTr(expired ? "Record what came home" : "Review a store offer")) {
-                                    Group {
-                                        if pickup.selectedID != journey.id { ProgressView() }
-                                        else if expired { PickupArrivalView(model: pickup) }
+                                    pickupDestination(journey.id) {
+                                        if expired { PickupArrivalView(model: pickup) }
                                         else { PickupOfferView(model: pickup) }
                                     }
-                                    .onAppear { pickup.selectedID = journey.id }
                                 }.frame(minHeight: 44).accessibilityIdentifier("shop.resumeOffer")
                             }.frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(16).background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
@@ -173,9 +179,26 @@ struct ShopView: View {
                         if let slot = shop.basis.slot, let zone = TimeZone(identifier: shop.basis.timeZoneIdentifier) {
                             Text(slot.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened, timeZone: zone)) + " · " + zone.identifier)
                         }
-                        NavigationLink(tr("Review checkout")) {
-                            LedgerCheckoutEntry(ledger: ledger, pickup: pickup)
-                        }.frame(minHeight: 44)
+                        if let closed = pickup.journeys.first(where: { $0.id == shop.id })?.closedAt {
+                            Text(pTr("Closed") + " · " + closed.formatted(date: .abbreviated, time: .shortened))
+                        } else if let journey = pickup.resumableJourney(for: shop.id), let basket = journey.basket, basket.phase != .draft {
+                            if shop.basis.slot == nil, let slot = journey.context?.slot, !slot.isEmpty {
+                                Text(pTr("Pickup or delivery slot") + " · " + slot)
+                            }
+                            if basket.phase == .frozen {
+                                NavigationLink(pTr("Prepare retailer handoff")) {
+                                    pickupDestination(journey.id) { PickupHandoffView(model: pickup) }
+                                }.frame(minHeight: 44)
+                            } else if journey.nextUnfilledOffer(at: .now) == nil, journey.pickup?.receipts.isEmpty == true {
+                                NavigationLink(pTr("Record what came home")) {
+                                    pickupDestination(journey.id) { PickupArrivalView(model: pickup) }
+                                }.frame(minHeight: 44)
+                            }
+                        } else {
+                            NavigationLink(tr("Review checkout")) {
+                                LedgerCheckoutEntry(ledger: ledger, pickup: pickup)
+                            }.frame(minHeight: 44)
+                        }
                     }
                     NavigationLink {
                         UrgentRepairView(model: pickup).environment(\.pickupLedger, ledger)
@@ -183,7 +206,7 @@ struct ShopView: View {
                         Text(tr("Something is missing")).font(.body).fixedSize(horizontal: false, vertical: true)
                             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
                     }.foregroundStyle(Theme.action).accessibilityIdentifier("urgentRepairShortcut")
-                    if let saved = [ledger.savedAt, pickup.resumableJourney(for: ledger.shop?.id)?.savedAt].compactMap({ $0 }).max() {
+                    if let saved = [ledger.savedAt, pickup.journeys.first?.savedAt, model.records.first?.savedAt].compactMap({ $0 }).max() {
                         Text(tr("Last local save") + " · " + saved.formatted(date: .abbreviated, time: .shortened))
                             .font(.footnote).accessibilityIdentifier("shop.localSave")
                     }
