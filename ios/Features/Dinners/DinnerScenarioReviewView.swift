@@ -10,6 +10,9 @@ struct DinnerScenarioReviewView: View {
     let alternatives: [DinnerScenario]
     let selectedAcceptedDinnerIDs: Set<UUID>
     let cap: CheckoutCap?
+    var excludedByRules: [String] = []
+    var library: DinnerLibraryPairings?
+    @State private var showReplacement = false
     @State private var pairing: DinnerPairingResult?
     @State private var recovery: DinnerRecoveryResult?
     @State private var acceptsExtraTrip = false
@@ -30,12 +33,26 @@ struct DinnerScenarioReviewView: View {
             if let pairing {
                 Section(dinnerText("Pairing review")) {
                     Text(pairingStatus(pairing.status))
+                    if !excludedByRules.isEmpty { Text(dinnerFormat("Excluded by the reviewed food rules: %@",excludedByRules.joined(separator: ", "))) }
                     if pairing.untestedCount > 0 { Text(dinnerFormat("Untested alternatives: %d", pairing.untestedCount)) }
                     scenario(pairing.baseline)
-                    ForEach(pairing.alternatives, id: \.scenarioID) { scenario($0) }
+                    ForEach(pairing.alternatives, id: \.scenarioID) { result in
+                        scenario(result)
+                        if let library, result.feasible, result.checkout.total.exact != nil, let shop = model.shop,
+                           let candidate = alternatives.first(where: { $0.id == result.scenarioID }) {
+                            if (try? library.replacement(for: candidate, shop: shop, state: model.state)) != nil {
+                                Button(dinnerText("Preview this exact dinner replacement")) {
+                                    do {
+                                        let changes = try library.replacement(for: candidate, shop: shop, state: model.state)
+                                        showReplacement = model.prepare(changes, tool: .pairing, isolated: !model.paid, expectedRevision: library.shopRevision)
+                                    } catch { model.report(error) }
+                                }
+                            } else { Text(dinnerText("This comparison changes a serving group or a linked recipe. Review a manual edit to keep the other portions.")) }
+                        }
+                    }
                 }
             }
-            if let recovery {
+            if let recovery, model.paid {
                 Section(dinnerText("Fallback review")) {
                     if recovery.needsExtraTripConfirmation { Text(dinnerText("The preferred fallback requires an extra trip. Review that choice explicitly.")) }
                     if recovery.unresolved { Text(dinnerText("A complete feasible fallback has not been confirmed.")) }
@@ -51,6 +68,7 @@ struct DinnerScenarioReviewView: View {
             }
             DinnerFeedback(model: model)
         }.navigationTitle(dinnerText("Dinner scenarios")).dinnerAccess(model, budget: true)
+            .navigationDestination(isPresented: $showReplacement) { DinnerPreviewView(model: model) }
     }
     private func scenario(_ result: DinnerScenarioResult) -> some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -59,6 +77,24 @@ struct DinnerScenarioReviewView: View {
             Text(dinnerFormat("Checkout: %@", dinnerMoney(result.checkout.total.exact))).font(.headline)
             Text(dinnerCap(result.checkout.cap))
             if let source {
+                ForEach(source.acceptedDinnerIDs, id: \.self) { id in
+                    if let dinner = model.state.acceptedDinners.first(where: { $0.id == id }) { Text(dinner.template.title).font(.headline) }
+                }
+                ForEach(source.commitments.commitments) { c in
+                    Text("\(c.name) · \(c.portions.description) \(c.protected ? dinnerText("Protected commitment") : dinnerText("Required portions"))")
+                }
+                if let baseline = pairing?.baseline, baseline.scenarioID != result.scenarioID,
+                   baseline.feasible && result.feasible {
+                    let changed = Set(baseline.packs.map(\.foodID) + result.packs.map(\.foodID))
+                    ForEach(changed.sorted(by: { $0.uuidString < $1.uuidString }), id: \.self) { id in
+                        let old = baseline.packs.first { $0.foodID == id }?.result?.packsToBuy ?? 0
+                        let new = result.packs.first { $0.foodID == id }?.result?.packsToBuy ?? 0
+                        if old != new {
+                            let name = (source.demands + current.demands).first { $0.foodID == id }?.name ?? dinnerText("Food name")
+                            Text(dinnerFormat("%@ · packages change from %lld to %lld",name,old,new))
+                        }
+                    }
+                }
                 ForEach(result.stockAllocation.demands) { need in
                     let name = source.demands.first { $0.id == need.id }?.name ?? source.otherReservations.first { $0.id == need.id }?.name ?? dinnerText("Protected need")
                     Text(dinnerFormat("%@ · confirmed stock allocated: %@ %@", name, need.allocated?.description ?? dinnerText("Unresolved"), dinnerUnit(need.unit)))

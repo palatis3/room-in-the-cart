@@ -4641,6 +4641,454 @@
           }
         }
       }
+    },
+    "Purpose for a future pickup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purpose for a future pickup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uso en una próxima recogida"
+          }
+        }
+      }
+    },
+    "Enter this pickup’s store before remembering a staple.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter this pickup’s store before remembering a staple."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresa la tienda de esta recogida antes de guardar un producto habitual."
+          }
+        }
+      }
+    },
+    "Remembering a staple keeps its purpose and store. You decide again how much to buy on a later trip.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remembering a staple keeps its purpose and store. You decide again how much to buy on a later trip."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al guardar un producto habitual, conservas su uso y la tienda. En tu próxima compra decidirás cuánto necesitas."
+          }
+        }
+      }
+    },
+    "Remember this staple": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remember this staple"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar como producto habitual"
+          }
+        }
+      }
+    },
+    "Remembered store": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remembered store"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tienda guardada"
+          }
+        }
+      }
+    },
+    "Forget this staple": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forget this staple"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Olvidar este producto habitual"
+          }
+        }
+      }
+    },
+    "Reopen this item to review its current details.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reopen this item to review its current details."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a abrir este producto para consultar los detalles actuales."
+          }
+        }
+      }
+    },
+    "Staple for future pickups": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Staple for future pickups"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Producto habitual para futuras recogidas"
+          }
+        }
+      }
+    },
+    "Assisted staple recall requires an active adult planning seat. You can still review open deferrals and enter items manually.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assisted staple recall requires an active adult planning seat. You can still review open deferrals and enter items manually."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para consultar las sugerencias de productos habituales, necesitas una plaza de planificación activa para adultos. Puedes revisar los pendientes y agregar productos manualmente."
+          }
+        }
+      }
+    },
+    "Household membership": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household membership"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Membresía del hogar"
+          }
+        }
+      }
+    },
+    "Open a current draft pickup to review staples for it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open a current draft pickup to review staples for it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre una recogida en borrador para revisar tus productos habituales."
+          }
+        }
+      }
+    },
+    "Choose what you need this trip. Previous checked items stay with their original pickup.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose what you need this trip. Previous checked items stay with their original pickup."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige lo que necesitas esta vez. Los productos marcados anteriormente se quedan en su recogida original."
+          }
+        }
+      }
+    },
+    "All remembered stores": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All remembered stores"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todas las tiendas guardadas"
+          }
+        }
+      }
+    },
+    "Filter by purpose": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter by purpose"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filtrar por uso"
+          }
+        }
+      }
+    },
+    "No matching staples. Open an item’s details on a previous pickup to remember its purpose and store.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No matching staples. Open an item’s details on a previous pickup to remember its purpose and store."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay productos habituales que coincidan. Abre los detalles de un producto de una recogida anterior para guardar su uso y la tienda."
+          }
+        }
+      }
+    },
+    "Previously handled": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previously handled"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resuelto anteriormente"
+          }
+        }
+      }
+    },
+    "Previously checked": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previously checked"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marcado anteriormente"
+          }
+        }
+      }
+    },
+    "Previously on the active list": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previously on the active list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estaba en la lista activa"
+          }
+        }
+      }
+    },
+    "Review prior staples": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review prior staples"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar productos habituales"
+          }
+        }
+      }
+    },
+    "Purpose": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purpose"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uso"
+          }
+        }
+      }
+    },
+    "Review the quantity for this pickup. Enter its price separately after adding the item.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the quantity for this pickup. Enter its price separately after adding the item."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa la cantidad para esta recogida. Ingresa el precio por separado después de agregar el producto."
+          }
+        }
+      }
+    },
+    "Amount for this pickup, blank if unknown": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amount for this pickup, blank if unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad para esta recogida; deja en blanco si la desconoces"
+          }
+        }
+      }
+    },
+    "This name is already on this pickup, including its history. Inspect the existing item before changing it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This name is already on this pickup, including its history. Inspect the existing item before changing it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ese nombre ya figura en esta recogida o en su historial. Revisa el producto existente antes de cambiarlo."
+          }
+        }
+      }
+    },
+    "Add reviewed need to this pickup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add reviewed need to this pickup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agregar el producto revisado a esta recogida"
+          }
+        }
+      }
+    },
+    "Already handled for this pickup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already handled for this pickup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya se resolvió para esta recogida"
+          }
+        }
+      }
+    },
+    "Skip on this pickup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skip on this pickup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Omitir en esta recogida"
+          }
+        }
+      }
+    },
+    "Review staple": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review staple"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar producto habitual"
+          }
+        }
+      }
+    },
+    "Store": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Store"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tienda"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

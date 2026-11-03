@@ -8921,6 +8921,438 @@
           }
         }
       }
+    },
+    "Household access changed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household access changed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El acceso al hogar cambió"
+          }
+        }
+      }
+    },
+    "Return to the previous screen and choose the current household or shop again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Return to the previous screen and choose the current household or shop again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a la pantalla anterior y elige de nuevo el hogar o la compra actual."
+          }
+        }
+      }
+    },
+    "Cancelling leaves your request unsent. No captured photo or audio is sent with this request.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelling leaves your request unsent. No captured photo or audio is sent with this request."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si cancelas, la solicitud no se envía. No se envían fotos ni audio capturados con esta solicitud."
+          }
+        }
+      }
+    },
+    "Capture and review a request": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture and review a request"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capturar y revisar una solicitud"
+          }
+        }
+      }
+    },
+    "Confirm the displayed request destination. Nothing has been sent.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm the displayed request destination. Nothing has been sent."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirma el destino que se muestra para la solicitud. No se ha enviado nada."
+          }
+        }
+      }
+    },
+    "Destination": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destination"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destino"
+          }
+        }
+      }
+    },
+    "I reviewed the original wording, item, quantity, packs, exclusions and destination.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed the original wording, item, quantity, packs, exclusions and destination."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé el texto original, el artículo, la cantidad, los paquetes, las exclusiones y el destino."
+          }
+        }
+      }
+    },
+    "Keep exactly one reviewed item for this request. Skip other lines or cancel; nothing has been sent.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep exactly one reviewed item for this request. Skip other lines or cancel; nothing has been sent."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conserva exactamente un artículo revisado para esta solicitud. Omite las demás líneas o cancela; no se ha enviado nada."
+          }
+        }
+      }
+    },
+    "Keep these exclusions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep these exclusions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mantener estas exclusiones"
+          }
+        }
+      }
+    },
+    "Only the shopper can change the basket. Sending a request does not buy an item or confirm its price.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the shopper can change the basket. Sending a request does not buy an item or confirm its price."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo la persona encargada de comprar puede cambiar la canasta. Enviar una solicitud no compra un artículo ni confirma su precio."
+          }
+        }
+      }
+    },
+    "Original wording": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto original"
+          }
+        }
+      }
+    },
+    "Purpose": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purpose"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Propósito"
+          }
+        }
+      }
+    },
+    "Quantity": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quantity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad"
+          }
+        }
+      }
+    },
+    "Request for next shop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request for next shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicitud para la próxima compra"
+          }
+        }
+      }
+    },
+    "Request for this pickup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request for this pickup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicitud para esta recogida"
+          }
+        }
+      }
+    },
+    "Request the household will receive": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request the household will receive"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicitud que recibirá el hogar"
+          }
+        }
+      }
+    },
+    "Review needed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review needed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se requiere revisión"
+          }
+        }
+      }
+    },
+    "Review request before sending": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review request before sending"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la solicitud antes de enviarla"
+          }
+        }
+      }
+    },
+    "Review your request": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review your request"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar tu solicitud"
+          }
+        }
+      }
+    },
+    "Send reviewed request": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send reviewed request"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar la solicitud revisada"
+          }
+        }
+      }
+    },
+    "The complete request, including original wording, purpose and exclusions, must fit 240 item characters and 80 quantity characters. Shorten the source request and review again; nothing was truncated or sent.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The complete request, including original wording, purpose and exclusions, must fit 240 item characters and 80 quantity characters. Shorten the source request and review again; nothing was truncated or sent."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La solicitud completa, con el texto original, el propósito y las exclusiones, debe caber en 240 caracteres para el artículo y 80 para la cantidad. Acorta el texto de origen y vuelve a revisarlo; no se ha recortado ni enviado nada."
+          }
+        }
+      }
+    },
+    "This edits only your selected request.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This edits only your selected request."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esto modifica únicamente la solicitud que seleccionaste."
+          }
+        }
+      }
+    },
+    "This request or your access changed. Reopen request review before sending.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This request or your access changed. Reopen request review before sending."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta solicitud o tu acceso cambió. Vuelve a abrir la revisión de la solicitud antes de enviarla."
+          }
+        }
+      }
+    },
+    "Unknown amount": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown amount"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad desconocida"
+          }
+        }
+      }
+    },
+    "amount per pack unknown": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "amount per pack unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cantidad por paquete desconocida"
+          }
+        }
+      }
+    },
+    "pack count unknown": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pack count unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "número de paquetes desconocido"
+          }
+        }
+      }
+    },
+    "packs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "packs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "paquetes"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

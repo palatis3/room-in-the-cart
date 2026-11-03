@@ -53,6 +53,7 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                     NavigationLink(captureText("Review a recipe from text or photo")) { RecipeCaptureEntry(model: model) }
                         .accessibilityIdentifier("dinner.scanRecipe")
                     NavigationLink(dinnerText("Accepted dinners and Free reusable dinner")) { DinnerLibraryView(model: model) }.accessibilityIdentifier("dinnerLibrary")
+                    NavigationLink(HistoryCopy.text("Family decision history")) { FamilyDecisionsEntry(localShopID: model.shop?.id) }
                     NavigationLink(dinnerText("Review a dinner idea")) { DinnerIdeasView(model: model) }
                     NavigationLink(dinnerText("Dinner rotations")) { DinnerRotationsView(model: model, weekStart: weekStart) }
                     NavigationLink(dinnerText("Protect a lunch or side")) { DinnerReservationView(model: model) }

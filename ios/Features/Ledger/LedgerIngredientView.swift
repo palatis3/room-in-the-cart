@@ -18,6 +18,7 @@ private enum IngredientSheet: Identifiable {
 
 struct LedgerIngredientView: View {
     @ObservedObject var model: LedgerModel
+    @EnvironmentObject private var pickup: PickupModel
     let shopID: UUID
     let lineID: UUID
     @State private var sheet: IngredientSheet?
@@ -33,6 +34,20 @@ struct LedgerIngredientView: View {
                     Text(ledgerQuantity(try? shop.quantity(forLineID: lineID))).font(.headline)
                     if !line.notes.isEmpty { Text(line.notes) }
                     if !line.aisle.isEmpty { Text(line.aisle) }
+                    NavigationLink(ledgerText("Staple for future pickups")) { StapleApprovalView(ledger: model, shop: shop, line: line) }
+                    if pickup.journeys.contains(where: { $0.id == shopID && $0.basket?.current.lines.contains(where: { $0.id == lineID }) == true }) {
+                        NavigationLink(pTr("Confirm pantry or freezer food")) {
+                            Form {
+                                PickupSaveStatus(model: pickup)
+                                if let current = pickup.journey, current.id == shopID,
+                                   current.basket?.current.lines.contains(where: { $0.id == lineID }) == true {
+                                    if current.closedAt == nil { PickupNewStockSection(model: pickup, ingredientID: lineID) }
+                                    PickupSavedStockSection(model: pickup, journey: current, onlyFoodID: lineID)
+                                }
+                            }.navigationTitle(line.name)
+                                .onAppear { pickup.selectedID = shopID }
+                        }
+                    }
                     Button(ledgerText("Edit item and visible notes")) { sheet = .line }
                         .disabled(model.saving || model.hasPendingSave)
                     if !line.isTrashed && !line.isHandled {

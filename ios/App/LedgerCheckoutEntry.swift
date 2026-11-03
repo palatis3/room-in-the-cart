@@ -290,10 +290,14 @@ struct PickupListBridgeView: View {
     @ObservedObject var model: PickupModel
     @ObservedObject var ledger: LedgerModel
     let journeyID: UUID
+    var reviewStaples = false
     @State private var opened = false
     var body: some View {
         Group {
-            if opened { LedgerHomeView(model: ledger) }
+            if opened {
+                if reviewStaples { StapleRecallView(ledger: ledger, targetID: journeyID) }
+                else { LedgerHomeView(model: ledger) }
+            }
             else {
                 Form {
                     LedgerSaveStatus(model: ledger)

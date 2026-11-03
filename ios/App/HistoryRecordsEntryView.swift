@@ -12,7 +12,7 @@ struct HistoryRecordsEntryView: View {
                scope.grantId == nil, ["organizer", "shopper", "contributor"].contains(scope.role),
                household.identity != nil {
                 if let model {
-                    HistoryEntryView(model: model, chooseShop: { choosingScope = true })
+                    HistoryEntryView(model: model, chooseShop: scope.canSelectShop == true || scope.selectionRequired == true ? { choosingScope = true } : nil)
                 }
                 else { Text(HistoryCopy.text("History is not configured on this iPhone.")) }
             } else {
@@ -32,13 +32,6 @@ struct HistoryRecordsEntryView: View {
                         Text(HistoryCopy.text("For a budget covering several shops, choose Use household overview. Each shop still requires your current access."))
                             .font(.footnote).padding().background(.regularMaterial)
                     }
-            }
-        }
-        .toolbar {
-            if !household.locked, household.projection?.grantId == nil, household.projection?.canSelectShop == true {
-                ToolbarItem(placement: .topBarTrailing) {
-                    NavigationLink(HistoryCopy.text("Choose shared shop scope")) { HouseholdShopSelector(household: household) }
-                }
             }
         }
         .task { if model == nil { model = household.makeHistoryModel() } }

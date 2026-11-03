@@ -3,12 +3,29 @@ import CoreDomain
 
 struct DinnerScenarioEditor: View {
     @ObservedObject var model: DinnerFeatureModel
+    @EnvironmentObject private var pickup: PickupModel
+    @Environment(\.pickupLedger) private var linkedLedger
     @State private var draft: DinnerScenarioDraft
     @State private var reviewed: DinnerReviewedScenarios?
+    @State private var leftoverChoices: [UUID:UUID] = [:]
     @State private var showReview = false
+    @State private var conflicts: [String] = []
+    @State private var target: UUID?
+    @State private var library: DinnerLibraryPairings?
+    @State private var libraryAlternatives: [DinnerScenario] = []
     init(model: DinnerFeatureModel, shop: ShoppingLedger) {
         self.model = model; _draft = State(initialValue: DinnerScenarioDraft(shop: shop, state: model.state))
     }
+    private func findCandidates(offset: Int) {
+        guard let target, let shop = model.shop else { return }
+        do { library = try DinnerLibraryPairings.prepare(&draft, target: target, shop: shop, state: model.state, offset: offset) }
+        catch { library = nil; model.report(error) }
+    }
+    private var currentPickup: PickupJourney? {
+        guard let ledger = linkedLedger, ledger.sourceWorkspaceID == model.store.sourceWorkspaceID else { return nil }
+        return pickup.journeys.first { $0.id == draft.shopID }
+    }
+    private var leftoversCurrent: Bool { draft.leftoverRevision == nil || draft.leftoverRevision == currentPickup?.revision }
     var body: some View {
         Form {
             Section {
@@ -27,10 +44,35 @@ struct DinnerScenarioEditor: View {
                 Section { NavigationLink(dinnerText("Accept a dinner before comparing scenarios")) { DinnerTemplateEditor(model: model, purpose: .reusable) } }
             } else {
                 DinnerScenarioMealFields(model: model, draft: $draft)
+                Section(dinnerText("Pair with the accepted library")) {
+                    Button(dinnerText("Load chosen dinners and protected serving groups")) {
+                        guard let shop = model.shop else { return }
+                        do {
+                            let meals = try DinnerLibraryPairings.scheduledMeals(shop: shop, state: model.state)
+                            if !meals.isEmpty { draft.meals = meals; target = meals.first(where: { !$0.protected })?.id; library = nil; draft.matches = [] }
+                        } catch { model.report(error) }
+                    }
+                    Picker(dinnerText("Commitment to replace in the comparison"), selection: $target) {
+                        Text(dinnerText("Choose a meal")).tag(UUID?.none)
+                        ForEach(draft.meals.filter { !$0.protected }) { meal in Text(meal.name).tag(Optional(meal.id)) }
+                    }
+                    Button(dinnerText("Find accepted dinners not chosen for this pickup")) {
+                        findCandidates(offset: 0)
+                    }.disabled(target == nil)
+                    if let library {
+                        if library.candidates.isEmpty { Text(dinnerText("No new pairing; these dinners are already selected.")) }
+                        else { Text(dinnerText("Review each candidate’s ingredient matches and complete plan timing below.")) }
+                        if library.pageOffset > 0 { Button(dinnerText("Previous candidate group")) { findCandidates(offset: max(0,library.pageOffset-32)) } }
+                        if library.excludedByLimit > 0 {
+                            Text(dinnerFormat("Untested alternatives: %d", library.excludedByLimit))
+                            Button(dinnerText("Next candidate group")) { findCandidates(offset: library.pageOffset+32) }
+                        }
+                    }
+                }
                 Section(dinnerText("Explicit recipe ingredient matches")) {
                     Text(dinnerText("Prepare matches after choosing recipes and portions. Then explicitly select the same food identity only where those ingredients really are interchangeable."))
                     Button(dinnerText("Prepare required ingredient matches")) {
-                        do { try draft.prepareMatches(accepted: model.state.acceptedDinners); reviewed = nil }
+                        do { try draft.prepareMatches(accepted: model.state.acceptedDinners); library = nil; reviewed = nil }
                         catch { model.report(error) }
                     }
                     ForEach($draft.matches) { $match in
@@ -54,13 +96,43 @@ struct DinnerScenarioEditor: View {
                     }
                     Button(dinnerText("Add a reviewed food identity")) { draft.foods.append(DinnerFoodEvidenceDraft()) }.disabled(draft.foods.count >= 100)
                 }
+                if let journey = currentPickup, let lots = try? DinnerLibraryPairings.unreservedLots(journey, at: Date()), !lots.isEmpty {
+                    Section(dinnerText("Confirmed unreserved leftovers")) {
+                        ForEach(lots) { lot in
+                            Text("\(lot.name) · \(dinnerQuantity(lot.usable)) · \(lot.confirmedAt.formatted())")
+                            Picker(dinnerText("Reviewed food identity"), selection: $leftoverChoices[lot.id]) {
+                                Text(dinnerText("Do not use this lot")).tag(UUID?.none)
+                                ForEach(draft.foods) { food in Text(food.name).tag(Optional(food.id)) }
+                            }
+                        }
+                        Button(dinnerText("Use only the reviewed leftover balances")) {
+                            draft.reviewedLeftovers = lots.compactMap { lot in
+                                guard let food = leftoverChoices[lot.id] else { return nil }
+                                return .init(id: lot.id,foodID: food,name: lot.name,usable: lot.usable,confirmedAt: lot.confirmedAt,source: lot.source)
+                            }
+                            draft.leftoverRevision = draft.reviewedLeftovers.isEmpty ? nil : journey.revision
+                        }
+                    }
+                }
+                if !draft.reviewedLeftovers.isEmpty {
+                    Button(dinnerText("Remove linked leftovers from this comparison")) { draft.reviewedLeftovers = []; draft.leftoverRevision = nil; leftoverChoices = [:] }
+                }
                 DinnerScenarioBasketFields(draft: $draft)
                 DinnerScenarioContextFields(draft: $draft)
                 Section(dinnerText("Preparation timing")) {
                     TextField(dinnerText("Current plan hands-on minutes, optional"), text: $draft.currentHands)
                     TextField(dinnerText("Current plan remaining lead minutes, optional"), text: $draft.currentLead)
-                    TextField(dinnerText("Candidate hands-on minutes, optional"), text: $draft.candidateHands)
-                    TextField(dinnerText("Candidate remaining lead minutes, optional"), text: $draft.candidateLead)
+                    if let libraryBinding = Binding($library) {
+                        ForEach(libraryBinding.candidates) { $candidate in
+                            Text(candidate.title).font(.headline)
+                            TextField(dinnerText("Candidate hands-on minutes, optional"), text: $candidate.hands)
+                            TextField(dinnerText("Candidate remaining lead minutes, optional"), text: $candidate.lead)
+                            Toggle(dinnerText("I checked that the required advance steps are already complete"), isOn: $candidate.advanceStepsReviewed)
+                        }
+                    } else {
+                        TextField(dinnerText("Candidate hands-on minutes, optional"), text: $draft.candidateHands)
+                        TextField(dinnerText("Candidate remaining lead minutes, optional"), text: $draft.candidateLead)
+                    }
                     TextField(dinnerText("Available minutes, optional"), text: $draft.availableMinutes)
                     Text(dinnerText("Enter the remaining elapsed preparation after any completed steps. Missing timing cannot prove a plan is feasible."))
                 }
@@ -68,7 +140,16 @@ struct DinnerScenarioEditor: View {
                     Button(dinnerText("Review complete scenarios")) {
                         do {
                             guard let shop = model.shop else { return }
-                            reviewed = try draft.build(shop: shop, state: model.state); showReview = true
+                            guard leftoversCurrent else { throw DinnerPlanningError.stalePreview }
+                            if let library {
+                                guard target == library.target else { throw DinnerPlanningError.stalePreview }
+                                let (baseline, alternatives, cap, excluded) = try library.build(draft, shop: shop, state: model.state)
+                                guard let first = alternatives.first else { return }
+                                conflicts = excluded; libraryAlternatives = alternatives
+                                reviewed = DinnerReviewedScenarios(shopID: shop.id, baseRevision: shop.revisionID, planningRevision: model.state.revisionID,
+                                                                  current: baseline, candidate: first, cap: cap)
+                            } else { conflicts = []; libraryAlternatives = []; reviewed = try draft.build(shop: shop, state: model.state) }
+                            showReview = true
                         } catch { model.report(error) }
                     }.disabled(!model.editable)
                 }
@@ -76,10 +157,11 @@ struct DinnerScenarioEditor: View {
             DinnerFeedback(model: model)
         }.navigationTitle(dinnerText("Scenario evidence")).dinnerAccess(model, budget: true)
             .navigationDestination(isPresented: $showReview) {
-                if let reviewed {
-                    DinnerScenarioReviewView(model: model, current: reviewed.current, alternatives: [reviewed.candidate],
-                        selectedAcceptedDinnerIDs: Set(reviewed.current.acceptedDinnerIDs), cap: reviewed.cap)
-                }
+                if leftoversCurrent, let reviewed, let shop = model.shop, reviewed.shopID == shop.id, reviewed.baseRevision == shop.revisionID,
+                   reviewed.planningRevision == model.state.revisionID {
+                    DinnerScenarioReviewView(model: model, current: reviewed.current, alternatives: libraryAlternatives.isEmpty ? [reviewed.candidate] : libraryAlternatives,
+                        selectedAcceptedDinnerIDs: DinnerLibraryPairings.chosen(in: shop, state: model.state).union(reviewed.current.acceptedDinnerIDs), cap: reviewed.cap, excludedByRules: conflicts, library: library)
+                } else { Text(dinnerText("Planning access changed or expired. Reconnect and review again.")) }
             }
     }
 }
@@ -120,14 +202,16 @@ private struct DinnerScenarioBasketFields: View {
                 VStack(alignment: .leading) {
                     Text(line.name).font(.headline)
                     TextField(dinnerText("Complete unchanged line cost in USD, optional"), text: $line.cost)
+                    if !draft.feeThreshold.isEmpty { Toggle(dinnerText("Counts toward the fee threshold"), isOn: $line.feeEligible) }
                 }
             }
             Toggle(dinnerText("Every other dinner, lunch, side and staple is included once"), isOn: $draft.baselineComplete)
             Toggle(dinnerText("Compared recipe purchases are excluded from these remaining line costs"), isOn: $draft.baselineExcludesComparedRecipes)
             TextField(dinnerText("All checkout fees in USD, optional"), text: $draft.fee)
+            TextField(dinnerText("Fee waived at eligible subtotal, optional"), text: $draft.feeThreshold)
             TextField(dinnerText("Tax in USD, optional"), text: $draft.tax)
             TextField(dinnerText("Deposits in USD, optional"), text: $draft.deposits)
-            Text(dinnerText("Use this entry path for confirmed fixed charges. Threshold fees, discounts or incomplete retailer terms need a reviewed inclusive store quote instead."))
+            Text(dinnerText("Enter the fixed fee or the fee below a confirmed waiver threshold. Review complex discounts separately."))
         }
     }
 }
@@ -176,6 +260,7 @@ private struct DinnerFoodEvidenceEditor: View {
             }
             Section(dinnerText("One usable pack")) {
                 TextField(dinnerText("Pack description"), text: $food.packLabel)
+                Toggle(dinnerText("Counts toward the fee threshold"), isOn: $food.feeEligible)
                 TextField(dinnerText("Confirmed usable amount per pack, optional"), text: $food.packAmount)
                 DinnerUnitPicker(unit: $food.packUnit)
                 Toggle(dinnerText("Usable pack yield reviewed"), isOn: $food.yieldReviewed)

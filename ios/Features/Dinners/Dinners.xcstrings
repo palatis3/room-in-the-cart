@@ -6176,6 +6176,905 @@
           }
         }
       }
+    },
+    "Pickup selection changed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pickup selection changed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La compra seleccionada cambió"
+          }
+        }
+      }
+    },
+    "Return to the original pickup before reviewing these dinner choices or store quotes.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Return to the original pickup before reviewing these dinner choices or store quotes."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a la compra original antes de revisar estas opciones de cena o cotizaciones de tiendas."
+          }
+        }
+      }
+    },
+    "%@ · packages change from %lld to %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · packages change from %lld to %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · los paquetes cambian de %lld a %lld"
+          }
+        }
+      }
+    },
+    "Accepted fallbacks": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accepted fallbacks"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alternativas aceptadas"
+          }
+        }
+      }
+    },
+    "Choose a meal": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a meal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una comida"
+          }
+        }
+      }
+    },
+    "Commitment to replace in the comparison": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commitment to replace in the comparison"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comida que se sustituirá en la comparación"
+          }
+        }
+      }
+    },
+    "Confirmed packages available": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed packages available"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquetes disponibles confirmados"
+          }
+        }
+      }
+    },
+    "Find accepted dinners not chosen for this pickup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find accepted dinners not chosen for this pickup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar cenas aceptadas que aún no elegiste para esta recogida"
+          }
+        }
+      }
+    },
+    "I agree to an extra top-up trip for this repair": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I agree to an extra top-up trip for this repair"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acepto hacer un viaje adicional para completar esta comida"
+          }
+        }
+      }
+    },
+    "I agree to consider a repeated dinner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I agree to consider a repeated dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acepto considerar una cena repetida"
+          }
+        }
+      }
+    },
+    "I checked that the required advance steps are already complete": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I checked that the required advance steps are already complete"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comprobé que ya se completaron los pasos que requieren preparación previa"
+          }
+        }
+      }
+    },
+    "I checked these food identities, yields and exclusions for this meal": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I checked these food identities, yields and exclusions for this meal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comprobé los alimentos, los rendimientos y las exclusiones de esta comida"
+          }
+        }
+      }
+    },
+    "Load chosen dinners and protected serving groups": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load chosen dinners and protected serving groups"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargar las cenas elegidas y los grupos con porciones reservadas"
+          }
+        }
+      }
+    },
+    "Meal deadline": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal deadline"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hora límite de la comida"
+          }
+        }
+      }
+    },
+    "Meal deadline is known": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal deadline is known"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conozco la hora límite de la comida"
+          }
+        }
+      }
+    },
+    "Need to repair": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Need to repair"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Necesidad que quieres resolver"
+          }
+        }
+      }
+    },
+    "No feasible accepted repair is confirmed. Keep the need open or edit it manually.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No feasible accepted repair is confirmed. Keep the need open or edit it manually."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se ha confirmado ninguna alternativa aceptada que sea viable. Deja la necesidad pendiente o edítala manualmente."
+          }
+        }
+      }
+    },
+    "No household dinner is marked as an accepted fallback.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No household dinner is marked as an accepted fallback."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay cenas del hogar marcadas como alternativas aceptadas."
+          }
+        }
+      }
+    },
+    "Only checked usable food from this pickup and its confirmed stock can feed a fallback. All other named needs stay reserved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only checked usable food from this pickup and its confirmed stock can feed a fallback. All other named needs stay reserved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para una alternativa solo se usan los alimentos aprovechables verificados de esta recogida y las existencias confirmadas. Se mantienen las reservas para las demás necesidades."
+          }
+        }
+      }
+    },
+    "Pair with the accepted library": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pair with the accepted library"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Combinar con las cenas aceptadas"
+          }
+        }
+      }
+    },
+    "Price per pack": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price per pack"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio por paquete"
+          }
+        }
+      }
+    },
+    "Recover with an accepted dinner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recover with an accepted dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resolver con una cena aceptada"
+          }
+        }
+      }
+    },
+    "Remaining time including any trip: %d minutes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remaining time including any trip: %d minutes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tiempo restante, incluido cualquier viaje: %d minutos"
+          }
+        }
+      }
+    },
+    "Reserved: %@ · %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reserved: %@ · %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reservado: %@ · %@"
+          }
+        }
+      }
+    },
+    "Review each candidate’s ingredient matches and complete plan timing below.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review each candidate’s ingredient matches and complete plan timing below."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa abajo los ingredientes y el tiempo total del plan para cada opción."
+          }
+        }
+      }
+    },
+    "Review feasible repairs": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review feasible repairs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar soluciones viables"
+          }
+        }
+      }
+    },
+    "Reviewed remaining elapsed minutes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed remaining elapsed minutes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minutos totales restantes verificados"
+          }
+        }
+      }
+    },
+    "Round-trip minutes for a top-up": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Round-trip minutes for a top-up"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minutos de ida y vuelta para la compra adicional"
+          }
+        }
+      }
+    },
+    "Saved elapsed preparation: %d minutes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved elapsed preparation: %d minutes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparación total guardada: %d minutos"
+          }
+        }
+      }
+    },
+    "Smallest feasible repair": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smallest feasible repair"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solución viable que requiere menos compras"
+          }
+        }
+      }
+    },
+    "Top-up only for this ingredient": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Top-up only for this ingredient"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comprar este ingrediente por separado"
+          }
+        }
+      }
+    },
+    "Usable amount per pack": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usable amount per pack"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad aprovechable por paquete"
+          }
+        }
+      }
+    },
+    "Use in manual repair instructions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use in manual repair instructions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar en las instrucciones manuales"
+          }
+        }
+      }
+    },
+    "Usual fallback minutes, optional": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usual fallback minutes, optional"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minutos de la alternativa habitual, opcional"
+          }
+        }
+      }
+    },
+    "Your usual fallback: %d minutes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your usual fallback: %d minutes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu alternativa habitual: %d minutos"
+          }
+        }
+      }
+    },
+    "Confirmed unreserved leftovers": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed unreserved leftovers"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sobrantes confirmados sin reservar"
+          }
+        }
+      }
+    },
+    "Do not use this lot": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do not use this lot"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No usar este lote"
+          }
+        }
+      }
+    },
+    "Use only the reviewed leftover balances": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use only the reviewed leftover balances"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar solo los sobrantes revisados"
+          }
+        }
+      }
+    },
+    "Remove linked leftovers from this comparison": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove linked leftovers from this comparison"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar de esta comparación los sobrantes vinculados"
+          }
+        }
+      }
+    },
+    "Previous candidate group": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous candidate group"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grupo anterior de opciones"
+          }
+        }
+      }
+    },
+    "Next candidate group": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next candidate group"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grupo siguiente de opciones"
+          }
+        }
+      }
+    },
+    "Excluded by the reviewed food rules: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Excluded by the reviewed food rules: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descartadas por las reglas alimentarias revisadas: %@"
+          }
+        }
+      }
+    },
+    "Counts toward the fee threshold": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Counts toward the fee threshold"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuenta para el mínimo que elimina el cargo"
+          }
+        }
+      }
+    },
+    "Fee waived at eligible subtotal, optional": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fee waived at eligible subtotal, optional"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subtotal válido a partir del cual se elimina el cargo, opcional"
+          }
+        }
+      }
+    },
+    "Enter the fixed fee or the fee below a confirmed waiver threshold. Review complex discounts separately.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the fixed fee or the fee below a confirmed waiver threshold. Review complex discounts separately."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresa el cargo fijo o el cargo que se aplica por debajo del mínimo confirmado. Revisa los descuentos complejos por separado."
+          }
+        }
+      }
+    },
+    "%@ · required %@ · confirmed on hand %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · required %@ · confirmed on hand %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · se necesita %@ · disponible confirmado %@"
+          }
+        }
+      }
+    },
+    "Keep these exclusions: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep these exclusions: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mantén estas exclusiones: %@"
+          }
+        }
+      }
+    },
+    "Top up: %@ × %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Top up: %@ × %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compra adicional: %@ × %lld"
+          }
+        }
+      }
+    },
+    "Maximum available for a top-up, USD": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maximum available for a top-up, USD"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Máximo disponible para la compra adicional, USD"
+          }
+        }
+      }
+    },
+    "Top-up fees and tax, including zero, USD": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Top-up fees and tax, including zero, USD"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargos e impuestos de la compra adicional, incluso si son cero, USD"
+          }
+        }
+      }
+    },
+    "Extra checkout including entered fees and tax: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extra checkout including entered fees and tax: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compra adicional con los cargos e impuestos indicados: %@"
+          }
+        }
+      }
+    },
+    "Preview this exact dinner replacement": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview this exact dinner replacement"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar esta sustitución exacta de cena"
+          }
+        }
+      }
+    },
+    "This comparison changes a serving group or a linked recipe. Review a manual edit to keep the other portions.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This comparison changes a serving group or a linked recipe. Review a manual edit to keep the other portions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta comparación cambia un grupo de porciones o una receta vinculada. Revisa un cambio manual para conservar las demás porciones."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

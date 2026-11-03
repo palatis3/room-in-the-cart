@@ -105,66 +105,58 @@ struct PickupUsableCorrectionView: View {
 
 struct PickupOfferView: View {
     @ObservedObject var model: PickupModel
-    @State private var lineID: UUID?
-    @State private var replacement = ""
-    @State private var required = ""
-    @State private var remaining = ""
-    @State private var price = ""
-    @State private var ceiling = ""
-    @State private var fallback = ""
-    @State private var deadline = Date()
-    @State private var zone = TimeZone.current.identifier
-    @State private var preference = ""
-    @State private var response = ""
-    @State private var operationID = UUID()
+    @State private var editor: OfferEditorSelection?
+    private struct OfferEditorSelection: Identifiable {
+        let id = UUID()
+        let journey: PickupJourney
+        let original: PickupOffer?
+    }
     var body: some View {
         Form {
             PickupSaveStatus(model: model)
-            Section(pTr("Store offer")) {
-                Picker(pTr("Original line"), selection: $lineID) {
-                    Text(pTr("Choose a line")).tag(UUID?.none)
-                    ForEach(model.journey?.pickup?.orderLines ?? []) { Text($0.name).tag(Optional($0.id)) }
+            if let journey = model.journey {
+                Section(pTr("Store offer")) {
+                    Button(pTr("New store offer")) {
+                        editor = OfferEditorSelection(journey: journey, original: nil)
+                    }.accessibilityIdentifier("pickup.offer.new").frame(minHeight: 44)
+                        .disabled(model.saving || model.hasPendingSave || (journey.pickup?.orderLines.isEmpty ?? true))
+                    Text(pTr("Open a saved offer to update its pending household preference or retailer response. A new offer creates a separate record."))
                 }
-                TextField(pTr("Replacement and offered pack"), text: $replacement)
-                TextField(pTr("Required usable amount in original units"), text: $required).keyboardType(.decimalPad)
-                TextField(pTr("Original amount still expected"), text: $remaining).keyboardType(.decimalPad)
-                PickupEvidenceField(title: "Offered price", amount: $price)
-                PickupEvidenceField(title: "Reviewed offer-specific maximum price", amount: $ceiling)
-                Text(pTr("A line ceiling does not establish that the whole checkout fits. Review combined charges separately."))
-                DatePicker(pTr("Retailer response cutoff"), selection: $deadline)
-                TextField(pTr("Time zone"), text: $zone)
-                TextField(pTr("Fallback if short"), text: $fallback)
-                TextField(pTr("Household preference (not retailer acceptance)"), text: $preference)
-                TextField(pTr("Retailer response (leave blank if pending)"), text: $response)
-                Button(pTr("Save offer for review")) { save() }
-            }
-            ForEach(model.journey?.offers ?? []) { offer in
-                Section(offer.replacement) {
-                    TimelineView(.periodic(from: .now, by: 30)) { context in
-                        Text(pTr((try? offer.deadline.status(at: context.date)) == .awaitPickup ? "Await pickup · fill still unknown" : "Decision pending before cutoff"))
+                ForEach(journey.offers) { offer in
+                    Section(offer.replacement) {
+                        PickupOfferFacts(offer: offer, journey: journey)
+                            .accessibilityIdentifier("pickup.offer.saved.\(offer.id.uuidString)")
+                        Button(pTr("Review or edit saved offer")) {
+                            editor = OfferEditorSelection(journey: journey, original: offer)
+                        }.accessibilityIdentifier("pickup.offer.edit.\(offer.id.uuidString)")
+                            .frame(minHeight: 44).disabled(model.saving || model.hasPendingSave)
+                        let copyCurrent = offer.evaluation == nil || (try? PickupOfferEvaluation.isCurrent(offer: offer, journey: journey)) == true
+                        if copyCurrent {
+                            Text(pickupOfferRetailerNote(offer)).textSelection(.enabled)
+                        } else {
+                            Text(pTr("Review the changed forecast before previewing or copying its retailer note."))
+                        }
+                        Button(pTr("Copy retailer note without changing decision")) { Task {
+                            let note = pickupOfferRetailerNote(offer)
+                            let attempt = PickupOfferAction(id: UUID(), offerID: offer.id, kind: .copyAttempted, occurredAt: Date())
+                            guard await model.recordReviewedOfferAction(attempt, offer: offer, journeyID: journey.id),
+                                  model.journey?.id == journey.id,
+                                  model.journey?.offers.first(where: { $0.id == offer.id }) == offer,
+                                  !model.saving, !model.hasPendingSave,
+                                  offer.evaluation == nil || (try? PickupOfferEvaluation.isCurrent(offer: offer, journey: model.journey ?? journey)) == true else { return }
+                            UIPasteboard.general.string = note
+                            let copied = PickupOfferAction(id: UUID(), offerID: offer.id, kind: .copied, occurredAt: Date())
+                            await model.recordReviewedOfferAction(copied, offer: offer, journeyID: journey.id)
+                        } }.accessibilityIdentifier("pickup.offer.copy.\(offer.id.uuidString)")
+                            .frame(minHeight: 44).disabled(model.saving || model.hasPendingSave || !copyCurrent)
                     }
-                    Text("\(offer.deadline.cutoff.formatted()) · \(offer.deadline.timeZoneID)")
-                    Text("\(pTr("Household preference")): \(offer.householdPreference)")
-                    Text("\(pTr("Retailer response")): \(offer.retailerResponse.isEmpty ? pTr("Pending") : offer.retailerResponse)")
-                    Text(retailerNote(offer)).textSelection(.enabled)
-                    Button(pTr("Copy retailer note without changing decision")) { Task {
-                        guard await model.change({ $0.offerActions.append(PickupOfferAction(id: UUID(), offerID: offer.id, kind: .copyAttempted, occurredAt: Date())) }) else { return }
-                        UIPasteboard.general.string = retailerNote(offer)
-                        await model.change { $0.offerActions.append(PickupOfferAction(id: UUID(), offerID: offer.id, kind: .copied, occurredAt: Date())) }
-                    } }
                 }
             }
-        }.navigationTitle(pTr("Review store offer"))
-    }
-    private func retailerNote(_ offer: PickupOffer) -> String {
-        "\(offer.replacement)\n\(pTr("Required usable")): \(pQuantity(offer.required))\n\(pTr("Maximum price")): \(offer.ceiling.map(pMoney) ?? pTr("Unresolved"))\n\(pTr("Cutoff")): \(offer.deadline.cutoff.formatted()) · \(offer.deadline.timeZoneID)\n\(pTr("If short")): \(offer.fallback)"
-    }
-    private func save() {
-        do {
-            guard let line = model.journey?.pickup?.orderLines.first(where: { $0.id == lineID }),
-                  let needed = try ComparisonModel.quantity(required, line.ordered.unit), let left = try ComparisonModel.quantity(remaining, line.ordered.unit), !replacement.isEmpty else { throw CocoaError(.validationMissingMandatoryProperty) }
-            let offer = PickupOffer(id: operationID, lineID: line.id, replacement: replacement, required: needed, remainingOriginal: left, price: try pickupEvidence(price), ceiling: try ComparisonModel.money(ceiling), deadline: try RetailerDeadline(cutoff: deadline, timeZoneID: zone), fallback: fallback, householdPreference: preference, retailerResponse: response)
-            Task { await model.change { value in if let index = value.offers.firstIndex(where: { $0.id == offer.id }) { value.offers[index] = offer } else { value.offers.append(offer) } } }
-        } catch { model.error = pTr("Check the offer amounts, original line and time zone.") }
+        }
+        .navigationTitle(pTr("Review store offer"))
+        .sheet(item: $editor) { selected in
+            NavigationStack { PickupOfferEditorView(model: model, journey: selected.journey, original: selected.original) }
+        }
+        .onChange(of: model.selectedID) { _, _ in editor = nil }
     }
 }

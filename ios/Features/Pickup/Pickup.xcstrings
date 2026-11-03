@@ -6256,6 +6256,2817 @@
           }
         }
       }
+    },
+    "Acknowledgment unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acknowledgment unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se desconoce si el destinatario confirmó la recepción"
+          }
+        }
+      }
+    },
+    "Add": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir"
+          }
+        }
+      }
+    },
+    "Batch details": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Batch details"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detalles del lote"
+          }
+        }
+      }
+    },
+    "Batch observed at": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Batch observed at"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha de observación del lote"
+          }
+        }
+      }
+    },
+    "Bounded price": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bounded price"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rango de precio"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar"
+          }
+        }
+      }
+    },
+    "Changes to the handoff": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changes to the handoff"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambios en las instrucciones"
+          }
+        }
+      }
+    },
+    "Check the offer amounts, original remaining quantity, price, and retailer deadline. Nothing was changed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the offer amounts, original remaining quantity, price, and retailer deadline. Nothing was changed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa las cantidades de la oferta, la cantidad original que aún se espera, el precio y el plazo de la tienda. No se cambió nada."
+          }
+        }
+      }
+    },
+    "Choose a saved recipient": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a saved recipient"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir un destinatario guardado"
+          }
+        }
+      }
+    },
+    "Complete current instruction": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Complete current instruction"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instrucción actual completa"
+          }
+        }
+      }
+    },
+    "Confirm for this shop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm for this shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar para esta compra"
+          }
+        }
+      }
+    },
+    "Confirm the price": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm the price"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar el precio"
+          }
+        }
+      }
+    },
+    "Copied. Mark the version sent only after sending it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copied. Mark the version sent only after sending it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se copió la corrección. Marca la versión como enviada después de enviarla."
+          }
+        }
+      }
+    },
+    "Copy reviewed correction": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy reviewed correction"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copiar la corrección revisada"
+          }
+        }
+      }
+    },
+    "Correct the observed batch": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correct the observed batch"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corregir el lote observado"
+          }
+        }
+      }
+    },
+    "Exact price": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exact price"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio exacto"
+          }
+        }
+      }
+    },
+    "I know the previous copy went to this recipient": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I know the previous copy went to this recipient"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sé que la copia anterior se envió a este destinatario"
+          }
+        }
+      }
+    },
+    "I reviewed this offer evidence and the separate retailer response.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed this offer evidence and the separate retailer response."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé la información de esta oferta y la respuesta de la tienda por separado."
+          }
+        }
+      }
+    },
+    "Include the saved custom or private wording in this correction": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include the saved custom or private wording in this correction"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incluir el texto personalizado o privado guardado en esta corrección"
+          }
+        }
+      }
+    },
+    "Last marked sent": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last marked sent"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Último envío registrado"
+          }
+        }
+      }
+    },
+    "Linked meal needs to review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linked meal needs to review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Necesidades de comidas vinculadas para revisar"
+          }
+        }
+      }
+    },
+    "Lower offered price (USD)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lower offered price (USD)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio mínimo ofrecido (USD)"
+          }
+        }
+      }
+    },
+    "New store offer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New store offer"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nueva oferta de la tienda"
+          }
+        }
+      }
+    },
+    "No linked meal needs are saved for this line. Meal suitability remains unresolved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No linked meal needs are saved for this line. Meal suitability remains unresolved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay necesidades de comidas vinculadas guardadas para esta línea. Su utilidad para las comidas sigue sin resolverse."
+          }
+        }
+      }
+    },
+    "No offer-specific ceiling is saved; affordability remains unresolved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No offer-specific ceiling is saved; affordability remains unresolved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay un límite específico guardado para esta oferta; no se sabe si cabe en el presupuesto."
+          }
+        }
+      }
+    },
+    "None": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ninguno"
+          }
+        }
+      }
+    },
+    "Offered price (USD)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offered price (USD)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio ofrecido (USD)"
+          }
+        }
+      }
+    },
+    "Offered price exceeds this offer-specific ceiling.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offered price exceeds this offer-specific ceiling."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El precio ofrecido supera el límite específico de esta oferta."
+          }
+        }
+      }
+    },
+    "Offered price is not confirmed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offered price is not confirmed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El precio ofrecido no está confirmado."
+          }
+        }
+      }
+    },
+    "Offered price is unresolved; this ceiling cannot be checked.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offered price is unresolved; this ceiling cannot be checked."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El precio ofrecido sigue sin resolverse; no se puede comprobar este límite."
+          }
+        }
+      }
+    },
+    "Offered price is within this offer-specific ceiling.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offered price is within this offer-specific ceiling."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El precio ofrecido está dentro del límite específico de esta oferta."
+          }
+        }
+      }
+    },
+    "Open a saved offer to update its pending household preference or retailer response. A new offer creates a separate record.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open a saved offer to update its pending household preference or retailer response. A new offer creates a separate record."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre una oferta guardada para actualizar la preferencia pendiente del hogar o la respuesta de la tienda. Una nueva oferta crea un registro separado."
+          }
+        }
+      }
+    },
+    "Original order quantity": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original order quantity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad del pedido original"
+          }
+        }
+      }
+    },
+    "Price evidence": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price evidence"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Información del precio"
+          }
+        }
+      }
+    },
+    "Price evidence is invalid. Reopen and review this offer.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price evidence is invalid. Reopen and review this offer."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La información del precio no es válida. Vuelve a abrir esta oferta y revísala."
+          }
+        }
+      }
+    },
+    "Recheck a batch from the previous shop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recheck a batch from the previous shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a comprobar un lote de la compra anterior"
+          }
+        }
+      }
+    },
+    "Recipient acknowledgment reported": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipient acknowledgment reported"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se registró la confirmación del destinatario"
+          }
+        }
+      }
+    },
+    "Recipient and version": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipient and version"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destinatario y versión"
+          }
+        }
+      }
+    },
+    "Remaining amount unit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remaining amount unit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unidad de la cantidad restante"
+          }
+        }
+      }
+    },
+    "Remove": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar"
+          }
+        }
+      }
+    },
+    "Reopen this pickup and review the saved offer before changing it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reopen this pickup and review the saved offer before changing it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a abrir esta recogida y revisa la oferta guardada antes de cambiarla."
+          }
+        }
+      }
+    },
+    "Required amount unit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Required amount unit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unidad de la cantidad necesaria"
+          }
+        }
+      }
+    },
+    "Required usable amount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Required usable amount"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad utilizable necesaria"
+          }
+        }
+      }
+    },
+    "Return to offer draft": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Return to offer draft"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver al borrador de la oferta"
+          }
+        }
+      }
+    },
+    "Review correction": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review correction"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la corrección"
+          }
+        }
+      }
+    },
+    "Review offer changes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review offer changes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar los cambios de la oferta"
+          }
+        }
+      }
+    },
+    "Review or edit saved offer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review or edit saved offer"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar o editar la oferta guardada"
+          }
+        }
+      }
+    },
+    "Review the saved batch again before changing it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the saved batch again before changing it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a revisar el lote guardado antes de cambiarlo."
+          }
+        }
+      }
+    },
+    "Review this saved copy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review this saved copy"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar esta copia guardada"
+          }
+        }
+      }
+    },
+    "Review this saved offer change": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review this saved offer change"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar este cambio en la oferta guardada"
+          }
+        }
+      }
+    },
+    "Save reviewed batch": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save reviewed batch"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar el lote revisado"
+          }
+        }
+      }
+    },
+    "Saved pantry and freezer batches": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved pantry and freezer batches"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lotes guardados en la despensa y el congelador"
+          }
+        }
+      }
+    },
+    "Saving or copying an offer does not confirm retailer acceptance, received food, or usable meal portions.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving or copying an offer does not confirm retailer acceptance, received food, or usable meal portions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar o copiar una oferta no confirma la aceptación de la tienda, los alimentos recibidos ni las porciones utilizables para las comidas."
+          }
+        }
+      }
+    },
+    "Still to confirm": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Still to confirm"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Por confirmar"
+          }
+        }
+      }
+    },
+    "The offered price range crosses this ceiling. The result is conditional.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The offered price range crosses this ceiling. The result is conditional."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El rango del precio ofrecido abarca valores por debajo y por encima de este límite. El resultado es condicional."
+          }
+        }
+      }
+    },
+    "The recipient acknowledged this version": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The recipient acknowledged this version"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El destinatario confirmó que recibió esta versión"
+          }
+        }
+      }
+    },
+    "The source changed. Prepare and review the current instruction.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The source changed. Prepare and review the current instruction."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La información cambió. Prepara y revisa la instrucción actual."
+          }
+        }
+      }
+    },
+    "The source changed. Review this version again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The source changed. Review this version again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La información cambió. Vuelve a revisar esta versión."
+          }
+        }
+      }
+    },
+    "This creates a separate store-offer record.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This creates a separate store-offer record."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esto crea un registro separado de oferta de la tienda."
+          }
+        }
+      }
+    },
+    "This offer changed. Reopen it before saving your review.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This offer changed. Reopen it before saving your review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta oferta cambió. Vuelve a abrirla antes de guardar tu revisión."
+          }
+        }
+      }
+    },
+    "This updates only the selected saved offer.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This updates only the selected saved offer."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esto actualiza solo la oferta guardada seleccionada."
+          }
+        }
+      }
+    },
+    "This version was marked sent": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This version was marked sent"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta versión se marcó como enviada"
+          }
+        }
+      }
+    },
+    "Unknown price": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown price"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio desconocido"
+          }
+        }
+      }
+    },
+    "Unreserved": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unreserved"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin reservar"
+          }
+        }
+      }
+    },
+    "Upper offered price (USD)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upper offered price (USD)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio máximo ofrecido (USD)"
+          }
+        }
+      }
+    },
+    "Use original units. Exact fractions such as 1/3 are accepted; no unit conversion is assumed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use original units. Exact fractions such as 1/3 are accepted; no unit conversion is assumed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usa las unidades originales. Se aceptan fracciones exactas, como 1/3; no se supone ninguna conversión de unidades."
+          }
+        }
+      }
+    },
+    "Use this batch first": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use this batch first"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar este lote primero"
+          }
+        }
+      }
+    },
+    "Why the offered price is unresolved": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Why the offered price is unresolved"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Por qué el precio ofrecido sigue sin resolverse"
+          }
+        }
+      }
+    },
+    "shareCompleted": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share activity completed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se completó la acción de compartir"
+          }
+        }
+      }
+    },
+    "How to share this instruction": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How to share this instruction"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cómo compartir esta instrucción"
+          }
+        }
+      }
+    },
+    "Save or share a dated copy below, or prepare a separate current shared view. A dated copy stays as sent; a current view can expire or be revoked.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save or share a dated copy below, or prepare a separate current shared view. A dated copy stays as sent; a current view can expire or be revoked."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guarda o comparte abajo una copia con fecha, o prepara por separado una vista compartida actual. La copia con fecha queda como se envió; la vista actual puede vencer o revocarse."
+          }
+        }
+      }
+    },
+    "Prepare a current shared view": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prepare a current shared view"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparar una vista compartida actual"
+          }
+        }
+      }
+    },
+    "Your private cook note is not copied here. Choose the shared shop, then enter and review only the instructions this recipient should see.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your private cook note is not copied here. Choose the shared shop, then enter and review only the instructions this recipient should see."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu nota privada para cocinar no se copia aquí. Elige la compra compartida y luego escribe y revisa solo las instrucciones que debe ver esta persona."
+          }
+        }
+      }
+    },
+    "Recipients can open the current view in a browser. Previously sent dated copies cannot be recalled.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipients can open the current view in a browser. Previously sent dated copies cannot be recalled."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las personas destinatarias pueden abrir la vista actual en un navegador. No se pueden retirar las copias con fecha ya enviadas."
+          }
+        }
+      }
+    },
+    "I chose the shared shop for these new instructions.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I chose the shared shop for these new instructions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegí la compra compartida para estas nuevas instrucciones."
+          }
+        }
+      }
+    },
+    "Current shared view": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current shared view"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vista compartida actual"
+          }
+        }
+      }
+    },
+    "Open this saved next-shop draft to choose a familiar dinner. Choosing a dinner still requires its own review and Apply.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open this saved next-shop draft to choose a familiar dinner. Choosing a dinner still requires its own review and Apply."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre este borrador guardado de la próxima compra para elegir una cena conocida. Elegirla aún requiere revisar y aplicar el cambio."
+          }
+        }
+      }
+    },
+    "Open saved next-shop dinner choices": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open saved next-shop dinner choices"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir las opciones de cena de la próxima compra guardada"
+          }
+        }
+      }
+    },
+    "Reuse a dinner next shop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reuse a dinner next shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reutilizar una cena en la próxima compra"
+          }
+        }
+      }
+    },
+    "A required unit conversion is not confirmed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A required unit conversion is not confirmed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se ha confirmado una conversión de unidades necesaria."
+          }
+        }
+      }
+    },
+    "A selected simultaneous offer lacks reviewed evidence.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A selected simultaneous offer lacks reviewed evidence."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falta información revisada de una oferta simultánea seleccionada."
+          }
+        }
+      }
+    },
+    "Amount (USD)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amount (USD)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importe (USD)"
+          }
+        }
+      }
+    },
+    "Approved for this dish": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approved for this dish"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprobado para este plato"
+          }
+        }
+      }
+    },
+    "Charge for the original amount still expected": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Charge for the original amount still expected"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargo por la cantidad original que aún se espera"
+          }
+        }
+      }
+    },
+    "Checkout evidence recorded at": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checkout evidence recorded at"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha y hora de la información del total de compra"
+          }
+        }
+      }
+    },
+    "Combined checkout evidence": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Combined checkout evidence"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Información del total de compra combinado"
+          }
+        }
+      }
+    },
+    "Combined cost is unresolved. Joint affordability cannot be confirmed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Combined cost is unresolved. Joint affordability cannot be confirmed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El costo combinado sigue sin resolverse. No se puede confirmar si el conjunto cabe en el presupuesto."
+          }
+        }
+      }
+    },
+    "Combined expected cost": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Combined expected cost"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Costo combinado esperado"
+          }
+        }
+      }
+    },
+    "Combined-cost forecast": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Combined-cost forecast"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previsión del costo combinado"
+          }
+        }
+      }
+    },
+    "Dish approval is a private planning choice. It does not certify allergen safety or send acceptance to the retailer.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dish approval is a private planning choice. It does not certify allergen safety or send acceptance to the retailer."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprobar un plato es una decisión privada de planificación. No certifica la seguridad frente a alérgenos ni envía una aceptación a la tienda."
+          }
+        }
+      }
+    },
+    "Do not copy an inclusive retailer total into the unaffected-cost field unless it already excludes all selected affected charges. Leave it unknown when the breakdown is unavailable.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do not copy an inclusive retailer total into the unaffected-cost field unless it already excludes all selected affected charges. Leave it unknown when the breakdown is unavailable."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No copies el total completo de la tienda en el campo de costos no afectados a menos que ya excluya todos los cargos afectados seleccionados. Déjalo como desconocido si no tienes el desglose."
+          }
+        }
+      }
+    },
+    "Enter the total usable yield covered by the offered price. A package count or label is not a confirmed edible yield. Missing mass-to-volume conversions stay unresolved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the total usable yield covered by the offered price. A package count or label is not a confirmed edible yield. Missing mass-to-volume conversions stay unresolved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresa la cantidad utilizable total que cubre el precio ofrecido. El número de paquetes o la etiqueta no confirman el rendimiento comestible. Las conversiones de masa a volumen que falten siguen sin resolverse."
+          }
+        }
+      }
+    },
+    "Evidence recorded at": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evidence recorded at"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha y hora de la información"
+          }
+        }
+      }
+    },
+    "Evidence source": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evidence source"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuente de la información"
+          }
+        }
+      }
+    },
+    "Excluded from this dish": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Excluded from this dish"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Excluido de este plato"
+          }
+        }
+      }
+    },
+    "Expected offered usable yield": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expected offered usable yield"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad utilizable esperada de la oferta"
+          }
+        }
+      }
+    },
+    "Expected original allocated": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expected original allocated"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad original esperada asignada"
+          }
+        }
+      }
+    },
+    "Expected quantities can change at pickup. Confirm actual arrival and usable food separately; this forecast does not fill a meal.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expected quantities can change at pickup. Confirm actual arrival and usable food separately; this forecast does not fill a meal."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las cantidades esperadas pueden cambiar al recoger la compra. Confirma por separado lo recibido y los alimentos utilizables; esta previsión no completa una comida."
+          }
+        }
+      }
+    },
+    "Expected replacement allocated": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expected replacement allocated"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad esperada del sustituto asignada"
+          }
+        }
+      }
+    },
+    "Expected usable amount from the whole offered pack (blank if unknown)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expected usable amount from the whole offered pack (blank if unknown)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad utilizable esperada del paquete completo ofrecido (en blanco si se desconoce)"
+          }
+        }
+      }
+    },
+    "Expected usable unit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expected usable unit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unidad de la cantidad utilizable esperada"
+          }
+        }
+      }
+    },
+    "Expected usable yield and remaining original charge": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expected usable yield and remaining original charge"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad utilizable esperada y cargo original restante"
+          }
+        }
+      }
+    },
+    "Forecast uncovered meal quantities": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forecast uncovered meal quantities"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidades de comida sin cubrir en la previsión"
+          }
+        }
+      }
+    },
+    "I checked this replacement against all saved exclusions for this dish.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I checked this replacement against all saved exclusions for this dish."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comprobé este sustituto frente a todas las exclusiones guardadas para este plato."
+          }
+        }
+      }
+    },
+    "Include unaffected items and all applicable fees, tax, deposits, and discounts once. Exclude every selected replacement and its retained original charge; those are added separately. A later shortfall does not create a new placement fee.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include unaffected items and all applicable fees, tax, deposits, and discounts once. Exclude every selected replacement and its retained original charge; those are added separately. A later shortfall does not create a new placement fee."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incluye una sola vez los artículos no afectados y todos los cargos, impuestos, depósitos y descuentos aplicables. Excluye cada sustituto seleccionado y su cargo original restante; se suman por separado. Una falta posterior no crea un nuevo cargo por hacer el pedido."
+          }
+        }
+      }
+    },
+    "Inherited allowance for this original line (USD, optional)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inherited allowance for this original line (USD, optional)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Límite asignado previamente a esta línea original (USD, opcional)"
+          }
+        }
+      }
+    },
+    "Inherited line allowance": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inherited line allowance"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Límite asignado previamente a la línea"
+          }
+        }
+      }
+    },
+    "Lower amount (USD)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lower amount (USD)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importe mínimo (USD)"
+          }
+        }
+      }
+    },
+    "Manual offer review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manual offer review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisión manual de la oferta"
+          }
+        }
+      }
+    },
+    "Maximum replacement price after shared allowance": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maximum replacement price after shared allowance"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio máximo del sustituto según el límite compartido"
+          }
+        }
+      }
+    },
+    "Meal and checkout forecast": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal and checkout forecast"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previsión de comidas y total de compra"
+          }
+        }
+      }
+    },
+    "Minimum forecast overage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minimum forecast overage"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exceso mínimo previsto"
+          }
+        }
+      }
+    },
+    "Net cost of everything outside the selected offers": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Net cost of everything outside the selected offers"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Costo neto de todo lo que queda fuera de las ofertas seleccionadas"
+          }
+        }
+      }
+    },
+    "Net unaffected checkout cost": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Net unaffected checkout cost"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Costo neto de la compra no afectado"
+          }
+        }
+      }
+    },
+    "No linked meal needs are available for this offer.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No linked meal needs are available for this offer."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay necesidades de comidas vinculadas disponibles para esta oferta."
+          }
+        }
+      }
+    },
+    "No saved meal or combined-cost forecast. Reopen this offer to review it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No saved meal or combined-cost forecast. Reopen this offer to review it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay una previsión guardada de comidas ni de costo combinado. Vuelve a abrir esta oferta para revisarla."
+          }
+        }
+      }
+    },
+    "No whole-checkout allowance was entered. Joint affordability remains unresolved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No whole-checkout allowance was entered. Joint affordability remains unresolved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se ingresó un límite para toda la compra. Sigue sin saberse si el conjunto cabe en el presupuesto."
+          }
+        }
+      }
+    },
+    "Not reviewed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not reviewed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin revisar"
+          }
+        }
+      }
+    },
+    "Not yet reviewed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not yet reviewed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no se ha revisado."
+          }
+        }
+      }
+    },
+    "Offered usable yield is unknown.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offered usable yield is unknown."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se desconoce la cantidad utilizable de la oferta."
+          }
+        }
+      }
+    },
+    "Per-dish replacement suitability": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per-dish replacement suitability"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utilidad del sustituto para cada plato"
+          }
+        }
+      }
+    },
+    "Protected portions are allocated first.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protected portions are allocated first."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las porciones protegidas se asignan primero."
+          }
+        }
+      }
+    },
+    "Replacement charge": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replacement charge"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargo del sustituto"
+          }
+        }
+      }
+    },
+    "Replacement suitability for this dish has not been reviewed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replacement suitability for this dish has not been reviewed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se ha revisado si el sustituto sirve para este plato."
+          }
+        }
+      }
+    },
+    "Retained original charge": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retained original charge"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargo original restante"
+          }
+        }
+      }
+    },
+    "Review and save this other offer's forecast before including it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review and save this other offer's forecast before including it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa y guarda la previsión de esta otra oferta antes de incluirla."
+          }
+        }
+      }
+    },
+    "Review the changed forecast before previewing or copying its retailer note.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the changed forecast before previewing or copying its retailer note."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa la previsión modificada antes de ver o copiar su nota para la tienda."
+          }
+        }
+      }
+    },
+    "Review usable yield, meal suitability, and combined cost": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review usable yield, meal suitability, and combined cost"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la cantidad utilizable, la utilidad para las comidas y el costo combinado"
+          }
+        }
+      }
+    },
+    "Reviewed maximum in the retailer note": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed maximum in the retailer note"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Máximo revisado de la nota para la tienda"
+          }
+        }
+      }
+    },
+    "Reviewed whole-checkout allowance": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed whole-checkout allowance"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Límite revisado para toda la compra"
+          }
+        }
+      }
+    },
+    "Saved exclusions have not been confirmed for this replacement.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved exclusions have not been confirmed for this replacement."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se han comprobado las exclusiones guardadas para este sustituto."
+          }
+        }
+      }
+    },
+    "Saved source evidence changed. Reopen and review the forecast.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved source evidence changed. Reopen and review the forecast."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambió la información de origen guardada. Vuelve a abrir la previsión y revísala."
+          }
+        }
+      }
+    },
+    "Simultaneous offers sharing this checkout": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Simultaneous offers sharing this checkout"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ofertas simultáneas que comparten esta compra"
+          }
+        }
+      }
+    },
+    "Some selected charges remain unknown or bounded.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some selected charges remain unknown or bounded."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Algunos cargos seleccionados siguen siendo desconocidos o tienen un rango."
+          }
+        }
+      }
+    },
+    "Source of this checkout evidence": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source of this checkout evidence"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuente de esta información del total de compra"
+          }
+        }
+      }
+    },
+    "Still uncovered in this forecast": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Still uncovered in this forecast"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún sin cubrir en esta previsión"
+          }
+        }
+      }
+    },
+    "The checkout or meal evidence changed. Review the combined offer forecast again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The checkout or meal evidence changed. Review the combined offer forecast again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambió la información de la compra o de las comidas. Revisa de nuevo la previsión combinada de la oferta."
+          }
+        }
+      }
+    },
+    "The combined cost range crosses the allowance. Joint affordability is conditional.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The combined cost range crosses the allowance. Joint affordability is conditional."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El rango del costo combinado abarca valores por debajo y por encima del límite. Que el conjunto quepa en el presupuesto depende del costo final."
+          }
+        }
+      }
+    },
+    "The combined forecast exceeds the reviewed whole-checkout allowance.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The combined forecast exceeds the reviewed whole-checkout allowance."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La previsión combinada supera el límite revisado para toda la compra."
+          }
+        }
+      }
+    },
+    "The combined forecast is within the reviewed whole-checkout allowance.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The combined forecast is within the reviewed whole-checkout allowance."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La previsión combinada está dentro del límite revisado para toda la compra."
+          }
+        }
+      }
+    },
+    "The retailer note uses the lower of your explicit offer ceiling and the known shared-allowance maximum. If that maximum is unknown, only your explicit ceiling is used; joint affordability remains unresolved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The retailer note uses the lower of your explicit offer ceiling and the known shared-allowance maximum. If that maximum is unknown, only your explicit ceiling is used; joint affordability remains unresolved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La nota para la tienda usa el menor entre tu límite explícito para la oferta y el máximo conocido del límite compartido. Si ese máximo se desconoce, solo se usa tu límite explícito; sigue sin saberse si el conjunto cabe en el presupuesto."
+          }
+        }
+      }
+    },
+    "The retained original charge consumes this line allowance. It is separate from the maximum price authorized for the replacement.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The retained original charge consumes this line allowance. It is separate from the maximum price authorized for the replacement."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El cargo original restante consume parte del límite de esta línea. Es distinto del precio máximo autorizado para el sustituto."
+          }
+        }
+      }
+    },
+    "The saved forecast cannot be evaluated. Reopen this offer and review its evidence.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The saved forecast cannot be evaluated. Reopen this offer and review its evidence."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se puede evaluar la previsión guardada. Vuelve a abrir esta oferta y revisa su información."
+          }
+        }
+      }
+    },
+    "The saved offer-specific ceiling also applies. A combined checkout that fits does not authorize exceeding that ceiling.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The saved offer-specific ceiling also applies. A combined checkout that fits does not authorize exceeding that ceiling."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "También se aplica el límite específico guardado para la oferta. Que la compra combinada quepa en el presupuesto no autoriza superar ese límite."
+          }
+        }
+      }
+    },
+    "This forecast is stale. Review current offers, meal needs, and checkout evidence before using it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This forecast is stale. Review current offers, meal needs, and checkout evidence before using it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta previsión está desactualizada. Revisa las ofertas actuales, las necesidades de comidas y la información de la compra antes de usarla."
+          }
+        }
+      }
+    },
+    "This is a forecast of expected food and charges. It does not record received food or retailer acceptance.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is a forecast of expected food and charges. It does not record received food or retailer acceptance."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta es una previsión de alimentos y cargos esperados. No registra alimentos recibidos ni la aceptación de la tienda."
+          }
+        }
+      }
+    },
+    "This offer is included. Select other saved offers that must fit the same checkout allowance. Each original line can have only one selected replacement.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This offer is included. Select other saved offers that must fit the same checkout allowance. Each original line can have only one selected replacement."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta oferta está incluida. Selecciona otras ofertas guardadas que deban caber en el mismo límite de compra. Cada línea original puede tener solo un sustituto seleccionado."
+          }
+        }
+      }
+    },
+    "This saved offer has no reviewed meal or combined-cost forecast. Its suitability and joint affordability remain unresolved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This saved offer has no reviewed meal or combined-cost forecast. Its suitability and joint affordability remain unresolved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta oferta guardada no tiene una previsión revisada de comidas ni de costo combinado. Su utilidad y si cabe en el presupuesto conjunto siguen sin resolverse."
+          }
+        }
+      }
+    },
+    "Upper amount (USD)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upper amount (USD)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importe máximo (USD)"
+          }
+        }
+      }
+    },
+    "Use this replacement for this dish": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use this replacement for this dish"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar este sustituto para este plato"
+          }
+        }
+      }
+    },
+    "Whole-checkout allowance (USD, optional)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whole-checkout allowance (USD, optional)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Límite para toda la compra (USD, opcional)"
+          }
+        }
+      }
+    },
+    "Why this charge is unresolved": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Why this charge is unresolved"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Por qué este cargo sigue sin resolverse"
+          }
+        }
+      }
+    },
+    "Original charge has not been reviewed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original charge has not been reviewed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se ha revisado el cargo original"
+          }
+        }
+      }
+    },
+    "Reviewed checkout charges have a range": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed checkout charges have a range"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los cargos de compra revisados tienen un rango"
+          }
+        }
+      }
+    },
+    "Reviewed checkout charges are not fully known": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed checkout charges are not fully known"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se conocen por completo los cargos de compra revisados"
+          }
+        }
+      }
+    },
+    "Changing the replacement, required quantity, remaining original quantity, or expected yield clears dish approvals and exclusion checks. Review them again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changing the replacement, required quantity, remaining original quantity, or expected yield clears dish approvals and exclusion checks. Review them again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar el sustituto, la cantidad necesaria, la cantidad original restante o el rendimiento esperado borra las aprobaciones de platos y las comprobaciones de exclusiones. Revísalas de nuevo."
+          }
+        }
+      }
+    },
+    "Keep unassigned until a meal is reviewed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep unassigned until a meal is reviewed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dejar sin asignar hasta revisar una comida"
+          }
+        }
+      }
+    },
+    "Maximum replacement price after retained original charge": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maximum replacement price after retained original charge"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio máximo del sustituto después del cargo original restante"
+          }
+        }
+      }
+    },
+    "The retailer note uses the lowest reviewed maximum from your explicit offer ceiling, the inherited line allowance after retained charges, and any known shared allowance. An unknown shared allowance still leaves joint affordability unresolved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The retailer note uses the lowest reviewed maximum from your explicit offer ceiling, the inherited line allowance after retained charges, and any known shared allowance. An unknown shared allowance still leaves joint affordability unresolved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La nota para la tienda usa el menor máximo revisado entre tu límite explícito para la oferta, el límite de la línea después de los cargos restantes y cualquier límite compartido conocido. Si el límite compartido se desconoce, sigue sin saberse si el conjunto cabe en el presupuesto."
+          }
+        }
+      }
+    },
+    "Remaining charges unresolved": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remaining charges unresolved"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargos restantes sin resolver"
+          }
+        }
+      }
+    },
+    "Selected shared shop reference": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected shared shop reference"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referencia de la compra compartida seleccionada"
+          }
+        }
+      }
+    },
+    "This replacement and its retained original charge fit their inherited line allowance.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This replacement and its retained original charge fit their inherited line allowance."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este sustituto y su cargo original restante caben en el límite asignado previamente a su línea."
+          }
+        }
+      }
+    },
+    "This replacement and its retained original charge exceed their inherited line allowance.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This replacement and its retained original charge exceed their inherited line allowance."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este sustituto y su cargo original restante superan el límite asignado previamente a su línea."
+          }
+        }
+      }
+    },
+    "This line's cost range crosses its inherited allowance.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This line's cost range crosses its inherited allowance."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El rango de costo de esta línea abarca valores por debajo y por encima de su límite asignado previamente."
+          }
+        }
+      }
+    },
+    "This line's combined charge is unresolved; its inherited allowance cannot be confirmed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This line's combined charge is unresolved; its inherited allowance cannot be confirmed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El cargo combinado de esta línea sigue sin resolverse; no se puede confirmar si cabe en su límite asignado previamente."
+          }
+        }
+      }
+    },
+    "No inherited allowance is saved for this selected line.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No inherited allowance is saved for this selected line."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay un límite asignado previamente guardado para esta línea seleccionada."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

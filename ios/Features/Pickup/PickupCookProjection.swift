@@ -10,31 +10,51 @@ enum PickupCookProjection {
         formatter.timeZone = timeZone
         formatter.dateStyle = .full; formatter.timeStyle = .short
         var lines = [pCook("Cook instruction", language: language), "\(formatter.string(from: at)) · \(pCook("Revision", language: language)) \(value.revision)"]
+        lines += pieces(journey: value, allocation: allocation, language: language, timeZone: timeZone).map(\.text)
+        if includeBudget, let result { lines.append("\(pCook("Private budget included", language: language)): \(budgetText(result, language: language))") }
+        return lines.joined(separator: "\n\n")
+    }
+
+    static func pieces(journey value: PickupJourney, allocation: StockAllocationResult?, language: String,
+                       timeZone: TimeZone = .current) -> [HandoffPiece] {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: language); formatter.timeZone = timeZone
+        formatter.dateStyle = .full; formatter.timeStyle = .short
+        var pieces: [HandoffPiece] = []
         for need in value.urgent {
-            lines += ["\(need.meal): \(need.food)", "\(pCook("Required", language: language)): \(pQuantity(need.required, language: language)); \(pCook("Confirmed available", language: language)): \(need.carriedFromID == nil ? pQuantity(need.available, language: language) : (pCook("Reconfirmation required", language: language)))", need.due.map { "\(pCook("Needed by", language: language)): \(formatter.string(from: $0))" } ?? (pCook("Deadline unknown", language: language))]
-            if !need.resolved { lines.append(pCook("Open need: review before cooking.", language: language)) }
+            let name = "\(need.meal): \(need.food)"
+            let warning = pCook("Open need: review before cooking.", language: language)
+            var lines = [name, "\(pCook("Required", language: language)): \(pQuantity(need.required, language: language)); \(pCook("Confirmed available", language: language)): \(need.carriedFromID == nil ? pQuantity(need.available, language: language) : (pCook("Reconfirmation required", language: language)))", need.due.map { "\(pCook("Needed by", language: language)): \(formatter.string(from: $0))" } ?? pCook("Deadline unknown", language: language)]
+            if !need.resolved { lines.append(warning) }
+            pieces.append(.init(key: "urgent/\(need.id)", text: lines.joined(separator: "\n\n"), unresolved: need.resolved ? nil : "\(name) · \(warning)"))
         }
         for need in value.needs {
-            lines.append("\(need.name): \(pQuantity(need.amount, language: language))\(need.priority == .protected ? (" — " + pCook("set aside first", language: language)) : "")")
-            if let coverage = allocation?.demands.first(where: { $0.id == need.id }) {
-                if let amount = coverage.allocated {
-                    let quantity = Quantity(amount: amount, unit: coverage.unit, originalLiteral: "")
-                    lines.append("\(pCook("Allocated", language: language)): \(pQuantity(quantity, language: language))")
-                }
-                if coverage.shortfall != .zero { lines.append(pCook("Short or unverified amount. Review.", language: language)) }
+            var lines = ["\(need.name): \(pQuantity(need.amount, language: language))\(need.priority == .protected ? (" — " + pCook("set aside first", language: language)) : "")"]
+            let coverage = allocation?.demands.first { $0.id == need.id }
+            if let coverage, let amount = coverage.allocated {
+                let quantity = Quantity(amount: amount, unit: coverage.unit, originalLiteral: "")
+                lines.append("\(pCook("Allocated", language: language)): \(pQuantity(quantity, language: language))")
             }
+            let warning = pCook("Short or unverified amount. Review.", language: language)
+            let unresolved = coverage?.shortfall != .zero
+            if unresolved { lines.append(warning) }
+            pieces.append(.init(key: "need/\(need.id)", text: lines.joined(separator: "\n\n"), unresolved: unresolved ? "\(need.name) · \(warning)" : nil))
         }
         for detail in value.needDetails where value.needs.contains(where: { $0.id == detail.id }) {
+            var lines: [String] = []
             if !detail.exclusions.isEmpty { lines.append("\(detail.mealName) · \(pCook("Keep these exclusions", language: language)): \(detail.exclusions.joined(separator: ", "))") }
             if let day = detail.scheduledDay { lines.append("\(detail.mealName): \(day.iso8601) · \(day.timeZoneIdentifier)") }
             if let minutes = detail.leadTimeMinutes { lines.append("\(pCook("Saved elapsed preparation minutes", language: language)): \(minutes)") }
             if !detail.completedSteps.isEmpty { lines.append("\(pCook("Steps already marked complete", language: language)): \(detail.completedSteps.joined(separator: "; "))") }
+            if !lines.isEmpty { pieces.append(.init(key: "detail/\(detail.id)", text: lines.joined(separator: "\n\n"), unresolved: nil)) }
         }
-        lines += value.repairs.map { "\($0.instruction)\n" + ($0.timingConfirmed ? (pCook("Entered preparation time fits the deadline", language: language)) : (pCook("Timing conditional or deadline missed · review before cooking", language: language))) }
-        if includeBudget, let result { lines.append("\(pCook("Private budget included", language: language)): \(budgetText(result, language: language))") }
-        return lines.joined(separator: "\n\n")
+        for repair in value.repairs {
+            let timing = pCook(repair.timingConfirmed ? "Entered preparation time fits the deadline" : "Timing conditional or deadline missed · review before cooking", language: language)
+            pieces.append(.init(key: "repair/\(repair.id)", text: "\(repair.instruction)\n\(timing)", unresolved: repair.timingConfirmed ? nil : "\(repair.instruction) · \(timing)"))
+        }
+        return pieces
     }
-    private static func budgetText(_ result: CheckoutResult, language: String) -> String {
+    static func budgetText(_ result: CheckoutResult, language: String) -> String {
         if let exact = result.total.exact { return pMoney(exact) }
         if let upper = result.total.upperBound { return "\(pMoney(result.total.lowerBound)) – \(pMoney(upper))" }
         return "\(pCook("At least", language: language)) \(pMoney(result.total.lowerBound)) · \(pCook("total unresolved", language: language))"

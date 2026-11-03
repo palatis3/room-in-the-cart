@@ -1,6 +1,9 @@
 import SwiftUI
 import DeviceSurfaces
 
+#if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
+// The dedicated test build supplies its isolated @main from UITestSupport.
+#else
 @main struct RoomInTheCartApp: App {
     @StateObject private var model = AppModel()
     @StateObject private var ledger = LedgerModel()
@@ -60,6 +63,8 @@ import DeviceSurfaces
         }
     }
 }
+
+#endif
 
 struct RootView: View {
     @EnvironmentObject private var ledger: LedgerModel
@@ -152,6 +157,7 @@ struct ShopView: View {
                         Text(tr("Something is missing")).font(.body).fixedSize(horizontal: false, vertical: true)
                             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
                     }.foregroundStyle(Theme.action).accessibilityIdentifier("urgentRepairShortcut")
+                    FamilyInboxContextLink()
                     if !pickup.journeys.isEmpty {
                         NavigationLink(tr("Pickup, repairs and handoffs")) { PickupHomeView(model: pickup).environment(\.pickupLedger, ledger) }
                             .frame(minHeight: 44)
@@ -202,6 +208,8 @@ struct RecordsView: View {
     @EnvironmentObject private var ledger: LedgerModel
     var body: some View {
         List {
+            ManagedViewsContextLink()
+            NavigationLink(HistoryCopy.text("Family decision history")) { FamilyDecisionsEntry() }
             NavigationLink(tr("Recovery, exports and saved records")) {
                 RecordsToolsEntryView(app: model, ledger: ledger, pickup: pickup,
                     erasureCleanup: RecordsErasureCleanup(eraseLedgerWorkspace: { id in

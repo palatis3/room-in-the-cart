@@ -8,6 +8,8 @@ struct DinnerScenarioMealDraft: Identifiable {
     var currentDinnerID: UUID?
     var candidateDinnerID: UUID?
     var protected = false
+    var isReviewedServingGroup = false
+    var savedExclusions: [String] = []
     var scheduled = false
     var date = Date()
 }
@@ -32,6 +34,7 @@ struct DinnerFoodEvidenceDraft: Identifiable {
     var availability = 0
     var maximumPacks = ""
     var yieldReviewed = false
+    var feeEligible = true
 }
 struct DinnerRecipeMatchDraft: Identifiable {
     let id: UUID
@@ -48,6 +51,7 @@ struct DinnerBaselineCostDraft: Identifiable {
     let id: UUID
     let name: String
     var cost = ""
+    var feeEligible = true
 }
 struct DinnerReviewedScenarios {
     let shopID: UUID
@@ -69,6 +73,8 @@ struct DinnerScenarioDraft {
     var meals = [DinnerScenarioMealDraft()]
     var foods: [DinnerFoodEvidenceDraft] = []
     var matches: [DinnerRecipeMatchDraft] = []
+    var reviewedLeftovers: [ConfirmedStockLot] = []
+    var leftoverRevision: Int64?
     private(set) var matchedMeals: [DinnerScenarioMealDraftSnapshot] = []
     var baseline: [DinnerBaselineCostDraft]
     var baselineComplete = false
@@ -80,6 +86,7 @@ struct DinnerScenarioDraft {
     var source = ""
     var observedAt = Date()
     var fee = ""
+    var feeThreshold = ""
     var tax = ""
     var deposits = ""
     var currentHands = ""
@@ -100,7 +107,7 @@ struct DinnerScenarioDraft {
             for dinnerID in Set([meal.currentDinnerID, meal.candidateDinnerID].compactMap { $0 }).sorted(by: { $0.uuidString < $1.uuidString }) {
                 guard let dinner = accepted.first(where: { $0.id == dinnerID }) else { throw DinnerPlanningError.notFound(dinnerID) }
                 let ratio = try meal.portions.divided(by: dinner.template.servings)
-                if dinner.template.servingGroups.contains(where: \.isProtected), ratio != .one {
+                if dinner.template.servingGroups.contains(where: \.isProtected), ratio != .one, !meal.isReviewedServingGroup || dinnerID != meal.currentDinnerID {
                     throw DinnerPlanningError.reviewRequired("protectedRecipeVersion")
                 }
                 for ingredient in dinner.template.ingredients {
@@ -111,14 +118,14 @@ struct DinnerScenarioDraft {
                     let previous = matches.first { $0.commitmentID == meal.id && $0.acceptedDinnerID == dinnerID && $0.ingredientID == ingredient.id && $0.quantity == quantity }
                     next.append(DinnerRecipeMatchDraft(id: previous?.id ?? UUID(), commitmentID: meal.id, acceptedDinnerID: dinnerID,
                         ingredientID: ingredient.id, recipeName: dinner.template.title, ingredientName: ingredient.name,
-                        quantity: quantity, exclusions: ingredient.exclusions, foodID: previous?.foodID))
+                        quantity: quantity, exclusions: ingredient.exclusions + meal.savedExclusions, foodID: previous?.foodID))
                 }
             }
         }
         guard !next.isEmpty else { throw DinnerPlanningError.reviewRequired("recipes") }
         matches = next; matchedMeals = snapshots; recipeYieldsReviewed = false
     }
-    func build(shop: ShoppingLedger, state: DinnerPlanningState) throws -> DinnerReviewedScenarios {
+    func build(shop: ShoppingLedger, state: DinnerPlanningState, candidateScenarioID: UUID? = nil) throws -> DinnerReviewedScenarios {
         guard shop.id == shopID, shop.revisionID == baseRevision, state.revisionID == planningRevision else { throw DinnerPlanningError.stalePreview }
         let snapshots = try meals.map { try DinnerScenarioMealDraftSnapshot($0, zone: zone) }
         guard snapshots == matchedMeals, !matches.isEmpty, recipeYieldsReviewed else { throw DinnerPlanningError.reviewRequired("recipeMatches") }
@@ -137,10 +144,11 @@ struct DinnerScenarioDraft {
                 try MealTemplate(title: "Reviewed pack", ingredients: [MealIngredient(name: food.packLabel, quantity: nil)], exclusions: exclusions).validate()
             }
         }
-        var stock: [ConfirmedStockLot] = [], outside: [StockNeed] = [], packs: [DinnerPackSelection] = []
+        var stock = reviewedLeftovers, outside: [StockNeed] = [], packs: [DinnerPackSelection] = []
         for food in foods {
             guard !food.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw DinnerPlanningError.invalid("foodName") }
             if food.stockConfirmed {
+                guard !reviewedLeftovers.contains(where: { $0.foodID == food.id }) else { throw DinnerPlanningError.reviewRequired("duplicateStock") }
                 guard food.outsideReservationsReviewed, let quantity = try DinnerEntry.quantity(food.stockAmount, unit: food.stockUnit) else { throw DinnerPlanningError.reviewRequired("stockReservations") }
                 stock.append(ConfirmedStockLot(id: food.stockID, foodID: food.id, name: food.name, usable: quantity, confirmedAt: food.stockDate, source: food.stockSource))
             }
@@ -162,13 +170,17 @@ struct DinnerScenarioDraft {
                 packs.append(DinnerPackSelection(id: food.packID, foodID: food.id,
                     offer: PackOffer(id: food.packID.uuidString, label: food.packLabel,
                         usableQuantity: food.yieldReviewed ? try DinnerEntry.quantity(food.packAmount, unit: food.packUnit) : nil,
-                        price: try DinnerEntry.money(food.packPrice)), availability: available))
+                        price: try DinnerEntry.money(food.packPrice)), availability: available, thresholdEligible: food.feeEligible))
             }
         }
-        let lines = try baseline.map { CheckoutLine(id: $0.id, name: $0.name, cost: try evidence($0.cost, missing: "Unchanged basket line cost is unknown")) }
+        let lines = try baseline.map { CheckoutLine(id: $0.id, name: $0.name, cost: try evidence($0.cost, missing: "Unchanged basket line cost is unknown"), thresholdEligible: $0.feeEligible) }
         let context = CheckoutContext(storeID: store, branchID: branch, mode: mode,
             slot: ISO8601DateFormatter().string(from: slot), commitmentsID: commitmentSetID, observedAt: observedAt, source: source)
-        let fees = [CheckoutFee(id: "reviewed-fees", rule: .fixed(try evidence(fee, missing: "Fees are unknown")))]
+        let enteredFee = try evidence(fee, missing: "Fees are unknown")
+        let rule = try DinnerEntry.money(feeThreshold).map {
+            CheckoutFeeRule.waivedAt(threshold: $0, belowThreshold: enteredFee, basis: .eligibleItemsBeforeDiscounts)
+        } ?? .fixed(enteredFee)
+        let fees = [CheckoutFee(id: "reviewed-fees", rule: rule)]
         let cap = shop.basis.cap.map { CheckoutCap(scope: shop.basis.capScope == .wholeShop ? .wholeCheckout : shop.basis.capScope == .dinnersOnly ? .dinner : .item,
             commitmentsID: commitmentSetID, amount: $0) }
         func scenario(candidate: Bool) throws -> DinnerScenario {
@@ -183,7 +195,7 @@ struct DinnerScenarioDraft {
                         quantity: match.quantity, exclusions: match.exclusions, acceptedDinnerID: acceptedID, ingredientID: match.ingredientID))
                 }
             }
-            return DinnerScenario(id: candidate ? candidateID : currentID, commitments: commitments, acceptedDinnerIDs: selected,
+            return DinnerScenario(id: candidate ? (candidateScenarioID ?? candidateID) : currentID, commitments: commitments, acceptedDinnerIDs: selected,
                 demands: demands, stock: stock, otherReservations: outside, packs: packs, baselineLines: lines,
                 baselineComplete: baselineComplete && baselineExcludesComparedRecipes, fees: fees,
                 tax: try evidence(tax, missing: "Tax is unknown"), deposits: try evidence(deposits, missing: "Deposits are unknown"),
@@ -206,8 +218,11 @@ struct DinnerScenarioMealDraftSnapshot: Equatable {
     let candidateDinnerID: UUID?
     let protected: Bool
     let day: MealDay?
+    let isReviewedServingGroup: Bool
+    let savedExclusions: [String]
     init(_ draft: DinnerScenarioMealDraft, zone: String) throws {
         id = draft.id; name = draft.name; portions = try DinnerEntry.positive(draft.portions)
+        isReviewedServingGroup = draft.isReviewedServingGroup; savedExclusions = draft.savedExclusions
         currentDinnerID = draft.currentDinnerID; candidateDinnerID = draft.candidateDinnerID; protected = draft.protected
         day = try DinnerEntry.date(draft.date, zone: zone, scheduled: draft.scheduled)
     }

@@ -61,8 +61,9 @@ struct UrgentRepairView: View {
 }
 
 struct PickupRepairView: View {
+    @Environment(\.pickupLedger) private var fallbackLedger
     @ObservedObject var model: PickupModel
-    private enum Field { case purpose, amount, stockName, stockAmount, instruction, minutes }
+    private enum Field { case purpose, amount, instruction, minutes }
     @FocusState private var field: Field?
     @State private var lineID: UUID?
     @State private var purpose = ""
@@ -76,12 +77,6 @@ struct PickupRepairView: View {
     @State private var knownDue = false
     @State private var due = Date()
     @State private var repairID = UUID()
-    @State private var stockFoodID: UUID?
-    @State private var stockAmount = ""
-    @State private var stockName = ""
-    @State private var stockUnit: UnitOfMeasure = .count
-    @State private var stockSource: ConfirmedStockSource = .freezer
-    @State private var stockConfirmed = false
     var body: some View {
         Form {
             PickupSaveStatus(model: model)
@@ -136,22 +131,16 @@ struct PickupRepairView: View {
                     Text(pTr("No current stock or purchase is assumed for this carried need."))
                 }
             }
-            Section(pTr("Confirm pantry or freezer food")) {
-                Picker(pTr("Reviewed matching food need"), selection: $stockFoodID) {
-                    Text(pTr("Choose a need")).tag(UUID?.none)
-                    ForEach(model.journey?.stockNeeds ?? []) { Text($0.name).tag(Optional($0.foodID)) }
-                    ForEach(model.journey?.pickup?.orderLines ?? []) { Text($0.name).tag(Optional($0.id)) }
+            if model.journey?.closedAt == nil { PickupNewStockSection(model: model).id(model.selectedID) }
+            if let journey = model.journey { PickupSavedStockSection(model: model, journey: journey) }
+            if let ledger = fallbackLedger {
+                NavigationLink(dinnerText("Recover with an accepted dinner")) {
+                    PickupFallbackReviewEntry(model: model, ledger: ledger) { option, target, deadline in
+                        needID = target; instruction = option.instruction
+                        minutes = String(option.minutes); due = deadline; knownDue = true
+                        extraTrip = option.requiresTrip; repeatMeal = option.repeatRequired
+                    }
                 }
-                TextField(pTr("Actual food or freezer batch"), text: $stockName).focused($field, equals: .stockName)
-                TextField(pTr("Confirmed usable amount"), text: $stockAmount).keyboardType(.decimalPad).focused($field, equals: .stockAmount)
-                Picker(pTr("Unit"), selection: $stockUnit) { ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pTr($0.rawValue)).tag($0) } }
-                Picker(pTr("Stock source"), selection: $stockSource) {
-                    Text(pTr("Freezer")).tag(ConfirmedStockSource.freezer)
-                    Text(pTr("Pantry")).tag(ConfirmedStockSource.pantry)
-                }
-                Toggle(pTr("I reviewed identity, exclusions and usable quantity"), isOn: $stockConfirmed)
-                Button(pTr("Confirm this separate stock lot")) { addStock() }.disabled(!stockConfirmed)
-                Text(pTr("Only confirmed matching food enters allocation. Do not enter the same batch twice."))
             }
             Section(pTr("Free manual meal repair")) {
                 Picker(pTr("Affected meal need"), selection: $needID) {
@@ -180,22 +169,14 @@ struct PickupRepairView: View {
             .scrollDismissesKeyboard(.interactively)
             .toolbar {
                 ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    Button(tr("Done")) { field = nil }
+                    if field != nil {
+                        Spacer()
+                        Button(tr("Done")) { field = nil }
+                    }
                 }
             }
     }
     private func rationalText(_ value: Rational?) -> String { value?.description ?? pTr("Unresolved") }
-    private func addStock() {
-        do {
-            guard let foodID = stockFoodID, !stockName.isEmpty, let quantity = try ComparisonModel.quantity(stockAmount, stockUnit) else { throw CocoaError(.validationMissingMandatoryProperty) }
-            let lot = ConfirmedStockLot(id: UUID(), foodID: foodID, name: stockName, usable: quantity, confirmedAt: Date(), source: stockSource)
-            Task { if await model.change({ value in
-                value.stockLots.append(lot)
-                _ = try ConfirmedStockAllocator.allocate(lots: value.stockLots, needs: value.stockNeeds)
-            }) { stockName = ""; stockAmount = ""; stockConfirmed = false } }
-        } catch { model.error = pTr("Check the confirmed food amounts and matching units.") }
-    }
     private func addNeed() {
         do {
             guard let line = model.journey?.pickup?.orderLines.first(where: { $0.id == lineID }), !purpose.isEmpty, let quantity = try ComparisonModel.quantity(amount, line.ordered.unit) else { throw CocoaError(.validationMissingMandatoryProperty) }
@@ -219,12 +200,18 @@ struct PickupCookView: View {
     @State private var language = "en-US"
     @State private var includeBudget = false
     @State private var text = ""
-    @State private var recipient = ""
+    @State private var prepared: CookHandoffReview?
+    @State private var preparedRevision: Int64?
+    @State private var preparedText = ""
+    @State private var preparedShopID: UUID?
     @State private var noteID: UUID?
+    @State private var draftID = UUID()
+    @State private var editingSavedID: UUID?
     @State private var sharing = false
     var body: some View {
         Form {
             PickupSaveStatus(model: model)
+            CookLiveViewContextLink()
             Picker(pTr("Recipient language"), selection: $language) {
                 Text(pTr("English (US)")).tag("en-US")
                 Text(pTr("Español (EE. UU.)")).tag("es-US")
@@ -243,34 +230,38 @@ struct PickupCookView: View {
                 Button(pTr("Share saved dated copy")) { Task {
                     if await recordShare(.shareOpened, destination: nil) { sharing = true }
                 } }
-                TextField(pTr("Recipient (for explicit sent history)"), text: $recipient)
-                Button(pTr("I sent this version to this recipient")) { Task {
-                    await model.change { value in
-                        guard let index = value.notes.firstIndex(where: { $0.id == noteID }), !recipient.isEmpty else { return }
-                        value.notes[index].sentTo = recipient; value.notes[index].sentAt = Date()
-                    }
-                } }.disabled(recipient.isEmpty)
-                Text(pTr("A sent version does not prove receipt or acknowledgment. Cancelling share does not mark it sent."))
+                if let noteID {
+                    PickupRecipientSection(model: model, channel: .cook, versionID: noteID, language: language)
+                        .id(noteID)
+                }
             }
             Section(pTr("Saved cook notes")) {
                 ForEach(model.journey?.notes ?? []) { note in
                     Text(note.text).textSelection(.enabled)
+                    Button(pTr("Review this saved copy")) {
+                        readback = nil; prepared = nil; preparedRevision = nil
+                        language = note.language; text = note.text; noteID = note.id; editingSavedID = note.id
+                    }
                     if let sent = note.sentTo { Text("\(pTr("Reported sent to")): \(sent)") }
                 }
             }
         }.navigationTitle(pTr("Tell the cook"))
             .onAppear { includeBudget = false; readback = nil }
             .onDisappear { readback = nil }
-            .onChange(of: text) { _, value in if value != readback?.text { readback = nil } }
+            .onChange(of: text) { _, value in
+                draftID = UUID()
+                if value != readback?.text { readback = nil }
+                if let noteID, model.journey?.notes.first(where: { $0.id == noteID })?.text != value { self.noteID = nil }
+            }
             .onChange(of: language) { _, _ in readback = nil }
             .onChange(of: includeBudget) { _, _ in readback = nil }
-            .onChange(of: model.journey?.id) { _, _ in readback = nil }
+            .onChange(of: model.journey?.id) { _, _ in readback = nil; noteID = nil; prepared = nil; text = "" }
             .onChange(of: model.journey?.revision) { _, _ in readback = nil }
             .onChange(of: readbackContext) { _, _ in readback = nil }
             .onChange(of: scenePhase) { _, phase in if phase != .active { readback = nil } }
             .sheet(isPresented: $sharing) {
                 PickupActivitySheet(text: model.journey?.notes.first(where: { $0.id == noteID })?.text ?? "") { completed, destination in
-                    Task { await recordShare(completed ? .intentionallySent : .shareCancelled, destination: destination) }
+                    Task { await recordShare(completed ? .shareCompleted : .shareCancelled, destination: destination) }
                 }
             }
     }
@@ -296,6 +287,8 @@ struct PickupCookView: View {
         let at = Date(), timeZone = TimeZone.current
         text = PickupCookProjection.text(journey: value, allocation: model.allocation, result: model.result,
             language: language, includeBudget: includeBudget, at: at, timeZone: timeZone)
+        prepared = sourceReview(value, zone: timeZone, custom: false)
+        preparedText = text; preparedShopID = value.id; preparedRevision = value.revision; editingSavedID = nil
         noteID = nil
         readback = PickupCookReadbackBinding(journey: value, allocation: model.allocation, result: model.result,
             language: language, includeBudget: includeBudget, text: text, context: readbackContext, at: at, timeZone: timeZone)
@@ -304,12 +297,37 @@ struct PickupCookView: View {
         guard let noteID else { return false }
         return await model.change { value in value.cookShareEvents.append(PickupCookShareEvent(id: UUID(), noteID: noteID, occurredAt: Date(), action: action, destination: destination)) }
     }
+    private func sourceReview(_ value: PickupJourney, zone: TimeZone, custom: Bool) -> CookHandoffReview {
+        CookHandoffReview(pieces: PickupCookProjection.pieces(journey: value, allocation: model.allocation, language: language, timeZone: zone),
+                          timeZoneID: zone.identifier, includesBudget: includeBudget, customWording: custom,
+                          budget: includeBudget ? model.result.map { PickupCookProjection.budgetText($0, language: language) } : nil)
+    }
     @discardableResult private func saveNote() async -> Bool {
         readback = nil
-        guard let value = model.journey else { return false }
-        let id = UUID()
-        let note = PickupCookNote(id: id, text: text, language: language, createdAt: Date(), revision: value.revision)
-        if await model.change({ $0.notes.append(note) }) { noteID = id; includeBudget = false; return true }
+        guard let value = model.journey, !text.isEmpty else { return false }
+        if let saved = value.notes.first(where: { $0.id == (noteID ?? draftID) && $0.text == text && $0.language == language }) {
+            noteID = saved.id
+            return true
+        }
+        if let editingSavedID {
+            guard let source = model.handoffCopy(channel: .cook, versionID: editingSavedID, language: language), model.isCurrent(source) else {
+                model.error = pTr("The source changed. Prepare and review the current instruction.")
+                return false
+            }
+        }
+        let zone = prepared.flatMap { TimeZone(identifier: $0.timeZoneID) } ?? .current
+        if let prepared, (preparedShopID != value.id || preparedRevision != value.revision || prepared != sourceReview(value, zone: zone, custom: false)) {
+            model.error = pTr("The source changed. Prepare and review the current instruction.")
+            return false
+        }
+        // Keep the source ID while a failed store write is retried from PickupSaveStatus.
+        let id = value.notes.contains(where: { $0.id == draftID }) ? UUID() : draftID
+        draftID = id
+        var note = PickupCookNote(id: id, text: text, language: language, createdAt: Date(), revision: value.revision)
+        note.reviewedHandoff = sourceReview(value, zone: zone, custom: prepared == nil || text != preparedText)
+        if await model.change({ $0.notes.append(note) }) {
+            noteID = id; editingSavedID = id; prepared = nil; includeBudget = false; return true
+        }
         return false
     }
 }

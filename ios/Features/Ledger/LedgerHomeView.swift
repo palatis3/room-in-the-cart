@@ -109,6 +109,7 @@ struct LedgerHomeView: View {
                 Spacer()
                 Menu {
                     Button(ledgerText("List order and aisles")) { sheet = .layout }
+                    NavigationLink(ledgerText("Review prior staples")) { StapleRecallView(ledger: model, targetID: shop.id) }
                     Button(ledgerText("Large-print list")) { sheet = .printList }
                 } label: {
                     Label(ledgerText("List options"), systemImage: "ellipsis.circle").labelStyle(.iconOnly)

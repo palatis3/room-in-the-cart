@@ -238,9 +238,11 @@ public struct ConfirmedStockLot: Codable, Equatable, Sendable, Identifiable {
     public let usable: Quantity
     public let confirmedAt: Date
     public let source: ConfirmedStockSource
-    public init(id: UUID, foodID: UUID, name: String, usable: Quantity, confirmedAt: Date, source: ConfirmedStockSource = .manual) {
+    public let useFirst: Bool?
+    public init(id: UUID, foodID: UUID, name: String, usable: Quantity, confirmedAt: Date, source: ConfirmedStockSource = .manual, useFirst: Bool = false) {
         self.id = id; self.foodID = foodID; self.name = name; self.usable = usable
         self.confirmedAt = confirmedAt; self.source = source
+        self.useFirst = useFirst ? true : nil
     }
 }
 public struct StockNeed: Codable, Equatable, Sendable, Identifiable {
@@ -304,7 +306,8 @@ public enum ConfirmedStockAllocator {
             let foodNeeds = needs.enumerated().filter { $0.element.foodID == food }.sorted {
                 $0.element.priority == $1.element.priority ? $0.offset < $1.offset : $0.element.priority < $1.element.priority
             }.map(\.element)
-            let foodLots = lots.filter { $0.foodID == food }
+            let matched = lots.filter { $0.foodID == food }
+            let foodLots = matched.filter { $0.useFirst == true } + matched.filter { $0.useFirst != true }
             guard let unit = needs.first(where: { $0.foodID == food })?.amount.unit ?? foodLots.first?.usable.unit else { continue }
             let requests = try foodNeeds.map { try $0.amount.converted(to: unit) }
             let supplies = try foodLots.map { try $0.usable.converted(to: unit) }

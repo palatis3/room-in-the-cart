@@ -92,6 +92,36 @@ final class NativeServiceWireTests: XCTestCase {
                 XCTFail("Free must keep saved observations without granting paid history.")
             } catch ClientError.service(status: 403, code: "membership_inactive", correlationID: _, retryAfter: _) { }
         }
+        let shopUUID = try XCTUnwrap(UUID(uuidString: shop))
+        _ = try await service.selectShop(shopUUID)
+        let decision = FamilyDecisionInput(kind: .preference, dish: "Sopa de maíz", product: "Maíz",
+            occasion: nil, decision: "Prefer the smaller pack this time", outcome: nil)
+        let initial = try await service.prepareFamilyDecision(shopID: shopUUID, id: nil, action: .create(decision))
+        let recorded = try await service.executeFamilyDecision(initial)
+        let sameRecord = try await service.executeFamilyDecision(initial)
+        XCTAssertEqual(recorded, sameRecord)
+        XCTAssertNil(recorded.outcome)
+        XCTAssertEqual(recorded.scope, .oneShop)
+        let observed = try await service.prepareFamilyDecision(shopID: shopUUID, id: recorded.id,
+            action: .observe(version: recorded.version, text: "Two packs came home."))
+        let updated = try await service.executeFamilyDecision(observed)
+        XCTAssertEqual(updated.version, 2)
+        let promote = try await service.prepareFamilyDecision(shopID: shopUUID, id: recorded.id, action: .promote(version: updated.version))
+        if env["RITC_WIRE_PAID"] == "1" {
+            let page = try await service.familyDecisions(dish: "sopa", product: "Maíz", occasion: nil, cursor: nil)
+            XCTAssertEqual(page.decisions, [updated])
+            let lasting = try await service.executeFamilyDecision(promote)
+            XCTAssertEqual(lasting.scope, .lasting)
+            let replayed = try await service.executeFamilyDecision(promote)
+            XCTAssertEqual(lasting, replayed)
+        } else {
+            do {
+                _ = try await service.executeFamilyDecision(promote)
+                XCTFail("A Free saved record must not grant a paid lasting preference.")
+            } catch ClientError.service(status: 403, code: "membership_inactive", correlationID: _, retryAfter: _) { }
+            let saved = try await service.familyDecision(shopID: shopUUID, id: recorded.id)
+            XCTAssertEqual(saved, updated)
+        }
         let second = try await service.selectShop(XCTUnwrap(UUID(uuidString: other)))
         XCTAssertEqual(second.shopId, other)
         let reopened = HouseholdService(configuration: config, auth: auth, deviceVault: vault, transport: transport)

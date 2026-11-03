@@ -42,6 +42,13 @@ public actor HouseholdService {
         enrollment = device; self.householdID = householdID; subject = access.identity.subject
         return try await bootstrap()
     }
+    /// Nonsecret enrollment identity for an explicit own-request review lease.
+    public func requestReviewDeviceID(bootstrap: HouseholdBootstrap) throws -> String {
+        guard let enrollment, bootstrap.enrolled, bootstrap.capabilities.contains("own_requests"),
+              bootstrap.household.id == householdID, bootstrap.memberId == memberID,
+              bootstrap.grantId == selectedGrantID else { throw ClientError.accessEnded }
+        return enrollment.deviceId
+    }
     public func matches(_ operation: PendingOperation, memberID: String) -> Bool {
         operation.householdID == householdID && operation.memberID == memberID && operation.deviceID == enrollment?.deviceId
     }
@@ -747,3 +754,71 @@ public actor OperationOutbox {
 }
 
 private struct StoredEnrollment: Codable { let householdID: String; let subject: String; let device: DeviceEnrollment; let grantID: String?; let shopID: UUID? }
+
+extension HouseholdService {
+    public func familyDecision(shopID: UUID, id: UUID) async throws -> FamilyDecisionRecord {
+        let path = "shops/\(shopID.uuidString.lowercased())/decisions/\(id.uuidString.lowercased())"
+        let record: FamilyDecisionRecord = try await historyRead(path)
+        try record.validate()
+        guard record.id == id, record.shopId == shopID else { throw ClientError.invalidResponse }
+        return record
+    }
+
+    public func familyDecisions(dish: String?, product: String?, occasion: String?, cursor: UUID?) async throws -> FamilyDecisionPage {
+        var query: [URLQueryItem] = []
+        for (name, value) in [("dish",dish),("product",product),("occasion",occasion)] {
+            if let value {
+                guard !value.isEmpty, value.utf16.count <= 120 else { throw ClientError.configuration }
+                query.append(.init(name: name, value: value))
+            }
+        }
+        if let cursor { query.append(.init(name: "cursor", value: cursor.uuidString.lowercased())) }
+        let page: FamilyDecisionPage = try await historyRead("decisions", query: query)
+        let ids = page.decisions.map(\.id)
+        guard ids.count <= 50, Set(ids).count == ids.count, !ids.contains(where: { $0 == cursor }),
+              page.nextCursor == nil || (page.nextCursor == ids.last && page.nextCursor != cursor) else { throw ClientError.invalidResponse }
+        for record in page.decisions {
+            try record.validate()
+            if let selectedShopID, record.shopId != selectedShopID { throw ClientError.invalidResponse }
+        }
+        return page
+    }
+
+    public func prepareFamilyDecision(shopID: UUID, id: UUID?, action: FamilyDecisionAction) async throws -> FamilyDecisionIntent {
+        let start = generation
+        try await historyContext()
+        guard start == generation, let subject, let householdID, let memberID, let enrollment,
+              selectedShopID == nil || selectedShopID == shopID else { throw ClientError.accessEnded }
+        switch action {
+        case .create: guard id == nil else { throw ClientError.configuration }
+        case .observe, .promote: guard id != nil else { throw ClientError.configuration }
+        }
+        let key = UUID()
+        let intent = FamilyDecisionIntent(id: key, subject: subject, householdID: householdID, memberID: memberID,
+            deviceID: enrollment.deviceId, shopID: shopID, recordID: id ?? key, action: action)
+        try intent.validate()
+        return intent
+    }
+
+    public func executeFamilyDecision(_ intent: FamilyDecisionIntent) async throws -> FamilyDecisionRecord {
+        let start = generation
+        try intent.validate()
+        try await historyContext()
+        guard start == generation, selectedShopID == nil || selectedShopID == intent.shopID else { throw ClientError.accessEnded }
+        try matchesHistory(subject: intent.subject, household: intent.householdID, member: intent.memberID, device: intent.deviceID)
+        let record: FamilyDecisionRecord = try await perform(intent.path, method: "POST", body: intent.body())
+        try record.validate()
+        guard record.shopId == intent.shopID, record.id == intent.recordID else { throw ClientError.invalidResponse }
+        switch intent.action {
+        case .create(let input):
+            guard record.version == 1, record.scope == .oneShop, record.decision == input.decision, record.kind == input.kind,
+                  record.dish == input.dish, record.product == input.product, record.occasion == input.occasion,
+                  record.outcome == input.outcome else { throw ClientError.invalidResponse }
+        case .observe(let version, let text):
+            guard record.version == version + 1, record.outcome == text else { throw ClientError.invalidResponse }
+        case .promote(let version):
+            guard record.version == version + 1, record.scope == .lasting else { throw ClientError.invalidResponse }
+        }
+        return record
+    }
+}

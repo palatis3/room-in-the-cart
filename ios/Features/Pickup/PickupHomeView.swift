@@ -34,6 +34,13 @@ struct PickupHomeView: View {
                 Text(pTr("Review your shopping list to begin checkout. You can also repair a meal without an order."))
             }
             Section {
+                NavigationLink(pTr("Confirm pantry or freezer food")) {
+                    Form {
+                        PickupSaveStatus(model: model)
+                        if model.journey?.closedAt == nil { PickupNewStockSection(model: model).id(model.selectedID) }
+                        if let journey = model.journey { PickupSavedStockSection(model: model, journey: journey) }
+                    }.navigationTitle(pTr("Confirm pantry or freezer food"))
+                }
                 NavigationLink(pTr("Something is missing")) { UrgentRepairView(model: model) }
             }
             if model.journeys.count > 1 {
@@ -41,7 +48,7 @@ struct PickupHomeView: View {
                     ForEach(model.journeys) { value in
                         Button { model.selectedID = value.id } label: {
                             VStack(alignment: .leading) {
-                                Text(value.basket?.current.lines.first?.name ?? value.urgent.first?.meal ?? pTr("Pickup"))
+                                Text(value.basket?.current.lines.first?.name ?? value.urgent.first?.meal ?? value.stockLots.first?.name ?? pTr("Pickup"))
                                 Text(value.savedAt.formatted()).font(.caption).foregroundStyle(.secondary)
                             }
                         }
@@ -146,6 +153,7 @@ struct PickupCheckoutView: View {
     var body: some View {
         Form {
             PickupSaveStatus(model: model)
+            CheckoutQuotesContextLink(pickup: model)
             Section(pTr("Retailer preview · source and time")) {
                 TextField(pTr("Store"), text: $store)
                 TextField(pTr("Branch"), text: $branch)
@@ -279,6 +287,11 @@ struct PickupHandoffView: View {
                     await model.recordHandoff(.copied)
                 } }
                 Button(pTr("Share dated list")) { Task { if await model.recordHandoff(.shareOpened) { sharing = true } } }
+                if let snapshot = model.frozenSnapshot {
+                    PickupRecipientSection(model: model, channel: .retailer, versionID: snapshot.id,
+                                           language: Locale.current.language.languageCode?.identifier == "es" ? "es-US" : "en-US")
+                        .id(snapshot.id)
+                }
                 TextField(pTr("Retailer website (https://…)"), text: $retailerURL).keyboardType(.URL).textInputAutocapitalization(.never)
                 Button(pTr("Open retailer website")) { Task {
                     guard let url = URL(string: retailerURL), url.scheme == "https", url.host != nil else { model.error = pTr("Enter a valid https retailer address."); return }
@@ -299,7 +312,7 @@ struct PickupHandoffView: View {
         .disabled(model.saving)
         .sheet(isPresented: $sharing) {
             PickupActivitySheet(text: model.frozenText() ?? "") { completed, destination in
-                Task { await model.recordHandoff(completed ? .intentionallySent : .shareCancelled, destination: destination) }
+                Task { await model.recordHandoff(completed ? .shareCompleted : .shareCancelled, destination: destination) }
             }
         }
     }

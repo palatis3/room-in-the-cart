@@ -116,6 +116,7 @@ struct PickupNextShopView: View {
                     Text(pTr("Leave unchecked to keep deferred."))
                 }
             }
+            NavigationLink(HistoryCopy.text("Family decision history")) { FamilyDecisionsEntry(localShopID: model.journey?.id) }
             Section(pTr("Open meal needs")) {
                 ForEach(model.journey?.urgent.filter { !$0.resolved } ?? []) { need in
                     Text("\(need.meal): \(need.food) · \(pQuantity(need.required))")
@@ -128,8 +129,15 @@ struct PickupNextShopView: View {
             Button(pTr("Create fresh next-shop draft")) { Task { created = await model.startNextShop(accept: accepted) } }.buttonStyle(.borderedProminent).disabled(created)
             if created {
                 Text(pTr("Fresh draft saved. Review its store, slot and prices before checkout."))
+                if let journey = model.journey { PickupSavedStockSection(model: model, journey: journey) }
                 if let ledger, let journeyID = model.journey?.id {
                     NavigationLink(pTr("Open next shopping list")) { PickupListBridgeView(model: model, ledger: ledger, journeyID: journeyID) }.accessibilityIdentifier("pickupOpenCreatedNextList")
+                    NavigationLink(dinnerText("Accepted dinners and Free reusable dinner")) {
+                        NextShopDinnerContextEntry(pickup: model, ledger: ledger, journeyID: journeyID)
+                    }.accessibilityIdentifier("nextShop.reuseDinner")
+                    NavigationLink(ledgerText("Review prior staples")) {
+                        PickupListBridgeView(model: model, ledger: ledger, journeyID: journeyID, reviewStaples: true)
+                    }
                 } else { Text(pTr("Return to Shop to open the editable list for this saved draft.")) }
             }
         }.navigationTitle(pTr("Next shop"))

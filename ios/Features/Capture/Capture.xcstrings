@@ -3349,6 +3349,166 @@
           }
         }
       }
+    },
+    "Capture is optional. You can always type your request.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture is optional. You can always type your request."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La captura es opcional. Siempre puedes escribir tu solicitud."
+          }
+        }
+      }
+    },
+    "Your editable request": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your editable request"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu solicitud editable"
+          }
+        }
+      }
+    },
+    "Review one request at a time. Check the item, amount, packs, purpose and exclusions; skip any other captured lines.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review one request at a time. Check the item, amount, packs, purpose and exclusions; skip any other captured lines."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa una solicitud a la vez. Comprueba el artículo, la cantidad, los paquetes, el propósito y las exclusiones; omite las demás líneas capturadas."
+          }
+        }
+      }
+    },
+    "Capture a request": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture a request"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capturar una solicitud"
+          }
+        }
+      }
+    },
+    "Continue to request review": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue to request review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuar a la revisión de la solicitud"
+          }
+        }
+      }
+    },
+    "Keep exactly one reviewed item for this request. Skip other lines or cancel; nothing has been sent.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep exactly one reviewed item for this request. Skip other lines or cancel; nothing has been sent."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conserva exactamente un artículo revisado para esta solicitud. Omite las demás líneas o cancela; no se ha enviado nada."
+          }
+        }
+      }
+    },
+    "The next screen previews your own request before sending. Only the shopper can change the basket; capture does not verify price, food safety or arrival.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The next screen previews your own request before sending. Only the shopper can change the basket; capture does not verify price, food safety or arrival."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La siguiente pantalla muestra tu solicitud antes de enviarla. Solo la persona encargada de comprar puede cambiar la canasta; la captura no verifica el precio, la seguridad de los alimentos ni la entrega."
+          }
+        }
+      }
+    },
+    "Destination wording does not change where this request goes. Confirm the displayed household destination, or cancel and open the intended household.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destination wording does not change where this request goes. Confirm the displayed household destination, or cancel and open the intended household."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El texto del destino no cambia adónde va esta solicitud. Confirma el destino del hogar que se muestra, o cancela y abre el hogar deseado."
+          }
+        }
+      }
+    },
+    "This household or request changed. Close capture and review the current request.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This household or request changed. Close capture and review the current request."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este hogar o esta solicitud cambió. Cierra la captura y revisa la solicitud actual."
+          }
+        }
+      }
+    },
+    "Confirm the displayed request destination, or cancel and choose the intended household.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm the displayed request destination, or cancel and choose the intended household."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirma el destino que se muestra para la solicitud, o cancela y elige el hogar deseado."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

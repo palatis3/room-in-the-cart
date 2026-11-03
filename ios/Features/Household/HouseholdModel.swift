@@ -46,6 +46,8 @@ import HouseholdClient
     private var attempts = 0
     private var retryAfter = Date.distantPast
     private var generation = UUID()
+    private var contributorEnrollmentRevision = UUID()
+    private var contributorDeviceID: String?
 
     init(bundle: Bundle = .main, auth: AdultAuth? = nil, service: HouseholdService? = nil, outboxURL: URL? = nil, deletionVault: (any RefreshTokenVault)? = nil, exitVault: (any RefreshTokenVault)? = nil) {
         let otpSetting = bundle.object(forInfoDictionaryKey: "RITCEmailOTPEnabled")
@@ -125,8 +127,11 @@ import HouseholdClient
         } catch { await show(error, start: start) }
     }
     private func finishEnrollment(_ value: HouseholdBootstrap, start: UUID) async throws {
+        contributorEnrollmentRevision = UUID()
         guard let service else { throw ClientError.configuration }
             projection = value
+            contributorDeviceID = try? await service.requestReviewDeviceID(bootstrap: value)
+            guard start == generation else { return }
             if value.capabilities.contains("own_requests") {
                 let page = try await service.ownRequests()
                 guard start == generation else { return }
@@ -217,30 +222,50 @@ import HouseholdClient
             nextRequestCursor = page.nextCursor
         } catch { await show(error, start: start) }
     }
-    func sendRequest() async {
-        guard let service, let projection, projection.capabilities.contains("own_requests"), let shop = editing?.shopId ?? followingUp?.shopId ?? projection.shopId,
-              !busy, !locked, pending == nil else { return }
-        let text = item.trimmingCharacters(in: .whitespacesAndNewlines)
-        let amount = quantity.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty, text.count <= 240, amount.count <= 80 else { notice = ht("Enter an item up to 240 characters and a quantity up to 80 characters."); return }
+    /// Current native authority and draft are captured together before opening review.
+    var contributorRequestScope: ContributorRequestScope? {
+        guard !busy, !locked, pending == nil else { return nil }
+        return currentContributorRequestScope()
+    }
+    private func currentContributorRequestScope() -> ContributorRequestScope? {
+        guard let identity, let projection, let contributorDeviceID, projection.enrolled,
+              projection.capabilities.contains("own_requests"), !locked,
+              let shop = editing?.shopId ?? followingUp?.shopId ?? projection.shopId else { return nil }
+        return ContributorRequestScope(generation: generation, enrollmentRevision: contributorEnrollmentRevision, subject: identity.subject,
+            householdID: projection.household.id, memberID: projection.memberId, deviceID: contributorDeviceID, role: projection.role,
+            grantID: projection.grantId, selectedShopID: projection.shopId, targetShopID: shop,
+            capabilities: projection.capabilities.sorted(), editing: editing, followingUp: followingUp,
+            item: item, quantity: quantity, nextShop: forNextShop)
+    }
+    func sendRequest(reviewed: ContributorRequestReview? = nil, approved: Bool = false) async {
+        guard let service, let projection, let scope = contributorRequestScope else { return }
+        if let reviewed, (!approved || reviewed.scope != scope) {
+            notice = ht("This request or your access changed. Reopen request review before sending."); return
+        }
+        let text = (reviewed?.item ?? scope.item).trimmingCharacters(in: .whitespacesAndNewlines)
+        let amount = (reviewed?.quantity ?? scope.quantity).trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty, text.utf16.count <= 240, amount.utf16.count <= 80 else { notice = ht("Enter an item up to 240 characters and a quantity up to 80 characters."); return }
         busy = true; notice = nil; defer { busy = false }; let start = generation
         do {
             let window = try await service.replayWindow()
-            guard start == generation else { return }
+            let deviceID = try await service.requestReviewDeviceID(bootstrap: projection)
+            guard deviceID == scope.deviceID, start == generation, currentContributorRequestScope() == scope else {
+                if start == generation { notice = ht("This request or your access changed. Reopen request review before sending.") }; return
+            }
             var body: [String: JSONValue] = ["originalItem": .string(text), "ownQuantity": amount.isEmpty ? .null : .string(amount)]
             let kind: String
-            if let editing {
+            if let editing = scope.editing {
                 kind = "request.edit"; body["requestId"] = .string(editing.requestId)
             } else {
                 kind = "request.send"; body["clientRequestId"] = .string(UUID().uuidString.lowercased())
                 body["authoredAt"] = .string(ISO8601DateFormatter().string(from: Date()))
-                body["route"] = .string(forNextShop ? "next" : "current")
-                if let followingUp { body["followupTo"] = .string(followingUp.requestId) }
+                body["route"] = .string(scope.nextShop ? "next" : "current")
+                if let followingUp = scope.followingUp { body["followupTo"] = .string(followingUp.requestId) }
             }
-            let envelope = CommandEnvelope(replayWindow: window.id, shopId: editing?.shopId ?? followingUp?.shopId ?? shop, kind: kind,
-                base: .init(shopRevision: 0, authorityEpoch: 0, requestRevision: editing?.revision), body: body)
+            let envelope = CommandEnvelope(replayWindow: window.id, shopId: scope.targetShopID, kind: kind,
+                base: .init(shopRevision: 0, authorityEpoch: 0, requestRevision: scope.editing?.revision), body: body)
             let operation = try await service.prepare(envelope: envelope, bootstrap: projection)
-            guard start == generation else { return }
+            guard start == generation, currentContributorRequestScope() == scope else { return }
             try await outbox.append(operation)
             guard start == generation else { return }
             pending = operation; attempts = 0; delivery = .waiting(operationID: operation.id)
@@ -431,7 +456,7 @@ import HouseholdClient
         if !preservePlacementEvidence { placementEvidenceIdentity = nil; placementEvidenceUnlocked = false; placementEvidenceNotice = nil }
         lifecycle?.clearScope()
         shopperInbox?.clear(); shopperInbox = nil; sharedShop?.clear(); sharedShop = nil
-        projection = nil; requests = []; nextRequestCursor = nil; pending = nil
+        projection = nil; contributorDeviceID = nil; requests = []; nextRequestCursor = nil; pending = nil
         delivery = .localDraft; attempts = 0; retryAfter = .distantPast; cancelEdit()
     }
     var canReviewHouseholdRequests: Bool {
@@ -495,6 +520,13 @@ func ht(_ key: String) -> String { String(localized: String.LocalizationValue(ke
 
 // E09 uses the active native session; recovered files never supply this authority.
 extension HouseholdModel {
+    var decisionStore: HistoryPendingStore { historyStore }
+    var decisionAccess: FamilyDecisionAccess? {
+        guard !locked, let identity, let scope = projection, scope.enrolled, scope.grantId == nil,
+              scope.role == "shopper" || scope.role == "organizer" || scope.canSelectShop == true else { return nil }
+        return .init(generation: generation, subject: identity.subject, householdID: scope.household.id,
+                     memberID: scope.memberId, shopID: scope.shopId.flatMap(UUID.init(uuidString:)))
+    }
     func makeHistoryModel() -> HistoryFeatureModel? {
         guard let service else { return nil }
         return HistoryFeatureModel(service: service, store: historyStore, runtime: { [weak self] in

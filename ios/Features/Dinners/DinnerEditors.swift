@@ -106,6 +106,9 @@ struct DinnerTemplateEditor: View {
                         Text(dinnerText("Review every ingredient and quantity. Accepted ideas remain separate from chosen dinners."))
                     }
                 }
+                if !draft.title.isEmpty {
+                    NavigationLink(HistoryCopy.text("Family decision history")) { FamilyDecisionsEntry(initialDish: draft.title) }
+                }
                 Section { Button(dinnerText("Review"), action: review).disabled(!model.editable).accessibilityIdentifier("ledgerReviewDinner") }
             }
             DinnerFeedback(model: model)

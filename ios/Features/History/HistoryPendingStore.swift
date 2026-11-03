@@ -23,6 +23,7 @@ struct HistoryStoredReference: Codable, Equatable, Sendable {
 struct HistoryStoredState: Codable, Equatable, Sendable {
     var pending: [HistoryPendingWrite] = []
     var observations: [HistoryStoredReference] = []
+    var familyDecisions: FamilyDecisionCache?
 }
 protocol HistoryPersisting: Sendable {
     func epoch() async -> UUID
@@ -75,11 +76,40 @@ actor HistoryPendingStore: HistoryPersisting {
         var state = try read()
         if !state.observations.contains(reference) { state.observations.append(reference); try write(state) }
     }
+    func stageDecision(_ intent: FamilyDecisionIntent, expectedEpoch: UUID) throws {
+        guard generation == expectedEpoch else { throw ClientError.cancelled }
+        try intent.validate()
+        var state = try read(), cache = state.familyDecisions ?? .init()
+        if let pending = cache.pending.first(where: {
+            $0.householdID == intent.householdID && $0.memberID == intent.memberID && $0.subject == intent.subject
+        }) {
+            guard pending == intent else { throw ClientError.configuration }
+            return
+        }
+        cache.pending.append(intent)
+        state.familyDecisions = cache
+        try write(state)
+    }
+    func finishDecision(_ intent: FamilyDecisionIntent, confirmed: Bool, expectedEpoch: UUID) throws {
+        guard generation == expectedEpoch else { throw ClientError.cancelled }
+        var state = try read(), cache = state.familyDecisions ?? .init()
+        guard cache.pending.contains(intent) else { throw ClientError.cancelled }
+        cache.pending.removeAll { $0 == intent }
+        if confirmed {
+            let ref = FamilyDecisionReference(subject: intent.subject, householdID: intent.householdID,
+                memberID: intent.memberID, shopID: intent.shopID, id: intent.recordID)
+            if !cache.records.contains(ref) { cache.records.append(ref) }
+        }
+        state.familyDecisions = cache
+        try write(state)
+    }
     func purge(householdID: String, subject: String) throws {
         generation = UUID()
         var state = try read()
         state.pending.removeAll { $0.householdID == householdID && $0.subject == subject }
         state.observations.removeAll { $0.householdID == householdID && $0.subject == subject }
+        state.familyDecisions?.pending.removeAll { $0.householdID == householdID && $0.subject == subject }
+        state.familyDecisions?.records.removeAll { $0.householdID == householdID && $0.subject == subject }
         try write(state)
     }
     func purge() throws { generation = UUID(); try write(.init()) }

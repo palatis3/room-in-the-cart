@@ -136,7 +136,7 @@ def outputs():
     packages = [obj("package:" + name, "XCLocalSwiftPackageReference", relativePath="Packages/" + name) for name in package_names]
     for name in package_names:
         obj("product:" + name, "XCSwiftPackageProductDependency", package=ident("package:" + name), productName=name)
-    app_sources = sorted((IOS / "App").rglob("*.swift")) + sorted((IOS / "Features").rglob("*.swift"))
+    app_sources = sorted((IOS / "App").rglob("*.swift")) + sorted((IOS / "Features").rglob("*.swift")) + sorted((IOS / "UITestSupport").rglob("*.swift"))
     targets, extension_dependencies, extension_embeds = [], [], []
     extension_keys = []
     for key, folder, name in (("widget", "Widget", "RoomInTheCartWidget"), ("share", "Share", "RoomInTheCartShare")):

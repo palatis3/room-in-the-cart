@@ -4,6 +4,12 @@ import HouseholdClient
 struct HouseholdSettingsView: View {
     @ObservedObject var model: HouseholdModel
     @Environment(\.scenePhase) private var scenePhase
+    @State private var requestReview: RequestReviewPresentation?
+    private struct RequestReviewPresentation: Identifiable {
+        let id = UUID()
+        let scope: ContributorRequestScope
+        let capture: Bool
+    }
     var body: some View {
         Form {
             Section {
@@ -92,7 +98,12 @@ struct HouseholdSettingsView: View {
                             TextField(ht("Item"), text: $model.item)
                             TextField(ht("Quantity, optional"), text: $model.quantity)
                             if model.editing == nil { Toggle(ht("Ask for next shop"), isOn: $model.forNextShop) }
-                            Button(ht("Send request")) { Task { await model.sendRequest() } }.disabled(!canSend)
+                            Button(ht("Review request before sending")) {
+                                if let scope = model.contributorRequestScope { requestReview = .init(scope: scope, capture: false) }
+                            }.disabled(!canSend).accessibilityIdentifier("household.request.review")
+                            Button(ht("Capture and review a request")) {
+                                if let scope = model.contributorRequestScope { requestReview = .init(scope: scope, capture: true) }
+                            }.disabled(model.contributorRequestScope == nil).accessibilityIdentifier("household.request.capture")
                             delivery
                         }
                     }
@@ -137,6 +148,9 @@ struct HouseholdSettingsView: View {
         }
         .disabled(model.busy)
         .navigationTitle(ht("Household"))
+        .sheet(item: $requestReview) { selected in
+            NavigationStack { ContributorRequestCaptureView(household: model, scope: selected.scope, capture: selected.capture) }
+        }
         .onChange(of: scenePhase) { _, value in if value == .background { model.lock() } }
     }
     private var canSend: Bool {

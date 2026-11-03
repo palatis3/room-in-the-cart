@@ -298,7 +298,7 @@ public struct HandoffSnapshot: Codable, Equatable, Sendable, Identifiable {
     public let createdAt: Date
 }
 public enum HandoffActionKind: String, Codable, Sendable {
-    case prepared, copyAttempted, copied, shareOpened, shareCancelled, retailerOpened, intentionallySent, acknowledged
+    case prepared, copyAttempted, copied, shareOpened, shareCancelled, shareCompleted, retailerOpened, intentionallySent, acknowledged
 }
 public struct HandoffAction: Codable, Equatable, Sendable, Identifiable {
     public let id: UUID

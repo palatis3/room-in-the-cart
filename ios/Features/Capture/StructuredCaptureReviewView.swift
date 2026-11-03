@@ -6,6 +6,7 @@ import CoreDomain
     @ObservedObject var corrections: CaptureCorrectionsModel
     let destination: String
     let source: CaptureSource
+    var requestMode: Bool = false
     let originalText: String
     let imageData: Data?
     let authorize: () -> Bool
@@ -21,7 +22,7 @@ import CoreDomain
                     .accessibilityLabel(captureText("Selected source photo"))
             }
             Text(captureText("Actual destination") + ": " + destination).font(.headline)
-            Text(captureText("Destination wording does not change where this list goes. Choose the displayed list explicitly, or cancel and open the intended list."))
+            Text(captureText(requestMode ? "Destination wording does not change where this request goes. Confirm the displayed household destination, or cancel and open the intended household." : "Destination wording does not change where this list goes. Choose the displayed list explicitly, or cancel and open the intended list."))
         }
         ForEach(lines) { snapshot in
             let placeholder = CaptureLineDraft(id: snapshot.id, proposedLineID: snapshot.proposedLineID,
@@ -52,21 +53,25 @@ import CoreDomain
         }
         Section {
             if let validationMessage { Text(captureText(validationMessage)).accessibilityIdentifier("capture.structured.error") }
-            Button(captureText("Continue to list review")) {
-                guard authorize() else { validationMessage = "This workspace changed. Close capture and review the current list."; return }
+            Button(captureText(requestMode ? "Continue to request review" : "Continue to list review")) {
+                guard authorize() else { validationMessage = requestMode ? "This household or request changed. Close capture and review the current request." : "This workspace changed. Close capture and review the current list."; return }
                 do {
                     let reviewed = try lines.compactMap { try $0.reviewed(expectedDestination: destination) }
                     guard !reviewed.isEmpty else { throw StructuredCaptureFailure.reviewRequired }
+                    if requestMode, reviewed.count != 1 {
+                        validationMessage = "Keep exactly one reviewed item for this request. Skip other lines or cancel; nothing has been sent."
+                        return
+                    }
                     onContinue(reviewed)
                 } catch StructuredCaptureFailure.destinationMismatch {
-                    validationMessage = "Confirm the displayed destination for every item, or cancel and choose another list."
+                    validationMessage = requestMode ? "Confirm the displayed request destination, or cancel and choose the intended household." : "Confirm the displayed destination for every item, or cancel and choose another list."
                 } catch {
                     validationMessage = "Review each item. Use a positive amount or leave it explicitly unknown; pack counts must be whole numbers."
                 }
             }.disabled(!authorize() || lines.isEmpty || !lines.contains(where: { !$0.skip }) || !lines.allSatisfy { $0.skip || $0.confirmed })
                 .accessibilityIdentifier("capture.continue")
             Button(captureText("Back to captured words"), action: onBack)
-            Text(captureText("The next screen reviews duplicates before adding the reviewed list. Capture does not verify a price, receipt, food safety or arrival."))
+            Text(captureText(requestMode ? "The next screen previews your own request before sending. Only the shopper can change the basket; capture does not verify price, food safety or arrival." : "The next screen reviews duplicates before adding the reviewed list. Capture does not verify a price, receipt, food safety or arrival."))
                 .font(.footnote)
         }
     }

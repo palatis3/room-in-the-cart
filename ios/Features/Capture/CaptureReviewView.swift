@@ -13,6 +13,8 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
     @State private var guestDetected = false
     @State private var structuredFailure = false
     let destination: String
+    let requestMode: Bool
+    let dismissOnReview: Bool
     let correctionScope: CaptureCorrectionScope?
     let authorize: () -> Bool
     let onReviewed: (ReviewedCapture) -> Void
@@ -24,7 +26,7 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
     @AccessibilityFocusState private var reviewFocused: Bool
 
     init(initialText: String = "", initialSource: CaptureSource = .typed, localeIdentifier: String = Locale.current.identifier,
-         destination: String = captureText("This pickup"), existingCapture: ReviewedCapture? = nil, correctionScope: CaptureCorrectionScope? = nil,
+         destination: String = captureText("This pickup"), requestMode: Bool = false, dismissOnReview: Bool = true, existingCapture: ReviewedCapture? = nil, correctionScope: CaptureCorrectionScope? = nil,
          authorize: @escaping () -> Bool, onReviewed: @escaping (ReviewedCapture) -> Void) {
         let evidence = existingCapture.map { CaptureEvidence(text: $0.originalText, source: $0.source,
             uncertainLines: [], sourceImageData: $0.sourceImageData, previewImageData: $0.previewImageData) }
@@ -37,22 +39,22 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
         _structuredLines = State(initialValue: existingCapture?.fieldDrafts ?? [])
         _reviewingFields = State(initialValue: existingCapture?.fieldDrafts != nil)
         self.onReviewed = onReviewed
-        self.destination = destination; self.correctionScope = correctionScope; self.authorize = authorize
+        self.destination = destination; self.requestMode = requestMode; self.dismissOnReview = dismissOnReview; self.correctionScope = correctionScope; self.authorize = authorize
     }
 
     var body: some View {
         Form {
             if reviewingFields {
                 StructuredCaptureReviewView(lines: $structuredLines, corrections: corrections, destination: destination,
-                    source: model.acceptedEvidence?.source ?? .typed, originalText: model.acceptedEvidence?.text ?? model.text,
+                    source: model.acceptedEvidence?.source ?? .typed, requestMode: requestMode, originalText: model.acceptedEvidence?.text ?? model.text,
                     imageData: model.acceptedEvidence?.previewImageData ?? model.acceptedEvidence?.sourceImageData,
                     authorize: authorize, onBack: { reviewingFields = false }) { lines in
                         guard authorize(), let capture = model.reviewed(lines: lines, fieldDrafts: structuredLines) else { return }
-                        onReviewed(capture); dismiss()
+                        onReviewed(capture); if dismissOnReview { dismiss() }
                     }
             } else {
             Section {
-                Text(captureText("Capture is optional. You can always type your list."))
+                Text(captureText(requestMode ? "Capture is optional. You can always type your request." : "Capture is optional. You can always type your list."))
                 Text(captureText("Speech and photo text recognition run on this iPhone. Nothing is added until you review the list."))
                     .font(.footnote).foregroundStyle(.secondary)
                 Text(captureText("Actual destination") + ": " + destination)
@@ -67,8 +69,8 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
                     }
                 }
             }
-            Section(captureText("Your editable list")) {
-                Text(captureText("One item per line. Check item names, amounts, units and any exclusions."))
+            Section(captureText(requestMode ? "Your editable request" : "Your editable list")) {
+                Text(captureText(requestMode ? "Review one request at a time. Check the item, amount, packs, purpose and exclusions; skip any other captured lines." : "One item per line. Check item names, amounts, units and any exclusions."))
                 TextEditor(text: $model.text).frame(minHeight: 180)
                     .accessibilityLabel(captureText("List text to review")).accessibilityIdentifier("capture.editor")
                     .accessibilityFocused($reviewFocused)
@@ -121,7 +123,7 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
             }
             }
         }
-        .navigationTitle(captureText("Capture a list"))
+        .navigationTitle(captureText(requestMode ? "Capture a request" : "Capture a list"))
         .scrollDismissesKeyboard(.interactively)
         .toolbar { ToolbarItem(placement: .cancellationAction) {
             Button(captureText("Cancel")) { close(); dismiss() }

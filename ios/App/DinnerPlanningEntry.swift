@@ -5,6 +5,11 @@ import Combine
 /// The local ledger remains private even while an account is signed in. Restored
 /// planning documents never supply the installation actor, permission or paid seat.
 struct DinnerPlanningEntry: View {
+    let destination: ContextualDinnerDestination?
+    @State private var expectedShopID: UUID?
+    init(destination: ContextualDinnerDestination? = nil, expectedShopID: UUID? = nil) {
+        self.destination = destination; _expectedShopID = State(initialValue: expectedShopID)
+    }
     @EnvironmentObject private var ledger: LedgerModel
     @EnvironmentObject private var pickup: PickupModel
     @EnvironmentObject private var household: HouseholdModel
@@ -12,14 +17,27 @@ struct DinnerPlanningEntry: View {
     @EnvironmentObject private var membership: MembershipCoordinator
 
     var body: some View {
-        DinnerPlanningHome(ledger: ledger, access: localAccess, phase: phase, ideaCatalog: DinnerPatternCatalog.patterns,
-            runtimeChanges: Publishers.Merge4(access.objectWillChange, pickup.objectWillChange,
-                household.objectWillChange, membership.objectWillChange).eraseToAnyPublisher())
-            .task { await pickup.load() }
+        Group {
+            if let expectedShopID, ledger.shop?.id != expectedShopID {
+                ContentUnavailableView(dinnerText("Pickup selection changed"), systemImage: "arrow.triangle.2.circlepath",
+                    description: Text(dinnerText("Return to the original pickup before reviewing these dinner choices or store quotes.")))
+            } else if let destination {
+                ContextualDinnerFeature(ledger: ledger, destination: destination, access: localAccess, phase: phase,
+                    runtimeChanges: runtimeChanges)
+            } else {
+                DinnerPlanningHome(ledger: ledger, access: localAccess, phase: phase, ideaCatalog: DinnerPatternCatalog.patterns,
+                    runtimeChanges: runtimeChanges)
+            }
+        }.task { await pickup.load() }
+    }
+    private var runtimeChanges: AnyPublisher<Void, Never> {
+        Publishers.Merge4(access.objectWillChange, pickup.objectWillChange,
+            household.objectWillChange, membership.objectWillChange).eraseToAnyPublisher()
     }
 
     private func localAccess(for shopID: UUID) -> DinnerAccessContext? {
-        guard access.unlocked, !household.locked, ledger.ready, pickup.ready,
+        guard expectedShopID == nil || expectedShopID == shopID,
+              access.unlocked, !household.locked, ledger.ready, pickup.ready,
               !pickup.saving, !pickup.hasPendingSave,
               let workspaceID = ledger.sourceWorkspaceID,
               ledger.workspace.shops.contains(where: { $0.id == shopID }) else { return nil }

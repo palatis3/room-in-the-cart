@@ -64,6 +64,7 @@ struct PickupCookNote: Codable, Equatable, Identifiable {
     let revision: Int64
     var sentTo: String?
     var sentAt: Date?
+    var reviewedHandoff: CookHandoffReview?
 }
 struct PickupOfferAction: Codable, Equatable, Identifiable {
     let id: UUID
@@ -83,6 +84,7 @@ struct PickupOffer: Codable, Equatable, Identifiable {
     let fallback: String
     var householdPreference: String
     var retailerResponse: String
+    var evaluation: PickupOfferEvaluationEvidence? = nil
 }
 struct PickupNeedDetail: Codable, Equatable, Identifiable {
     let id: UUID
@@ -122,6 +124,7 @@ struct PickupJourney: Codable, Equatable, Identifiable {
     var offers: [PickupOffer] = []
     var offerActions: [PickupOfferAction] = []
     var notes: [PickupCookNote] = []
+    var recipientSends: [RecipientSend]?
     var cookShareEvents: [PickupCookShareEvent] = []
     var settlement = SettlementLedger()
     var feedback: PickupFeedback?
@@ -133,6 +136,7 @@ struct PickupJourney: Codable, Equatable, Identifiable {
 // Required identity/version/date still fail closed, and validate checks all links.
 extension PickupJourney {
     private enum CodingKeys: String, CodingKey {
+        case recipientSends
         case id, savedAt, version, revision, basket, context, cap, quote, quotedRevisionID, frozenQuotes, pickup, needs, plannedNeeds, needDetails, ledgerBasis, ledgerSourceRevisionID, ledgerPackSelections, originShopID, carriedMeals, urgent, stockLots, stockNeeds, repairs, deferred, flexible, proposals, undoneProposals, offers, offerActions, notes, cookShareEvents, settlement, closedAt, feedback
     }
     init(from decoder: Decoder) throws {
@@ -166,6 +170,7 @@ extension PickupJourney {
         if let decoded = try container.decodeIfPresent([PickupOffer].self, forKey: .offers) { offers = decoded }
         if let decoded = try container.decodeIfPresent([PickupOfferAction].self, forKey: .offerActions) { offerActions = decoded }
         if let decoded = try container.decodeIfPresent([PickupCookNote].self, forKey: .notes) { notes = decoded }
+        recipientSends = try container.decodeIfPresent([RecipientSend].self, forKey: .recipientSends)
         if let decoded = try container.decodeIfPresent([PickupCookShareEvent].self, forKey: .cookShareEvents) { cookShareEvents = decoded }
         if let decoded = try container.decodeIfPresent(SettlementLedger.self, forKey: .settlement) { settlement = decoded }
         feedback = try container.decodeIfPresent(PickupFeedback.self, forKey: .feedback)
@@ -231,7 +236,8 @@ struct PickupPersistenceLocation {
                 }
             }
         }
-        let orderedNeeds = value.needs.map { StockNeed(id: $0.id, foodID: $0.orderLineID, name: $0.name, amount: $0.amount, priority: $0.priority) }
+        let commitments = value.pickup == nil ? value.plannedNeeds : value.needs
+        let orderedNeeds = commitments.map { StockNeed(id: $0.id, foodID: $0.orderLineID, name: $0.name, amount: $0.amount, priority: $0.priority) }
         return try? ConfirmedStockAllocator.allocate(lots: lots, needs: orderedNeeds + value.stockNeeds)
     }
     var stockAllocation: StockAllocationResult? { allocation }
@@ -417,8 +423,10 @@ struct PickupPersistenceLocation {
         return basket.snapshots.last { $0.revision.id == basket.current.id }
     }
     func frozenText() -> String? {
-        guard let snapshot = frozenSnapshot else { return nil }
-        return "\(pTr("Reviewed pickup")) · \(snapshot.createdAt.formatted())\n\(pTr("Revision")) \(snapshot.revision.number)\n" + snapshot.revision.lines.map { "\($0.name) — \(pQuantity($0.quantity))" }.joined(separator: "\n")
+        frozenSnapshot.map(Self.datedRetailerText)
+    }
+    static func datedRetailerText(_ snapshot: HandoffSnapshot) -> String {
+        "\(pTr("Reviewed pickup")) · \(snapshot.createdAt.formatted())\n\(pTr("Revision")) \(snapshot.revision.number)\n" + snapshot.revision.lines.map { "\($0.name) — \(pQuantity($0.quantity))" }.joined(separator: "\n")
     }
     @discardableResult func recordHandoff(_ kind: HandoffActionKind, destination: String? = nil) async -> Bool {
         guard let snapshot = frozenSnapshot else { return false }
@@ -470,6 +478,49 @@ struct PickupPersistenceLocation {
         catch { self.error = pTr("Check the confirmed food amounts and matching units."); return false }
         return await save(value)
     }
+    @discardableResult func saveStockLot(_ lot: ConfirmedStockLot, in journeyID: UUID,
+                                         replacing original: ConfirmedStockLot? = nil,
+                                         carriedFrom priorLot: ConfirmedStockLot? = nil,
+                                         createIfEmpty: Bool = false) async -> Bool {
+        if !ready { await load() }
+        var candidate = journey
+        if createIfEmpty, ready, journeys.isEmpty, original == nil, priorLot == nil {
+            candidate = PickupJourney(id: journeyID, savedAt: clock())
+        }
+        guard var current = candidate, current.id == journeyID, current.closedAt == nil,
+              !saving, pending == nil, lot.source != .manual,
+              !lot.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              lot.confirmedAt <= clock(),
+              lot.id == lot.foodID || current.stockNeeds.contains(where: { $0.foodID == lot.foodID })
+                || current.basket?.current.lines.contains(where: { $0.id == lot.foodID }) == true
+                || current.pickup?.orderLines.contains(where: { $0.id == lot.foodID }) == true else {
+            error = pTr("Check the confirmed food amounts and matching units.")
+            return false
+        }
+        let existing = current.stockLots.first { $0.id == lot.id }
+        if let priorLot {
+            guard original == nil, lot.id == priorLot.id, priorLot.source != .manual,
+                  let previous = journeys.first(where: { $0.id == current.originShopID }),
+                  previous.stockLots.contains(priorLot), lot.confirmedAt >= priorLot.confirmedAt else {
+                error = pTr("Review the saved batch again before changing it.")
+                return false
+            }
+        }
+        if existing == lot { return true }
+        let canCorrect = original.map { batch in
+            batch.id == lot.id && batch.source != .manual && (batch.foodID == lot.foodID || batch.foodID == batch.id)
+        } ?? true
+        guard existing == original, canCorrect else {
+            error = pTr("Review the saved batch again before changing it.")
+            return false
+        }
+        if let index = current.stockLots.firstIndex(where: { $0.id == lot.id }) {
+            current.stockLots[index] = lot
+        } else {
+            current.stockLots.append(lot)
+        }
+        return await save(current)
+    }
     @discardableResult func settle(_ entry: SettlementEntry) async -> Bool {
         await change { value in
             guard value.pickup != nil else { throw PickupModelError.invalid }
@@ -478,12 +529,13 @@ struct PickupPersistenceLocation {
     }
     static func validate(_ value: PickupJourney) throws {
         guard value.feedback == nil || value.eligibleForFeedback, value.version == 1, value.revision >= 0, value.savedAt.timeIntervalSinceReferenceDate.isFinite,
-              value.basket != nil || !value.urgent.isEmpty,
+              value.basket != nil || !value.urgent.isEmpty || value.stockLots.contains(where: { $0.id == $0.foodID && $0.source != .manual }),
               value.basket == nil || value.basket?.id == value.id,
               Set(value.urgent.map(\.id)).count == value.urgent.count,
               Set(value.notes.map(\.id)).count == value.notes.count,
               Set(value.repairs.map(\.id)).count == value.repairs.count,
               Set(value.deferred.map(\.id)).count == value.deferred.count else { throw PickupModelError.invalid }
+        try value.validateRecipientSends()
         try value.ledgerBasis?.validate()
         guard value.ledgerPackSelections.count <= 10_000,
               Set(value.ledgerPackSelections.map(\.lineID)).count == value.ledgerPackSelections.count else { throw PickupModelError.invalid }
