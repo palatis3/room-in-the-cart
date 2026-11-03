@@ -1,0 +1,38 @@
+{
+  "recordedAt": "2026-11-03T20:09:11.868757+00:00",
+  "scope": "Production createRuntime privacy composition; local isolated PostgreSQL and HTTP regression, no deployment/provider mutation",
+  "change": "createRuntime always constructs PrivacyService(repository) without gateway or policy, enabling authenticated responsibility preview, existing scoped status receipts and recent-auth household exit while preserving unavailable new account deletion",
+  "checks": [
+    {
+      "kind": "TypeScript compile",
+      "command": "npm run build",
+      "result": "passed"
+    },
+    {
+      "kind": "production-runtime real HTTP/PostgreSQL regressions",
+      "command": "node --test tests/runtime-privacy.integration.mjs tests/runtime.test.mjs",
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "newTests": 3,
+      "database": "isolated ritc_runtime_privacy_audit using Unix /tmp socket, current migrations001\u2013019",
+      "identityScope": "Production JOSE signature/issuer/audience/claims verification with trusted fixture JWKS retrieval; production Supabase live-session SQL retained",
+      "proved": [
+        "Authenticated preview reaches PrivacyService and returns deletionAvailablefalse with unknown retention policy",
+        "Missing deletion provider/policy returns503 before job insertion or membership revocation",
+        "Existing pending status receipt remains readable without enabling new deletion or claiming provider erasure; wrong token404",
+        "Household exit acts on exactly reviewed scope, replays once and preserves another household/provider session",
+        "Stale recent-auth proof and absent/expired provider session are rejected"
+      ]
+    }
+  ],
+  "sourceSha256": {
+    "service/src/runtime.ts": "e38addef6d2dfa1a50a53f825cf2a4de19b4abd619e32ea92c2172d600b44b32",
+    "service/tests/runtime-privacy.integration.mjs": "e26171a20c3502934521d7f8b50ffb173ee2bc98e3432ca5f6e8ad9204410225"
+  },
+  "compiledRuntimeSha256": "05c83dbef54ee2d1105410c744912f9dbf2bec45d1f70480834bc2d593a4230f",
+  "remainingGates": [
+    "Hosted deployment and real provider sessions",
+    "Actual account-deletion gateway, approved retention policy and worker operations remain disabled/unconfigured"
+  ]
+}

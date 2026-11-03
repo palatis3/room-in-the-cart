@@ -73,6 +73,14 @@ export class PrivacyService {
 }
 export class PrivacyMaintenance {
  constructor(private readonly pool:Database,private readonly options:{provider?:AccountDeletionProvider}={}){}
+ // Production may retire already-completed receipts using their persisted dates
+ // without granting permission to claim, erase, or delete any pending account.
+ async cleanup(input:{batchSize?:number;signal?:AbortSignal}={}){
+  input.signal?.throwIfAborted();await assertWorkerRole(this.pool);
+  const batch=z.number().int().min(1).max(100).parse(input.batchSize??25);
+  input.signal?.throwIfAborted();const row=(await this.pool.query('SELECT * FROM ritc.privacy_cleanup($1)',[batch])).rows[0];
+  input.signal?.throwIfAborted();return{receiptsCleared:row.receipts_cleared as number,jobsPurged:row.jobs_purged as number};
+ }
  async run(input:{batchSize?:number;timeBudgetMs?:number}={}){
   await assertWorkerRole(this.pool);const batch=z.number().int().min(1).max(100).parse(input.batchSize??25),budget=z.number().int().min(1000).max(25000).parse(input.timeBudgetMs??20000),start=Date.now();
   const cleanup=(await workerQuery(this.pool,'SELECT * FROM ritc.privacy_cleanup($1)',[batch])).rows[0];

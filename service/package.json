@@ -10,6 +10,8 @@
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && node --test tests/*.test.mjs src/billing/tests/*.test.mjs",
     "start": "node dist/main.js",
+    "operations": "node dist/operations-cli.js",
+    "test:operations": "npm run build && node scripts/test-operations.mjs",
     "migrate": "node scripts/migrate.mjs",
     "test:integration": "npm run build && node scripts/test-database.mjs"
   },

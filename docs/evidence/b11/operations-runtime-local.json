@@ -1,0 +1,162 @@
+{
+  "recordedAt": "2026-11-03T20:19:16.280Z",
+  "scope": "Local source implementation and fictional-provider verification only",
+  "node": "v22.14.0",
+  "postgres": "17.11",
+  "databaseTransport": "Disposable PostgreSQL database over Unix socket /tmp port 55432",
+  "tests": [
+    {
+      "command": "npm --prefix service run test:operations",
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0,
+      "log": "docs/evidence/b11/operations-runtime-local.log"
+    },
+    {
+      "command": "npm --prefix service test",
+      "passed": 61,
+      "failed": 0,
+      "skipped": 1,
+      "skipReason": "Billing PostgreSQL case requires its dedicated integration fixture; actual worker/PostgreSQL coverage is in operations suite"
+    }
+  ],
+  "verified": [
+    "Actual HTTP bearer rejection before database construction",
+    "Exact path/method/query/body checks",
+    "Application/superuser/combined-worker role denial",
+    "Actual PostgreSQL startup statement and lock timeouts and raw-table denial",
+    "Disabled-email deployment composition with public provider metadata",
+    "Browser authentication expiry and durable provider-outage retry",
+    "Expired provider-session revocation honestly unconfirmed",
+    "Exclusive leases, lost completion and abandoned lease recovery",
+    "Interrupted aggregate deadline preserves pending lease instead of completing",
+    "Completed privacy receipt/marker cleanup by persisted dates",
+    "Pending privacy jobs never claimed, erased, or sent to provider",
+    "Runnable CLI status/run and content-free error reporting"
+  ],
+  "bounds": {
+    "batchSize": 25,
+    "aggregateDeadlineMs": 25000,
+    "authLoopBudgetMs": 10000,
+    "statementTimeoutMs": 2000,
+    "lockTimeoutMs": 500,
+    "connectionAndClientQueryTimeoutMs": 3000,
+    "providerTimeoutMs": 5000,
+    "functionMaxDurationSeconds": 60
+  },
+  "schedule": {
+    "cronUTC": "0 8 * * *",
+    "path": "/internal/maintenance",
+    "rewrite": "/api/maintenance",
+    "precision": "Daily slow reconciliation; no exact execution or prompt retry guarantee"
+  },
+  "gates": {
+    "providerAccountDeletionEnabled": false,
+    "privacyJobProcessingEnabled": false,
+    "retentionPolicyApproved": false,
+    "remoteDeploymentPerformed": false,
+    "remoteMigrationPerformed": false,
+    "cronExecutionVerified": false,
+    "liveProviderRevocationVerified": false,
+    "externalAlertConfigured": false
+  },
+  "appliedMigrations": [
+    {
+      "version": "001_household_requests.sql",
+      "checksum": "e919302e353eae03f5cf63425ad82924c3c6315321b8b4b07e1253185e79ef5b"
+    },
+    {
+      "version": "002_apple_billing.sql",
+      "checksum": "2f819c06c49f47e32c0093c636bacdfd95ad299ed159337b39041d173385ca6e"
+    },
+    {
+      "version": "003_web_session.sql",
+      "checksum": "dd2b9967be0364bf313afba035e8a60fec948a94aa1cf182e9fea14e269888cb"
+    },
+    {
+      "version": "004_household_lock.sql",
+      "checksum": "65fef08a239f4ea122133c335d56918e9d2ef2c4455418f36e18b6442a473250"
+    },
+    {
+      "version": "005_session_and_policy_hardening.sql",
+      "checksum": "3504fec9398d40cad639aa50c931d7cbe6b585e7cf2dc5059f227b3e87727d45"
+    },
+    {
+      "version": "006_household_lifecycle.sql",
+      "checksum": "7f293a0b681627cccb2d5bdc943eb3ea5c6e1436b063857f4a33f981cced296c"
+    },
+    {
+      "version": "007_selected_helper_session.sql",
+      "checksum": "422f3b0cafc482adb3708689c11bbbab1d026aac69555a8dafcbd3a525f2fca5"
+    },
+    {
+      "version": "008_browser_email_auth.sql",
+      "checksum": "5ad8c46d4146e1ce980e4f8809afa00512b9ed6ae6e41fd76637e0d86a713e1e"
+    },
+    {
+      "version": "009_auth_maintenance.sql",
+      "checksum": "b4e33a77bc0a9576a763062e8f3dddf00c019ecbe5464ad300b1e5fa0e872b6e"
+    },
+    {
+      "version": "010_account_lifecycle.sql",
+      "checksum": "e35ebbc6a2d1fcc3f7d03420542eb4ce588c3708e8bb31fcfc3ec0cc283daa22"
+    },
+    {
+      "version": "011_helper_review_and_shop_selection.sql",
+      "checksum": "23457cac7c614eb8794ec0268641cd1130558ce8d8c576c4ce8bd994253d07b9"
+    },
+    {
+      "version": "012_price_budget_history.sql",
+      "checksum": "dad295084f43a58cd15f58524575e98df66a77bdb0a17bd0f9555b3eac05c5c2"
+    },
+    {
+      "version": "013_shared_meal_occurrences.sql",
+      "checksum": "f574ff8a6b73f0959c622053b9ebd3408d05629d653709a40d631cc58259e1d5"
+    },
+    {
+      "version": "014_shared_meal_moves.sql",
+      "checksum": "2673ea349e6a7cd4df823e4128e4059533049b46071b03a1a1dc90a0d6e90a95"
+    },
+    {
+      "version": "015_family_decisions.sql",
+      "checksum": "c9779d5c19bcbb2e2bc5b3f4ffe0793e459375892d9616d5c0db2ac82686def1"
+    },
+    {
+      "version": "016_shared_meal_changes.sql",
+      "checksum": "362138035995832cc6b1bbffb6e9c0528ee2576945a908a14db03104355da6b0"
+    },
+    {
+      "version": "017_shared_meal_ideas.sql",
+      "checksum": "fe61e6528a38cc9c6c4315587d12ee540ea624422a8e89f8933f05e75addab63"
+    },
+    {
+      "version": "018_shared_store_quotes.sql",
+      "checksum": "ad18c9602e2f3c16d30f1f504ed833995bd2d09231ec405d50c7db592622b849"
+    },
+    {
+      "version": "019_optional_measurement.sql",
+      "checksum": "11cf0700dd146331a6997cca80b011a04fc8028c403745dd9e6b1d8121e959a2"
+    },
+    {
+      "version": "020_operations_health.sql",
+      "checksum": "daa858b576a969c5c8297a87ed88deeb4cda5c24a0b9f588f5a3429e92a0c2e7"
+    }
+  ],
+  "sourceHashes": {
+    "api/maintenance.js": "37743f1829602e8f0227d2dab56f377898d80c05e8a48e107a3aff9e11da9162",
+    "service/src/operations-runtime.ts": "689d61e34f7ac25b3270bd0387a90a2e3b4263159dad65e251e5ef46e314264f",
+    "service/src/operations-http.ts": "327c382f0f57132e8ba3d8add721d36cb3ccd46946134ecdf03d24835477d36e",
+    "service/src/operations-cli.ts": "a49d73d9d4affa99443601cb0be0b76affb9e393097ff5e5b0d60d1419632a8e",
+    "service/src/maintenance.ts": "599e5bf22aa9b3c5a37537ebc6f56ed82089a8299bac326f8d1bea2504abd249",
+    "service/src/privacy.ts": "e9644d5582f8ae9e8d86ba9f3164ac5f43cb1d167cceaa08c9749bae9b869c6f",
+    "service/migrations/020_operations_health.sql": "daa858b576a969c5c8297a87ed88deeb4cda5c24a0b9f588f5a3429e92a0c2e7",
+    "service/package.json": "d0c1bccda92b7c2998b1b65a97499fa69aad7be56fd977b64cd4369c4d5b9064",
+    "service/scripts/test-operations.mjs": "8c41e650b48626a6fb77b79a3c1ed63ace7205fd40b1da05b6e894de0de8aa94",
+    "service/tests/operations.test.mjs": "a3f4141f13d0ad58b519cdbed4d51b6b49e374a6c514a0f95ce79648895a91d9",
+    "service/tests/runtime.operations.mjs": "272ce05f73459e4320f3855cbfe17df124c47d9829eb9f49f200bba1d450f4fc",
+    "service/tests/maintenance.operations.mjs": "77a62703fdca6d0303955d5c6d26197accb3f69cee7e99bb828bf92a28179fd7",
+    "service/OPERATIONS.md": "8f7ee3aa92268b0d13d67ba361d8ad8397e7c4baa541d09bcccb7600619069d8",
+    "service/API-PRIVACY.md": "07a8313083ad7d21560c13e09da18dba492c6788036b026904f73a202d75e579",
+    "vercel.json": "8b703b4ab3d29d1a9bc10b604ac12210a6d57bc725e5f8571cf35a5b70f1262d"
+  }
+}

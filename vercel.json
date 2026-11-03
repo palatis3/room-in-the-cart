@@ -10,9 +10,22 @@
   "functions": {
     "api/index.js": {
       "maxDuration": 30
+    },
+    "api/maintenance.js": {
+      "maxDuration": 60
     }
   },
+  "crons": [
+    {
+      "path": "/internal/maintenance",
+      "schedule": "0 8 * * *"
+    }
+  ],
   "rewrites": [
+    {
+      "source": "/internal/maintenance",
+      "destination": "/api/maintenance"
+    },
     {
       "source": "/help",
       "destination": "/index.html"

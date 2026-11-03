@@ -8,6 +8,7 @@ import { JWTIdentityVerifier, DenyIdentityVerifier, SupabaseSessionVerifier } fr
 import { HouseholdRepository } from './repository.js';
 import { createHTTPServer } from './http.js';
 import { BrowserAuthService, SupabaseEmailOTPProvider } from './browser-auth.js';
+import { PrivacyService } from './privacy.js';
 
 /** Trust Vercel's overwritten edge metadata only inside its deployed runtime.
  * https://vercel.com/docs/headers/request-headers#x-vercel-forwarded-for
@@ -65,7 +66,13 @@ export async function createRuntime(environment: NodeJS.ProcessEnv = process.env
         { encryptionKey: environment.BFF_TOKEN_ENCRYPTION_KEY });
     }
     const clientAddress = deploymentClientAddress(environment);
+    // Free responsibility preview, existing status receipts and household exit
+    // do not depend on an account-deletion provider. The default service keeps
+    // accepting new deletion jobs disabled until a reviewed gateway and numeric
+    // retention policy are explicitly supplied by the deployment owner.
+    const privacy = new PrivacyService(repository);
     const server = createHTTPServer({ repository, verifier, billing: new BillingService(appleGatewayFromEnvironment(environment)),
+      privacy,
       ...(webOrigin ? { webOrigin } : {}), ...(browserAuth ? { browserAuth } : {}), ...(clientAddress ? { clientAddress } : {}) });
     server.requestTimeout = 15_000;
     server.headersTimeout = 10_000;
