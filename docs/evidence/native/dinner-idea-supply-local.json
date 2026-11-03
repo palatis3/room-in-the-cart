@@ -71,5 +71,38 @@
     ],
     "screenshot": "dinner-idea-reviewed-pack-es.png",
     "scope": "The localized entry, pack yield, singular and plural units, USD price, explicit approval and empty list after restarting were verified through the normal controls."
+  },
+  "unsignedDeviceArchive": {
+    "sourceRevision": "82b4666",
+    "path": ".build/RoomInTheCart-ReviewedDinners.xcarchive",
+    "configuration": "Release",
+    "destination": "generic/platform=iOS",
+    "signed": false,
+    "metadataVerified": [
+      "app icon",
+      "privacy manifest",
+      "environment isolation",
+      "service configuration"
+    ],
+    "executables": [
+      {
+        "bundle": "RoomInTheCart.app",
+        "identifier": "dev.roominthecart.app",
+        "architectures": "arm64",
+        "binarySHA256": "29230c5ff7f7340695499bc72c3a6cfe17f78caa917e3b6583befb208cfedd60"
+      },
+      {
+        "bundle": "RoomInTheCartShare.appex",
+        "identifier": "dev.roominthecart.app.share",
+        "architectures": "arm64",
+        "binarySHA256": "7996f4c74be76f2ce3e9fd786670be9c9b84008c4b9455965424ebf6685420a8"
+      },
+      {
+        "bundle": "RoomInTheCartWidget.appex",
+        "identifier": "dev.roominthecart.app.widget",
+        "architectures": "arm64",
+        "binarySHA256": "3160ba6d65d8341626b72d0a05cce8738c63b4df8a8df6a3d3fd8118fd741119"
+      }
+    ]
   }
 }
