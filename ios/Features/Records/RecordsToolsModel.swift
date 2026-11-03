@@ -39,6 +39,8 @@ import RecordArchive
     private let deleteSource: Delete?
     private let wholeLedgerDeletionAction: (() async throws -> Void)?
     private let cleanupRecovered: (() async throws -> Void)?
+    private let willRemoveRecovered: () -> Void
+    private var recoveredOpenGeneration = UUID()
     private let deletable: (ArchiveRecord) -> Bool
     private let sourceUndo: (() async throws -> Void)?
     private let beginAuthorization: () -> Authorization?
@@ -55,11 +57,12 @@ import RecordArchive
     static func mediaSelectionID(_ media: ArchiveMediaAttachment, record: ArchiveRecord) -> String { selectionID(record) + "/media/" + media.id }
 
     init(registry: RecoveryRegistry, snapshot: @escaping Snapshot, validateNativePayload: @escaping Validate,
-         openRecovered: @escaping Open, deleteSource: Delete? = nil, undoSourceDeletion: (() async throws -> Void)? = nil, canDeleteSource: @escaping (ArchiveRecord) -> Bool = { _ in true }, cleanupRecoveredWorkspaces: (() async throws -> Void)? = nil, reviewWholeLedgerDeletion: (() async throws -> Void)? = nil, unavailableRecords: @escaping () -> [RecordsUnavailableRecord] = { [] }, beginAuthorization: @escaping () -> Authorization? = { { true } }) {
+         openRecovered: @escaping Open, deleteSource: Delete? = nil, undoSourceDeletion: (() async throws -> Void)? = nil, canDeleteSource: @escaping (ArchiveRecord) -> Bool = { _ in true }, cleanupRecoveredWorkspaces: (() async throws -> Void)? = nil, willRemoveRecovered: @escaping () -> Void = {}, reviewWholeLedgerDeletion: (() async throws -> Void)? = nil, unavailableRecords: @escaping () -> [RecordsUnavailableRecord] = { [] }, beginAuthorization: @escaping () -> Authorization? = { { true } }) {
         self.registry = registry; self.snapshot = snapshot; self.validate = validateNativePayload
         self.open = openRecovered; self.deleteSource = deleteSource; self.sourceUndo = undoSourceDeletion; self.deletable = canDeleteSource; self.cleanupRecovered = cleanupRecoveredWorkspaces; self.wholeLedgerDeletionAction = reviewWholeLedgerDeletion
         self.unavailableSnapshot = unavailableRecords
         self.beginAuthorization = beginAuthorization
+        self.willRemoveRecovered = willRemoveRecovered
     }
     private func readSnapshot() async throws -> [ArchiveRecord] {
         let records = try await snapshot()
@@ -206,19 +209,33 @@ import RecordArchive
     }
     func undoImport() async {
         guard !lastImportIDs.isEmpty else { return }
-        do { try await registry.undoImport(insertedCopyIDs: lastImportIDs); lastImportIDs = []; try await cleanupRecovered?(); currentRecords = try await readSnapshot(); recoveredRecords = try await registry.refreshList(); publishOutcome(recordsText("The imported batch was undone.")) }
+        do {
+            let authorize = try authorization()
+            cancelRecoveredOpen()
+            try await registry.undoImport(insertedCopyIDs: lastImportIDs); lastImportIDs = []; try await cleanupRecovered?()
+            try requireAuthorization(authorize)
+            currentRecords = try await readSnapshot(); recoveredRecords = try await registry.refreshList()
+            try requireAuthorization(authorize)
+            publishOutcome(recordsText("The imported batch was undone."))
+        }
         catch { fail(error) }
     }
     func openRecovered(_ record: RecoveredRecord) async {
+        let generation = recoveredOpenGeneration
         do {
             let authorize = try authorization()
             try await validateRecord(record.record); try requireAuthorization(authorize)
+            guard recoveredOpenGeneration == generation else { return }
             try await open(record); try requireAuthorization(authorize)
+            guard recoveredOpenGeneration == generation else { return }
             if record.record.kind != .recipe { lastImportIDs = [] }
-        } catch { fail(error) }
+        } catch { if recoveredOpenGeneration == generation { fail(error) } }
     }
+    private func cancelRecoveredOpen() { recoveredOpenGeneration = UUID(); willRemoveRecovered() }
     func deleteRecovered(_ scope: RecoveryDeleteScope) async {
         do {
+            let authorize = try authorization()
+            cancelRecoveredOpen()
             let token = try await registry.delete(scope)
             let outcome: String
             if let cleanupRecovered {
@@ -230,8 +247,10 @@ import RecordArchive
                 deleteUndo = token
                 outcome = recordsText("Deleted from this iPhone. Undo is available until you leave the app.")
             }
+            try requireAuthorization(authorize)
             currentRecords = try await readSnapshot()
             recoveredRecords = try await registry.refreshList()
+            try requireAuthorization(authorize)
             publishOutcome(outcome)
         }
         catch { fail(error) }
@@ -266,6 +285,7 @@ import RecordArchive
     /// Clear cached disclosures and pending imports before retiring a source. A new
     /// snapshot can only repopulate them after composition rechecks tombstones.
     func invalidateForSourceErasure() {
+        recoveredOpenGeneration = UUID()
         preparedDocument = nil; recoveryKey = ""; selectedIDs = []; selectedMediaIDs = []
         review = nil; reviewAuthorization = nil; recipeReport = nil; lastImportIDs = []; deleteUndo = nil
         currentRecords = []; recoveredRecords = []; unavailableRecords = []; status = nil; actionOutcomeID = nil; error = nil

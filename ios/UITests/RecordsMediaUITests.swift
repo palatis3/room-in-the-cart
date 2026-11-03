@@ -75,7 +75,9 @@ import XCTest
 
         tap(element("records.chooseFile"))
         let related = app.staticTexts["Related revision — keep both copies"]
-        XCTAssertTrue(related.waitForExistence(timeout: 12))
+        // Separate native Form rows are lazy: bring passive review text into the
+        // viewport before querying it. Completed-action status below must still
+        // become visible automatically, without this scrolling helper.
         reveal(related, requiresHitTarget: false)
         capture("F07 sibling review before cancelling import")
         tap(element("records.cancelImport"))
@@ -84,7 +86,7 @@ import XCTest
         XCTAssertFalse(element("records.applyImport").exists)
 
         tap(element("records.chooseFile"), upward: true)
-        XCTAssertTrue(related.waitForExistence(timeout: 12))
+        reveal(related, requiresHitTarget: false)
         tap(element("records.applyImport"))
         assertEvidence(copies: 2)
         assertVisibleStatus("Saved separate recovered copies. Your current work is unchanged.")

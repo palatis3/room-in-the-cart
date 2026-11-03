@@ -1,0 +1,177 @@
+{
+  "schemaVersion": 1,
+  "featureIDs": [
+    "F07",
+    "D15",
+    "D14"
+  ],
+  "status": "scoped-pass",
+  "date": "2026-11-03",
+  "scope": {
+    "baseline": "ec1c243",
+    "overlays": "overlay-manifest.json",
+    "excludes": [
+      "In-progress guardian native enrollment",
+      "Unconfirmed civil-date integration"
+    ],
+    "fullIntegratedCheckoutVerified": false,
+    "documentationFinalizedAfterBuild": true
+  },
+  "source": {
+    "snapshot": ".build/F07-Recovered-UIFinal-Source",
+    "manifest": "source-manifest.json",
+    "digest": "097d6c63b5e2d2fe57a733f9c3bc551f52d4cf480154b6dcb4e04a394ce31524",
+    "liveF07RuntimeAndTestSourceMatchesSnapshot": true
+  },
+  "binary": {
+    "products": ".build/F07-Recovered-UIFinal-Products",
+    "manifest": "binary-manifest.json",
+    "appExecutableSHA256": "89a85b4446bd78daeddb49a59fed008ccd992f644669bf74ed3e7e63de76514f",
+    "configuration": "Debug, arm64, DEBUG CONTRIBUTOR_CAPTURE_UI_FIXTURE"
+  },
+  "tests": {
+    "package": {
+      "passed": 33,
+      "failed": 0,
+      "log": ".build/f07-recovered-package.log",
+      "sourceAndTestBytesEqualFrozenSnapshot": true
+    },
+    "native": {
+      "passed": 49,
+      "failed": 0,
+      "newRecoveryCaptureRegressions": 9,
+      "focusedUniqueTotal": 77
+    },
+    "screen": {
+      "passed": 1,
+      "failed": 0,
+      "test": "RecordsMediaUITests/testSelectedPhotoDisclosureEncryptedPreviewCancelSiblingRecoveryAndReadablePhoto",
+      "seconds": 205.989,
+      "locale": "en_US",
+      "dynamicType": "default",
+      "simulator": "65B8A2FE-51FE-44A5-A9C7-F2524E33179B",
+      "device": "iPhone SE, iOS 17.0 / 21A328"
+    },
+    "combined": {
+      "passed": 50,
+      "failed": 0,
+      "skipped": 0,
+      "resultBundle": ".build/F07-Recovered-UIFinal.xcresult",
+      "log": ".build/f07-recovered-uifinal-tests.log",
+      "summary": "test-summary.json"
+    },
+    "localization": {
+      "catalogs": 15,
+      "entries": 3451,
+      "literalSourceKeys": 3309,
+      "log": ".build/f07-recovered-finalscoped-localization.log",
+      "method": "Exact source/checker copy outside .build; unchanged checker excludes .build ancestors."
+    },
+    "loggingAccommodation": [
+      "OS_ACTIVITY_MODE=disable in copied xctestrun test environments",
+      "-collect-test-diagnostics never disables only verbose system diagnostics; assertion/action logs and manually attached screenshots/AX remain"
+    ],
+    "supplemental": [
+      {
+        "classes": [
+          "StructuredCaptureTests"
+        ],
+        "passed": 14,
+        "failed": 0,
+        "resultBundle": ".build/F07-Recovered-UIFinal-CaptureStores.xcresult",
+        "log": ".build/f07-recovered-uifinal-capturestores.log",
+        "note": "Only StructuredCaptureTests matched; nonexistent ScanTests selector is not counted."
+      },
+      {
+        "classes": [
+          "ScanMediaStoreTests",
+          "CaptureCorrectionTests"
+        ],
+        "passed": 14,
+        "failed": 0,
+        "resultBundle": ".build/F07-Recovered-UIFinal-CaptureErasure.xcresult",
+        "log": ".build/f07-recovered-uifinal-capture-erasure.log"
+      }
+    ]
+  },
+  "nativeCoverage": [
+    "Import photo-bearing ledger, open actual independent SQLite LedgerStore, persist a new normalized JPEG under actual physical UUID, project fresh records, explicitly select/encrypt/reexport, sibling recovery and source preservation",
+    "Receipt and recipe references remain bound to actual native records and capture UUIDs",
+    "Wrong physical mapping rejected; imported unrelated mapping never drives live listing or cleanup",
+    "Digest-valid foreign/copy/kind journal, future/unknown fields, corruption, symlinks, protected root IDs and legacy journal derivation",
+    "Deletion cancellation, shared lease draining, stale row denial, denied deletion and stale-open outcome suppression; undo uses the same cancellation hook",
+    "Copy erasure retires new media and all correction locales; late saves denied; unrelated original namespace survives; media scrub retains copy directory"
+  ],
+  "captureMethodLimit": "Native regression creates a real reduced JPEG with UIGraphicsImageRenderer/ScanImageNormalizer and persists it through production CaptureMediaStore; it does not claim physical-camera or OCR-provider acceptance. Screen fixture seeds a real persisted JPEG; only system file selection/save destinations are adapted.",
+  "visualQA": {
+    "inspected": [
+      "source-photo.png",
+      "selected-size.png",
+      "sibling-review.png",
+      "recovered-photo.png",
+      "import-outcome.png",
+      "deletion-outcome.png",
+      "Local prepared-file screenshot in final attachments"
+    ],
+    "findings": [
+      "Separate Form rows no longer overlap in selected/recovered photo previews",
+      "Original wording, 51 KB selected size, sibling disposition and recovered photo are readable",
+      "Preview disclosure is a named native Button, 66 pt tall in captured review AX",
+      "Import status frame y=95/h=64.5; deletion status y=95/h=86.5; both automatic viewport assertions passed without test scrolling"
+    ],
+    "preparedScreenshotPromotion": "Prepared-file screenshot/AX remain only in ignored .build attachments because they include an ephemeral generated fixture recovery key.",
+    "artifacts": [
+      {
+        "file": "source-photo.png",
+        "sha256": "a1ae10a758aecd9008130a32d65761df78b76b788a911f2439129c1d7eb7da0b"
+      },
+      {
+        "file": "selected-size.png",
+        "sha256": "5770bb3bedc8e4bdd3203da78f4f140237ba893feaedcae8ae99f984cb2db7df"
+      },
+      {
+        "file": "sibling-review.png",
+        "sha256": "817832e0416eb0b38ecf256bccb067f19d407d8757fedd163b08e64279e388ce"
+      },
+      {
+        "file": "recovered-photo.png",
+        "sha256": "ea29b3c06d40b30efab563803c0271c527cf6bcce366b68442115810e7f634e0"
+      },
+      {
+        "file": "import-outcome.png",
+        "sha256": "d0891e66f0c042f7eae1c3dfcc56ccf24636043cc18fb8981dac5af54d39d769"
+      },
+      {
+        "file": "deletion-outcome.png",
+        "sha256": "0e164c90125f3e34f6d7711fbb346e673a0ec961c192cbf85a9c99aa47a11374"
+      },
+      {
+        "file": "sibling-review-ax.txt",
+        "sha256": "ee359f7c15a6175a0d31c4cafcdcc30f5df80847654a085f5361f5b86773ca07"
+      },
+      {
+        "file": "recovered-photo-ax.txt",
+        "sha256": "7ba1d8e5d0c0a7db003f35a87b1d3ff0478b05e31ab4bf9f89edf58cf01820f6"
+      },
+      {
+        "file": "import-outcome-ax.txt",
+        "sha256": "b388bf8f2ecaa0e1f4fa9e4fad29d9632de679ebbb82af711c19ffe18890b91f"
+      },
+      {
+        "file": "deletion-outcome-ax.txt",
+        "sha256": "dbbf00db3f236c69cc4720a8bb21968cd9b24bde6ba4aec2991385827af97ce6"
+      }
+    ]
+  },
+  "preservedDiagnostics": [
+    ".build/F07-Recovered-Finish-Source and f07-recovered-finish-build.log (fixed Scope actor isolation)",
+    ".build/F07-Recovered-Verified-Source and f07-recovered-verified-build.log (excluded partial guardian DTO compile failure)",
+    ".build/F07-Recovered-Scoped-Models.xcresult (invalid empty pickup fixture corrected; only owned 600-second simctl diagnose child terminated after test failure)",
+    ".build/F07-Recovered-FinalScoped-UI.xcresult and attachments (lazy passive review row queried before scroll; oracle order corrected)"
+  ],
+  "remainingGates": [
+    "Root fresh integrated native/ordinary Debug/unsigned Release build with all completed lanes",
+    "Physical camera/photo permission/device acceptance",
+    "Physical VoiceOver, large-text/language matrix and human US-Spanish review"
+  ]
+}

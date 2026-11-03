@@ -1,0 +1,20 @@
+{
+  "files": [
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/F07-Recovered-UIFinal-Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart",
+      "sha256": "89a85b4446bd78daeddb49a59fed008ccd992f644669bf74ed3e7e63de76514f"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/F07-Recovered-UIFinal-Products/Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/RoomInTheCartTests",
+      "sha256": "d01ac2668debdc74a7af774db8ede92d8770875f932f7b2fb7eaa45087a03c30"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/F07-Recovered-UIFinal-Products/Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/PlugIns/RoomInTheCartUITests.xctest/RoomInTheCartUITests",
+      "sha256": "56939d4f7008b2eb1aa48732b641efa0121bf1c884c85652c28343d20ffdc942"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/F07-Recovered-UIFinal-Products/RoomInTheCart_iphonesimulator27.1-arm64.xctestrun",
+      "sha256": "b4c95fdba3fd21bbc5e4e1a7a72be36afda18f08b24084edc59f3b6c54c567b2"
+    }
+  ]
+}

@@ -1,0 +1,113 @@
+Attributes: Application, 0x11c0d2eb0, pid: 59443, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x11c0d2eb0, pid: 59443, label: 'Room in the Cart'
+    Window (Main), 0x11c0dc7f0, {{0.0, 0.0}, {375.0, 667.0}}
+      Other, 0x11c0dcbb0, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x11c0dccd0, {{0.0, 0.0}, {375.0, 667.0}}
+          Other, 0x11c0dc910, {{0.0, 0.0}, {375.0, 667.0}}
+            Other, 0x11c0dca30, {{0.0, 0.0}, {375.0, 667.0}}
+              StaticText, 0x11c0dcdf0, {{48.5, 20.0}, {126.0, 13.5}}, identifier: 'fixture.records.recoveredCount', label: 'F07 recovered copies: 2'
+              StaticText, 0x11c0dcf10, {{182.5, 20.0}, {144.0, 13.5}}, identifier: 'fixture.records.sourceUnchanged', label: 'F07 source unchanged: yes'
+              StaticText, 0x11c0dd030, {{60.5, 35.5}, {112.5, 13.5}}, identifier: 'fixture.records.savedFiles', label: 'F07 encrypted files: 1'
+              StaticText, 0x11c0dd150, {{181.0, 35.5}, {133.5, 13.5}}, identifier: 'fixture.records.fileHidesSource', label: 'F07 file hides source: yes'
+              Other, 0x11c0dd270, {{0.0, 51.0}, {375.0, 616.0}}
+                NavigationBar, 0x11c0dd390, {{0.0, 51.0}, {375.0, 44.0}}, identifier: 'Data and recovery'
+                  StaticText, 0x11c0dd4b0, {{115.0, 63.0}, {145.0, 20.5}}, label: 'Data and recovery'
+                Other, 0x11c0dd5d0, {{0.0, 51.0}, {375.0, 616.0}}
+                  Other, 0x11c0dd6f0, {{0.0, 51.0}, {375.0, 616.0}}
+                    Other, 0x11c0dd810, {{0.0, 51.0}, {375.0, 616.0}}
+                      Other, 0x11c0dd930, {{0.0, 51.0}, {375.0, 616.0}}
+                        CollectionView, 0x11c0dda50, {{0.0, 51.0}, {375.0, 616.0}}, identifier: 'records.tools'
+                          Other, 0x11c0ddb70, {{-16.0, -215.0}, {407.0, 960.0}}
+                          Cell, 0x11c0ddc90, {{16.0, 46.5}, {343.0, 66.0}}
+                            Other, 0x11c0dddb0, {{16.0, 46.5}, {343.0, 66.0}}
+                              Other, 0x11c0dded0, {{16.0, 46.5}, {343.0, 66.0}}
+                            Other, 0x11c0ddff0, {{16.0, 46.5}, {343.0, 66.0}}
+                              Other, 0x11c0de110, {{16.0, 46.5}, {343.0, 66.0}}
+                                Other, 0x11c0de230, {{16.0, 46.5}, {343.0, 66.0}}
+                                  Button, 0x11c0de350, {{16.0, 46.5}, {343.0, 66.0}}, identifier: 'records.mediaPreview.77777777-7777-4777-8777-777777777777', label: 'Preview source reference: F07 wraps package photo', value: Expanded
+                                    StaticText, 0x11c0de470, {{32.0, 57.5}, {311.0, 44.0}}, label: 'Preview source reference'
+                                    Image, 0x11c0de590, {{326.0, 75.0}, {15.0, 9.0}}, label: 'Go Down'
+                          Cell, 0x11c0de6b0, {{16.0, 112.5}, {343.0, 44.0}}
+                            Other, 0x11c0de7d0, {{16.0, 112.5}, {343.0, 44.0}}
+                              Other, 0x11c0de8f0, {{16.0, 112.5}, {343.0, 44.0}}
+                            Other, 0x11c0dea70, {{16.0, 112.5}, {343.0, 44.0}}
+                              Other, 0x11c0deb90, {{16.0, 112.5}, {343.0, 44.0}}
+                                Other, 0x11c0decb0, {{16.0, 112.5}, {343.0, 44.0}}
+                                  StaticText, 0x11c0dedd0, {{16.0, 112.5}, {343.0, 44.0}}, label: 'F07 wraps package photo'
+                          Other, 0x11c0deef0, {{32.0, 112.0}, {327.0, 0.5}}
+                          Cell, 0x11c0df010, {{16.0, 156.5}, {343.0, 44.0}}
+                            Other, 0x11c0df130, {{16.0, 156.5}, {343.0, 44.0}}
+                              Other, 0x11c0df250, {{16.0, 156.5}, {343.0, 44.0}}
+                            Other, 0x11c0df370, {{16.0, 156.5}, {343.0, 44.0}}
+                              Other, 0x11c0df490, {{16.0, 156.5}, {343.0, 44.0}}
+                                Other, 0x11c0df5b0, {{16.0, 156.5}, {343.0, 44.0}}
+                                  StaticText, 0x11c0df6d0, {{16.0, 156.5}, {343.0, 44.0}}, label: 'Package reference'
+                          Other, 0x11c0df7f0, {{32.0, 156.0}, {327.0, 0.5}}
+                          Cell, 0x11c0df910, {{16.0, 200.5}, {343.0, 44.0}}
+                            Other, 0x11c0dfa30, {{16.0, 200.5}, {343.0, 44.0}}
+                              Other, 0x11c0dfb50, {{16.0, 200.5}, {343.0, 44.0}}
+                            Other, 0x11c0dfc70, {{16.0, 200.5}, {343.0, 44.0}}
+                              Other, 0x11c0dfd90, {{16.0, 200.5}, {343.0, 44.0}}
+                                Other, 0x11c0dfeb0, {{16.0, 200.5}, {343.0, 44.0}}
+                                  StaticText, 0x11c0dffd0, {{16.0, 200.5}, {343.0, 44.0}}, label: '51 KB'
+                          Other, 0x11c0e00f0, {{32.0, 200.0}, {327.0, 0.5}}
+                          Cell, 0x11c0e0210, {{16.0, 244.5}, {343.0, 44.0}}
+                            Other, 0x11c0e0330, {{16.0, 244.5}, {343.0, 44.0}}
+                              Other, 0x11c0e0450, {{16.0, 244.5}, {343.0, 44.0}}
+                            Other, 0x11c0e0570, {{16.0, 244.5}, {343.0, 44.0}}
+                              Other, 0x11c0e0690, {{16.0, 244.5}, {343.0, 44.0}}
+                                Other, 0x11c0e07b0, {{16.0, 244.5}, {343.0, 44.0}}
+                                  StaticText, 0x11c0e08d0, {{16.0, 244.5}, {343.0, 44.0}}, label: 'Nov 3, 2026 at 3:56 PM'
+                          Other, 0x11c0e09f0, {{32.0, 244.0}, {327.0, 0.5}}
+                          Cell, 0x11c0e0b10, {{16.0, 288.5}, {343.0, 200.0}}
+                            Other, 0x11c0e0c30, {{16.0, 288.5}, {343.0, 200.0}}
+                              Other, 0x11c0e0d50, {{16.0, 288.5}, {343.0, 200.0}}
+                            Other, 0x11c0e0e70, {{16.0, 288.5}, {343.0, 200.0}}
+                              Other, 0x11c0e0f90, {{16.0, 288.5}, {343.0, 200.0}}
+                                Other, 0x11c0e10b0, {{16.0, 288.5}, {343.0, 200.0}}
+                                  Image, 0x11c0e11d0, {{16.0, 288.5}, {343.0, 200.0}}, identifier: 'records.mediaImage.77777777-7777-4777-8777-777777777777', label: 'Selected reduced source photo'
+                          Other, 0x11c0e12f0, {{32.0, 288.0}, {327.0, 0.5}}
+                          Cell, 0x11c0e1410, {{16.0, 488.5}, {343.0, 64.5}}
+                            Other, 0x11c0e1530, {{16.0, 488.5}, {343.0, 64.5}}
+                              Other, 0x11c0e1650, {{16.0, 488.5}, {343.0, 64.5}}
+                            Other, 0x11c0e1770, {{16.0, 488.5}, {343.0, 64.5}}
+                              Other, 0x11c0e1890, {{16.0, 488.5}, {343.0, 64.5}}
+                                Other, 0x11c0e19b0, {{16.0, 488.5}, {343.0, 64.5}}
+                                  StaticText, 0x11c0e1ad0, {{16.0, 488.5}, {343.0, 64.5}}, identifier: 'records.mediaWording.77777777-7777-4777-8777-777777777777', label: 'F07 package wording: 8 wraps per pack. Review only.'
+                          Other, 0x11c0e1bf0, {{32.0, 488.0}, {327.0, 0.5}}
+                          Cell, 0x11c0e1d10, {{16.0, 553.0}, {343.0, 44.0}}
+                            Other, 0x11c0e1e30, {{16.0, 553.0}, {343.0, 44.0}}
+                              Other, 0x11c0e1f50, {{16.0, 553.0}, {343.0, 44.0}}
+                            Other, 0x11c0e2070, {{16.0, 553.0}, {343.0, 44.0}}
+                              Other, 0x11c0e2190, {{16.0, 553.0}, {343.0, 44.0}}
+                                Other, 0x11c0e22b0, {{16.0, 553.0}, {343.0, 44.0}}
+                                  Button, 0x11c0e23d0, {{16.0, 553.0}, {343.0, 44.0}}, label: 'Delete this recovered copy'
+                          Other, 0x11c0e24f0, {{32.0, 552.5}, {327.0, 0.5}}
+                          Cell, 0x11c0e2610, {{16.0, 597.0}, {343.0, 64.5}}
+                            Other, 0x11c0e2730, {{16.0, 597.0}, {343.0, 64.5}}
+                              Other, 0x11c0e2850, {{16.0, 597.0}, {343.0, 64.5}}
+                            Other, 0x11c0e2970, {{16.0, 597.0}, {343.0, 64.5}}
+                              Other, 0x11c0e2a90, {{16.0, 597.0}, {343.0, 64.5}}
+                                Other, 0x11c0e2bb0, {{16.0, 597.0}, {343.0, 64.5}}
+                                  Button, 0x11c0e2cd0, {{16.0, 597.0}, {343.0, 64.5}}, label: 'Delete recovered copies from this source'
+                          Other, 0x11c0e2df0, {{32.0, 596.5}, {327.0, 0.5}}
+                          Cell, 0x11c0e2f10, {{16.0, 661.5}, {343.0, 66.0}}
+                            Other, 0x11c0e3030, {{16.0, 661.5}, {343.0, 66.0}}
+                              Other, 0x11c0e3150, {{16.0, 661.5}, {343.0, 66.0}}
+                            Other, 0x11c0e3270, {{16.0, 661.5}, {343.0, 66.0}}
+                              Other, 0x11c0e3390, {{16.0, 661.5}, {343.0, 66.0}}
+                                Other, 0x11c0e34b0, {{16.0, 661.5}, {343.0, 66.0}}
+                                  Button, 0x11c0e35d0, {{16.0, 661.5}, {343.0, 66.0}}, identifier: 'records.recovered.F07 newer recovered work', label: 'Recovered copy: F07 newer recovered work', value: Collapsed
+                                    StaticText, 0x11c0e36f0, {{32.0, 672.5}, {311.0, 44.0}}, label: 'F07 newer recovered work'
+                                    Image, 0x11c0e3810, {{333.0, 687.0}, {9.0, 15.0}}, label: 'Forward'
+                          Other, 0x11c0e3930, {{32.0, 661.0}, {327.0, 0.5}}
+                          Other, 0x11c0e3a50, {{342.0, 95.0}, {30.0, 572.0}}, label: 'Vertical scroll bar, 6 pages', value: 81%
+                            Other, 0x11c0e3b70, {{369.0, 469.5}, {3.0, 110.0}}
+Path to element:
+ →Application, 0x11c0d2eb0, pid: 59443, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x11c0e3c90, pid: 59443, label: 'Room in the Cart'
+  }

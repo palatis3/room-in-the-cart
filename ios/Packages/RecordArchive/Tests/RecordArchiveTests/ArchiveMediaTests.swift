@@ -40,6 +40,16 @@ final class ArchiveMediaTests: XCTestCase {
         XCTAssertEqual(fixture.payload.records.first?.media?.count, 1)
         XCTAssertEqual(try ArchiveCodec.decode(ArchiveCodec.encode(fixture)), fixture)
     }
+    func testVersionOnePointTwoMappedMediaFixtureRetainsDeclaredProvenance() throws {
+        let directory = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Fixtures")
+        let fixture = try ArchiveCodec.decode(Data(contentsOf: directory.appendingPathComponent("archive-v1.2-media.json")))
+        XCTAssertEqual(fixture.formatMinor, 2)
+        let attachment = try XCTUnwrap(fixture.payload.records.first?.media?.first)
+        XCTAssertEqual(attachment.captureNamespace?.archiveOrigin, "legacy-fixture-owner")
+        XCTAssertEqual(attachment.captureNamespace?.physicalWorkspaceID.uuidString, "22222222-2222-2222-2222-222222222222")
+        XCTAssertEqual(fixture.mediaManifest?.entries.first?.captureNamespace, attachment.captureNamespace)
+        XCTAssertEqual(try ArchiveCodec.decode(ArchiveCodec.encode(fixture)), fixture)
+    }
     func testMappedCaptureNamespaceUsesVersionTwelveAndPreservesLegacyBytesAndSubsetIdentity() throws {
         var source = record(media: [media()])
         source.origin = "legacy-owner-namespace"

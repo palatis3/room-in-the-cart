@@ -174,6 +174,23 @@ private struct RecordsPlanningProjection: Codable {
         record.media = ownedMedia.isEmpty ? nil : ownedMedia
         return record
     }
+    static func recoveredLedger(_ saved: RecoveredRecord, current: LedgerRecord, scope: RecordsRecoveryCapture.Scope,
+                                sources: [SourceMediaRecord]) throws -> [ArchiveRecord] {
+        let workspace = try ledger(current.payload)
+        var result = try workspace.shops.map { shop in
+            let scoped = try ledgerScope(workspace, shop: shop)
+            let bytes = try canonical(RecordsLedgerDocument(formatVersion: 1, workspace: scoped))
+            let lines = shop.contributions.filter { $0.removedAt == nil }.map {
+                HelperLine(label: $0.productName, originalAmount: $0.quantity?.originalLiteral ?? "", originalUnit: $0.quantity?.unit.rawValue ?? "")
+            }
+            return try revised(saved.record, nativePayload: bytes, id: shop.id.uuidString, title: shop.title, date: current.savedAt, lines: lines)
+        }
+        if let library = try ledgerLibrary(workspace) {
+            let bytes = try canonical(RecordsLedgerDocument(formatVersion: 1, workspace: library))
+            result.append(try revised(saved.record, nativePayload: bytes, id: "meal-library", title: "Reusable dinners", date: current.savedAt, lines: []))
+        }
+        return try result.map { try RecordsMediaCodec.attaching(sources, to: $0, liveScope: scope) }
+    }
     static func validate(_ record: ArchiveRecord) throws {
         try RecordsMediaCodec.validate(record)
         guard let bytes = record.nativePayload else { return }
@@ -330,6 +347,7 @@ private struct RecordsRecoveredDinnersView: View {
     private var active = false
     private var visibleIdentity: CapturePrivateIdentity?
     private var authorizationGeneration = UUID()
+    private let recoveryLifetime = RecordsRecoveryLifetime.shared
     func bind(access: WorkspaceAccess, household: HouseholdModel, active: Bool) {
         self.access = access; self.household = household; self.active = active
         checkAccess()
@@ -338,7 +356,7 @@ private struct RecordsRecoveredDinnersView: View {
         let identity = active ? privateIdentity() : nil
         if identity != visibleIdentity { clearPrivatePreviews(); visibleIdentity = identity }
     }
-    func clearPrivatePreviews() { authorizationGeneration = UUID(); tools?.invalidateForSourceErasure(); destination = nil }
+    func clearPrivatePreviews() { authorizationGeneration = UUID(); recoveryLifetime.invalidate(); tools?.invalidateForSourceErasure(); destination = nil }
     private func privateIdentity() -> CapturePrivateIdentity? {
         guard let access, let household else { return nil }
         return CapturePrivateIdentity.current(access: access, household: household)
@@ -388,6 +406,8 @@ private struct RecordsRecoveredDinnersView: View {
                 return (record.kind == .comparison && record.origin == self.app.store.map { "comparisons/" + $0.workspaceID.uuidString }) || (record.kind == .pickup && record.origin == self.pickupOrigin)
             }, cleanupRecoveredWorkspaces: { [weak self] in
                 guard let self else { throw ArchiveError.unavailable }; try await self.purgeOrphanWorkspaces()
+            }, willRemoveRecovered: { [weak self] in
+                self?.recoveryLifetime.invalidate(); self?.destination = nil
             }, reviewWholeLedgerDeletion: { [weak self] in
                 guard let self else { throw ArchiveError.unavailable }
                 let review = try await self.ledger.reviewWholeLedgerDeletion()
@@ -435,9 +455,16 @@ private struct RecordsRecoveredDinnersView: View {
         let root = directory.appendingPathComponent("Recoveries", isDirectory: true)
         guard FileManager.default.fileExists(atPath: root.path) else { return }
         let retained = Set(try await registry.refreshList().map(\.id))
+        let folders = try FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)
+            .filter { UUID(uuidString: $0.lastPathComponent) != nil && !retained.contains($0.lastPathComponent) }
+        guard !folders.isEmpty else { return }
+        recoveryLifetime.invalidate(); destination = nil
+        await recoveryLifetime.drain()
+        // A concurrent reviewed import may have retained a copy while we drained.
+        let current = Set(try await registry.refreshList().map(\.id))
         let protectedWorkspaceIDs = Set([ledger.sourceWorkspaceID, pickup.sourceWorkspaceID, app.store?.workspaceID].compactMap { $0 })
-        for url in try FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: nil) {
-            guard UUID(uuidString: url.lastPathComponent) != nil, !retained.contains(url.lastPathComponent) else { continue }
+        for url in folders {
+            guard !current.contains(url.lastPathComponent) else { continue }
             try await RecordsRecoveryCapture.erase(directory: url, protectedWorkspaceIDs: protectedWorkspaceIDs)
             try FileManager.default.removeItem(at: url)
         }
@@ -555,7 +582,10 @@ private struct RecordsRecoveredDinnersView: View {
         return listing
     }
     private func recoveredSnapshot(_ saved: RecoveredRecord, authorize: @escaping RecordsToolsModel.Authorization) async throws -> [ArchiveRecord] {
-        guard let directory, UUID(uuidString: saved.id) != nil else { throw ArchiveError.invalidIdentity }
+        guard let registry, let directory, UUID(uuidString: saved.id) != nil else { throw ArchiveError.invalidIdentity }
+        let lease = try await recoveryLifetime.begin(copy: saved, registry: registry, authorize: authorize)
+        defer { recoveryLifetime.finish(lease) }
+        let authorize = lease.authorize
         let folder = directory.appendingPathComponent("Recoveries", isDirectory: true).appendingPathComponent(saved.id, isDirectory: true)
         let filename: String
         switch saved.record.kind {
@@ -576,24 +606,12 @@ private struct RecordsRecoveredDinnersView: View {
             let store = opened.store
             let current = try await store.load()
             try await store.close()
+            try await recoveryLifetime.revalidate(lease, copy: saved, registry: registry)
             guard authorize() else { throw ArchiveError.unavailable }
             guard let current else { return omitRecovered(saved, reason: .unreadableStorage) }
             do {
-            let workspace = try RecordsNativeCodec.ledger(current.payload)
-            var result = try workspace.shops.map { shop in
-                let scoped = try RecordsNativeCodec.ledgerScope(workspace, shop: shop)
-                let bytes = try RecordsNativeCodec.canonical(RecordsLedgerDocument(formatVersion: 1, workspace: scoped))
-                let lines = shop.contributions.filter { $0.removedAt == nil }.map {
-                    HelperLine(label: $0.productName, originalAmount: $0.quantity?.originalLiteral ?? "", originalUnit: $0.quantity?.unit.rawValue ?? "")
-                }
-                return try RecordsNativeCodec.revised(saved.record, nativePayload: bytes, id: shop.id.uuidString, title: shop.title, date: current.savedAt, lines: lines)
-            }
-            if let library = try RecordsNativeCodec.ledgerLibrary(workspace) {
-                let bytes = try RecordsNativeCodec.canonical(RecordsLedgerDocument(formatVersion: 1, workspace: library))
-                result.append(try RecordsNativeCodec.revised(saved.record, nativePayload: bytes, id: "meal-library", title: "Reusable dinners", date: current.savedAt, lines: []))
-            }
             let sources = try await mediaListing(workspaceID: opened.scope.workspaceID, authorize: authorize, liveScope: opened.scope).records
-            return try result.map { try RecordsMediaCodec.attaching(sources, to: $0, liveScope: opened.scope) }
+            return try RecordsNativeCodec.recoveredLedger(saved, current: current, scope: opened.scope, sources: sources)
             } catch { return omitRecovered(saved, reason: .invalidNative) }
         }
         let store: ComparisonStore
@@ -604,6 +622,7 @@ private struct RecordsRecoveredDinnersView: View {
         } else { store = try ComparisonStore(url: url); liveScope = nil }
         let listing = try await store.listing()
         try await store.close()
+        try await recoveryLifetime.revalidate(lease, copy: saved, registry: registry)
         guard authorize() else { throw ArchiveError.unavailable }
         if listing.records.isEmpty && listing.unavailable.isEmpty { return omitRecovered(saved, reason: .unreadableStorage) }
         let batch = RecordsSnapshotProjection.project(listing, origin: saved.record.origin, localCopyID: saved.id) { current in
@@ -680,12 +699,15 @@ private struct RecordsRecoveredDinnersView: View {
         await app.refresh()
     }
     private func open(_ saved: RecoveredRecord) async throws {
-        guard let authorize = captureAuthorization(), authorize() else { throw ArchiveError.unavailable }
+        guard let baseAuthorize = captureAuthorization(), baseAuthorize() else { throw ArchiveError.unavailable }
         try await validate(saved.record)
-        guard authorize() else { throw ArchiveError.unavailable }
+        guard baseAuthorize() else { throw ArchiveError.unavailable }
         guard let registry, let directory, let current = try await registry.refreshList().first(where: { $0.id == saved.id }), current == saved,
               let localID = UUID(uuidString: saved.id), let bytes = saved.record.nativePayload else { throw ArchiveError.unavailable }
-        guard authorize() else { throw ArchiveError.unavailable }
+        guard baseAuthorize() else { throw ArchiveError.unavailable }
+        let lease = try await recoveryLifetime.begin(copy: saved, registry: registry, authorize: baseAuthorize)
+        defer { recoveryLifetime.finish(lease) }
+        let authorize = lease.authorize
         if saved.record.kind == .recipe {
             let recipe = try JSONDecoder().decode(ImportedRecipe.self, from: bytes).validated()
             destination = Destination(id: saved.id, content: .recipe(recipe)); return
@@ -701,7 +723,9 @@ private struct RecordsRecoveredDinnersView: View {
                 try await store.save(id: payload.draft.id, title: payload.draft.item, payload: bytes, savedAt: Date(timeIntervalSince1970: Double(saved.record.savedAtMilliseconds) / 1000))
             }
             try await store.close()
+            try await recoveryLifetime.revalidate(lease, copy: saved, registry: registry)
             let isolated = AppModel(databaseURL: url); await isolated.open()
+            try await recoveryLifetime.revalidate(lease, copy: saved, registry: registry)
             guard authorize(), isolated.ready, let record = isolated.records.first else { throw ArchiveError.unavailable }
             destination = Destination(id: saved.id, content: .comparison(isolated, try isolated.decode(record), record.savedAt))
         case .ledger:
@@ -710,7 +734,9 @@ private struct RecordsRecoveredDinnersView: View {
             let store = try await RecordsRecoveryCapture.openLedger(copy: saved, directory: folder, authorize: authorize).store
             if try await store.load() == nil { try await store.save(payload: bytes, expectedRevision: 0, operationID: UUID(), savedAt: Date(timeIntervalSince1970: Double(saved.record.savedAtMilliseconds) / 1000)) }
             try await store.close()
+            try await recoveryLifetime.revalidate(lease, copy: saved, registry: registry)
             let isolated = LedgerModel(databaseURL: url); await isolated.open()
+            try await recoveryLifetime.revalidate(lease, copy: saved, registry: registry)
             guard authorize(), isolated.ready else { throw ArchiveError.unavailable }
             destination = Destination(id: saved.id, content: .ledger(isolated))
         case .pickup:
@@ -718,7 +744,9 @@ private struct RecordsRecoveredDinnersView: View {
             let url = folder.appendingPathComponent("pickup.sqlite")
             let store = try await RecordsRecoveryCapture.openPickup(copy: saved, directory: folder, authorize: authorize).store
             if try await store.load(id: value.id) == nil { try await store.save(id: value.id, title: saved.record.title, payload: bytes, savedAt: value.savedAt) }
+            try await recoveryLifetime.revalidate(lease, copy: saved, registry: registry)
             let isolated = PickupModel(store: store, databaseURL: url); await isolated.load()
+            try await recoveryLifetime.revalidate(lease, copy: saved, registry: registry)
             guard authorize(), isolated.ready else { throw ArchiveError.unavailable }
             isolated.selectedID = value.id
             destination = Destination(id: saved.id, content: .pickup(isolated))

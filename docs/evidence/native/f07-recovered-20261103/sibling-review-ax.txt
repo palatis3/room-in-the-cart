@@ -1,0 +1,127 @@
+Attributes: Application, 0x119a374b0, pid: 59443, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x119a374b0, pid: 59443, label: 'Room in the Cart'
+    Window (Main), 0x119a2c200, {{0.0, 0.0}, {375.0, 667.0}}
+      Other, 0x119a393a0, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x119a394c0, {{0.0, 0.0}, {375.0, 667.0}}
+          Other, 0x119a390e0, {{0.0, 0.0}, {375.0, 667.0}}
+            Other, 0x119a39200, {{0.0, 0.0}, {375.0, 667.0}}
+              StaticText, 0x119a395e0, {{49.2, 20.0}, {124.5, 13.5}}, identifier: 'fixture.records.recoveredCount', label: 'F07 recovered copies: 1'
+              StaticText, 0x119a39700, {{181.8, 20.0}, {144.0, 13.5}}, identifier: 'fixture.records.sourceUnchanged', label: 'F07 source unchanged: yes'
+              StaticText, 0x119a39820, {{60.5, 35.5}, {112.5, 13.5}}, identifier: 'fixture.records.savedFiles', label: 'F07 encrypted files: 1'
+              StaticText, 0x119a39940, {{181.0, 35.5}, {133.5, 13.5}}, identifier: 'fixture.records.fileHidesSource', label: 'F07 file hides source: yes'
+              Other, 0x119a39a60, {{0.0, 51.0}, {375.0, 616.0}}
+                NavigationBar, 0x119a39b80, {{0.0, 51.0}, {375.0, 44.0}}, identifier: 'Data and recovery'
+                  StaticText, 0x119a39ca0, {{115.0, 63.0}, {145.0, 20.5}}, label: 'Data and recovery'
+                Other, 0x119a39dc0, {{0.0, 51.0}, {375.0, 616.0}}
+                  Other, 0x119a39ee0, {{0.0, 51.0}, {375.0, 616.0}}
+                    Other, 0x119a3a000, {{0.0, 51.0}, {375.0, 616.0}}
+                      Other, 0x119a3a120, {{0.0, 51.0}, {375.0, 616.0}}
+                        CollectionView, 0x119a3a240, {{0.0, 51.0}, {375.0, 616.0}}, identifier: 'records.tools'
+                          Other, 0x119a3a360, {{-16.0, -35.5}, {407.0, 643.5}}
+                          Cell, 0x119a3a480, {{16.0, 26.0}, {343.0, 44.0}}
+                            Other, 0x119a3a5a0, {{16.0, 26.0}, {343.0, 44.0}}
+                              Other, 0x119a3a6c0, {{16.0, 26.0}, {343.0, 44.0}}
+                            Other, 0x119a3a7e0, {{16.0, 26.0}, {343.0, 44.0}}
+                              Other, 0x119a3a900, {{16.0, 26.0}, {343.0, 44.0}}
+                                Other, 0x119a3aa20, {{16.0, 26.0}, {343.0, 44.0}}
+                                  StaticText, 0x119a3ab40, {{16.0, 26.0}, {343.0, 44.0}}, label: 'Saved at Nov 3, 2026 at 3:56 PM'
+                          Cell, 0x119a3ac60, {{16.0, 70.0}, {343.0, 44.0}}
+                            Other, 0x119a3ad80, {{16.0, 70.0}, {343.0, 44.0}}
+                              Other, 0x119a3aea0, {{16.0, 70.0}, {343.0, 44.0}}
+                            Other, 0x119a3afc0, {{16.0, 70.0}, {343.0, 44.0}}
+                              Other, 0x119a3b0e0, {{16.0, 70.0}, {343.0, 44.0}}
+                                Other, 0x119a3b200, {{16.0, 70.0}, {343.0, 44.0}}
+                                  StaticText, 0x119a3b320, {{16.0, 70.0}, {343.0, 44.0}}, label: 'F07 source pickup'
+                          Other, 0x119a3b440, {{32.0, 69.5}, {327.0, 0.5}}
+                          Cell, 0x119a3b560, {{16.0, 114.0}, {343.0, 44.0}}
+                            Other, 0x119a3b680, {{16.0, 114.0}, {343.0, 44.0}}
+                              Other, 0x119a3b7a0, {{16.0, 114.0}, {343.0, 44.0}}
+                            Other, 0x119a3b8c0, {{16.0, 114.0}, {343.0, 44.0}}
+                              Other, 0x119a3b9e0, {{16.0, 114.0}, {343.0, 44.0}}
+                                Other, 0x119a3bb00, {{16.0, 114.0}, {343.0, 44.0}}
+                                  StaticText, 0x119a3bc20, {{16.0, 114.0}, {343.0, 44.0}}, identifier: 'records.importDisposition.2ABEB27F-B799-4036-9694-183794186284', label: 'Related revision — keep both copies'
+                          Other, 0x119a3bd40, {{32.0, 113.5}, {327.0, 0.5}}
+                          Cell, 0x119a3be60, {{16.0, 158.0}, {343.0, 68.5}}
+                            Other, 0x119a3bf80, {{16.0, 158.0}, {343.0, 68.5}}
+                              Other, 0x119a3c0a0, {{16.0, 158.0}, {343.0, 68.5}}
+                            Other, 0x119a3c1c0, {{16.0, 158.0}, {343.0, 68.5}}
+                              Other, 0x119a3c2e0, {{16.0, 158.0}, {343.0, 68.5}}
+                                Other, 0x119a3c400, {{16.0, 158.0}, {343.0, 68.5}}
+                                  StaticText, 0x119a3c520, {{16.0, 158.0}, {343.0, 68.5}}, label: 'Revision: 68de7c561be3749d692b0df6d4a18aa8023be24a514664172c8750a2be8d6b6f'
+                          Other, 0x119a3c640, {{32.0, 157.5}, {327.0, 0.5}}
+                          Cell, 0x119a3c760, {{16.0, 226.5}, {343.0, 66.0}}
+                            Other, 0x119a3c880, {{16.0, 226.5}, {343.0, 66.0}}
+                              Other, 0x119a3c9a0, {{16.0, 226.5}, {343.0, 66.0}}
+                            Other, 0x119a3cac0, {{16.0, 226.5}, {343.0, 66.0}}
+                              Other, 0x119a3cbe0, {{16.0, 226.5}, {343.0, 66.0}}
+                                Other, 0x119a3cd00, {{16.0, 226.5}, {343.0, 66.0}}
+                                  Button, 0x119a3ce20, {{16.0, 226.5}, {343.0, 66.0}}, identifier: 'records.mediaPreview.77777777-7777-4777-8777-777777777777', label: 'Preview source reference: F07 wraps package photo', value: Collapsed
+                                    StaticText, 0x119a3cf40, {{32.0, 237.5}, {311.0, 44.0}}, label: 'Preview source reference'
+                                    Image, 0x119a3d060, {{333.0, 252.0}, {9.0, 15.0}}, label: 'Forward'
+                          Other, 0x119a3d180, {{32.0, 226.0}, {327.0, 0.5}}
+                          Cell, 0x119a3d2a0, {{16.0, 292.5}, {343.0, 44.0}}
+                            Other, 0x119a3d3c0, {{16.0, 292.5}, {343.0, 44.0}}
+                              Other, 0x119a3d4e0, {{16.0, 292.5}, {343.0, 44.0}}
+                            Other, 0x119a3d600, {{16.0, 292.5}, {343.0, 44.0}}
+                              Other, 0x119a3d720, {{16.0, 292.5}, {343.0, 44.0}}
+                                Other, 0x119a3d840, {{16.0, 292.5}, {343.0, 44.0}}
+                                  StaticText, 0x119a3d960, {{16.0, 292.5}, {343.0, 44.0}}, label: '1 selected references · 51 KB'
+                          Other, 0x119a3da80, {{32.0, 292.0}, {327.0, 0.5}}
+                          Cell, 0x119a3dba0, {{16.0, 336.5}, {343.0, 74.0}}
+                            Other, 0x119a3dcc0, {{16.0, 336.5}, {343.0, 74.0}}
+                              Other, 0x119a3dde0, {{16.0, 336.5}, {343.0, 74.0}}
+                            Other, 0x119a3df00, {{16.0, 336.5}, {343.0, 74.0}}
+                              Other, 0x119a3e020, {{16.0, 336.5}, {343.0, 74.0}}
+                                Other, 0x119a3e140, {{16.0, 336.5}, {343.0, 74.0}}
+                                  StaticText, 0x119a3e260, {{16.0, 336.5}, {343.0, 74.0}}, label: 'Selected references recover with these separate copies. They do not reopen the original photo store or restore access to another workspace.'
+                          Other, 0x119a3e380, {{32.0, 336.0}, {327.0, 0.5}}
+                          Cell, 0x119a3e4a0, {{16.0, 410.5}, {343.0, 92.0}}
+                            Other, 0x119a3e5c0, {{16.0, 410.5}, {343.0, 92.0}}
+                              Other, 0x119a3e6e0, {{16.0, 410.5}, {343.0, 92.0}}
+                            Other, 0x119a3e800, {{16.0, 410.5}, {343.0, 92.0}}
+                              Other, 0x119a3e920, {{16.0, 410.5}, {343.0, 92.0}}
+                                Other, 0x119a3ea40, {{16.0, 410.5}, {343.0, 92.0}}
+                                  StaticText, 0x119a3eb60, {{16.0, 410.5}, {343.0, 92.0}}, label: 'Current and newer work stays in place. Different revisions become separate copies; identical imports reopen the saved copy. A conflicting digest or erased identity blocks this batch.'
+                          Other, 0x119a3ec80, {{32.0, 410.0}, {327.0, 0.5}}
+                          Cell, 0x119a3eda0, {{16.0, 502.5}, {343.0, 44.0}}
+                            Other, 0x119a3eec0, {{16.0, 502.5}, {343.0, 44.0}}
+                              Other, 0x119a3efe0, {{16.0, 502.5}, {343.0, 44.0}}
+                            Other, 0x119a3f100, {{16.0, 502.5}, {343.0, 44.0}}
+                              Other, 0x119a3f220, {{16.0, 502.5}, {343.0, 44.0}}
+                                Other, 0x119a3f340, {{16.0, 502.5}, {343.0, 44.0}}
+                                  Button, 0x119a3f460, {{16.0, 502.5}, {343.0, 44.0}}, identifier: 'records.applyImport', label: 'Import reviewed copies'
+                          Other, 0x119a3f580, {{32.0, 502.0}, {327.0, 0.5}}
+                          Cell, 0x119a3f6a0, {{16.0, 546.5}, {343.0, 44.0}}
+                            Other, 0x119a3f7c0, {{16.0, 546.5}, {343.0, 44.0}}
+                              Other, 0x119a3f8e0, {{16.0, 546.5}, {343.0, 44.0}}
+                            Other, 0x119a3fa00, {{16.0, 546.5}, {343.0, 44.0}}
+                              Other, 0x119a3fb20, {{16.0, 546.5}, {343.0, 44.0}}
+                                Other, 0x119a3fc40, {{16.0, 546.5}, {343.0, 44.0}}
+                                  Button, 0x119a3fd60, {{16.0, 546.5}, {343.0, 44.0}}, identifier: 'records.cancelImport', label: 'Cancel import'
+                          Other, 0x119a3fe80, {{32.0, 546.0}, {327.0, 0.5}}
+                          Other, 0x119a3ffa0, {{-16.0, 608.0}, {407.0, 122.5}}
+                          Cell, 0x119a400c0, {{16.0, 608.0}, {343.0, 39.0}}
+                            Other, 0x119a401e0, {{16.0, 608.0}, {343.0, 39.0}}
+                            Other, 0x119a40300, {{16.0, 608.0}, {343.0, 39.0}}
+                              Other, 0x119a40420, {{16.0, 608.0}, {343.0, 39.0}}
+                                Other, 0x119a40540, {{16.0, 608.0}, {343.0, 39.0}}
+                                  StaticText, 0x119a40660, {{16.0, 608.0}, {343.0, 39.0}}, label: 'Recovered copies and saved recipes'
+                          Cell, 0x119a40780, {{16.0, 647.0}, {343.0, 66.0}}
+                            Other, 0x119a408a0, {{16.0, 647.0}, {343.0, 66.0}}
+                              Other, 0x119a409c0, {{16.0, 647.0}, {343.0, 66.0}}
+                            Other, 0x119a40ae0, {{16.0, 647.0}, {343.0, 66.0}}
+                              Other, 0x119a40c00, {{16.0, 647.0}, {343.0, 66.0}}
+                                Other, 0x119a40d20, {{16.0, 647.0}, {343.0, 66.0}}
+                                  Button, 0x119a40e40, {{16.0, 647.0}, {343.0, 66.0}}, identifier: 'records.recovered.F07 newer recovered work', label: 'Recovered copy: F07 newer recovered work', value: Collapsed
+                                    StaticText, 0x119a40f60, {{32.0, 658.0}, {311.0, 44.0}}, label: 'F07 newer recovered work'
+                                    Image, 0x119a41080, {{333.0, 672.5}, {9.0, 15.0}}, label: 'Forward'
+                          Other, 0x119a411a0, {{342.0, 95.0}, {30.0, 572.0}}, label: 'Vertical scroll bar, 5 pages', value: 79%
+                            Other, 0x119a412c0, {{369.0, 446.0}, {3.0, 125.0}}
+Path to element:
+ →Application, 0x119a374b0, pid: 59443, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x1199e9570, pid: 59443, label: 'Room in the Cart'
+  }

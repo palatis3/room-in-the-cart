@@ -1,0 +1,42 @@
+{
+  "baseline": "ec1c243",
+  "overlays": [
+    {
+      "path": "ios/App/RecordsComposition.swift",
+      "sha256": "f427bd7c465dafddb9073e3b5923413b2b761c38049553f77f70187a298bc733"
+    },
+    {
+      "path": "ios/Features/Records/RecordsRecoveryCapture.swift",
+      "sha256": "b51539a99835d2c7b81d7d779646958b95b01bdf84898b8445877b4148df6208"
+    },
+    {
+      "path": "ios/Features/Records/RecordsToolsModel.swift",
+      "sha256": "8d3cac78070e022e4964d5379117df65c2af0cc6bcdfe2918b0f9ac458cfd923"
+    },
+    {
+      "path": "ios/Tests/RecordsRecoveryCaptureTests.swift",
+      "sha256": "03ecf26f3823bb20886814364ca2eaf39d3d89a7a95b763f69220faddb8e0342"
+    },
+    {
+      "path": "ios/Packages/RecordArchive/Tests/RecordArchiveTests/ArchiveMediaTests.swift",
+      "sha256": "09c3115b61631552865fafe076c6c7a7cf2c23e2682cc43a1faadd49547b0cb3"
+    },
+    {
+      "path": "ios/Packages/RecordArchive/Tests/RecordArchiveTests/Fixtures/archive-v1.2-media.json",
+      "sha256": "cd159ba2783b5fdb51cd44e171fb26628eb70ed6c1440cceef9fcef83bb93de2"
+    },
+    {
+      "path": "ios/Packages/RecordArchive/README.md",
+      "sha256": "39ad6f3225010238842e7a596dda172492bbaa906f67745fe57fdc78593f41f2"
+    },
+    {
+      "path": "ios/Features/Records/INTEGRATION.md",
+      "sha256": "4aeef9f73d045a970e20d93309fe4b225f8db6fdbd28d933de6a61a5a7972424"
+    },
+    {
+      "path": "ios/UITests/RecordsMediaUITests.swift",
+      "sha256": "32b4625bc6bef56dc8daeb3548783eabdaf0528ced384bbba975af997d350073"
+    }
+  ],
+  "excludes": "In-progress guardian native source and unconfirmed civil-date source are excluded; integrated root verification remains separate."
+}

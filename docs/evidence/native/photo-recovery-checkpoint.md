@@ -1,5 +1,19 @@
 # F07 selected-media recovery checkpoint · 2026-11-03
 
+## Latest continuation · 2026-11-03 afternoon
+
+The recovered-store capture extension now compiles and passes **49/49 affected native tests** on the reserved iPhone SE / iOS 17 simulator. RecordArchive passes **33/33**, including the retained v1.2 mapping fixture. The new integration regression imports a photo-bearing ledger, opens the real independent LedgerStore, persists a new normalized JPEG in that actual physical namespace, projects fresh records, explicitly selects/encrypts/re-exports it, recovers beside newer work, and verifies physical UUID/provenance, inert imported mappings, copy cleanup, correction retirement, denied late writes and unrelated source preservation. Receipt and recipe bindings, malformed/foreign/future journals, protected root IDs, symlinks, legacy journal derivation, source-media scrubbing and cancellation/draining are covered.
+
+The stale registry-row race is resolved with shared runtime recovery leases, current receipt rechecks, invalidation before delete/undo, destination dismissal and draining before orphan directory removal. A cancelled open cannot overwrite a successful deletion outcome. Cleanup now checks a journal against the actual fixed SQLite store before retiring its physical namespace. Imported declarations still never authorize listing or cleanup.
+
+**Final scoped screen verification passed.** `.build/F07-Recovered-UIFinal.xcresult` passed **50/50**: 49 native models and one actual Records media screen journey (205.989 seconds). All seven manually captured screenshots were inspected; the final separate Form rows have no overlapping photo/wording content. Import and deletion statuses are at y=95 and passed strict viewport assertions without test scrolling. The first screen rerun exposed a test ordering issue when passive review text became a lazy separate Form row; it now scrolls that review text into view before querying it. Automatic result checks remain unchanged. That failed attempt is preserved in `.build/F07-Recovered-FinalScoped-UI.xcresult` and attachments. [Final evidence and promoted screenshots](f07-recovered-20261103/evidence.json) include exact scope, manifests, limitations and remaining release gates.
+
+Final runtime/test source is frozen at `.build/F07-Recovered-UIFinal-Source`: clean `ec1c243` plus the explicit F07 overlays in `f07-overlay-manifest.json`, excluding in-progress guardian and civil-date lane changes. Source manifest `.build/f07-recovered-uifinal-source-manifest.json` has aggregate SHA-256 `097d6c63b5e2d2fe57a733f9c3bc551f52d4cf480154b6dcb4e04a394ce31524`. The matching binary manifest is `.build/f07-recovered-uifinal-binary-manifest.json`. Whole-checkout integrated verification remains a root task.
+
+## Historical restart state · superseded by the acceptance above
+
+The following checkpoint is retained as history. Its required-next-work list is superseded by the latest scoped acceptance and remaining gates above.
+
 Preserved for a Codex app restart. The feature is **not finished**: the approved recovered-store capture-namespace extension is implemented in source but still needs native compilation, targeted regressions and final screen verification. No long run should be inferred from the presence of its source.
 
 ## Executed and preserved

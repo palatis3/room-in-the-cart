@@ -3,10 +3,45 @@ import LocalStore
 import RecordArchive
 import Darwin
 
+/// A registry row must still exist when an independent store is opened. Deletion
+/// invalidates synchronous authorizers before awaiting the registry, then drains
+/// in-flight users before removing directories. A stale row cannot mint a new scope.
+@MainActor final class RecordsRecoveryLifetime {
+    static let shared = RecordsRecoveryLifetime()
+    struct Lease {
+        fileprivate let id: UUID
+        let authorize: RecordsToolsModel.Authorization
+    }
+    private var generation = UUID()
+    private var active: Set<UUID> = []
+    private var waiters: [CheckedContinuation<Void, Never>] = []
+    func begin(copy: RecoveredRecord, registry: RecoveryRegistry, authorize: @escaping RecordsToolsModel.Authorization) async throws -> Lease {
+        let captured = generation
+        guard authorize(), try await registry.refreshList().contains(copy), authorize(), generation == captured else { throw ArchiveError.unavailable }
+        let id = UUID(); active.insert(id)
+        return Lease(id: id, authorize: { [weak self] in
+            guard let self else { return false }
+            return self.generation == captured && self.active.contains(id) && authorize()
+        })
+    }
+    func revalidate(_ lease: Lease, copy: RecoveredRecord, registry: RecoveryRegistry) async throws {
+        guard lease.authorize(), try await registry.refreshList().contains(copy), lease.authorize() else { throw ArchiveError.unavailable }
+    }
+    func finish(_ lease: Lease) {
+        active.remove(lease.id)
+        if active.isEmpty { let pending = waiters; waiters = []; pending.forEach { $0.resume() } }
+    }
+    func invalidate() { generation = UUID() }
+    func drain() async {
+        guard !active.isEmpty else { return }
+        await withCheckedContinuation { waiters.append($0) }
+    }
+}
+
 /// Runtime authority is minted from a store opened at an app-owned recovery URL.
 /// ArchiveCaptureNamespace is only the inert, portable description of that scope.
 @MainActor enum RecordsRecoveryCapture {
-    struct Scope {
+    @MainActor struct Scope {
         let declaration: ArchiveCaptureNamespace
         fileprivate init(_ declaration: ArchiveCaptureNamespace) { self.declaration = declaration }
         var workspaceID: UUID { declaration.physicalWorkspaceID }
@@ -41,7 +76,7 @@ import Darwin
         try validateCopy(copy)
         try prepare(directory, copyID: copy.id)
         let url = directory.appendingPathComponent("ledger.sqlite")
-        try requireNonLinkIfPresent(url)
+        try requireStoreFiles(url)
         let store = try LedgerStore(url: url)
         do {
             guard authorize() else { throw ArchiveError.unavailable }
@@ -55,7 +90,7 @@ import Darwin
         try validateCopy(copy)
         try prepare(directory, copyID: copy.id)
         let url = directory.appendingPathComponent("pickup.sqlite")
-        try requireNonLinkIfPresent(url)
+        try requireStoreFiles(url)
         let store = try ComparisonStore(url: url)
         do {
             guard authorize() else { throw ArchiveError.unavailable }
@@ -71,26 +106,29 @@ import Darwin
                       corrections: CaptureCorrectionStore = .shared) async throws {
         guard let copyID = UUID(uuidString: directory.lastPathComponent) else { throw ArchiveError.invalidIdentity }
         try requireDirectory(directory)
+        let ledgerURL = directory.appendingPathComponent("ledger.sqlite"), pickupURL = directory.appendingPathComponent("pickup.sqlite")
+        let hasLedger = FileManager.default.fileExists(atPath: ledgerURL.path), hasPickup = FileManager.default.fileExists(atPath: pickupURL.path)
+        guard !(hasLedger && hasPickup) else { throw ArchiveError.integrity }
+        let actual: PhysicalScope?
+        if hasLedger {
+            try requireStoreFiles(ledgerURL)
+            let store = try LedgerStore(url: ledgerURL)
+            actual = PhysicalScope(formatMajor: 1, recoveryCopyID: copyID, storeKind: .ledger, physicalWorkspaceID: store.workspaceID)
+            try await store.close()
+        } else if hasPickup {
+            try requireStoreFiles(pickupURL)
+            let store = try ComparisonStore(url: pickupURL)
+            actual = PhysicalScope(formatMajor: 1, recoveryCopyID: copyID, storeKind: .pickup, physicalWorkspaceID: store.workspaceID)
+            try await store.close()
+        } else { actual = nil }
         let physical: PhysicalScope?
         if FileManager.default.fileExists(atPath: directory.appendingPathComponent(filename).path) {
             physical = try read(directory, copyID: copyID)
+            guard physical == actual else { throw ArchiveError.integrity }
         } else {
             // Pre-journal recovered stores used these same fixed filenames. Read
             // their actual SQLite identity; never infer it from archive metadata.
-            let ledgerURL = directory.appendingPathComponent("ledger.sqlite"), pickupURL = directory.appendingPathComponent("pickup.sqlite")
-            let hasLedger = FileManager.default.fileExists(atPath: ledgerURL.path), hasPickup = FileManager.default.fileExists(atPath: pickupURL.path)
-            guard !(hasLedger && hasPickup) else { throw ArchiveError.integrity }
-            if hasLedger {
-                try requireNonLinkIfPresent(ledgerURL)
-                let store = try LedgerStore(url: ledgerURL)
-                physical = PhysicalScope(formatMajor: 1, recoveryCopyID: copyID, storeKind: .ledger, physicalWorkspaceID: store.workspaceID)
-                try await store.close()
-            } else if hasPickup {
-                try requireNonLinkIfPresent(pickupURL)
-                let store = try ComparisonStore(url: pickupURL)
-                physical = PhysicalScope(formatMajor: 1, recoveryCopyID: copyID, storeKind: .pickup, physicalWorkspaceID: store.workspaceID)
-                try await store.close()
-            } else { physical = nil }
+            physical = actual
             if let physical { try write(physical, directory: directory) }
         }
         guard let physical else { return }
@@ -159,6 +197,9 @@ import Darwin
         if lstat(url.path, &value) == 0 {
             guard value.st_mode & S_IFMT == S_IFREG else { throw ArchiveError.unavailable }
         } else if errno != ENOENT { throw ArchiveError.unavailable }
+    }
+    private static func requireStoreFiles(_ url: URL) throws {
+        for suffix in ["", "-journal", "-wal", "-shm"] { try requireNonLinkIfPresent(URL(fileURLWithPath: url.path + suffix)) }
     }
     private static func requireDirectory(_ url: URL) throws {
         guard try mode(url) & S_IFMT == S_IFDIR else { throw ArchiveError.unavailable }

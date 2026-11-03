@@ -1,0 +1,118 @@
+Attributes: Application, 0x120526a00, pid: 59443, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x120526a00, pid: 59443, label: 'Room in the Cart'
+    Window (Main), 0x120539880, {{0.0, 0.0}, {375.0, 667.0}}
+      Other, 0x120537050, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x120537170, {{0.0, 0.0}, {375.0, 667.0}}
+          Other, 0x120536f00, {{0.0, 0.0}, {375.0, 667.0}}
+            Other, 0x120538140, {{0.0, 0.0}, {375.0, 667.0}}
+              StaticText, 0x120537290, {{49.2, 20.0}, {124.5, 13.5}}, identifier: 'fixture.records.recoveredCount', label: 'F07 recovered copies: 1'
+              StaticText, 0x1205373b0, {{181.8, 20.0}, {144.0, 13.5}}, identifier: 'fixture.records.sourceUnchanged', label: 'F07 source unchanged: yes'
+              StaticText, 0x1205374d0, {{60.5, 35.5}, {112.5, 13.5}}, identifier: 'fixture.records.savedFiles', label: 'F07 encrypted files: 1'
+              StaticText, 0x1205375f0, {{181.0, 35.5}, {133.5, 13.5}}, identifier: 'fixture.records.fileHidesSource', label: 'F07 file hides source: yes'
+              Other, 0x120537710, {{0.0, 51.0}, {375.0, 616.0}}
+                NavigationBar, 0x120537830, {{0.0, 51.0}, {375.0, 44.0}}, identifier: 'Data and recovery'
+                  StaticText, 0x120537950, {{115.0, 63.0}, {145.0, 20.5}}, label: 'Data and recovery'
+                Other, 0x120537a70, {{0.0, 51.0}, {375.0, 616.0}}
+                  Other, 0x120537b90, {{0.0, 51.0}, {375.0, 616.0}}
+                    Other, 0x120537cb0, {{0.0, 51.0}, {375.0, 616.0}}
+                      Other, 0x120537dd0, {{0.0, 51.0}, {375.0, 616.0}}
+                        CollectionView, 0x120537ef0, {{0.0, 51.0}, {375.0, 616.0}}, identifier: 'records.tools'
+                          Other, 0x12053a040, {{-16.0, -1376.5}, {407.0, 1454.0}}
+                          Cell, 0x12053a160, {{16.0, -14.0}, {343.0, 74.0}}
+                            Other, 0x12053a280, {{16.0, -14.0}, {343.0, 74.0}}
+                              Other, 0x12053a3a0, {{16.0, -14.0}, {343.0, 74.0}}
+                            Other, 0x12053a4c0, {{16.0, -14.0}, {343.0, 74.0}}
+                              Other, 0x12053a5e0, {{16.0, -14.0}, {343.0, 74.0}}
+                                Other, 0x12053a700, {{16.0, -14.0}, {343.0, 74.0}}
+                                  StaticText, 0x12053a820, {{16.0, -14.0}, {343.0, 74.0}}, label: 'Recovery saves a separate copy. A file never restores membership, consent, permissions or a retailer order.'
+                          Other, 0x12053a940, {{-16.0, 77.5}, {407.0, 121.5}}
+                          Cell, 0x12053aa60, {{16.0, 95.0}, {343.0, 86.5}}
+                            Other, 0x12053ab80, {{16.0, 95.0}, {343.0, 86.5}}
+                              Other, 0x12053aca0, {{16.0, 95.0}, {343.0, 86.5}}
+                            Other, 0x12053adc0, {{16.0, 95.0}, {343.0, 86.5}}
+                              Other, 0x12053aee0, {{16.0, 95.0}, {343.0, 86.5}}
+                                Other, 0x12053b000, {{16.0, 95.0}, {343.0, 86.5}}
+                                  StaticText, 0x12053b120, {{16.0, 95.0}, {343.0, 86.5}}, identifier: 'records.status', label: 'The recovered copies and their separate workspaces were permanently deleted from this iPhone.'
+                          Other, 0x12053b240, {{-16.0, 199.0}, {407.0, 251.5}}
+                          Cell, 0x12053b360, {{16.0, 199.0}, {343.0, 39.0}}
+                            Other, 0x12053b480, {{16.0, 199.0}, {343.0, 39.0}}
+                            Other, 0x12053b5a0, {{16.0, 199.0}, {343.0, 39.0}}
+                              Other, 0x12053b6c0, {{16.0, 199.0}, {343.0, 39.0}}
+                                Other, 0x12053b7e0, {{16.0, 199.0}, {343.0, 39.0}}
+                                  StaticText, 0x12053b900, {{16.0, 199.0}, {343.0, 39.0}}, label: 'Choose records to export'
+                          Cell, 0x12053ba20, {{16.0, 238.0}, {343.0, 44.0}}
+                            Other, 0x12053bb40, {{16.0, 238.0}, {343.0, 44.0}}
+                              Other, 0x12053bc60, {{16.0, 238.0}, {343.0, 44.0}}
+                            Other, 0x12053bd80, {{16.0, 238.0}, {343.0, 44.0}}
+                              Other, 0x12053bea0, {{16.0, 238.0}, {343.0, 44.0}}
+                                Other, 0x12053bfc0, {{16.0, 238.0}, {343.0, 44.0}}
+                                  Button, 0x12053c0e0, {{16.0, 238.0}, {343.0, 44.0}}, label: 'Select all readable records'
+                          Cell, 0x12053c200, {{16.0, 282.0}, {343.0, 75.5}}
+                            Other, 0x12053c320, {{16.0, 282.0}, {343.0, 75.5}}
+                              Other, 0x12053c440, {{16.0, 282.0}, {343.0, 75.5}}
+                            Other, 0x12053c560, {{16.0, 282.0}, {343.0, 75.5}}
+                              Other, 0x12053c680, {{16.0, 282.0}, {343.0, 75.5}}
+                                Other, 0x12053c7a0, {{16.0, 282.0}, {343.0, 75.5}}
+                                  Switch, 0x12053c8c0, {{32.0, 293.0}, {311.0, 31.0}}, identifier: 'records.source.2ABEB27F-B799-4036-9694-183794186284', label: 'F07 source pickup', value: 1
+                                    StaticText, 0x12053c9e0, {{32.0, 298.2}, {140.0, 20.5}}, label: 'F07 source pickup'
+                                    Switch, 0x12053cb00, {{294.0, 293.0}, {51.0, 31.0}}, value: 1
+                                  StaticText, 0x12053cc20, {{32.0, 332.0}, {143.5, 14.5}}, label: 'Shopping list and dinners'
+                          Other, 0x12053cd40, {{32.0, 281.5}, {327.0, 0.5}}
+                          Cell, 0x12053ce60, {{16.0, 357.5}, {343.0, 75.5}}
+                            Other, 0x12053cf80, {{16.0, 357.5}, {343.0, 75.5}}
+                              Other, 0x12053d0a0, {{16.0, 357.5}, {343.0, 75.5}}
+                            Other, 0x12053d1c0, {{16.0, 357.5}, {343.0, 75.5}}
+                              Other, 0x12053d2e0, {{16.0, 357.5}, {343.0, 75.5}}
+                                Other, 0x12053d400, {{16.0, 357.5}, {343.0, 75.5}}
+                                  Switch, 0x12053d520, {{32.0, 368.5}, {311.0, 31.0}}, identifier: 'records.source.2ABEB27F-B799-4036-9694-183794186284', label: 'F07 newer recovered work', value: 0
+                                    StaticText, 0x12053d640, {{32.0, 373.8}, {201.0, 20.5}}, label: 'F07 newer recovered work'
+                                    Switch, 0x12053d760, {{294.0, 368.5}, {51.0, 31.0}}, value: 0
+                                  StaticText, 0x12053d880, {{32.0, 407.5}, {143.5, 14.5}}, label: 'Shopping list and dinners'
+                          Other, 0x12053d9a0, {{32.0, 357.0}, {327.0, 0.5}}
+                          Other, 0x12053dac0, {{-16.0, 450.5}, {407.0, 789.0}}
+                          Cell, 0x12053dbe0, {{16.0, 450.5}, {343.0, 39.0}}
+                            Other, 0x12053dd00, {{16.0, 450.5}, {343.0, 39.0}}
+                            Other, 0x12053de20, {{16.0, 450.5}, {343.0, 39.0}}
+                              Other, 0x12053df40, {{16.0, 450.5}, {343.0, 39.0}}
+                                Other, 0x12053e060, {{16.0, 450.5}, {343.0, 39.0}}
+                                  StaticText, 0x12053e180, {{16.0, 450.5}, {343.0, 39.0}}, label: 'Export selected records'
+                          Cell, 0x12053e2a0, {{16.0, 489.5}, {343.0, 74.0}}
+                            Other, 0x12053e3c0, {{16.0, 489.5}, {343.0, 74.0}}
+                              Other, 0x12053e4e0, {{16.0, 489.5}, {343.0, 74.0}}
+                            Other, 0x12053e600, {{16.0, 489.5}, {343.0, 74.0}}
+                              Other, 0x12053e720, {{16.0, 489.5}, {343.0, 74.0}}
+                                Other, 0x12053e840, {{16.0, 489.5}, {343.0, 74.0}}
+                                  StaticText, 0x12053e960, {{16.0, 489.5}, {343.0, 74.0}}, label: 'Cook and helper copies include selected food labels, amounts, purposes and actions. They leave out native financial and private record data.'
+                          Cell, 0x12053ea80, {{16.0, 563.5}, {343.0, 44.0}}
+                            Other, 0x12053eba0, {{16.0, 563.5}, {343.0, 44.0}}
+                              Other, 0x12053ecc0, {{16.0, 563.5}, {343.0, 44.0}}
+                            Other, 0x12053ede0, {{16.0, 563.5}, {343.0, 44.0}}
+                              Other, 0x12053ef00, {{16.0, 563.5}, {343.0, 44.0}}
+                                Other, 0x12053f020, {{16.0, 563.5}, {343.0, 44.0}}
+                                  Button, 0x12053f140, {{16.0, 563.5}, {343.0, 44.0}}, label: 'Prepare readable cook copy'
+                          Other, 0x12053f260, {{32.0, 563.0}, {327.0, 0.5}}
+                          Cell, 0x12053f380, {{16.0, 607.5}, {343.0, 44.0}}
+                            Other, 0x12053f4a0, {{16.0, 607.5}, {343.0, 44.0}}
+                              Other, 0x12053f5c0, {{16.0, 607.5}, {343.0, 44.0}}
+                            Other, 0x12053f6e0, {{16.0, 607.5}, {343.0, 44.0}}
+                              Other, 0x12053f800, {{16.0, 607.5}, {343.0, 44.0}}
+                                Other, 0x12053f920, {{16.0, 607.5}, {343.0, 44.0}}
+                                  Button, 0x12053fa40, {{16.0, 607.5}, {343.0, 44.0}}, label: 'Prepare structured helper copy'
+                          Other, 0x12053fb60, {{32.0, 607.0}, {327.0, 0.5}}
+                          Cell, 0x12053fc80, {{16.0, 651.5}, {343.0, 44.0}}
+                            Other, 0x12053fda0, {{16.0, 651.5}, {343.0, 44.0}}
+                              Other, 0x12053fec0, {{16.0, 651.5}, {343.0, 44.0}}
+                            Other, 0x12053ffe0, {{16.0, 651.5}, {343.0, 44.0}}
+                              Other, 0x120540100, {{16.0, 651.5}, {343.0, 44.0}}
+                                Other, 0x120540220, {{16.0, 651.5}, {343.0, 44.0}}
+                                  StaticText, 0x120540340, {{16.0, 651.5}, {343.0, 44.0}}, label: 'Choose one source for each cook or helper copy.'
+                          Other, 0x120540460, {{32.0, 651.0}, {327.0, 0.5}}
+                          Other, 0x120540580, {{342.0, 95.0}, {30.0, 572.0}}, label: 'Vertical scroll bar, 5 pages', value: 14%
+Path to element:
+ →Application, 0x120526a00, pid: 59443, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x11dcc5730, pid: 59443, label: 'Room in the Cart'
+  }
