@@ -111,6 +111,13 @@ final class PickupStockBatchTests: XCTestCase {
         XCTAssertNil(model.journey?.quote)
     }
 
+    func testBatchQuantityPluralFormsFollowTheRecipientLanguage() throws {
+        XCTAssertEqual(pQuantity(.one, unit: .count, language: "en-US"), "1 unit")
+        XCTAssertEqual(pQuantity(.one, unit: .count, language: "es-US"), "1 unidad")
+        XCTAssertEqual(pQuantity(try Rational(2), unit: .cup, language: "es-US"), "2 tazas")
+        XCTAssertEqual(pQuantity(try Rational(2), unit: .gram, language: "en-US"), "2 grams")
+    }
+
     func testUseFirstReservesPreferredLotAndLegacyBytesDecodeWithoutAHint() throws {
         let food = UUID(), old = ConfirmedStockLot(id: UUID(), foodID: food, name: "Pantry", usable: quantity(4),
                                                   confirmedAt: now, source: .pantry)

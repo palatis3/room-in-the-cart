@@ -11,6 +11,8 @@ struct PickupSettlementView: View {
     @State private var date = Date()
     @State private var entryID = UUID()
     private var isCredit: Bool { [.pendingCredit, .postedCredit, .includedCredit].contains(kind) }
+    @State private var nextShopRequested = false
+    @AccessibilityFocusState private var nextShopFocused: Bool
     var body: some View {
         Form {
             PickupSaveStatus(model: model)
@@ -82,10 +84,11 @@ struct PickupSettlementView: View {
                     }.buttonStyle(.borderedProminent)
                 }
                 if let closed = model.journey?.closedAt { Text("\(pTr("Closed")): \(closed.formatted())") }
-                NavigationLink(pTr("Review next shop")) { PickupNextShopView(model: model) }
+                Button(pTr("Review next shop")) { nextShopRequested = true }.accessibilityFocused($nextShopFocused)
             }
             if let journey = model.journey { PickupFeedbackSection(model: model, journey: journey) }
         }.navigationTitle(pTr("Close the pickup"))
+        .modifier(PickupNextShopRoute(model: model, requested: $nextShopRequested) { nextShopFocused = true })
             .disabled(model.saving)
     }
     private func save() {
@@ -98,52 +101,123 @@ struct PickupSettlementView: View {
     }
 }
 
-struct PickupNextShopView: View {
+/// The shopper can cancel the selection sheet until the new draft has been saved.
+/// Subsequent list, dinner and staple work uses the ordinary pushed navigation stack.
+struct PickupNextShopRoute: ViewModifier {
     @ObservedObject var model: PickupModel
-    @Environment(\.pickupLedger) private var ledger
-    @State private var accepted: Set<UUID> = []
-    @State private var created = false
+    @Binding var requested: Bool
+    let restoreFocus: () -> Void
+    @State private var review: PickupJourney?
+    @State private var openedDraft: UUID?
+    @State private var savedID: UUID?
+
+    func body(content: Content) -> some View {
+        content.onChange(of: requested) { _, launch in
+            guard launch else { return }
+            requested = false
+            guard let source = model.journey else { return }
+            if source.originShopID != nil, source.context == nil {
+                openedDraft = source.id
+            } else if let existing = model.journeys.first(where: { $0.originShopID == source.id }) {
+                model.selectedID = existing.id
+                openedDraft = existing.id
+            } else {
+                review = source
+            }
+        }
+        .sheet(item: $review, onDismiss: {
+            if let id = savedID { savedID = nil; openedDraft = id }
+            else { restoreFocus() }
+        }) { source in
+            NavigationStack {
+                PickupNextShopSelection(model: model, source: source) { id in
+                    savedID = id
+                    review = nil
+                }
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button(tr("Cancel")) { review = nil }.disabled(model.saving || model.hasPendingSave)
+                    }
+                }
+            }.presentationDetents([.large]).interactiveDismissDisabled(model.saving || model.hasPendingSave)
+        }
+        .navigationDestination(item: $openedDraft) { id in
+            if model.journey?.id == id { PickupNextShopDraft(model: model, journeyID: id) }
+        }
+    }
+}
+
+private struct PickupNextShopSelection: View {
+    @ObservedObject var model: PickupModel
+    let source: PickupJourney
+    let didSave: (UUID) -> Void
+    @State private var choices: [UUID: NextShopDisposition] = [:]
+
     var body: some View {
         Form {
             PickupSaveStatus(model: model)
             Text(pTr("Review each carryover. The new draft clears old prices, quotes, offers and checkout status. Prior history stays intact."))
-            ForEach(model.journey?.deferred.filter { $0.status == "review" } ?? []) { need in
+            ForEach(source.deferred.filter { $0.status == "review" }) { need in
                 Section(need.line.name) {
                     Text(pQuantity(need.line.quantity))
-                    Toggle(pTr("Accept into the next draft and reprice"), isOn: Binding(get: { accepted.contains(need.id) }, set: { if $0 { accepted.insert(need.id) } else { accepted.remove(need.id) } }))
-                    Button(pTr("Already handled · no new purchase")) { update(need.id, "handled") }
-                    Button(pTr("Dismiss this need")) { update(need.id, "dismissed") }
-                    Text(pTr("Leave unchecked to keep deferred."))
+                    Picker(pTr("For this trip"), selection: Binding(get: { choices[need.id] ?? .keep }, set: { choices[need.id] = $0 })) {
+                        Text(pTr("Keep deferred")).tag(NextShopDisposition.keep)
+                        Text(pTr("Accept into the next draft and reprice")).tag(NextShopDisposition.accept)
+                        Text(pTr("Already handled · no new purchase")).tag(NextShopDisposition.handled)
+                        Text(pTr("Dismiss this need")).tag(NextShopDisposition.dismissed)
+                    }
                 }
             }
-            NavigationLink(HistoryCopy.text("Family decision history")) { FamilyDecisionsEntry(localShopID: model.journey?.id) }
+            NavigationLink(HistoryCopy.text("Family decision history")) { FamilyDecisionsEntry(localShopID: source.id) }
             Section(pTr("Open meal needs")) {
-                ForEach(model.journey?.urgent.filter { !$0.resolved } ?? []) { need in
+                ForEach(source.urgent.filter { !$0.resolved }) { need in
                     Text("\(need.meal): \(need.food) · \(pQuantity(need.required))")
                 }
-                ForEach(model.allocation?.demands.filter { $0.shortfall != .zero } ?? []) { coverage in
-                    Text(model.journey?.needs.first { $0.id == coverage.id }?.name ?? pTr("Open meal need"))
+                if model.journey?.id == source.id {
+                    ForEach(model.allocation?.demands.filter { $0.shortfall != .zero } ?? []) { coverage in
+                        Text(source.needs.first { $0.id == coverage.id }?.name ?? pTr("Open meal need"))
+                    }
                 }
                 Text(pTr("Prior receipts and money remain with the previous pickup for review."))
             }
-            Button(pTr("Create fresh next-shop draft")) { Task { created = await model.startNextShop(accept: accepted) } }.buttonStyle(.borderedProminent).disabled(created)
-            if created {
-                Text(pTr("Fresh draft saved. Review its store, slot and prices before checkout."))
-                if let journey = model.journey { PickupSavedStockSection(model: model, journey: journey) }
-                if let ledger, let journeyID = model.journey?.id {
-                    NavigationLink(pTr("Open next shopping list")) { PickupListBridgeView(model: model, ledger: ledger, journeyID: journeyID) }.accessibilityIdentifier("pickupOpenCreatedNextList")
-                    NavigationLink(dinnerText("Accepted dinners and Free reusable dinner")) {
-                        NextShopDinnerContextEntry(pickup: model, ledger: ledger, journeyID: journeyID)
-                    }.accessibilityIdentifier("nextShop.reuseDinner")
-                    NavigationLink(ledgerText("Review prior staples")) {
-                        PickupListBridgeView(model: model, ledger: ledger, journeyID: journeyID, reviewStaples: true)
-                    }
-                } else { Text(pTr("Return to Shop to open the editable list for this saved draft.")) }
-            }
-        }.navigationTitle(pTr("Next shop"))
-            .onAppear { if model.journey?.originShopID != nil && model.journey?.context == nil { created = true } }
+            Button(pTr("Create fresh next-shop draft")) {
+                Task {
+                    let accepted = Set(choices.filter { $0.value == .accept }.keys)
+                    let closing = choices.filter { $0.value == .handled || $0.value == .dismissed }
+                    _ = await model.startNextShop(accept: accepted, closing: closing, sourceID: source.id, sourceRevision: source.revision)
+                }
+            }.buttonStyle(.borderedProminent).disabled(model.saving || model.hasPendingSave)
+        }
+        .navigationTitle(pTr("Next shop"))
+        .onChange(of: model.selectedID) { _, newID in
+            // A retried store write can also finish this exact creation.
+            if let id = newID, model.journey?.originShopID == source.id { didSave(id) }
+        }
     }
-    private func update(_ id: UUID, _ status: String) {
-        Task { if await model.change({ value in if let index = value.deferred.firstIndex(where: { $0.id == id }) { value.deferred[index].status = status } }) { accepted.remove(id) } }
+}
+
+private struct PickupNextShopDraft: View {
+    @ObservedObject var model: PickupModel
+    let journeyID: UUID
+    @Environment(\.pickupLedger) private var ledger
+
+    var body: some View {
+        Form {
+            PickupSaveStatus(model: model)
+            Text(pTr("Fresh draft saved. Review its store, slot and prices before checkout."))
+            if let journey = model.journey { PickupSavedStockSection(model: model, journey: journey) }
+            if let ledger {
+                NavigationLink(pTr("Open next shopping list")) {
+                    PickupListBridgeView(model: model, ledger: ledger, journeyID: journeyID)
+                }.accessibilityIdentifier("pickupOpenCreatedNextList")
+                NavigationLink(dinnerText("Accepted dinners and Free reusable dinner")) {
+                    NextShopDinnerContextEntry(pickup: model, ledger: ledger, journeyID: journeyID)
+                }.accessibilityIdentifier("nextShop.reuseDinner")
+                NavigationLink(ledgerText("Review prior staples")) {
+                    PickupListBridgeView(model: model, ledger: ledger, journeyID: journeyID, reviewStaples: true)
+                }
+            } else { Text(pTr("Return to Shop to open the editable list for this saved draft.")) }
+            NavigationLink(HistoryCopy.text("Family decision history")) { FamilyDecisionsEntry(localShopID: journeyID) }
+        }.navigationTitle(pTr("Next shop"))
     }
 }

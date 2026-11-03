@@ -291,7 +291,7 @@ struct PickupOfferForecastResults: View {
     }
     private func quantityText(_ amount: Rational?, _ unit: UnitOfMeasure) -> String {
         guard let amount else { return pTr("Unresolved") }
-        return "\(amount.description) \(pTr(unit.rawValue))"
+        return pQuantity(amount, unit: unit)
     }
     private func decisionText(_ decision: PickupOfferDishDecision) -> String {
         switch decision {

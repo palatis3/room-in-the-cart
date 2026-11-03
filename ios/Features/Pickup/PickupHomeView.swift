@@ -5,6 +5,8 @@ import CoreDomain
 struct PickupHomeView: View {
     @ObservedObject var model: PickupModel
     @Environment(\.pickupLedger) private var ledger
+    @State private var nextShopRequested = false
+    @AccessibilityFocusState private var nextShopFocused: Bool
     var body: some View {
         List {
             PickupSaveStatus(model: model)
@@ -28,7 +30,7 @@ struct PickupHomeView: View {
                     }
                     NavigationLink(pTr("Repair a meal")) { PickupRepairView(model: model) }
                     NavigationLink(pTr("Tell the cook")) { PickupCookView(model: model) }
-                    NavigationLink(pTr("Start the next shop")) { PickupNextShopView(model: model) }
+                    Button(pTr("Start the next shop")) { nextShopRequested = true }.accessibilityFocused($nextShopFocused)
                 }
             } else {
                 Text(pTr("Review your shopping list to begin checkout. You can also repair a meal without an order."))
@@ -57,6 +59,7 @@ struct PickupHomeView: View {
             }
         }
         .navigationTitle(pTr("Pickup"))
+        .modifier(PickupNextShopRoute(model: model, requested: $nextShopRequested) { nextShopFocused = true })
         .task { await model.load() }
         .disabled(model.saving)
     }

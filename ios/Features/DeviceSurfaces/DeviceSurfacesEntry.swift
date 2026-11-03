@@ -154,6 +154,8 @@ struct DeviceSurfacesDestination: View {
     @ObservedObject var pickup: PickupModel
     @ObservedObject var household: HouseholdModel
     @State private var selected = false
+    @State private var nextShopRequested = false
+    @AccessibilityFocusState private var nextShopFocused: Bool
     var body: some View {
         Group {
             switch destination {
@@ -180,10 +182,11 @@ struct DeviceSurfacesDestination: View {
                 } else { SurfaceUnavailableView() }
             case .deferral(let journey, let needID):
                 if composition.privateAuthorized, selected, pickup.journey?.id == journey, let need = pickup.journey?.deferred.first(where: { $0.id == needID && $0.status == "review" }) {
-                    Form { Text(need.line.name); NavigationLink(SurfaceCopy.text("Review next shop")) { PickupNextShopView(model: pickup).environment(\.pickupLedger, ledger) } }
+                    Form { Text(need.line.name); Button(SurfaceCopy.text("Review next shop")) { nextShopRequested = true }.accessibilityFocused($nextShopFocused).environment(\.pickupLedger, ledger) }
                 } else { SurfaceUnavailableView() }
             }
-        }.task {
+        }.modifier(PickupNextShopRoute(model: pickup, requested: $nextShopRequested) { nextShopFocused = true })
+        .task {
             guard composition.privateAuthorized else { return }
             switch destination { case .shop(let id): await ledger.selectShop(id)
             case .offer(let id, _), .deferral(let id, _): if composition.privateAuthorized { pickup.selectedID = id }

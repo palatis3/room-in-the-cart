@@ -1,0 +1,57 @@
+{
+  "date": "2026-11-03",
+  "resultBundle": ".build/AtomicHandoffWorkflow.xcresult",
+  "passedTests": 350,
+  "failedTests": 0,
+  "devices": [
+    {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+        "deviceName": "iPhone 17e",
+        "modelName": "iPhone 17e",
+        "osBuildNumber": "24A434",
+        "osVersion": "27.0",
+        "platform": "iOS Simulator"
+      },
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "passedTests": 350,
+      "skippedTests": 0,
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      }
+    }
+  ],
+  "walkthrough": "Start from an urgent meal need, restart, cancel the next-shop sheet, reopen it, create one reviewed draft and open its shopping list. Records remains reachable.",
+  "modelCoverage": [
+    "Source and target revisions checked atomically when creating or reopening the next pickup",
+    "Stale edits require reload and review",
+    "Private cook note retains separate portion amounts and one identical instruction per source ingredient",
+    "Prior records remain readable when the new optional evidence is absent"
+  ],
+  "localStoreSuite": {
+    "passed": 74,
+    "log": ".build/next-shop-cas-sqlite.log"
+  },
+  "sourceSHA256": {
+    "ios/App/DeviceSurfacesComposition.swift": "e5e85aaa98d5e879d739e83d7b0a44ca14ab7095bfd12e384640565dde8c6330",
+    "ios/App/LedgerCheckoutEntry.swift": "d0d2b577cf17c53c51fa9e0483c77f6eed3bae0fa8fe5c7889255d5fb92182df",
+    "ios/Features/DeviceSurfaces/DeviceSurfacesEntry.swift": "72c5ee97e7e42f504a56b9921f5dd482fc5a7e4ed3ba0db10e016031286c5558",
+    "ios/Features/Ledger/StapleRecallViews.swift": "f98900dd59f7ca0713a32726fc17179c542bd6d220cd45ac302ab776b19cee56",
+    "ios/Features/Pickup/Pickup.xcstrings": "75c72522f4a8e068ad2440b2aa8188d5a7590cecb5ed5f5c06afb4ecb4f8deb1",
+    "ios/Features/Pickup/PickupCookProjection.swift": "6bc2137b1206d1d270ce4b6175f74c97d51b0fbd1157e0a7e8c227abc6773719",
+    "ios/Features/Pickup/PickupHomeView.swift": "c09992bb6913df5de80e91ae8397b2a9b3cab93dd6e432288daacaa66edaa6d9",
+    "ios/Features/Pickup/PickupModel.swift": "950b7ec3204bdba697544716a8ed9a55ca66b01c5939f90a830a7be905519514",
+    "ios/Features/Pickup/PickupOfferForecastViews.swift": "61893780afa61229503cd72219d6101d6192b2a20449d2d7d1dec0274085ad7f",
+    "ios/Features/Pickup/PickupSavedStockSection.swift": "81721f8418cf11c0f053481ddeeb284ff18380fa9ccf78a17e0973787f4b77c3",
+    "ios/Features/Pickup/PickupSettlementView.swift": "7ac86bff0e67a50aac380a22200f58a692d2659a22c75b545cc59574afdac815",
+    "ios/Packages/LocalStore/Sources/LocalStore/ComparisonStore.swift": "f3238a7589941cd248bc8ad2535cd6b6b23c40c2a633aa8059aa84f4e3c53e6f",
+    "ios/Packages/LocalStore/Tests/LocalStoreTests/ComparisonStoreTests.swift": "6a8bafd8224e526ea03837c6b6156330ec86fbc90a58bcc856ee55790feac404",
+    "ios/Tests/FreeJourneyAcceptanceTests.swift": "c408a3181bf553c6a3f8558290f0faa4bcef55b4bc33177053fb68feee47a38d",
+    "ios/Tests/PickupStockBatchTests.swift": "e2900106f61eadfe3d420ebde2b2d5280d6ebf520c4489ea12505dafe02163e7",
+    "ios/Tests/PickupCookProjectionTests.swift": "528b5276164b75937951ed641a247f7d569fa3f23dce27c5b57edc6dd3476838",
+    "ios/UITests/FreeJourneyUITests.swift": "3af1d34254779ad3cf3af27949f79ff5a4d86c7071c05c5752e125a516d80c22"
+  }
+}

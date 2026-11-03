@@ -37,6 +37,20 @@ final class PickupCookProjectionTests: XCTestCase {
         let scope = CheckoutContext(storeID: "Private store", branchID: "Main", mode: .pickup, slot: "Evening", commitmentsID: journey.id, observedAt: now, source: "Reviewed")
         return try CheckoutEngine.evaluate(CheckoutQuote(scope: .wholeCheckout, context: scope, pricing: .inclusiveTotal(.exact(Money(minorUnits: 4069)))), cap: nil)
     }
+    func testSplitServingsRepeatQuantitiesButShareOneSetOfIngredientInstructions() throws {
+        let (fixtureJourney, allocation) = try fixture()
+        var journey = fixtureJourney
+        let source = UUID()
+        journey.needDetails = journey.needs.map { need in
+            PickupNeedDetail(id: need.id, mealName: "Tacos", exclusions: ["no sesame"],
+                             scheduledDay: nil, leadTimeMinutes: nil, completedSteps: [], sourceContributionID: source)
+        }
+        let pieces = PickupCookProjection.pieces(journey: journey, allocation: allocation, language: "en", timeZone: utc)
+        XCTAssertEqual(pieces.filter { $0.text.contains("no sesame") }.count, 1)
+        XCTAssertEqual(pieces.filter { $0.key.hasPrefix("need/") }.count, 2)
+        journey.needDetails[1].sourceContributionID = UUID()
+        XCTAssertEqual(PickupCookProjection.pieces(journey: journey, allocation: allocation, language: "en").filter { $0.text.contains("no sesame") }.count, 2)
+    }
     func testFormatterPreservesProtectedPortionsConfirmedSupplyAndUnresolvedNeed() throws {
         let (journey, allocation) = try fixture()
         let value = text(journey, allocation)

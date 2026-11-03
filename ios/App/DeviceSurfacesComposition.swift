@@ -270,13 +270,14 @@ import DeviceSurfaces
     }
     private func validTarget(_ row: SurfaceRouteRecord, requireRevision: Bool) -> Bool {
         guard privateAuthorized, row.route.personaID == access?.localActorID, row.route.generation == routeGeneration(row.target) else { return false }
+        let eligible = row.reminderID == nil ? pickup?.journeys : pickup?.reminderJourneys
         switch row.target {
         case .shop(let workspace, let shopID): return scope?.workspaceID == workspace && shop(shopID) != nil
         case .offer(let workspace, let journeyID, let offerID):
-            guard pickupWorkspaceID == workspace, let journey = pickup?.journeys.first(where: { $0.id == journeyID }), journey.offers.contains(where: { $0.id == offerID }) else { return false }
+            guard pickupWorkspaceID == workspace, let journey = eligible?.first(where: { $0.id == journeyID }), (row.reminderID == nil || journey.closedAt == nil), journey.offers.contains(where: { $0.id == offerID }) else { return false }
             return !requireRevision || journey.revision == row.sourceRevision
         case .deferral(let workspace, let journeyID, let needID):
-            guard pickupWorkspaceID == workspace, let journey = pickup?.journeys.first(where: { $0.id == journeyID }), journey.deferred.contains(where: { $0.id == needID && $0.status == "review" }) else { return false }
+            guard pickupWorkspaceID == workspace, let journey = eligible?.first(where: { $0.id == journeyID }), journey.deferred.contains(where: { $0.id == needID && $0.status == "review" }) else { return false }
             return !requireRevision || journey.revision == row.sourceRevision
         }
     }
@@ -326,8 +327,8 @@ import DeviceSurfaces
     }
     var reminderTargets: [SurfaceReminderTarget] {
         guard privateAuthorized, let workspace = pickupWorkspaceID else { return [] }
-        return (pickup?.journeys ?? []).flatMap { journey in
-            journey.offers.map { SurfaceReminderTarget(target: .offer(workspaceID: workspace, journeyID: journey.id, offerID: $0.id), title: $0.replacement, revision: journey.revision, cutoff: $0.deadline.cutoff, timeZoneID: $0.deadline.timeZoneID) }
+        return (pickup?.reminderJourneys ?? []).flatMap { journey in
+            (journey.closedAt == nil ? journey.offers : []).map { SurfaceReminderTarget(target: .offer(workspaceID: workspace, journeyID: journey.id, offerID: $0.id), title: $0.replacement, revision: journey.revision, cutoff: $0.deadline.cutoff, timeZoneID: $0.deadline.timeZoneID) }
             + journey.deferred.filter { $0.status == "review" }.map { SurfaceReminderTarget(target: .deferral(workspaceID: workspace, journeyID: journey.id, needID: $0.id), title: $0.line.name, revision: journey.revision, cutoff: nil, timeZoneID: TimeZone.current.identifier) }
         }
     }

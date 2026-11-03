@@ -261,7 +261,9 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
         try requireSaved(await pickup.startNextShop(accept: []))
         let next = try XCTUnwrap(pickup.journey)
         XCTAssertEqual(next.carriedMeals, [needs[2]])
-        XCTAssertEqual(next.deferred, [decisions[2]])
+        XCTAssertEqual(next.deferred.map(\.id), [decisions[2].id])
+        XCTAssertEqual(next.deferred.first?.line.quantity, decisions[2].line.quantity)
+        guard case .unknown = next.deferred.first?.line.expectedCost else { return XCTFail("A new trip needs fresh pricing") }
         let reopened = PickupModel(databaseURL: url)
         await reopened.load()
         reopened.selectedID = origin
@@ -269,6 +271,58 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
         XCTAssertEqual(reopened.journey, next)
         XCTAssertEqual(reopened.journeys.first { $0.id == origin }, before)
         XCTAssertEqual(reopened.journeys.count, 2)
+    }
+
+    @MainActor func testReviewedNextShopDispositionIsScopedAndNeverRewritesSource() async throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let model = PickupModel(databaseURL: directory.appendingPathComponent("next.sqlite"))
+        try requireSaved(await model.addUrgent(UrgentMealNeed(id: UUID(), food: "Coffee", meal: "Breakfast", required: quantity(1), available: quantity(0), due: nil, confirmedAt: now)))
+        let sourceID = try XCTUnwrap(model.journey?.id), key = UUID()
+        let line = BasketLine(id: UUID(), name: "Coffee", quantity: quantity(1), expectedCost: .exact(Money(minorUnits: 460)))
+        try requireSaved(await model.change { $0.deferred = [DeferredPickupNeed(id: key, sourceShopID: sourceID, line: line, status: "review")] })
+        let before = try XCTUnwrap(model.journey)
+        let rejected = await model.startNextShop(accept: [], closing: [key: .handled], sourceID: sourceID, sourceRevision: before.revision - 1)
+        XCTAssertFalse(rejected)
+        XCTAssertEqual(model.journey, before)
+        try requireSaved(await model.startNextShop(accept: [], closing: [key: .handled], sourceID: sourceID, sourceRevision: before.revision))
+        XCTAssertTrue(try XCTUnwrap(model.journey?.basket?.current.lines).isEmpty)
+        XCTAssertEqual(model.journey?.deferred.first?.status, "handled")
+        XCTAssertFalse(model.reminderJourneys.contains(where: { $0.id == sourceID }))
+        XCTAssertEqual(model.journeys.first { $0.id == sourceID }, before)
+    }
+
+    @MainActor func testConcurrentPickupChangesAndCompetingNextShopsRequireAFreshReview() async throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let database = directory.appendingPathComponent("shared-pickup.sqlite")
+        let first = PickupModel(databaseURL: database), second = PickupModel(databaseURL: database)
+        try requireSaved(await first.addUrgent(UrgentMealNeed(id: UUID(), food: "Milk", meal: "Breakfast", required: quantity(2), available: quantity(0), due: nil, confirmedAt: now)))
+        await second.load()
+        let source = try XCTUnwrap(first.journey?.id)
+        let deferred = DeferredPickupNeed(id: UUID(), sourceShopID: source,
+                                         line: BasketLine(id: UUID(), name: "Coffee", quantity: quantity(1), expectedCost: .exact(.zero)),
+                                         status: "review")
+        try requireSaved(await first.change { $0.deferred.append(deferred) })
+        let stale = await second.startNextShop(accept: [], sourceID: source, sourceRevision: try XCTUnwrap(second.journey?.revision))
+        XCTAssertFalse(stale)
+        XCTAssertFalse(second.hasPendingSave)
+        XCTAssertEqual(second.journey?.deferred.first?.id, deferred.id)
+        let revision = try XCTUnwrap(second.journey?.revision)
+        try requireSaved(await first.startNextShop(accept: [], closing: [deferred.id: .handled], sourceID: source, sourceRevision: revision))
+        let draft = try XCTUnwrap(first.journey?.id)
+        let lostRace = await second.startNextShop(accept: [deferred.id], sourceID: source, sourceRevision: revision)
+        XCTAssertFalse(lostRace)
+        XCTAssertEqual(second.journeys.count, 2)
+        let changedIntent = await second.startNextShop(accept: [deferred.id], sourceID: source, sourceRevision: revision)
+        XCTAssertFalse(changedIntent)
+        try requireSaved(await second.startNextShop(accept: [], closing: [deferred.id: .handled], sourceID: source, sourceRevision: revision))
+        XCTAssertEqual(second.selectedID, draft)
+        XCTAssertTrue(try XCTUnwrap(second.journey?.basket?.current.lines).isEmpty)
+        try requireSaved(await first.change { $0.closedAt = self.now })
+        let staleEdit = await second.change { $0.closedAt = self.now.addingTimeInterval(10) }
+        XCTAssertFalse(staleEdit)
+        XCTAssertEqual(second.journey?.closedAt, now)
     }
 
     @MainActor func testCurrentDinnerFeatureFreeReusableChoiceProjectsLunchAndSurvivesNewShopRestart() async throws {

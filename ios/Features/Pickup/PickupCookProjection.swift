@@ -40,13 +40,19 @@ enum PickupCookProjection {
             if unresolved { lines.append(warning) }
             pieces.append(.init(key: "need/\(need.id)", text: lines.joined(separator: "\n\n"), unresolved: unresolved ? "\(need.name) · \(warning)" : nil))
         }
+        var renderedDetails: [UUID: Set<String>] = [:]
         for detail in value.needDetails where value.needs.contains(where: { $0.id == detail.id }) {
+            // Lunch and dinner allocations can share the same original ingredient instructions.
+            let sourceID = detail.sourceContributionID ?? detail.id
             var lines: [String] = []
             if !detail.exclusions.isEmpty { lines.append("\(detail.mealName) · \(pCook("Keep these exclusions", language: language)): \(detail.exclusions.joined(separator: ", "))") }
             if let day = detail.scheduledDay { lines.append("\(detail.mealName): \(day.iso8601) · \(day.timeZoneIdentifier)") }
             if let minutes = detail.leadTimeMinutes { lines.append("\(pCook("Saved elapsed preparation minutes", language: language)): \(minutes)") }
             if !detail.completedSteps.isEmpty { lines.append("\(pCook("Steps already marked complete", language: language)): \(detail.completedSteps.joined(separator: "; "))") }
-            if !lines.isEmpty { pieces.append(.init(key: "detail/\(detail.id)", text: lines.joined(separator: "\n\n"), unresolved: nil)) }
+            let text = lines.joined(separator: "\n\n")
+            if !text.isEmpty, renderedDetails[sourceID, default: []].insert(text).inserted {
+                pieces.append(.init(key: "detail/\(detail.id)", text: text, unresolved: nil))
+            }
         }
         for repair in value.repairs {
             let timing = pCook(repair.timingConfirmed ? "Entered preparation time fits the deadline" : "Timing conditional or deadline missed · review before cooking", language: language)

@@ -103,7 +103,8 @@ public actor ComparisonStore {
     /// An exact payload/title retry returns the original timestamp and revision, even if
     /// the caller supplies a later retry time. Date is evidence, not operation identity.
     @discardableResult
-    public func save(id: UUID, title: String, payload: Data, savedAt: Date) throws -> SavedComparison {
+    public func save(id: UUID, title: String, payload: Data, savedAt: Date,
+                     requiring revisions: [UUID: Int64] = [:]) throws -> SavedComparison {
         guard payload.count <= Self.maximumPayloadBytes else { throw ComparisonStoreError.payloadTooLarge }
         guard title.utf8.count <= 4096, !title.contains("\0"), savedAt.timeIntervalSinceReferenceDate.isFinite
         else { throw ComparisonStoreError.invalidInput }
@@ -111,6 +112,13 @@ public actor ComparisonStore {
             guard try !isErased(id: id) else { throw ComparisonStoreError.erased }
             let previous = try load(id: id)
             if let previous, previous.title == title, previous.payload == payload { return previous }
+            // The source and destination must still match the reviewed SQLite heads.
+            // Zero denotes a new record. Check in the same transaction as the write.
+            for (recordID, expected) in revisions {
+                guard expected >= 0 else { throw ComparisonStoreError.invalidInput }
+                let head = try database.head(id: recordID, workspaceID: workspaceID) ?? 0
+                guard head == expected else { throw ComparisonStoreError.staleRevision(expected: expected, actual: head) }
+            }
             guard previous?.revision != Int64.max else { throw ComparisonStoreError.corruptRecord }
             let revision = (previous?.revision ?? 0) + 1
             let encoder = JSONEncoder()

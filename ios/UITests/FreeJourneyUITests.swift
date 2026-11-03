@@ -230,6 +230,30 @@ import XCTest
         capture("P06-Free-cook-acknowledged-version")
     }
 
+    func testNextShopCanCancelThenOpenOneFreshShoppingList() {
+        launch(reset: true)
+        tap(element("urgentRepairShortcut"))
+        fill("Rice", into: "Food that is short")
+        fill("Dinner", into: "Meal or purpose")
+        fill("3", into: "Required amount")
+        fill("1", into: "Usable amount available now")
+        enableSwitch("I checked this food’s identity and usable amount")
+        tap(app.buttons["Save need and repair meal"])
+        assertText("Open meal need")
+        restart()
+        tap(app.buttons["Pickup, repairs and handoffs"])
+        tap(app.buttons["Start the next shop"])
+        tap(app.buttons["Cancel"])
+        XCTAssertTrue(app.navigationBars["Pickup"].exists)
+        tap(app.buttons["Start the next shop"])
+        tap(app.buttons["Create fresh next-shop draft"])
+        tap(element("pickupOpenCreatedNextList"))
+        assertText("Store not set")
+        capture("Next-shop-reviewed-draft-opened")
+        tap(app.tabBars.buttons["Records"])
+        XCTAssertTrue(app.tabBars.buttons["Records"].isSelected)
+    }
+
     func testCorrectFreezerBatchAndReadReservationsAfterRestart() {
         launch(reset: true)
         tap(element("urgentRepairShortcut"))
@@ -397,6 +421,9 @@ import XCTest
     private func enableSwitch(_ label: String) {
         let control = app.switches[label]
         reveal(control)
+        let area = scrollableArea()
+        if control.frame.midY > area.maxY { scrollContent(upward: true) }
+        else if control.frame.midY < area.minY { scrollContent(upward: false) }
         if control.value as? String == "0" {
             // The accessibility frame includes the Form label. Tap the trailing switch itself.
             control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()

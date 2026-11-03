@@ -73,12 +73,12 @@ private struct PickupBatchReview: View {
                             model.journey?.stockNeeds.first { $0.id == edge.needID }?.name ??
                             model.journey?.plannedNeeds.first { $0.id == edge.needID }?.name
                         if let name {
-                            Text("\(name) · \(edge.amount.description) \(pTr(edge.unit.rawValue))")
+                            Text("\(name) · \(pQuantity(edge.amount, unit: edge.unit))")
                         }
                     }
                     if let balance = allocation.remainingLots.first(where: { $0.lotID == lot.id }) {
                         if balance.issues.isEmpty {
-                            Text("\(pTr("Unreserved")): \(balance.remainingUnallocated.description) \(pTr(balance.unit.rawValue))")
+                            Text("\(pTr("Unreserved")): \(pQuantity(balance.remainingUnallocated, unit: balance.unit))")
                         } else {
                             Text(pTr("Unresolved"))
                         }

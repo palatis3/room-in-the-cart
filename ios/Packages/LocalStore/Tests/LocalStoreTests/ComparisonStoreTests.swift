@@ -42,6 +42,25 @@ final class ComparisonStoreTests: XCTestCase {
         try await store.close()
     }
 
+    func testStaleSourceCannotCreateSiblingAndExactRetryPreservesFirstWrite() async throws {
+        let store = try ComparisonStore(url: url)
+        let source = UUID(), child = UUID()
+        _ = try await store.save(id: source, title: "Source", payload: Data([1]), savedAt: Date())
+        _ = try await store.save(id: source, title: "Source", payload: Data([2]), savedAt: Date(), requiring: [source: 1])
+        do {
+            _ = try await store.save(id: child, title: "Next", payload: Data([3]), savedAt: Date(), requiring: [source: 1, child: 0])
+            XCTFail("An older source cannot create a next shop")
+        } catch let error as ComparisonStoreError {
+            XCTAssertEqual(error, .staleRevision(expected: 1, actual: 2))
+        }
+        let absent = try await store.load(id: child)
+        XCTAssertNil(absent)
+        let saved = try await store.save(id: child, title: "Next", payload: Data([3]), savedAt: Date(), requiring: [source: 2, child: 0])
+        let retry = try await store.save(id: child, title: "Next", payload: Data([3]), savedAt: Date(), requiring: [source: 2, child: 0])
+        XCTAssertEqual(retry, saved)
+        try await store.close()
+    }
+
     func testSubsecondDateRoundTripsExactly() async throws {
         let store = try ComparisonStore(url: url)
         // Converting this reference-epoch Double to Unix epoch and back loses a bit.

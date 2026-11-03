@@ -84,13 +84,13 @@ enum LedgerCheckoutAdapter {
                         let portion = try amount.multiplied(by: group.servings.divided(by: meal.servings))
                         let id = compositeID(contribution.id, group.id)
                         needs.append(AllocationNeed(id: id, orderLineID: line.id, name: "\(meal.title) · \(group.name)", amount: Quantity(amount: portion, unit: line.quantity.unit, originalLiteral: quantity.originalLiteral), priority: group.isProtected ? .protected : .required))
-                        details.append(PickupNeedDetail(id: id, mealName: meal.title, exclusions: contribution.exclusions, scheduledDay: meal.scheduledDay, leadTimeMinutes: meal.leadTimeMinutes, completedSteps: meal.completedSteps))
+                        details.append(PickupNeedDetail(id: id, mealName: meal.title, exclusions: contribution.exclusions, scheduledDay: meal.scheduledDay, leadTimeMinutes: meal.leadTimeMinutes, completedSteps: meal.completedSteps, sourceContributionID: contribution.id))
                     }
                     let remainingServings = try meal.servings.subtracting(usedServings)
                     if remainingServings > .zero {
                         let portion = try amount.multiplied(by: remainingServings.divided(by: meal.servings))
                         needs.append(AllocationNeed(id: contribution.id, orderLineID: line.id, name: meal.title, amount: Quantity(amount: portion, unit: line.quantity.unit, originalLiteral: quantity.originalLiteral), priority: .required))
-                        details.append(PickupNeedDetail(id: contribution.id, mealName: meal.title, exclusions: contribution.exclusions, scheduledDay: meal.scheduledDay, leadTimeMinutes: meal.leadTimeMinutes, completedSteps: meal.completedSteps))
+                        details.append(PickupNeedDetail(id: contribution.id, mealName: meal.title, exclusions: contribution.exclusions, scheduledDay: meal.scheduledDay, leadTimeMinutes: meal.leadTimeMinutes, completedSteps: meal.completedSteps, sourceContributionID: contribution.id))
                     }
                 default: break
                 }
