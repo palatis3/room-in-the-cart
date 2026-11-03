@@ -206,7 +206,7 @@ These are blocks on release or the affected assurance, not reasons to stop indep
 3. Exercise the real entry route, cancellation, save/restart, unknown inputs, permissions and stale/retry paths that apply. Record human assistive-access and bilingual review separately from automated checks.
 4. Link all dependent requirement/route rows and outstanding risks. Record a failing scenario as open, not as “done with caveats.” Reopen evidence affected by later source changes.
 
-The complete Free dinner-to-next-shop journey now passes. Remaining work includes staged import and duplicate decisions across restart, first-time urgent repair, household and paid flows, the unfiltered accessibility audit and release operations.
+The complete Free dinner-to-next-shop journey now passes. A separate [fresh-install urgent repair journey](evidence/native/urgent-repair-two-meals-summary.json) saves two meal needs before any order and reopens both after restart. The [integrated native suite](evidence/native/integrated-native-scan-summary.json) passes all 247 tests. Remaining work includes staged import and duplicate decisions across restart, household and paid flows, the unfiltered accessibility audit and release operations.
 
 [src-app]: ../ios/App/RoomInTheCartApp.swift
 [src-pack]: ../ios/Features/Shop/ComparisonView.swift

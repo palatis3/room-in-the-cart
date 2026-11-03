@@ -151,6 +151,37 @@ import XCTest
         assertText("Next shop")
     }
 
+    func testUrgentRepairWithoutAnOrderPersistsAcrossRestart() throws {
+        launch(reset: true)
+        tap(element("urgentRepairShortcut"))
+        fill("Tortillas", into: "Food that is short")
+        fill("Wednesday supper", into: "Meal or purpose")
+        fill("6", into: "Required amount")
+        fill("2", into: "Usable amount available now")
+        enableSwitch("I checked this food’s identity and usable amount")
+        fill("3", into: "Usable amount available now", replacing: true)
+        XCTAssertFalse(app.buttons["Save need and repair meal"].isEnabled)
+        enableSwitch("I checked this food’s identity and usable amount")
+        tap(app.buttons["Save need and repair meal"])
+        assertText("Open meal need")
+        assertText("Wednesday supper")
+        capture("Free-urgent-need-before-shopping")
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        fill("Beans", into: "Food that is short")
+        fill("Thursday lunch", into: "Meal or purpose")
+        fill("4", into: "Required amount")
+        fill("1", into: "Usable amount available now")
+        enableSwitch("I checked this food’s identity and usable amount")
+        tap(app.buttons["Save need and repair meal"])
+        assertText("Thursday lunch")
+        restart()
+        tap(app.buttons["Pickup, repairs and handoffs"])
+        tap(app.buttons["Repair a meal"])
+        assertText("Open meal need")
+        assertText("Wednesday supper")
+        assertText("Thursday lunch")
+    }
+
     private func launch(reset: Bool) {
         app.launchArguments = ["--ui-testing", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         if reset { app.launchArguments.append("--reset-test-workspace") }

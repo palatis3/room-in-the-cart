@@ -4,6 +4,8 @@ import CoreDomain
 
 struct UrgentRepairView: View {
     @ObservedObject var model: PickupModel
+    private enum Field { case food, meal, required, available }
+    @FocusState private var field: Field?
     @State private var food = ""
     @State private var meal = ""
     @State private var required = ""
@@ -11,32 +13,49 @@ struct UrgentRepairView: View {
     @State private var unit: UnitOfMeasure = .count
     @State private var hasDue = false
     @State private var due = Date()
-    @State private var confirmed = false
+    @State private var confirmedAt: Date?
     @State private var operationID = UUID()
     @State private var showRepair = false
     var body: some View {
         Form {
             PickupSaveStatus(model: model)
             Text(pTr("Make a private meal need from food you have checked. This does not create an order, delivery or charge."))
-            TextField(pTr("Food that is short"), text: $food)
-            TextField(pTr("Meal or purpose"), text: $meal)
-            TextField(pTr("Required amount"), text: $required).keyboardType(.decimalPad)
-            TextField(pTr("Usable amount available now"), text: $available).keyboardType(.decimalPad)
+            TextField(pTr("Food that is short"), text: $food).focused($field, equals: .food)
+            TextField(pTr("Meal or purpose"), text: $meal).focused($field, equals: .meal)
+            TextField(pTr("Required amount"), text: $required).focused($field, equals: .required).keyboardType(.decimalPad)
+            TextField(pTr("Usable amount available now"), text: $available).focused($field, equals: .available).keyboardType(.decimalPad)
             Picker(pTr("Unit"), selection: $unit) { ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pTr($0.rawValue)).tag($0) } }
-            Toggle(pTr("I checked this food’s identity and usable amount"), isOn: $confirmed)
+            Toggle(pTr("I checked this food’s identity and usable amount"), isOn: Binding(
+                get: { confirmedAt != nil }, set: { confirmedAt = $0 ? Date() : nil }
+            ))
             Toggle(pTr("Meal deadline is known"), isOn: $hasDue)
             if hasDue { DatePicker(pTr("Needed by"), selection: $due) }
-            Button(pTr("Save need and repair meal")) { save() }.buttonStyle(.borderedProminent).disabled(!confirmed)
+            Button(pTr("Save need and repair meal")) { save() }.buttonStyle(.borderedProminent).disabled(confirmedAt == nil)
         }.navigationTitle(pTr("Something is missing"))
+            .onChange(of: [food, meal, required, available, unit.rawValue]) { _, _ in confirmedAt = nil }
+            .scrollDismissesKeyboard(.interactively)
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button(tr("Done")) { field = nil }
+                }
+            }
             .task { await model.load() }
             .navigationDestination(isPresented: $showRepair) { PickupRepairView(model: model) }
             .disabled(model.saving)
     }
     private func save() {
         do {
-            guard !food.isEmpty, !meal.isEmpty, let needed = try ComparisonModel.quantity(required, unit), let stock = try ComparisonModel.quantity(available, unit) else { throw CocoaError(.validationMissingMandatoryProperty) }
-            let need = UrgentMealNeed(id: operationID, food: food, meal: meal, required: needed, available: stock, due: hasDue ? due : nil, confirmedAt: Date())
-            Task { if await model.addUrgent(need) { showRepair = true } }
+            guard let confirmedAt, !food.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  !meal.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, let needed = try ComparisonModel.quantity(required, unit), let stock = try ComparisonModel.quantity(available, unit) else { throw CocoaError(.validationMissingMandatoryProperty) }
+            let need = UrgentMealNeed(id: operationID, food: food, meal: meal, required: needed, available: stock, due: hasDue ? due : nil, confirmedAt: confirmedAt)
+            Task {
+                guard await model.addUrgent(need) else { return }
+                operationID = UUID()
+                food = ""; meal = ""; required = ""; available = ""
+                unit = .count; hasDue = false; due = Date(); self.confirmedAt = nil
+                showRepair = true
+            }
         } catch { model.error = pTr("Enter the food, meal and valid required and available amounts.") }
     }
 }
