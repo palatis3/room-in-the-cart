@@ -1,0 +1,44 @@
+{
+  "status": "local_contract_passed_not_production",
+  "counts": {
+    "tests": 30,
+    "pass": 30,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "runtime": {
+    "path": "/Users/palatis/Room in the Cart/.tools/node-v22.14.0-darwin-arm64/bin/node",
+    "version": "v22.14.0",
+    "sha256": "e2d4915d03eda6a2f00a09920e7eeb7a04ad123f9aaad61b1481179fe1bf50e0"
+  },
+  "sourcePins": [
+    {
+      "path": "/Users/palatis/Room in the Cart/service/src/privacy-journal.ts",
+      "sha256": "5bc1944554aa6057805b087bd77adad128aff795458d8a17eb30ddda213f8c1c"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/service/dist/privacy-journal.js",
+      "sha256": "423c823cc5d1546390084727bf55d5febd7f7eaddb6ad2bb05acf548d9553937"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/service/node_modules/zod/package.json",
+      "sha256": "c2d190d9ee4e0bdb60332aaa2130a6a98d65ddb903fe1d29248b15de57832c45"
+    }
+  ],
+  "files": {
+    "contract-runtime.mjs": "705761a66d4333000ba7132de1605050078a1248d76752e3d0fe07962362de5c",
+    "deterministic-transports.mjs": "682e44e8258ec28b558aae5834ef225229841e88f454c391312ebb72f5dfc3bb",
+    "contract.test.mjs": "ab90df0d4cc148fe8f213af9ef481c754eadc3c6e80dc30650f6f85327af5caf",
+    "README.md": "ef5ea7194eea8854f6699bab58b1f48b75b0bfd7ad1380203a91ee7b65ab9508",
+    "test-output.tap": "4ba263900ecbdb9cf3a0334ae8ef4bb06fea082c81bfc436f1614f63cd190ce8",
+    "result.json": "7e45a314760c7b96b99711bee18135b28fcf7718e162fc1b5e10d81310f555df"
+  },
+  "limits": {
+    "processRecreation": "serialized model states reconstructed as new instances inside one Node process; fixture retains key/client capability custody; no physical process-kill or remote/power-loss proof",
+    "remoteDurabilityProved": false,
+    "sqlAuthenticationAuthorizationProved": false,
+    "productionReady": false
+  }
+}

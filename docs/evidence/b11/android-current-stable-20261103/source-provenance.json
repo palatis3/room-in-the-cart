@@ -1,0 +1,84 @@
+{
+  "checked_at_utc": "2026-11-03T21:52:00.988957+00:00",
+  "raw_html_xml_included": false,
+  "raw_source_scope": "Original scratch evidence current-android-chrome-evidence/final-check-20261103T2152Z; hashes below describe the fetched source bodies, not files installed beside this manifest.",
+  "sources": [
+    {
+      "source_body_name": "active-android-stable.json",
+      "url": "https://versionhistory.googleapis.com/v1/chrome/platforms/android/channels/stable/versions/all/releases?filter=endtime%3Dnone&order_by=version%20desc&pageSize=20",
+      "final_url": "https://versionhistory.googleapis.com/v1/chrome/platforms/android/channels/stable/versions/all/releases?filter=endtime%3Dnone&order_by=version%20desc&pageSize=20",
+      "method": "GET",
+      "credentials": "none",
+      "status": 200,
+      "response_date_utc": "Tue, 03 Nov 2026 21:51:59 GMT",
+      "bytes": 371,
+      "sha256": "ee18126aa29d601b4b582faef20600d5c9bdf14cd3d39cabd24746318f82e3cb"
+    },
+    {
+      "source_body_name": "google-play-sdk-metadata.xml",
+      "url": "https://dl.google.com/android/repository/sys-img/google_apis_playstore/sys-img2-3.xml",
+      "final_url": "https://dl.google.com/android/repository/sys-img/google_apis_playstore/sys-img2-3.xml",
+      "method": "GET",
+      "credentials": "none",
+      "status": 200,
+      "response_date_utc": "Tue, 03 Nov 2026 21:51:59 GMT",
+      "bytes": 238027,
+      "sha256": "515d4f4d418b580db9f48ec0f4dcc3fb1fada378f3a49b289b9adffda3a3d079"
+    },
+    {
+      "source_body_name": "chrome-android.html",
+      "url": "https://www.google.com/chrome/android/",
+      "final_url": "https://www.google.com/chrome/mobile/",
+      "method": "GET",
+      "credentials": "none",
+      "status": 200,
+      "response_date_utc": "Tue, 03 Nov 2026 21:51:59 GMT",
+      "bytes": 568302,
+      "sha256": "f664ecf3e1c6540923c46d99e8272d28a63ae7d79679db111a65810f52d6f883"
+    },
+    {
+      "source_body_name": "chrome-release-channels.html",
+      "url": "https://www.chromium.org/getting-involved/chrome-release-channels/",
+      "final_url": "https://www.chromium.org/getting-involved/chrome-release-channels/",
+      "method": "GET",
+      "credentials": "none",
+      "status": 200,
+      "response_date_utc": "Tue, 03 Nov 2026 21:51:59 GMT",
+      "bytes": 12623,
+      "sha256": "554afc0e400429e92157665880e2a45ff4b6c8e0fac7193de47fbaf852c8d31c"
+    },
+    {
+      "source_body_name": "android-install-documentation.html",
+      "url": "https://developer.chrome.com/docs/chromedriver/get-started/android",
+      "final_url": "https://developer.chrome.com/docs/chromedriver/get-started/android",
+      "method": "GET",
+      "credentials": "none",
+      "status": 200,
+      "response_date_utc": "Tue, 03 Nov 2026 21:52:00 GMT",
+      "bytes": 107876,
+      "sha256": "307fe8f616c087142d5022726ba956f9eb98d644f97157913f44a87b57f2972a"
+    },
+    {
+      "source_body_name": "chrome-enterprise-download.html",
+      "url": "https://chromeenterprise.google/browser/download/",
+      "final_url": "https://chromeenterprise.google/download/",
+      "method": "GET",
+      "credentials": "none",
+      "status": 200,
+      "response_date_utc": "Tue, 03 Nov 2026 21:52:00 GMT",
+      "bytes": 640081,
+      "sha256": "d87c59f074c5c9671e5ff75bc12f32b1266869b7fddfc55d4d829a63eaa7adc3"
+    },
+    {
+      "source_body_name": "chrome-for-testing-README.md",
+      "url": "https://raw.githubusercontent.com/GoogleChromeLabs/chrome-for-testing/main/README.md",
+      "final_url": "https://raw.githubusercontent.com/GoogleChromeLabs/chrome-for-testing/main/README.md",
+      "method": "GET",
+      "credentials": "none",
+      "status": 200,
+      "response_date_utc": "Tue, 03 Nov 2026 21:52:00 GMT",
+      "bytes": 13383,
+      "sha256": "36357a50c1dcfffbc4643c24762e6a1a23352bfe64a65a790ee2602aaedcfd93"
+    }
+  ]
+}

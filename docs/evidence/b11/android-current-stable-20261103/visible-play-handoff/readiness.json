@@ -1,0 +1,134 @@
+{
+  "checked_at_utc": "2026-11-03T23:01:02.477338+00:00",
+  "handoff_status": "READY: SAME AVD RUNNING VISIBLE; signed-out Google Play screen; leave running for human",
+  "owned_qemu_pid": 97755,
+  "exec_session": 71812,
+  "avd_name": "RITC_Chrome_API34",
+  "serial": "emulator-5554",
+  "api": "34",
+  "abi": "arm64-v8a",
+  "effective_guest_ram_mb": 2560,
+  "cores": 2,
+  "renderer": [
+    "-gpu",
+    "swiftshader",
+    "-feature",
+    "-Vulkan"
+  ],
+  "actual_packages": {
+    "com.android.chrome": {
+      "version_name": "149.0.7827.5",
+      "version_code": "782700532"
+    },
+    "com.android.vending": {
+      "version_name": "35.6.11-21",
+      "version_code": "83561110"
+    },
+    "com.google.android.gms": {
+      "version_name": "23.18.18",
+      "version_code": "231818044"
+    }
+  },
+  "android_process_metadata": [
+    {
+      "pid": 97755,
+      "parent_pid": 48580,
+      "elapsed": "07:46",
+      "rss_kib": 1254656,
+      "executable": "/private/tmp/ritc-android/sdk/emulator/qemu/darwin-aarch64/qemu-system-aarch64"
+    },
+    {
+      "pid": 97768,
+      "parent_pid": 1,
+      "elapsed": "07:41",
+      "rss_kib": 4880,
+      "executable": "/private/tmp/ritc-android/sdk/emulator/crashpad_handler"
+    },
+    {
+      "pid": 97774,
+      "parent_pid": 97755,
+      "elapsed": "07:39",
+      "rss_kib": 13520,
+      "executable": "/private/tmp/ritc-android/sdk/emulator/netsimd"
+    },
+    {
+      "pid": 99232,
+      "parent_pid": 1,
+      "elapsed": "03:09",
+      "rss_kib": 9840,
+      "executable": "adb"
+    }
+  ],
+  "scoped_local_listener_ownership": [
+    {
+      "pid": 97755,
+      "command": "qemu-system-aarch64",
+      "listen_address": "127.0.0.1:5555"
+    },
+    {
+      "pid": 97755,
+      "command": "qemu-system-aarch64",
+      "listen_address": "[::1]:5555"
+    },
+    {
+      "pid": 97755,
+      "command": "qemu-system-aarch64",
+      "listen_address": "127.0.0.1:5554"
+    },
+    {
+      "pid": 97755,
+      "command": "qemu-system-aarch64",
+      "listen_address": "[::1]:5554"
+    },
+    {
+      "pid": 99232,
+      "command": "adb",
+      "listen_address": "127.0.0.1:5037"
+    }
+  ],
+  "memory_pressure_query": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 65%\n",
+  "human_access": "Bring the already-open Android emulator window for RITC_Chrome_API34/emulator-5554 to the foreground. Google Play displays Sign in. Parent asks human to click it and handle credentials/2-step/terms directly; agent stops before that.",
+  "signed_out_screen_verified_at_utc": "2026-11-03T22:59:26.283510+00:00",
+  "screenshot_visually_inspected": true,
+  "screenshot": {
+    "file": "play-signed-out.png",
+    "bytes": 65171,
+    "sha256": "310bf226c3a4319adf9e812dbdced2fb9f1bd7bff57cdf7e2d5041160de00008"
+  },
+  "ui_xml": {
+    "file": "play-signed-out.xml",
+    "bytes": 5477,
+    "sha256": "da7241cfd431fc65914ac172474cb0454463645d3608557d5782c1049c44f4aa"
+  },
+  "host_default_adb_key_metadata_only": [
+    {
+      "path": "/Users/palatis/.android/adbkey",
+      "exists": true,
+      "contents_read": false,
+      "bytes": 1704,
+      "birth_utc": "2026-11-03T22:53:30.082484+00:00"
+    },
+    {
+      "path": "/Users/palatis/.android/adbkey.pub",
+      "exists": true,
+      "contents_read": false,
+      "bytes": 736,
+      "birth_utc": "2026-11-03T22:53:30.083296+00:00"
+    }
+  ],
+  "account_db_tokens_or_private_keys_read": false,
+  "sign_in_terms_account_or_update_action": false,
+  "new_image_sdk_artifact_download": false,
+  "data_wipe_or_new_avd": false,
+  "current_stable_acceptance": "UNRUN; running Chrome149 is historical engine only",
+  "parent_17e_touched": false,
+  "git_action": false,
+  "cleanup": "Do not execute while human may interact. After parent/human finish: verify exact emulator identity and use adb -P 5037 -s emulator-5554 emu kill. Verify the current ADB daemon/5037 ownership before any later adb -P 5037 kill-server; no global device shutdown. Do not remove host keys or account state automatically.",
+  "observed_postboot_qemu_rss_kib": [
+    5451904,
+    5500896
+  ],
+  "observed_rss_is_measured_peak": false,
+  "no_further_ui_inspection_after_handoff": true,
+  "human_may_now_change_screen": true
+}

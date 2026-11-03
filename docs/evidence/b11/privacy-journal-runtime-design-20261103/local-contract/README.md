@@ -1,0 +1,36 @@
+# Local durable-port contract rehearsal
+
+**Nonproduction local prototype.** This directory models the proposed durable port using a fake SQL source, an in-memory create-only record store and a separately authorized checkpoint authority. It has no SQL driver, provider SDK, HTTP service, external storage configuration, network call or deployment hook. It neither enables account deletion nor establishes real remote durability, authentication, authorization, latency or production readiness.
+
+`contract-runtime.mjs` exposes a trusted constructor and the existing three-method journal port shape with a caller-owned deadline/signal. There is no sign-JSON, supplied-target import or remote signing endpoint. The constructor retains its synthetic signing key in a private closure. `beforeCommit` receives the calling acceptance process's SQL-produced candidate in the production design; this rehearsal's candidate is explicitly a **fake-source contract fixture**, not evidence that JWT/session/adult/guardian/provider/policy gates ran. The dedicated 001–023 repository evidence separately exercises the actual SQL/HTTP/device paths.
+
+The runtime imports the actual installed `journalCanonical`, `journalHash`, `verifyPrivacyJournal` and `validatePrivacyRestoreEvents` functions. Import refuses to proceed if the source module, built verifier module or Zod package metadata differs from the pinned SHA256 identities exported as `ACTUAL_VERIFIER_PINS`. Actual full-chain verification runs on materialized, independently sealed v1 bundles. Genuine Ed25519 journal and witness key pairs are generated only in process memory; no private key is exported, written to disk or included in snapshots/results.
+
+`deterministic-transports.mjs` models separate capabilities. The record writer may conditionally create exact immutable bytes; it cannot advance the canonical head. The checkpoint writer admits records through atomic reserve/publish checks against the exact generation/head/revision, stable event/digest/transition identity and authority-clock deadline. Its separate witness key authenticates heads/receipts. Operator recovery alone can increase the generation, wait for the source fence, resolve source-backed commits or proven rollbacks and seal a final head. Ordinary writers cannot clear a pending operation, take over an expired slot, admit rollback or reset a fenced origin. Late old-generation PUTs can persist as unreferenced blobs; publication rejects them.
+
+Strict content validation happens **before object persistence**, including when a rejected object might otherwise become an orphan. Progress validation resolves the original committed acceptance through the fixed source; it does not accept a caller's replacement target list. The fake source acknowledgement boundary also asserts that the exact durable commit receipt was admitted, making a no-op persistence adapter fail the rehearsal. This assertion is a test oracle for the trusted Node observer boundary, not a claim that current PostgreSQL verifies witness signatures.
+
+The fake SQL source models immutable committed events, transaction resolution, acknowledgement identity, per-job eligibility and a monotonic source fence waiting for earlier transactions. It does not reproduce PostgreSQL locking/isolation or security grants. The modeled request helper returns a Boolean representing successful ordering; it is not an actual HTTP 202 proof. The original status capability is represented by an opaque in-memory Symbol rather than a plaintext token in journal content.
+
+The scheduler explicitly pauses/fails named points and advances logical time; tests use no sleeps. State-recreation tests serialize the three public model states to JSON, discard their instances, and build new instances from that state while the test fixture retains independent key/capability custody. This is **simulated process recreation inside one Node process**, not a physical process-kill, storage power-loss or remote recovery test. Pending operations, generations, admitted references, acknowledgement identities and terminal states must survive that reconstruction; process-local queues are not authoritative.
+
+The existing approved contract permits an already-sent SQL acknowledgement to finish after the HTTP/caller timeout when its exact source commit, journal commit observation and independent head were durable first. The tests exercise safely eligible late acknowledgement and recovery through the original status capability. They do not add the optional stricter product rule forbidding eligibility after response timeout, or a new SQL deadline guard.
+
+Files:
+
+- `contract-runtime.mjs`: trusted signer/observer port and separately constructed owner recovery.
+- `deterministic-transports.mjs`: scheduler, immutable record model, independent conditional checkpoint model and explicitly fake SQL source.
+- `contract.test.mjs`: deterministic ordering, concurrency, failure, replay-verifier and capability cases.
+- `result.json` and `test-output.tap`: execution result and retained test output after a successful run.
+
+The final target-version run passed **30/30**, with zero failures, cancellations or skips, on the existing Node **v22.14.0** binary. The retained TAP output and `result.json` identify the command, runtime hash, code/verifier pins and exact limits. Run from this directory:
+
+```sh
+'/Users/palatis/Room in the Cart/.tools/node-v22.14.0-darwin-arm64/bin/node' --test --test-reporter=tap contract.test.mjs
+```
+
+Required outcomes include no modeled SQL COMMIT after an unsuccessful intent phase, no acknowledgement before admitted durable commit/head, exact idempotent recovery after lost responses, blocked persistent uncertainty, one canonical branch under concurrent instances, no admission of stale/expired tickets, terminal source fencing, strict content/pair/key rejection, and actual v1 verifier rejection of unresolved intents, valid early prefixes, missing suffixes and corruption. No provider call is made by this rehearsal. Source pins and final counts belong in `result.json`; passing this local model does not supply the missing provider-specific distributed, operational or latency evidence.
+
+Two concrete integration caveats remain. The checkpoint model performs its final conditional state update synchronously in JavaScript; a provider implementation must prove equivalent atomicity across processes, enforce independent credentials and preserve exact object-version admission. Also, strict progress validation before storage uses a fixed-source original-acceptance lookup (`readCommittedAcceptance` in this model); a real restricted observer needs a reviewed bounded SQL helper/grant for that lookup. It is not supplied by this prototype or the current public app/worker role. Validation only after a PUT would allow forbidden fields to remain in an orphan object.
+
+The verifier imports intentionally use absolute paths to the reviewed local repository and reject changed pins. These evidence files are not a portable drop-in service adapter; another checkout requires an explicit reviewed repin. `MANIFEST.json` binds the six prototype/evidence files, including `result.json`; it contains no key material and makes no production claim.

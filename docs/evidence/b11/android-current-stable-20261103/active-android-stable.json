@@ -1,0 +1,16 @@
+{
+  "releases": [
+    {
+      "name": "chrome/platforms/android/channels/stable/versions/156.0.8078.79/releases/1793734627",
+      "serving": {
+        "startTime": "2026-11-03T19:37:07.452381Z"
+      },
+      "fraction": 1,
+      "version": "156.0.8078.79",
+      "fractionGroup": "61",
+      "pinnable": true,
+      "rolloutData": []
+    }
+  ],
+  "nextPageToken": ""
+}

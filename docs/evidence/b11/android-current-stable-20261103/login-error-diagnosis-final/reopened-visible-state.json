@@ -1,0 +1,20 @@
+{
+  "observed_at_utc": "2026-11-03T23:24:01.519278+00:00",
+  "serial": "emulator-5554",
+  "avd": "RITC_Chrome_API34",
+  "exec_session": 52978,
+  "read_only_no_input_or_intent": true,
+  "raw_ui_saved": false,
+  "screenshot_saved": false,
+  "account_db_tokens_authlogcat_credentials_read": false,
+  "hierarchy_available": true,
+  "ui_dump_exit": 0,
+  "exact_generic_error_text": [],
+  "ui_packages_only": [
+    "com.google.android.apps.nexuslauncher"
+  ],
+  "credential_or_editable_field_present": false,
+  "identifier_like_label_present": false,
+  "expected_play_signed_out_screen": false,
+  "human_login_state_not_inspected_or_changed": true
+}

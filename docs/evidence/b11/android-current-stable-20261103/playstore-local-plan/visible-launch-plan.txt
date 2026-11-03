@@ -1,0 +1,22 @@
+PROPOSED ONLY — NOT EXECUTED. Parent resource release and explicit boot instruction required.
+
+Use the existing AVD with its existing userdata. Do not run the older headless launcher unchanged.
+
+source /tmp/ritc-android/env.sh
+/tmp/ritc-android/sdk/emulator/emulator \
+  -avd RITC_Chrome_API34 \
+  -cores 2 -memory 2560 \
+  -no-snapshot -no-audio -no-boot-anim \
+  -port 5554 \
+  -gpu swiftshader -feature -Vulkan -no-metrics
+
+The omission of -no-window is intentional for human interaction. No -wipe-data, new SDK/image,
+or new AVD. Verify the local port is free and resource lease is still valid immediately before
+the separately authorized launch. Keep an owned process/session identity for precise shutdown.
+
+Opening Google Play / Chrome's listing must happen later in the visible native Android UI.
+Stop at the live Sign in screen. The human handles credentials, 2-step verification and terms.
+No ADB/DevTools harness or TLS fixture is needed for the login screen.
+
+The emulator may perform normal guest/Google background networking once booted. This plan does
+not authorize boot, sign-in, account creation, terms acceptance, a payment, or an update now.

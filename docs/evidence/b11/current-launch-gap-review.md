@@ -1,5 +1,22 @@
 # Current launch gap review
 
+## Superseding status — 2026-11-03, 22:59 UTC
+
+**All six implementation gaps below are now resolved in installed source.** The stock-to-purchase candidate was confirmed after its complete provenance review and implemented; it is no longer an unresolved design candidate. The original observations are retained unchanged as the reason for those fixes. Current requirement/route traceability is in [CURRENT-ACCEPTANCE](../../CURRENT-ACCEPTANCE.md).
+
+| Original gap | Installed source | Current scoped proof / next gate |
+|---|---|---|
+| D12/N03 cook coverage | `PickupCookProjection` iterates `physicalStockNeeds`, deduplicates urgent metadata, renders current allocation/shortfall and labels initial observations historically. | [Integrated proof](../native/integrated-local-20261103/evidence.json): N526 models and two actual stock-review/cook UI cases pass; physical audio and human cook task remain. |
+| S24 protected meals | `HouseholdRequestMealContext` and its view render authorized meals/protected planning facts, including explicit unavailable state. | N526/local service plus [two actual current UI passes](../native/integrated-local-20261103/requests-final/evidence.json), with separate frozen scope. |
+| E06 dependent preview | `PickupStockReview` / `PickupBatchReview` preview every changed demand before exact-source commit and invalidate stale/private scope. | N526 and two actual stock-review/cook UI cases pass; separate [ordinary freezer-batch1/1](../native/integrated-local-20261103/free-batch/evidence.json) proves corrected reservations after restart. |
+| S23 duplicate comparison | `RequestDuplicateGroups`, comparison view and explicit bounded page loading preserve author/use/status and separate decisions. | N526/local HTTP plus [both functional UI cases](../native/integrated-local-20261103/requests-final/evidence.json). The observed amount/use-caption ellipsis is fixed; the separate [post-wrap Spanish case](s23-largest-text-caption-followup-20261103.md) passes1/1 with inspected full-height captions. |
+| S21 device inventory | `HouseholdDevicesModel/View`, client management API, service device management and023 session/enrollment fence. | [Integrated backend](integrated-backend-20261103/validation-summary.json) includes current001–023; separate [English and Spanish-largest-text SE/iOS17 UI cases](s21-device-management-20261103/ui-acceptance-20261103/acceptance.json) pass, with exact source and test-only logging limits. |
+| D05 stock-aware packs | `LedgerPackStockReview`, `LedgerPackStockEvidence`, no-purchase disposition and checkout source revalidation retain gross needs. | Integrated ordinary UI proves12need/8stock→one8-pack and full-stock→no order; source/binary identities and mixed-run limits are in integrated proof. |
+
+Separate518/526 model runs and selected UI passes must not be combined into an all-green suite. Hosted/provider, production durable journal and physical/human acceptance remain distinct. No further local product implementation gap was demonstrated in the refresh.
+
+## Historical inspection
+
 Source inspection: 2026-11-03, 21:40 UTC. Read-only implementation review against `APP-BASELINE.md`, `MASTER-GENERATION.md`, Foundation 2.1 `CODEX-MASTER.md`, `02-features.md`, `03-screens.md`, and build acceptance. This report is a point-in-time inspection of a concurrently changing checkout. It does not certify a release candidate, execute new tests, or repeat the historical before-followup inventories as current findings. The only file written by this review is this report.
 
 ## Demonstrated local gaps

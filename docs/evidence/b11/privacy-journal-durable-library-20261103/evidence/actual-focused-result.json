@@ -1,0 +1,39 @@
+{
+  "classification": "ACTUAL compiled adapter, real crypto and actual AbortSignal/deadline behavior exercised against SYNTHETIC injected backing capabilities",
+  "date": "2026-11-03",
+  "nodeVersion": "22.14.0",
+  "buildExitCode": 0,
+  "testExitCode": 0,
+  "parentTests": 33,
+  "testsIncludingSubtests": 89,
+  "passed": 89,
+  "failed": 0,
+  "cancelled": 0,
+  "skipped": 0,
+  "productionReady": false,
+  "productionProviderCalls": 0,
+  "artifacts": {
+    "suite": "service/tests/privacy-journal-durable.test.mjs",
+    "authorityFixture": "service/tests/durable-authority-fixture.mjs",
+    "independentCryptoFixture": "service/tests/durable-independent-fixture.mjs",
+    "tap": "evidence/actual-focused.tap",
+    "initialFenceRegression": "evidence/authority-fence-initial-red.txt",
+    "fixedFenceRegression": "evidence/authority-fence-fixed.tap"
+  },
+  "sha256": {
+    "service/src/privacy-journal-durable.ts": "02db670596bec727153f49d09e23f542d7dc4e76adb80eee9c779c0e8248d8e7",
+    "service/src/privacy-journal-durable-contract.ts": "ef188e894ab4f1a0afd03d28d25924b55d387f04640c9a6205c9c2f22b6c6729",
+    "service/src/privacy-journal.ts": "5bc1944554aa6057805b087bd77adad128aff795458d8a17eb30ddda213f8c1c",
+    "service/tests/privacy-journal-durable.test.mjs": "e3d70403de7fef019ae3a365a71949c5a1f9e1196da52528f7f659c9a8b618a4",
+    "service/tests/durable-authority-fixture.mjs": "e816c9336ac8031670e6c5951e8d0cbb3436ed88a6e155f0d4a14019421fa143",
+    "service/tests/durable-independent-fixture.mjs": "97aa56a0e66ab131bc6370386503971ffcdecd8a2e75e2a9ed84256107a7b8c4",
+    "evidence/actual-focused.tap": "1aaa3532b5fc2bdce4dc24b48cd069ebb0a30cd062f16c2005bd10e3d7c22484"
+  },
+  "limitations": [
+    "The authority, immutable record transport, fixed source and shared non-expiring uncertainty guard are local injected fixtures; their persistent state across reconstructed instances is synthetic remote durability and authentication evidence.",
+    "No production HTTP/fetch/SQL transport implementation exists in this lane, so no real 127.0.0.1 HTTP fixture or private PostgreSQL cancellation test was claimed.",
+    "No operator fenced recovery, rollback, export or sealing implementation is supplied or proved. The canonical verifier compatibility test uses a fixture-supplied fenced head for the resolved signed chain.",
+    "No independent process/host/account/cloud durability, real network latency, provider authentication, credential custody, role grants, runtime composition or production readiness is established.",
+    "Fresh test signing and witness keys remain only in process memory and are never written to evidence."
+  ]
+}

@@ -1,0 +1,106 @@
+{
+  "reviewedAt": "2026-11-03T23:18:24.611Z",
+  "verdict": "no_remaining_concrete_library_blockers",
+  "productionReady": false,
+  "scope": "provider-neutral scratch client and injected test backends",
+  "nodeVersion": "v22.14.0",
+  "compile": {
+    "command": "tsc --noEmit -p service/tsconfig.json",
+    "exitCode": 0
+  },
+  "tests": {
+    "command": "node --test service/tests/privacy-journal-durable.test.mjs",
+    "exitCode": 0,
+    "tests": 89,
+    "passed": 89,
+    "failed": 0
+  },
+  "reviewWrites": "review/ only",
+  "realRemoteDurabilityProven": false,
+  "actualPostgreSQLCancellationProven": false,
+  "serviceIntegrationInstalled": false,
+  "files": [
+    {
+      "path": "/Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-option-a/service/src/privacy-journal-durable.ts",
+      "bytes": 24641,
+      "sha256": "02db670596bec727153f49d09e23f542d7dc4e76adb80eee9c779c0e8248d8e7"
+    },
+    {
+      "path": "/Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-option-a/service/src/privacy-journal-durable-contract.ts",
+      "bytes": 7627,
+      "sha256": "ef188e894ab4f1a0afd03d28d25924b55d387f04640c9a6205c9c2f22b6c6729"
+    },
+    {
+      "path": "/Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-option-a/service/src/privacy-journal.ts",
+      "bytes": 26721,
+      "sha256": "5bc1944554aa6057805b087bd77adad128aff795458d8a17eb30ddda213f8c1c"
+    },
+    {
+      "path": "/Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-option-a/service/dist/privacy-journal-durable.js",
+      "bytes": 26286,
+      "sha256": "6018e058d2858a5d918cd9f7de5d5664ecc42fc4287866fa8c6fd480f96f26c6"
+    },
+    {
+      "path": "/Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-option-a/service/dist/privacy-journal.js",
+      "bytes": 29884,
+      "sha256": "423c823cc5d1546390084727bf55d5febd7f7eaddb6ad2bb05acf548d9553937"
+    },
+    {
+      "path": "/Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-option-a/service/tests/privacy-journal-durable.test.mjs",
+      "bytes": 20895,
+      "sha256": "e3d70403de7fef019ae3a365a71949c5a1f9e1196da52528f7f659c9a8b618a4"
+    },
+    {
+      "path": "/Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-option-a/service/tests/durable-authority-fixture.mjs",
+      "bytes": 15205,
+      "sha256": "e816c9336ac8031670e6c5951e8d0cbb3436ed88a6e155f0d4a14019421fa143"
+    },
+    {
+      "path": "/Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-option-a/service/tests/durable-independent-fixture.mjs",
+      "bytes": 5131,
+      "sha256": "97aa56a0e66ab131bc6370386503971ffcdecd8a2e75e2a9ed84256107a7b8c4"
+    },
+    {
+      "path": "/Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-option-a/proposals/SHARED-HOOKS.md",
+      "bytes": 6418,
+      "sha256": "2aa8de73f1e4a691f93e329a2e860022251e32543fd4a214563f70b79d49a84f"
+    },
+    {
+      "path": "/Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-option-a/review/independent-adapter-tests.tap",
+      "bytes": 13685,
+      "sha256": "b5fc30f9bd6a5e2c7ff1771803411086fa69f7be576366ce23a6e1cc94d66e1e"
+    },
+    {
+      "path": "/Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-option-a/review/INDEPENDENT-REVIEW.md",
+      "bytes": 7950,
+      "sha256": "51dd3d28adb3e550a93577ba029735d7ac6939ef0afb6189b6b584cc059d9f7a"
+    }
+  ],
+  "authoritativeSource": [
+    {
+      "path": "/Users/palatis/Room in the Cart/docs/evidence/b11/privacy-journal-runtime-design-20261103/RUNTIME-OPTIONS.md",
+      "bytes": 25451,
+      "sha256": "ffacf337cfcbe94f7b413ef1ff5e2d5e0c629fcca836c2ba821dd969d8795d72"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/docs/evidence/b11/privacy-journal-runtime-design-20261103/PORT-CONTRACT.md",
+      "bytes": 7187,
+      "sha256": "1311152ca85c67fc853e6780468560877490b8570c3cdc218981bbc6186dfb73"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/service/src/privacy-journal.ts",
+      "bytes": 26721,
+      "sha256": "5bc1944554aa6057805b087bd77adad128aff795458d8a17eb30ddda213f8c1c"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/service/src/privacy.ts",
+      "bytes": 13772,
+      "sha256": "723670077537ff014e7137b213cd6876579996577842baa9bf1c223f8b048f17"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/service/migrations/022_privacy_journal.sql",
+      "bytes": 53102,
+      "sha256": "d64716764dd1e9b1131c7aab53faa1e67cf518875011271452ee0120d4ead5cb"
+    }
+  ]
+}

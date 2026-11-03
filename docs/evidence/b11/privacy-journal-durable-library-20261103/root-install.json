@@ -1,0 +1,65 @@
+{
+  "recordedAtUTC": "2026-11-03T23:26:25.573710+00:00",
+  "patchSHA256": "184592c1910cbf1b490787ba350b0923bd1030210176c27ab69e58be42966725",
+  "status": "Installed locally, TypeScript build and parent isolated service suite passed; unused by default runtime",
+  "sourceFiles": [
+    {
+      "path": "service/src/privacy-journal-durable-contract.ts",
+      "sha256": "ef188e894ab4f1a0afd03d28d25924b55d387f04640c9a6205c9c2f22b6c6729",
+      "bytes": 7627,
+      "operation": "add"
+    },
+    {
+      "path": "service/src/privacy-journal-durable.ts",
+      "sha256": "02db670596bec727153f49d09e23f542d7dc4e76adb80eee9c779c0e8248d8e7",
+      "bytes": 24641,
+      "operation": "add"
+    },
+    {
+      "path": "service/tests/durable-independent-fixture.mjs",
+      "sha256": "97aa56a0e66ab131bc6370386503971ffcdecd8a2e75e2a9ed84256107a7b8c4",
+      "bytes": 5131,
+      "operation": "add"
+    },
+    {
+      "path": "service/tests/durable-authority-fixture.mjs",
+      "sha256": "e816c9336ac8031670e6c5951e8d0cbb3436ed88a6e155f0d4a14019421fa143",
+      "bytes": 15205,
+      "operation": "add"
+    },
+    {
+      "path": "service/tests/privacy-journal-durable.test.mjs",
+      "sha256": "e3d70403de7fef019ae3a365a71949c5a1f9e1196da52528f7f659c9a8b618a4",
+      "bytes": 20895,
+      "operation": "add"
+    }
+  ],
+  "rootReview": "Root read entire adapter, contracts and shared-hook proposal; independent root child review found no additional concrete bug under stated trusted capability contracts.",
+  "proofLimits": [
+    "Tests use actual compiled client-library/crypto with in-memory transports; no physical restart/remote durability.",
+    "Authority fixture shares actual semantic validator; not independent backend validation.",
+    "Lineage-wide uncertainty lock across scope/deployment rotation remains contract only, not proven by single-scope fixture.",
+    "Real transport/authority/uncertainty/source/operator recovery missing.",
+    "Existing production runtime remains unavailable/default provider erasure off; no existing shared hooks or SQL changed."
+  ],
+  "externalChanges": [],
+  "parentValidation": {
+    "collected": 310,
+    "passed": 309,
+    "failed": 0,
+    "skipped": 1,
+    "libraryCases": 89,
+    "skip": "Optional separate billing PostgreSQL test; existing B175 covers billing PG without skip.",
+    "environment": "Node22.14.0; fresh child environment with only pinned PATH, no ambient database/provider secrets",
+    "databaseOrProviderActivation": false,
+    "root-build.logSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "root-unit.tapSHA256": "85bc69dad7df0175a125f2c8215a85d1688d3a2b943c175fb9afd9f2523f9847"
+  },
+  "validatedAtUTC": "2026-11-03T23:29:57.658185+00:00",
+  "existingBackendInputComparison": {
+    "checked": 74,
+    "changedExistingInputs": [],
+    "newLibraryFiles": 5,
+    "scope": "No new HTTP/SQL/wire integration claim; previous B175 existing runtime inputs remain unchanged."
+  }
+}

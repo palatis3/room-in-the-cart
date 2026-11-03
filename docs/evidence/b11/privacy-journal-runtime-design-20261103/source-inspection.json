@@ -1,0 +1,51 @@
+{
+  "status": "read-only design inspection; not a production/schema pin or deployment proof",
+  "sourceRoot": "/Users/palatis/Room in the Cart",
+  "inspectedAt": "2026-11-03",
+  "files": [
+    {
+      "path": "api/index.js",
+      "sha256": "e3cc2aa3fb34c44d1f734b2f03c44189b947c64fae09476bfb72333aa69b0ce7"
+    },
+    {
+      "path": "api/maintenance.js",
+      "sha256": "37743f1829602e8f0227d2dab56f377898d80c05e8a48e107a3aff9e11da9162"
+    },
+    {
+      "path": "vercel.json",
+      "sha256": "8b703b4ab3d29d1a9bc10b604ac12210a6d57bc725e5f8571cf35a5b70f1262d"
+    },
+    {
+      "path": "service/package.json",
+      "sha256": "1ae270edf862179971e73661293828bc7a68c3a10c6ef6e9679d801ff7d8421b"
+    },
+    {
+      "path": "service/src/runtime.ts",
+      "sha256": "fcbd5dfe3df32d7d425eab61fa5b977a895168712a1802ee65b46b46c592422b"
+    },
+    {
+      "path": "service/src/privacy.ts",
+      "sha256": "723670077537ff014e7137b213cd6876579996577842baa9bf1c223f8b048f17"
+    },
+    {
+      "path": "service/src/privacy-journal.ts",
+      "sha256": "5bc1944554aa6057805b087bd77adad128aff795458d8a17eb30ddda213f8c1c"
+    },
+    {
+      "path": "service/src/operations-runtime.ts",
+      "sha256": "a94ab12148516bd5ed4817d214bdc91fe3d6c212c36009fee0457397cf8c6de5"
+    },
+    {
+      "path": "service/migrations/022_privacy_journal.sql",
+      "sha256": "d64716764dd1e9b1131c7aab53faa1e67cf518875011271452ee0120d4ead5cb"
+    },
+    {
+      "path": "service/migrations/023_device_enrollment_fence.sql",
+      "sha256": "16f737590b2d90c6ae2942b2e4983d1455f42077d477382320773b15a6629b5d"
+    },
+    {
+      "path": "service/PRIVACY-JOURNAL.md",
+      "sha256": "d3de62d47f3ce5891c575d06f0f0cb0d1b0f829b092f55e619727af610d03e78"
+    }
+  ]
+}

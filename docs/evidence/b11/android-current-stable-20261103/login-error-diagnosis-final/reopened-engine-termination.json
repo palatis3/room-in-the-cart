@@ -1,0 +1,8 @@
+{
+  "log_last_modified_utc": "2026-11-03T23:23:01.397010+00:00",
+  "reopened_qemu_pids_from_owned_graceful_shutdown_marker": [],
+  "graceful_shutdown_marker_present": false,
+  "SIGSEGV_marker": false,
+  "SIGABRT_marker": false,
+  "raw_log_not_dumped": true
+}

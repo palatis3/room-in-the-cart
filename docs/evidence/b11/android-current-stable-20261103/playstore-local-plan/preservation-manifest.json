@@ -1,0 +1,22 @@
+{
+  "README.md": {
+    "bytes": 9765,
+    "sha256": "5b14aec5c374254b1ba99b2c63a9b1ad923b8e278f0e12f5b61067026f1f1cce"
+  },
+  "inspect-local.py": {
+    "bytes": 6311,
+    "sha256": "2dfb821ff58bfaf8a314572de9747f64884d03af9edebcf725831972f7173e7b"
+  },
+  "local-inventory.json": {
+    "bytes": 22784,
+    "sha256": "e83e0ab027ba928135c0fe2a0cb4c1e8289a5db46fe8d578234a3e66df059d15"
+  },
+  "verification.json": {
+    "bytes": 363,
+    "sha256": "c38d6eafed77cecf3857fdd6f076f286567a20fd3498534449609f71f001d064"
+  },
+  "visible-launch-plan.txt": {
+    "bytes": 1162,
+    "sha256": "5570c247824dfc114ae6b53574f3f696ca34020cba41047e32cbee1d0e3cc808"
+  }
+}

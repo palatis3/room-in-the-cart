@@ -1,0 +1,21 @@
+TAP version 13
+# Subtest: real adapter: historical intent receipt cannot authorize beforeCommit after authority-only fence
+ok 1 - real adapter: historical intent receipt cannot authorize beforeCommit after authority-only fence
+  ---
+  duration_ms: 16.200416
+  ...
+# Subtest: real adapter: authority fence after publish but before response prevents completing beforeCommit
+ok 2 - real adapter: authority fence after publish but before response prevents completing beforeCommit
+  ---
+  duration_ms: 3.437708
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 90.413708
+

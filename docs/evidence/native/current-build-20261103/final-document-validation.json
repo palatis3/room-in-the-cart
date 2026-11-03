@@ -1,0 +1,39 @@
+{
+  "recordedAtUTC": "2026-11-03T23:40:43.473146+00:00",
+  "documents": [
+    {
+      "path": "docs/CURRENT-ACCEPTANCE.md",
+      "sha256": "f54f8a276558113b150b534bb32e03a1ac532b0a45d73b5d335a2794feecd5a7"
+    },
+    {
+      "path": "docs/CURRENT-HANDOFF.md",
+      "sha256": "3f51b0bb9888f69e569782ce3549f8fb53b8f406b0533c309f2b512291ebbd4d"
+    },
+    {
+      "path": "docs/IMPLEMENTATION.md",
+      "sha256": "918df7f6631b34facce8d7a85d7148da3c1eef71a04748065bf4184234765b91"
+    },
+    {
+      "path": "docs/B11-ACCEPTANCE-RECONCILIATION.md",
+      "sha256": "92f967323bb46ec5a976f20406dd8e1b6958c2f3522c8e328ec0d68d1e910a24"
+    },
+    {
+      "path": "docs/STAGING-UPDATE-PLAN.md",
+      "sha256": "25f7ed84a8d203dc31cf28e1c274254c919a6ec81ae7e5d6c88e58baaffbe5dc"
+    },
+    {
+      "path": "docs/APP-STORE-PREPARATION.md",
+      "sha256": "31473c677999ccc12e23fccda3a3521c4ae031c3ba219badb781e172461a124c"
+    },
+    {
+      "path": "docs/evidence/b11/current-launch-gap-review.md",
+      "sha256": "fc84bbf9bf2b57c8f83b87a0dcf2700a2acec5e1dad8ee3c664c69e4fa902464"
+    }
+  ],
+  "launchIDs": 52,
+  "screenRoutes": 27,
+  "localLinksChecked": 281,
+  "missingLinks": [],
+  "suppliedListingUnchanged": true,
+  "scope": "Document counts/links/format only; route/requirement tables bounded separately from evidence-key table. No product tests repeated. Root completed final narrow documentation pass."
+}

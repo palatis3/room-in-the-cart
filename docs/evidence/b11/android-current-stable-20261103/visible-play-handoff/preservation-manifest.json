@@ -1,0 +1,22 @@
+{
+  "README.md": {
+    "bytes": 4859,
+    "sha256": "e7d5e7de935245b017d893accbdaad09160956e8373062972f43f23dd96ee393"
+  },
+  "play-signed-out.png": {
+    "bytes": 65171,
+    "sha256": "310bf226c3a4319adf9e812dbdced2fb9f1bd7bff57cdf7e2d5041160de00008"
+  },
+  "play-signed-out.xml": {
+    "bytes": 5477,
+    "sha256": "da7241cfd431fc65914ac172474cb0454463645d3608557d5782c1049c44f4aa"
+  },
+  "readiness.json": {
+    "bytes": 4230,
+    "sha256": "7569c81fe522e37cf4270d18dd72a109c6272039c5b0ddf5481e5efb5015ac03"
+  },
+  "verification.json": {
+    "bytes": 279,
+    "sha256": "a5ba0f662236651ac6c3d50f6f9c1de9d4a56bdc66091d541c4ca9fe46cb9bbe"
+  }
+}

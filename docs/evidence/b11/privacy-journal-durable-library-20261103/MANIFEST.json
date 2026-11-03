@@ -1,0 +1,101 @@
+{
+  "createdAt": "2026-11-03T23:18:24.625997+00:00",
+  "status": "SCRATCH_REVIEW_CANDIDATE_NOT_INSTALLED",
+  "sourceFiles": [
+    {
+      "path": "service/src/privacy-journal-durable-contract.ts",
+      "sha256": "ef188e894ab4f1a0afd03d28d25924b55d387f04640c9a6205c9c2f22b6c6729",
+      "bytes": 7627,
+      "operation": "add"
+    },
+    {
+      "path": "service/src/privacy-journal-durable.ts",
+      "sha256": "02db670596bec727153f49d09e23f542d7dc4e76adb80eee9c779c0e8248d8e7",
+      "bytes": 24641,
+      "operation": "add"
+    },
+    {
+      "path": "service/tests/durable-independent-fixture.mjs",
+      "sha256": "97aa56a0e66ab131bc6370386503971ffcdecd8a2e75e2a9ed84256107a7b8c4",
+      "bytes": 5131,
+      "operation": "add"
+    },
+    {
+      "path": "service/tests/durable-authority-fixture.mjs",
+      "sha256": "e816c9336ac8031670e6c5951e8d0cbb3436ed88a6e155f0d4a14019421fa143",
+      "bytes": 15205,
+      "operation": "add"
+    },
+    {
+      "path": "service/tests/privacy-journal-durable.test.mjs",
+      "sha256": "e3d70403de7fef019ae3a365a71949c5a1f9e1196da52528f7f659c9a8b618a4",
+      "bytes": 20895,
+      "operation": "add"
+    }
+  ],
+  "patch": {
+    "path": "option-a-library.patch",
+    "sha256": "184592c1910cbf1b490787ba350b0923bd1030210176c27ab69e58be42966725",
+    "bytes": 75628
+  },
+  "baselineDrift": [],
+  "focusedProof": "evidence/actual-focused-result.json",
+  "independentReview": "review/INDEPENDENT-REVIEW.md",
+  "sharedHooks": "proposals/SHARED-HOOKS.md",
+  "liveSourceEdits": 0,
+  "runtimeActivation": false,
+  "remoteDurabilityProved": false,
+  "dryRun": {
+    "command": "git apply --check --whitespace=error-all option-a-library.patch",
+    "target": "/Users/palatis/Room in the Cart",
+    "exitCode": 0,
+    "applied": false
+  },
+  "evidenceFiles": [
+    {
+      "path": "README.md",
+      "sha256": "5c9ef4e556bbfb6ef077182dde91f1641c1a06550b34369d4f090be5f83ca6e0",
+      "bytes": 5521
+    },
+    {
+      "path": "proposals/SHARED-HOOKS.md",
+      "sha256": "5ae96663606e468ca326e14178c9cbe1f4544ef47fc98e12470d1da709c6ec58",
+      "bytes": 7081
+    },
+    {
+      "path": "evidence/actual-focused-result.json",
+      "sha256": "4ad33f2ef10418aacd9b29878d94e18543faeffa5fa6a4037f74e50f66e89baf",
+      "bytes": 2639
+    },
+    {
+      "path": "evidence/actual-focused.tap",
+      "sha256": "1aaa3532b5fc2bdce4dc24b48cd069ebb0a30cd062f16c2005bd10e3d7c22484",
+      "bytes": 13693
+    },
+    {
+      "path": "evidence/authority-fence-initial-red.txt",
+      "sha256": "6bcc83a2c1c8d1a1baf57c1458d3584b144fddfedd9b2f1ed0bd1170672937ef",
+      "bytes": 1115
+    },
+    {
+      "path": "evidence/authority-fence-fixed.tap",
+      "sha256": "7dfacb6938a89f7b5ab1baf5b57b0b653d0396c5c70d3647df73fc528cda6210",
+      "bytes": 616
+    },
+    {
+      "path": "review/INDEPENDENT-REVIEW.md",
+      "sha256": "51dd3d28adb3e550a93577ba029735d7ac6939ef0afb6189b6b584cc059d9f7a",
+      "bytes": 7950
+    },
+    {
+      "path": "review/reviewed-candidate.json",
+      "sha256": "a9c055b060cf7e06b3c84f84d6936886dcd9b41fe53196c14af43a51756896ce",
+      "bytes": 4496
+    },
+    {
+      "path": "review/independent-adapter-tests.tap",
+      "sha256": "b5fc30f9bd6a5e2c7ff1771803411086fa69f7be576366ce23a6e1cc94d66e1e",
+      "bytes": 13685
+    }
+  ]
+}

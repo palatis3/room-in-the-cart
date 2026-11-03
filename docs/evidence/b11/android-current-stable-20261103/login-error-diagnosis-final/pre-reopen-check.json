@@ -1,0 +1,14 @@
+{
+  "checked_at_utc": "2026-11-03T23:22:25.040230+00:00",
+  "owned_metadata": [
+    {
+      "pid": 99232,
+      "parent_pid": 1,
+      "rss_kib": 8256,
+      "executable": "adb"
+    }
+  ],
+  "scoped_listener_metadata": "p99232\ncadb\nf12\nn127.0.0.1:5037\n",
+  "memory_pressure": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 51%\n",
+  "no_account_or_ui_action": true
+}

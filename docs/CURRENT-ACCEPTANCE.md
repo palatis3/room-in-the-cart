@@ -1,0 +1,138 @@
+# Current implementation and acceptance map
+
+Reviewed 2026-11-03, 23:33 UTC. Complete Foundation 2.1 remains the objective: **52 launch requirements and 27 screen contracts**. Current ordinary/Release source is the 470-input polish SHA `36479321a5cadd46a6226c553d3e6946958e04b822dbf7aff73b2457a4f6c0bc`; the final S21 test-helper-only variant is scoped separately below. This documentation review made no Git calls. The [product contracts](product/foundation-gen2.1/02-features.md) govern scope. **Release is not accepted.** The historical tables in `IMPLEMENTATION.md` and the before-followup audits do not describe current missing implementation.
+
+The six gaps identified in the [point-in-time review](evidence/b11/current-launch-gap-review.md) now have implementation and passing dedicated screen scopes: stock-aware pack/no-purchase review, current-allocation cook projection, dependent-meal stock preview, S24 protected meal context, S23 duplicate comparison and S21 scoped device management. Subsequent caption wrapping and measurement privacy-purpose corrections are included in the polished build. No further unowned local product-flow gap was demonstrated by this review. This is not a claim that every acceptance criterion passed.
+
+## Evidence scopes
+
+Results belong to their own immutable source and binary identities. Do not add these counts together or treat an actual UI pass with a synthetic service as a deployed household pass.
+
+| Key | Inspected proof | What it establishes and excludes |
+|---|---|---|
+| BUILD | [Polished build proof](evidence/native/current-build-20261103/polish/build-proof.json), [preview preservation](evidence/native/current-build-20261103/polish/preview-install.json) | Frozen 470-input polish source: unsigned physical-arm64 Release and ordinary DEBUG compile/metadata checks, correct operator/contact, seven privacy types and exactly three Analytics purposes, tracking=false, no XCTest bundles or fixture markers. Ordinary Debug installs/launches on the regular17 simulator with 22 durable files byte-identical before relaunch, no erase/reset/test arguments. Documents/Application Support/Preferences were inventoried; App Groups/Keychain were not separately inventoried. No distribution, physical-device installation, actual StoreKit or complete production metadata. Earlier [build proof](evidence/native/current-build-20261103/build-proof.json) remains historical. |
+| N518 | [Integrated local evidence](evidence/native/integrated-local-20261103/evidence.json), ordinary manifest | 518/518 native model/adapter tests on the pinned 468-input candidate. Its ordinary UI batch had three passes and one freezer-picker selector failure; the combined run was not green. |
+| N526 | [Integrated local evidence](evidence/native/integrated-local-20261103/evidence.json), fixture manifest | 526/526 native models on `.build/IntegratedFixtureSource-20261103T223750Z`. The same invocation had 3 UI passes and 6 S21/S23/S24 UI failures, so its overall result is failed (529 pass / 6 fail). Six corrected cases run separately. |
+| STOCK | Same N526 source/run, `StockReviewUITests` | Two actual SwiftUI cases pass: preview/Cancel/confirm/restart/fresh cook text and changed-source invalidation. Fixture data and dependencies are isolated; this is not physical stock observation or audio/VoiceOver acceptance. |
+| ORDINARY | [Integrated local evidence](evidence/native/integrated-local-20261103/evidence.json), ordinary run | Complete Free journey and two stock-aware pack/no-purchase UI cases passed in the ordinary app. No green whole UI suite is claimed here. |
+| FREE-BATCH | [Corrected ordinary batch evidence](evidence/native/integrated-local-20261103/free-batch/evidence.json) | Separate 1/1 pass, ordinary DEBUG without fixture compilation flags. Actual urgent entry → matched batch → dependent preview → explicit approval → correction/restart shows batch1, dinner1, unreserved0 and shortfall3. One unlocated invalid-frame runtime warning remains a diagnostic; visible result passed, not release acceptance. |
+| B175 | [Integrated backend summary](evidence/b11/integrated-backend-20261103/validation-summary.json) | 175/175 application/HTTP/PostgreSQL cases on full 001–023; four actual Swift HTTPS invocations cover Free/paid history, planner/shopper proposals and store quote adoption. Compiled WebApp/API wire also executes with actual local PostgreSQL. This is local fixture service proof, not mobile-browser-engine or provider acceptance. |
+| G29 | Same backend summary | 29/29 focused guardian checks with current 001–023 journal/fences. Real local SQL/HTTP and provider-adapter test cases; no live KWS activation, email or hosted deployment. |
+| U220 | Same backend summary | 220 passing unit cases, zero failures, one optional separate billing-PostgreSQL skip. The billing PostgreSQL suite is included without skip in B175. |
+| U309 | [Unused durable library installation](evidence/b11/privacy-journal-durable-library-20261103/root-install.json), [root validation](evidence/b11/privacy-journal-durable-library-20261103/ROOT-VALIDATION.md) | TypeScript build and isolated unit invocation collect310 / pass309 / fail0 / skip1; includes89 new library cases with actual compiled crypto/client code and in-memory capabilities. Exactly five new unused files; 74 existing backend runtime/SQL/contract inputs byte-match B175. No new HTTP/SQL/wire, remote durability, physical restart or runtime-activation claim. |
+| RESTORE | [Full 001–023 drill](evidence/b11/privacy-journal-full23-20261103/validation-report.json) | 15 actual local SQL/HTTP/journal/restore checkpoints with real fsynced local writer, stale-backup replay and fencing. Provider calls are synthetic. Independent production durability and real disaster recovery are excluded. |
+| GUARDIAN-UI | [Final guardian proof](evidence/native/guardian-enrollment-20261103/BUILD-READY-FINAL.json), [scope](evidence/native/guardian-enrollment-20261103/UI-ACCEPTANCE.md) | 8/8 guardian UI cases plus a separate 2/2 Root exit-notice supplement on SE/iOS 17. Uses actual RootView, coordinator, marker, cold launch and isolated synthetic vaults/transport. Exact 36-input manifests distinguish 31 matches and five declared shared-source drifts; no current whole-Release or real-provider claim. |
+| LIBRARY | [Library/history/civil acceptance](evidence/native/library-history-civil-20261103/acceptance.json) | 25 focused models and six UI cases across separately frozen builds: civil dates2, grant-only history2, JSON-LD library1, correction privacy1. Production screens execute with guarded fictional fixtures; file input substitutes for the system document picker. Civil tests exercise rendered labels, not the entire shared meal journey again. |
+| F07 | [Recovered-file proof](evidence/native/f07-recovered-20261103/evidence.json) | 33 RecordArchive cases, 77 focused native cases and one actual SE/iOS 17 recovered photo-capture/export/cleanup journey at its source. Latest RecordArchive recheck is 33/33 in `.build/IntegratedRecordArchive-20261103.log`, using N526 source. Physical photo-picker/camera behavior is separate. |
+| PLANNING | [Shared planning proof](evidence/native/shared-acceptance-20261103/proof-index.json), [guest packs](evidence/native/guest-packages-and-protected-checkout-local.json), [contextual decisions](evidence/native/contextual-dinner-decisions-local.json) | Scoped local model and functional UI evidence for proposals, carryover, adult idea approval, guest pack boundaries and cancel. The older shared bundle's known civil-label defect is superseded by LIBRARY's dedicated fix/evidence. Synthetic shared service does not establish deployed authority. |
+| QUOTES | [Connected quote acceptance](evidence/native/connected-store-quotes/acceptance.json), [HTTP/Swift evidence](evidence/connected-s27/README.md) | Five distinct native quote cases with explicit per-run provenance, plus scoped real local service/client proof; not one combined whole-app run. |
+| MEASUREMENT | [Optional consent proof](evidence/native/optional-measurement/acceptance.json) | Native explicit consent/decline/withdrawal and closed-shop coded feedback, isolated from groceries and billing; real marketing study and paid-household demand are not established. |
+| DEVICE | [Focused device proof](evidence/b11/s21-device-management-20261103/validation-summary.json), [SE/iOS17 UI acceptance](evidence/b11/s21-device-management-20261103/ui-acceptance-20261103/acceptance.json) | Actual English case passes54.187s; separate Spanish accessibility5 case passes102.291s, with14 selected screenshot/AX artifacts. Cancel writes0; exact target revokes once; current/sibling/member/shopper remain distinct. English runs unmuted within a bundle whose other case crashes; Spanish suppresses unified logging only in the launched fixture app after the preserved XCTest callback crash. No absence-of-warnings claim. Spanish test-helper SHA143865… / source4c52bc09… differs only in the test helper from polished production sources. |
+| REQUEST-UI | [Four scoped request passes](evidence/native/integrated-local-20261103/requests-final/evidence.json), earlier470-input source | S24 cereal/protected lunches and unknown meals plus S23 separate authors and Spanish largest text pass. Whole six-case invocation remains4pass/2S21 startup failures; later DEVICE passes do not relabel it. Actual SwiftUI with bounded fictional services is not hosted authority or human-language/VoiceOver proof. The observed S23 caption ellipsis is addressed by the separate CAPTION proof. |
+| CAPTION | [Post-wrap scope](evidence/native/current-build-20261103/polish/s23-caption/scope.json), [result](evidence/native/current-build-20261103/polish/s23-caption/result-summary.json) | Separate Spanish largest-text S23 case passes1/1 after the wrapping change,361.533s on the polished source. Exact source/screenshots are retained; no logging accommodation in this case. |
+| PRIVACY | [Measurement declaration correction](evidence/native/privacy-measurement-declaration-20261103.md), BUILD | Analytics added to existing Other User Content/User ID/Purchase History alongside App Functionality; seven types remain linked=true/tracking=false. Literal declarations and updated archive/ordinary-bundle inclusion verified. Actual App Store questionnaire, operator/provider and human policy review remain separate. |
+| WEB | [Guardian browser proof](evidence/b11/guardian-browser-20261103/actual-browser/README.md), [Android status](evidence/b11/android-current-stable-20261103/README.md) | Actual browser captures and local synthetic/provider boundary tests have their own scopes. Historical Android 113/149 runs cannot satisfy current-stable Android acceptance; 156 acquisition/launch/task remains open. |
+
+## Launch requirement traceability
+
+“Implemented” below means the current source/dataflow exists. Proof keys identify relevant evidence subsets; they do not certify the entire row. Physical assistive access, human US-Spanish review and final immutable build regression apply throughout.
+
+| ID | Current implementation and proof | Remaining acceptance specific to the row |
+|---|---|---|
+| D01 | Offline Shop comparison and SQLite save/reopen; `ComparisonView`, `AppModel`; N518/N526 and earlier minimum-OS UI. | Final candidate first-install/offline and hardware accessibility. |
+| D02 | Staged typed/paste/selected-text/structured capture, duplicate semantics and batch undo; `LedgerModel`, capture/import ports; N526. | Physical share extension, denied permissions and speech task. |
+| D03 | Scoped cap, fees, reserves, mode/slot/zone and dependent review invalidation; ledger facts/checkout; N526. | Final complete/unknown basis scenarios and hardware labels. |
+| D04 | Separate occurrences, contributions, named serving groups and protected allocations; dinner/ledger; N526, PLANNING. | Mixed-device shared week against deployed grants. |
+| D05 | Pure comparison plus durable stock-evidence pack selection and zero-purchase result; `LedgerPackStockReview`, checkout bridge; N526, ORDINARY. | Current promoted screen artifacts; source changes must invalidate reviewed stock before checkout. |
+| D06 | Equivalent checkout repricing, unknowns and explicit overage; checkout/request models; N526, B175, REQUEST-UI. | Verify configured deployed household and final hardware task. |
+| D07 | Required/flexible/undecided needs, explicit deferral/handled disposition; checkout/next shop; N526, ORDINARY. | Final contextual reminder/next-trip hardware task. |
+| D08 | Base-bound previews, apply-once, compensating undo and locked-order proposals; N526, B175, PLANNING. | Cross-device current-grant race and final UI candidate. |
+| D09 | Frozen dated retailer handoff, action receipts and separate placed report; placement/pickup; N526, B175. | Real OS share/open cancellation and retailer roundtrip. |
+| D10 | Reopen exact saved offer, per-dish acceptance/yield and joint charges/cutoff review; offer editor/evaluator; N526 and scoped S07 UI. | Physical deadline/offline/retailer note task. |
+| D11 | Idempotent split receipt fragments, usable correction and protected allocation; pickup domain/model; N526, ORDINARY, STOCK. | Physical receipt/partial/wrong/late item capture and final UI regression. |
+| D12 | Complete dated text from all current physical needs, current allocated/short amounts and historical initial observation labels; cook projection; N526, STOCK. | Human cook task on Android and real share/readback. |
+| D13 | Fresh next-shop identity, selected carryovers/handled omission, reusable dinner link and cleared stale prices; N526, ORDINARY. | Current final new-trip/relaunch journey. |
+| D14 | Atomic SQLite records/revisions, pending saves and restart paths; N526, F07, ORDINARY. | Interrupted real-device sync/storage and accessible recovery. |
+| D15 | Scoped exports, correction, deletion/undo, account exit/erasure and isolated recovery; N526, F07, RESTORE, B175. | Production provider erasure/policy/durable journal and system Files delivery. |
+| D16 | Optional coded feedback, separate versioned consent and zero benefit for ties; N526, MEASUREMENT, B175. | Consented household study and human language review. |
+| F01 | Money/Quantity/Rational/UnitBasis and explicit unknowns; domain and capture; N526. | Physical dual-label/locale fixtures. |
+| F02 | Stable contribution/allocation identities, explicit duplicate/match and exclusions; N526, PLANNING, STOCK. | Complete end-to-end source-removal and shared-device task. |
+| F03 | Independent templates, drafts, snapshots, placed originals, proposals and fills; N526, B175. | Final real OS external-action/retry journey. |
+| F04 | Scoped dated price evidence; expected/hold/pending/posted/included-credit/top-up separation; N526, B175, QUOTES. | Real manually entered evidence and final receipt/settlement task. |
+| F05 | Distinct principal/member/device/grant/seat/shopper; 023 enrollment fence and scoped device revocation; B175, G29, DEVICE. | S21 native rerun, hosted and mixed-device authority. |
+| F06 | Catalogs/formatting, independent UI/recipient locale, access/focus controls; N526, LIBRARY, GUARDIAN-UI, REQUEST-UI, CAPTION, DEVICE. | Human en-US/es-US, physical VoiceOver/Switch Control, RTL/large-text full route pass. |
+| F07 | Versioned bounded archive/media staging, siblings, canonical identity and scoped cleanup; N526, F07. | Final system Files/photo flow, production deletion recovery. |
+| F08 | Actor-keyed outboxes and authoritative local service receipts; separate draft/waiting/received/conflict/placed states; N526, B175, WEB. | Deployed offline/refresh/device-loss task. |
+| F09 | StoreKit/server purchase binding, seats and separate measurement consent; N526, B175, MEASUREMENT, PRIVACY. | Final privacy questionnaire; owner-deferred actual Apple product/team and sandbox lifecycle. |
+| P01 | Accepted versioned dinners, one Free selection, rotations/pins/this-week separation; N526, PLANNING. | Actual paid access/two-device reuse and final rotation UI matrix. |
+| P02 | Accepted unscheduled library enumeration, whole-pack/current commitments and confirmed unreserved stock scenarios; N526, PLANNING. | Hardware complete-equivalent-plan task with real household. |
+| P03 | Named group/guest/away changes, pack impact and manual alternative; N526, PLANNING, B175. | Deployed non-shopper proposal and post-purchase task. |
+| P04 | Confirmed accepted fallback ranking from actual fill/stock, exclusions, elapsed time and explicit top-up consent; N526, PLANNING. | Human fallback/travel comparison and actual pickup scenario. |
+| P05 | Purpose/store-approved staple recall and per-trip review/handled status; N526, ORDINARY. | Real re-entry effort and long-lived checked-item task. |
+| P06 | Recipient-specific intentional-send delta and complete Free/manual correction; N526 and scoped recipient-handoff UI. | Real uncertain destination/cancel/lapse resend task. |
+| P07 | Private/shared decision history, observed/unknown outcome and explicit promotion; N526, B175. | Final household history task with real paid seat. |
+| P08 | Actual localized StoreKit offer, two named adult seats, restore/manage and lapse preservation; N526, B175. | Actual Apple configuration/purchase/renewal/refund/second device. |
+| E01 | Recipe JSON-LD adapter, original source, duplicates/skips, preview and whole-batch undo; N526, F07, LIBRARY. | Real system document-picker and human recipe-library task. |
+| E02 | Optional reviewed photo/OCR/barcode/receipt capture and typed path; N526, F07. | Physical low-light bilingual capture/camera/barcode and denial. |
+| E03 | Authenticated one-shop helper projection/editor proposals with expiry/revoke; N526, B175, WEB. | Deployed iPhone/Android grant and stale-cache task. |
+| E04 | Bilingual catalogs/help/billing/handoff and original text preservation; N526, LIBRARY, GUARDIAN-UI. | Human US-Spanish review and both-direction cook/billing task. |
+| E06 | Dated/use-first batches, explicit identity, carryover, multi-meal preview and stock-bound purchase review; N526, STOCK, ORDINARY, FREE-BATCH. | Physical multi-meal stock observation and final build diagnostic review. |
+| E07 | Store sorting/aisles, print, selected-text inbox, widget/App Intent and dictation ports; N526 and scoped surface UI. | Physical printing, signed extensions/widget/lock-screen and speech. |
+| E08 | Explicit per-offer/deferral reminder time/zone/quiet hours/expiry; N526 and scoped contextual reminder UI. | Physical permission/delivery/interruption acceptance. |
+| E09 | Authorized history, saved Free references and partial-scope period budgets; N526, B175, LIBRARY. | Final configured household period-budget task. |
+| E10 | Narrow contributor/cook web clients and market configuration; B175, WEB. | Current stable Android, deployed browser/screen-reader and market claims. |
+| N01 | Own-only contributor requests, guardian flow, inbox duplicates, pack/meal preview and once-only decisions; N526, B175, G29, GUARDIAN-UI, REQUEST-UI, CAPTION, DEVICE. | Actual KWS/SMTP, configured hosted service and mixed-phone household. |
+| N02 | Structured typed/speech review of item/count/unit/pack/purpose/destination; native contributor and ledger routes; N526. | Physical on-device speech/negation/locale and retry task. |
+| N03 | Exact current cook projection, pause/stop/repeat and VoiceOver arbitration model; N526, STOCK. | Physical playback and assistive speech interruption. |
+| N04 | Device/profile/locale-scoped reviewed spelling memory, forget/opt-out without rewriting history; N526, LIBRARY. | Human correction/readback and physical focus. |
+| N05 | Optional recipe source plus independent editable original data; N526, LIBRARY. | Broken-site original/weekly allocation human task. |
+| N06 | Source/revision/projection/conflict comparison and separate recovery; N526, F07. | Real Files cancel/corrupt/reimport and lifecycle task. |
+| N07 | Spoken/typed guest proposal uses the same identified group planner and review; N526, PLANNING. | Physical speech and current-grant apply/amendment task. |
+| A01 | Adult meal week/list, full civil dates, stable occurrence identity and protected lunches; N526, LIBRARY, PLANNING. | Deployed cross-device week and physical accessibility. |
+| A02 | App-owned/manual editable ideas, exclusions/yield/source, adult approval distinct from choose/apply; N526, PLANNING. | Final household/human idea task; unavailable generator fallback. |
+| A03 | Two entered complete quotes, trip cash/time, break-even/unknowns, private proposal and shopper adoption; N526, B175, QUOTES. | Final configured household/hardware bilingual task. |
+
+## Route traceability
+
+All 27 have current source entries. “Pending” below concerns current screen evidence or release acceptance, not absent navigation.
+
+| Route | Actual entry / current source | Evidence or next screen gate |
+|---|---|---|
+| S01 Shop | `RestorableAdultTabs` → `ShopView`; active pickup, quick packs, urgent repair, contextual inbox. | ORDINARY; final current root regression. |
+| S02 List | Shop → `LedgerHomeView`; staged import/history/sort/print. | ORDINARY; physical shared text/dictation/print. |
+| S03 Facts | List/checkout → `LedgerFactsView` sheet. | N526; final cap/slot/cancel task. |
+| S04 Ingredient | List/meal → `LedgerIngredientView`; pack sheet and matching stock. Standalone `ComparisonView`. | ORDINARY stock pack/no-purchase cases; final promoted artifacts. |
+| S05 Checkout | Shop/list → `LedgerCheckoutEntry` → `PickupCheckoutView`; contextual quote entry. | ORDINARY, QUOTES; unknown/stock stale review. |
+| S06 Retailer handoff | Pickup → `PickupHandoffView`; connected `PlacementRecordsEntryView`. | N526/B175; actual external share/open. |
+| S07 Offer | Pickup or Shop resume → `PickupOfferView` / editor sheet. | Scoped S07 UI; physical cutoff. |
+| S08 Arrivals/urgent | Pickup → `PickupArrivalView`; Shop → `UrgentRepairView`. | ORDINARY/STOCK; physical receipt. |
+| S09 Repair | Arrival/urgent/pickup → `PickupRepairView`, fallback review. | STOCK; actual household food task. |
+| S10 Cook | Repair/pickup → `PickupCookView`; dated text/current-view choice. | STOCK, recipient history; Android human handoff/audio. |
+| S11 Closeout | Pickup → `PickupSettlementView`; separate feedback. | ORDINARY/MEASUREMENT; real evidence. |
+| S12 Next shop | Pickup/closeout → selection sheet → new draft/list/reusable-dinner entry. | ORDINARY; final hardware/new-trip task. |
+| S13 Dinners | Dinners → `DinnerPlanningEntry`; shared-plan route for authorized adult. | PLANNING; deployed grant. |
+| S14 Library | Dinners/next shop → `DinnerLibraryView` / editor; Records library import. | LIBRARY; actual document picker. |
+| S15 Pairing | Dinners → `DinnerScenarioEditor` decision sheet/library comparison. | PLANNING; real accepted-library task. |
+| S16 Guests | Meal → `DinnerGuestsView`, guest capture review. | PLANNING; physical speech. |
+| S17 Apply | Dinner decision sheet / shared proposal → shopper `HouseholdShopView`. | PLANNING/B175; final shared candidate. |
+| S18 Offer | Settings/selected paid feature → `MembershipEntryView`. | Local StoreKit matrix; actual Apple deferred. |
+| S19 Seats | Membership named seats and shared-shop authorized handover. | N526/B175; actual second paid device. |
+| S20 Records | Records root → history, saved evidence, recovery and managed views. | F07/LIBRARY; system export and final device. |
+| S21 People/grants/devices | Household → People/Guardian/Managed views/Devices. | DEVICE/G29/GUARDIAN-UI; dedicated English and Spanish SE/iOS17 cases pass with exact separate logging/source limits. |
+| S22 Own requests | Contributor/child scoped root; native structured review and narrow web client. | N526/GUARDIAN-UI/WEB; actual provider/mixed phone. |
+| S23 Inbox | Shop contextual inbox or Household → grouped requests/comparison. | N526/B175/REQUEST-UI/CAPTION; both functional cases and separate Spanish post-wrap case pass. |
+| S24 Decision | Inbox row → request decision sheet, sufficient pack and protected meal context. | N526/B175/REQUEST-UI; both current cases pass in separately scoped actual UI. |
+| S25 Week | Dinners week/list / shared meal dates, guest/away/carryover. | PLANNING + LIBRARY civil dates; current service/device. |
+| S26 Idea | Dinners or shared planning → local/shared idea review and approval. | PLANNING; final real household. |
+| S27 Quotes | Checkout contextual entry or Dinners/shared shop → quotes. | QUOTES/B175; final configured hardware. |
+
+## Remaining production work and release gates
+
+- **Current local milestone:** all six follow-up flow scopes now have passing dedicated UI evidence across their separately pinned runs; current polished Release/ordinary Debug and privacy resources compile/verify, and the preview is replaced without resetting its inventoried data. This is local implementation/acceptance progress, not a combined all-green regression or full27-route/device release gate. Recheck evidence affected by later changes. Preserve failed runs, the S21 logging accommodation and unlocated invalid-frame diagnostics.
+- **Production journal implementation:** the real local fsynced writer and001–023 restore exist. U309 adds an unused compiled client/crypto contract library; its in-memory transports do not supply real immutable storage, independent checkpoint authority, lineage-wide uncertainty enforcement, restricted SQL observer, cancellation hooks or operator recovery. Default runtime/provider erasure remains off. The older [30-case contract rehearsal](evidence/b11/privacy-journal-runtime-design-20261103/local-contract/README.md) is also fake-SQL/in-memory proof. Real remote composition and independent disaster acceptance remain required.
+- **Owner-deferred setup:** Apple paid team/product/signing/sandbox and SMTP remain deferred; do not interpret time or prior local authorization as permission to enable them. Actual KWS verification/notice configuration and Test activation have not occurred.
+- **Hosted state:** the [read-only dashboard observation](evidence/b11/staging-readonly-20261103/dashboard-observation.json) still shows last migration008 and no included Free-plan backups. This is not a current SQL checksum inventory or private backup. **009–023** and corresponding service/web/worker updates have not been deployed. Concrete backup/restore preparation precedes any hosted approval; the [staging plan](STAGING-UPDATE-PLAN.md) remains preparation only.
+- **Human/device/browser:** current stable Android task remains unaccepted; the reopened emulator exited again, the Google error was not retained, and clock/network/Play Services remain unverified. No current Play Store screen or product acceptance is claimed. Real mixed-phone household, human US-Spanish, physical camera/audio/share/widget/print/notification and VoiceOver/Switch Control remain. Synthetic provider or browser DOM tests do not replace them.
+- **Operating/release acceptance:** approved policy/retention/support/contact operation, actual provider erasure and independent restore drill, signed distribution/App Store review/complete route walkthrough and any required household study remain. Direct retailer integration E05 is deferred; X01–X06 remain product boundaries.
+
+No local source, provider configuration, hosted data or user preview was changed by this documentation review.

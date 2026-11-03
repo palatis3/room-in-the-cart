@@ -1,0 +1,23 @@
+{
+  "checked_at_utc": "2026-11-03T21:52:00.988957+00:00",
+  "current_android_stable": "156.0.8078.79",
+  "current_acceptance": "UNRUN",
+  "current_package_acquired": false,
+  "active_stable_fraction": 1,
+  "active_stable_serving_start_utc": "2026-11-03T19:37:07.452381Z",
+  "play_sdk_metadata_identical_to_previous": true,
+  "prior_inspected_sdk_image": "37.2r07",
+  "prior_inspected_image_chrome": "149.0.7827.5",
+  "historical_113_149_scope": "Historical only; current acceptance unsatisfied. Existing historical evidence unchanged.",
+  "signed_candidate_anonymous_head_status": 403,
+  "signed_candidate_existence_verified": false,
+  "source_get_count": 7,
+  "source_get_bytes": 1580663,
+  "account_or_terms_action": false,
+  "artifact_downloaded": false,
+  "device_or_simulator_operation": false,
+  "canary_route_retried_or_bypassed": false,
+  "git_action": false,
+  "remaining_prerequisite": "Permitted official Google-signed current stable Android package, or authorized test Android device already running verified current stable Chrome. Report exact source/version/size before any artifact download; verify manifest/signer/ABI/minSDK before install.",
+  "source_verification": "Original source hashes verified in scratch; no new research/download/device action during evidence installation."
+}

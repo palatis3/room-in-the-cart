@@ -1,0 +1,160 @@
+TAP version 13
+# Subtest: actual canonical/signature/full-chain verifier is hash pinned
+ok 1 - actual canonical/signature/full-chain verifier is hash pinned
+  ---
+  duration_ms: 0.465375
+  ...
+# Subtest: intent/head precede source COMMIT; committed observation/head precede acknowledgement
+ok 2 - intent/head precede source COMMIT; committed observation/head precede acknowledgement
+  ---
+  duration_ms: 9.604583
+  ...
+# Subtest: failed intent persistence returns no success and rolls back SQL; pending survives recreation
+ok 3 - failed intent persistence returns no success and rolls back SQL; pending survives recreation
+  ---
+  duration_ms: 1.35175
+  ...
+# Subtest: crash after intent publication before SQL COMMIT resolves only after source fence
+ok 4 - crash after intent publication before SQL COMMIT resolves only after source fence
+  ---
+  duration_ms: 2.758042
+  ...
+# Subtest: crash after SQL COMMIT before observation resumes through fixed-source job lookup
+ok 5 - crash after SQL COMMIT before observation resumes through fixed-source job lookup
+  ---
+  duration_ms: 1.971459
+  ...
+# Subtest: lost commit-publication response recovers exact receipt without duplicate sequence or ack identity
+ok 6 - lost commit-publication response recovers exact receipt without duplicate sequence or ack identity
+  ---
+  duration_ms: 2.755292
+  ...
+# Subtest: interruption at authority.afterReserve leaves a persistent uncertain slot, never inferred success
+ok 7 - interruption at authority.afterReserve leaves a persistent uncertain slot, never inferred success
+  ---
+  duration_ms: 0.975291
+  ...
+# Subtest: interruption at store.afterPut leaves a persistent uncertain slot, never inferred success
+ok 8 - interruption at store.afterPut leaves a persistent uncertain slot, never inferred success
+  ---
+  duration_ms: 0.787917
+  ...
+# Subtest: two independent instances racing one head admit one branch; loser cannot SQL-commit
+ok 9 - two independent instances racing one head admit one branch; loser cannot SQL-commit
+  ---
+  duration_ms: 2.842833
+  ...
+# Subtest: same event/digest across recreated instances reuses original intent and commit
+ok 10 - same event/digest across recreated instances reuses original intent and commit
+  ---
+  duration_ms: 2.582333
+  ...
+# Subtest: same event ID with changed digest conflicts without new source commit/head
+ok 11 - same event ID with changed digest conflicts without new source commit/head
+  ---
+  duration_ms: 1.815333
+  ...
+# Subtest: a late stale-generation PUT remains an unreferenced object and cannot publish
+ok 12 - a late stale-generation PUT remains an unreferenced object and cannot publish
+  ---
+  duration_ms: 0.679916
+  ...
+# Subtest: authority-clock expiry rejects late publication even before outer call deadline
+ok 13 - authority-clock expiry rejects late publication even before outer call deadline
+  ---
+  duration_ms: 0.45625
+  ...
+# Subtest: already-sent SQL acknowledgement may finish after timeout; original status capability recovers safely
+ok 14 - already-sent SQL acknowledgement may finish after timeout; original status capability recovers safely
+  ---
+  duration_ms: 2.091708
+  ...
+# Subtest: forged independent receipt cannot cause source COMMIT or acknowledgement
+ok 15 - forged independent receipt cannot cause source COMMIT or acknowledgement
+  ---
+  duration_ms: 0.733875
+  ...
+# Subtest: wrong fixed source identity fails before persistence
+ok 16 - wrong fixed source identity fails before persistence
+  ---
+  duration_ms: 0.140125
+  ...
+# Subtest: transport cannot redirect a ticket outside its constructor-pinned namespace
+ok 17 - transport cannot redirect a ticket outside its constructor-pinned namespace
+  ---
+  duration_ms: 0.370833
+  ...
+# Subtest: unapproved fields fail actual strict content validation before any object PUT
+ok 18 - unapproved fields fail actual strict content validation before any object PUT
+  ---
+  duration_ms: 0.428209
+  ...
+# Subtest: target pair/binding replacement is rejected before persistence
+ok 19 - target pair/binding replacement is rejected before persistence
+  ---
+  duration_ms: 0.203417
+  ...
+# Subtest: valid signatures from an unpinned journal key cannot enter the canonical head
+ok 20 - valid signatures from an unpinned journal key cannot enter the canonical head
+  ---
+  duration_ms: 0.498334
+  ...
+# Subtest: committed source acceptance without original admitted intent cannot be exported/acknowledged
+ok 21 - committed source acceptance without original admitted intent cannot be exported/acknowledged
+  ---
+  duration_ms: 0.187167
+  ...
+# Subtest: unacknowledged source progress blocks eligibility until exact progress head/ack
+ok 22 - unacknowledged source progress blocks eligibility until exact progress head/ack
+  ---
+  duration_ms: 3.430458
+  ...
+# Subtest: progress for a target outside the original acceptance is never written or acknowledged
+ok 23 - progress for a target outside the original acceptance is never written or acknowledged
+  ---
+  duration_ms: 1.730541
+  ...
+# Subtest: source fence waits for earlier transaction before absence can resolve rollback
+ok 24 - source fence waits for earlier transaction before absence can resolve rollback
+  ---
+  duration_ms: 1.99175
+  ...
+# Subtest: fence waits for an earlier COMMIT, then recovery observes it rather than fabricating rollback
+ok 25 - fence waits for an earlier COMMIT, then recovery observes it rather than fabricating rollback
+  ---
+  duration_ms: 1.908125
+  ...
+# Subtest: ordinary authority cannot admit rollback or clear a fence
+ok 26 - ordinary authority cannot admit rollback or clear a fence
+  ---
+  duration_ms: 0.304208
+  ...
+# Subtest: seal rejects unresolved intent; actual verifier rejects an unresolved journal even with claimed fenced head
+ok 27 - seal rejects unresolved intent; actual verifier rejects an unresolved journal even with claimed fenced head
+  ---
+  duration_ms: 0.921333
+  ...
+# Subtest: actual verifier rejects valid early prefix, missing suffix and changed record under independent final head
+ok 28 - actual verifier rejects valid early prefix, missing suffix and changed record under independent final head
+  ---
+  duration_ms: 3.959209
+  ...
+# Subtest: corrupt stored version fails full-chain verification rather than yielding a ready bundle
+ok 29 - corrupt stored version fails full-chain verification rather than yielding a ready bundle
+  ---
+  duration_ms: 2.039542
+  ...
+# Subtest: sealed origin is terminal for ordinary writers and recovery generation
+ok 30 - sealed origin is terminal for ordinary writers and recovery generation
+  ---
+  duration_ms: 1.962541
+  ...
+1..30
+# tests 30
+# suites 0
+# pass 30
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 118.656125

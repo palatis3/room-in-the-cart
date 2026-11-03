@@ -1,6 +1,15 @@
 # B11 acceptance reconciliation — 2026-11-03
 
-## Current verification checkpoint — November 3 follow-up
+## Current verification checkpoint — 23:39 UTC
+
+The [current52-requirement/27-route map](CURRENT-ACCEPTANCE.md) is authoritative for present scope. All six later product-flow gaps have installed implementations and passing dedicated screen scopes. Native source/proof checkpoint is `b23a23a`. The original findings and counts below remain historical; they do not describe current missing implementation.
+
+- [Native evidence](evidence/native/integrated-local-20261103/evidence.json) preserves separate518/518 and526/526 model passes and original mixed UI failures. Later actual Free-batch, S24two, S23two/post-caption, S21 English/Spanish, guardian8+exit2, library/history/civil and F07 scopes pass independently. This is not one all-green full UI invocation. The S21 Spanish pass uses a documented per-app test logging accommodation against a preserved XCTest callback crash.
+- [Polished build/preview proof](evidence/native/current-build-20261103/polish/build-proof.json) pins470-input production source36479321…: unsigned arm64 Release and ordinary Debug compile/metadata checks pass, correct business/contact and privacy-purpose resource included, no XCTest or fixture entry points. Preview installation preserves22durable app files before relaunch. This is not signed distribution or physical-device acceptance.
+- [Integrated backend](evidence/b11/integrated-backend-20261103/validation-summary.json) remains175/175 actual local SQL/HTTP cases with four Swift HTTPS invocations,29focused guardian cases and the separate unit evidence. [Full001–023 restore](evidence/b11/privacy-journal-full23-20261103/validation-report.json) passes15 local checkpoints. The newly [installed unused durable library](evidence/b11/privacy-journal-durable-library-20261103/root-install.json) adds89 actual client/crypto tests with in-memory backing capabilities; parent TypeScript build and full isolated units collect310/pass309/skip1. That billing-PG skip is separately covered in B175. All74 existing backend runtime/SQL/contract inputs remain unchanged; no new HTTP/SQL/wire or remote durability result is inferred.
+- Real remote storage/checkpoint/uncertainty, restricted SQL source, caller cancellation hooks, operator recovery and production key custody remain absent. Actual KWS/notice/provider activation, deferred SMTP and paid Apple setup, hosted009–023 update with a private backup, current Android/mixed-phone, human Spanish and physical-device/assistive acceptance remain. Provider erasure/default runtime stays off. [Staging plan](STAGING-UPDATE-PLAN.md) and [App Store packet](APP-STORE-PREPARATION.md) are preparation only.
+
+## Historical November 3 follow-up
 
 **Resumed on Terrance’s explicit instruction.** The restart handoff is retained as historical evidence at `/Users/palatis/Documents/Codex/2026-11-03/task-2/RESTART-HANDOFF.md`; current lane status is in `B11-RESUMED-ACCEPTANCE.md` beside it. Native S17/S25/S26 screen acceptance uses E03. The parent subsequently authorized one isolated 2 GB Android AVD in parallel after releasing its 17e and confirming memory headroom; each lane remains restricted to its own device and fixtures. The resumed frozen native run passed 35 focused model tests; four screen tests exposed fixture/selector issues and their corrected rerun is pending. These results do not certify concurrent integration changes.
 
@@ -28,7 +37,7 @@ This is a local source/evidence reconciliation, not release acceptance. The audi
 
 The inventories were machine-checked for52 unique requirement IDs and27 unique S01–S27 routes. Old implementation tracker statements that scan, E09, spoken guest preview, aisle/manual sorting, or shared placement are simply absent are superseded by current source and evidence. No requirement is marked fully release-accepted by this audit.
 
-## Concrete missing behavior, distinct from unrun acceptance
+## Historical missing behavior at the original inspection
 
 The highest-priority narrow native fix is S07/D10: saved store offers cannot be reopened for editing, and entered price/ceiling evidence has no warning. Its follow-up adds identity-safe explicit review and bounded/unknown ceiling assessment; it does not implement the full combined checkout/dish evaluation contract.
 

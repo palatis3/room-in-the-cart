@@ -1,12 +1,18 @@
 # Foundation 2.1 implementation tracker
 
-Evidence checkpoint: **2026-11-03 20:08 UTC**. Maintainers: **lead agent and Dot**. Integration/release owner: **lead agent**. Scope is the complete US iPhone Foundation launch, with the narrow invited-person web client.
+Current traceability refresh: **2026-11-03 23:19 UTC**. Maintainers: **lead agent and Lumpy**. Integration/release owner: **lead agent**. Scope is the complete US iPhone Foundation launch, with the narrow invited-person web client.
+
+**Start with the [current 52-requirement / 27-route acceptance map](CURRENT-ACCEPTANCE.md).** It supersedes current-status assertions in the historical rows below, including P07 absent, N07 unbound, pantry correction missing, guardian unavailable as an implementation claim, and older pending test counts. The six gaps from the later source review are implemented; dedicated late screen scopes now pass while production release gates remain open. No new local product implementation gap was demonstrated in this refresh.
+
+The [integrated native evidence](evidence/native/integrated-local-20261103/evidence.json) preserves separate 518/518 and 526/526 model runs and scoped UI passes from mixed-result invocations. The [backend summary](evidence/b11/integrated-backend-20261103/validation-summary.json) records 175/175 shared/HTTP/PostgreSQL cases, 29/29 guardian and 220 passing units with one separately covered billing-PG skip. Full 001–023 [local restore](evidence/b11/privacy-journal-full23-20261103/validation-report.json) passed 15 checkpoints. [Guardian native UI](evidence/native/guardian-enrollment-20261103/BUILD-READY-FINAL.json) passed 8 plus a separate Root exit-notice 2; [library/history/civil](evidence/native/library-history-civil-20261103/acceptance.json) contains six scoped screen passes. These are neither a combined full-app green result nor production-provider/distribution acceptance.
 
 Read [APP-BASELINE](product/APP-BASELINE.md), [feature contracts](product/foundation-gen2.1/02-features.md), [screen contracts](product/foundation-gen2.1/03-screens.md) and [build tickets](product/foundation-gen2.1/08-build.md) before using this tracker. The baseline describes an initial handoff; source and evidence below describe the inspected work in progress. The feature catalogue is acceptance criteria, not proof of delivery.
 
 **Release is not accepted.** The parsed register contains **59 IDs: 52 launch requirements + E05 deferred integration + six X boundaries**. The 52 comprise D01–D16 (16), F01–F09 (9), P01–P08 (8), E01–E04/E06–E10 (9), N01–N07 (7), A01–A03 (3). There are **27 unique S01–S27 contracts**: three tab roots, 15 pushes, eight sheets, one contributor destination, following the [placement audit](product/foundation-gen2.1/11-experience-audit.md). No launch requirement is marked fully release-accepted here; this is an acceptance statement, not a claim that no implementation exists.
 
-## Reading the status
+Latest native source/proof checkpoint is `b23a23a`. [Polished Release and ordinary preview](evidence/native/current-build-20261103/polish/build-proof.json) compile and pass metadata/resource checks; preview replacement preserves22durable files before relaunch. Dedicated S21 English/Spanish, S24two and S23 functional/post-caption scopes pass with their explicit source and logging limits. The [unused durable journal library](evidence/b11/privacy-journal-durable-library-20261103/root-install.json) is installed: TypeScript build and isolated service units pass309/310 with one separately covered billing-PG skip, including89 new cases. Real remote adapters, private SQL observation/caller hooks and operator recovery remain absent; activation is off.
+
+## Reading the historical status
 
 - **Source present** means inspected implementation or test code exists. It does not prove compilation, route reachability, correct behavior or acceptance.
 - **Executed evidence** names a log/report and its exact scope. A helper-reported pass is identified separately from a directly inspected log. Earlier counts do not certify later edits.
@@ -14,7 +20,7 @@ Read [APP-BASELINE](product/APP-BASELINE.md), [feature contracts](product/founda
 - **Partial/prerequisite** never means the complete requirement passed. “Not located” describes this inspection, not a promise that another worker has not since added it.
 - **Commit/build identity:** checkpoints `e2c5943`, `7cee53b` and `967df15` now exist. The working tree contains later module additions; pin each test to its own source hash/build. The DeviceSurfaces [verification](/Users/palatis/Documents/Codex/2026-11-03/task/review/device-surfaces-work/verification.json) and [installation manifest](/Users/palatis/Documents/Codex/2026-11-03/task/review/device-surfaces-work/installed-manifest.json) identify that tested addition separately from the earlier native 71 checkpoint.
 
-All requirement and route rows inherit the checkpoint date above. Ownership follows the milestone dashboard below: Dot owns the ledger and dinner work, the lead owns app composition and integration, and delegated implementation lanes own their new service/web/auth/records/billing/pickup files. A final named acceptance tester and immutable build must be added before closure. This tracker itself executed count/link validation, not the product suites.
+The historical requirement/route rows and milestone/evidence registers retain their original checkpoints; their numbers and open-work descriptions do not inherit the new refresh date. Use `CURRENT-ACCEPTANCE.md` for present implementation, scoped evidence and remaining gates. Root owns integration and Lumpy coordinates the dedicated acceptance/operations lanes. A final named acceptance tester and immutable build must be added before closure. This documentation refresh executes only document count/link checks, not product suites.
 
 ## November 3 integration update
 
@@ -123,7 +129,7 @@ The hosted staging catalog was checked read-only with verified TLS at 20:07 UTC:
 
 The reference fixture/oracle files under `docs/product/foundation-gen2.1` preserve expected behavior. Passing a reference verifier alone does not certify the Swift/client/service implementation. Every launch row below requires source, a matching executed test, and appropriate native/browser acceptance before closing.
 
-## 52 launch requirements
+## Historical 52-requirement register
 
 Each tier and milestone is copied from the accepted register. “All…” tiers are cross-cutting contracts, not paywalls. Source/test links name the owning implementation and test surface; execution status is always in the separate evidence column. Device acceptance remains open except the limited B01 evidence explicitly cited.
 
@@ -182,7 +188,7 @@ Each tier and milestone is copied from the accepted register. “All…” tiers
 | A02 · Editable dinner ideas | Free suggestion and manual review; Household assisted pairing | B10 | S26 S14 S15 | [Editable meal patterns](../ios/Features/Dinners/DinnerEditors.swift) and scoped stock and pack review | [Local approval and reservation checks](evidence/native/dinner-idea-supply-local.json) | Local approval preserves the empty shopping list through a restart. Missing or excluded evidence remains unresolved. | Verify adult household approval and carryover reservations in the integrated app. |
 | A03 · Compare two entered store quotes | Free manual comparison; adult with budget scope | B10 | S27 S03 S05 | Local and [connected household quotes](../service/API-STORE-QUOTES.md) | [Store-quote service evidence](evidence/connected-s27/README.md) plus native model cases | Private adult saves, explicit proposals, shopper-only adoption, exact retries and fresh store repricing exercised over Swift HTTPS and PostgreSQL. | Connected native screen acceptance in progress; final bilingual and hardware review remain. |
 
-## 27 route contracts
+## Historical 27-route register
 
 Presentation is the accepted compact-width contract. Existing widgets/views must be connected through stable shop/record IDs and authority checks; they are not additional completed screens. Settings and helper renderings do not inflate the 27 count.
 
@@ -230,7 +236,7 @@ These seven rows are outside the 52 launch-requirement count. E05 is intentional
 | X05 | No social feed or general family calendar | S21 S25 | Scoped request/service and meal-day prerequisites | Adult-only meal week, private author requests; no school/chore/social schedule |
 | X06 | No mandatory scanning or credential scraping | S02 S06 S08 | Typed flow remains available; optional structured speech/photo capture and selected-text surfaces now implemented | Entire ordinary shop with camera denied; manual retailer review and no retailer password collection |
 
-## Hard blocks and unresolved assurance
+## Historical hard blocks and unresolved assurance
 
 | Block | Current evidence / status | Required resolution / owner |
 |---|---|---|

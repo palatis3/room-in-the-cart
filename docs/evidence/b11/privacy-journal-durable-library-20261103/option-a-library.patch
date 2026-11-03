@@ -1,0 +1,1113 @@
+diff --git a/service/src/privacy-journal-durable-contract.ts b/service/src/privacy-journal-durable-contract.ts
+new file mode 100644
+--- /dev/null
++++ b/service/src/privacy-journal-durable-contract.ts
+@@ -0,0 +1,170 @@
++import type {KeyObject} from 'node:crypto';
++import type {PrivacyJournalEvent, PrivacyJournalHead} from './privacy-journal.js';
++
++/** One caller-owned deadline. Every implementation must pass signal to its actual I/O. */
++export interface JournalCall {
++ readonly attemptId:string;
++ readonly deadlineUnixMs:number;
++ readonly signal:AbortSignal;
++}
++/** A fresh adapter-generated challenge authenticates observations, not immutable receipts. */
++export interface AuthorityCall extends JournalCall { readonly requestNonce:string }
++export interface DurableJournalPins {
++ readonly lineage:string;
++ readonly schemaDigest:string;
++ readonly configurationId:string;
++ readonly keyId:string;
++ readonly publicKeyFingerprint:string;
++ readonly sourceIdentity:string;
++ readonly recordStoreIdentity:string;
++ readonly recordNamespace:string;
++ readonly checkpointAuthority:string;
++ readonly deploymentPrincipal:string;
++ readonly authorityKeyId:string;
++ readonly authorityPublicKeyFingerprint:string;
++}
++export interface RegisteredOrigin {
++ readonly lineage:string;
++ readonly schemaDigest:string;
++ readonly configurationId:string;
++ readonly sourceIdentity:string;
++ readonly fenced:boolean;
++}
++export type JournalTransition='intent'|'commit'|'rollback';
++export interface AdmittedHead {
++ readonly head:PrivacyJournalHead;
++ readonly generation:number;
++ readonly authorityRevision:number;
++ readonly mode:'active'|'pending'|'blocked'|'recovery'|'sealed';
++ readonly pendingOperation:string|null;
++ readonly totalBytes:number;
++}
++export interface RecordIdentity {
++ readonly seq:number;
++ readonly previousHash:string;
++ readonly recordHash:string;
++ /** UTF-8 canonical signed v1 record plus its single LF. */
++ readonly byteLength:number;
++ readonly eventId:string;
++ readonly payloadDigest:string;
++ readonly jobId:string;
++ readonly transition:JournalTransition;
++}
++export interface AppendTicket {
++ readonly operationId:string;
++ readonly generation:number;
++ readonly expected:AdmittedHead;
++ readonly record:RecordIdentity;
++ readonly objectKey:string;
++ readonly authorityExpiresAtUnixMs:number;
++}
++export interface StoredRecord {
++ readonly objectKey:string;
++ readonly immutableVersion:string;
++ readonly recordHash:string;
++ readonly byteLength:number;
++}
++/** Strict canonical JSON body is Ed25519-signed with the constructor-pinned authority key. */
++export interface AuthorityEnvelope<T> {
++ readonly version:1;
++ readonly domain:'ritc-privacy-journal-authority-v1';
++ readonly scopeDigest:string;
++ readonly authorityKeyId:string;
++ readonly requestNonce:string;
++ readonly value:T;
++ readonly authoritySignature:string;
++}
++/** Immutable receipt: no freshness nonce; retries retain this exact record/storage identity. */
++export interface AdmissionReceipt {
++ readonly version:1;
++ readonly domain:'ritc-privacy-journal-admission-v1';
++ readonly scopeDigest:string;
++ readonly authorityKeyId:string;
++ readonly operationId:string;
++ readonly admitted:AdmittedHead;
++ readonly record:RecordIdentity;
++ readonly stored:StoredRecord;
++ readonly authoritySignature:string;
++}
++export type OperationInspection=
++ | {readonly state:'absent';readonly operationId:string}
++ | {readonly state:'pending'|'blocked';readonly operationId:string;readonly ticket:AppendTicket}
++ | {readonly state:'admitted';readonly operationId:string;readonly receipt:AdmissionReceipt};
++
++/** Constructor-scoped immutable object capability; no list, delete or overwrite authority. */
++export interface ImmutableRecordTransport {
++ putExact(ticket:AppendTicket,canonicalRecord:Uint8Array,call:JournalCall):Promise<StoredRecord>;
++ readExact(reference:StoredRecord,call:JournalCall):Promise<Uint8Array>;
++}
++/**
++ * Required remote semantics, not guarantees manufactured by this client:
++ * strongly consistent challenge-bound reads; atomic generation/mode/head CAS and
++ * event/transition index; no lease takeover; authority-clock expiry; independent
++ * exact-version read + canonical/signature/schema/dependency verification at
++ * publish; atomic retained receipt/head/index update. A writer cannot reset/fence.
++ */
++export interface CheckpointAuthority {
++ readCurrent(call:AuthorityCall):Promise<AuthorityEnvelope<AdmittedHead>>;
++ inspectOperation(operationId:string,call:AuthorityCall):Promise<AuthorityEnvelope<OperationInspection>>;
++ reserve(expected:AdmittedHead,record:RecordIdentity,call:AuthorityCall):Promise<AuthorityEnvelope<AppendTicket>>;
++ publish(ticket:AppendTicket,stored:StoredRecord,call:AuthorityCall):Promise<AdmissionReceipt>;
++}
++export interface UncertaintyOperation {
++ readonly scopeDigest:string;
++ readonly eventId:string;
++ readonly transition:'intent'|'commit';
++}
++export interface UncertaintyClaim extends UncertaintyOperation {
++ readonly claimId:string;
++}
++/**
++ * REQUIRED durable, strongly consistent origin guard, shared by every instance.
++ * All authorized deployment scopes for one immutable source lineage MUST map to
++ * the same origin lock; deploymentPrincipal/scope rotation cannot bypass a claim.
++ * begin atomically persists an exclusive, non-expiring claim before returning.
++ * Any outstanding claim (even the same operation) rejects begin. complete may
++ * release only that exact claim after verifying the supplied durable admission
++ * proof binds its scope, event ID and transition. This capability is authenticated
++ * and constructor-scoped; an ordinary writer cannot delete someone else's claim.
++ * Lost begin/PUT/publish responses therefore leave a blocking claim. No ordinary
++ * reset, TTL or process-local implementation is sufficient. Operator reconciliation
++ * requires a separate capability, absent from this interface. A complete response
++ * may be lost after release; this is safe because all journal outcomes are already
++ * authenticated and durable before complete is invoked.
++ */
++export interface DurableUncertaintyStore {
++ begin(operation:UncertaintyOperation,call:JournalCall):Promise<UncertaintyClaim>;
++ complete(claim:UncertaintyClaim,proof:AdmissionReceipt,call:JournalCall):Promise<void>;
++}
++/** Private committed observer. Implementations must never use the public app/worker role. */
++export interface FixedCommittedSource {
++ readOrigin(call:JournalCall):Promise<RegisteredOrigin>;
++ readCommittedEvent(eventId:string,call:JournalCall):Promise<PrivacyJournalEvent>;
++ readCommittedAcceptance(jobId:string,call:JournalCall):Promise<PrivacyJournalEvent>;
++ listUnacknowledgedJobEvents(jobId:string,call:JournalCall):Promise<readonly string[]>;
++ /**
++  * Trusted Node boundary. The adapter verifies the receipt immediately before
++  * calling; a source implementation must repeat verification if it crosses any
++  * additional trust boundary. SQL does not verify an external receipt. Already
++  * issued acknowledgement can safely complete late; no call may start after abort.
++  */
++ acknowledge(eventId:string,payloadDigest:string,commitRecordSeq:number,
++  commitRecordHash:string,verifiedReceipt:AdmissionReceipt,call:JournalCall):Promise<void>;
++}
++export interface DurablePrivacyJournalPort {
++ readonly configurationId:string;
++ beforeCommit(candidate:PrivacyJournalEvent,call:JournalCall):Promise<void>;
++ afterCommit(eventId:string,call:JournalCall):Promise<void>;
++ acknowledgeJob(jobId:string,call:JournalCall):Promise<void>;
++}
++export interface DurablePrivacyJournalConfiguration {
++ readonly pins:DurableJournalPins;
++ readonly privateKey:KeyObject;
++ readonly authorityPublicKey:KeyObject|string;
++ readonly source:FixedCommittedSource;
++ readonly records:ImmutableRecordTransport;
++ readonly authority:CheckpointAuthority;
++ readonly uncertainty:DurableUncertaintyStore;
++ /** Injectable only for deterministic testing; production defaults to Date.now. */
++ readonly clock?:{now():number};
++}
+diff --git a/service/src/privacy-journal-durable.ts b/service/src/privacy-journal-durable.ts
+new file mode 100644
+--- /dev/null
++++ b/service/src/privacy-journal-durable.ts
+@@ -0,0 +1,266 @@
++import {createHash,createPublicKey,randomBytes,sign,verify,type KeyObject} from 'node:crypto';
++import {z} from 'zod';
++import {journalCanonical,journalHash,validatePrivacyRestoreEvents,type PrivacyJournalEvent} from './privacy-journal.js';
++import type {
++ AdmittedHead,AdmissionReceipt,AuthorityCall,
++ DurableJournalPins,DurablePrivacyJournalConfiguration,DurablePrivacyJournalPort,
++ JournalCall,JournalTransition,RecordIdentity,UncertaintyClaim,
++} from './privacy-journal-durable-contract.js';
++export type * from './privacy-journal-durable-contract.js';
++
++const MAX_BYTES=32*1024*1024,MAX_RECORDS=10000,ZERO='0'.repeat(64);
++const hash=z.string().regex(/^[0-9a-f]{64}$/);
++const uuid=z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
++const identifier=z.string().min(1).max(300).regex(/^[^\x00-\x1f\x7f]+$/);
++const safe=z.number().int().min(0).max(Number.MAX_SAFE_INTEGER);
++const signature=z.string().regex(/^[A-Za-z0-9_-]{86}$/);
++const pinsSchema=z.object({lineage:uuid,schemaDigest:hash,configurationId:identifier.max(100),keyId:identifier.max(100),publicKeyFingerprint:hash,sourceIdentity:identifier,recordStoreIdentity:identifier,recordNamespace:identifier,checkpointAuthority:identifier,deploymentPrincipal:identifier,authorityKeyId:identifier.max(100),authorityPublicKeyFingerprint:hash}).strict();
++const payloadSchema=z.object({version:z.literal(1),eventId:uuid,lineage:uuid,schemaDigest:hash,configurationId:identifier.max(100),jobId:uuid,kind:z.enum(['acceptance','target_erased','source_completed','source_pending']),data:z.record(z.string(),z.unknown())}).strict();
++const eventSchema=z.object({eventId:uuid,payloadDigest:hash,payload:payloadSchema}).strict();
++const headSchema=z.object({version:z.literal(1),lineage:uuid,schemaDigest:hash,configurationId:identifier.max(100),seq:safe.max(MAX_RECORDS),hash,fenced:z.boolean()}).strict();
++const admittedSchema=z.object({head:headSchema,generation:safe.min(1),authorityRevision:safe,mode:z.enum(['active','pending','blocked','recovery','sealed']),pendingOperation:hash.nullable(),totalBytes:safe.max(MAX_BYTES)}).strict();
++const identitySchema=z.object({seq:safe.min(1).max(MAX_RECORDS),previousHash:hash,recordHash:hash,byteLength:safe.min(1).max(MAX_BYTES),eventId:uuid,payloadDigest:hash,jobId:uuid,transition:z.enum(['intent','commit','rollback'])}).strict();
++const storedSchema=z.object({objectKey:identifier,immutableVersion:identifier,recordHash:hash,byteLength:safe.min(1).max(MAX_BYTES)}).strict();
++const ticketSchema=z.object({operationId:hash,generation:safe.min(1),expected:admittedSchema,record:identitySchema,objectKey:identifier,authorityExpiresAtUnixMs:safe.min(1)}).strict();
++const receiptSchema=z.object({version:z.literal(1),domain:z.literal('ritc-privacy-journal-admission-v1'),scopeDigest:hash,authorityKeyId:identifier.max(100),operationId:hash,admitted:admittedSchema,record:identitySchema,stored:storedSchema,authoritySignature:signature}).strict();
++const inspectionSchema=z.discriminatedUnion('state',[
++ z.object({state:z.literal('absent'),operationId:hash}).strict(),
++ z.object({state:z.enum(['pending','blocked']),operationId:hash,ticket:ticketSchema}).strict(),
++ z.object({state:z.literal('admitted'),operationId:hash,receipt:receiptSchema}).strict(),
++]);
++const recordSchema=z.object({version:z.literal(1),keyId:identifier.max(100),seq:safe.min(1).max(MAX_RECORDS),previousHash:hash,kind:z.enum(['intent','commit','rollback']),event:eventSchema,signature}).strict();
++const originSchema=z.object({lineage:uuid,schemaDigest:hash,configurationId:identifier.max(100),sourceIdentity:identifier,fenced:z.boolean()}).strict();
++const claimSchema=z.object({scopeDigest:hash,eventId:uuid,transition:z.enum(['intent','commit']),claimId:identifier}).strict();
++
++/** SHA-256 of the exact Ed25519 public SPKI DER, independent of PEM formatting. */
++export function durableJournalPublicKeyFingerprint(key:KeyObject|string):string{
++ const publicKey=typeof key==='string'?pinnedPublicKey(key):key.type==='public'?key:createPublicKey(key);
++ if(publicKey.asymmetricKeyType!=='ed25519')throw Error('Pinned Ed25519 public key required');
++ return createHash('sha256').update(publicKey.export({format:'der',type:'spki'})).digest('hex');
++}
++function pinnedPublicKey(input:KeyObject|string):KeyObject{
++ // createPublicKey also accepts private PEM and silently derives its public key.
++ // Independent witness custody requires this capability to contain PUBLIC SPKI.
++ if(typeof input==='string'){
++  if(!/^-----BEGIN PUBLIC KEY-----\r?\n(?:[A-Za-z0-9+/=]+\r?\n)+-----END PUBLIC KEY-----\r?\n?$/.test(input))throw Error('Public SPKI PEM required; authority private material is forbidden');
++  return createPublicKey(input);
++ }
++ if(input.type!=='public')throw Error('Public authority key required');return input;
++}
++export function durableJournalScopeDigest(pins:DurableJournalPins):string{return journalHash({version:1,...pinsSchema.parse(pins)});}
++export function durableJournalOperationId(scopeDigest:string,eventId:string,payloadDigest:string,transition:JournalTransition):string{
++ hash.parse(scopeDigest);uuid.parse(eventId);hash.parse(payloadDigest);
++ return journalHash({version:1,scopeDigest,eventId,payloadDigest,transition:z.enum(['intent','commit','rollback']).parse(transition)});
++}
++function equal(a:unknown,b:unknown,message:string):void{if(journalCanonical(a)!==journalCanonical(b))throw Error(message);}
++function immutable<T>(value:T):T{
++ if(value&&typeof value==='object'){for(const item of Object.values(value))immutable(item);Object.freeze(value);}
++ return value;
++}
++function copied<T>(value:T):T{return structuredClone(value);}
++function assertCall(call:JournalCall,now:()=>number):void{
++ if(!call||typeof call.attemptId!=='string'||!call.attemptId.length||call.attemptId.length>100||!Number.isSafeInteger(call.deadlineUnixMs)||!(call.signal instanceof AbortSignal))throw Error('Call-owned journal deadline and AbortSignal required');
++ call.signal.throwIfAborted();if(now()>=call.deadlineUnixMs)throw Error('Journal deadline exceeded');
++}
++/** Abort the actual injected I/O and stop our continuation even if it ignores abort. */
++async function withOwnedCall<T>(input:JournalCall,now:()=>number,work:(call:JournalCall)=>Promise<T>):Promise<T>{
++ assertCall(input,now);
++ const controller=new AbortController();
++ const abort=()=>controller.abort(input.signal.reason??Error('Journal call aborted'));
++ input.signal.addEventListener('abort',abort,{once:true});
++ const timer=setTimeout(()=>controller.abort(Error('Journal deadline exceeded')),Math.min(2_147_483_647,Math.max(0,input.deadlineUnixMs-now())));
++ const call=Object.freeze({attemptId:input.attemptId,deadlineUnixMs:input.deadlineUnixMs,signal:controller.signal});
++ let onAbort:(()=>void)|undefined;
++ const cancelled=new Promise<never>((_,reject)=>{onAbort=()=>reject(controller.signal.reason??Error('Journal call aborted'));controller.signal.addEventListener('abort',onAbort,{once:true});});
++ try{assertCall(call,now);return await Promise.race([work(call),cancelled]);}
++ finally{clearTimeout(timer);input.signal.removeEventListener('abort',abort);if(onAbort)controller.signal.removeEventListener('abort',onAbort);}
++}
++function verifySignature(body:Record<string,unknown>,encoded:string,key:KeyObject):void{
++ const bytes=Buffer.from(encoded,'base64url');
++ if(bytes.toString('base64url')!==encoded||bytes.length!==64||!verify(null,Buffer.from(journalCanonical(body)),key,bytes))throw Error('Independent authority signature rejected');
++}
++function verifyHeadPins(head:AdmittedHead,pins:DurableJournalPins):void{
++ if(head.head.lineage!==pins.lineage||head.head.schemaDigest!==pins.schemaDigest||head.head.configurationId!==pins.configurationId)throw Error('Independent head origin conflict');
++ if(head.head.seq===0&&(head.head.hash!==ZERO||head.totalBytes!==0)||head.head.seq>0&&head.totalBytes===0)throw Error('Independent head capacity conflict');
++}
++function active(head:AdmittedHead):void{
++ if(head.mode!=='active'||head.pendingOperation!==null||head.head.fenced)throw Error('Independent origin is not active');
++}
++function objectKey(scopeDigest:string,record:RecordIdentity):string{return `${scopeDigest}/${record.seq}/${record.recordHash}`;}
++
++/** Strict, independently authenticated immutable proof; never accepts a provider Boolean. */
++export function verifyDurableAdmissionReceipt(input:unknown,pinsInput:DurableJournalPins,authorityPublicKey:KeyObject|string):AdmissionReceipt{
++ const pins=pinsSchema.parse(pinsInput),scopeDigest=durableJournalScopeDigest(pins);
++ const key=pinnedPublicKey(authorityPublicKey);
++ if(key.type!=='public'||durableJournalPublicKeyFingerprint(key)!==pins.authorityPublicKeyFingerprint||pins.authorityPublicKeyFingerprint===pins.publicKeyFingerprint)throw Error('Independent authority key fingerprint conflict');
++ const receipt=receiptSchema.parse(input),{authoritySignature,...body}=receipt;
++ if(receipt.scopeDigest!==scopeDigest||receipt.authorityKeyId!==pins.authorityKeyId)throw Error('Independent receipt scope conflict');
++ verifySignature(body,authoritySignature,key);verifyHeadPins(receipt.admitted,pins);active(receipt.admitted);
++ if(receipt.operationId!==durableJournalOperationId(scopeDigest,receipt.record.eventId,receipt.record.payloadDigest,receipt.record.transition)||receipt.admitted.head.seq!==receipt.record.seq||receipt.admitted.head.hash!==receipt.record.recordHash||receipt.record.recordHash!==receipt.stored.recordHash||receipt.record.byteLength!==receipt.stored.byteLength||receipt.stored.objectKey!==objectKey(scopeDigest,receipt.record)||receipt.admitted.totalBytes<receipt.record.byteLength)throw Error('Independent receipt record or storage conflict');
++ return immutable(receipt);
++}
++
++/**
++ * Private in-process signer. Only wire this port to the trusted actual SQL-result
++ * callback. It is not an arbitrary-event network signing or import endpoint.
++ * There is deliberately no environment composition or provider implementation.
++ */
++export function createDurablePrivacyJournal(configuration:DurablePrivacyJournalConfiguration):{readonly port:DurablePrivacyJournalPort;isPoisoned():boolean}{
++ const pins=immutable(pinsSchema.parse(copied(configuration.pins))),scopeDigest=durableJournalScopeDigest(pins);
++ const privateKey=configuration.privateKey;
++ if(privateKey.type!=='private'||privateKey.asymmetricKeyType!=='ed25519'||durableJournalPublicKeyFingerprint(privateKey)!==pins.publicKeyFingerprint)throw Error('Pinned Ed25519 private key required');
++ const publicKey=createPublicKey(privateKey),authorityPublicKey=pinnedPublicKey(configuration.authorityPublicKey);
++ if(authorityPublicKey.type!=='public'||authorityPublicKey.asymmetricKeyType!=='ed25519'||durableJournalPublicKeyFingerprint(authorityPublicKey)!==pins.authorityPublicKeyFingerprint)throw Error('Pinned independent authority key required');
++ if(durableJournalPublicKeyFingerprint(authorityPublicKey)===pins.publicKeyFingerprint)throw Error('Journal signer and authority key must be independent');
++ const now=configuration.clock?configuration.clock.now.bind(configuration.clock):Date.now;
++ // Capture method identities now. Each trusted capability implementation must
++ // independently pin its actual endpoint, credentials and registered resource.
++ const source={readOrigin:configuration.source.readOrigin.bind(configuration.source),readCommittedEvent:configuration.source.readCommittedEvent.bind(configuration.source),readCommittedAcceptance:configuration.source.readCommittedAcceptance.bind(configuration.source),listUnacknowledgedJobEvents:configuration.source.listUnacknowledgedJobEvents.bind(configuration.source),acknowledge:configuration.source.acknowledge.bind(configuration.source)};
++ const records={putExact:configuration.records.putExact.bind(configuration.records),readExact:configuration.records.readExact.bind(configuration.records)};
++ const authority={readCurrent:configuration.authority.readCurrent.bind(configuration.authority),inspectOperation:configuration.authority.inspectOperation.bind(configuration.authority),reserve:configuration.authority.reserve.bind(configuration.authority),publish:configuration.authority.publish.bind(configuration.authority)};
++ const uncertainty={begin:configuration.uncertainty.begin.bind(configuration.uncertainty),complete:configuration.uncertainty.complete.bind(configuration.uncertainty)};
++ let poisoned=false;
++ async function step<T>(call:JournalCall,work:()=>Promise<T>):Promise<T>{
++  assertCall(call,now);const value=await work();assertCall(call,now);return value;
++ }
++ function authorityCall(call:JournalCall):AuthorityCall{return Object.freeze({...call,requestNonce:randomBytes(32).toString('hex')});}
++ function envelope<T>(input:unknown,schema:z.ZodType<T>,call:AuthorityCall):T{
++  const parsed=z.object({version:z.literal(1),domain:z.literal('ritc-privacy-journal-authority-v1'),scopeDigest:hash,authorityKeyId:identifier.max(100),requestNonce:hash,value:schema,authoritySignature:signature}).strict().parse(input);
++  if(parsed.scopeDigest!==scopeDigest||parsed.authorityKeyId!==pins.authorityKeyId||parsed.requestNonce!==call.requestNonce)throw Error('Independent observation scope or freshness conflict');
++  const {authoritySignature,...body}=parsed;verifySignature(body,authoritySignature,authorityPublicKey);return immutable(parsed.value);
++ }
++ async function current(call:JournalCall):Promise<AdmittedHead>{
++  const request=authorityCall(call),value=envelope(await step(call,()=>authority.readCurrent(request)),admittedSchema,request);
++  verifyHeadPins(value,pins);active(value);return value;
++ }
++ function event(input:unknown):PrivacyJournalEvent{
++  const value=eventSchema.parse(copied(input));
++  if(value.eventId!==value.payload.eventId||value.payloadDigest!==journalHash(value.payload)||value.payload.lineage!==pins.lineage||value.payload.schemaDigest!==pins.schemaDigest||value.payload.configurationId!==pins.configurationId)throw Error('Fixed source event pins or digest conflict');
++  return immutable(value);
++ }
++ async function origin(call:JournalCall):Promise<void>{
++  const value=originSchema.parse(await step(call,()=>source.readOrigin(call)));
++  if(value.lineage!==pins.lineage||value.schemaDigest!==pins.schemaDigest||value.configurationId!==pins.configurationId||value.sourceIdentity!==pins.sourceIdentity||value.fenced)throw Error('Fixed source origin unavailable or fenced');
++ }
++ async function content(value:PrivacyJournalEvent,call:JournalCall):Promise<void>{
++  if(value.payload.kind==='acceptance'){validatePrivacyRestoreEvents([value]);return;}
++  const acceptance=event(await step(call,()=>source.readCommittedAcceptance(value.payload.jobId,call)));
++  if(acceptance.payload.kind!=='acceptance'||acceptance.payload.jobId!==value.payload.jobId)throw Error('Requested committed acceptance binding conflict');
++  validatePrivacyRestoreEvents([acceptance,value]);
++  // A self-consistent source acceptance must also be the original admitted
++  // authorization. Reject changed targets/content before creating an object.
++  if(!await find(acceptance,'commit',call))throw Error('Progress lacks its original durable accepted authorization');
++ }
++ function receipt(input:unknown,expected?:RecordIdentity):AdmissionReceipt{
++  const value=verifyDurableAdmissionReceipt(input,pins,authorityPublicKey);
++  if(expected)equal(value.record,expected,'Independent admitted identity changed');return value;
++ }
++ async function storedRecord(proof:AdmissionReceipt,value:PrivacyJournalEvent,kind:JournalTransition,call:JournalCall):Promise<void>{
++  if(proof.record.eventId!==value.eventId||proof.record.payloadDigest!==value.payloadDigest||proof.record.jobId!==value.payload.jobId||proof.record.transition!==kind)throw Error('Original transition event binding conflict');
++  const bytes=Buffer.from(await step(call,()=>records.readExact(proof.stored,call)));
++  if(bytes.length!==proof.record.byteLength||bytes.length>MAX_BYTES||bytes.at(-1)!==10)throw Error('Stored canonical record length conflict');
++  const line=new TextDecoder('utf-8',{fatal:true}).decode(bytes.subarray(0,-1));
++  const record=recordSchema.parse(JSON.parse(line));
++  if(journalCanonical(record)!==line||journalHash(record)!==proof.record.recordHash||record.seq!==proof.record.seq||record.previousHash!==proof.record.previousHash||record.kind!==kind||record.keyId!==pins.keyId)throw Error('Stored canonical record identity conflict');
++  equal(record.event,value,'Stored immutable event changed');
++  const {signature:encoded,...body}=record;verifySignature(body,encoded,publicKey);
++ }
++ async function find(value:PrivacyJournalEvent,kind:JournalTransition,call:JournalCall):Promise<AdmissionReceipt|undefined>{
++  const operationId=durableJournalOperationId(scopeDigest,value.eventId,value.payloadDigest,kind),request=authorityCall(call);
++  const inspected=envelope(await step(call,()=>authority.inspectOperation(operationId,request)),inspectionSchema,request);
++  if(inspected.operationId!==operationId)throw Error('Independent operation lookup conflict');
++  if(inspected.state==='absent')return;
++  if(inspected.state!=='admitted')throw Error('Uncertain operation requires explicit fenced recovery');
++  const proof=receipt(inspected.receipt);
++  if(proof.operationId!==operationId)throw Error('Independent original receipt conflict');
++  await storedRecord(proof,value,kind,call);return proof;
++ }
++ async function append(value:PrivacyJournalEvent,kind:'intent'|'commit',call:JournalCall):Promise<AdmissionReceipt>{
++  await content(value,call);
++  const prior=await find(value,kind,call);if(prior)return prior;
++  const head=await current(call);
++  const unsigned={version:1 as const,keyId:pins.keyId,seq:head.head.seq+1,previousHash:head.head.hash,kind,event:value};
++  const record={...unsigned,signature:sign(null,Buffer.from(journalCanonical(unsigned)),privateKey).toString('base64url')};
++  const bytes=Buffer.from(journalCanonical(record)+'\n');
++  if(head.head.seq>=MAX_RECORDS||head.totalBytes+bytes.length>MAX_BYTES)throw Error('Durable journal capacity reached');
++  const identity:RecordIdentity=immutable({seq:record.seq,previousHash:record.previousHash,recordHash:journalHash(record),byteLength:bytes.length,eventId:value.eventId,payloadDigest:value.payloadDigest,jobId:value.payload.jobId,transition:kind});
++  const request=authorityCall(call),ticket=envelope(await step(call,()=>authority.reserve(head,identity,request)),ticketSchema,request);
++  equal(ticket.expected,head,'Reservation changed expected independent head');equal(ticket.record,identity,'Reservation changed record identity');
++  if(ticket.operationId!==durableJournalOperationId(scopeDigest,value.eventId,value.payloadDigest,kind)||ticket.generation!==head.generation||ticket.objectKey!==objectKey(scopeDigest,identity)||ticket.authorityExpiresAtUnixMs>=call.deadlineUnixMs||ticket.authorityExpiresAtUnixMs<=now())throw Error('Reservation scope, generation or deadline conflict');
++  const stored=immutable(storedSchema.parse(await step(call,()=>records.putExact(ticket,Buffer.from(bytes),call))));
++  if(stored.objectKey!==ticket.objectKey||stored.recordHash!==identity.recordHash||stored.byteLength!==identity.byteLength)throw Error('Immutable storage result conflict');
++  const exact=Buffer.from(await step(call,()=>records.readExact(stored,call)));
++  if(!exact.equals(bytes))throw Error('Conditional object create did not preserve exact bytes');
++  // Reject stale tickets before starting publication. The authority must repeat
++  // generation/mode/head/deadline checks atomically using its own clock.
++  assertCall(call,now);if(now()>=ticket.authorityExpiresAtUnixMs)throw Error('Reservation deadline exceeded');
++  const proof=receipt(await step(call,()=>authority.publish(ticket,stored,authorityCall(call))),identity);
++  if(proof.admitted.generation!==ticket.generation||proof.admitted.authorityRevision<=head.authorityRevision||proof.admitted.totalBytes!==head.totalBytes+bytes.length)throw Error('Publication generation, revision or byte coverage conflict');
++  equal(proof.stored,stored,'Publication changed immutable storage version');return proof;
++ }
++ async function claim(eventId:string,transition:'intent'|'commit',call:JournalCall):Promise<UncertaintyClaim>{
++  const expected=Object.freeze({scopeDigest,eventId,transition});
++  const held=immutable(claimSchema.parse(await step(call,()=>uncertainty.begin(expected,call))));
++  if(held.scopeDigest!==scopeDigest||held.eventId!==eventId||held.transition!==transition)throw Error('Durable uncertainty claim changed');return held;
++ }
++ async function complete(held:UncertaintyClaim,proof:AdmissionReceipt,call:JournalCall):Promise<void>{
++  receipt(proof);
++  if(held.scopeDigest!==proof.scopeDigest||held.eventId!==proof.record.eventId||held.transition!==proof.record.transition)throw Error('Uncertainty completion proof binding conflict');
++  await step(call,()=>uncertainty.complete(held,proof,call));
++ }
++ async function covered(proof:AdmissionReceipt,call:JournalCall):Promise<void>{
++  const head=await current(call);
++  if(head.generation!==proof.admitted.generation||head.authorityRevision<proof.admitted.authorityRevision||head.head.seq<proof.record.seq||head.head.seq===proof.record.seq&&head.head.hash!==proof.record.recordHash)throw Error('Receipt is not covered by current active independent head');
++ }
++ async function afterCommit(eventId:string,call:JournalCall,requiredJobId?:string):Promise<void>{
++  const held=await claim(eventId,'commit',call);await origin(call);
++  const value=event(await step(call,()=>source.readCommittedEvent(eventId,call)));
++  if(value.eventId!==eventId||requiredJobId!==undefined&&value.payload.jobId!==requiredJobId)throw Error('Requested committed event binding conflict');
++  await content(value,call);
++  if(value.payload.kind==='acceptance'&&!await find(value,'intent',call))throw Error('Committed acceptance lacks its original durable intent');
++  const proof=await append(value,'commit',call);
++  await covered(proof,call);
++  // This check is immediately before initiating SQL acknowledgement. Once sent,
++  // cancellation cannot undo it; exact durable commit/head make late success safe.
++  assertCall(call,now);receipt(proof);
++  await step(call,()=>source.acknowledge(eventId,value.payloadDigest,proof.record.seq,proof.record.recordHash,proof,call));
++  await complete(held,proof,call);
++ }
++ async function guarded<T>(call:JournalCall,work:(owned:JournalCall)=>Promise<T>):Promise<T>{
++  if(poisoned)throw Error('Durable journal requires explicit fenced reconciliation');
++  try{return await withOwnedCall(call,now,work);}catch(error){poisoned=true;throw error;}
++ }
++ const port:DurablePrivacyJournalPort=Object.freeze({configurationId:pins.configurationId,
++  beforeCommit(candidate:PrivacyJournalEvent,call:JournalCall):Promise<void>{
++   // Snapshot and fully validate before first await: caller mutation cannot change
++   // signed bytes while origin/head/storage I/O is pending.
++   let value:PrivacyJournalEvent;
++   try{value=event(candidate);if(value.payload.kind!=='acceptance')throw Error('Acceptance intent required');validatePrivacyRestoreEvents([value]);}
++   catch(error){return Promise.reject(error);}
++   return guarded(call,async owned=>{const held=await claim(value.eventId,'intent',owned);await origin(owned);const proof=await append(value,'intent',owned);await covered(proof,owned);await complete(held,proof,owned);});
++  },
++  afterCommit(eventId:string,call:JournalCall):Promise<void>{
++   try{uuid.parse(eventId);}catch(error){return Promise.reject(error);}
++   return guarded(call,owned=>afterCommit(eventId,owned));
++  },
++  acknowledgeJob(jobId:string,call:JournalCall):Promise<void>{
++   try{uuid.parse(jobId);}catch(error){return Promise.reject(error);}
++   return guarded(call,async owned=>{
++    // A read-only empty status path requires a genuine committed acceptance.
++    // No mutation claim is opened until an individual event needs observation.
++    await origin(owned);
++    const acceptance=event(await step(owned,()=>source.readCommittedAcceptance(jobId,owned)));
++    if(acceptance.payload.kind!=='acceptance'||acceptance.payload.jobId!==jobId)throw Error('Requested job acceptance binding conflict');
++    validatePrivacyRestoreEvents([acceptance]);
++    const ids=z.array(uuid).max(MAX_RECORDS).parse(await step(owned,()=>source.listUnacknowledgedJobEvents(jobId,owned)));
++    if(new Set(ids).size!==ids.length)throw Error('Duplicate unacknowledged source event');
++    if(!ids.length){
++     const proof=await find(acceptance,'commit',owned);if(!proof)throw Error('Acknowledged job has no durable acceptance');
++     await covered(proof,owned);
++    }
++    for(const id of ids)await afterCommit(id,owned,jobId);
++   });
++  },
++ });
++ return Object.freeze({port,isPoisoned:()=>poisoned});
++}
+diff --git a/service/tests/durable-independent-fixture.mjs b/service/tests/durable-independent-fixture.mjs
+new file mode 100644
+--- /dev/null
++++ b/service/tests/durable-independent-fixture.mjs
+@@ -0,0 +1,93 @@
++import assert from 'node:assert/strict';
++import {createHash, generateKeyPairSync, randomUUID, sign, verify} from 'node:crypto';
++
++// Independent test-side canonical encoder and hashes. Never import the adapter's
++// encoder or receipt verifier to manufacture the expected result.
++export function canonical(value) {
++  if (value === null || typeof value !== 'object') return JSON.stringify(value);
++  if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
++  return `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${canonical(value[key])}`).join(',')}}`;
++}
++export const digest = value => createHash('sha256').update(canonical(value)).digest('hex');
++export const bytesDigest = value => createHash('sha256').update(value).digest('hex');
++export const clone = value => structuredClone(value);
++export const zero = '0'.repeat(64);
++
++export function keys() {
++  const pair = generateKeyPairSync('ed25519');
++  const publicKey = pair.publicKey.export({type:'spki', format:'pem'}).toString();
++  return {...pair, publicKeyPEM:publicKey, fingerprint:bytesDigest(pair.publicKey.export({type:'spki',format:'der'}))};
++}
++
++export function acceptedEvent(origin, options = {}) {
++  const householdId = options.householdId ?? randomUUID();
++  const memberId = options.memberId ?? randomUUID();
++  const at = '2026-11-03T12:00:00.000Z';
++  const identityHash = 'a'.repeat(64);
++  const binding = {household_id:householdId,member_id:memberId,kind:'adult',state:'active',organizer:true,can_contribute:true,erased_at:null,identity_hash:identityHash};
++  const payload = {
++    version:1,eventId:options.eventId ?? randomUUID(),...origin,jobId:options.jobId ?? randomUUID(),kind:'acceptance',
++    data:{
++      identityHash,receiptHash:'b'.repeat(64),requestDigest:'c'.repeat(64),acceptedAt:at,
++      receiptDays:1,markerDays:2,receiptUntil:'2026-11-04T12:00:00.000Z',markerUntil:'2026-11-05T12:00:00.000Z',
++      attestation:{configurationId:origin.configurationId,authenticatedAt:at,authenticatedMethod:'otp',providerAvailability:'configured_adapter_passed',appleGate:'availability_contract_passed',sqlAdultScopeCheck:'passed',policy:{receiptRetentionDays:1,erasureMarkerRetentionDays:2,verifiedBackupRetentionDays:1},sessionBindingHash:'d'.repeat(64),checkedAt:at},
++      targets:[{householdId,memberId,kind:'self_adult',binding}],
++      effects:[{table:'member',key:`${householdId}/${memberId}`,before:binding,after:{...binding,state:'revoked',organizer:false,can_contribute:false}}],
++    },
++  };
++  return {eventId:payload.eventId,payloadDigest:digest(payload),payload};
++}
++
++export function progressEvent(acceptance, kind = 'target_erased', changes = {}) {
++  const {householdId,memberId} = acceptance.payload.data.targets[0];
++  const payload = {
++    ...acceptance.payload,eventId:randomUUID(),kind,
++    data:kind === 'target_erased'
++      ? {householdId,memberId,retiredPurchases:[],erasedAt:'2026-11-03T12:01:00.000Z'}
++      : {appErasedAt:'2026-11-03T12:01:00.000Z',providerErasedAt:kind === 'source_completed' ? '2026-11-03T12:02:00.000Z' : null,completedAt:kind === 'source_completed' ? '2026-11-03T12:02:00.000Z' : null,receiptUntil:'2026-11-04T12:00:00.000Z',markerUntil:'2026-11-05T12:00:00.000Z'},
++    ...changes,
++  };
++  return {eventId:payload.eventId,payloadDigest:digest(payload),payload};
++}
++
++export function gate() {
++  let resolve, reject;
++  const promise = new Promise((ok, bad) => {resolve=ok;reject=bad;});
++  return {promise,resolve,reject};
++}
++
++export function assertCanonicalRecord(bytes, publicKey, expected) {
++  const raw = Buffer.from(bytes);
++  const parsed = JSON.parse(raw.toString('utf8'));
++  assert.equal(raw.toString('utf8'),canonical(parsed)+'\n');
++  assert.deepEqual(Object.keys(parsed).sort(),['event','keyId','kind','previousHash','seq','signature','version']);
++  const {signature,...unsigned}=parsed;
++  assert.equal(parsed.version,1);
++  assert(verify(null,Buffer.from(canonical(unsigned)),publicKey,Buffer.from(signature,'base64url')));
++  assert.equal(parsed.seq,expected.seq);
++  assert.equal(parsed.previousHash,expected.previousHash);
++  assert.equal(digest(parsed),expected.recordHash);
++  assert.equal(parsed.event.eventId,expected.eventId);
++  assert.equal(parsed.event.payloadDigest,expected.payloadDigest);
++  assert.equal(parsed.event.payload.jobId,expected.jobId);
++  assert.equal(parsed.kind,expected.transition);
++  assert.equal(digest(parsed.event.payload),parsed.event.payloadDigest);
++  return parsed;
++}
++
++export function signEnvelope(body, authorityPrivateKey) {
++  return {...body,signature:sign(null,Buffer.from(canonical(body)),authorityPrivateKey).toString('base64url')};
++}
++
++export function checkCall(call) {
++  assert(call && typeof call.attemptId === 'string');
++  assert(call.signal instanceof AbortSignal);
++  if (call.signal.aborted || Date.now() >= call.deadlineUnixMs) throw Error('Fixture call cancelled or expired');
++}
++
++export function call(options = {}) {
++  const controller = new AbortController();
++  const value={attemptId:randomUUID(),deadlineUnixMs:Date.now()+4000,signal:controller.signal,...options};
++  Object.defineProperty(value,'controller',{value:controller});
++  return value;
++}
+diff --git a/service/tests/durable-authority-fixture.mjs b/service/tests/durable-authority-fixture.mjs
+new file mode 100644
+--- /dev/null
++++ b/service/tests/durable-authority-fixture.mjs
+@@ -0,0 +1,193 @@
++import assert from 'node:assert/strict';
++import {randomUUID,sign,verify} from 'node:crypto';
++import {createDurablePrivacyJournal} from '../dist/privacy-journal-durable.js';
++import {validatePrivacyRestoreEvents} from '../dist/privacy-journal.js';
++import {acceptedEvent,assertCanonicalRecord,canonical,checkCall,clone,digest,gate,keys,zero} from './durable-independent-fixture.mjs';
++
++// Test-only backing state models independently authenticated CAS and immutable
++// object versions. Its state is shared by every constructed real adapter. This
++// deliberately does not establish a remote provider's production durability.
++export function fixture() {
++  const writer=keys(), authorityKeys=keys();
++  const pins={
++    lineage:randomUUID(),schemaDigest:'b'.repeat(64),configurationId:'actual-option-a-local-fixture',
++    keyId:'fixture-writer-v1',publicKeyFingerprint:writer.fingerprint,
++    sourceIdentity:'fixture-fixed-source-v1',recordStoreIdentity:'fixture-record-store-v1',recordNamespace:'fixture-namespace-v1',
++    checkpointAuthority:'fixture-checkpoint-v1',deploymentPrincipal:'fixture-deployment-v1',
++    authorityKeyId:'fixture-authority-v1',authorityPublicKeyFingerprint:authorityKeys.fingerprint,
++  };
++  const fixedPins=clone(pins), scopeDigest=digest({version:1,...fixedPins});
++  const origin={lineage:pins.lineage,schemaDigest:pins.schemaDigest,configurationId:pins.configurationId};
++  const objects=new Map(), operations=new Map(), claims=new Map(), committed=new Map(), eventIndex=new Map(), accepted=new Map();
++  const logs=[], records=[], acknowledgements=[], hooks={}, afterHooks={}, faults={}, entered=new Map();
++  let current={head:{version:1,...origin,seq:0,hash:zero,fenced:false},generation:1,authorityRevision:0,mode:'active',pendingOperation:null,totalBytes:0};
++  let mutations=0,capturedHead=null,sourceFenced=false;
++  const copy=clone;
++  const operationId=identity=>digest({version:1,scopeDigest,eventId:identity.eventId,payloadDigest:identity.payloadDigest,transition:identity.transition});
++  const authSign=(value,domain='ritc-privacy-journal-authority-v1')=>{
++    const body=copy(value);
++    return {...body,authoritySignature:sign(null,Buffer.from(canonical(body)),authorityKeys.privateKey).toString('base64url')};
++  };
++  function authenticate(value) {
++    const {authoritySignature,...body}=value;
++    assert.equal(body.scopeDigest,scopeDigest);assert.equal(body.authorityKeyId,fixedPins.authorityKeyId);
++    assert(verify(null,Buffer.from(canonical(body)),authorityKeys.publicKey,Buffer.from(authoritySignature,'base64url')));
++  }
++  function envelope(value,call){return authSign({version:1,domain:'ritc-privacy-journal-authority-v1',scopeDigest,authorityKeyId:fixedPins.authorityKeyId,requestNonce:call.requestNonce,value:copy(value)});}
++  async function enter(phase,call) {
++    logs.push('enter:'+phase);
++    if(!entered.has(phase))entered.set(phase,gate());
++    entered.get(phase).resolve();
++    if(hooks[phase]) await hooks[phase](call);
++  }
++  const unchanged=(left,right)=>assert.equal(canonical(left),canonical(right));
++  function validateStored(stored,ticket) {
++    assert.equal(stored.objectKey,ticket.objectKey);assert.equal(stored.recordHash,ticket.record.recordHash);assert.equal(stored.byteLength,ticket.record.byteLength);
++    const object=objects.get(stored.objectKey);assert(object);unchanged(stored,object.stored);
++    return assertCanonicalRecord(object.bytes,writer.publicKey,ticket.record);
++  }
++  function validReceipt(receipt) {
++    authenticate(receipt);assert.equal(receipt.domain,'ritc-privacy-journal-admission-v1');
++    const actual=operations.get(receipt.operationId);assert.equal(actual?.state,'admitted');unchanged(receipt,actual.receipt);
++  }
++  function corruptedReceipt(receipt) {
++    if(faults.otherReceipt)return copy(faults.otherReceipt);
++    if(!faults.receipt)return copy(receipt);
++    const changed=copy(receipt), variant=faults.receipt;
++    if(variant==='signature')changed.authoritySignature='A'.repeat(86);
++    else {
++      delete changed.authoritySignature;
++      if(variant==='namespace')changed.scopeDigest='e'.repeat(64);
++      if(variant==='key')changed.authorityKeyId='other-authority-key';
++      if(variant==='head')changed.admitted.head.hash='e'.repeat(64);
++      if(variant==='generation')changed.admitted.generation++;
++      if(variant==='record')changed.record.jobId=randomUUID();
++      if(variant==='stored')changed.stored.immutableVersion='other-version';
++      if(variant==='unknown')changed.extra=true;
++      return authSign(changed);
++    }
++    return changed;
++  }
++  const authority={
++    async readCurrent(call){
++      checkCall(call);await enter('head',call);checkCall(call);
++      if(faults.replayHead){assert(capturedHead);return copy(capturedHead);}
++      const result=envelope(current,call);if(faults.captureHead)capturedHead=copy(result);return result;
++    },
++    async inspectOperation(id,call){
++      checkCall(call);await enter('inspect',call);checkCall(call);
++      const op=operations.get(id);return envelope(op?{...copy(op),operationId:id}:{state:'absent',operationId:id},call);
++    },
++    async reserve(expected,identity,call){
++      checkCall(call);await enter('reserve',call);checkCall(call);
++      const id=operationId(identity), prior=operations.get(id);
++      if(prior?.state==='admitted')throw Error('Already admitted; inspect exact receipt');
++      assert.equal(current.mode,'active');assert.equal(current.pendingOperation,null);unchanged(expected,current);
++      assert.equal(identity.seq,current.head.seq+1);assert.equal(identity.previousHash,current.head.hash);
++      const existing=eventIndex.get(identity.eventId);
++      if(existing){assert.equal(existing.digest,identity.payloadDigest);assert.equal(existing.jobId,identity.jobId);assert(!existing.transitions.has(identity.transition));}
++      const ticket={operationId:id,generation:current.generation,expected:copy(expected),record:copy(identity),objectKey:`${scopeDigest}/${identity.seq}/${identity.recordHash}`,authorityExpiresAtUnixMs:Math.min(call.deadlineUnixMs-10,Date.now()+3000)};
++      current={...current,mode:'pending',pendingOperation:id};operations.set(id,{state:'pending',ticket:copy(ticket)});mutations++;
++      if(afterHooks.reserve)await afterHooks.reserve(call);
++      if(faults.lostResponse==='reserve')throw Error('Fixture reserve response lost after durable CAS');
++      const returned=copy(ticket);
++      if(faults.ticket==='objectKey')returned.objectKey='other-scope/1/other-record';
++      if(faults.ticket==='generation')returned.generation++;
++      if(faults.ticket==='deadline')returned.authorityExpiresAtUnixMs=Date.now()-1;
++      if(faults.ticket==='identity')returned.record.byteLength++;
++      if(faults.ticket==='previousHead')returned.expected.head.hash='e'.repeat(64);
++      if(faults.ticket==='unknown')returned.extra=true;
++      return envelope(returned,call);
++    },
++    async publish(ticket,stored,call){
++      checkCall(call);await enter('publish',call);checkCall(call);
++      const prior=operations.get(ticket.operationId);
++      if(prior?.state==='admitted')return corruptedReceipt(prior.receipt);
++      assert.equal(prior?.state,'pending');unchanged(ticket,prior.ticket);
++      assert.equal(current.generation,ticket.generation);assert.equal(current.pendingOperation,ticket.operationId);
++      assert.equal(current.mode,'pending');assert(Date.now()<ticket.authorityExpiresAtUnixMs);
++      const record=validateStored(stored,ticket), event=record.event, state=eventIndex.get(event.eventId);
++      assert.equal(record.keyId,fixedPins.keyId);
++      assert.equal(event.payload.lineage,origin.lineage);assert.equal(event.payload.schemaDigest,origin.schemaDigest);assert.equal(event.payload.configurationId,origin.configurationId);
++      if(state){assert.equal(state.digest,event.payloadDigest);assert.equal(state.jobId,event.payload.jobId);assert(!state.transitions.has(record.kind));}
++      if(record.kind==='intent')assert(!state);
++      if(record.kind==='commit'){
++        if(event.payload.kind==='acceptance'){assert(state?.transitions.has('intent'));assert(!accepted.has(event.payload.jobId));}
++        else assert(accepted.has(event.payload.jobId));
++      }
++      if(event.payload.kind==='acceptance')validatePrivacyRestoreEvents([event]);
++      else validatePrivacyRestoreEvents([accepted.get(event.payload.jobId),event]);
++      if(record.kind==='commit'&&event.payload.kind==='acceptance')accepted.set(event.payload.jobId,copy(event));
++      const transitions=state?.transitions??new Set();transitions.add(record.kind);
++      eventIndex.set(event.eventId,{digest:event.payloadDigest,jobId:event.payload.jobId,transitions});
++      records.push(copy(record));
++      current={head:{version:1,...origin,seq:record.seq,hash:digest(record),fenced:false},generation:ticket.generation,authorityRevision:current.authorityRevision+1,mode:'active',pendingOperation:null,totalBytes:current.totalBytes+ticket.record.byteLength};
++      const receipt=authSign({version:1,domain:'ritc-privacy-journal-admission-v1',scopeDigest,authorityKeyId:fixedPins.authorityKeyId,operationId:ticket.operationId,admitted:copy(current),record:copy(ticket.record),stored:copy(stored)});
++      operations.set(ticket.operationId,{state:'admitted',receipt});logs.push('publish:'+record.kind);mutations++;
++      if(afterHooks.publish)await afterHooks.publish(call);
++      if(faults.lostResponse==='publish')throw Error('Fixture publish response lost after durable admission');
++      return corruptedReceipt(receipt);
++    },
++  };
++  const recordTransport={
++    async putExact(ticket,bytes,call){
++      checkCall(call);await enter('put',call);checkCall(call);
++      assert.equal(ticket.objectKey,`${scopeDigest}/${ticket.record.seq}/${ticket.record.recordHash}`);
++      assert.equal(bytes.byteLength,ticket.record.byteLength);assertCanonicalRecord(bytes,writer.publicKey,ticket.record);
++      const found=objects.get(ticket.objectKey);
++      if(found){assert(Buffer.from(bytes).equals(found.bytes));return copy(found.stored);}
++      const stored={objectKey:ticket.objectKey,immutableVersion:randomUUID(),recordHash:ticket.record.recordHash,byteLength:bytes.byteLength};
++      objects.set(ticket.objectKey,{stored:copy(stored),bytes:Buffer.from(bytes)});mutations++;
++      if(afterHooks.put)await afterHooks.put(call);
++      if(faults.lostResponse==='put')throw Error('Fixture immutable object response lost after persisted bytes');
++      return copy(stored);
++    },
++    async readExact(stored,call){checkCall(call);await enter('readExact',call);checkCall(call);const found=objects.get(stored.objectKey);assert(found);unchanged(stored,found.stored);if(afterHooks.readExact)await afterHooks.readExact(call,JSON.parse(found.bytes.toString('utf8')));return Buffer.from(found.bytes);},
++  };
++  const uncertainty={
++    async begin(operation,call){
++      checkCall(call);await enter('begin',call);checkCall(call);assert.equal(operation.scopeDigest,scopeDigest);assert(!claims.has(operation.scopeDigest),'Outstanding durable claim cannot be cleared by new instance');
++      const claim={...copy(operation),claimId:randomUUID()};claims.set(operation.scopeDigest,copy(claim));
++      if(faults.lostResponse==='begin')throw Error('Fixture durable guard response lost after persisted claim');
++      return copy(claim);
++    },
++    async complete(claim,proof,call){
++      checkCall(call);await enter('complete',call);checkCall(call);unchanged(claim,claims.get(claim.scopeDigest));validReceipt(proof);
++      assert.equal(proof.scopeDigest,claim.scopeDigest);assert.equal(proof.record.eventId,claim.eventId);assert.equal(proof.record.transition,claim.transition);
++      claims.delete(claim.scopeDigest);
++      if(faults.lostResponse==='complete')throw Error('Fixture durable claim completion response lost after proof-checked release');
++    },
++  };
++  const source={
++    async readOrigin(call){checkCall(call);await enter('sourceOrigin',call);checkCall(call);return {...origin,sourceIdentity:fixedPins.sourceIdentity,fenced:sourceFenced};},
++    async readCommittedEvent(id,call){checkCall(call);await enter('sourceRead',call);checkCall(call);const event=faults.sourceEvent??committed.get(id);if(!event)throw Error('Committed source event unknown');return copy(event);},
++    async readCommittedAcceptance(job,call){checkCall(call);await enter('sourceAcceptance',call);checkCall(call);const event=faults.sourceAcceptance??[...committed.values()].find(e=>e.payload.jobId===job&&e.payload.kind==='acceptance');if(!event)throw Error('Committed acceptance unavailable');return copy(event);},
++    async listUnacknowledgedJobEvents(job,call){checkCall(call);await enter('sourceList',call);checkCall(call);return [...committed.values()].filter(e=>e.payload.jobId===job&&!acknowledgements.some(a=>a.identity.eventId===e.eventId)).map(e=>e.eventId);},
++    async acknowledge(eventId,payloadDigest,seq,hash,receipt,call){
++      checkCall(call);validReceipt(receipt);assert.equal(receipt.record.transition,'commit');
++      assert.equal(receipt.record.eventId,eventId);assert.equal(receipt.record.payloadDigest,payloadDigest);assert.equal(receipt.record.seq,seq);assert.equal(receipt.record.recordHash,hash);
++      assert.equal(committed.get(eventId)?.payloadDigest,payloadDigest);
++      // Simulate private SQL execution already sent. Cancellation after entry does
++      // not undo the legitimate acknowledgement protected by a durable receipt.
++      await enter('ack',call);
++      acknowledgements.push({identity:{eventId,payloadDigest,seq,hash},receipt:copy(receipt)});logs.push('source:ack');
++    },
++  };
++  return {
++    pins,origin,records,logs,acknowledgements,hooks,afterHooks,faults,source,authority,uncertainty,recordTransport,scopeDigest,
++    writerKeys:writer,authorityKeys,
++    get mutations(){return mutations;},
++    event(options={}){return acceptedEvent(origin,options);},
++    adapter(options={}){return createDurablePrivacyJournal({pins,privateKey:writer.privateKey,authorityPublicKey:authorityKeys.publicKey,source,records:recordTransport,authority,uncertainty,...options});},
++    commit(event){committed.set(event.eventId,copy(event));logs.push('source:commit');},
++    status(job){return acknowledgements.some(a=>committed.get(a.identity.eventId)?.payload.jobId===job)?'pending':null;},
++    exportBytes(){return Buffer.from(records.map(canonical).join('\n')+'\n');},
++    sealedTrust(){return {...origin,keyId:fixedPins.keyId,publicKey:writer.publicKeyPEM,head:{...current.head,fenced:true}};},
++    uncertainCount(){return claims.size;},
++    receiptFor(eventId,transition){return copy(operations.get(digest({version:1,scopeDigest,eventId,payloadDigest:committed.get(eventId)?.payloadDigest??records.find(r=>r.event.eventId===eventId)?.event.payloadDigest,transition}))?.receipt);},
++    entered(phase){if(!entered.has(phase))entered.set(phase,gate());return entered.get(phase).promise;},
++    fence(){sourceFenced=true;current={...current,generation:current.generation+1,mode:'recovery'};},
++    authorityFenceOnly(mode='recovery'){current={...current,head:{...current.head,fenced:mode==='sealed'},generation:current.generation+1,mode};},
++    setCurrent(changes){current={...current,...copy(changes),head:{...current.head,...copy(changes.head??{})}};},
++  };
++}
+diff --git a/service/tests/privacy-journal-durable.test.mjs b/service/tests/privacy-journal-durable.test.mjs
+new file mode 100644
+--- /dev/null
++++ b/service/tests/privacy-journal-durable.test.mjs
+@@ -0,0 +1,366 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import {randomUUID} from 'node:crypto';
++import {verifyPrivacyJournal,validatePrivacyRestoreEvents} from '../dist/privacy-journal.js';
++import {verifyDurableAdmissionReceipt} from '../dist/privacy-journal-durable.js';
++import {fixture} from './durable-authority-fixture.mjs';
++import {acceptedEvent,progressEvent,call,clone,digest,gate,keys} from './durable-independent-fixture.mjs';
++
++test('real adapter: admitted intent precedes source commit, observation/head precedes exact SQL acknowledgement; existing canonical verifier restores', async () => {
++  const f=fixture(), a=f.event(), port=f.adapter().port;
++  await port.beforeCommit(a,call());
++  assert.equal(f.acknowledgements.length,0);
++  assert.equal(f.records.length,1);
++  assert.deepEqual(f.records.map(r=>r.kind),['intent']);
++  f.commit(a);
++  await port.afterCommit(a.eventId,call());
++  assert.deepEqual(f.records.map(r=>r.kind),['intent','commit']);
++  assert.equal(f.acknowledgements.length,1);
++  assert.deepEqual(f.acknowledgements[0].identity,{eventId:a.eventId,payloadDigest:a.payloadDigest,seq:2,hash:digest(f.records[1])});
++  assert(f.logs.indexOf('publish:intent')<f.logs.indexOf('source:commit'));
++  assert(f.logs.indexOf('source:commit')<f.logs.indexOf('publish:commit'));
++  assert(f.logs.indexOf('publish:commit')<f.logs.indexOf('source:ack'));
++  const checked=verifyPrivacyJournal(f.exportBytes(),f.sealedTrust());
++  assert.deepEqual(checked.events,[a]);
++  assert.equal(validatePrivacyRestoreEvents(checked.events).length,1);
++});
++
++test('real adapter: only fixed-source progress for the requested job is admitted and canonical restore validates it', async () => {
++  const f=fixture(), a=f.event(), port=f.adapter().port;
++  await port.beforeCommit(a,call());f.commit(a);await port.afterCommit(a.eventId,call());
++  const p=progressEvent(a), completed=progressEvent(a,'source_completed');
++  f.commit(p);f.commit(completed);
++  await port.acknowledgeJob(a.payload.jobId,call());
++  assert.deepEqual(f.records.map(r=>[r.kind,r.event.eventId]),[['intent',a.eventId],['commit',a.eventId],['commit',p.eventId],['commit',completed.eventId]]);
++  assert.deepEqual(validatePrivacyRestoreEvents(verifyPrivacyJournal(f.exportBytes(),f.sealedTrust()).events),[a,p,completed]);
++});
++
++test('real adapter: completed retries across instances reuse immutable identity and original acknowledgement after later heads', async () => {
++  const f=fixture(), a=f.event();
++  let port=f.adapter().port;
++  await port.beforeCommit(a,call());f.commit(a);await port.afterCommit(a.eventId,call());
++  const committed=digest(f.records[1]);
++  const p=progressEvent(a);f.commit(p);await port.acknowledgeJob(a.payload.jobId,call());
++  port=f.adapter().port;
++  await port.beforeCommit(clone(a),call());
++  await port.afterCommit(a.eventId,call());
++  assert.equal(f.records.length,3);
++  assert.deepEqual(f.acknowledgements.at(-1).identity,{eventId:a.eventId,payloadDigest:a.payloadDigest,seq:2,hash:committed});
++});
++
++test('real adapter: valid status reconciliation with zero unacknowledged events remains a safe repeatable no-op', async () => {
++  const f=fixture(), a=f.event(), adapter=f.adapter();
++  await adapter.port.beforeCommit(a,call());f.commit(a);await adapter.port.afterCommit(a.eventId,call());
++  const count=f.mutations;
++  await adapter.port.acknowledgeJob(a.payload.jobId,call());
++  await f.adapter().port.acknowledgeJob(a.payload.jobId,call());
++  assert.equal(f.mutations,count);assert.equal(f.records.length,2);assert.equal(f.acknowledgements.length,1);
++  assert.equal(adapter.isPoisoned(),false);
++});
++
++test('real adapter: missing job cannot pass empty status reconciliation', async () => {
++  const f=fixture();
++  await assert.rejects(()=>f.adapter().port.acknowledgeJob(randomUUID(),call()));
++  assert.equal(f.mutations,0);assert.equal(f.acknowledgements.length,0);
++});
++
++test('real adapter: concurrent independent instances never admit duplicate event transitions', async () => {
++  const f=fixture(), a=f.event();
++  const results=await Promise.allSettled([f.adapter().port.beforeCommit(a,call()),f.adapter().port.beforeCommit(clone(a),call())]);
++  assert(results.some(r=>r.status==='fulfilled'));
++  assert.equal(f.records.length,1);
++  assert.equal(f.records[0].event.eventId,a.eventId);
++});
++
++test('real adapter: one event ID cannot change its digest or job on retry', async t => {
++  for(const variant of ['digest','job']) await t.test(variant,async()=>{
++    const f=fixture(), a=f.event();await f.adapter().port.beforeCommit(a,call());
++    const changed=clone(a);
++    if(variant==='digest') changed.payload.data.requestDigest='e'.repeat(64);
++    else changed.payload.jobId=randomUUID();
++    changed.payloadDigest=digest(changed.payload);
++    await assert.rejects(()=>f.adapter().port.beforeCommit(changed,call()));
++    assert.equal(f.records.length,1);assert.equal(f.acknowledgements.length,0);
++  });
++});
++
++test('real adapter: strict content-free runtime payload validation precedes remote reservation', async t => {
++  const changes=[
++    ['outer unknown',e=>e.extra=true],
++    ['payload unknown',e=>e.payload.extra=true],
++    ['acceptance unknown',e=>e.payload.data.unknownField='forbidden'],
++    ['attestation unknown',e=>e.payload.data.attestation.unknownField='forbidden'],
++    ['snapshot unknown',e=>e.payload.data.effects[0].after.unknownField='forbidden'],
++    ['duplicate target',e=>e.payload.data.targets.push(clone(e.payload.data.targets[0]))],
++    ['event mismatch',e=>e.payload.eventId=randomUUID()],
++    ['policy mismatch',e=>e.payload.data.attestation.policy.receiptRetentionDays=2],
++    ['unknown progress kind',e=>e.payload.kind='future'],
++  ];
++  for(const [name,change] of changes) await t.test(name,async()=>{
++    const f=fixture(), e=f.event();change(e);e.payloadDigest=digest(e.payload);
++    await assert.rejects(()=>f.adapter().port.beforeCommit(e,call()));
++    assert.equal(f.records.length,0);assert.equal(f.mutations,0);
++  });
++});
++
++test('real adapter: wrong receipt boundary or signature cannot complete a phase', async t => {
++  for(const variant of ['signature','namespace','key','head','generation','record','stored','unknown']) await t.test(variant,async()=>{
++    const f=fixture();f.faults.receipt=variant;
++    const adapter=f.adapter();
++    await assert.rejects(()=>adapter.port.beforeCommit(f.event(),call()));
++    assert(adapter.isPoisoned());assert.equal(f.acknowledgements.length,0);assert(f.uncertainCount()>0);
++  });
++});
++
++test('real adapter: authenticated stale active head is rejected for a fresh challenge and generation', async () => {
++  const f=fixture(), a=f.event();
++  f.faults.captureHead=true;await f.adapter().port.beforeCommit(a,call());
++  f.faults.replayHead=true;
++  await assert.rejects(()=>f.adapter().port.beforeCommit(f.event(),call()));
++  assert.equal(f.records.length,1);
++});
++
++test('real adapter: constructor snapshots pins and caller event across awaited source/authority work', async () => {
++  const f=fixture(), a=f.event(), original=clone(a), adapter=f.adapter();
++  const hold=gate();f.hooks.inspect=()=>hold.promise;
++  const started=adapter.port.beforeCommit(a,call());
++  await f.entered('inspect');
++  a.payload.jobId=randomUUID();a.payload.data.requestDigest='e'.repeat(64);a.payloadDigest=digest(a.payload);
++  f.pins.configurationId='mutated';f.pins.recordNamespace='mutated';
++  hold.resolve();await started;
++  assert.deepEqual(f.records[0].event,original);
++});
++
++test('real adapter: returned source event must match exact requested event ID', async () => {
++  const f=fixture(), a=f.event(), other=f.event(), port=f.adapter().port;
++  await port.beforeCommit(a,call());f.commit(a);
++  f.faults.sourceEvent=other;
++  await assert.rejects(()=>port.afterCommit(a.eventId,call()));
++  assert.equal(f.records.length,1);assert.equal(f.acknowledgements.length,0);
++});
++
++test('real adapter: returned unacknowledged event and acceptance must match requested job', async t => {
++  for(const variant of ['event','acceptance']) await t.test(variant,async()=>{
++    const f=fixture(), a=f.event(), b=f.event(), port=f.adapter().port;
++    await port.beforeCommit(a,call());f.commit(a);await port.afterCommit(a.eventId,call());
++    const progress=progressEvent(a);f.commit(progress);
++    if(variant==='event') f.faults.sourceEvent=progressEvent(b);
++    else f.faults.sourceAcceptance=b;
++    await assert.rejects(()=>port.acknowledgeJob(a.payload.jobId,call()));
++    assert.equal(f.records.length,2);assert.equal(f.acknowledgements.length,1);
++  });
++});
++
++test('real adapter: unknown committed source remains quarantined without acknowledgement or head reset', async () => {
++  const f=fixture(), a=f.event(), adapter=f.adapter();await adapter.port.beforeCommit(a,call());
++  await assert.rejects(()=>adapter.port.afterCommit(a.eventId,call()));
++  assert.equal(f.records.length,1);assert.equal(f.acknowledgements.length,0);
++  await assert.rejects(()=>adapter.port.beforeCommit(f.event(),call()));
++  assert.equal(f.records.length,1);
++});
++
++test('real adapter: accepted remote mutation with lost response stays durably blocked across reconstruction', async t => {
++  for(const phase of ['begin','reserve','put','publish']) await t.test(phase,async()=>{
++    const f=fixture();f.faults.lostResponse=phase;
++    const adapter=f.adapter(), a=f.event();
++    await assert.rejects(()=>adapter.port.beforeCommit(a,call()));
++    assert(adapter.isPoisoned());
++    const mutations=f.mutations, fresh=f.adapter();
++    await assert.rejects(()=>fresh.port.beforeCommit(f.event(),call()));
++    assert.equal(f.mutations,mutations);assert.equal(f.acknowledgements.length,0);
++    assert(f.uncertainCount()>0);
++  });
++});
++
++test('real adapter: pre-aborted or expired calls initiate no remote mutation or source acknowledgement', async t => {
++  for(const phase of ['before','after','job']) for(const variant of ['abort','deadline']) await t.test(`${phase}:${variant}`,async()=>{
++    const f=fixture(), a=f.event(), adapter=f.adapter();
++    if(phase!=='before'){await adapter.port.beforeCommit(a,call());f.commit(a);}
++    const c=call();if(variant==='abort')c.controller.abort();else c.deadlineUnixMs=Date.now()-1;
++    const mutations=f.mutations;
++    await assert.rejects(()=>phase==='before'?adapter.port.beforeCommit(a,c):phase==='after'?adapter.port.afterCommit(a.eventId,c):adapter.port.acknowledgeJob(a.payload.jobId,c));
++    assert.equal(f.mutations,mutations);assert.equal(f.acknowledgements.length,0);
++  });
++});
++
++test('real adapter: cancellation during a remote phase forwards actual signal and starts no next phase', async t => {
++  for(const phase of ['reserve','put','publish']) await t.test(phase,async()=>{
++    const f=fixture(), a=f.event(), c=call(), hold=gate();
++    let actualSignal;
++    f.hooks[phase]=async received=>{actualSignal=received.signal;assert(actualSignal instanceof AbortSignal);await hold.promise;};
++    const adapter=f.adapter(), started=adapter.port.beforeCommit(a,c);
++    await f.entered(phase);c.controller.abort();hold.resolve();
++    await assert.rejects(()=>started);
++    assert.equal(actualSignal.aborted,true);
++    const at=f.logs.indexOf(`enter:${phase}`);
++    if(phase==='reserve')assert(!f.logs.slice(at+1).includes('enter:put'));
++    if(phase==='put')assert(!f.logs.slice(at+1).includes('enter:publish'));
++    assert.equal(f.acknowledgements.length,0);
++  });
++});
++
++test('real adapter: automatic deadline aborts the actual in-flight transport signal', async () => {
++  const f=fixture(), c=call({deadlineUnixMs:Date.now()+45});
++  let observedAbort=false, fallback;
++  f.hooks.reserve=received=>new Promise((resolve,reject)=>{
++    assert(received.signal instanceof AbortSignal);
++    const abort=()=>{observedAbort=true;clearTimeout(fallback);reject(Error('Fixture transport cancelled by actual signal'));};
++    if(received.signal.aborted)return abort();
++    received.signal.addEventListener('abort',abort,{once:true});
++    fallback=setTimeout(()=>reject(Error('No automatic deadline cancellation reached transport')),350);
++  });
++  try{await assert.rejects(()=>f.adapter().port.beforeCommit(f.event(),c));}
++  finally{clearTimeout(fallback);}
++  assert.equal(observedAbort,true);
++  assert.equal(f.records.length,0);assert.equal(f.acknowledgements.length,0);
++});
++
++test('real adapter: successful remote phase arriving after caller abort initiates no next side effect', async t => {
++  for(const phase of ['reserve','put','publish'])await t.test(phase,async()=>{
++    const f=fixture(),c=call();f.afterHooks[phase]=()=>c.controller.abort();
++    await assert.rejects(()=>f.adapter().port.beforeCommit(f.event(),c));
++    if(phase==='reserve')assert(!f.logs.includes('enter:put'));
++    if(phase==='put')assert(!f.logs.includes('enter:publish'));
++    assert.equal(f.acknowledgements.length,0);assert(f.uncertainCount()>0);
++  });
++});
++
++test('real adapter: cancellation during exact committed-record read cannot initiate SQL acknowledgement', async () => {
++  const f=fixture(),a=f.event(),port=f.adapter().port;
++  await port.beforeCommit(a,call());f.commit(a);
++  const c=call();let cancelled=false;
++  f.afterHooks.readExact=(received,record)=>{if(record.kind==='commit'){cancelled=true;c.controller.abort();}};
++  await assert.rejects(()=>port.afterCommit(a.eventId,c));
++  assert.equal(cancelled,true);assert.equal(f.acknowledgements.length,0);
++});
++
++test('real adapter: generation fence makes delayed immutable PUT inert and ordinary writer cannot reset origin', async () => {
++  const f=fixture(),a=f.event();f.afterHooks.put=()=>f.fence();
++  await assert.rejects(()=>f.adapter().port.beforeCommit(a,call()));
++  assert.equal(f.records.length,0);assert.equal(f.acknowledgements.length,0);
++  const mutations=f.mutations;
++  await assert.rejects(()=>f.adapter().port.beforeCommit(f.event(),call()));
++  assert.equal(f.mutations,mutations);assert(f.uncertainCount()>0);
++});
++
++test('real adapter: cancellation during committed source work prevents initiating acknowledgement', async () => {
++  const f=fixture(), a=f.event(), port=f.adapter().port;
++  await port.beforeCommit(a,call());f.commit(a);
++  const c=call();f.hooks.sourceRead=()=>c.controller.abort();
++  await assert.rejects(()=>port.afterCommit(a.eventId,c));
++  assert.equal(f.acknowledgements.length,0);
++});
++
++test('real adapter: an acknowledgement sent after durable commit may safely complete after caller abort', async () => {
++  const f=fixture(), a=f.event(), port=f.adapter().port;
++  await port.beforeCommit(a,call());f.commit(a);
++  const hold=gate(), c=call();f.hooks.ack=async()=>hold.promise;
++  const pending=port.afterCommit(a.eventId,c);
++  await f.entered('ack');
++  assert.equal(f.records.at(-1).kind,'commit');
++  c.controller.abort();hold.resolve();
++  await Promise.allSettled([pending]);
++  assert.equal(f.acknowledgements.length,1);
++  assert.equal(f.status(a.payload.jobId),'pending');
++  assert(f.logs.indexOf('publish:commit')<f.logs.indexOf('enter:ack'));
++});
++
++test('real adapter: unpinned signing key is rejected before any remote mutation', async () => {
++  const f=fixture(), wrong=keys();
++  assert.throws(()=>f.adapter({privateKey:wrong.privateKey}));
++  assert.equal(f.mutations,0);
++});
++
++test('real adapter: authority verifier accepts only a distinct pinned public Ed25519 key', async t => {
++  await t.test('private KeyObject',()=>{
++    const f=fixture();assert.throws(()=>f.adapter({authorityPublicKey:f.authorityKeys.privateKey}));assert.equal(f.mutations,0);
++  });
++  await t.test('private PEM',()=>{
++    const f=fixture(),pem=f.authorityKeys.privateKey.export({type:'pkcs8',format:'pem'}).toString();
++    assert.throws(()=>f.adapter({authorityPublicKey:pem}));assert.equal(f.mutations,0);
++  });
++  await t.test('writer and witness are same key',()=>{
++    const f=fixture();f.pins.authorityPublicKeyFingerprint=f.writerKeys.fingerprint;
++    assert.throws(()=>f.adapter({authorityPublicKey:f.writerKeys.publicKey}));assert.equal(f.mutations,0);
++  });
++});
++
++test('real adapter: canonical chain limits refuse new immutable PUT at 10000 records or 32 MiB', async t => {
++  for(const variant of ['records','bytes'])await t.test(variant,async()=>{
++    const f=fixture();
++    f.setCurrent(variant==='records'?{head:{seq:10000,hash:'e'.repeat(64)},totalBytes:1000000}:{head:{seq:1,hash:'e'.repeat(64)},totalBytes:32*1024*1024-1});
++    await assert.rejects(()=>f.adapter().port.beforeCommit(f.event(),call()));
++    assert(!f.logs.includes('enter:put'));assert.equal(f.records.length,0);assert.equal(f.acknowledgements.length,0);
++  });
++});
++
++test('real adapter: an unrelated valid admitted receipt cannot release the held event claim', async () => {
++  const f=fixture(),a=f.event();await f.adapter().port.beforeCommit(a,call());
++  f.faults.otherReceipt=f.receiptFor(a.eventId,'intent');
++  await assert.rejects(()=>f.adapter().port.beforeCommit(f.event(),call()));
++  assert(f.uncertainCount()>0);assert.equal(f.acknowledgements.length,0);
++  const mutations=f.mutations;
++  await assert.rejects(()=>f.adapter().port.beforeCommit(f.event(),call()));
++  assert.equal(f.mutations,mutations);
++});
++
++test('real adapter: historical intent receipt cannot authorize beforeCommit after authority-only fence', async t => {
++  for(const mode of ['recovery','sealed','active'])await t.test(mode,async()=>{
++    const f=fixture(),a=f.event();await f.adapter().port.beforeCommit(a,call());
++    f.authorityFenceOnly(mode);
++    await assert.rejects(()=>f.adapter().port.beforeCommit(a,call()));
++    assert.equal(f.records.length,1);assert.equal(f.acknowledgements.length,0);assert(f.uncertainCount()>0);
++  });
++});
++
++test('real adapter: authority fence after publish but before response prevents completing beforeCommit', async () => {
++  const f=fixture();f.afterHooks.publish=()=>f.authorityFenceOnly();
++  await assert.rejects(()=>f.adapter().port.beforeCommit(f.event(),call()));
++  assert.equal(f.records.length,1);assert.equal(f.acknowledgements.length,0);assert(f.uncertainCount()>0);
++});
++
++test('real adapter: changed same-job committed acceptance must match its original admitted receipt before progress PUT', async t => {
++  for(const variant of ['content','target'])await t.test(variant,async()=>{
++    const f=fixture(),a=f.event(),port=f.adapter().port;
++    await port.beforeCommit(a,call());f.commit(a);await port.afterCommit(a.eventId,call());
++    const changed=clone(a);
++    if(variant==='content')changed.payload.data.requestDigest='e'.repeat(64);
++    else {
++      const memberId=randomUUID(),data=changed.payload.data,target=data.targets[0];
++      target.memberId=memberId;target.binding.member_id=memberId;
++      for(const effect of data.effects){effect.key=`${target.householdId}/${memberId}`;effect.before.member_id=memberId;effect.after.member_id=memberId;}
++    }
++    changed.payloadDigest=digest(changed.payload);
++    const p=progressEvent(changed);f.commit(p);f.faults.sourceAcceptance=changed;
++    const puts=f.logs.filter(x=>x==='enter:put').length;
++    await assert.rejects(()=>port.afterCommit(p.eventId,call()));
++    assert.equal(f.logs.filter(x=>x==='enter:put').length,puts);
++    assert.equal(f.records.length,2);assert.equal(f.acknowledgements.length,1);
++  });
++});
++
++test('real adapter: lost guard completion response permits safe exact retry after durable receipt', async () => {
++  const f=fixture(),a=f.event();f.faults.lostResponse='complete';
++  await assert.rejects(()=>f.adapter().port.beforeCommit(a,call()));
++  assert.equal(f.records.length,1);assert.equal(f.uncertainCount(),0);
++  delete f.faults.lostResponse;
++  await f.adapter().port.beforeCommit(a,call());
++  assert.equal(f.records.length,1);assert.equal(f.uncertainCount(),0);
++});
++
++test('real receipt verifier: independent authenticated receipt validates; private witness material or signer reuse rejects', async t => {
++  const f=fixture(),a=f.event();await f.adapter().port.beforeCommit(a,call());
++  const proof=f.receiptFor(a.eventId,'intent');
++  assert.deepEqual(verifyDurableAdmissionReceipt(proof,f.pins,f.authorityKeys.publicKey),proof);
++  await t.test('private KeyObject',()=>assert.throws(()=>verifyDurableAdmissionReceipt(proof,f.pins,f.authorityKeys.privateKey)));
++  await t.test('private PEM',()=>assert.throws(()=>verifyDurableAdmissionReceipt(proof,f.pins,f.authorityKeys.privateKey.export({type:'pkcs8',format:'pem'}).toString())));
++  await t.test('same signer/witness key',()=>assert.throws(()=>verifyDurableAdmissionReceipt(proof,{...f.pins,authorityPublicKeyFingerprint:f.writerKeys.fingerprint},f.writerKeys.publicKey)));
++});
++
++test('real adapter: independently signed wrong ticket identity, generation, namespace, head or deadline causes no PUT', async t => {
++  for(const variant of ['objectKey','generation','deadline','identity','previousHead','unknown'])await t.test(variant,async()=>{
++    const f=fixture();f.faults.ticket=variant;
++    await assert.rejects(()=>f.adapter().port.beforeCommit(f.event(),call()));
++    assert(!f.logs.includes('enter:put'));assert.equal(f.records.length,0);assert(f.uncertainCount()>0);
++  });
++});

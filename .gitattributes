@@ -3,3 +3,5 @@ docs/evidence/b11/privacy-journal-20261103/api-privacy-live.diff whitespace=-bla
 docs/evidence/b11/s21-device-management-20261103/source-checks.log whitespace=-blank-at-eof
 docs/evidence/b11/s21-device-management-20261103/se17-logging-crash/app-stdout-final100lines.txt whitespace=-blank-at-eol
 docs/evidence/b11/s21-device-management-20261103/ui-diagnosis/FinalFixture-Form-hitpoint-diagnostic.txt whitespace=-blank-at-eof
+docs/evidence/b11/privacy-journal-durable-library-20261103/evidence/authority-fence-fixed.tap whitespace=-blank-at-eof
+docs/evidence/b11/privacy-journal-durable-library-20261103/review/INDEPENDENT-REVIEW.md whitespace=-blank-at-eof

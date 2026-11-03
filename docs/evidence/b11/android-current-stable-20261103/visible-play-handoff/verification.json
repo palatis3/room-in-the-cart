@@ -1,0 +1,9 @@
+{
+  "screenshot_hash_matches_record": true,
+  "xml_hash_matches_record": true,
+  "captured_sign_in_button": true,
+  "no_password_field_in_captured_xml": true,
+  "no_account_terms_or_update_action_recorded": true,
+  "running_handoff_explicit": true,
+  "chrome_remains149": true
+}

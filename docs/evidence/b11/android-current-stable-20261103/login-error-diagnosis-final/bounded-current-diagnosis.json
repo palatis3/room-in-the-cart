@@ -1,0 +1,53 @@
+{
+  "checked_at_utc": "2026-11-03T23:30:20.187650+00:00",
+  "exec_session": 52978,
+  "serial": "emulator-5554",
+  "avd": "RITC_Chrome_API34",
+  "exact_previous_google_error": "UNKNOWN: not retained; foreground was launcher at23:24:01UTC",
+  "no_signin_retry_account_terms_security_or_data_action": true,
+  "owned_processes": [
+    {
+      "pid": 99232,
+      "parent_pid": 1,
+      "rss_kib": 8592,
+      "executable": "adb"
+    }
+  ],
+  "local_listener_metadata": "p99232\ncadb\nf12\nn127.0.0.1:5037\n",
+  "current_clock": {
+    "verified": false,
+    "host_utc": "2026-11-03T23:30:20.250956+00:00",
+    "scope": "Current after reopen; not state during failed login"
+  },
+  "current_connectivity": {
+    "query_completed": false,
+    "default_network_present": false,
+    "default_network_validated": null,
+    "scope": "Current Android connectivity metadata only; not a Google authentication transaction or earlier failure proof"
+  },
+  "packages": {
+    "com.android.vending": {
+      "query_completed": false,
+      "version_name": null,
+      "version_code": null,
+      "package_state_only": {}
+    },
+    "com.google.android.gms": {
+      "query_completed": false,
+      "version_name": null,
+      "version_code": null,
+      "package_state_only": {}
+    }
+  },
+  "official_https_check": "Not performed: device unavailable; host-only HTTPS would not establish the earlier Android authentication failure",
+  "play_open_intent_completed": false,
+  "play_screen": {
+    "verified": false,
+    "raw_ui_saved": false,
+    "screenshot_saved": false,
+    "reason": "Owned emulator absent during final queries; no screenshot/UI saved and no retry"
+  },
+  "finished_at_utc": "2026-11-03T23:30:20.301655+00:00",
+  "reopened_qemu_pid_from_owned_engine_boot_marker": 8534,
+  "reopened_exec_status": "Unknown process id 52978 when queried after disappearance; no exit code available"
+}

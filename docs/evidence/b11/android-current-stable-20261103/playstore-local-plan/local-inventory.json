@@ -1,0 +1,612 @@
+{
+  "checked_at_utc": "2026-11-03T22:24:01.092622+00:00",
+  "scope": "LOCAL READ ONLY; no emulator/ADB/network/account action",
+  "avd_name": "RITC_Chrome_API34",
+  "avd_path": "/tmp/ritc-android/avd/RITC_Chrome_API34.avd",
+  "image_path": "/tmp/ritc-android/sdk/system-images/android-34/google_apis_playstore/arm64-v8a",
+  "config": {
+    "AvdId": "RITC_Chrome_API34",
+    "PlayStore.enabled": "true",
+    "abi.type": "arm64-v8a",
+    "avd.ini.displayname": "RITC Chrome API34 isolated",
+    "avd.ini.encoding": "UTF-8",
+    "disk.dataPartition.size": "6442450944",
+    "fastboot.forceColdBoot": "yes",
+    "fastboot.forceFastBoot": "no",
+    "fastboot.forceChosenSnapshotBoot": "no",
+    "hw.accelerometer": "yes",
+    "hw.audioInput": "no",
+    "hw.battery": "yes",
+    "hw.cpu.arch": "arm64",
+    "hw.cpu.ncore": "2",
+    "hw.dPad": "no",
+    "hw.gps": "yes",
+    "hw.gpu.enabled": "yes",
+    "hw.gpu.mode": "auto",
+    "hw.initialOrientation": "Portrait",
+    "hw.keyboard": "yes",
+    "hw.lcd.density": "420",
+    "hw.lcd.height": "1920",
+    "hw.lcd.width": "1080",
+    "hw.mainKeys": "no",
+    "hw.ramSize": "2048",
+    "hw.sdCard": "no",
+    "image.sysdir.1": "system-images/android-34/google_apis_playstore/arm64-v8a/",
+    "runtime.network.latency": "none",
+    "runtime.network.speed": "full",
+    "showDeviceFrame": "no",
+    "skin.dynamic": "yes",
+    "skin.name": "1080x1920",
+    "snapshot.present": "no",
+    "tag.display": "Google Play",
+    "tag.id": "google_apis_playstore",
+    "vm.heapSize": "256"
+  },
+  "last_generated_hardware": {
+    "hw.cpu.arch": "arm64",
+    "hw.cpu.ncore": "2",
+    "hw.ramSize": "2560",
+    "hw.screen": "multi-touch",
+    "hw.mainKeys": "false",
+    "hw.touchpad0": "false",
+    "hw.touchpad0.width": "600",
+    "hw.touchpad0.height": "400",
+    "hw.trackBall": "true",
+    "hw.keyboard": "true",
+    "hw.keyboard.lid": "false",
+    "hw.keyboard.charmap": "qwerty2",
+    "hw.dPad": "false",
+    "hw.rotaryInput": "false",
+    "hw.gsmModem": "true",
+    "hw.gps": "true",
+    "hw.battery": "true",
+    "hw.accelerometer": "true",
+    "hw.accelerometer_uncalibrated": "true",
+    "hw.gyroscope": "true",
+    "hw.audioInput": "false",
+    "hw.audioOutput": "true",
+    "hw.sdCard": "false",
+    "disk.cachePartition": "true",
+    "disk.cachePartition.path": "/tmp/ritc-android/avd/RITC_Chrome_API34.avd/cache.img",
+    "disk.cachePartition.size": "66m",
+    "test.quitAfterBootTimeOut": "-1",
+    "test.delayAdbTillBootComplete": "0",
+    "test.monitorAdb": "0",
+    "hw.lcd.width": "1080",
+    "hw.lcd.height": "1920",
+    "hw.lcd.depth": "32",
+    "hw.lcd.circular": "false",
+    "hw.lcd.density": "420",
+    "hw.lcd.transparent": "false",
+    "hw.lcd.backlight": "true",
+    "hw.lcd.vsync": "60",
+    "hw.gltransport": "pipe",
+    "hw.gltransport.asg.writeBufferSize": "1048576",
+    "hw.gltransport.asg.writeStepSize": "4096",
+    "hw.gltransport.asg.dataRingSize": "32768",
+    "hw.gltransport.drawFlushInterval": "800",
+    "hw.displayRegion.0.1.xOffset": "-1",
+    "hw.displayRegion.0.1.yOffset": "-1",
+    "hw.displayRegion.0.1.width": "0",
+    "hw.displayRegion.0.1.height": "0",
+    "hw.displayRegion.0.2.xOffset": "-1",
+    "hw.displayRegion.0.2.yOffset": "-1",
+    "hw.displayRegion.0.2.width": "0",
+    "hw.displayRegion.0.2.height": "0",
+    "hw.displayRegion.0.3.xOffset": "-1",
+    "hw.displayRegion.0.3.yOffset": "-1",
+    "hw.displayRegion.0.3.width": "0",
+    "hw.displayRegion.0.3.height": "0",
+    "hw.display1.width": "0",
+    "hw.display1.height": "0",
+    "hw.display1.density": "0",
+    "hw.display1.xOffset": "-1",
+    "hw.display1.yOffset": "-1",
+    "hw.display1.flag": "0",
+    "hw.display2.width": "0",
+    "hw.display2.height": "0",
+    "hw.display2.density": "0",
+    "hw.display2.xOffset": "-1",
+    "hw.display2.yOffset": "-1",
+    "hw.display2.flag": "0",
+    "hw.display3.width": "0",
+    "hw.display3.height": "0",
+    "hw.display3.density": "0",
+    "hw.display3.xOffset": "-1",
+    "hw.display3.yOffset": "-1",
+    "hw.display3.flag": "0",
+    "hw.multi_display_window": "false",
+    "hw.hotplug_multi_display": "false",
+    "hw.gpu.enabled": "true",
+    "hw.gpu.mode": "swiftshader",
+    "hw.initialOrientation": "portrait",
+    "hw.camera.back": "emulated",
+    "hw.camera.back.orientation": "90",
+    "hw.camera.front": "none",
+    "hw.camera.front.orientation": "90",
+    "vm.heapSize": "576",
+    "hw.sensors.light": "true",
+    "hw.sensors.pressure": "true",
+    "hw.sensors.humidity": "true",
+    "hw.sensors.proximity": "true",
+    "hw.sensors.magnetic_field": "true",
+    "hw.sensors.magnetic_field_uncalibrated": "true",
+    "hw.sensors.gyroscope_uncalibrated": "true",
+    "hw.sensors.orientation": "true",
+    "hw.sensors.temperature": "true",
+    "hw.sensors.rgbclight": "false",
+    "hw.sensor.hinge": "false",
+    "hw.sensor.hinge.count": "0",
+    "hw.sensor.hinge.type": "0",
+    "hw.sensor.hinge.sub_type": "0",
+    "hw.sensor.hinge.resizable.config": "1",
+    "hw.sensor.hinge.fold_to_displayRegion.0.1_at_posture": "1",
+    "hw.sensor.roll": "false",
+    "hw.sensor.roll.count": "0",
+    "hw.sensor.roll.resize_to_displayRegion.0.1_at_posture": "6",
+    "hw.sensor.roll.resize_to_displayRegion.0.2_at_posture": "6",
+    "hw.sensor.roll.resize_to_displayRegion.0.3_at_posture": "6",
+    "hw.sensors.heart_rate": "false",
+    "hw.sensors.wrist_tilt": "false",
+    "hw.sensors.heading": "false",
+    "hw.useext4": "true",
+    "kernel.path": "/tmp/ritc-android/sdk/system-images/android-34/google_apis_playstore/arm64-v8a//kernel-ranchu",
+    "kernel.newDeviceNaming": "yes",
+    "kernel.supportsYaffs2": "no",
+    "disk.ramdisk.path": "/tmp/ritc-android/sdk/system-images/android-34/google_apis_playstore/arm64-v8a//ramdisk.img",
+    "disk.systemPartition.initPath": "/tmp/ritc-android/sdk/system-images/android-34/google_apis_playstore/arm64-v8a//system.img",
+    "disk.systemPartition.size": "3044m",
+    "disk.vendorPartition.initPath": "/tmp/ritc-android/sdk/system-images/android-34/google_apis_playstore/arm64-v8a//vendor.img",
+    "disk.vendorPartition.size": "800m",
+    "disk.dataPartition.path": "/tmp/ritc-android/avd/RITC_Chrome_API34.avd/userdata-qemu.img",
+    "disk.dataPartition.size": "6g",
+    "disk.encryptionKeyPartition.path": "/tmp/ritc-android/avd/RITC_Chrome_API34.avd/encryptionkey.img",
+    "PlayStore.enabled": "true",
+    "avd.name": "RITC_Chrome_API34",
+    "avd.id": "RITC_Chrome_API34",
+    "fastboot.forceColdBoot": "true",
+    "userdata.useQcow2": "true",
+    "firstboot.bootFromDownloadableSnapshot": "true",
+    "firstboot.bootFromLocalSnapshot": "true",
+    "firstboot.saveToLocalSnapshot": "true",
+    "android.sdk.root": "/tmp/ritc-android/sdk",
+    "android.avd.home": "/tmp/ritc-android/avd",
+    "environment.width": "0",
+    "environment.height": "0"
+  },
+  "image_source_properties": {
+    "Pkg.Desc": "System Image arm64-v8a with Google Play.",
+    "Pkg.Revision": "14",
+    "Pkg.Dependencies": "emulator#34.2.16",
+    "AndroidVersion.ApiLevel": "34",
+    "AndroidVersion.ExtensionLevel": "7",
+    "AndroidVersion.IsBaseSdk": "true",
+    "SystemImage.Abi": "arm64-v8a",
+    "SystemImage.TagId": "google_apis_playstore",
+    "SystemImage.TagDisplay": "Google Play",
+    "SystemImage.GpuSupport": "true",
+    "Addon.VendorId": "google",
+    "Addon.VendorDisplay": "Google Inc."
+  },
+  "emulator_source_properties": {
+    "Pkg.UserSrc": "false",
+    "Pkg.Revision": "37.2.13",
+    "Pkg.Path": "emulator",
+    "Pkg.Desc": "Android Emulator",
+    "Pkg.BuildId": "16740729"
+  },
+  "platform_tools_source_properties": {
+    "Pkg.UserSrc": "false",
+    "Pkg.Revision": "37.0.1"
+  },
+  "last_launch_parameters": [
+    "/private/tmp/ritc-android",
+    "/private/tmp/ritc-android/sdk/emulator/emulator",
+    "18",
+    "/tmp/ritc-android/sdk/emulator/emulator",
+    "-avd",
+    "RITC_Chrome_API34",
+    "-cores",
+    "2",
+    "-memory",
+    "2048",
+    "-no-snapshot",
+    "-no-audio",
+    "-no-boot-anim",
+    "-no-window",
+    "-port",
+    "5554",
+    "-gpu",
+    "swiftshader",
+    "-feature",
+    "-Vulkan",
+    "-no-metrics"
+  ],
+  "current_android_processes": [],
+  "native_activity_metadata_only": [
+    {
+      "pid": 87400,
+      "parent_pid": 87398,
+      "elapsed": "01:21",
+      "rss_kib": 266240,
+      "executable": "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild"
+    }
+  ],
+  "process_query_result": {
+    "command": [
+      "/bin/ps",
+      "-axo",
+      "pid=,ppid=,etime=,rss=,comm="
+    ],
+    "exit": 0,
+    "stderr": ""
+  },
+  "listener_query": {
+    "command": [
+      "/usr/sbin/lsof",
+      "-nP",
+      "-iTCP:5037",
+      "-iTCP:5554",
+      "-iTCP:5555",
+      "-iTCP:9227",
+      "-iTCP:65502",
+      "-sTCP:LISTEN"
+    ],
+    "exit": 1,
+    "stdout": "",
+    "stderr": ""
+  },
+  "resource_queries": {
+    "memory_pressure_query": {
+      "command": [
+        "/usr/bin/memory_pressure",
+        "-Q"
+      ],
+      "exit": 0,
+      "stdout": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 63%\n",
+      "stderr": ""
+    },
+    "vm_stat": {
+      "command": [
+        "/usr/bin/vm_stat"
+      ],
+      "exit": 0,
+      "stdout": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                   441770.\nPages active:                                 255013.\nPages inactive:                               270620.\nPages speculative:                              6505.\nPages throttled:                                   0.\nPages wired down:                             224756.\nPages purgeable:                                 331.\n\"Translation faults\":                     5139294748.\nPages copy-on-write:                       419885345.\nPages zero filled:                        3218125485.\nPages reactivated:                         281819950.\nPages purged:                               28006137.\nFile-backed pages:                            279347.\nAnonymous pages:                              252791.\nPages stored in compressor:                   662169.\nPages occupied by compressor:                 322687.\nDecompressions:                            174372916.\nCompressions:                              278821545.\nPageins:                                   109696303.\nPageouts:                                     227562.\nSwapins:                                     3460600.\nSwapouts:                                    6394218.\n",
+      "stderr": ""
+    },
+    "disk_free": {
+      "command": [
+        "/bin/df",
+        "-k",
+        "/tmp"
+      ],
+      "exit": 0,
+      "stdout": "Filesystem   1024-blocks      Used Available Capacity iused      ifree %iused  Mounted on\n/dev/disk3s5   971350180 459471996 481973952    49% 4040582 4819739520    0%   /System/Volumes/Data\n",
+      "stderr": ""
+    },
+    "allocated_directory_sizes_kib": {
+      "command": [
+        "/usr/bin/du",
+        "-sk",
+        "/tmp/ritc-android/sdk",
+        "/tmp/ritc-android/avd",
+        "/tmp/ritc-android-fixture"
+      ],
+      "exit": 0,
+      "stdout": "4758368\t/tmp/ritc-android/sdk\n1973464\t/tmp/ritc-android/avd\n156704\t/tmp/ritc-android-fixture\n",
+      "stderr": ""
+    }
+  },
+  "host_adb_key_metadata_only": [
+    {
+      "path": "/tmp/ritc-android/user/adbkey",
+      "exists": true,
+      "key_contents_read": false,
+      "bytes": 1704
+    },
+    {
+      "path": "/Users/palatis/.android/adbkey",
+      "exists": false,
+      "key_contents_read": false
+    },
+    {
+      "path": "/Users/palatis/.android/adbkey.pub",
+      "exists": false,
+      "key_contents_read": false
+    }
+  ],
+  "file_identities": [
+    {
+      "path": "/tmp/ritc-android/avd/RITC_Chrome_API34.ini",
+      "bytes": 90,
+      "allocated_bytes": 4096,
+      "modified_utc": "2026-11-03T15:34:44.495947+00:00",
+      "sha256": "59c2e2517a820b532fe2ee9fa497f3e7751a136d4de780a5dd8e4f00610fcf82"
+    },
+    {
+      "path": "/tmp/ritc-android/avd/RITC_Chrome_API34.avd/config.ini",
+      "bytes": 897,
+      "allocated_bytes": 4096,
+      "modified_utc": "2026-11-03T19:42:05.699938+00:00",
+      "sha256": "f099214e1521b11ee55fa0e70f8852dcc230b9476ebc80d4c0e644d5a9d1e010"
+    },
+    {
+      "path": "/tmp/ritc-android/avd/RITC_Chrome_API34.avd/hardware-qemu.ini",
+      "bytes": 4199,
+      "allocated_bytes": 8192,
+      "modified_utc": "2026-11-03T20:15:56.580692+00:00",
+      "sha256": "a4e4ccd79e343f0ee9d2a5cd89900f0617afce757eb848d8314576b06ed52ecf"
+    },
+    {
+      "path": "/tmp/ritc-android/avd/RITC_Chrome_API34.avd/emu-launch-params.txt",
+      "bytes": 267,
+      "allocated_bytes": 4096,
+      "modified_utc": "2026-11-03T20:15:55.818228+00:00",
+      "sha256": "bc2bd2b70b850c25bc1fc70e18058df5c8bd2ea47dabe88bcf2972839df87556"
+    },
+    {
+      "path": "/tmp/ritc-android/sdk/system-images/android-34/google_apis_playstore/arm64-v8a/source.properties",
+      "bytes": 372,
+      "allocated_bytes": 4096,
+      "modified_utc": "2026-11-03T15:31:19.048348+00:00",
+      "sha256": "94f98243f584bd142d1113f30fdd78be03472e77408e3bf8b4b29b7be313b83c"
+    },
+    {
+      "path": "/tmp/ritc-android/sdk/system-images/android-34/google_apis_playstore/arm64-v8a/build.prop",
+      "bytes": 4480,
+      "allocated_bytes": 8192,
+      "modified_utc": "2026-11-03T15:31:18.570723+00:00",
+      "sha256": "59e27ee3b6656199300ec0926e3f2fbc99a21e89769e9f33a6e4779705f74932"
+    },
+    {
+      "path": "/tmp/ritc-android/sdk/emulator/source.properties",
+      "bytes": 103,
+      "allocated_bytes": 4096,
+      "modified_utc": "2026-11-03T15:30:43.120441+00:00",
+      "sha256": "f7562ee75ef359fc20b64727a0977c6306c6bac2dab60c8d7ced7c9e372a7cc7"
+    },
+    {
+      "path": "/tmp/ritc-android/sdk/platform-tools/source.properties",
+      "bytes": 38,
+      "allocated_bytes": 4096,
+      "modified_utc": "2026-11-03T15:30:50.071844+00:00",
+      "sha256": "2dccd788c0234d8cf7f7457377e57f57527a86a629c6ed54feb8af0f549dac38"
+    },
+    {
+      "path": "/tmp/ritc-android/env.sh",
+      "bytes": 234,
+      "allocated_bytes": 4096,
+      "modified_utc": "2026-11-03T15:30:21.519051+00:00",
+      "sha256": "84031a7e5962221d09037f2325fbdd96e525b507d1d3bd52da1c684e5802b36d"
+    },
+    {
+      "path": "/tmp/ritc-android/launch-authorized.sh",
+      "bytes": 413,
+      "allocated_bytes": 4096,
+      "modified_utc": "2026-11-03T15:34:44.509695+00:00",
+      "sha256": "84eeb688a76b0af056f319ff304638cb6dc64dd43851564d5ea04a13a8322ccf"
+    },
+    {
+      "path": "/tmp/ritc-android/sdk/emulator/emulator",
+      "bytes": 9178208,
+      "allocated_bytes": 9179136,
+      "modified_utc": "2026-11-03T15:30:47.056736+00:00",
+      "sha256": "12b00532e34748566af6a572fafe3d8ef433d742c8e593783b496c82eb28df59"
+    },
+    {
+      "path": "/tmp/ritc-android/sdk/platform-tools/adb",
+      "bytes": 18844128,
+      "allocated_bytes": 18845696,
+      "modified_utc": "2026-11-03T15:30:50.345525+00:00",
+      "sha256": "1811e253b21b12cbfda7201ebaf86c10e7ddcb5c606a7a81f7c82b4c429c2d3b"
+    },
+    {
+      "path": "/Users/palatis/Documents/Codex/2026-11-03/task-2/android-browser-acceptance/resume-preflight/149-continuation-transport.json",
+      "bytes": 407,
+      "allocated_bytes": 4096,
+      "modified_utc": "2026-11-03T20:17:38.349247+00:00",
+      "sha256": "b28daee74d40689c30d15128b86273a4e73bb82fb91ea81a39322e85f7c1a04a"
+    },
+    {
+      "path": "/Users/palatis/Documents/Codex/2026-11-03/task-2/android-browser-acceptance/resume-preflight/cleanup-verification.json",
+      "bytes": 375,
+      "allocated_bytes": 4096,
+      "modified_utc": "2026-11-03T20:29:17.350587+00:00",
+      "sha256": "38255afed1776ef3a5a1cbfe3221fb532bd67fcdb42bdf3fe584667bd921b587"
+    },
+    {
+      "path": "/Users/palatis/Documents/Codex/2026-11-03/task-2/android-chrome-prep-evidence/apks/product__app__Chrome__Chrome.apk",
+      "bytes": 56911312,
+      "allocated_bytes": 56913920,
+      "modified_utc": "2026-11-03T19:58:39.787702+00:00",
+      "sha256": "862e1c2e4bd88c37a016757e6ac30555b17850287eec00f4fadc17cb79eac652"
+    },
+    {
+      "path": "/Users/palatis/Documents/Codex/2026-11-03/task-2/android-chrome-prep-evidence/apks/product__app__TrichromeLibrary__TrichromeLibrary.apk",
+      "bytes": 145166816,
+      "allocated_bytes": 145170432,
+      "modified_utc": "2026-11-03T19:58:39.555519+00:00",
+      "sha256": "78ad2be015aa59d154aab72b7648a70c79bc11768f5223bbac0e239cdbd8e4ae"
+    },
+    {
+      "path": "/tmp/ritc-android-fixture/setup-evidence/20-play-chrome-update.png",
+      "bytes": 64769,
+      "allocated_bytes": 65536,
+      "modified_utc": "2026-11-03T20:03:47.182000+00:00",
+      "sha256": "f7787da255e1f919115757a3c26a44f817bb688dd915fdc6da3698c31341043e"
+    },
+    {
+      "path": "/tmp/ritc-android-fixture/setup-evidence/20-play-chrome-update.xml",
+      "bytes": 5532,
+      "allocated_bytes": 8192,
+      "modified_utc": "2026-11-03T20:03:47.069363+00:00",
+      "sha256": "32a173f734f4a7a855af0bd02a3bc7c17279b5caf40a017fb0b996d5b9136745"
+    }
+  ],
+  "image_files_metadata_only": [
+    {
+      "path": "/tmp/ritc-android/sdk/system-images/android-34/google_apis_playstore/arm64-v8a/encryptionkey.img",
+      "bytes": 18874368,
+      "allocated_bytes": 18874368,
+      "modified_utc": "2026-11-03T15:31:18.677608+00:00"
+    },
+    {
+      "path": "/tmp/ritc-android/sdk/system-images/android-34/google_apis_playstore/arm64-v8a/kernel-ranchu",
+      "bytes": 12784248,
+      "allocated_bytes": 12787712,
+      "modified_utc": "2026-11-03T15:31:18.991572+00:00"
+    },
+    {
+      "path": "/tmp/ritc-android/sdk/system-images/android-34/google_apis_playstore/arm64-v8a/ramdisk.img",
+      "bytes": 1539730,
+      "allocated_bytes": 1540096,
+      "modified_utc": "2026-11-03T15:31:19.046985+00:00"
+    },
+    {
+      "path": "/tmp/ritc-android/sdk/system-images/android-34/google_apis_playstore/arm64-v8a/system.img",
+      "bytes": 3191865344,
+      "allocated_bytes": 3191865344,
+      "modified_utc": "2026-11-03T15:32:58.655746+00:00"
+    },
+    {
+      "path": "/tmp/ritc-android/sdk/system-images/android-34/google_apis_playstore/arm64-v8a/userdata.img",
+      "bytes": 1048576,
+      "allocated_bytes": 1048576,
+      "modified_utc": "2026-11-03T15:32:58.682289+00:00"
+    },
+    {
+      "path": "/tmp/ritc-android/sdk/system-images/android-34/google_apis_playstore/arm64-v8a/vendor.img",
+      "bytes": 95420416,
+      "allocated_bytes": 95420416,
+      "modified_utc": "2026-11-03T15:33:02.042898+00:00"
+    }
+  ],
+  "avd_files_metadata_only": [
+    {
+      "path": "/tmp/ritc-android/avd/RITC_Chrome_API34.avd/bootcompleted.ini",
+      "bytes": 0,
+      "allocated_bytes": 0,
+      "modified_utc": "2026-11-03T20:16:09.231517+00:00"
+    },
+    {
+      "path": "/tmp/ritc-android/avd/RITC_Chrome_API34.avd/cache.img",
+      "bytes": 69206016,
+      "allocated_bytes": 5341184,
+      "modified_utc": "2026-11-03T19:42:05.968464+00:00"
+    },
+    {
+      "path": "/tmp/ritc-android/avd/RITC_Chrome_API34.avd/cache.img.qcow2",
+      "bytes": 196616,
+      "allocated_bytes": 200704,
+      "modified_utc": "2026-11-03T19:42:08.488998+00:00"
+    },
+    {
+      "path": "/tmp/ritc-android/avd/RITC_Chrome_API34.avd/config.ini",
+      "bytes": 897,
+      "allocated_bytes": 4096,
+      "modified_utc": "2026-11-03T19:42:05.699938+00:00"
+    },
+    {
+      "path": "/tmp/ritc-android/avd/RITC_Chrome_API34.avd/emu-launch-params.txt",
+      "bytes": 267,
+      "allocated_bytes": 4096,
+      "modified_utc": "2026-11-03T20:15:55.818228+00:00"
+    },
+    {
+      "path": "/tmp/ritc-android/avd/RITC_Chrome_API34.avd/emulator-user.ini",
+      "bytes": 113,
+      "allocated_bytes": 4096,
+      "modified_utc": "2026-11-03T20:27:37.633930+00:00"
+    },
+    {
+      "path": "/tmp/ritc-android/avd/RITC_Chrome_API34.avd/encryptionkey.img",
+      "bytes": 18874368,
+      "allocated_bytes": 18874368,
+      "modified_utc": "2026-11-03T19:42:05.967686+00:00"
+    },
+    {
+      "path": "/tmp/ritc-android/avd/RITC_Chrome_API34.avd/encryptionkey.img.qcow2",
+      "bytes": 1966080,
+      "allocated_bytes": 1966080,
+      "modified_utc": "2026-11-03T20:16:44.058332+00:00"
+    },
+    {
+      "path": "/tmp/ritc-android/avd/RITC_Chrome_API34.avd/hardware-qemu.ini",
+      "bytes": 4199,
+      "allocated_bytes": 8192,
+      "modified_utc": "2026-11-03T20:15:56.580692+00:00"
+    },
+    {
+      "path": "/tmp/ritc-android/avd/RITC_Chrome_API34.avd/initrd",
+      "bytes": 1541600,
+      "allocated_bytes": 1544192,
+      "modified_utc": "2026-11-03T20:15:56.485145+00:00"
+    },
+    {
+      "path": "/tmp/ritc-android/avd/RITC_Chrome_API34.avd/multiinstance.lock",
+      "bytes": 0,
+      "allocated_bytes": 0,
+      "modified_utc": "2026-11-03T20:15:56.145221+00:00"
+    },
+    {
+      "path": "/tmp/ritc-android/avd/RITC_Chrome_API34.avd/netsim.ini",
+      "bytes": 38,
+      "allocated_bytes": 4096,
+      "modified_utc": "2026-11-03T19:42:09.495974+00:00"
+    },
+    {
+      "path": "/tmp/ritc-android/avd/RITC_Chrome_API34.avd/qemu-version.txt",
+      "bytes": 1,
+      "allocated_bytes": 4096,
+      "modified_utc": "2026-11-03T19:42:05.521225+00:00"
+    },
+    {
+      "path": "/tmp/ritc-android/avd/RITC_Chrome_API34.avd/read-snapshot.txt",
+      "bytes": 0,
+      "allocated_bytes": 0,
+      "modified_utc": "2026-11-03T20:15:56.608668+00:00"
+    },
+    {
+      "path": "/tmp/ritc-android/avd/RITC_Chrome_API34.avd/userdata-qemu.img",
+      "bytes": 6488064,
+      "allocated_bytes": 6488064,
+      "modified_utc": "2026-11-03T19:42:05.932543+00:00"
+    },
+    {
+      "path": "/tmp/ritc-android/avd/RITC_Chrome_API34.avd/userdata-qemu.img.qcow2",
+      "bytes": 1986330624,
+      "allocated_bytes": 1986330624,
+      "modified_utc": "2026-11-03T20:27:36.605811+00:00"
+    },
+    {
+      "path": "/tmp/ritc-android/avd/RITC_Chrome_API34.avd/version_num.cache",
+      "bytes": 9,
+      "allocated_bytes": 4096,
+      "modified_utc": "2026-11-03T19:42:08.492809+00:00"
+    }
+  ],
+  "installed_browser_last_observed": {
+    "at": "2026-11-03T20:17:38.234Z",
+    "serial": "emulator-5554",
+    "AVD": "RITC_Chrome_API34\r\nOK",
+    "browserVersion": "149.0.7827.5",
+    "rendererArgs": [
+      "-gpu",
+      "swiftshader",
+      "-feature",
+      "-Vulkan"
+    ],
+    "requestedRAM": 2048,
+    "effectiveRAM": 2560,
+    "cores": 2,
+    "forward": "emulator-5554 tcp:9227 localabstract:chrome_devtools_remote",
+    "reverse": "host-18 tcp:65502 tcp:65502"
+  },
+  "fresh_runtime_version_checked": false,
+  "play_store_app_version": "Not retained in inspected local evidence; requires later authorized running-device query",
+  "google_play_services_version": "Not retained in inspected local evidence; requires later authorized running-device query",
+  "network_probes": false,
+  "emulator_or_adb_executed": false,
+  "account_or_terms_action": false,
+  "avd_or_sdk_written": false
+}

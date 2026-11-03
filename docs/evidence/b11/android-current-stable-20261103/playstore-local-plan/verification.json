@@ -1,0 +1,12 @@
+{
+  "play_store_enabled": true,
+  "api34_arm64": true,
+  "existing_image_revision14": true,
+  "config_requested_2048_effective_2560": true,
+  "last_gpu_swiftshader": true,
+  "no_android_processes": true,
+  "no_scoped_listeners": true,
+  "last_observed_browser149": true,
+  "retained_apk_hashes_match": true,
+  "no_boot_adb_network_account_avd_sdk_action": true
+}

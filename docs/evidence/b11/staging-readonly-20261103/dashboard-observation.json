@@ -1,0 +1,19 @@
+{
+  "observedAtUTC": "2026-11-03T23:07:23.817315+00:00",
+  "method": "Authenticated Supabase dashboard, read-only navigation",
+  "project": "uwjxrotnocxxomqdetzk",
+  "projectName": "Room in the Cart Staging",
+  "organization": "ybzztipzreurtjtjhmbo",
+  "health": "Healthy",
+  "compute": "Nano",
+  "region": "us-west-2 / West US (Oregon)",
+  "lastMigration": "008_browser_email_auth",
+  "backups": "No backups; scheduled backups page states Free Plan does not include project backups",
+  "github": "No repository connected",
+  "urls": [
+    "https://supabase.com/dashboard/project/uwjxrotnocxxomqdetzk",
+    "https://supabase.com/dashboard/project/uwjxrotnocxxomqdetzk/database/backups/scheduled"
+  ],
+  "changes": [],
+  "limitations": "Dashboard observation only, no current SQL registry checksum inventory or private backup. No paid upgrade, key read, credential mutation or migration. Backups must be concretely prepared before hosted migration approval."
+}

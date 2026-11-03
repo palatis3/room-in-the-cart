@@ -1,0 +1,469 @@
+TAP version 13
+# Subtest: real adapter: admitted intent precedes source commit, observation/head precedes exact SQL acknowledgement; existing canonical verifier restores
+ok 1 - real adapter: admitted intent precedes source commit, observation/head precedes exact SQL acknowledgement; existing canonical verifier restores
+  ---
+  duration_ms: 18.10575
+  ...
+# Subtest: real adapter: only fixed-source progress for the requested job is admitted and canonical restore validates it
+ok 2 - real adapter: only fixed-source progress for the requested job is admitted and canonical restore validates it
+  ---
+  duration_ms: 14.43575
+  ...
+# Subtest: real adapter: completed retries across instances reuse immutable identity and original acknowledgement after later heads
+ok 3 - real adapter: completed retries across instances reuse immutable identity and original acknowledgement after later heads
+  ---
+  duration_ms: 11.821042
+  ...
+# Subtest: real adapter: valid status reconciliation with zero unacknowledged events remains a safe repeatable no-op
+ok 4 - real adapter: valid status reconciliation with zero unacknowledged events remains a safe repeatable no-op
+  ---
+  duration_ms: 6.543542
+  ...
+# Subtest: real adapter: missing job cannot pass empty status reconciliation
+ok 5 - real adapter: missing job cannot pass empty status reconciliation
+  ---
+  duration_ms: 0.603125
+  ...
+# Subtest: real adapter: concurrent independent instances never admit duplicate event transitions
+ok 6 - real adapter: concurrent independent instances never admit duplicate event transitions
+  ---
+  duration_ms: 2.550917
+  ...
+# Subtest: real adapter: one event ID cannot change its digest or job on retry
+    # Subtest: digest
+    ok 1 - digest
+      ---
+      duration_ms: 3.337083
+      ...
+    # Subtest: job
+    ok 2 - job
+      ---
+      duration_ms: 2.845667
+      ...
+    1..2
+ok 7 - real adapter: one event ID cannot change its digest or job on retry
+  ---
+  duration_ms: 6.435833
+  ...
+# Subtest: real adapter: strict content-free runtime payload validation precedes remote reservation
+    # Subtest: outer unknown
+    ok 1 - outer unknown
+      ---
+      duration_ms: 0.848417
+      ...
+    # Subtest: payload unknown
+    ok 2 - payload unknown
+      ---
+      duration_ms: 0.505667
+      ...
+    # Subtest: acceptance unknown
+    ok 3 - acceptance unknown
+      ---
+      duration_ms: 0.506792
+      ...
+    # Subtest: attestation unknown
+    ok 4 - attestation unknown
+      ---
+      duration_ms: 0.502083
+      ...
+    # Subtest: snapshot unknown
+    ok 5 - snapshot unknown
+      ---
+      duration_ms: 0.503917
+      ...
+    # Subtest: duplicate target
+    ok 6 - duplicate target
+      ---
+      duration_ms: 0.462708
+      ...
+    # Subtest: event mismatch
+    ok 7 - event mismatch
+      ---
+      duration_ms: 0.425375
+      ...
+    # Subtest: policy mismatch
+    ok 8 - policy mismatch
+      ---
+      duration_ms: 0.438292
+      ...
+    # Subtest: unknown progress kind
+    ok 9 - unknown progress kind
+      ---
+      duration_ms: 0.406333
+      ...
+    1..9
+ok 8 - real adapter: strict content-free runtime payload validation precedes remote reservation
+  ---
+  duration_ms: 4.829708
+  ...
+# Subtest: real adapter: wrong receipt boundary or signature cannot complete a phase
+    # Subtest: signature
+    ok 1 - signature
+      ---
+      duration_ms: 1.643791
+      ...
+    # Subtest: namespace
+    ok 2 - namespace
+      ---
+      duration_ms: 1.889916
+      ...
+    # Subtest: key
+    ok 3 - key
+      ---
+      duration_ms: 1.718625
+      ...
+    # Subtest: head
+    ok 4 - head
+      ---
+      duration_ms: 1.711709
+      ...
+    # Subtest: generation
+    ok 5 - generation
+      ---
+      duration_ms: 1.676958
+      ...
+    # Subtest: record
+    ok 6 - record
+      ---
+      duration_ms: 1.695125
+      ...
+    # Subtest: stored
+    ok 7 - stored
+      ---
+      duration_ms: 2.107541
+      ...
+    # Subtest: unknown
+    ok 8 - unknown
+      ---
+      duration_ms: 2.88575
+      ...
+    1..8
+ok 9 - real adapter: wrong receipt boundary or signature cannot complete a phase
+  ---
+  duration_ms: 15.540167
+  ...
+# Subtest: real adapter: authenticated stale active head is rejected for a fresh challenge and generation
+ok 10 - real adapter: authenticated stale active head is rejected for a fresh challenge and generation
+  ---
+  duration_ms: 2.705541
+  ...
+# Subtest: real adapter: constructor snapshots pins and caller event across awaited source/authority work
+ok 11 - real adapter: constructor snapshots pins and caller event across awaited source/authority work
+  ---
+  duration_ms: 2.059833
+  ...
+# Subtest: real adapter: returned source event must match exact requested event ID
+ok 12 - real adapter: returned source event must match exact requested event ID
+  ---
+  duration_ms: 1.998666
+  ...
+# Subtest: real adapter: returned unacknowledged event and acceptance must match requested job
+    # Subtest: event
+    ok 1 - event
+      ---
+      duration_ms: 4.659084
+      ...
+    # Subtest: acceptance
+    ok 2 - acceptance
+      ---
+      duration_ms: 4.414791
+      ...
+    1..2
+ok 13 - real adapter: returned unacknowledged event and acceptance must match requested job
+  ---
+  duration_ms: 9.171292
+  ...
+# Subtest: real adapter: unknown committed source remains quarantined without acknowledgement or head reset
+ok 14 - real adapter: unknown committed source remains quarantined without acknowledgement or head reset
+  ---
+  duration_ms: 2.490333
+  ...
+# Subtest: real adapter: accepted remote mutation with lost response stays durably blocked across reconstruction
+    # Subtest: begin
+    ok 1 - begin
+      ---
+      duration_ms: 0.840583
+      ...
+    # Subtest: reserve
+    ok 2 - reserve
+      ---
+      duration_ms: 1.189167
+      ...
+    # Subtest: put
+    ok 3 - put
+      ---
+      duration_ms: 1.415917
+      ...
+    # Subtest: publish
+    ok 4 - publish
+      ---
+      duration_ms: 1.592292
+      ...
+    1..4
+ok 15 - real adapter: accepted remote mutation with lost response stays durably blocked across reconstruction
+  ---
+  duration_ms: 5.154083
+  ...
+# Subtest: real adapter: pre-aborted or expired calls initiate no remote mutation or source acknowledgement
+    # Subtest: before:abort
+    ok 1 - before:abort
+      ---
+      duration_ms: 0.47575
+      ...
+    # Subtest: before:deadline
+    ok 2 - before:deadline
+      ---
+      duration_ms: 0.426125
+      ...
+    # Subtest: after:abort
+    ok 3 - after:abort
+      ---
+      duration_ms: 2.203208
+      ...
+    # Subtest: after:deadline
+    ok 4 - after:deadline
+      ---
+      duration_ms: 1.854292
+      ...
+    # Subtest: job:abort
+    ok 5 - job:abort
+      ---
+      duration_ms: 1.805291
+      ...
+    # Subtest: job:deadline
+    ok 6 - job:deadline
+      ---
+      duration_ms: 1.787167
+      ...
+    1..6
+ok 16 - real adapter: pre-aborted or expired calls initiate no remote mutation or source acknowledgement
+  ---
+  duration_ms: 8.702875
+  ...
+# Subtest: real adapter: cancellation during a remote phase forwards actual signal and starts no next phase
+    # Subtest: reserve
+    ok 1 - reserve
+      ---
+      duration_ms: 0.931042
+      ...
+    # Subtest: put
+    ok 2 - put
+      ---
+      duration_ms: 1.023584
+      ...
+    # Subtest: publish
+    ok 3 - publish
+      ---
+      duration_ms: 1.665792
+      ...
+    1..3
+ok 17 - real adapter: cancellation during a remote phase forwards actual signal and starts no next phase
+  ---
+  duration_ms: 3.75125
+  ...
+# Subtest: real adapter: automatic deadline aborts the actual in-flight transport signal
+ok 18 - real adapter: automatic deadline aborts the actual in-flight transport signal
+  ---
+  duration_ms: 45.962916
+  ...
+# Subtest: real adapter: successful remote phase arriving after caller abort initiates no next side effect
+    # Subtest: reserve
+    ok 1 - reserve
+      ---
+      duration_ms: 1.391875
+      ...
+    # Subtest: put
+    ok 2 - put
+      ---
+      duration_ms: 1.397791
+      ...
+    # Subtest: publish
+    ok 3 - publish
+      ---
+      duration_ms: 1.535583
+      ...
+    1..3
+ok 19 - real adapter: successful remote phase arriving after caller abort initiates no next side effect
+  ---
+  duration_ms: 4.475167
+  ...
+# Subtest: real adapter: cancellation during exact committed-record read cannot initiate SQL acknowledgement
+ok 20 - real adapter: cancellation during exact committed-record read cannot initiate SQL acknowledgement
+  ---
+  duration_ms: 3.799
+  ...
+# Subtest: real adapter: generation fence makes delayed immutable PUT inert and ordinary writer cannot reset origin
+ok 21 - real adapter: generation fence makes delayed immutable PUT inert and ordinary writer cannot reset origin
+  ---
+  duration_ms: 1.674542
+  ...
+# Subtest: real adapter: cancellation during committed source work prevents initiating acknowledgement
+ok 22 - real adapter: cancellation during committed source work prevents initiating acknowledgement
+  ---
+  duration_ms: 1.906292
+  ...
+# Subtest: real adapter: an acknowledgement sent after durable commit may safely complete after caller abort
+ok 23 - real adapter: an acknowledgement sent after durable commit may safely complete after caller abort
+  ---
+  duration_ms: 4.255791
+  ...
+# Subtest: real adapter: unpinned signing key is rejected before any remote mutation
+ok 24 - real adapter: unpinned signing key is rejected before any remote mutation
+  ---
+  duration_ms: 0.406834
+  ...
+# Subtest: real adapter: authority verifier accepts only a distinct pinned public Ed25519 key
+    # Subtest: private KeyObject
+    ok 1 - private KeyObject
+      ---
+      duration_ms: 0.28875
+      ...
+    # Subtest: private PEM
+    ok 2 - private PEM
+      ---
+      duration_ms: 0.394125
+      ...
+    # Subtest: writer and witness are same key
+    ok 3 - writer and witness are same key
+      ---
+      duration_ms: 0.345
+      ...
+    1..3
+ok 25 - real adapter: authority verifier accepts only a distinct pinned public Ed25519 key
+  ---
+  duration_ms: 1.119041
+  ...
+# Subtest: real adapter: canonical chain limits refuse new immutable PUT at 10000 records or 32 MiB
+    # Subtest: records
+    ok 1 - records
+      ---
+      duration_ms: 0.932625
+      ...
+    # Subtest: bytes
+    ok 2 - bytes
+      ---
+      duration_ms: 0.86525
+      ...
+    1..2
+ok 26 - real adapter: canonical chain limits refuse new immutable PUT at 10000 records or 32 MiB
+  ---
+  duration_ms: 1.86125
+  ...
+# Subtest: real adapter: an unrelated valid admitted receipt cannot release the held event claim
+ok 27 - real adapter: an unrelated valid admitted receipt cannot release the held event claim
+  ---
+  duration_ms: 3.464458
+  ...
+# Subtest: real adapter: historical intent receipt cannot authorize beforeCommit after authority-only fence
+    # Subtest: recovery
+    ok 1 - recovery
+      ---
+      duration_ms: 2.950458
+      ...
+    # Subtest: sealed
+    ok 2 - sealed
+      ---
+      duration_ms: 2.507667
+      ...
+    # Subtest: active
+    ok 3 - active
+      ---
+      duration_ms: 2.572625
+      ...
+    1..3
+ok 28 - real adapter: historical intent receipt cannot authorize beforeCommit after authority-only fence
+  ---
+  duration_ms: 8.12525
+  ...
+# Subtest: real adapter: authority fence after publish but before response prevents completing beforeCommit
+ok 29 - real adapter: authority fence after publish but before response prevents completing beforeCommit
+  ---
+  duration_ms: 1.567542
+  ...
+# Subtest: real adapter: changed same-job committed acceptance must match its original admitted receipt before progress PUT
+    # Subtest: content
+    ok 1 - content
+      ---
+      duration_ms: 4.361875
+      ...
+    # Subtest: target
+    ok 2 - target
+      ---
+      duration_ms: 4.888166
+      ...
+    1..2
+ok 30 - real adapter: changed same-job committed acceptance must match its original admitted receipt before progress PUT
+  ---
+  duration_ms: 9.336292
+  ...
+# Subtest: real adapter: lost guard completion response permits safe exact retry after durable receipt
+ok 31 - real adapter: lost guard completion response permits safe exact retry after durable receipt
+  ---
+  duration_ms: 2.77075
+  ...
+# Subtest: real receipt verifier: independent authenticated receipt validates; private witness material or signer reuse rejects
+    # Subtest: private KeyObject
+    ok 1 - private KeyObject
+      ---
+      duration_ms: 0.042875
+      ...
+    # Subtest: private PEM
+    ok 2 - private PEM
+      ---
+      duration_ms: 0.11575
+      ...
+    # Subtest: same signer/witness key
+    ok 3 - same signer/witness key
+      ---
+      duration_ms: 0.080542
+      ...
+    1..3
+ok 32 - real receipt verifier: independent authenticated receipt validates; private witness material or signer reuse rejects
+  ---
+  duration_ms: 2.214583
+  ...
+# Subtest: real adapter: independently signed wrong ticket identity, generation, namespace, head or deadline causes no PUT
+    # Subtest: objectKey
+    ok 1 - objectKey
+      ---
+      duration_ms: 1.007667
+      ...
+    # Subtest: generation
+    ok 2 - generation
+      ---
+      duration_ms: 0.975875
+      ...
+    # Subtest: deadline
+    ok 3 - deadline
+      ---
+      duration_ms: 0.972959
+      ...
+    # Subtest: identity
+    ok 4 - identity
+      ---
+      duration_ms: 1.030917
+      ...
+    # Subtest: previousHead
+    ok 5 - previousHead
+      ---
+      duration_ms: 1.019208
+      ...
+    # Subtest: unknown
+    ok 6 - unknown
+      ---
+      duration_ms: 1.17175
+      ...
+    1..6
+ok 33 - real adapter: independently signed wrong ticket identity, generation, namespace, head or deadline causes no PUT
+  ---
+  duration_ms: 6.298583
+  ...
+1..33
+# tests 89
+# suites 0
+# pass 89
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 279.554041

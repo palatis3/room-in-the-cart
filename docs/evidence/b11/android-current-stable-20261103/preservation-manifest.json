@@ -1,0 +1,22 @@
+{
+  "README.md": {
+    "bytes": 3890,
+    "sha256": "f7dfb1399c68ea0b73852b31c41925695d3b4eb04ba477eac619a3f47fce1a78"
+  },
+  "acquisition-status.json": {
+    "bytes": 1301,
+    "sha256": "026c1194af51290273865c2ef5b31d05c2ab2f0d41f8df9f68b47970279e7f82"
+  },
+  "active-android-stable.json": {
+    "bytes": 371,
+    "sha256": "ee18126aa29d601b4b582faef20600d5c9bdf14cd3d39cabd24746318f82e3cb"
+  },
+  "signed-stable-head.json": {
+    "bytes": 724,
+    "sha256": "7c2868ca09cfbf2fbf6bc0255d30f3f68834484413f017a252aa803d4f1fc355"
+  },
+  "source-provenance.json": {
+    "bytes": 3846,
+    "sha256": "73004242cbf58d8162099244661db517b5c08a2d632a72f39425bfb847228d56"
+  }
+}
