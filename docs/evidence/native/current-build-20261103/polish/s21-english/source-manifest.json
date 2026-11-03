@@ -1,0 +1,1892 @@
+{
+  "createdAtUTC": "20261103T231101Z",
+  "sourceRoot": "/Users/palatis/Room in the Cart/.build/FinalDevicesSource-20261103T231101Z",
+  "baseCommit": "f705a3edb3b6b9a56ca84e3ae6296aedbaa3f889",
+  "files": [
+    {
+      "path": "config/README.md",
+      "sha256": "3ee06412780c160bf8c154fce5a3ca4893903d470d508bade354ec406ca6b542"
+    },
+    {
+      "path": "config/public-contact.json",
+      "sha256": "6e55ef58c6ad5aafcbaca74f1c525f4306b55d587456d008db488b0a95043175"
+    },
+    {
+      "path": "config/release.example.json",
+      "sha256": "57013e6ab6d730522398635d26b2b7de34714a08c57ea7eb3135f6fe4fec122a"
+    },
+    {
+      "path": "config/staging.json",
+      "sha256": "498655f32dfa6ac3201d87930118cbdb2a954944679f7e1d388a5337443292c7"
+    },
+    {
+      "path": "config/supabase-ca.crt",
+      "sha256": "700723581420dd1ac98fd7e9ac529f0ef210eadcaf87fc868a3ad7d114c2f3b7"
+    },
+    {
+      "path": "ios/App/AppModel.swift",
+      "sha256": "cb9e3b9cf5632ae99179a2bc47b368c44d3872a81b15e4f7e83cc2a2215fb4cd"
+    },
+    {
+      "path": "ios/App/ContextualNavigation.swift",
+      "sha256": "c63b550ef3327c9383e8082126880b663f259ad4e41aa86c797e982589e13368"
+    },
+    {
+      "path": "ios/App/ContextualNavigationPolicy.swift",
+      "sha256": "e01dafa9e4d2111b7d15bd7751649788baec73ade3546f6a83ad7e283c12b1cb"
+    },
+    {
+      "path": "ios/App/DeviceSurfacesComposition.swift",
+      "sha256": "e407fd35ba98f5800fbf62cba28e9ffc586fc09119d5a9099c35c4c607e1c12f"
+    },
+    {
+      "path": "ios/App/Diagnostics.swift",
+      "sha256": "e643ccbade4a34f2100c0141d9c1c17b242f0042165b81c66ba8ed39368330d4"
+    },
+    {
+      "path": "ios/App/DinnerPlanningEntry.swift",
+      "sha256": "8e1bc61e7f33d54c846babb187f5c908d73690c8f7905c4fbd0071bc91347a7f"
+    },
+    {
+      "path": "ios/App/HistoryRecordsEntryView.swift",
+      "sha256": "76111538d58dec0e10b7692fc6652824f0a27ef392264d2b7baf5e6b6dc101b0"
+    },
+    {
+      "path": "ios/App/Info.plist",
+      "sha256": "9e1a99ecebbe5fcca0099fe652d6858740c858e4ab6cd9c601f9bde762168f2a"
+    },
+    {
+      "path": "ios/App/L10n.swift",
+      "sha256": "ddccd37fae72b11250ab564c165762cdc93716d8f23b5ed4ba8683987259907f"
+    },
+    {
+      "path": "ios/App/LedgerCheckoutEntry.swift",
+      "sha256": "1e10e2501a74b128609241b00825993b97c31d66d8810aa798e26ce4df5a9222"
+    },
+    {
+      "path": "ios/App/MembershipCoordinator.swift",
+      "sha256": "9381c55f631c43949fda8a48afdc9e4cab1df37d64431df18f57142169bcc9a2"
+    },
+    {
+      "path": "ios/App/MembershipEntryView.swift",
+      "sha256": "2660e8304c459896dd70542d740368307be39729bcba7421d294daedf35146b8"
+    },
+    {
+      "path": "ios/App/NavigationRestoration.swift",
+      "sha256": "6de62ce10a083e21c5de7217984e9982cc8a62e6a45e78e687b7c904ab6f9b85"
+    },
+    {
+      "path": "ios/App/PlacementRecordsEntryView.swift",
+      "sha256": "d772d7d9207f562c9eda9fc0ffdb1c03aade1bd29f689eedb0b19916dc01b23e"
+    },
+    {
+      "path": "ios/App/RecordsComposition.swift",
+      "sha256": "f427bd7c465dafddb9073e3b5923413b2b761c38049553f77f70187a298bc733"
+    },
+    {
+      "path": "ios/App/RecordsRecoveryLink.swift",
+      "sha256": "425582e0cff799322f70425294882581d140d63031df6079e4bed69718eba1e1"
+    },
+    {
+      "path": "ios/App/RestorableAdultTabs.swift",
+      "sha256": "895900356bb926d258e753d52c17dc41aa2e4c84444b13b170c864adea5d1be1"
+    },
+    {
+      "path": "ios/App/RoomInTheCartApp.swift",
+      "sha256": "dfd54165f2abe662b601594e92e25b4b3ef345de0851a58e2a6562f0530f03d3"
+    },
+    {
+      "path": "ios/App/Theme.swift",
+      "sha256": "72638655e0bbc20dd2f2bd9266d977e21b978b658e6f943aa8fc95275a36dfe8"
+    },
+    {
+      "path": "ios/App/WorkspaceAccess.swift",
+      "sha256": "dc7d8c92fa41bfdfa0aa1646fe8486490d67e7667b554432406d9783510a8c92"
+    },
+    {
+      "path": "ios/Configuration/App.entitlements",
+      "sha256": "56c48ef667b84ba949342b309d538fa3b3b3d07ec9dc5d3535602278425d93a5"
+    },
+    {
+      "path": "ios/Configuration/Share.entitlements",
+      "sha256": "6dcf5bc9d156cabf4a9da2747f6263fb6d19d1ec823cc527fa93af7c9486f758"
+    },
+    {
+      "path": "ios/Configuration/Widget.entitlements",
+      "sha256": "175a864b7707b0ac1230db00d43bcd4539f4ad53370e008ab5bfe9a0bf9b1044"
+    },
+    {
+      "path": "ios/Extensions/Share/Info.plist",
+      "sha256": "6666750fcefdfefb1cff2ab7435452553aa0ef2ac25fd13044d8c8d7d6819f60"
+    },
+    {
+      "path": "ios/Extensions/Share/ShareViewController.swift",
+      "sha256": "41bfa3ea70f80244a5aa005ac0eda6750f4b3c7f929ec47da6e0c999b07ef405"
+    },
+    {
+      "path": "ios/Extensions/Widget/Info.plist",
+      "sha256": "b76227487bc21ea59ae6c33cafa6800487f648520b2b142c1e894a67694781d6"
+    },
+    {
+      "path": "ios/Extensions/Widget/RoomInTheCartWidget.swift",
+      "sha256": "d8e304a026fab1b489c1a18987b245747956e1214b501db7d164118449febdd0"
+    },
+    {
+      "path": "ios/Features/Capture/CameraCapture.swift",
+      "sha256": "6f0825bc8012e5da6c88b0d32c9f7f2e04cb333aa69799b73c957219a1320dd0"
+    },
+    {
+      "path": "ios/Features/Capture/Capture.xcstrings",
+      "sha256": "89ff65f55bf60f326d12a7149a7ee3850ad6e96f8ec566f30a24246ac722fcf6"
+    },
+    {
+      "path": "ios/Features/Capture/CaptureAppEntries.swift",
+      "sha256": "c43999fd274c06abc1917ddd33df7cbcf005e0b5514ed9daef3ed15bfa8bff7d"
+    },
+    {
+      "path": "ios/Features/Capture/CaptureCorrections.swift",
+      "sha256": "a039029357de73202188fd5c4df67b513d87d412df2d48a498b4e16fb79baf59"
+    },
+    {
+      "path": "ios/Features/Capture/CaptureDomain.swift",
+      "sha256": "e51084f88a2744a8527ceed086b8ece5e0c924609cd819292cefaac1b4307c62"
+    },
+    {
+      "path": "ios/Features/Capture/CaptureDraftBinding.swift",
+      "sha256": "235469eb565192c35491a3c54ccd16580552bd45b03aeee697aa2c9b77aecf51"
+    },
+    {
+      "path": "ios/Features/Capture/CaptureLedgerImport.swift",
+      "sha256": "1f782b1b4caab6e8ebd07752757d69a857058d23c4c96edd837c8ea2e4bbb58a"
+    },
+    {
+      "path": "ios/Features/Capture/CaptureMediaStore.swift",
+      "sha256": "ce3a7d790ad6f65036a97e893a1a75ade621215d82deb52224fc795de114c43c"
+    },
+    {
+      "path": "ios/Features/Capture/CaptureModel.swift",
+      "sha256": "42cb60e84813147e34b17fcc05a5ca9d4f075d78032e344b9260f899f8c0f469"
+    },
+    {
+      "path": "ios/Features/Capture/CaptureReferenceShelf.swift",
+      "sha256": "8e7a5afa2269231aafddd1c58eebf4bd1e21d01c6b84eecde7e70b6a5b31853b"
+    },
+    {
+      "path": "ios/Features/Capture/CaptureReviewView.swift",
+      "sha256": "588290b0b009c79e86e71e71cee9bda5bff552f738b504f95406a2c92a5ab222"
+    },
+    {
+      "path": "ios/Features/Capture/CookReadbackModel.swift",
+      "sha256": "cb644533a00c2be087b4cf7ad9d7e589cb22c803725e9cdefede3756bd7dff94"
+    },
+    {
+      "path": "ios/Features/Capture/CookReadbackView.swift",
+      "sha256": "d2bb3b109e0c2a1c00952eb67caa4c53a8b82cc3e365636689ee2728f3d15f48"
+    },
+    {
+      "path": "ios/Features/Capture/CorrectionSettingsOutcome.swift",
+      "sha256": "57e7c1f6c50dd5fcab26f4c4ac006bf9dd3e83a51a04d92e2fa3b7c05f98b9c5"
+    },
+    {
+      "path": "ios/Features/Capture/CorrectionSettingsView.swift",
+      "sha256": "904153f4197ad107e09033aedbc6eae34cd67b5b674a610df911a8df527ed7e6"
+    },
+    {
+      "path": "ios/Features/Capture/GuestCapture.swift",
+      "sha256": "0c0098de06d62cf9629695b292a0892713230e1d1d7d3ce922e953ca6666e7a8"
+    },
+    {
+      "path": "ios/Features/Capture/GuestCaptureReviewView.swift",
+      "sha256": "f1623fd4c9fe7ab54eef158ad92431358351102d012946b2c3f45b990db0d84b"
+    },
+    {
+      "path": "ios/Features/Capture/INTEGRATION.md",
+      "sha256": "695a4d0fb52ef76398478d58884cc3c26ccff3a584b85558d95cfeb6d08602da"
+    },
+    {
+      "path": "ios/Features/Capture/LocalCookSpeech.swift",
+      "sha256": "fefe116757d4708e942bef82de5cd403f2120432e7a83bf938bddbee31eb8cc1"
+    },
+    {
+      "path": "ios/Features/Capture/OnDeviceScanService.swift",
+      "sha256": "4dffaf15a77185919eefcab19f239697cf59da7fe4c08cf5da392d9d4cd8cbe5"
+    },
+    {
+      "path": "ios/Features/Capture/OnDeviceSpeechCapture.swift",
+      "sha256": "0c2320956f066553650044256094e115401d7f04a790de32d15064ae13992484"
+    },
+    {
+      "path": "ios/Features/Capture/OnDeviceTextCapture.swift",
+      "sha256": "f05e4bad6b939425f931fabe373eaabc7761ad98b6a3da09d14703414cd8054b"
+    },
+    {
+      "path": "ios/Features/Capture/READBACK.md",
+      "sha256": "431c5a9ce170f15cef395108b30a85f46a8ac8dabf0f4ab4b6dac6224bf5fdf6"
+    },
+    {
+      "path": "ios/Features/Capture/RecipeCaptureAdapter.swift",
+      "sha256": "22eeee166ab60a745ed6e0306fd76bd1bf6e1d22d0fb7e3154f6f52f2c322faf"
+    },
+    {
+      "path": "ios/Features/Capture/ScanDomain.swift",
+      "sha256": "3ec3ae6c6deb1b25f24ff3ac654e35a08658a14fcf6b902eaa91ce419b3e9693"
+    },
+    {
+      "path": "ios/Features/Capture/ScanImageNormalizer.swift",
+      "sha256": "5340d9cb44c295d83d7365a2bdbccd24b0c6289e85533856ae17798fb80a0e9b"
+    },
+    {
+      "path": "ios/Features/Capture/ScanModel.swift",
+      "sha256": "6d631d8af58ccb32eb5b74733380cd0c525c29a60ae7818a29a5f04ecadcb122"
+    },
+    {
+      "path": "ios/Features/Capture/ScanReviewView.swift",
+      "sha256": "857dc0bf2a9554a23e29d44398b715d1e348736600317a97f745ee7e35f409a9"
+    },
+    {
+      "path": "ios/Features/Capture/SelectedPhotoTransfer.swift",
+      "sha256": "7b6cb32f07b467d4b9222da419e808bee6858f9c7553a005d08d96ad2514a672"
+    },
+    {
+      "path": "ios/Features/Capture/StructuredCapture.swift",
+      "sha256": "8b9225d606adb6a3c0b6e1110416ecf0bb3764377d1997043a18e23fee4e5fe1"
+    },
+    {
+      "path": "ios/Features/Capture/StructuredCaptureReviewView.swift",
+      "sha256": "6cfa57faf0124fe29659a239b0d371db849ea89fa8b6483efa03716b4b139da2"
+    },
+    {
+      "path": "ios/Features/DeviceSurfaces/APP-INTEGRATION.md",
+      "sha256": "aaa70e79e8f72c95ed670d02e70651d6b6ab49137f14bd44f3ab30b7775d2356"
+    },
+    {
+      "path": "ios/Features/DeviceSurfaces/AppShortcuts.xcstrings",
+      "sha256": "12fa60c5d5d223e66f1ba14ffb6888f040b041e650d1e28f976f61f24f6e9f24"
+    },
+    {
+      "path": "ios/Features/DeviceSurfaces/CaptureAppIntent.swift",
+      "sha256": "057f825fc67523f9b810c18044e85aa3b24d74ec75955f0e1718a6237db903ad"
+    },
+    {
+      "path": "ios/Features/DeviceSurfaces/ContextualReminderEntry.swift",
+      "sha256": "33360d48b574d7dbe8194b079b69c1e8cbb1c2be7ddb06d208a5800bafcbc5f4"
+    },
+    {
+      "path": "ios/Features/DeviceSurfaces/DeviceSurfaces.xcstrings",
+      "sha256": "b53e8e182a42f49ad02050b7a2da7e128a4c1920dc6e0be4dfecd17d3a496f92"
+    },
+    {
+      "path": "ios/Features/DeviceSurfaces/DeviceSurfacesEntry.swift",
+      "sha256": "14a462163ef4342d1a7911ac8ba0ee52aff589aa7d02bb88118162d3261894e3"
+    },
+    {
+      "path": "ios/Features/DeviceSurfaces/INTEGRATION.md",
+      "sha256": "021586f7dbfc6626b1a1b1839bee4de84feb1acb088558024a1a31ac9edd43dc"
+    },
+    {
+      "path": "ios/Features/DeviceSurfaces/LedgerSelectedTextPort.swift",
+      "sha256": "ae195d69db9bb6b92f4047b59d1cb32d0b603f214f8da606269a36663a0fc929"
+    },
+    {
+      "path": "ios/Features/DeviceSurfaces/ReminderEditorView.swift",
+      "sha256": "912667a88f14823bb12572b7fae0d31a594e16b17a23330cdb875c197a3c05e7"
+    },
+    {
+      "path": "ios/Features/DeviceSurfaces/SelectedTextReviewView.swift",
+      "sha256": "8f5acc181929cd1ebdddc3a2756a6c2badaffa2532e081dcebbee97ecbb65687"
+    },
+    {
+      "path": "ios/Features/DeviceSurfaces/SurfaceImportBridge.swift",
+      "sha256": "61b304dfcc7cb3b6964e7b62f2448af370f87aca8fab4df16682dd25547f6051"
+    },
+    {
+      "path": "ios/Features/DeviceSurfaces/SurfaceNotificationDelegate.swift",
+      "sha256": "0963ddd9cd888aca18b8e3b8057899aa1f71b5cc97d12cf067c072b40c050e5b"
+    },
+    {
+      "path": "ios/Features/DeviceSurfaces/SurfaceReconciliationGate.swift",
+      "sha256": "0100181cf5c649f8ce4f315ac3e7b319bdca533b48e4c4c7ae5a3e94fda5fde6"
+    },
+    {
+      "path": "ios/Features/DeviceSurfaces/SurfaceRouteStore.swift",
+      "sha256": "4ed642eb053bacbaf2fc8aadc1d3d381fc9b7bd0937fe289575d951ff20bf354"
+    },
+    {
+      "path": "ios/Features/DeviceSurfaces/SurfaceRuntimeIsolation.swift",
+      "sha256": "9063ab791aac008293302b3503a3cd5126d3ae702e92d6e9e7762b7eea103b2a"
+    },
+    {
+      "path": "ios/Features/Dinners/DinnerAccessShield.swift",
+      "sha256": "812e8dcabcb3a1abc5fe7065cc3254a89850e70cf07a2f8eac41d19bfb817d4b"
+    },
+    {
+      "path": "ios/Features/Dinners/DinnerAwayCarryoverView.swift",
+      "sha256": "c032d974d14c15e62829064824aec492d938d5d81b42db2dc9a4e0dab846f6aa"
+    },
+    {
+      "path": "ios/Features/Dinners/DinnerDecisionSheet.swift",
+      "sha256": "c401b54ea72ad2f91728a9218da087fde9cb40fbedcb7b034b9db68123d1dfa9"
+    },
+    {
+      "path": "ios/Features/Dinners/DinnerDrafts.swift",
+      "sha256": "46731fc53e4be99ffdc8dcdaf2d73c7f9f362f929d5745b0fc35e90be025b06c"
+    },
+    {
+      "path": "ios/Features/Dinners/DinnerEditors.swift",
+      "sha256": "2f473b49dee23e67490f6477189d9bfaf502ef4315b98e665544b7fde8a90e52"
+    },
+    {
+      "path": "ios/Features/Dinners/DinnerFeatureModel.swift",
+      "sha256": "d1cd61617225d60eebee437f32f228011866cd9fb5204f4e1b49dc62ffc184bd"
+    },
+    {
+      "path": "ios/Features/Dinners/DinnerIdeaSupplyReview.swift",
+      "sha256": "7689674c5a9b82ecd59774235d529bb1a0f4320db7ed5633866c45518c350a04"
+    },
+    {
+      "path": "ios/Features/Dinners/DinnerIdeaSupplyViews.swift",
+      "sha256": "62ef5560cb67d0d3139e4cf94d70d08bea72b8bd01c884c172c0228c2f87e7a4"
+    },
+    {
+      "path": "ios/Features/Dinners/DinnerLibraryPairings.swift",
+      "sha256": "76b8a3496fdd86379f21f737007563b95a30e27118b714b9bf1274bdde72078f"
+    },
+    {
+      "path": "ios/Features/Dinners/DinnerLocalization.swift",
+      "sha256": "c1530888af5e4e3be69118781b7c9534d8f22de1c623e7da9c0987275c91b5fe"
+    },
+    {
+      "path": "ios/Features/Dinners/DinnerPatternCatalog.swift",
+      "sha256": "5e099e47ec192eaacf02c01bd277ef0d1389c7facc902e79a75151cd7fef0822"
+    },
+    {
+      "path": "ios/Features/Dinners/DinnerPlanningHome.swift",
+      "sha256": "19304cec30875696e964ae9a6a531ee0bb0781fe081ea9433fabee2298dee2fb"
+    },
+    {
+      "path": "ios/Features/Dinners/DinnerQuotesView.swift",
+      "sha256": "af95804cb70faecdcb05cd020507b908f93dbc2255c78f81994fad036ecc568e"
+    },
+    {
+      "path": "ios/Features/Dinners/DinnerRotationsView.swift",
+      "sha256": "47a347a384886cfecfc310f321b0e6dca603ac0f5ddc20cd11d22177f9b51257"
+    },
+    {
+      "path": "ios/Features/Dinners/DinnerScenarioDraft.swift",
+      "sha256": "24fcce2303c35b0f3c3447061c1eba3b092c9ed2a5ee643de990a2d47e66c64a"
+    },
+    {
+      "path": "ios/Features/Dinners/DinnerScenarioEditor.swift",
+      "sha256": "b5dcd615fd87544341e72ebf05acf27683bbed72929bf9ddb3b8129d08547db4"
+    },
+    {
+      "path": "ios/Features/Dinners/DinnerScenarioReviewView.swift",
+      "sha256": "125a56c3f8c2336e1ccc388ef8aeb0bbd15108108c29b6b403d9416f0201ed04"
+    },
+    {
+      "path": "ios/Features/Dinners/DinnerWeekEditors.swift",
+      "sha256": "cbae156b61a7a168ac924e10c57aef5a712a169e3343c142efb3296a6b5c8ebf"
+    },
+    {
+      "path": "ios/Features/Dinners/Dinners.xcstrings",
+      "sha256": "8be6a9ea0f84dcec6eb4004515bcfef0540d865aee87e3964dd944751c9d0054"
+    },
+    {
+      "path": "ios/Features/Dinners/INTEGRATION.md",
+      "sha256": "2066ba3091a6c152efbfd6a5208cfe34c96b5d59fc96d4d3de8ba83527d0471b"
+    },
+    {
+      "path": "ios/Features/Help/Help.xcstrings",
+      "sha256": "f0e19cdb69d27a2821c897a312f871adea00ac5ec4d2f1a0623cb3c9b6b9e94a"
+    },
+    {
+      "path": "ios/Features/Help/HelpConfiguration.swift",
+      "sha256": "04788fa42896ec7b8c50637c41c067fd267d183e86366f1fadd17de9247da9b3"
+    },
+    {
+      "path": "ios/Features/Help/HelpView.swift",
+      "sha256": "575f5ddaece8958b30a4e87a7c94ae5be034a2260db334c6794f0b72becf078b"
+    },
+    {
+      "path": "ios/Features/Help/INTEGRATION.md",
+      "sha256": "2b0c72fce29b729e60cea1e1ede994c314b8b7bcf28df1c91bbcca4d3ef3c16a"
+    },
+    {
+      "path": "ios/Features/History/FamilyDecisionModel.swift",
+      "sha256": "3ee1a951b6284f027f56657f38879e793c816fce0339109dc77685948249a5ca"
+    },
+    {
+      "path": "ios/Features/History/FamilyDecisionStore.swift",
+      "sha256": "0df21e98ba61434d8f1454de85689dfcfc639a6d8d1200fceb8d5941ecafd35a"
+    },
+    {
+      "path": "ios/Features/History/FamilyDecisionsView.swift",
+      "sha256": "57fadc0298e6a6817a92c3e5069ae0116ad888c8eda8cde7042b2319289a3ff2"
+    },
+    {
+      "path": "ios/Features/History/History.xcstrings",
+      "sha256": "36dc866c4512d21568444e74d34d7ed10f4b8b086f280307a90e6fddc3fa30c6"
+    },
+    {
+      "path": "ios/Features/History/HistoryDrafts.swift",
+      "sha256": "541bbf982254af7fadc8e690d2e3ddeedfe89183ddb647ab4d5adcf22acede55"
+    },
+    {
+      "path": "ios/Features/History/HistoryFeatureModel.swift",
+      "sha256": "1c1f563f353d2d72d3eaf1bcd2c93b00c8d1fa94b0bfa2b41765de5557592e5e"
+    },
+    {
+      "path": "ios/Features/History/HistoryLocalization.swift",
+      "sha256": "aa25e67a704c908448965a895627dcd54bdf3da4b72f6f4787e04a7dc6c87ae8"
+    },
+    {
+      "path": "ios/Features/History/HistoryPendingStore.swift",
+      "sha256": "d09110b689905806fdf4e3c0b6961f6f0ae650293f4775daa0917badc2726fed"
+    },
+    {
+      "path": "ios/Features/History/HistoryViews.swift",
+      "sha256": "b960bd5ba5e51385805097eb2aed8fe3d651c9ca7339f553117d121fbddfb3d3"
+    },
+    {
+      "path": "ios/Features/History/INTEGRATION.md",
+      "sha256": "7aecc5dedf5b60705d083a6003ef17da9f6379b182cd043e4f61e957afaf5994"
+    },
+    {
+      "path": "ios/Features/History/PickupDecisionEvidence.swift",
+      "sha256": "fde3846e4cbfc186fc3798f8883585e5ae8243052f1b44e2b201175371a7276a"
+    },
+    {
+      "path": "ios/Features/Household/AccountDeletionModel.swift",
+      "sha256": "2065c9122e38ab3b6be3bc97b557cad1586e9db17346fc5f3bee1c0154e59525"
+    },
+    {
+      "path": "ios/Features/Household/AccountDeletionView.swift",
+      "sha256": "7e4dcc0f438b8d81d430617fb06f1b11ed7081448b799997278e91dd742d411d"
+    },
+    {
+      "path": "ios/Features/Household/ContributorRequestCaptureView.swift",
+      "sha256": "dbeb075cd49cccad56a1bf6a8abb537769ba01651e04dfd7c2a7c8744d97f572"
+    },
+    {
+      "path": "ios/Features/Household/ContributorRequestReview.swift",
+      "sha256": "76af5a017320f43dbdbc669e9e1b5d11543f4e29abce62b05ba98c6a6c7f3377"
+    },
+    {
+      "path": "ios/Features/Household/DeviceManagement.xcstrings",
+      "sha256": "670980e95a0f849d4512708062e2cc9dbf966c98e599604e1a266fe08b10050d"
+    },
+    {
+      "path": "ios/Features/Household/DinnerSharedPlanningEntry.swift",
+      "sha256": "e3ae8d3946491325359f17eb539c5b79c56fbee99d6b2447cc0b909e9d485b95"
+    },
+    {
+      "path": "ios/Features/Household/Guardian.xcstrings",
+      "sha256": "996241a552ccebb602edcc690f49ca87678d8547eb62336e4b51f055de088a09"
+    },
+    {
+      "path": "ios/Features/Household/GuardianChildCoordinator.swift",
+      "sha256": "c48903ec26f933150d937ee34b3512c2e9980d1047bed68f0e463884b4128d8a"
+    },
+    {
+      "path": "ios/Features/Household/GuardianChildModel.swift",
+      "sha256": "4b099bd463ed3eed94a91b1cf5373c3b8ba935409c0a17938d466baa4fb4c9a6"
+    },
+    {
+      "path": "ios/Features/Household/GuardianChildRootView.swift",
+      "sha256": "4bc3ab370d0312f8a820a3fd2006368ed934c11a2caba2901b957e5755640ba3"
+    },
+    {
+      "path": "ios/Features/Household/GuardianChildView.swift",
+      "sha256": "1c70f5de0f6d02d4d969203737f97b42061b643bb6cc62236b821b17309bae74"
+    },
+    {
+      "path": "ios/Features/Household/GuardianEnrollmentModel.swift",
+      "sha256": "ffb7e0d936ba2b5515e8fadbfcd85a56b9f3a6e53ba79e6f5426b50cb7272331"
+    },
+    {
+      "path": "ios/Features/Household/GuardianEnrollmentViews.swift",
+      "sha256": "b07114b4c01dfa5a4d056bda3aa945a2f95be5b91f8d923cadcdac4000c6f87d"
+    },
+    {
+      "path": "ios/Features/Household/GuardianLocalization.swift",
+      "sha256": "7362f1da9d1c246a1a9262151e817c098c83fb008e5f75216a298757b452aa02"
+    },
+    {
+      "path": "ios/Features/Household/GuardianNativeAuthenticationModel.swift",
+      "sha256": "89b708614ff0b7469a7ae63f367473bebaf8c2ea114ceb093eb4b13794b6c53c"
+    },
+    {
+      "path": "ios/Features/Household/Household.xcstrings",
+      "sha256": "6e00370963dd10945ece9d10158b9e442dd08a10c423aa59a8c9fa3e0b94fecb"
+    },
+    {
+      "path": "ios/Features/Household/HouseholdDevicesModel.swift",
+      "sha256": "652a18e28e51852c1d6c44f1b81c0c48c356c9dacfebcd0248ff3bc6df8429da"
+    },
+    {
+      "path": "ios/Features/Household/HouseholdDevicesView.swift",
+      "sha256": "00412aabfd4250311fb427ec24a2d31234df1a40efbcfb4e3fbfb9731f3c31d6"
+    },
+    {
+      "path": "ios/Features/Household/HouseholdExitModel.swift",
+      "sha256": "c7cfe0350afc226793345af32c024c2ae3a71d96ae4e408b6970b17f0c40944d"
+    },
+    {
+      "path": "ios/Features/Household/HouseholdExitView.swift",
+      "sha256": "d8186ec5b0045f3f22e6da6af7b69759208e28661b7e7f7a2f0f5e5816e678c6"
+    },
+    {
+      "path": "ios/Features/Household/HouseholdInboxModel.swift",
+      "sha256": "81e92b810e8e47c4734443c3f0288b87c746f2392d69ebcd6d37c9999e725f45"
+    },
+    {
+      "path": "ios/Features/Household/HouseholdInboxView.swift",
+      "sha256": "11c274e820957af4e1533df5b45c1b8e6a4c3d5bfe5112f5943905e5ac055e27"
+    },
+    {
+      "path": "ios/Features/Household/HouseholdLifecycleModel.swift",
+      "sha256": "04c00c59774336e542dae6e3f5906ebd8a8d74f2ff4133073bc5aca6e84f7ced"
+    },
+    {
+      "path": "ios/Features/Household/HouseholdLifecycleViews.swift",
+      "sha256": "c6f6e12db249801d582dc9018b71b1cb61e8e4643b025cd1434da3a077dc1771"
+    },
+    {
+      "path": "ios/Features/Household/HouseholdModel.swift",
+      "sha256": "ea1a77d7813eacb0874db20d5017e61f0afd3356b7d1817ecab0e1751a158da3"
+    },
+    {
+      "path": "ios/Features/Household/HouseholdRequestMealContext.swift",
+      "sha256": "7f24cc32c776a2a77f4c268ef9a9c452631e2fc5cc4456e8cae73caf8d6b1e64"
+    },
+    {
+      "path": "ios/Features/Household/HouseholdRequestPackReview.swift",
+      "sha256": "feb04b5e428b6d913ce63aaf0b2dc2123f0978bb8c443d0f66a0d1dcd92ab9cc"
+    },
+    {
+      "path": "ios/Features/Household/HouseholdRequestPackReviewView.swift",
+      "sha256": "036aff257576516e5a6a70f7da2f99cb953933339e8a11eb1bab356ab13c1710"
+    },
+    {
+      "path": "ios/Features/Household/HouseholdSettingsView.swift",
+      "sha256": "c19fe14820ad252558630f638b4b6c0265a5093772dbc9713913a34ba79ab904"
+    },
+    {
+      "path": "ios/Features/Household/HouseholdShopModel.swift",
+      "sha256": "0a08ce7fc98e146ea776597eb049936cadcf4ecc1d0731519470be8ee141abe9"
+    },
+    {
+      "path": "ios/Features/Household/HouseholdShopSelector.swift",
+      "sha256": "4ecc502beef0657f7e52d9f6797a022cd5d7aa5a9127c129ed4b20944195d2f7"
+    },
+    {
+      "path": "ios/Features/Household/HouseholdShopView.swift",
+      "sha256": "bca35b486e6df01e00f5b0abf16177c6c892d52df97dff2599f572ae37b20223"
+    },
+    {
+      "path": "ios/Features/Household/RequestDuplicateComparisonView.swift",
+      "sha256": "11088e22ac1bea6960a771fb078b774ab9f62ff6b4a1f014bc23a3a10f272330"
+    },
+    {
+      "path": "ios/Features/Household/RequestDuplicateGroups.swift",
+      "sha256": "ab15f4b51fff08b20025f4023c6a9272e05624f2708e210d36d3f80130e2d291"
+    },
+    {
+      "path": "ios/Features/Household/RequestDuplicates.xcstrings",
+      "sha256": "7cf9b71511c318379bb78d0be2a5d874686554732b59d5fe90c1ac6e5b9dd87b"
+    },
+    {
+      "path": "ios/Features/Household/SharedMealChangeModel.swift",
+      "sha256": "baeb207a0a4a5a78cd1c9e079512714ed2a0cdd45cea95b71fbbf877a5d60f6a"
+    },
+    {
+      "path": "ios/Features/Household/SharedMealChangeSeed.swift",
+      "sha256": "752d59a1d988f35c0656c222b8366b160e39c326b15efffb9be66dcde93f7c60"
+    },
+    {
+      "path": "ios/Features/Household/SharedMealChangesView.swift",
+      "sha256": "eac2c33b9b512beb025921680435fa40406182ce0c81fbb5d98c2aa42dd0134f"
+    },
+    {
+      "path": "ios/Features/Household/SharedMealIdeaModel.swift",
+      "sha256": "5e8bf82c7da7f4505ca1b9ce9ca524df4607007006ef640567785f7c24dff69b"
+    },
+    {
+      "path": "ios/Features/Household/SharedMealIdeaProposalView.swift",
+      "sha256": "de9c8dcc133aea46edf4d3c613dff443adff510f0f7bc407657b8984a7282881"
+    },
+    {
+      "path": "ios/Features/Household/SharedMealIdeasView.swift",
+      "sha256": "001fa6043afe62d67da33a22aa99adbcda90788c73893a3b0be3601ebb7a0b76"
+    },
+    {
+      "path": "ios/Features/Household/SharedMealViews.swift",
+      "sha256": "4dce8c7731ede0e8f2e8a2f0f63b364de472c40b1617d9a492aeac59d4837589"
+    },
+    {
+      "path": "ios/Features/Household/SharedStoreQuotesModel.swift",
+      "sha256": "f18fc7ff14c1bf2d7fd9ae487672def5bee02d4d460b30e6b229cd27c88b3199"
+    },
+    {
+      "path": "ios/Features/Household/SharedStoreQuotesView.swift",
+      "sha256": "6074210d310fe79fb1ef2bcd0c0e4a3178d9b7259118ee2731f91707c25afbe5"
+    },
+    {
+      "path": "ios/Features/Household/StoreQuotes.xcstrings",
+      "sha256": "7509d4499b389216a7c7214351214c8cdd635c7e5961e9f2a4500c2181c4320b"
+    },
+    {
+      "path": "ios/Features/Household/StoreQuotesPendingStore.swift",
+      "sha256": "390f61a9656dd99a77f2d606bb2aef3e82350c2ac8564097e2584add801dfaa5"
+    },
+    {
+      "path": "ios/Features/Ledger/Ledger.xcstrings",
+      "sha256": "743d3238a7323f1f371b6d91c3cc927772ff494974cc082b7f12554c171df257"
+    },
+    {
+      "path": "ios/Features/Ledger/LedgerHomeView.swift",
+      "sha256": "5a9245d4dd28d4777aacaad8c9acc0e95b4b50b61dc61c1a5330b501b276ce3c"
+    },
+    {
+      "path": "ios/Features/Ledger/LedgerIngredientView.swift",
+      "sha256": "dc2ec6f50b9c5fcc0731d9b55164dd500f29e0005fda6c6d63f683eb369cb6cb"
+    },
+    {
+      "path": "ios/Features/Ledger/LedgerListLayoutViews.swift",
+      "sha256": "bddc713517bcc45023267c336943f5671fa849309eed50a07c9d8101bb114dee"
+    },
+    {
+      "path": "ios/Features/Ledger/LedgerLocalization.swift",
+      "sha256": "950d581262f232d331152af163b514b86b7c438e5985cdd3a3632cf320dbf162"
+    },
+    {
+      "path": "ios/Features/Ledger/LedgerMealsView.swift",
+      "sha256": "26a178e99982021b6ae5bbed2ac36ab01e2bac30531fd21505377663d14491df"
+    },
+    {
+      "path": "ios/Features/Ledger/LedgerModel.swift",
+      "sha256": "77df98d6a518bed6b1abf46aff9dcd6c5ff838655707daf76d15c19db1fb65f5"
+    },
+    {
+      "path": "ios/Features/Ledger/LedgerPackChoiceView.swift",
+      "sha256": "99dbd1064d0b685d24b8022efacc17eef028e22a3d8db73aafd65a02c7533483"
+    },
+    {
+      "path": "ios/Features/Ledger/LedgerPackReview.swift",
+      "sha256": "bcf5b58a08f398e4695e24074049656d506f47af85f3853dca3bb96e2f807284"
+    },
+    {
+      "path": "ios/Features/Ledger/LedgerPackStockReview.swift",
+      "sha256": "657e86c2beeb7d561ffa0642fb60a5061096a28c24181f759c51e290531dd2b7"
+    },
+    {
+      "path": "ios/Features/Ledger/LedgerSheets.swift",
+      "sha256": "f8bef9947c5355cdba0f5859994f83707ef61a5d6bd245d26ed1121fa90a08f8"
+    },
+    {
+      "path": "ios/Features/Ledger/StapleRecallViews.swift",
+      "sha256": "40e24c4d6296475a073045e1444788a117a44d38d47a923bb4f7bf3266860f98"
+    },
+    {
+      "path": "ios/Features/Membership/HouseholdLocalTesting.storekit",
+      "sha256": "4803f75689da6bcdfa4fb21b64c1b3fe39931a456c61dc8703be34108b44278b"
+    },
+    {
+      "path": "ios/Features/Membership/INTEGRATION.md",
+      "sha256": "3590f8045dc4646f841cce7809f5684df798de097a080b598a547138a2c689f5"
+    },
+    {
+      "path": "ios/Features/Membership/LOCAL-STOREKIT-TESTING.md",
+      "sha256": "7075df2b85ed55ab45ffe52b184a216e60a5a0da416d6955057eb809e8b41b99"
+    },
+    {
+      "path": "ios/Features/Membership/Membership.xcstrings",
+      "sha256": "cf86ff79d4e8039f56b2190abdd97f6cf35a4e4ac04f8e2952a8220a63099e48"
+    },
+    {
+      "path": "ios/Features/Membership/MembershipDomain.swift",
+      "sha256": "c16d4d9793d0d47c9f541e4a9c2fb6d8dca4efa2b2955206295899e1dadcfe32"
+    },
+    {
+      "path": "ios/Features/Membership/MembershipHTTPService.swift",
+      "sha256": "2c2ca2bd3bbbf458393652e45e34fa9044f575de8350703ce6653af25560c8e1"
+    },
+    {
+      "path": "ios/Features/Membership/MembershipModel.swift",
+      "sha256": "073b084c5fb96d08676fec198977185c88d5681d20966f9ec96d4d8dd7aa5330"
+    },
+    {
+      "path": "ios/Features/Membership/MembershipStoreKit.swift",
+      "sha256": "483eed984ae19e274cd4115207bb20cbb4c99d4f5523793d5311b4507381d056"
+    },
+    {
+      "path": "ios/Features/Membership/MembershipView.swift",
+      "sha256": "766d1df8d99422d9e094640585e490048b833926245d20e3c01faa54a1e8224c"
+    },
+    {
+      "path": "ios/Features/Pickup/Pickup.xcstrings",
+      "sha256": "b4d649be1f585c83f5ce9dc52ae5ad5166cdaa19f3d653d921706547f73a3882"
+    },
+    {
+      "path": "ios/Features/Pickup/PickupArrivalView.swift",
+      "sha256": "41fc4c73f15878526d3e6b72ad3a98185765ef18a9c7aa0ad457373f35eba2e3"
+    },
+    {
+      "path": "ios/Features/Pickup/PickupAwayCarryover.swift",
+      "sha256": "ec24d990552c7d0b72df3736cbd8a5a807d9b78fdd121522dc3dcc0441c40977"
+    },
+    {
+      "path": "ios/Features/Pickup/PickupCookProjection.swift",
+      "sha256": "d501793625c1ff7254c4ec0e992a828d4364d2ddee9255b3931d7a4dd9b6cf1c"
+    },
+    {
+      "path": "ios/Features/Pickup/PickupFallbackOptions.swift",
+      "sha256": "1bbfc9037a838ceee9ec2981ed4903ffaa814b25abcd2f1b86c3fd1f19381c71"
+    },
+    {
+      "path": "ios/Features/Pickup/PickupFallbackReviewView.swift",
+      "sha256": "c909e833d881420488302c1beecc29c084e161a4e0be0841897c3b70b2089d56"
+    },
+    {
+      "path": "ios/Features/Pickup/PickupFeedback.swift",
+      "sha256": "8f3360eaecd7ba9eab7f3104553999d3d2b4af4778b54e09f0b728e6d37c7804"
+    },
+    {
+      "path": "ios/Features/Pickup/PickupHomeView.swift",
+      "sha256": "532828a81e30d7ee0f5e27c030d1300c8dc2c171e531850186e2f72880891b2b"
+    },
+    {
+      "path": "ios/Features/Pickup/PickupModel.swift",
+      "sha256": "a88a6a205dbb30a2930f9a6ca24cab488d964fea5b252756bd232162dc44d83e"
+    },
+    {
+      "path": "ios/Features/Pickup/PickupOfferEditorView.swift",
+      "sha256": "eb31b823b9fa6cba93e445ca4a5afc11be5161940e1f236d10e8f0cff314886a"
+    },
+    {
+      "path": "ios/Features/Pickup/PickupOfferEvaluation.swift",
+      "sha256": "e58f43f2477624df8c1967cabae925202d2f5b8f69e5ccb12f7775f15e3a90c6"
+    },
+    {
+      "path": "ios/Features/Pickup/PickupOfferForecastViews.swift",
+      "sha256": "61893780afa61229503cd72219d6101d6192b2a20449d2d7d1dec0274085ad7f"
+    },
+    {
+      "path": "ios/Features/Pickup/PickupOfferReview.swift",
+      "sha256": "cf59c11fae653321ea27107e56cc447a33c0d0463fa57288c5b70ed009848dc7"
+    },
+    {
+      "path": "ios/Features/Pickup/PickupRecipientHandoff.swift",
+      "sha256": "2059263eecf0bb7f1eaa387409bdf4387aa3301f1822a25d53ec0cec53ac3a53"
+    },
+    {
+      "path": "ios/Features/Pickup/PickupRepairView.swift",
+      "sha256": "658cd21fa103f35cf6149244a5d259c5ff60d372175f0ad30d88062e866f2c24"
+    },
+    {
+      "path": "ios/Features/Pickup/PickupSavedStockSection.swift",
+      "sha256": "718ec706ec6ce238b7472420657681b7d8a2a4932e027736fee4f0b5407940ac"
+    },
+    {
+      "path": "ios/Features/Pickup/PickupSettlementView.swift",
+      "sha256": "915ab6e9fc5f92aeb2aded040f817814641e9fbaba1a7781962a410dc0fef307"
+    },
+    {
+      "path": "ios/Features/Pickup/PickupStockReview.swift",
+      "sha256": "e27577bd44dc0159bedd34a2e11660f17d475a2c003090ff0e70c3b0db082b69"
+    },
+    {
+      "path": "ios/Features/Placement/INTEGRATION.md",
+      "sha256": "c63858a5859124c3c815b1e4b3d650ca4b545c4810341ad94a3b46615dfa1723"
+    },
+    {
+      "path": "ios/Features/Placement/Placement.xcstrings",
+      "sha256": "b0e7bbb0bdb3df8c9486f93d4cc5fff449613e4a0414891ddcc63b4762ffa544"
+    },
+    {
+      "path": "ios/Features/Placement/PlacementFeatureModel.swift",
+      "sha256": "656e9754e095a1b2db65c58d67c76aaf80051c888dfed97a60c0e8816a1acf4c"
+    },
+    {
+      "path": "ios/Features/Placement/PlacementLocalization.swift",
+      "sha256": "78edd976a8ea15f2febcd669e28d2961eb99ac3c4389180bd8f202855db13212"
+    },
+    {
+      "path": "ios/Features/Placement/PlacementPendingStore.swift",
+      "sha256": "baa1378a568bf2654c667b021d579a379e7fb19e2a5f8770640dc40ffcb8d4ba"
+    },
+    {
+      "path": "ios/Features/Placement/PlacementShopFacts.swift",
+      "sha256": "07188a671fe97b25ebf2615d63a12837b9a1169eea2f5fc13228d6903f0b4bac"
+    },
+    {
+      "path": "ios/Features/Placement/PlacementViews.swift",
+      "sha256": "126905f91cab66541041c12329328cd37cef0cbf7c5eb35c815c09f89690ca4e"
+    },
+    {
+      "path": "ios/Features/Records/INTEGRATION.md",
+      "sha256": "e699c6ef8664775642d24714e579bcc8f616abe6600db9980e929f15e3bd2a29"
+    },
+    {
+      "path": "ios/Features/Records/Records.xcstrings",
+      "sha256": "f5075b75e83d33dcd32bd8dc2782907593dc777cbfbe3cfea8727e5791fa5e49"
+    },
+    {
+      "path": "ios/Features/Records/RecordsFileDocument.swift",
+      "sha256": "bde546194cd780472cd4f5b4d07b890b925a564895eed6dc382909ed011bb51c"
+    },
+    {
+      "path": "ios/Features/Records/RecordsMedia.swift",
+      "sha256": "ad0a89708ac0c1d52d36c6e5e56ef9b32e8fdbe1bde669d0ff3f4ff2f3113efd"
+    },
+    {
+      "path": "ios/Features/Records/RecordsRecoveryCapture.swift",
+      "sha256": "b51539a99835d2c7b81d7d779646958b95b01bdf84898b8445877b4148df6208"
+    },
+    {
+      "path": "ios/Features/Records/RecordsSnapshotProjection.swift",
+      "sha256": "12bdbb2abf3ef66c2581d674558e2c282e026ebe58db659afc4553c65e3787bc"
+    },
+    {
+      "path": "ios/Features/Records/RecordsToolsModel.swift",
+      "sha256": "8d3cac78070e022e4964d5379117df65c2af0cc6bcdfe2918b0f9ac458cfd923"
+    },
+    {
+      "path": "ios/Features/Records/RecordsToolsView.swift",
+      "sha256": "51c87871113b9da4caea73c2ae5344046ac3c90443f379a3e3c234bee9d5f175"
+    },
+    {
+      "path": "ios/Features/Shop/ComparisonModel.swift",
+      "sha256": "e72a8fcc94420e16986c573be22b142b95a5f59c7a6463af4df5de9ebc23331d"
+    },
+    {
+      "path": "ios/Features/Shop/ComparisonView.swift",
+      "sha256": "cb1e419eccc3af825d6eeaad331d628dd0230d6377244c93c8c6b8d866b1d8a4"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Package.swift",
+      "sha256": "b3ca42df470f7943f3071033ae0bbb1307d71a5365cca0a53f699ab5114fe235"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/README.md",
+      "sha256": "e7bc73cc298eee0417b746dca424c1212ca7c695e1d94123537109b13750a00f"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Sources/CoreDomain/CaptureImport.swift",
+      "sha256": "ab2920736c7c8b65850a55f4588d15c6303d2d7e58fbb3632c96833021df1630"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Sources/CoreDomain/Checkout.swift",
+      "sha256": "b1bc6f5f779a745e723733a48582de07b42a8a89cd30acec6f28d1dd105358ee"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Sources/CoreDomain/CheckoutWeight.swift",
+      "sha256": "1a79ebbdc8a588c47842c653f52d4adcf8a775f659577982c2e5864f3332e81d"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Sources/CoreDomain/DinnerCarryover.swift",
+      "sha256": "27ca451e66830d72dc65ba1b9133ac0e1b1fec3fdd737fdc665130347f28e773"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Sources/CoreDomain/DinnerGuestImpact.swift",
+      "sha256": "ba73ef7cc4a6876a246e46c7cae0203ba5353cc7a68d3f8cda3a23dff5e7c1fd"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Sources/CoreDomain/DinnerIdeaSupply.swift",
+      "sha256": "0d6ac2493e78e8725c4e4685465ee3f3495320286e9063fa5da273d908af416c"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Sources/CoreDomain/DinnerPlanning.swift",
+      "sha256": "678ea70f48b84fc3d651062cae35d239da3a5cbef23aef6cbc1d03c9f138113c"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Sources/CoreDomain/DinnerProjectedBindings.swift",
+      "sha256": "7cf391d79e2829e1f60444b798aee8084191d02cbd68fb5df71cf254dcfc16c6"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Sources/CoreDomain/DinnerScenarios.swift",
+      "sha256": "69831638a5dafebdf2b69c545748b7ec721efac79d63a7c812fe60eeb07706b8"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Sources/CoreDomain/LedgerListLayout.swift",
+      "sha256": "7b9f95cfa4e888add306a652beb61410904c00c870cf3ad491df79d9f3f5b007"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Sources/CoreDomain/LedgerMealPortions.swift",
+      "sha256": "74c5a52d85bccc9b43adad5780101358a50a9d3a436f7a727c236ccc4f077966"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Sources/CoreDomain/LedgerPackSelection.swift",
+      "sha256": "2b9db4372ae7338d5f140c75ad9edccd8709c85f5f4b4cdb5e463c718c27288f"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Sources/CoreDomain/LedgerPackStockEvidence.swift",
+      "sha256": "46128a3267751b10177ac34a92d3d0c2c7b161d266ab3fdc60a1d3a2d91d1460"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Sources/CoreDomain/Money.swift",
+      "sha256": "45feddb2d2938d1c935ec565bd3a3d44f0067fae28cffe6c90867c643aea7418"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Sources/CoreDomain/PackComparison.swift",
+      "sha256": "1a92e167218217f780256b573ffd72dd842e79df7f5d4963b5d779c435c59ca5"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Sources/CoreDomain/Pickup.swift",
+      "sha256": "f8d634a966253586611a5d434b0b57da4aaadb1fd05af54b9738cc5641dd6392"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Sources/CoreDomain/Quantity.swift",
+      "sha256": "41bae770e050976ecb8a44bd35d00cb58cd9aceee6a0785f38b23b8e7b6dfd07"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Sources/CoreDomain/Rational.swift",
+      "sha256": "46e13fbb592027518e611c1398ea557991125cb362f7a20c796fa343b309c2e9"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Sources/CoreDomain/RecipeSourceEvidence.swift",
+      "sha256": "1d1d5bb46ae42ee2e481da28420b4b8b86331a5e6e8e5ad24e28002b6c3ad0dc"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Sources/CoreDomain/ShoppingLedger.swift",
+      "sha256": "1bfeb7a929d8970275139be2a81113252c7f81406105f178d6e0505862034371"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Sources/CoreDomain/StapleRecall.swift",
+      "sha256": "2191004d4722e85a355f93b2772b04d7f2fa9992faec69099b25d7f3b4bc954a"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Tests/CoreDomainTests/CaptureImportTests.swift",
+      "sha256": "65bfed39aba1d1debb71708e831c676223c070714d3509ac4852e8395f8ce216"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Tests/CoreDomainTests/CheckoutTests.swift",
+      "sha256": "9d30a846dfcd79d613f66f74f55993faf80e59f4c7592d407736177540ee6f7d"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Tests/CoreDomainTests/CoreDomainTests.swift",
+      "sha256": "79e9d723e238d5886bbe912ed6df937a6023715045849d705b204f8ba6b3b18b"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Tests/CoreDomainTests/DinnerCompletenessTests.swift",
+      "sha256": "fb1141e02857de9c124248e5284dc2651f485a4cc35374329fa17f29837981fc"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Tests/CoreDomainTests/DinnerPlanningTests.swift",
+      "sha256": "dcf60dc2a403c878f01f539baa76507632feae7ad9da25de6ccaf4779a2bf99d"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Tests/CoreDomainTests/LedgerIndexSafetyTests.swift",
+      "sha256": "327fa8745ae67281bee8fe1d2bc7972873a2f16292a55e01ea42d72adfd5628b"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Tests/CoreDomainTests/LedgerPackSelectionTests.swift",
+      "sha256": "c83eb832c3d57be45655debbb63b81d1ccaf28f4bd0837fa470a84094a9a1973"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Tests/CoreDomainTests/LedgerPackStockEvidenceTests.swift",
+      "sha256": "32944437d1841daadf98538f29607a3f91f2b9fcd154bb293af2d1dd9127805b"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Tests/CoreDomainTests/PickupTests.swift",
+      "sha256": "8620e4b3415f93fea55161ea147f12da4bb585bb55a488c3050930b579a6b78d"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Tests/CoreDomainTests/RecipeSourceEvidenceTests.swift",
+      "sha256": "ca27d9ccd39bedf6dea3b15df97e6098cec2fcda0ae71ee0f71268b61cc9b7a2"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Tests/CoreDomainTests/ShoppingLedgerTests.swift",
+      "sha256": "102d2b586917b297870a866f3a877dbed41f637680172cf8a8d05fabe8b1204c"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Tests/CoreDomainTests/StagedImportIdentityTests.swift",
+      "sha256": "e4f36849ca615cf8c9903e3a2d74feead08dd06dea4c061340d8612a0d6b45f7"
+    },
+    {
+      "path": "ios/Packages/CoreDomain/Tests/CoreDomainTests/StapleRecallTests.swift",
+      "sha256": "a4a47af97270fc3f99d1a6cf5740aec83dc10cf3830a0545197e11a783157d9a"
+    },
+    {
+      "path": "ios/Packages/DeviceSurfaces/Package.swift",
+      "sha256": "c5bf7312820a8af925b39b66da1f3fea013f9960bf979dcf4ad62dddc31d5950"
+    },
+    {
+      "path": "ios/Packages/DeviceSurfaces/Sources/CDeviceSQLite/module.modulemap",
+      "sha256": "424dddacd67aed9b8f319753d381a7b54f427c4b053a218a0d4dc6057eb257cd"
+    },
+    {
+      "path": "ios/Packages/DeviceSurfaces/Sources/CDeviceSQLite/shim.h",
+      "sha256": "b052d8e561e942f97b503033ecd2eaa2b35213bdbf374983efe9e68eabdfc024"
+    },
+    {
+      "path": "ios/Packages/DeviceSurfaces/Sources/DeviceSurfaces/IOSAdapters.swift",
+      "sha256": "8e00a1e3b8411afac78a523b21af25f237b04c0cb72a0f32250dc6857f95be74"
+    },
+    {
+      "path": "ios/Packages/DeviceSurfaces/Sources/DeviceSurfaces/Reminders.swift",
+      "sha256": "4961acd57589ff3de898a16f0b89ae6275ef0e55fecb82ad8b3ec96ced7d08b2"
+    },
+    {
+      "path": "ios/Packages/DeviceSurfaces/Sources/DeviceSurfaces/SelectedTextInbox.swift",
+      "sha256": "10749848cf150878cf73a102f73a9100796c96f66ac07b9b8ed575d9ca5a5a5b"
+    },
+    {
+      "path": "ios/Packages/DeviceSurfaces/Sources/DeviceSurfaces/SurfaceContracts.swift",
+      "sha256": "28b67b7e58be626c7b0438de10c1a2ee974ceef251577387921a7da3fb9ece58"
+    },
+    {
+      "path": "ios/Packages/DeviceSurfaces/Sources/DeviceSurfaces/SurfaceDatabase.swift",
+      "sha256": "0dd3bc999092dc4736dc665916a1fc04592d3fce94ece79520a5b89611b27318"
+    },
+    {
+      "path": "ios/Packages/DeviceSurfaces/Tests/DeviceSurfacesTests/DeviceSurfacesTests.swift",
+      "sha256": "627080bf1d13dde0578db8c2002ce35f4c15b4b9fa5f6b41d57f77410547d086"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Package.swift",
+      "sha256": "c45a7f380597e59ad15ab960107bbaa9718f8a6ae2405524f06c69db7f71a360"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/README.md",
+      "sha256": "4e1ebe447aeb019ab8ba4245dfd6a9c66806084960da989d7f68f792fd78c4fa"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Sources/HouseholdClient/AccountDeletion.swift",
+      "sha256": "1acccd6024da395f01f757e8cb5e7a1e1d2d52e78893563f59d4528f624473a1"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Sources/HouseholdClient/AdultAuth.swift",
+      "sha256": "8f9068d54673aea35005d7a155e4889eebaa1b2ad7f55a516f3d45a2210959d6"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Sources/HouseholdClient/Contracts.swift",
+      "sha256": "18124e91befafbe30b94d47415fe8d256a56172a3f078c38836568616d35f2cd"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Sources/HouseholdClient/DecisionContracts.swift",
+      "sha256": "6e6e73a1dd7b0b3740ca5040962a50b0e0b15a49c3b5b133a337b0c6602ba4fd"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Sources/HouseholdClient/DeviceManagement.swift",
+      "sha256": "0491d7f2204f74cdde96c614a35ad5d3c5243c8013be35895fd5762b14b63f3f"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Sources/HouseholdClient/GuardianChildClient.swift",
+      "sha256": "0de1dc599d3509ce446b3b514aa7c1f284fef63e19c82e635b2a43630e9e7c3e"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Sources/HouseholdClient/GuardianContracts.swift",
+      "sha256": "ed27db337dc21a0cb22e74d0c8f0e7efe5812e219262a92f6275ff121b22ffea"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Sources/HouseholdClient/GuardianIntents.swift",
+      "sha256": "f4372fe40bb15825079cb715908803d75aeae5249ca04f04b298249455606990"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Sources/HouseholdClient/GuardianNativeAuth.swift",
+      "sha256": "6129446eb8921b3285464808d2ebf174b24bc415d1e00b8247b84277531f6c0f"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Sources/HouseholdClient/GuardianService.swift",
+      "sha256": "b52720f545e3e0d3b7488f8e3148150c388224beee4f47b0eb6585ca0837e279"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Sources/HouseholdClient/HTTPTransport.swift",
+      "sha256": "3d9255762f90a481d3323c87902a1fcc72a59f682ae7e4ceeb8c28509bb58697"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Sources/HouseholdClient/HelperReviewContracts.swift",
+      "sha256": "49d09258eb45f4b285f8caca29687308ff1d88a96b14b6a5d853c8b9ad193007"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Sources/HouseholdClient/HistoryContracts.swift",
+      "sha256": "2f7418657c62e632ad2e722a40983be191c12a4e6233d001bfbae441ebce08d0"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Sources/HouseholdClient/HouseholdExitIntent.swift",
+      "sha256": "9cdcbfc543f4c76c753e80e4b94c49f6d6d567ad021b8a7c0462a8e3d6112ff8"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Sources/HouseholdClient/HouseholdMeasurementService.swift",
+      "sha256": "9af39c77e6788f876e3d48da65181f3fd8f1d7a89ef3d27cd2d539a786c080b1"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Sources/HouseholdClient/HouseholdService.swift",
+      "sha256": "06e918e34ff3ceb3e509a61c91115aee9f5e922d1beb5ea653217482c6cb6e42"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Sources/HouseholdClient/HouseholdStoreQuoteService.swift",
+      "sha256": "a236a17ecc5e03bddc19a0d8e7da06aaef5d866e953f7d0cf0c9589c01102a6a"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Sources/HouseholdClient/LifecycleContracts.swift",
+      "sha256": "fb9cb293f0565931cd758e076b1157416689095a7f3fece45004b339a1438303"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Sources/HouseholdClient/PlacementContracts.swift",
+      "sha256": "7c3506a27cd6749176e28b80afceb7019980c6b896df5657ea20659d12f42171"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Sources/HouseholdClient/RequestPackEvidence.swift",
+      "sha256": "679aeeef562795c7c1a5383325f9a6673b26966df02818f966d0ef0694fb1855"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Sources/HouseholdClient/RetryPolicy.swift",
+      "sha256": "c8e02b36994992e2f35e883de33b7a5764e92f3cf3a2c3a20881bad0ad4a2dee"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Sources/HouseholdClient/SharedMealChangeContracts.swift",
+      "sha256": "62db6793f00e00bde988550aa7ff8da73ba9284101fbe96d69d7266d103112a6"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Sources/HouseholdClient/SharedMealIdeaContracts.swift",
+      "sha256": "7014fd15a91f4ecf5582c48496254fdf64828a49069b4d1e6d833414ce0babea"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Sources/HouseholdClient/ShopperContracts.swift",
+      "sha256": "3a6fb2848a4347cdb6f448ce9104cb8979c1029743a3e3b4e25434cab6dc8b93"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Sources/HouseholdClient/StoreQuoteContracts.swift",
+      "sha256": "cdc6f4391f32a3035e68a0ad7f4b27a6d36e656a91ebcbb85d48b2a809f8e8ac"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Sources/HouseholdClient/TokenVault.swift",
+      "sha256": "7cec456c3ebcfe4deb7210bc8ad8cab133479ab736b20537b2eaf3a9e5f45a1c"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Tests/HouseholdClientTests/DeviceManagementTests.swift",
+      "sha256": "6aabd8a05486652a4c9037e7615e38fbb33834a6bada6b41457e484d42849e6d"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Tests/HouseholdClientTests/GuardianClientTests.swift",
+      "sha256": "7f8e203e53def3e54afd73862885c0280cbf18b40df036581c33d40729480068"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Tests/HouseholdClientTests/HelperReviewClientTests.swift",
+      "sha256": "9e30fc30298df301511b08708983080506f3386b0df953bedd825ece6ae97f24"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Tests/HouseholdClientTests/HistoryClientTests.swift",
+      "sha256": "3e5ca8e4498fa4733fe8b19757e83217649e388652b88aff5ae2f4a3c5b32497"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Tests/HouseholdClientTests/HouseholdClientTests.swift",
+      "sha256": "45bdd369b86f039ad56d16c402e4b86b16cf899a763e11104832a9c10e79cd3f"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Tests/HouseholdClientTests/LifecycleClientTests.swift",
+      "sha256": "4a08c25dfc05a56112d71aa78b87628df509d941df530e5df285d4d6354fcac1"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Tests/HouseholdClientTests/MeasurementClientTests.swift",
+      "sha256": "38d1aa7bc3ae554fac332dd3ed86b02c49064995f8ee916043cf16caa1571cde"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Tests/HouseholdClientTests/NativeServiceWireTests.swift",
+      "sha256": "09817054f14a76cb50c2482e3d25b141be719929c96951946d8ac82ac203df23"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Tests/HouseholdClientTests/PlacementClientTests.swift",
+      "sha256": "9fdf019f71cf1a34768ef534820da8aa288ed52db7109252c2387567f8fcc89b"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Tests/HouseholdClientTests/SharedMealNativeWireTests.swift",
+      "sha256": "ecacc73b4848e93fec2ff1da471250abf4d590b156ec1dd0d81b6a6abb1ec426"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Tests/HouseholdClientTests/SharedShopClientTests.swift",
+      "sha256": "b776ced30d7be4f69b497c0ecf76a56a57edba75b0295c1a03fb27e188870541"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Tests/HouseholdClientTests/ShopperClientTests.swift",
+      "sha256": "249240d42213d310fe899f484422569ec1e7c62ffbf5c0e3b70bdff9617c8869"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Tests/HouseholdClientTests/StoreQuoteClientTests.swift",
+      "sha256": "989eec9594c6df95f6134be0a915880406b948f058f0fe82fa1be7b8e13e4f78"
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Tests/HouseholdClientTests/StoreQuoteNativeWireTests.swift",
+      "sha256": "c889a19184d3d56575d1a8e63012b6c7b291428fb7db2910f6570ac26e7e2b51"
+    },
+    {
+      "path": "ios/Packages/LocalStore/Package.swift",
+      "sha256": "401462109f0873e122f0372aee57e72639072800e75d40c8bea788f1c20ddf01"
+    },
+    {
+      "path": "ios/Packages/LocalStore/README.md",
+      "sha256": "a9370399483e0492b6c20052807ac85302f3adeb05cf765b867440bc3ac5c99b"
+    },
+    {
+      "path": "ios/Packages/LocalStore/Sources/CSQLite/module.modulemap",
+      "sha256": "bbfe59a972a3e8e09e347c04bc22c0eacd2544881af8a4b6068bfc30b38466e8"
+    },
+    {
+      "path": "ios/Packages/LocalStore/Sources/CSQLite/shim.h",
+      "sha256": "b052d8e561e942f97b503033ecd2eaa2b35213bdbf374983efe9e68eabdfc024"
+    },
+    {
+      "path": "ios/Packages/LocalStore/Sources/LocalStore/ComparisonStore.swift",
+      "sha256": "f3238a7589941cd248bc8ad2535cd6b6b23c40c2a633aa8059aa84f4e3c53e6f"
+    },
+    {
+      "path": "ios/Packages/LocalStore/Sources/LocalStore/LedgerStore.swift",
+      "sha256": "91c8051be50ec711707bf30af395e33c7be0acd51db23f8e20038a513b4220d8"
+    },
+    {
+      "path": "ios/Packages/LocalStore/Tests/LocalStoreTests/ComparisonStoreTests.swift",
+      "sha256": "6a8bafd8224e526ea03837c6b6156330ec86fbc90a58bcc856ee55790feac404"
+    },
+    {
+      "path": "ios/Packages/LocalStore/Tests/LocalStoreTests/LedgerStoreTests.swift",
+      "sha256": "8387b06ee227f3df13a1cdc8897451fe2fb4d81c2e298a6210aa75bc6a05004b"
+    },
+    {
+      "path": "ios/Packages/RecordArchive/Package.swift",
+      "sha256": "e21946525911a486e193b499acd280d15735b9e3dc3aa89e2f54ec1e14256599"
+    },
+    {
+      "path": "ios/Packages/RecordArchive/README.md",
+      "sha256": "39ad6f3225010238842e7a596dda172492bbaa906f67745fe57fdc78593f41f2"
+    },
+    {
+      "path": "ios/Packages/RecordArchive/Sources/RecordArchive/Archive.swift",
+      "sha256": "eedd2c644498f5abd3b7e1248d2790ac4aff1adc9b2ad9414e049f72ac813f37"
+    },
+    {
+      "path": "ios/Packages/RecordArchive/Sources/RecordArchive/ArchiveMedia.swift",
+      "sha256": "26e71bfda64353757ea5eaf161ef3ed023c43dbb8e9f5d8bb89d455da411602b"
+    },
+    {
+      "path": "ios/Packages/RecordArchive/Sources/RecordArchive/RecipeImport.swift",
+      "sha256": "b4fccbc545ce15e2490a5312c84fafa8f005fb7327963bc172da4b9d633e8233"
+    },
+    {
+      "path": "ios/Packages/RecordArchive/Sources/RecordArchive/RecoveryRegistry.swift",
+      "sha256": "b418869a0a5161bcef987b1154853e86c218e440f438ac36b7c3d8819133bf70"
+    },
+    {
+      "path": "ios/Packages/RecordArchive/Tests/RecordArchiveTests/ArchiveMediaTests.swift",
+      "sha256": "09c3115b61631552865fafe076c6c7a7cf2c23e2682cc43a1faadd49547b0cb3"
+    },
+    {
+      "path": "ios/Packages/RecordArchive/Tests/RecordArchiveTests/Fixtures/archive-v0-unsupported.json",
+      "sha256": "f59b848e32300f9edf575eedb85ada094b8bf3a0ce3f040de0bc5001e573fa5b"
+    },
+    {
+      "path": "ios/Packages/RecordArchive/Tests/RecordArchiveTests/Fixtures/archive-v1.1-media.json",
+      "sha256": "f531a878e399d54bd1473a25cfebd9c372c418723cc5d9b7dec9e269ec0bdbae"
+    },
+    {
+      "path": "ios/Packages/RecordArchive/Tests/RecordArchiveTests/Fixtures/archive-v1.2-media.json",
+      "sha256": "cd159ba2783b5fdb51cd44e171fb26628eb70ed6c1440cceef9fcef83bb93de2"
+    },
+    {
+      "path": "ios/Packages/RecordArchive/Tests/RecordArchiveTests/Fixtures/archive-v1.json",
+      "sha256": "82892d3468ffeadcbb9789eb2d1622673177d072a4a462575fbf984b469cf602"
+    },
+    {
+      "path": "ios/Packages/RecordArchive/Tests/RecordArchiveTests/RecordArchiveTests.swift",
+      "sha256": "f01f96d8f37365ad858a53992ab2535d4442b2e4c8c1cc2a72627f935d163850"
+    },
+    {
+      "path": "ios/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon.png",
+      "sha256": "bf142bdd566c0612e13ebf3b55901d36030cfa19562357084faa7c1e07a8cc15"
+    },
+    {
+      "path": "ios/Resources/Assets.xcassets/AppIcon.appiconset/Contents.json",
+      "sha256": "8997a90fa87cae4eb0c35682f3a928b50b0d422ed793557907687187ccc93b87"
+    },
+    {
+      "path": "ios/Resources/Assets.xcassets/Contents.json",
+      "sha256": "f5fb0e1f3a8142892ed092efb5955c1c2cc537003a89ad7bbdb9dade7fe8985f"
+    },
+    {
+      "path": "ios/Resources/Assets.xcassets/accent.colorset/Contents.json",
+      "sha256": "00628be8984b8588ff344f6acaf01d403401203f714efb27c0d4076139904956"
+    },
+    {
+      "path": "ios/Resources/Assets.xcassets/canvas.colorset/Contents.json",
+      "sha256": "27763fee689fa1fddd74d395ef0d1e3c7dbfc3a69d1336e3954d47fd97e37bd0"
+    },
+    {
+      "path": "ios/Resources/Assets.xcassets/control_edge.colorset/Contents.json",
+      "sha256": "0c07174a99dd201149c6e649f8a673184557bccb2282b06bbfbfef904ea475f4"
+    },
+    {
+      "path": "ios/Resources/Assets.xcassets/divider.colorset/Contents.json",
+      "sha256": "f0172ba911c5117ff735d1e7127e7c034e9c896dbd03ad4b0b4245da43c9afed"
+    },
+    {
+      "path": "ios/Resources/Assets.xcassets/error.colorset/Contents.json",
+      "sha256": "8aef11c79178ea15dd6d11cc10143ea4619016cdab165f257801926f3128f96b"
+    },
+    {
+      "path": "ios/Resources/Assets.xcassets/error_surface.colorset/Contents.json",
+      "sha256": "ad46932939bf7bb3902e98dc999bd153b167310be531dd664d89a5c1cf4a958c"
+    },
+    {
+      "path": "ios/Resources/Assets.xcassets/focus.colorset/Contents.json",
+      "sha256": "c0d594957627592cd570a1b6a88229e7eec75ddbecc5a34074858a14bf2e0475"
+    },
+    {
+      "path": "ios/Resources/Assets.xcassets/ink.colorset/Contents.json",
+      "sha256": "a01de6c10d099a02179fa248aae28a66f09aca22714fe03c85acbfa161aedb29"
+    },
+    {
+      "path": "ios/Resources/Assets.xcassets/on_accent.colorset/Contents.json",
+      "sha256": "8089fb5be09fd26a12db3caca13282f185574b0b19852b0f5774ec315f10febf"
+    },
+    {
+      "path": "ios/Resources/Assets.xcassets/secondary.colorset/Contents.json",
+      "sha256": "72859db470ee5fe478cb4268a66391f5bf154b0eede5347e66e8906ffeb52de1"
+    },
+    {
+      "path": "ios/Resources/Assets.xcassets/selection.colorset/Contents.json",
+      "sha256": "38e0c99577aec3febf758cfd6fd0410a1ec218d561470af8a9e2602bd3c5bd81"
+    },
+    {
+      "path": "ios/Resources/Assets.xcassets/surface.colorset/Contents.json",
+      "sha256": "df7fd55e221c9e3c8306e0d1ee3b891fe13e211d8521ff474fd02a7137b690f3"
+    },
+    {
+      "path": "ios/Resources/Assets.xcassets/warning.colorset/Contents.json",
+      "sha256": "fccc7a42215166d1033eca438b1a6121d01ed6b568dc0428525e8100925f20e5"
+    },
+    {
+      "path": "ios/Resources/Assets.xcassets/warning_surface.colorset/Contents.json",
+      "sha256": "1087e433464f72b7eecf2950aad10cb75af7485b2cb2b4723f91d04ed68398da"
+    },
+    {
+      "path": "ios/Resources/InfoPlist.xcstrings",
+      "sha256": "ab8cbaa561d39663e31d119a55ee000bb9c1535d04dcc9e6810fae36c0b54bb6"
+    },
+    {
+      "path": "ios/Resources/Localizable.xcstrings",
+      "sha256": "bddcc50e5d5d0447af11a716898f2aeb3a4e45c8d30b352d71aaea1ca4e6f69a"
+    },
+    {
+      "path": "ios/Resources/PrivacyInfo.xcprivacy",
+      "sha256": "25677240ef21268a664f4f37b12fe03c096c192d13d2380d51e3f1e41824c2c2"
+    },
+    {
+      "path": "ios/RoomInTheCart.xcodeproj/project.pbxproj",
+      "sha256": "f7e9f988378259062d945ac41e974a43fb88e3899de4743b85ee8086d33d2ec3"
+    },
+    {
+      "path": "ios/RoomInTheCart.xcodeproj/xcshareddata/xcschemes/RoomInTheCart-LocalStoreKit.xcscheme",
+      "sha256": "7bad915f869bf237e85fbd97dd3025a00d814cc3adf7df5a3702ebb7bcc0c2ce"
+    },
+    {
+      "path": "ios/RoomInTheCart.xcodeproj/xcshareddata/xcschemes/RoomInTheCart-Release.xcscheme",
+      "sha256": "e7c216cf56c11a4e166ad257670c73e484284a4bbd423a5c63297ac273fb7871"
+    },
+    {
+      "path": "ios/RoomInTheCart.xcodeproj/xcshareddata/xcschemes/RoomInTheCart-Staging.xcscheme",
+      "sha256": "b8d8c705fec68abbe26f4b86aa6d81457c88505f08a3269e505f9c29bee88758"
+    },
+    {
+      "path": "ios/RoomInTheCart.xcodeproj/xcshareddata/xcschemes/RoomInTheCart.xcscheme",
+      "sha256": "071bf430a986998113de3afeab5f85f0a4c4aafd3b5839e558b1aee19b2d2319"
+    },
+    {
+      "path": "ios/Tests/AcceptedDinnerOptionsTests.swift",
+      "sha256": "f498deeb1afa5ce5045b70f2c6850eff55ff4911e90b540d65e1d4c06b07b7d3"
+    },
+    {
+      "path": "ios/Tests/AccountDeletionFlowTests.swift",
+      "sha256": "697e83c6697687ba72f95ed2aa84dd6d0db73552b750ce31acc088197fb5d05d"
+    },
+    {
+      "path": "ios/Tests/AppModelTests.swift",
+      "sha256": "a3459bfdfbcae6f30eed5aedb788745cbe87346776c0887ba8faa3b346c8c0ed"
+    },
+    {
+      "path": "ios/Tests/CaptureTests.swift",
+      "sha256": "343fe721843f98523e2f28ba78cfadf7cd6bc69ed41fa27559214f28f24b632f"
+    },
+    {
+      "path": "ios/Tests/ContextualNavigationTests.swift",
+      "sha256": "32ba86aadc8f4a7fe8262b4f8a81ada0f11525990fad4813913c4a71c4db825c"
+    },
+    {
+      "path": "ios/Tests/ContextualReminderTests.swift",
+      "sha256": "ddf70964bd0b79e787dfa84119ed95830d861647d60c454de512f73174a988d5"
+    },
+    {
+      "path": "ios/Tests/ContributorRequestCaptureTests.swift",
+      "sha256": "a79a1916ec8a70ce6b8a757f032183cb399510116753aab3f51764a8bbe871a3"
+    },
+    {
+      "path": "ios/Tests/CookReadbackTests.swift",
+      "sha256": "ef3373e0db75709016c36ae7c3477daa37830b814376a1ac65479cc1e6fb4cd4"
+    },
+    {
+      "path": "ios/Tests/CorrectionSettingsOutcomeTests.swift",
+      "sha256": "0f301c0c60ebf62eec29514813c52492acbda1d455e6a870dbd41b49fbee9555"
+    },
+    {
+      "path": "ios/Tests/DeviceSurfaceIntegrationTests.swift",
+      "sha256": "718b39aa57b175073bef4f951f7caeb0a02b102471c702bb727336cecdcd9d16"
+    },
+    {
+      "path": "ios/Tests/DinnerAwayCarryoverTests.swift",
+      "sha256": "4e347a3aa0cb3fd90a3908cb955fb8c76d44be04ca29b5ac689e87701b7bc7ac"
+    },
+    {
+      "path": "ios/Tests/DinnerDraftBindingTests.swift",
+      "sha256": "8c07c5377820bc0507546f5cbae7ff442a00db0f41b9ebdf74eb22262861144c"
+    },
+    {
+      "path": "ios/Tests/DinnerFeatureModelTests.swift",
+      "sha256": "e37b40daed66326df660748d723f05182d846d477454829c0698501c7d33054f"
+    },
+    {
+      "path": "ios/Tests/DinnerIdeaSupplyTests.swift",
+      "sha256": "8685204893e3b2ecbd6c49f9210bd835649c1eefea558b3a69b4f1701f9112f0"
+    },
+    {
+      "path": "ios/Tests/FamilyDecisionTests.swift",
+      "sha256": "e81882d51b45ed059fc0c7cd76ee7528c70dfdf081d86ca6798cbef5120f0677"
+    },
+    {
+      "path": "ios/Tests/FreeJourneyAcceptanceTests.swift",
+      "sha256": "c408a3181bf553c6a3f8558290f0faa4bcef55b4bc33177053fb68feee47a38d"
+    },
+    {
+      "path": "ios/Tests/GuardianChildBoundaryTests.swift",
+      "sha256": "542b811883267cf7327332309ca241b0728ff133ca687f7ba438021e4542c1a0"
+    },
+    {
+      "path": "ios/Tests/GuardianChildTests.swift",
+      "sha256": "c3966628c92c72910a171926f370917c2cf433bb6ab3dea94a1e5187e23f97ad"
+    },
+    {
+      "path": "ios/Tests/GuardianEnrollmentTests.swift",
+      "sha256": "aebefdd51d2fe28481500e6e13b31afbc82e012c6efad8602d39f1b3bef12824"
+    },
+    {
+      "path": "ios/Tests/GuardianNativeAuthenticationTests.swift",
+      "sha256": "76750839992b579e0ec83a219cb5f3def0c9420fc38ca7ceaccba56b70e3c289"
+    },
+    {
+      "path": "ios/Tests/GuardianRootPrivacyTests.swift",
+      "sha256": "e5dc68bbe7345ffdd97caf9a3af3fdad31c65afb4e7cc014d90945fe723f7669"
+    },
+    {
+      "path": "ios/Tests/HelpConfigurationTests.swift",
+      "sha256": "d6b3ae0c47bf59d42e4ca362237044ff7f3bfe7cbbdb68b53d95fb793a224da2"
+    },
+    {
+      "path": "ios/Tests/HistoryFlowTests.swift",
+      "sha256": "2f373978f83aaf1ec86beee7cc9ccd9e04381a44a63ab888768ebce26dc69f4e"
+    },
+    {
+      "path": "ios/Tests/HouseholdDevicesTests.swift",
+      "sha256": "6f24a61dba4116219e05c93b7928747131736d8513b1cfb9327eee7afc18a1a8"
+    },
+    {
+      "path": "ios/Tests/HouseholdRequestMealContextTests.swift",
+      "sha256": "87d5ed6f15672a24a3e1a1da629797916e228e0de8e0facfaaccda3896758858"
+    },
+    {
+      "path": "ios/Tests/HouseholdRequestPackFixtureSupport.swift",
+      "sha256": "3e0cc181d08b31a896f3050e8a8d37b6a2b2695855987c128f9336c646f16c0a"
+    },
+    {
+      "path": "ios/Tests/HouseholdRequestPackReviewTests.swift",
+      "sha256": "61351748f5544ba6548abc7672d8540fa2d93d497da8779364f3403eecf759d7"
+    },
+    {
+      "path": "ios/Tests/LargeListPerformanceTests.swift",
+      "sha256": "6b7ab0172a2047f2a168c410604217e5f401421f712d884fdc9f67742bc7545c"
+    },
+    {
+      "path": "ios/Tests/LedgerCheckoutAdapterTests.swift",
+      "sha256": "a67267a303aea8c591c2d6090cedf1dd55c3396e6d59a146b16b823633630e30"
+    },
+    {
+      "path": "ios/Tests/LedgerListLayoutTests.swift",
+      "sha256": "63225fbf80eff29cf3062064c4770dc91e5a021832ac4997ff37742a81c28aea"
+    },
+    {
+      "path": "ios/Tests/LedgerModelPerformanceSafetyTests.swift",
+      "sha256": "5d0931e9f2eca22b4e52d9c05c01174ee826dd5b04c6b9d3a2d71987af27315d"
+    },
+    {
+      "path": "ios/Tests/LedgerPackBridgeTests.swift",
+      "sha256": "74cf629a7a03462ce2ecc0c93cdccef3e763c9f46fe3063895d6342bf01d101c"
+    },
+    {
+      "path": "ios/Tests/LedgerPackStockReviewTests.swift",
+      "sha256": "1f2eaf6a054d13a50570e1c1cc657c0bed464ec4fd587bbe5cf8d522723401f9"
+    },
+    {
+      "path": "ios/Tests/LocalStoreKit.xctestplan",
+      "sha256": "77d789396c8521d079002ffcc150e5b434206bd460a21c56778b4109dab5b879"
+    },
+    {
+      "path": "ios/Tests/MembershipTests.swift",
+      "sha256": "b39f9148c9747693b3a04706ac4d0b57a9efc70edf8e803a995293095fad409c"
+    },
+    {
+      "path": "ios/Tests/NativeCompositionStartupTest.swift",
+      "sha256": "ff318805f82854559e20ce174a92e18a196850ca689b21c60db788a789701c6b"
+    },
+    {
+      "path": "ios/Tests/NativeDeviceSurfacesTests.swift",
+      "sha256": "a4b920c7fe3a5f26849151621a312c9a0dc77a338b9bb25f0e1360e9fcbd9551"
+    },
+    {
+      "path": "ios/Tests/NativeSurfaceIsolationTests.swift",
+      "sha256": "14adfca998a0a37aab4281b7e22d2d447c4176b9e6fdcfb140ada43748a5f0df"
+    },
+    {
+      "path": "ios/Tests/NavigationRestorationTests.swift",
+      "sha256": "abc96fa263dda3468f61d96ef3c2216166c23665341fcf24f4debc4c5cd58427"
+    },
+    {
+      "path": "ios/Tests/PickupCookProjectionTests.swift",
+      "sha256": "9eb5b62692d077b41fb30a2d0214622c40744f6c2e892338599bac48448b3997"
+    },
+    {
+      "path": "ios/Tests/PickupModelTests.swift",
+      "sha256": "114013f2a67306471f39e65d70f1f87753a4671ee44e72d0a7283782a817de89"
+    },
+    {
+      "path": "ios/Tests/PickupOfferEvaluationTests.swift",
+      "sha256": "e5cc7d1d6e6d8ff023cc166b3877992f2e87cc35a178e52f25f94313922c286c"
+    },
+    {
+      "path": "ios/Tests/PickupOfferReviewTests.swift",
+      "sha256": "c7b157f5e0ba7b324d6a07fad779264f435fc29fb7fa6ed1fac15e96f0ab0180"
+    },
+    {
+      "path": "ios/Tests/PickupRecipientHandoffTests.swift",
+      "sha256": "21f5e25bf2f946dcd9161cecab12090d44f1dbeae5ba20956345108b98f40257"
+    },
+    {
+      "path": "ios/Tests/PickupStockBatchTests.swift",
+      "sha256": "e2900106f61eadfe3d420ebde2b2d5280d6ebf520c4489ea12505dafe02163e7"
+    },
+    {
+      "path": "ios/Tests/PickupStockPrivateScopeIntegrationTests.swift",
+      "sha256": "bec7f8585de7a98d326b4a6b1c46dd48d4ab812ea9d9c686ff31bd2df868cdf8"
+    },
+    {
+      "path": "ios/Tests/PickupStockPrivateScopeTests.swift",
+      "sha256": "5c631003b75c265d396f8825e530c3367a0900317775bb5b8ac8c71416010a59"
+    },
+    {
+      "path": "ios/Tests/PickupStockReviewTests.swift",
+      "sha256": "7c25e5c1da68adb02912b4108748ec8eb406089aa13d9d60613baa0bd6d47538"
+    },
+    {
+      "path": "ios/Tests/PlacementFlowTests.swift",
+      "sha256": "946d9cece8456324c6b24c512ee08cae7a76a2c8ce21d09082f7eba16f7d3d12"
+    },
+    {
+      "path": "ios/Tests/RecipeCaptureIntegrationTests.swift",
+      "sha256": "bfb98b20e5e2013749879fdf1398d2437f15828115ce4b92a2213c297ef181fe"
+    },
+    {
+      "path": "ios/Tests/RecordsAdapterTests.swift",
+      "sha256": "97d9a8d450158cf15d8d2e6137d4cbdd4bf6e01adc4626624fce38124b0c62e3"
+    },
+    {
+      "path": "ios/Tests/RecordsErasureCleanupTests.swift",
+      "sha256": "531462fb631373cbf225c609f62b8af50d31c62adf1d08947e99f341e4bbd863"
+    },
+    {
+      "path": "ios/Tests/RecordsListingTests.swift",
+      "sha256": "7aedf5ead56e649a3ed9ebeba2f03e4902bb8947bd701882e2da5a88fd197a85"
+    },
+    {
+      "path": "ios/Tests/RecordsMediaTests.swift",
+      "sha256": "9f11f9cff682aa152cb1e65c1ff5becc816350786238b111e51c8682ed632c8d"
+    },
+    {
+      "path": "ios/Tests/RecordsRecoveryCaptureTests.swift",
+      "sha256": "03ecf26f3823bb20886814364ca2eaf39d3d89a7a95b763f69220faddb8e0342"
+    },
+    {
+      "path": "ios/Tests/RequestDuplicateComparisonTests.swift",
+      "sha256": "2e840912977076b6c1c7933349b1a68e9bddf8262f0859ff7f1519cc21aca58e"
+    },
+    {
+      "path": "ios/Tests/ScanTests.swift",
+      "sha256": "38f6cfad00db50f29394665d4cb85999834871aef06f461a3df074d01c08db44"
+    },
+    {
+      "path": "ios/Tests/SharedMealChangeTests.swift",
+      "sha256": "644f4906a11fdf56f16b36c96da50734b6dbf3ad1ea2f3f724177a7bfb3fedbb"
+    },
+    {
+      "path": "ios/Tests/SharedMealCivilDateTests.swift",
+      "sha256": "408b32d670092a226a364e900d4177a7147d860d838809e8c79ed7689fce6c64"
+    },
+    {
+      "path": "ios/Tests/SharedMealIdeaTests.swift",
+      "sha256": "a20d2890f80011ca0c02a20e698ed17a60af39fd34818fa798e3886b81519266"
+    },
+    {
+      "path": "ios/Tests/SharedShopFlowTests.swift",
+      "sha256": "280b7b5fc1b5c8f6efd93f10d07d7f400846d8b23bfa1065a869718bca964969"
+    },
+    {
+      "path": "ios/Tests/SharedStoreQuoteTests.swift",
+      "sha256": "fbf9107aee9616087f03a9b131d7bc84ff8a2112418fe2854f9d71542e94805d"
+    },
+    {
+      "path": "ios/Tests/StoreKitScenarioTests.swift",
+      "sha256": "e7a0b3802156c0cb699f95e0bb9c34554ed7e4d05f9f5930a46d882d272cb867"
+    },
+    {
+      "path": "ios/Tests/StructuredCaptureTests.swift",
+      "sha256": "ea2266c4b2b11b5beea889e969ccfd2b40d6e78abc23d930aca936967d555fdc"
+    },
+    {
+      "path": "ios/Tests/WorkspaceAccessTests.swift",
+      "sha256": "a6e6cb8f704ecb4f4bd2cb41190a7447950c260aebd44c6e3ba46ea0fc7d99c2"
+    },
+    {
+      "path": "ios/UITestSupport/AwayCarryoverUIFixture.swift",
+      "sha256": "03e63c09d309fdd68ac11aea5016769e40e7c11286b25af25f44657639bca6cd"
+    },
+    {
+      "path": "ios/UITestSupport/ContributorRequestUIFixture.swift",
+      "sha256": "c87edbb7d1f491bfc6eb5a1a8a20107839bcdbf7cce66f7db602cabad30ba0ba"
+    },
+    {
+      "path": "ios/UITestSupport/DinnerDecisionUIFixture.swift",
+      "sha256": "45ce944d8730505c16cf648e6db51bb3ff042b250229ccbc09d5ff2de2a994fe"
+    },
+    {
+      "path": "ios/UITestSupport/GuardianChildUIFixture.swift",
+      "sha256": "ca797c6a73f4e7369ac37082c6646d3d1c776fdbfa69c07001c2e33a30059837"
+    },
+    {
+      "path": "ios/UITestSupport/GuardianEnrollmentUIFixture.swift",
+      "sha256": "a29319340d1500851d60e7873c65ad2ee1824e4bae9f0e750ce2614e67d681c8"
+    },
+    {
+      "path": "ios/UITestSupport/GuardianRootTransitionUIFixture.swift",
+      "sha256": "22b13ce2a58f2f4226c134a80f57ede57b9deecce9ab602c1784efae7ef1d295"
+    },
+    {
+      "path": "ios/UITestSupport/HistoryGrantReadUIFixture.swift",
+      "sha256": "6a7908496b149ee83df99b7c4a48e3d96b8c1f26ea08c0921733ed6c75fe6726"
+    },
+    {
+      "path": "ios/UITestSupport/HouseholdDevicesUIFixture.swift",
+      "sha256": "38df85c16fb0811d3faa4ea76e411d0545c6a8c7844f51c3cd897d607a178274"
+    },
+    {
+      "path": "ios/UITestSupport/HouseholdRequestPackUIFixture.swift",
+      "sha256": "294570cdf6c0f513c9a248363d0216237e4bdab3adf1177ea089468ce0d95d8a"
+    },
+    {
+      "path": "ios/UITestSupport/LibraryPrivacyUIFixture.swift",
+      "sha256": "e43d439fa77f5ce81cca4abc6396fd9c4b92bac6aae757c5d0c590eee35b019b"
+    },
+    {
+      "path": "ios/UITestSupport/MeasurementUIFixture.swift",
+      "sha256": "6c50c72fd747156128c6a536af25e8be61fed7bc4ef99ae7f1e8653b44b3d719"
+    },
+    {
+      "path": "ios/UITestSupport/RecordsMediaUIFixture.swift",
+      "sha256": "d6e0e39f7e7e6405df468ef6bf15c050989b6f1e0cae544e02a454792ba35b29"
+    },
+    {
+      "path": "ios/UITestSupport/RequestDuplicateFixtureSupport.swift",
+      "sha256": "b71669682e7f8212ecf1298caf7b48762b9dda5fcfd50641ee4023e70b419d4b"
+    },
+    {
+      "path": "ios/UITestSupport/RequestDuplicateUIFixture.swift",
+      "sha256": "002e9216dbe0087de8079360a53f2a339aa128175eeb082068db83ded7e5ac45"
+    },
+    {
+      "path": "ios/UITestSupport/SharedMealChangeUIFixture.swift",
+      "sha256": "d7b08090b38e86284ee395888f70712aea8ebbd03427402f23fac76b0c66a150"
+    },
+    {
+      "path": "ios/UITestSupport/SharedMealIdeaUIFixture.swift",
+      "sha256": "b311a24424246b4c450c7c3bbcfd96951cd03f92d7a19db0a94a2d31c4a6a555"
+    },
+    {
+      "path": "ios/UITestSupport/StockReviewUIFixture.swift",
+      "sha256": "edb138eeee97f83bc77028ede2b121dd88b7abfc13e8d629e1d7851d1ef21b9a"
+    },
+    {
+      "path": "ios/UITestSupport/StoreQuotesUIFixture.swift",
+      "sha256": "f97997da875c2f79c294513b107acf346277e2590e6987bf5be59663fbbdf124"
+    },
+    {
+      "path": "ios/UITests/ContextualNavigationUITests.swift",
+      "sha256": "7c71eb5b0d0366142022608c02efbe30c86278b5829b53ce075635bc494a3a4e"
+    },
+    {
+      "path": "ios/UITests/ContextualReminderUITests.swift",
+      "sha256": "29191bced70cda566940c11843b45d4778a1dfcdb47e139f49aa171e363d1d58"
+    },
+    {
+      "path": "ios/UITests/ContributorRequestUITests.swift",
+      "sha256": "336c8d74587af29eea00a7b6e7130e5a7e7da6b1296b954c05d5e4dfa581cf0a"
+    },
+    {
+      "path": "ios/UITests/DinnerAwayCarryoverUITests.swift",
+      "sha256": "5f137129937ee234cb4eda870fd6d9216905f9a67143fd7073ccf02c8f1bfca9"
+    },
+    {
+      "path": "ios/UITests/DinnerDecisionSheetUITests.swift",
+      "sha256": "d59c1e38bf221b5b1a615691d32073bfc1e9de8487717d0c2e9f7427e0f4bd12"
+    },
+    {
+      "path": "ios/UITests/FreeJourneyUITests.swift",
+      "sha256": "95284884d5862a177846e990594508e0885fa13df8c0cc3dc638ef827f8721fe"
+    },
+    {
+      "path": "ios/UITests/GuardianEnrollmentUITests.swift",
+      "sha256": "a236bf4095b8b07c88a8d85ccfa0ea50417db81d9c4646ecb304e2a7ad6426f1"
+    },
+    {
+      "path": "ios/UITests/HistoryGrantReadUITests.swift",
+      "sha256": "6ee5dfb9dc9720aa1183b19cc56206443ebec891b05c2a926664ca201eae1cd6"
+    },
+    {
+      "path": "ios/UITests/HouseholdDevicesUITests.swift",
+      "sha256": "02d225a3d7251cef891d36f28d1c54168f6fb806008cd1ebe4071661daa5dd50"
+    },
+    {
+      "path": "ios/UITests/HouseholdRequestPackUITests.swift",
+      "sha256": "d1f758d1aa51c640a8bc9a8770b2687be88fdb6a0940808111eadb5d5b65e00f"
+    },
+    {
+      "path": "ios/UITests/LedgerConfirmedStockPackUITests.swift",
+      "sha256": "ec71c942c7f97d8964eea2a96e531ad979e326d52a473bcdd52368968d78f01b"
+    },
+    {
+      "path": "ios/UITests/LibraryPrivacyUITests.swift",
+      "sha256": "b1ad17cd5c730afa458e404f735a741c7a541dc55011abb74a3e4a25601e0c5d"
+    },
+    {
+      "path": "ios/UITests/MeasurementUITests.swift",
+      "sha256": "7d2b1205c1d4aa56b0ab5535ea8ff3b2e7f3e65ecfa82060b5a4214965ebb8f4"
+    },
+    {
+      "path": "ios/UITests/NavigationRestorationUITests.swift",
+      "sha256": "64e80d6705b4c39d54e01ef8e41ee1487338aca468aa62cb2ff69430cd21aa9a"
+    },
+    {
+      "path": "ios/UITests/PickupOfferUITests.swift",
+      "sha256": "46932cdb65017de906502a010c128eeb8f5f147d4bcc6e0b797845c56d29590c"
+    },
+    {
+      "path": "ios/UITests/RecordsMediaUITests.swift",
+      "sha256": "5f79980de62ec529fae85d123a1b5e1f2d0a961f06e96e97fea4c04a57b9dd06"
+    },
+    {
+      "path": "ios/UITests/RequestDuplicateComparisonUITests.swift",
+      "sha256": "b3e4cf1033a5bd396969600c9d65a3e24e6814c93ce89852ded0b840b6cfd0af"
+    },
+    {
+      "path": "ios/UITests/RoomInTheCartUITests.swift",
+      "sha256": "e06cb1d8e132c6c7e90494f74c8edc2b1edaa934d13e8f9b987f61ba26aaa25d"
+    },
+    {
+      "path": "ios/UITests/SharedMealChangeUITests.swift",
+      "sha256": "07024f5fb55ebe49e07ea88f95f8229be5f51b6119d531009581ff97d27dad78"
+    },
+    {
+      "path": "ios/UITests/SharedMealCivilDateUITests.swift",
+      "sha256": "31cc2243af73a6e06f329ad979f5bf78429b5e48571e27506b918cde2eade717"
+    },
+    {
+      "path": "ios/UITests/SharedMealIdeaUITests.swift",
+      "sha256": "b667e2cf9b9d88d25c01e1d5df6d514a0429c51159ce47cb14632aa8889b32b4"
+    },
+    {
+      "path": "ios/UITests/SharedStoreQuoteUITests.swift",
+      "sha256": "069ae93c217b411440cbcf71b4df51ed9a2e783fac36e77f8da5694f7f643016"
+    },
+    {
+      "path": "ios/UITests/StockReviewUITests.swift",
+      "sha256": "8b5b4dfca7535c2d5820a6c8783903f95a45c89223096c582d9a650877c43377"
+    },
+    {
+      "path": "scripts/app_configuration.py",
+      "sha256": "183886b8d20d954de6b7ddb51f05a54a36420bb5da9f482a1d4fec93582a3e54"
+    },
+    {
+      "path": "scripts/check.sh",
+      "sha256": "ccb201bd42984fcfa588abc81d899cf0f62315fcd206ba5961cea7fb64dff17f"
+    },
+    {
+      "path": "scripts/check_built_app.py",
+      "sha256": "664a1ec22d00e9ed760fb9fcc0ae267dc9bce2fec93d58f9eef8e27a0d474323"
+    },
+    {
+      "path": "scripts/check_localization.py",
+      "sha256": "c43a1bd909dcbade498c62c98fd3e7f842f301ee48b4dc5ebd13196bcef7121b"
+    },
+    {
+      "path": "scripts/check_staging.py",
+      "sha256": "290a6b59fea33c553b52cf4478043e5eddf110c4dc5695ef8b7d4fd9f818ba4d"
+    },
+    {
+      "path": "scripts/generate_theme.py",
+      "sha256": "33046f214f488a81fc9a1d959bb8c0b2fbfb3aa0ee956cfa7b9e97b2273c11d4"
+    },
+    {
+      "path": "scripts/generate_xcode_project.py",
+      "sha256": "558df086c2165a2e3752e52478581d862d9635c8ec9d1ae2a6f2a7ee9b478941"
+    },
+    {
+      "path": "scripts/test_app_configuration.py",
+      "sha256": "ddb98103045a4ec2d2dcfb3aaaa56544d03010b6d0b26069ceaaed9ce02d53c7"
+    },
+    {
+      "path": "scripts/test_check_localization.py",
+      "sha256": "532aa63f1181a762611cbd0e372a0ee7d2b2e7f067505685e7ef5765d65fd42c"
+    },
+    {
+      "path": "shared/contracts/guardian-enrollment-proposed-v1.d.ts",
+      "sha256": "80feba3354ab41440fc399bc674f83e2b8f8105fb5640e76f1eca98ae81c1ac1"
+    },
+    {
+      "path": "shared/contracts/guardian-enrollment-v1.d.ts",
+      "sha256": "fd88eee34a27137bd167131a45a1e720b5abc07c795135285b6293f43db5dd02"
+    },
+    {
+      "path": "shared/contracts/history-v1.d.ts",
+      "sha256": "bd488e2782023f2cf23117324f42a9385dc166916f66c98e93ef27377816a051"
+    },
+    {
+      "path": "shared/contracts/household-review-v1.d.ts",
+      "sha256": "8a955c80ebe72d42556e41daee288c5353a965448c945123637624bef980cbd1"
+    },
+    {
+      "path": "shared/contracts/pack-comparisons.json",
+      "sha256": "c660eed1e17cb72495b80c9624f1e447d8db8bf20ab20f4d6f40a51c4f109b3d"
+    },
+    {
+      "path": "shared/contracts/service-v1.d.ts",
+      "sha256": "1a2036eb3316f6c920126d2eefd06d12b5e2ff7eefdb1c9671e1ce8233b61e02"
+    },
+    {
+      "path": "shared/contracts/theme.json",
+      "sha256": "fc17b3a299808141abf5020b7c2098ee5631a2d542415d1051257339d12a6299"
+    },
+    {
+      "path": "shared/fixtures/checkout.json",
+      "sha256": "2c782d483ae6dec155d167c1b0722d6a6664697c37983fde21495ca5a01a212a"
+    }
+  ],
+  "aggregateSHA256": "24e0cd839291fc8aa4d14c914ae9bd3ef937ed37c76ea7ff4783116b33a9e16d",
+  "scope": "Current Release470source with only S21test helper delta: visible populated Form, no interactive container premise; actual row/action assertions unchanged",
+  "deltaFromFinalNative470": [
+    "ios/UITests/HouseholdDevicesUITests.swift"
+  ]
+}

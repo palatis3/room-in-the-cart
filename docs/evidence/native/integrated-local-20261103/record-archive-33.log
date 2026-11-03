@@ -1,0 +1,111 @@
+Building for debugging...
+[Planning deferred tasks]
+[42 / 67]
+[43 / 68] RecordArchive
+[53 / 110]
+[61 / 110]
+[63 / 110]
+[68 / 110]
+[72 / 110]
+[76 / 110]
+[78 / 110]
+[79 / 110]
+[85 / 110] RecordArchive
+[93 / 110] RecordArchive
+[94 / 110] RecordArchive
+[100 / 111] RecordArchiveTests-product
+[114 / 149]
+[119 / 149]
+[122 / 149]
+[125 / 149]
+[127 / 149]
+[128 / 149]
+[130 / 149]
+[131 / 149]
+[133 / 149]
+[138 / 149] RecordArchiveTests-product
+[143 / 149] RecordArchiveTests-product
+[145 / 149] RecordArchiveTests-product
+Build complete! (9.55 sec)
+Test Suite 'All tests' started at 2026-11-03 17:52:59.631.
+Test Suite 'RecordArchiveTests.xctest' started at 2026-11-03 17:52:59.633.
+Test Suite 'ArchiveMediaTests' started at 2026-11-03 17:52:59.633.
+Test Case '-[RecordArchiveTests.ArchiveMediaTests testCancelledReviewUndoAndErasureKeepMediaTransactional]' started.
+Test Case '-[RecordArchiveTests.ArchiveMediaTests testCancelledReviewUndoAndErasureKeepMediaTransactional]' passed (0.008 seconds).
+Test Case '-[RecordArchiveTests.ArchiveMediaTests testChangedMediaUnderSameSubsetQuarantinesWholeBatch]' started.
+Test Case '-[RecordArchiveTests.ArchiveMediaTests testChangedMediaUnderSameSubsetQuarantinesWholeBatch]' passed (0.004 seconds).
+Test Case '-[RecordArchiveTests.ArchiveMediaTests testCorruptManifestSizeDigestOwnerAndMediaTypeAreRejectedBeforeMutation]' started.
+Test Case '-[RecordArchiveTests.ArchiveMediaTests testCorruptManifestSizeDigestOwnerAndMediaTypeAreRejectedBeforeMutation]' passed (0.003 seconds).
+Test Case '-[RecordArchiveTests.ArchiveMediaTests testExactSelectedSubsetRetryDedupsAfterRestartAndOtherSubsetIsSibling]' started.
+Test Case '-[RecordArchiveTests.ArchiveMediaTests testExactSelectedSubsetRetryDedupsAfterRestartAndOtherSubsetIsSibling]' passed (0.011 seconds).
+Test Case '-[RecordArchiveTests.ArchiveMediaTests testHelperExcludesEveryAttachmentAndManifestEvenWhenOwnerMediaIsOversized]' started.
+Test Case '-[RecordArchiveTests.ArchiveMediaTests testHelperExcludesEveryAttachmentAndManifestEvenWhenOwnerMediaIsOversized]' passed (0.000 seconds).
+Test Case '-[RecordArchiveTests.ArchiveMediaTests testMappedCaptureNamespaceRejectsWrongOwnerKindFutureVersionAndUnknownFields]' started.
+Test Case '-[RecordArchiveTests.ArchiveMediaTests testMappedCaptureNamespaceRejectsWrongOwnerKindFutureVersionAndUnknownFields]' passed (0.001 seconds).
+Test Case '-[RecordArchiveTests.ArchiveMediaTests testMappedCaptureNamespaceUsesVersionTwelveAndPreservesLegacyBytesAndSubsetIdentity]' started.
+Test Case '-[RecordArchiveTests.ArchiveMediaTests testMappedCaptureNamespaceUsesVersionTwelveAndPreservesLegacyBytesAndSubsetIdentity]' passed (0.002 seconds).
+Test Case '-[RecordArchiveTests.ArchiveMediaTests testMediaBoundsDuplicateIDsAndFutureManifestVersionFail]' started.
+Test Case '-[RecordArchiveTests.ArchiveMediaTests testMediaBoundsDuplicateIDsAndFutureManifestVersionFail]' passed (0.001 seconds).
+Test Case '-[RecordArchiveTests.ArchiveMediaTests testMediaManifestAndEncryptionRoundTripKeepsLegacyProjectionAndSchema]' started.
+Test Case '-[RecordArchiveTests.ArchiveMediaTests testMediaManifestAndEncryptionRoundTripKeepsLegacyProjectionAndSchema]' passed (0.001 seconds).
+Test Case '-[RecordArchiveTests.ArchiveMediaTests testRemovingSourceMediaScrubsEarlierCopiesAndUndoWithoutLosingRecordOrCopyID]' started.
+Test Case '-[RecordArchiveTests.ArchiveMediaTests testRemovingSourceMediaScrubsEarlierCopiesAndUndoWithoutLosingRecordOrCopyID]' passed (0.010 seconds).
+Test Case '-[RecordArchiveTests.ArchiveMediaTests testVersionOnePointOneMediaFixtureRemainsDecodable]' started.
+Test Case '-[RecordArchiveTests.ArchiveMediaTests testVersionOnePointOneMediaFixtureRemainsDecodable]' passed (0.001 seconds).
+Test Case '-[RecordArchiveTests.ArchiveMediaTests testVersionOnePointTwoMappedMediaFixtureRetainsDeclaredProvenance]' started.
+Test Case '-[RecordArchiveTests.ArchiveMediaTests testVersionOnePointTwoMappedMediaFixtureRetainsDeclaredProvenance]' passed (0.001 seconds).
+Test Suite 'ArchiveMediaTests' passed at 2026-11-03 17:52:59.678.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 0.043 (0.044) seconds
+Test Suite 'RecordArchiveTests' started at 2026-11-03 17:52:59.678.
+Test Case '-[RecordArchiveTests.RecordArchiveTests testAuthenticatedEncryptionRejectsWrongKeyAndTampering]' started.
+Test Case '-[RecordArchiveTests.RecordArchiveTests testAuthenticatedEncryptionRejectsWrongKeyAndTampering]' passed (0.001 seconds).
+Test Case '-[RecordArchiveTests.RecordArchiveTests testCanonicalRetryIgnoresEnvelopeExportTimeAndReopensAfterRestart]' started.
+Test Case '-[RecordArchiveTests.RecordArchiveTests testCanonicalRetryIgnoresEnvelopeExportTimeAndReopensAfterRestart]' passed (0.003 seconds).
+Test Case '-[RecordArchiveTests.RecordArchiveTests testCombinedPayloadIsBoundedBeforeEncodingAndHelperIgnoresPrivateBytes]' started.
+Test Case '-[RecordArchiveTests.RecordArchiveTests testCombinedPayloadIsBoundedBeforeEncodingAndHelperIgnoresPrivateBytes]' passed (0.024 seconds).
+Test Case '-[RecordArchiveTests.RecordArchiveTests testConcurrentConflictingDigestIsQuarantinedAndCanReReviewUnrelatedChange]' started.
+Test Case '-[RecordArchiveTests.RecordArchiveTests testConcurrentConflictingDigestIsQuarantinedAndCanReReviewUnrelatedChange]' passed (0.005 seconds).
+Test Case '-[RecordArchiveTests.RecordArchiveTests testCorruptTruncatedFutureAndOversizedInputsNeverMutateRegistry]' started.
+Test Case '-[RecordArchiveTests.RecordArchiveTests testCorruptTruncatedFutureAndOversizedInputsNeverMutateRegistry]' passed (0.003 seconds).
+Test Case '-[RecordArchiveTests.RecordArchiveTests testDepthAndFileReadAreBounded]' started.
+Test Case '-[RecordArchiveTests.RecordArchiveTests testDepthAndFileReadAreBounded]' passed (0.001 seconds).
+Test Case '-[RecordArchiveTests.RecordArchiveTests testExternalSourceErasurePurgesAllProjectionsAndBlocksOlderRevisionsAfterRestart]' started.
+Test Case '-[RecordArchiveTests.RecordArchiveTests testExternalSourceErasurePurgesAllProjectionsAndBlocksOlderRevisionsAfterRestart]' passed (0.004 seconds).
+Test Case '-[RecordArchiveTests.RecordArchiveTests testFailedAtomicWriteLeavesRegistryEmptyAndRetryPreservesReview]' started.
+Test Case '-[RecordArchiveTests.RecordArchiveTests testFailedAtomicWriteLeavesRegistryEmptyAndRetryPreservesReview]' passed (0.001 seconds).
+Test Case '-[RecordArchiveTests.RecordArchiveTests testHelperThenOwnerKeepsProjectionsIndependent]' started.
+Test Case '-[RecordArchiveTests.RecordArchiveTests testHelperThenOwnerKeepsProjectionsIndependent]' passed (0.002 seconds).
+Test Case '-[RecordArchiveTests.RecordArchiveTests testProjectionRedactsPrivateNativePayloadInJSONAndReadableText]' started.
+Test Case '-[RecordArchiveTests.RecordArchiveTests testProjectionRedactsPrivateNativePayloadInJSONAndReadableText]' passed (0.001 seconds).
+Test Case '-[RecordArchiveTests.RecordArchiveTests testRecipeBatchUndoPreservesExistingCopyAndAllowsRetry]' started.
+Test Case '-[RecordArchiveTests.RecordArchiveTests testRecipeBatchUndoPreservesExistingCopyAndAllowsRetry]' passed (0.004 seconds).
+Test Case '-[RecordArchiveTests.RecordArchiveTests testRecipeGraphPreservesOriginalTextAndReportsSkippedFieldsAndDuplicates]' started.
+Test Case '-[RecordArchiveTests.RecordArchiveTests testRecipeGraphPreservesOriginalTextAndReportsSkippedFieldsAndDuplicates]' passed (0.000 seconds).
+Test Case '-[RecordArchiveTests.RecordArchiveTests testRecipeUnknownVersionUnsafeURLAndMalformedInputsFail]' started.
+Test Case '-[RecordArchiveTests.RecordArchiveTests testRecipeUnknownVersionUnsafeURLAndMalformedInputsFail]' passed (0.000 seconds).
+Test Case '-[RecordArchiveTests.RecordArchiveTests testRetiredOriginBlocksUnseenOldShopAndCannotUndoDeletedPrivateText]' started.
+Test Case '-[RecordArchiveTests.RecordArchiveTests testRetiredOriginBlocksUnseenOldShopAndCannotUndoDeletedPrivateText]' passed (0.002 seconds).
+Test Case '-[RecordArchiveTests.RecordArchiveTests testSameRevisionDifferentDigestQuarantinesEntireBatch]' started.
+Test Case '-[RecordArchiveTests.RecordArchiveTests testSameRevisionDifferentDigestQuarantinesEntireBatch]' passed (0.003 seconds).
+Test Case '-[RecordArchiveTests.RecordArchiveTests testScopedDeleteUndoAndErasureMarker]' started.
+Test Case '-[RecordArchiveTests.RecordArchiveTests testScopedDeleteUndoAndErasureMarker]' passed (0.004 seconds).
+Test Case '-[RecordArchiveTests.RecordArchiveTests testSiblingAndOlderImportNeverOverwriteNewerCopy]' started.
+Test Case '-[RecordArchiveTests.RecordArchiveTests testSiblingAndOlderImportNeverOverwriteNewerCopy]' passed (0.003 seconds).
+Test Case '-[RecordArchiveTests.RecordArchiveTests testStaleReviewCannotCommit]' started.
+Test Case '-[RecordArchiveTests.RecordArchiveTests testStaleReviewCannotCommit]' passed (0.002 seconds).
+Test Case '-[RecordArchiveTests.RecordArchiveTests testTwoFreshRegistriesConcurrentIdenticalApplyReturnsOneCopyAndExactInsertedIDs]' started.
+Test Case '-[RecordArchiveTests.RecordArchiveTests testTwoFreshRegistriesConcurrentIdenticalApplyReturnsOneCopyAndExactInsertedIDs]' passed (0.004 seconds).
+Test Case '-[RecordArchiveTests.RecordArchiveTests testUnknownEnvelopeAndHelperFieldsAreRejected]' started.
+Test Case '-[RecordArchiveTests.RecordArchiveTests testUnknownEnvelopeAndHelperFieldsAreRejected]' passed (0.000 seconds).
+Test Case '-[RecordArchiveTests.RecordArchiveTests testVersionOneFixtureAndExplicitVersionZeroMigrationBoundary]' started.
+Test Case '-[RecordArchiveTests.RecordArchiveTests testVersionOneFixtureAndExplicitVersionZeroMigrationBoundary]' passed (0.000 seconds).
+Test Suite 'RecordArchiveTests' passed at 2026-11-03 17:52:59.744.
+	 Executed 21 tests, with 0 failures (0 unexpected) in 0.066 (0.067) seconds
+Test Suite 'RecordArchiveTests.xctest' passed at 2026-11-03 17:52:59.744.
+	 Executed 33 tests, with 0 failures (0 unexpected) in 0.109 (0.111) seconds
+Test Suite 'All tests' passed at 2026-11-03 17:52:59.744.
+	 Executed 33 tests, with 0 failures (0 unexpected) in 0.109 (0.113) seconds
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

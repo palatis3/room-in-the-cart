@@ -1,0 +1,103 @@
+{
+  "devicesAndConfigurations" : [
+    {
+      "device" : {
+        "architecture" : "arm64",
+        "deviceId" : "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+        "deviceName" : "iPhone 17e",
+        "modelName" : "iPhone 17e",
+        "osBuildNumber" : "24A434",
+        "osVersion" : "27.0",
+        "platform" : "iOS Simulator"
+      },
+      "expectedFailures" : 0,
+      "failedTests" : 6,
+      "passedTests" : 529,
+      "skippedTests" : 0,
+      "testPlanConfiguration" : {
+        "configurationId" : "1",
+        "configurationName" : "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription" : "RoomInTheCart · Built with macOS 27.2",
+  "expectedFailures" : 0,
+  "failedTests" : 6,
+  "finishTime" : 1793746134.238,
+  "passedTests" : 529,
+  "result" : "Failed",
+  "runtimeWarnings" : [
+    {
+      "issueType" : "Runtime Warning",
+      "message" : "Invalid frame dimension (negative or non-finite)."
+    },
+    {
+      "issueType" : "Runtime Warning",
+      "message" : "Invalid frame dimension (negative or non-finite)."
+    }
+  ],
+  "skippedTests" : 0,
+  "startTime" : 1793745489.718,
+  "statistics" : [
+
+  ],
+  "testFailures" : [
+    {
+      "failureText" : "XCTAssertTrue failed",
+      "targetName" : "RoomInTheCartUITests",
+      "testIdentifier" : 529,
+      "testIdentifierString" : "HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite()",
+      "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite",
+      "testName" : "testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite()"
+    },
+    {
+      "failureText" : "XCTAssertTrue failed",
+      "targetName" : "RoomInTheCartUITests",
+      "testIdentifier" : 527,
+      "testIdentifierString" : "HouseholdDevicesUITests/testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess()",
+      "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/HouseholdDevicesUITests/testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess",
+      "testName" : "testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess()"
+    },
+    {
+      "failureText" : "XCTAssertTrue failed",
+      "targetName" : "RoomInTheCartUITests",
+      "testIdentifier" : 528,
+      "testIdentifierString" : "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+      "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke",
+      "testName" : "testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()"
+    },
+    {
+      "failureText" : "XCTAssertTrue failed - Missing visible text: 1 box for breakfasts",
+      "targetName" : "RoomInTheCartUITests",
+      "testIdentifier" : 532,
+      "testIdentifierString" : "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+      "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison",
+      "testName" : "testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()"
+    },
+    {
+      "failureText" : "XCTAssertTrue failed - Missing visible text: Lee",
+      "targetName" : "RoomInTheCartUITests",
+      "testIdentifier" : 533,
+      "testIdentifierString" : "RequestDuplicateComparisonUITests/testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam()",
+      "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam",
+      "testName" : "testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam()"
+    },
+    {
+      "failureText" : "XCTAssertTrue failed",
+      "targetName" : "RoomInTheCartUITests",
+      "testIdentifier" : 531,
+      "testIdentifierString" : "HouseholdRequestPackUITests/testUnavailableMealFactsRemainUnknownInRequestDecision()",
+      "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/HouseholdRequestPackUITests/testUnavailableMealFactsRemainUnknownInRequestDecision",
+      "testName" : "testUnavailableMealFactsRemainUnknownInRequestDecision()"
+    }
+  ],
+  "title" : "Test - RoomInTheCart",
+  "topInsights" : [
+    {
+      "category" : "Longest Test Runs",
+      "impact" : "26% of duration",
+      "text" : "4 longest test runs with outlier durations exceeding 0.27s (three standard deviations)"
+    }
+  ],
+  "totalTestCount" : 535
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "test": "StockReviewUITests/testChangedMealRevisionDisablesPreviewWithoutApplyingBatch()",
+    "caption": "E06-stale-dependent-meal-review-blocked_0_2F1E2CC6-E29B-4231-A259-89E6F1938581.png",
+    "file": "fixtures/attachments/4AC77F7B-826C-45EF-8405-FEA38EA4B1CC.png",
+    "sha256": "86b242c5b7b9900cb36e485cea5dfb9da58cbb784d666ef5bc6d4b6a6b331fac"
+  },
+  {
+    "test": "StockReviewUITests/testPreviewCancelThenConfirmShowsEveryMealAndFreshCookInstructionAfterRestart()",
+    "caption": "D12-N03-current-cook-text-and-readback-after-correction_0_F3FE106F-3476-4153-991D-78E1F3D7205D.png",
+    "file": "fixtures/attachments/1AEA6493-5E96-4A33-B5C6-A58B7D74654B.png",
+    "sha256": "0772cbc6d97197c618fe85f8deec3066fb600d8c8c6e58285a0c1ef178c83e7e"
+  },
+  {
+    "test": "StockReviewUITests/testPreviewCancelThenConfirmShowsEveryMealAndFreshCookInstructionAfterRestart()",
+    "caption": "E06-corrected-stock-protects-lunch_0_31E4DA98-4DDC-4319-98A7-94B16CBBCD36.png",
+    "file": "fixtures/attachments/7D1CEC9A-3A97-4FE0-B7DD-19EF4EE37996.png",
+    "sha256": "771016c7d93a8e53ec0bbf6a56b86ad684f27eb71fef2b2eb07342442feafcce"
+  },
+  {
+    "test": "StockReviewUITests/testPreviewCancelThenConfirmShowsEveryMealAndFreshCookInstructionAfterRestart()",
+    "caption": "E06-dependent-meals-reviewed-before-commit_0_A23752FD-9E98-42DE-9E25-ECF92AD672A9.png",
+    "file": "fixtures/attachments/CA9DC5A7-2751-4CD5-A686-F537B54EF9EC.png",
+    "sha256": "d9e408344d42bc8d2fff96885f8ca64dd5dcc860dfb224983dfe7f7b2f4fa1da"
+  }
+]

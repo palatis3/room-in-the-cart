@@ -137,7 +137,6 @@ struct HouseholdRequestDecisionView: View {
                                     if let context = model.requestMealContext { HouseholdRequestMealContextView(context: context) }
                                 }
                                 .monospacedDigit()
-                                .accessibilityIdentifier("household.decision.context")
                                 DisclosureGroup(ht("Checkout calculation details")) {
                                     LabeledContent(ht("Shop revision"), value: shop.shopRevision.formatted())
                                     LabeledContent(ht("Quote recorded"), value: householdTime(shop.quote.observedAt))

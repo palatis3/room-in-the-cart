@@ -1,0 +1,16 @@
+18:02:30.883 RoomInTheCartUITests-Runner[1724:9455492] Wait <XCTWaiterWait: 0x105de4380> completed after 0.000s
+18:02:30.883 RoomInTheCartUITests-Runner[1724:9455492] cleaning up getting screen scale
+18:02:30.883 RoomInTheCartUITests-Runner[1724:9455492] Checking that activation point {-1, -1} is inside event synthesis frame {{0, 0}, {390, 844}} (or is the {-1, -1} sentinel for unhittable)
+18:02:30.883 RoomInTheCartUITests-Runner[1724:9455492] hit point computation for CollectionView, {{0.0, 0.0}, {390.0, 844.0}} took 0.1s and 1 attempts
+18:02:30.883 RoomInTheCartUITests-Runner[1724:9455492] Computed hit point {-1.0, -1.0} (not hittable)
+18:02:30.883 RoomInTheCartUITests-Runner[1724:9455492] <XCTContext: 0x102e46e40> started activity <XCActivityRecord: 0x105eaea00> 2026-11-03 23:02:30 +0000: Find the Target Application 'dev.roominthecart.app.debug'
+18:02:30.887 xcodebuild[105:9448144] _XCT_testCaseWithIdentifier:<XCTTestIdentifier leaf, method, swift ["HouseholdDevicesUITests", "testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess"]> willStartActivity:<XCActivityRecord: 0x77b282aa70> 2026-11-03 23:02:30 +0000: Find the Target Application 'dev.roominthecart.app.debug'
+
+18:02:40.826 RoomInTheCartUITests-Runner[1724:9455492] Wait <XCTWaiterWait: 0x1064bd200> completed after 0.000s
+18:02:40.826 RoomInTheCartUITests-Runner[1724:9455492] cleaning up getting screen scale
+18:02:40.827 RoomInTheCartUITests-Runner[1724:9455492] Checking that activation point {-1, -1} is inside event synthesis frame {{0, 0}, {390, 844}} (or is the {-1, -1} sentinel for unhittable)
+18:02:40.827 RoomInTheCartUITests-Runner[1724:9455492] hit point computation for CollectionView, {{0.0, 0.0}, {390.0, 844.0}} took 0.1s and 1 attempts
+18:02:40.827 RoomInTheCartUITests-Runner[1724:9455492] Computed hit point {-1.0, -1.0} (not hittable)
+18:02:40.827 RoomInTheCartUITests-Runner[1724:9455492] <XCTContext: 0x102e46e40> started activity <XCActivityRecord: 0x105eaea00> 2026-11-03 23:02:40 +0000: Find the Target Application 'dev.roominthecart.app.debug'
+    t =     6.71s Find the Target Application 'dev.roominthecart.app.debug'
+

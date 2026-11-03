@@ -1,0 +1,47 @@
+[
+  {
+    "path": "ios/App/RoomInTheCartApp.swift",
+    "acceptedSHA256": "87f13b8c45ab3dfd451ee77fd9b8351577f009b8047cce7c070fb11336c4e47b",
+    "currentSHA256": "dfd54165f2abe662b601594e92e25b4b3ef345de0851a58e2a6562f0530f03d3"
+  },
+  {
+    "path": "ios/App/WorkspaceAccess.swift",
+    "acceptedSHA256": "cb8c4ebc2ba5d5d035adc21f5149615cf8762a7f4c007603e2b57d4970b72ed1",
+    "currentSHA256": "dc7d8c92fa41bfdfa0aa1646fe8486490d67e7667b554432406d9783510a8c92"
+  },
+  {
+    "path": "ios/Features/Household/HouseholdDevicesView.swift",
+    "acceptedSHA256": "4a4ac2b1df7569afaa8ad898c474a80c675d30098924c4c5c53d99c36a85fd31",
+    "currentSHA256": "00412aabfd4250311fb427ec24a2d31234df1a40efbcfb4e3fbfb9731f3c31d6"
+  },
+  {
+    "path": "ios/Features/Household/HouseholdInboxView.swift",
+    "acceptedSHA256": "066c49d30b80d989d39f85a4d7267cf0c846aea3dce42e5b221c484a22fa6408",
+    "currentSHA256": "11c274e820957af4e1533df5b45c1b8e6a4c3d5bfe5112f5943905e5ac055e27"
+  },
+  {
+    "path": "ios/Features/Household/HouseholdRequestMealContext.swift",
+    "acceptedSHA256": "779c576322c760915066626e5358ef3a5e3ed57ffc21c5b796644f50efd07664",
+    "currentSHA256": "7f24cc32c776a2a77f4c268ef9a9c452631e2fc5cc4456e8cae73caf8d6b1e64"
+  },
+  {
+    "path": "ios/Features/Household/RequestDuplicateComparisonView.swift",
+    "acceptedSHA256": "53a89afd2314c015bfc2d101aa6ced2d5eba317b495a120678f8711046d0527e",
+    "currentSHA256": "11088e22ac1bea6960a771fb078b774ab9f62ff6b4a1f014bc23a3a10f272330"
+  },
+  {
+    "path": "ios/UITests/GuardianEnrollmentUITests.swift",
+    "acceptedSHA256": "a469acd05c8ce7db227c3bf1ba87d16d412c89208471d42c29afe7674bfa49b9",
+    "currentSHA256": "a236bf4095b8b07c88a8d85ccfa0ea50417db81d9c4646ecb304e2a7ad6426f1"
+  },
+  {
+    "path": "ios/UITests/HouseholdDevicesUITests.swift",
+    "acceptedSHA256": "a8ed2d03bc22245c0727caaf9fda4e75c9da828c544dd82a9316d4b9e70c4de0",
+    "currentSHA256": "01d7087f50cc3db0bec8b302b48458f1f2da03583b5180013da228a56c4fdd1e"
+  },
+  {
+    "path": "ios/UITests/RequestDuplicateComparisonUITests.swift",
+    "acceptedSHA256": "70aa48532e93ac17ffdde81684af6c66fd9f7e4d3d072ef0333d0928f1d55a70",
+    "currentSHA256": "b3e4cf1033a5bd396969600c9d65a3e24e6814c93ce89852ded0b840b6cfd0af"
+  }
+]

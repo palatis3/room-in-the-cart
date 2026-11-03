@@ -1,0 +1,60 @@
+{
+  "scope": "Actual2case Root exit-notice supplement; all8PNG and pairedAX reviewed",
+  "reviewedAt": "2026-11-03T22:53:05.869489+00:00",
+  "reviewed": [
+    {
+      "caption": "Synthetic child vaults preserved private records and inbox",
+      "screenshot": "root-exit-notice-attachments/E377C3CA-D152-4333-966D-E388BCADD007.png",
+      "accessibility": "root-exit-notice-attachments/1537DB8A-E0CD-434F-B69D-AED01C9BF4B8.txt",
+      "finding": "Exact generic notice fully readable: local removal confirmed, remote revocation unconfirmed. Adult workspace locked; no private item/tabs. Preservation caption additionally reports unchanged ledger/inbox and empty child vaults, verified by actual assertions."
+    },
+    {
+      "caption": "Synthetic child vaults locked adult exit with honest remote cleanup notice",
+      "screenshot": "root-exit-notice-attachments/2F3C0CFC-1DC1-4EAA-ACCD-A8C871F11826.png",
+      "accessibility": "root-exit-notice-attachments/75A46323-57EE-48D9-9CE9-9FC76BAA7338.txt",
+      "finding": "Exact generic notice fully readable: local removal confirmed, remote revocation unconfirmed. Adult workspace locked; no private item/tabs. Preservation caption additionally reports unchanged ledger/inbox and empty child vaults, verified by actual assertions."
+    },
+    {
+      "caption": "Synthetic child vaults cold child root",
+      "screenshot": "root-exit-notice-attachments/58B7080A-6F0D-4B9B-A757-3C6CD4F944F0.png",
+      "accessibility": "root-exit-notice-attachments/50D99CB0-02B7-4143-955D-225C43F7C6FC.txt",
+      "finding": "Child root remains after Cancel/cold launch, unavailable or blocked as fixture dictates; no adult tabs/unlock/private item."
+    },
+    {
+      "caption": "Synthetic child vaults child root after cancel",
+      "screenshot": "root-exit-notice-attachments/116C1978-5D07-4565-8D81-A07D00BB791B.png",
+      "accessibility": "root-exit-notice-attachments/8A97010F-0444-4DC5-AC30-24920485871A.txt",
+      "finding": "Child root remains after Cancel/cold launch, unavailable or blocked as fixture dictates; no adult tabs/unlock/private item."
+    },
+    {
+      "caption": "Empty child vaults preserved private records and inbox",
+      "screenshot": "root-exit-notice-attachments/82D861A1-6BA8-4F67-BDCF-AA9DB6930FB7.png",
+      "accessibility": "root-exit-notice-attachments/531A7B0C-B42B-4AC8-BC6F-6F37DA97B2EE.txt",
+      "finding": "Exact generic notice fully readable: local removal confirmed, remote revocation unconfirmed. Adult workspace locked; no private item/tabs. Preservation caption additionally reports unchanged ledger/inbox and empty child vaults, verified by actual assertions."
+    },
+    {
+      "caption": "Empty child vaults locked adult exit with honest remote cleanup notice",
+      "screenshot": "root-exit-notice-attachments/76F3C02C-52F5-445D-A511-8B2904743ADF.png",
+      "accessibility": "root-exit-notice-attachments/40469D58-968B-4C0C-8E02-A49BE66342F3.txt",
+      "finding": "Exact generic notice fully readable: local removal confirmed, remote revocation unconfirmed. Adult workspace locked; no private item/tabs. Preservation caption additionally reports unchanged ledger/inbox and empty child vaults, verified by actual assertions."
+    },
+    {
+      "caption": "Empty child vaults cold child root",
+      "screenshot": "root-exit-notice-attachments/7B0ABE3D-1508-4FC2-BD81-DDA31ABCC3E8.png",
+      "accessibility": "root-exit-notice-attachments/FD2C0A59-7D70-4F7D-93C2-B6413870C615.txt",
+      "finding": "Child root remains after Cancel/cold launch, unavailable or blocked as fixture dictates; no adult tabs/unlock/private item."
+    },
+    {
+      "caption": "Empty child vaults child root after cancel",
+      "screenshot": "root-exit-notice-attachments/63661597-F9C4-4C9F-9BDC-889D2FC15748.png",
+      "accessibility": "root-exit-notice-attachments/83B2B0AE-11C7-4608-840F-F458AAECC629.txt",
+      "finding": "Child root remains after Cancel/cold launch, unavailable or blocked as fixture dictates; no adult tabs/unlock/private item."
+    }
+  ],
+  "leadReview": "lead-root-exit-notice-visual-review.json",
+  "limitations": [
+    "These2root cases use default text size; largest Spanish warning proof belongs to separate E8 artifact",
+    "Provider revocation remains unconfirmed; no real email/provider/account or activation",
+    "Storage invariants require the actual assertions; static images are not their sole proof"
+  ]
+}

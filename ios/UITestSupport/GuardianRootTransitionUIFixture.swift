@@ -145,21 +145,21 @@ private final class GuardianRootFixtureProtocol: URLProtocol {
     var body: some View {
         // Fixture state never forwards coordinator.objectWillChange. Production
         // RootView's subscribed GuardianBoundaryRoot owns every root transition.
-        RootView()
-            .environment(\.pickupLedger,state.ledger)
-            .environmentObject(state.app).environmentObject(state.ledger).environmentObject(state.pickup)
-            .environmentObject(state.household).environmentObject(state.access).environmentObject(state.surfaces)
-            .environmentObject(state.membership).environmentObject(state.navigation)
-            .environmentObject(state.coordinator).environment(\.guardianChildCoordinator,state.coordinator)
-            .safeAreaInset(edge:.bottom,spacing:0) {
-                VStack {
-                    if state.ready { Text("Fixture ready").accessibilityIdentifier("guardian.fixture.rootReady") }
-                    Button("Fixture: check preservation") { Task { await state.verifyPreservation() } }
-                        .accessibilityIdentifier("guardian.fixture.checkPreservation")
-                    Text(state.preservation).accessibilityIdentifier("guardian.fixture.preservation")
-                }.font(.caption).padding(4).background(.regularMaterial)
-                    .accessibilityIdentifier("guardian.fixture.evidence")
-            }
+        VStack(spacing:0) {
+            RootView()
+                .environment(\.pickupLedger,state.ledger)
+                .environmentObject(state.app).environmentObject(state.ledger).environmentObject(state.pickup)
+                .environmentObject(state.household).environmentObject(state.access).environmentObject(state.surfaces)
+                .environmentObject(state.membership).environmentObject(state.navigation)
+                .environmentObject(state.coordinator).environment(\.guardianChildCoordinator,state.coordinator)
+                .frame(maxWidth:.infinity,maxHeight:.infinity)
+            VStack {
+                if state.ready { Text("Fixture ready").accessibilityIdentifier("guardian.fixture.rootReady") }
+                Button("Fixture: check preservation") { Task { await state.verifyPreservation() } }
+                    .accessibilityIdentifier("guardian.fixture.checkPreservation")
+                Text(state.preservation).accessibilityIdentifier("guardian.fixture.preservation")
+            }.font(.caption).padding(4).frame(maxWidth:.infinity).background(.regularMaterial)
+        }
             .task { await state.start() }
             .onChange(of:phase) { _, value in state.phaseChanged(value) }
     }

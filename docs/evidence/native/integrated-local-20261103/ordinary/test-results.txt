@@ -1,0 +1,666 @@
+Test Case '-[RoomInTheCartTests.AcceptedDinnerOptionsTests testActualScheduleEnumeratesAcceptedUnchosenDinnersAndPricesThreePepperPacksWithLunchInBoth]' passed (0.023 seconds).
+Test Case '-[RoomInTheCartTests.AcceptedDinnerOptionsTests testExactReplacementRequiresUnchangedWholeOccurrenceAndAppliesOnceWithoutAnExtraDinner]' passed (0.005 seconds).
+Test Case '-[RoomInTheCartTests.AcceptedDinnerOptionsTests testLatestUsableCorrectionChangesSmallestTopupWhilePreservingProtectedLunch]' passed (0.005 seconds).
+Test Case '-[RoomInTheCartTests.AcceptedDinnerOptionsTests testPairingLinksOnlyConfirmedUnreservedRemainderAndReplacesSupersededYield]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.AcceptedDinnerOptionsTests testRepairRanksOnHandBeforeTopupAndPreservesCompetingUnfilledReservation]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.AcceptedDinnerOptionsTests testReviewedUnequalGroupsPriceTheSameProtectedFiveUnitsThatApplyRetains]' passed (0.004 seconds).
+Test Case '-[RoomInTheCartTests.AcceptedDinnerOptionsTests testUncheckedWrongLateUnconfirmedAndExcludedFoodStayUnusableAndRepeatAndSeatAreIndependent]' passed (0.002 seconds).
+Test Suite 'AcceptedDinnerOptionsTests' passed at 2026-11-03 17:12:53.859.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.041 (0.049) seconds
+Test Case '-[RoomInTheCartTests.AccountDeletionFlowTests testExitRejectsChildErasureAndStaleAuthAndRequiresNewReviewAfterConflict]' passed (0.134 seconds).
+Test Case '-[RoomInTheCartTests.AccountDeletionFlowTests testGuardianWithdrawalAfterLostReplyRefreshesScopedConsentAndRejectsStaleConfirmation]' passed (0.126 seconds).
+Test Case '-[RoomInTheCartTests.AccountDeletionFlowTests testIdenticalShopAndChildIDsInDifferentHouseholdsRequireIndependentConsent]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.AccountDeletionFlowTests testLostHouseholdExitRetriesOriginalBytesWithoutADeviceAfterMembershipIsGone]' passed (0.269 seconds).
+Test Case '-[RoomInTheCartTests.AccountDeletionFlowTests testLostResponseSurvivesRecreationAndSignedOutStatusIsReadOnly]' passed (0.214 seconds).
+Test Case '-[RoomInTheCartTests.AccountDeletionFlowTests testRetryRequiresReceiptCheckFreshChoicesAndSameKey]' passed (0.505 seconds).
+Test Case '-[RoomInTheCartTests.AccountDeletionFlowTests testUnavailableChildStaleAuthLockAndReceiptWriteFailureCannotSubmit]' passed (0.166 seconds).
+Test Suite 'AccountDeletionFlowTests' passed at 2026-11-03 17:12:55.278.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 1.416 (1.419) seconds
+Test Case '-[RoomInTheCartTests.AppModelTests testAnswerFromDifferentPriceIsRejectedWithoutDeletion]' passed (0.046 seconds).
+Test Case '-[RoomInTheCartTests.AppModelTests testDamagedComparisonDoesNotHideHealthyRecordAfterRelaunch]' passed (0.021 seconds).
+Test Case '-[RoomInTheCartTests.AppModelTests testDecimalQuantityParsingIsExactAndRetainsSourceLiteral]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.AppModelTests testFailedSaveRetainsDraftAndComputedResult]' passed (0.009 seconds).
+Test Case '-[RoomInTheCartTests.AppModelTests testInvalidEditClearsPreviousAnswer]' passed (0.043 seconds).
+Test Case '-[RoomInTheCartTests.AppModelTests testKnownComparisonSaveCloseReopenRecomputesIdenticalAnswer]' passed (0.013 seconds).
+Test Case '-[RoomInTheCartTests.AppModelTests testLegacyDraftOnlyV1RemainsReadableWithoutRewritingRecord]' passed (0.018 seconds).
+Test Case '-[RoomInTheCartTests.AppModelTests testNormalizedRequestMismatchIsRejectedWithoutDeletion]' passed (0.012 seconds).
+Test Case '-[RoomInTheCartTests.AppModelTests testParserRejectsSignsGroupingExponentsAndMalformedNumbers]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.AppModelTests testSavedPayloadRejectsFutureFormatAndDifferentRecordIdentity]' passed (0.012 seconds).
+Test Case '-[RoomInTheCartTests.AppModelTests testSnapshotDraftMismatchIsRejectedWithoutDeletion]' passed (0.011 seconds).
+Test Case '-[RoomInTheCartTests.AppModelTests testUnavailableStoreLeavesEditableDraftIntact]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.AppModelTests testUnknownComparisonSaveCloseReopenStaysUnresolved]' passed (0.013 seconds).
+Test Case '-[RoomInTheCartTests.AppModelTests testUnsupportedCalculationVersionIsRejectedWithoutMutation]' passed (0.010 seconds).
+Test Case '-[RoomInTheCartTests.AppModelTests testUSDParserUsesExactCentsAndRejectsMoreThanTwoDecimalPlaces]' passed (0.001 seconds).
+Test Suite 'AppModelTests' passed at 2026-11-03 17:12:55.493.
+	 Executed 15 tests, with 0 failures (0 unexpected) in 0.210 (0.215) seconds
+Test Case '-[RoomInTheCartTests.CaptureCorrectionTests testCorrectionsCannotRewriteNumbersOrNegation]' passed (0.010 seconds).
+Test Case '-[RoomInTheCartTests.CaptureCorrectionTests testEraseProfileRejectsLateRecreationAcrossLocalesAndRestart]' passed (0.019 seconds).
+Test Case '-[RoomInTheCartTests.CaptureCorrectionTests testExplicitRememberPreviewForgetAndOptOut]' passed (0.015 seconds).
+Test Case '-[RoomInTheCartTests.CaptureCorrectionTests testNoOptInMeansNoCorrectionWrites]' passed (0.003 seconds).
+Test Case '-[RoomInTheCartTests.CaptureCorrectionTests testProfileAndLocaleIsolationAndInvalidation]' passed (0.015 seconds).
+Test Case '-[RoomInTheCartTests.CaptureCorrectionTests testRawEmailIsNotAValidProfileScope]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.CaptureCorrectionTests testUITestCorrectionDirectoryNeverSelectsDevelopmentProfiles]' passed (0.001 seconds).
+Test Suite 'CaptureCorrectionTests' passed at 2026-11-03 17:12:55.560.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.064 (0.066) seconds
+Test Case '-[RoomInTheCartTests.CaptureTests testActualVisionOCRReadsLocalSyntheticImage]' passed (1.523 seconds).
+Test Case '-[RoomInTheCartTests.CaptureTests testDiscardCapturePreservesTypedDraft]' passed (0.003 seconds).
+Test Case '-[RoomInTheCartTests.CaptureTests testEditingInvalidatesConfirmation]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.CaptureTests testExclusionWordsUseWholeTokensAndBothLanguages]' passed (0.000 seconds).
+Test Case '-[RoomInTheCartTests.CaptureTests testImageEvidencePreservedWhileCorrectingRecognizedText]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.CaptureTests testLateOCRAfterCloseCannotRestoreImageOrText]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.CaptureTests testLateSpeechPermissionAfterCloseCannotRestoreDraft]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.CaptureTests testOversizedDraftAndImageFailWithoutReplacingExistingDraft]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.CaptureTests testPasteIsCandidateUntilExplicitlyAccepted]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.CaptureTests testPermissionDeniedPreservesTypedFallback]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.CaptureTests testRepeatedSpeechCallbackDoesNotAppendOrApply]' passed (0.003 seconds).
+Test Case '-[RoomInTheCartTests.CaptureTests testThreeNearbyOCRRowsHaveDeterministicOrderAcrossPermutations]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.CaptureTests testTypedReviewRequiresConfirmationAndDeliversExactlyOnce]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.CaptureTests testUnavailableOnDeviceLanguageNeverStartsOnlineFallback]' passed (0.001 seconds).
+Test Suite 'CaptureTests' passed at 2026-11-03 17:12:57.101.
+	 Executed 14 tests, with 0 failures (0 unexpected) in 1.537 (1.541) seconds
+Test Case '-[RoomInTheCartTests.ContextualNavigationTests testInboxRequiresAssignedShopperAndAllPreviewCapabilities]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.ContextualNavigationTests testManagingViewsDoesNotGrantAComposerOrHouseholdAuthorityToHelpers]' passed (0.005 seconds).
+Test Case '-[RoomInTheCartTests.ContextualNavigationTests testOpenDestinationCannotFollowAnotherAccountHouseholdMemberShopOrRole]' passed (0.000 seconds).
+Test Suite 'ContextualNavigationTests' passed at 2026-11-03 17:12:57.110.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.007 (0.008) seconds
+Test Case '-[RoomInTheCartTests.ContextualReminderTests testAcceptedNextShopRetiresPreviousContextualTargetsWithoutChangingOldPurchase]' passed (0.144 seconds).
+Test Case '-[RoomInTheCartTests.ContextualReminderTests testContextualOpeningKeepsTypedIdentityAndCreatesNoReminderOrShopMutation]' passed (0.053 seconds).
+Test Case '-[RoomInTheCartTests.ContextualReminderTests testContextualResolutionRejectsOtherWorkspaceShopKindRevisionAndPassedCutoff]' passed (0.029 seconds).
+Test Case '-[RoomInTheCartTests.ContextualReminderTests testEditedSourceAndLockedWorkspaceInvalidatePreviouslyReviewedReminder]' passed (0.040 seconds).
+Test Case '-[RoomInTheCartTests.ContextualReminderTests testExplicitSaveDeniedAndOffRemainSeparateFromPendingOfferAndDeferral]' passed (0.045 seconds).
+Test Suite 'ContextualReminderTests' passed at 2026-11-03 17:12:57.422.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.310 (0.312) seconds
+Test Case '-[RoomInTheCartTests.ContributorRequestCaptureTests testChangedDraftRouteOrBackgroundInvalidatesReviewAndCancellationIsLocal]' passed (0.042 seconds).
+Test Case '-[RoomInTheCartTests.ContributorRequestCaptureTests testColdContributorCaptureURLDoesNotNeedAdultStoresAndRejectsPrivateHandle]' passed (0.017 seconds).
+Test Case '-[RoomInTheCartTests.ContributorRequestCaptureTests testDraftMutationWhilePreparingCannotSendAnUnreviewedBody]' passed (0.038 seconds).
+Test Case '-[RoomInTheCartTests.ContributorRequestCaptureTests testLostReplyRestartUsesExactProtectedRequestAndNeverChangesBasket]' passed (0.205 seconds).
+Test Case '-[RoomInTheCartTests.ContributorRequestCaptureTests testOversizedMultipleAndWrongDestinationStopWithoutTruncation]' passed (0.054 seconds).
+Test Case '-[RoomInTheCartTests.ContributorRequestCaptureTests testReviewedFieldsPreserveOriginalPacksPurposeAndExclusionsWithoutSending]' passed (0.100 seconds).
+Test Suite 'ContributorRequestCaptureTests' passed at 2026-11-03 17:12:57.881.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.456 (0.459) seconds
+Test Case '-[RoomInTheCartTests.CookReadbackTests testDeniedSourceAndPrivateBudgetCannotPlay]' passed (0.003 seconds).
+Test Case '-[RoomInTheCartTests.CookReadbackTests testExpiredAuthorityStopsCurrentPlayback]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.CookReadbackTests testPlaybackUsesExactAuthorizedDatedProjection]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.CookReadbackTests testResumeRechecksAuthorityAndRequiresExplicitAction]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.CookReadbackTests testRouteCloseCannotBeReactivated]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.CookReadbackTests testSourceRevisionChangeStopsAndOldFinishCannotStopNewPlayback]' passed (0.007 seconds).
+Test Case '-[RoomInTheCartTests.CookReadbackTests testUnavailableLocalVoiceKeepsVisibleTextWithoutFallback]' passed (0.000 seconds).
+Test Case '-[RoomInTheCartTests.CookReadbackTests testVoiceOverIsExclusiveAndDoesNotAutoResume]' passed (0.000 seconds).
+Test Suite 'CookReadbackTests' passed at 2026-11-03 17:12:57.898.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 0.014 (0.017) seconds
+Test Case '-[RoomInTheCartTests.CorrectionSettingsOutcomeTests testForgetAccessibilityLabelIdentifiesBothProductSpellingsAndTheTarget]' passed (0.004 seconds).
+Test Case '-[RoomInTheCartTests.CorrectionSettingsOutcomeTests testForgetSuccessRequiresConfirmedPostOperationAbsenceAndKeepsTheDeletedTargetInResult]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.CorrectionSettingsOutcomeTests testOptOutSuccessRequiresDisabledEmptyReloadAndDoesNotMislabelFailure]' passed (0.001 seconds).
+Test Suite 'CorrectionSettingsOutcomeTests' passed at 2026-11-03 17:12:57.905.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.006 (0.007) seconds
+Test Case '-[RoomInTheCartTests.DeviceSurfaceIntegrationTests testCompiledSurfaceConfigurationResolvesSeparateSimulatorContainers]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.DeviceSurfaceIntegrationTests testSelectedTextPersistsInActualAppGroupWithoutMutatingWidgetContainer]' passed (0.008 seconds).
+Test Suite 'DeviceSurfaceIntegrationTests' passed at 2026-11-03 17:12:57.949.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.009 (0.010) seconds
+Test Case '-[RoomInTheCartTests.DeviceSurfacesCompositionStartupTests testBindingBeforePickupLoadPreservesDurablePickupSurfaceState]' passed (0.030 seconds).
+Test Suite 'DeviceSurfacesCompositionStartupTests' passed at 2026-11-03 17:12:57.980.
+Test Case '-[RoomInTheCartTests.DinnerAwayCarryoverTests testAppliedCarryoverKeepsNamedReservationsOutOfNewDinnerIdeaAvailability]' passed (0.132 seconds).
+Test Case '-[RoomInTheCartTests.DinnerAwayCarryoverTests testCancelBeforeApplyChangesNeitherPhysicalFoodNorCalendar]' passed (0.034 seconds).
+Test Case '-[RoomInTheCartTests.DinnerAwayCarryoverTests testDatedTargetPinsPhysicalFoodOnceAndPreservesPurchaseAndProtectedLunch]' passed (0.053 seconds).
+Test Case '-[RoomInTheCartTests.DinnerAwayCarryoverTests testFailedCalendarWriteSurvivesRestartAndOverlappingReviewIsBlocked]' passed (0.065 seconds).
+Test Case '-[RoomInTheCartTests.DinnerAwayCarryoverTests testInsufficientCountAndProtectedSourceAreRejectedWithoutWrites]' passed (0.050 seconds).
+Test Case '-[RoomInTheCartTests.DinnerAwayCarryoverTests testLaterSourceCorrectionDoesNotBorrowAnotherLotForPinnedCarryover]' passed (0.081 seconds).
+Test Case '-[RoomInTheCartTests.DinnerAwayCarryoverTests testLostCalendarReceiptReconcilesExistingStableTargetWithoutSecondWrite]' passed (0.082 seconds).
+Test Case '-[RoomInTheCartTests.DinnerAwayCarryoverTests testReceivedPhysicalIdentityIsRecountedWithoutNewStockOrChangingReceipt]' passed (0.073 seconds).
+Test Case '-[RoomInTheCartTests.DinnerAwayCarryoverTests testRecoveryRejectsChangedCalendarTargetEvenWhenLinkAndDateMatch]' passed (0.088 seconds).
+Test Case '-[RoomInTheCartTests.DinnerAwayCarryoverTests testReservedCarryoverReconcilesAfterUnrelatedSettlementAndRestart]' passed (0.064 seconds).
+Test Case '-[RoomInTheCartTests.DinnerAwayCarryoverTests testReservedReconciliationRefusesChangedPhysicalSourceWithoutRebasing]' passed (0.050 seconds).
+Test Case '-[RoomInTheCartTests.DinnerAwayCarryoverTests testUnrelatedUnresolvedFoodDoesNotBlockKnownPhysicalCarryover]' passed (0.041 seconds).
+Test Suite 'DinnerAwayCarryoverTests' passed at 2026-11-03 17:12:58.805.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 0.815 (0.825) seconds
+Test Case '-[RoomInTheCartTests.DinnerDraftBindingTests testBindingsFollowIdentityAcrossRemovalAndReordering]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.DinnerDraftBindingTests testCurrentReadsRemainLiveAndIdentityChangingWritesAreIgnored]' passed (0.000 seconds).
+Test Case '-[RoomInTheCartTests.DinnerDraftBindingTests testIngredientBindingSurvivesRemovalWithoutRedirectingTextOrUnitEdits]' passed (0.000 seconds).
+Test Case '-[RoomInTheCartTests.DinnerDraftBindingTests testRemovedBindingCannotReadOrWriteReplacementAtSameIndex]' passed (0.000 seconds).
+Test Case '-[RoomInTheCartTests.DinnerDraftBindingTests testRetainedProtectedToggleReadsFallbackAfterEditorCollectionIsCleared]' passed (0.000 seconds).
+Test Suite 'DinnerDraftBindingTests' passed at 2026-11-03 17:12:58.809.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.002 (0.003) seconds
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testAuthRevocationIsRecheckedBeforeApply]' passed (0.004 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testAwayNoteDoesNotRemoveDinner]' passed (0.003 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testBundledFreeIdeasAreEditableAndApprovalKeepsShoppingListUntouched]' passed (0.006 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testCancellingContextualReviewRestoresOnlyTheStillCurrentPendingDecision]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testChangedLedgerRejectsReviewedApply]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testEditorBaseChangeRejectsRatherThanOverwritingCurrentAmounts]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testFailedDurableSaveRetainsExactPreviewAndSavedWorkspace]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testFreeManualPreviewIsReadonlyCancelAndApplyOnce]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testFreeRotationCannotSaveButManualStillWorks]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testGuestBindingsAreRequiredAndFreeExplorationCannotApply]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testIdeaAcceptDoesNotChooseAndFreeSlotSwitchIsExplicit]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testInvalidReplacementPreviewClearsPreviousPendingPreview]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testLegacyTemplatesAndChosenOccurrencesRemainReadableWithoutAdoption]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testLocalBindingCannotUseImportedWorkspaceIdentity]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testLockedBasketPreviewOnlyAndCalendarRemainsManual]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testParsingExactFractionSpanishDecimalAndUnknown]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testQuoteProofSavedThenBasisAdoptionIsExplicitAndStalesOnEdit]' passed (0.003 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testRetryAcceptedDinnerPreservesOriginalTimestampAndOneCommit]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testReviewedGuestTotalChangesOnlySelectedUnprotectedGroup]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testRuntimePublisherRefreshesVisibleFeatureState]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testSharedEvenAuthorizedFlagCannotApplyThroughLocalAdapter]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testStoreDraftNeverInventsChargesOrTravel]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testSwitchingShopHidesOldPreviewAndCannotApplyIt]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testTemplateRevisionPreservedUntilAnExplicitEdit]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testUndatedOccurrenceGetsCivilDateWithoutNewNeeds]' passed (0.003 seconds).
+Test Suite 'DinnerFeatureModelTests' passed at 2026-11-03 17:12:58.869.
+	 Executed 25 tests, with 0 failures (0 unexpected) in 0.047 (0.060) seconds
+Test Case '-[RoomInTheCartTests.DinnerIdeaSupplyTests testDraftShopUsesNamedListReservationsBeforeCheckout]' passed (0.003 seconds).
+Test Case '-[RoomInTheCartTests.DinnerIdeaSupplyTests testProtectedLunchIsSubtractedBeforeRoundUpAndIdeaAcceptanceDoesNotSpendOrAllocate]' passed (0.012 seconds).
+Test Case '-[RoomInTheCartTests.DinnerIdeaSupplyTests testRepeatedFoodUsesStockOnceAndNeverReusesForeignOrIncompatiblePackTerms]' passed (0.001 seconds).
+Test Suite 'DinnerIdeaSupplyTests' passed at 2026-11-03 17:12:58.886.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.015 (0.017) seconds
+Test Case '-[RoomInTheCartTests.DinnerScenarioDraftTests testBlankFoodChoiceDoesNotGuessFromEqualNames]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.DinnerScenarioDraftTests testConfirmedStockCannotIgnoreUnreviewedOutsideReservations]' passed (0.003 seconds).
+Test Case '-[RoomInTheCartTests.DinnerScenarioDraftTests testEveryDemandRetainsExplicitRecipeIngredientIdentity]' passed (0.003 seconds).
+Test Case '-[RoomInTheCartTests.DinnerScenarioDraftTests testExcludedFoodAndPackLabelsCannotPassAnExplicitMatch]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.DinnerScenarioDraftTests testIncompleteUnchangedBasketPreventsExactCheckout]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.DinnerScenarioDraftTests testPortionChangeRequiresNewReviewAndScalesExactRecipeQuantities]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.DinnerScenarioDraftTests testProtectedRecipeDoesNotAutomaticallyScaleAllGroups]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.DinnerScenarioDraftTests testStaleLedgerBlocksEvidenceBuiltBeforeEdit]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.DinnerScenarioDraftTests testTwoDinnerDemandsUseOneConfirmedStockLotOnlyOnce]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.DinnerScenarioDraftTests testUnknownPackYieldAndPriceNeverBecomeZeroOrCoverage]' passed (0.001 seconds).
+Test Suite 'DinnerScenarioDraftTests' passed at 2026-11-03 17:12:58.905.
+	 Executed 10 tests, with 0 failures (0 unexpected) in 0.015 (0.019) seconds
+Test Case '-[RoomInTheCartTests.FamilyDecisionTests testPrivateRepairInstructionNeverImpliesThatMealWasCookedOrCreatesSharedRecord]' passed (0.003 seconds).
+Test Case '-[RoomInTheCartTests.FamilyDecisionTests testRetriedDecisionKeepsIdentityAndErasurePreventsLateCompletion]' passed (0.027 seconds).
+Test Suite 'FamilyDecisionTests' passed at 2026-11-03 17:12:58.936.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.030 (0.030) seconds
+Test Case '-[RoomInTheCartTests.FreeJourneyAcceptanceTests testConcurrentPickupChangesAndCompetingNextShopsRequireAFreshReview]' passed (0.036 seconds).
+Test Case '-[RoomInTheCartTests.FreeJourneyAcceptanceTests testCurrentDinnerFeatureFreeReusableChoiceProjectsLunchAndSurvivesNewShopRestart]' passed (0.070 seconds).
+Test Case '-[RoomInTheCartTests.FreeJourneyAcceptanceTests testFreeManualJourneySurvivesRestartFromMealsThroughNextShop]' passed (0.214 seconds).
+Test Case '-[RoomInTheCartTests.FreeJourneyAcceptanceTests testHandledAndDismissedCarryoversUseSourceIdentityInsteadOfName]' passed (0.063 seconds).
+Test Case '-[RoomInTheCartTests.FreeJourneyAcceptanceTests testInjectedNestedPickupCreatesItsOwnDirectoryAndSurvivesResetArguments]' passed (0.020 seconds).
+Test Case '-[RoomInTheCartTests.FreeJourneyAcceptanceTests testInjectedPickupLocationNeverResolvesDefaultSupportOrHonorsResetFlags]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.FreeJourneyAcceptanceTests testReviewedNextShopDispositionIsScopedAndNeverRewritesSource]' passed (0.018 seconds).
+Test Case '-[RoomInTheCartTests.FreeJourneyAcceptanceTests testWrongItemCannotFeedLunchAndLateSegmentRetryNeverDuplicatesFood]' passed (0.053 seconds).
+Test Suite 'FreeJourneyAcceptanceTests' passed at 2026-11-03 17:12:59.413.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 0.474 (0.477) seconds
+Test Case '-[RoomInTheCartTests.GuardianChildBoundaryTests testChildBoundarySynchronouslyClearsWidgetAndExitKeepsAdultLocked]' passed (0.105 seconds).
+Test Case '-[RoomInTheCartTests.GuardianChildBoundaryTests testMarkerColdLaunchAndCorruptionFailToChildRootInsteadOfAdultTabs]' passed (0.005 seconds).
+Test Suite 'GuardianChildBoundaryTests' passed at 2026-11-03 17:12:59.524.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.110 (0.111) seconds
+Test Case '-[RoomInTheCartTests.GuardianChildTests testAcceptedFinishArrivingAfterCleanupCannotInstallOrRestoreSecrets]' passed (0.031 seconds).
+Test Case '-[RoomInTheCartTests.GuardianChildTests testBackgroundScopeChangeDropsLateApprovedStatusAndNeverInstalls]' passed (0.007 seconds).
+Test Case '-[RoomInTheCartTests.GuardianChildTests testClaimShowsDevicePairingButCannotFinishWithoutGuardianApproval]' passed (0.005 seconds).
+Test Case '-[RoomInTheCartTests.GuardianChildTests testLostClaimAndFinishRetryUseSameRandomMaterialAcrossRestart]' passed (0.005 seconds).
+Test Case '-[RoomInTheCartTests.GuardianChildTests testSameSubjectNewSessionCannotExposeSavedPairingOrResumeClaim]' passed (0.002 seconds).
+Test Suite 'GuardianChildTests' passed at 2026-11-03 17:12:59.577.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.051 (0.053) seconds
+Test Case '-[RoomInTheCartTests.GuardianEnrollmentTests testFailedProtectedSaveSendsNothingAndScopeChangeHidesLateRead]' passed (0.013 seconds).
+Test Case '-[RoomInTheCartTests.GuardianEnrollmentTests testGrantNeedsSeparateCurrentNoticeReviewAndPairingNeedsActualCode]' passed (0.005 seconds).
+Test Case '-[RoomInTheCartTests.GuardianEnrollmentTests testInvitationRetainsSecretUntilExplicitStatusCheckedRetirementAndRevocationPurges]' passed (0.013 seconds).
+Test Case '-[RoomInTheCartTests.GuardianEnrollmentTests testLostResponseRetainsExactIntentAcrossRestartAndReconciliation]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.GuardianEnrollmentTests testUnavailableNoticePreventsSetupAndVerificationIsNotPermission]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.GuardianEnrollmentTests testUncertainVerificationCannotPrepareANewEmailAction]' passed (0.002 seconds).
+Test Suite 'GuardianEnrollmentTests' passed at 2026-11-03 17:12:59.618.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.038 (0.041) seconds
+Test Case '-[RoomInTheCartTests.GuardianNativeAuthenticationTests testLostStartResumesExactSecretAndCodeVerificationUsesReviewedEmail]' passed (0.025 seconds).
+Test Case '-[RoomInTheCartTests.GuardianNativeAuthenticationTests testSuspensionHidesDraftAndForegroundReloadDoesNotResendEmail]' passed (0.004 seconds).
+Test Case '-[RoomInTheCartTests.GuardianNativeAuthenticationTests testUnavailableGateDoesNotPrepareOrSendEmail]' passed (0.001 seconds).
+Test Suite 'GuardianNativeAuthenticationTests' passed at 2026-11-03 17:12:59.650.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.030 (0.031) seconds
+Test Case '-[RoomInTheCartTests.GuardianRootPrivacyTests testColdPrivacyBoundaryClearsPriorShortcutWithoutOpeningAdultStoresOrTouchingInbox]' passed (0.007 seconds).
+Test Case '-[RoomInTheCartTests.GuardianRootPrivacyTests testUnreadableChildMarkerCannotReopenAdultRoot]' passed (0.001 seconds).
+Test Suite 'GuardianRootPrivacyTests' passed at 2026-11-03 17:12:59.659.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.008 (0.009) seconds
+Test Case '-[RoomInTheCartTests.HelpConfigurationTests testBareSupportEmailOpensOnlyAddressWithoutHeadersOrEncodedPayload]' passed (0.003 seconds).
+Test Case '-[RoomInTheCartTests.HelpConfigurationTests testHelpPagesRequireLiteralHTTPSWithoutCredentialsOrTestHosts]' passed (0.004 seconds).
+Test Case '-[RoomInTheCartTests.HelpConfigurationTests testMissingConfigurationStaysUnavailableAndSummaryRejectsInjectedLines]' passed (0.003 seconds).
+Test Case '-[RoomInTheCartTests.HelpConfigurationTests testSuppliedOperatorNameIsPreservedAndRejectsControlOrFormatCharacters]' passed (0.006 seconds).
+Test Case '-[RoomInTheCartTests.HelpConfigurationTests testSupportSummaryAllowlistCannotIncludeArbitraryBundleData]' passed (0.002 seconds).
+Test Suite 'HelpConfigurationTests' passed at 2026-11-03 17:12:59.680.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.019 (0.021) seconds
+Test Case '-[RoomInTheCartTests.HistoryFlowTests testAuthorityFingerprintChangeStopsPreparationAndClearsVisibleFacts]' passed (0.018 seconds).
+Test Case '-[RoomInTheCartTests.HistoryFlowTests testBudgetGrantAloneCannotBeginOrReviewPriceObservationAndDoesNotGateFuturePeriodDraft]' passed (0.008 seconds).
+Test Case '-[RoomInTheCartTests.HistoryFlowTests testConfirmedReceiptCleanupRetryDoesNotResend]' passed (0.029 seconds).
+Test Case '-[RoomInTheCartTests.HistoryFlowTests testExplicitReviewApprovalAndPersistenceBeforeNetwork]' passed (0.006 seconds).
+Test Case '-[RoomInTheCartTests.HistoryFlowTests testExplicitStatusClearDoesNotSendOrInventConfirmation]' passed (0.004 seconds).
+Test Case '-[RoomInTheCartTests.HistoryFlowTests testLostResponseRestoresExactIntentWithoutAutomaticSend]' passed (0.004 seconds).
+Test Case '-[RoomInTheCartTests.HistoryFlowTests testMoneyUnknownPackAndTerminalReservationEvidenceRemainDistinct]' passed (0.010 seconds).
+Test Case '-[RoomInTheCartTests.HistoryFlowTests testOriginalPeriodRevisionAndBytesSurviveUncertainRetry]' passed (0.008 seconds).
+Test Case '-[RoomInTheCartTests.HistoryFlowTests testPaidLapseClearsAnalysisAndRawPathNeedsFreshRead]' passed (0.010 seconds).
+Test Case '-[RoomInTheCartTests.HistoryFlowTests testPartialPeriodClearsFullEnvelopeBeforeAwaitAndHidesPendingPlan]' passed (0.003 seconds).
+Test Case '-[RoomInTheCartTests.HistoryFlowTests testPartialResponseHidesPendingPrivatePlanAndBlocksNewWrite]' passed (0.009 seconds).
+Test Case '-[RoomInTheCartTests.HistoryFlowTests testPendingPlanIsNotExposedAfterLostPaidOrSourceAuthority]' passed (0.005 seconds).
+Test Case '-[RoomInTheCartTests.HistoryFlowTests testPricePaginationFilterAndAuthorizationFailureDoNotRetainHistory]' passed (0.008 seconds).
+Test Case '-[RoomInTheCartTests.HistoryFlowTests testPurgeDuringPreparationCannotRecreatePrivatePending]' passed (0.004 seconds).
+Test Case '-[RoomInTheCartTests.HistoryFlowTests testRealPendingStoreEpochAndAtomicCompletion]' passed (0.036 seconds).
+Test Case '-[RoomInTheCartTests.HistoryFlowTests testRepeatedCursorIsRejectedWithoutDuplicateRows]' passed (0.004 seconds).
+Test Case '-[RoomInTheCartTests.HistoryFlowTests testSavedObservationReferencesUseReadGrantsWithoutAddingWritableShops]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.HistoryFlowTests testSavedReferenceAccessPaginationAndRevokedRecordClearVisibleFacts]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.HistoryFlowTests testSaveFailureNeverSendsAndDraftEditInvalidatesReview]' passed (0.008 seconds).
+Test Case '-[RoomInTheCartTests.HistoryFlowTests testSelectedGrantedShopIsNeverDefaultedIntoObservationWhenAnotherShopIsOwned]' passed (0.004 seconds).
+Test Case '-[RoomInTheCartTests.HistoryFlowTests testStatusClearNeedsFreshAuthorityAndPreservesPrivateRetryOnDenial]' passed (0.006 seconds).
+Test Suite 'HistoryFlowTests' passed at 2026-11-03 17:12:59.878.
+	 Executed 21 tests, with 0 failures (0 unexpected) in 0.190 (0.197) seconds
+Test Case '-[RoomInTheCartTests.HouseholdDevicesTests testBackgroundClearsProtectedRowsAndResumesWithSameAuthorizedRetry]' passed (0.025 seconds).
+Test Case '-[RoomInTheCartTests.HouseholdDevicesTests testCurrentDeviceAndUnlistedTargetNeverSend]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.HouseholdDevicesTests testLostResponseRetainsExactIntentAndFreshModelReconcilesSameTarget]' passed (0.006 seconds).
+Test Case '-[RoomInTheCartTests.HouseholdDevicesTests testPurgeDuringSendCannotResurrectReceiptOrPendingAction]' passed (0.003 seconds).
+Test Case '-[RoomInTheCartTests.HouseholdDevicesTests testRevokedContextDropsInventoryAndPendingWithoutShowingPriorReceipt]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.HouseholdDevicesTests testScopeChangeDuringInventoryOrPreparationCannotExposeRowsOrSend]' passed (0.004 seconds).
+Test Case '-[RoomInTheCartTests.HouseholdDevicesTests testScopedPurgeInvalidatesAlreadyPreparedRetryBeforeTransmission]' passed (0.005 seconds).
+Test Suite 'HouseholdDevicesTests' passed at 2026-11-03 17:12:59.928.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.048 (0.050) seconds
+Test Case '-[RoomInTheCartTests.HouseholdHelperReviewFlowTests testChangedDraftOrStaleServerSnapshotCannotApplyOldApproval]' passed (0.014 seconds).
+Test Case '-[RoomInTheCartTests.HouseholdHelperReviewFlowTests testClearingUncertainRetryNeedsFreshAuthorizedStatus]' passed (0.026 seconds).
+Test Case '-[RoomInTheCartTests.HouseholdHelperReviewFlowTests testConfirmedReceiptCleanupRetryDoesNotSendAgain]' passed (0.021 seconds).
+Test Case '-[RoomInTheCartTests.HouseholdHelperReviewFlowTests testExplicitReviewAndApprovalPersistBeforeSending]' passed (0.008 seconds).
+Test Case '-[RoomInTheCartTests.HouseholdHelperReviewFlowTests testPersistenceFailureNeverSends]' passed (0.008 seconds).
+Test Case '-[RoomInTheCartTests.HouseholdHelperReviewFlowTests testPurgeAfterReviewRejectsLatePrivateSave]' passed (0.007 seconds).
+Test Case '-[RoomInTheCartTests.HouseholdHelperReviewFlowTests testScopeChangeDuringPreparationCannotPersistOrSendAndClearsVisibleData]' passed (0.007 seconds).
+Test Case '-[RoomInTheCartTests.HouseholdHelperReviewFlowTests testUncertainResultRestoresAndReplaysOriginalBytesAfterRevisionChanges]' passed (0.012 seconds).
+Test Suite 'HouseholdHelperReviewFlowTests' passed at 2026-11-03 17:13:00.036.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 0.104 (0.107) seconds
+Test Case '-[RoomInTheCartTests.HouseholdRequestMealContextTests testCancelAndServiceScopeLossClearMealContextWithoutWrites]' passed (0.116 seconds).
+Test Case '-[RoomInTheCartTests.HouseholdRequestMealContextTests testCerealPreviewIncludesTwoNamedProtectedLunchesFromItsCurrentShopRevision]' passed (0.185 seconds).
+Test Case '-[RoomInTheCartTests.HouseholdRequestMealContextTests testContextRejectsAnotherShopOrRevisionAndRefreshRequiresFreshReview]' passed (0.173 seconds).
+Test Case '-[RoomInTheCartTests.HouseholdRequestMealContextTests testMissingMealsStayUnknownWhileKnownEmptyMealsStayEmpty]' passed (0.091 seconds).
+Test Case '-[RoomInTheCartTests.HouseholdRequestMealContextTests testUnchangedDecisionBindingCommitsKeepPreviewAndExplicitAcknowledgments]' passed (0.063 seconds).
+Test Case '-[RoomInTheCartTests.HouseholdRequestMealContextTests testUnchangedPriceCommitDuringReviewKeepsResponseButChangedPriceDiscardsIt]' passed (0.021 seconds).
+Test Suite 'HouseholdRequestMealContextTests' passed at 2026-11-03 17:13:00.688.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.649 (0.652) seconds
+Test Case '-[RoomInTheCartTests.HouseholdRequestPackReviewTests testCheapestUsesWholePacksAndUsableYieldRatherThanStickerPrice]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.HouseholdRequestPackReviewTests testFixtureInterceptsEveryRequestAndRejectsUnexpectedNetworkDestinations]' passed (0.000 seconds).
+Test Case '-[RoomInTheCartTests.HouseholdRequestPackReviewTests testRefreshScopeAndAccessLossInvalidatePackSelectionAndLinkStaysZeroAddition]' passed (0.014 seconds).
+Test Case '-[RoomInTheCartTests.HouseholdRequestPackReviewTests testReviewedSelectionFeedsActualPreviewAndRequiresExplicitOverageBeforeAtomicApply]' passed (0.023 seconds).
+Test Case '-[RoomInTheCartTests.HouseholdRequestPackReviewTests testTiesAndExplicitFreePriceRemainDifferentFromUnknown]' passed (0.003 seconds).
+Test Case '-[RoomInTheCartTests.HouseholdRequestPackReviewTests testUnavailableInsufficientUnknownAndUnmatchedAreNotCertifiedCheapest]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.HouseholdRequestPackReviewTests testUnknownConversionAndYieldNeverInferProductQuantityOrPrice]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.HouseholdRequestPackReviewTests testUnknownSelectedPriceAndManualPathKeepExplicitUnknownAcknowledgment]' passed (0.014 seconds).
+Test Suite 'HouseholdRequestPackReviewTests' passed at 2026-11-03 17:13:00.750.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 0.059 (0.062) seconds
+Test Case '-[RoomInTheCartTests.LargeListPerformanceTests testFiveHundredLineListChecksSearchesAndReopensWithoutLosingIdentity]' passed (0.812 seconds).
+Test Suite 'LargeListPerformanceTests' passed at 2026-11-03 17:13:01.562.
+Test Case '-[RoomInTheCartTests.LedgerCheckoutAdapterTests testBasisOnlyChangeRequiresReviewClearsQuoteAndLeavesOldSnapshotImmutable]' passed (0.069 seconds).
+Test Case '-[RoomInTheCartTests.LedgerCheckoutAdapterTests testGuestApplyCarriesFiveBoundPeppersThroughPackAndCheckoutWithoutChangingReportedPurchase]' passed (0.039 seconds).
+Test Case '-[RoomInTheCartTests.LedgerCheckoutAdapterTests testGuestCheckoutReviewRequiresSameLedgerBasketAndBranch]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.LedgerCheckoutAdapterTests testNamedServingGroupsPartitionOneMealAndKeepStableNeedIdentities]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.LedgerCheckoutAdapterTests testNextShopBridgeAndRepeatedOriginActionCreateOneEditableShop]' passed (0.023 seconds).
+Test Case '-[RoomInTheCartTests.LedgerCheckoutAdapterTests testSameLinesStillReviewRetailerSourceAndZoneChanges]' passed (0.004 seconds).
+Test Case '-[RoomInTheCartTests.LedgerCheckoutAdapterTests testSourceChangesAfterPreviewAreRejectedEvenWhenQuantitiesStayTheSame]' passed (0.016 seconds).
+Test Case '-[RoomInTheCartTests.LedgerCheckoutAdapterTests testTwelveExistingWrapsProjectSixFourTwoExactlyOnce]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.LedgerCheckoutAdapterTests testUnknownAmountsBlockProjectionAndMissingContextStaysMissing]' passed (0.001 seconds).
+Test Suite 'LedgerCheckoutAdapterTests' passed at 2026-11-03 17:13:01.720.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.155 (0.157) seconds
+Test Case '-[RoomInTheCartTests.LedgerListLayoutTests testStoreOrderShopOverrideSearchAndOriginalIdentitySurviveRelaunch]' passed (0.008 seconds).
+Test Case '-[RoomInTheCartTests.LedgerListLayoutTests testSystemPrintFormatterPaginatesAndOmitsPrivateNotesAndInactiveItems]' passed (0.128 seconds).
+Test Suite 'LedgerListLayoutTests' passed at 2026-11-03 17:13:01.857.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.136 (0.137) seconds
+Test Case '-[RoomInTheCartTests.LedgerModelPerformanceSafetyTests testCommittedCandidateMatchesDurableBytesAndReopenedWorkspace]' passed (0.016 seconds).
+Test Case '-[RoomInTheCartTests.LedgerModelPerformanceSafetyTests testDecodedDomainCorruptionStillRejectsOpenAndReload]' passed (0.013 seconds).
+Test Case '-[RoomInTheCartTests.LedgerModelPerformanceSafetyTests testExternalHeadRemainsAuthoritativeAfterStaleSaveAndDiscard]' passed (0.011 seconds).
+Test Suite 'LedgerModelPerformanceSafetyTests' passed at 2026-11-03 17:13:01.898.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.040 (0.041) seconds
+Test Case '-[RoomInTheCartTests.LedgerPackBridgeTests testArchiveScopePreservesOnlySelectedShopPackEvidenceAndEarlierLedgerFilesRemainReadable]' passed (0.033 seconds).
+Test Case '-[RoomInTheCartTests.LedgerPackBridgeTests testChangedSourceRejectsReviewAndStalePackCostCannotLeakIntoUnchangedQuantity]' passed (0.035 seconds).
+Test Case '-[RoomInTheCartTests.LedgerPackBridgeTests testEarlierPickupArchiveDefaultsPackEvidenceWithoutAcceptingExtraAuthority]' passed (0.022 seconds).
+Test Case '-[RoomInTheCartTests.LedgerPackBridgeTests testExactSelectionRetryAndUnchangedCheckoutReviewDoNotCreateRevisionsOrClearFreshQuote]' passed (0.045 seconds).
+Test Case '-[RoomInTheCartTests.LedgerPackBridgeTests testPackChoiceKeepsSavedCheckoutUntilExplicitReviewThenSuppliesWholePacksWithoutInventingDemand]' passed (0.045 seconds).
+Test Case '-[RoomInTheCartTests.LedgerPackBridgeTests testPackEvidenceRestartAndPlacedOrderBoundaryRemainDurable]' passed (0.044 seconds).
+Test Suite 'LedgerPackBridgeTests' passed at 2026-11-03 17:13:02.125.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.224 (0.227) seconds
+Test Case '-[RoomInTheCartTests.LedgerPackStockReviewTests testAnAppliedStockSelectionCannotBeAdoptedForAnotherCheckoutChange]' passed (0.043 seconds).
+Test Case '-[RoomInTheCartTests.LedgerPackStockReviewTests testCachedCheckoutRejectsChangedStockButRecordsAnExplicitAlreadyPlacedOriginalOrder]' passed (0.080 seconds).
+Test Case '-[RoomInTheCartTests.LedgerPackStockReviewTests testChangedBatchRejectsUnsavedReviewAndInvalidatesSavedSelection]' passed (0.030 seconds).
+Test Case '-[RoomInTheCartTests.LedgerPackStockReviewTests testChangedJourneyRevisionListOrWorkspaceRequiresFreshReview]' passed (0.031 seconds).
+Test Case '-[RoomInTheCartTests.LedgerPackStockReviewTests testFullyCoveredProducesDurableStockOnlyPlanWithoutFakePurchaseOrPlacement]' passed (0.064 seconds).
+Test Case '-[RoomInTheCartTests.LedgerPackStockReviewTests testMixedStockOnlyAndPurchasedFoodKeepsAllDemandsWhenTheActualOrderIsReported]' passed (0.061 seconds).
+Test Case '-[RoomInTheCartTests.LedgerPackStockReviewTests testProtectedFoodElsewhereIsUnavailableForThePackReview]' passed (0.046 seconds).
+Test Case '-[RoomInTheCartTests.LedgerPackStockReviewTests testReviewedStockReducesWholePacksButDoesNotNetLedgerOrCheckoutMealDemand]' passed (0.044 seconds).
+Test Case '-[RoomInTheCartTests.LedgerPackStockReviewTests testStockAddedAfterNoStockReviewRejectsOldChoiceAndNoStockStillBuysTwo]' passed (0.025 seconds).
+Test Case '-[RoomInTheCartTests.LedgerPackStockReviewTests testStockAddedToCachedVersionOneBasketRequiresNewReview]' passed (0.027 seconds).
+Test Suite 'LedgerPackStockReviewTests' passed at 2026-11-03 17:13:02.579.
+	 Executed 10 tests, with 0 failures (0 unexpected) in 0.450 (0.454) seconds
+Test Case '-[RoomInTheCartTests.LedgerSelectedTextPortTests testActualLedgerScopeLossPreventsMutationAndLeavesInboxPending]' passed (0.036 seconds).
+Test Case '-[RoomInTheCartTests.LedgerSelectedTextPortTests testRealLedgerRestartAcknowledgesExactReceiptWithoutDuplicate]' passed (0.021 seconds).
+Test Suite 'LedgerSelectedTextPortTests' passed at 2026-11-03 17:13:02.638.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.057 (0.058) seconds
+Test Case '-[RoomInTheCartTests.MembershipTests testConcurrentDoubleCallbackCommitsOnlyOnce]' passed (0.005 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testCoordinatorAuthorizationRejectionStopsObserverUntilNewProjection]' passed (0.010 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testCoordinatorCredentialsCannotFollowAnotherAuthenticatedSubject]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testCoordinatorDiscardsModelConstructedAfterSignOut]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testCoordinatorHouseholdSwitchRejectsOldInFlightDelivery]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testCoordinatorIdentityChangeWaitsForNewAuthorizedProjection]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testCoordinatorLockSynchronouslyClearsModelAndCancelsObservation]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testCoordinatorReenrollmentInSameHouseholdReplacesObserver]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testCoordinatorStartsWithoutScreenAndForegroundReusesOneObserver]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testDurableServiceDeliveryPrecedesFinish]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testEqualRevisionCannotReplaceRefundWithActiveSnapshot]' passed (0.000 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testExpiryBoundaryDoesNotWaitForCachedLeaseDeadline]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testHTTPAdapterIncludesEnrolledDeviceAndDecodesServerDates]' passed (0.009 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testHTTPAdapterRejectsUntrustedBaseURLs]' passed (0.000 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testHTTPAdapterRequiresDeviceBeforeSendingPurchaseContext]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testHTTPAdapterUsesSpecificServerFailureCodes]' passed (0.009 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testInterruptedDeliveryRemainsUnfinishedAndRetries]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testMismatchedAccountRestoreSurvivesSuccessfulFreeProjection]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testMismatchedAccountTokenNeverReachesService]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testMissingDeploymentConfigurationKeepsPurchaseDisabled]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testNamedAdultSeatsDoNotGrantShopBudgetOrPlanningAuthority]' passed (0.000 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testNonDurableAndMismatchedAcknowledgmentsNeverFinish]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testPendingCancellationAndUnverifiedNeverGrantSeatsOrFinish]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testRefreshDoesNotPromptAppleSyncAndRestoreDoes]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testRefundWinsOverOlderActiveReceiptAndPreservesFreeRights]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testRejectedRestoreSurvivesSuccessfulFreeProjection]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testSameRevisionMayRefreshVerifiedLeaseButCannotChangeSeats]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testSecondNamedAdultRecoversSeatWithoutPurchaserTokenOrAppleSubmission]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testSessionRejectionImmediatelyClearsPaidProjection]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testStopDuringDeliveryDiscardsLateResultWithoutFinishing]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testStoppedScopeCannotBeReactivatedByQueuedCallback]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testStorefrontMetadataIsUsedWithoutReplacingLocalizedPrice]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testThirdSeatChildAndDuplicateSeatAreRejected]' passed (0.003 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testUnseatedAdultNeverGetsPaidAccessFromSharedSnapshot]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testVerifiedGraceEndsAtKnownDeadlineAndNoInfiniteOfflineAccess]' passed (0.000 seconds).
+Test Case '-[RoomInTheCartTests.MembershipTests testWrongHouseholdRestoreCannotGrantOrFinish]' passed (0.001 seconds).
+Test Suite 'MembershipTests' passed at 2026-11-03 17:13:02.710.
+	 Executed 36 tests, with 0 failures (0 unexpected) in 0.060 (0.072) seconds
+Test Case '-[RoomInTheCartTests.NavigationRestorationTests testBackgroundHidesHouseholdPathUntilExplicitFreshScopeAndNeverRestoresComposerConsent]' passed (0.073 seconds).
+Test Case '-[RoomInTheCartTests.NavigationRestorationTests testDeletedRecordAndRetiredLedgerCannotBeRestoredOrFollowNewWorkspace]' passed (0.037 seconds).
+Test Case '-[RoomInTheCartTests.NavigationRestorationTests testEmptyStartPickupRouteAcquiresCommittedShopIdentityWithoutSavingSheetDraft]' passed (0.018 seconds).
+Test Case '-[RoomInTheCartTests.NavigationRestorationTests testHouseholdLocatorWaitsForFreshEnrollmentAndRevocationRemovesItDurably]' passed (0.054 seconds).
+Test Case '-[RoomInTheCartTests.NavigationRestorationTests testHouseholdScopeChangeAndContributorEntryDiscardAdultPaths]' passed (0.030 seconds).
+Test Case '-[RoomInTheCartTests.NavigationRestorationTests testIncomingLinkBeforeOpenAlwaysTakesPrecedenceOverSavedTabAndPath]' passed (0.025 seconds).
+Test Case '-[RoomInTheCartTests.NavigationRestorationTests testLocalPathsDoNotCrossInstallationActorOrSelectedShop]' passed (0.063 seconds).
+Test Case '-[RoomInTheCartTests.NavigationRestorationTests testMissingMalformedAndFutureNavigationFilesUseOrdinaryShopRoot]' passed (0.004 seconds).
+Test Case '-[RoomInTheCartTests.NavigationRestorationTests testRelaunchRestoresSelectedTabIndependentPathsAndStableSavedSources]' passed (0.034 seconds).
+Test Case '-[RoomInTheCartTests.NavigationRestorationTests testRestoredHouseholdLocatorRejectsDifferentFreshIdentityScopeOrPermissions]' passed (0.110 seconds).
+Test Suite 'NavigationRestorationTests' passed at 2026-11-03 17:13:03.166.
+	 Executed 10 tests, with 0 failures (0 unexpected) in 0.450 (0.455) seconds
+Test Case '-[RoomInTheCartTests.PickupCookProjectionTests testBindingLeaseIsLocalBoundedAndNeverRestoredFromSameText]' passed (0.004 seconds).
+Test Case '-[RoomInTheCartTests.PickupCookProjectionTests testBindingRechecksIdentityHouseholdMemberRoleAndLocalActor]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.PickupCookProjectionTests testBindingRequiresUnlockedPermittedRuntimeScopeAndCleanSaveState]' passed (0.020 seconds).
+Test Case '-[RoomInTheCartTests.PickupCookProjectionTests testBudgetIsOmittedUnlessExplicitlyIncludedAndDoesNotEnterBinding]' passed (0.004 seconds).
+Test Case '-[RoomInTheCartTests.PickupCookProjectionTests testCarriedStockRemainsUnconfirmedAndSavedNotesDoNotSupplyInstruction]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.PickupCookProjectionTests testCurrentDemandSetIncludesPreplacementPlanAndStockOnlyProtectedCommitmentsOnce]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.PickupCookProjectionTests testFormatterPreservesProtectedPortionsConfirmedSupplyAndUnresolvedNeed]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.PickupCookProjectionTests testFormatterUsesSuppliedTimeAndLanguagePreservesOriginalFields]' passed (0.012 seconds).
+Test Case '-[RoomInTheCartTests.PickupCookProjectionTests testFractionalAllocatedAmountRemainsExactInBothLanguages]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.PickupCookProjectionTests testPlacedInstructionUsesCurrentNeedsRatherThanOutdatedPreplacementPlan]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.PickupCookProjectionTests testSourceRevisionTextLocaleBudgetAndSaveChangesInvalidateBinding]' passed (0.003 seconds).
+Test Case '-[RoomInTheCartTests.PickupCookProjectionTests testSplitServingsRepeatQuantitiesButShareOneSetOfIngredientInstructions]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.PickupCookProjectionTests testStockOnlyCarryoverUsesPinnedCoverageWithoutBorrowingAnotherBatch]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.PickupCookProjectionTests testUnknownCurrentAllocationNeverTreatsInitialObservationAsCurrentSupply]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.PickupCookProjectionTests testUnresolvedPrivateBudgetUsesRecipientLanguage]' passed (0.003 seconds).
+Test Suite 'PickupCookProjectionTests' passed at 2026-11-03 17:13:03.230.
+	 Executed 15 tests, with 0 failures (0 unexpected) in 0.058 (0.063) seconds
+Test Case '-[RoomInTheCartTests.PickupModelTests testArchivedDeletionIsDurableAndExactRetrySafe]' passed (0.012 seconds).
+Test Case '-[RoomInTheCartTests.PickupModelTests testConfirmedFreezerLotCoversOrderNeedsAndNextShopCarriesOnlyShortfall]' passed (0.023 seconds).
+Test Case '-[RoomInTheCartTests.PickupModelTests testFailedPersistenceNeverPublishesCandidateAndRetryKeepsIdentity]' passed (0.005 seconds).
+Test Case '-[RoomInTheCartTests.PickupModelTests testFeedbackRequiresClosedPlacedPickupAndConsentAndSurvivesRestart]' passed (0.028 seconds).
+Test Case '-[RoomInTheCartTests.PickupModelTests testInvalidPersistedJourneyDoesNotReplaceReadableState]' passed (0.006 seconds).
+Test Case '-[RoomInTheCartTests.PickupModelTests testKnownAndUnknownQuoteSurviveRestart]' passed (0.020 seconds).
+Test Case '-[RoomInTheCartTests.PickupModelTests testLegacyFeedbackDecodePreservesChoicesWithoutManufacturingConsent]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.PickupModelTests testLocalFeedbackConsentIsVersionedWorkspaceScopedAndCannotComeFromLegacyBoolean]' passed (0.009 seconds).
+Test Case '-[RoomInTheCartTests.PickupModelTests testRevisionOverflowRejectsCandidateAndArchiveContainsDurableRecord]' passed (0.008 seconds).
+Test Case '-[RoomInTheCartTests.PickupModelTests testUrgentCarryRebuildsDemandWithoutAssumingOldStock]' passed (0.010 seconds).
+Test Case '-[RoomInTheCartTests.PickupModelTests testUrgentOfflineHasNoOrderReceiptOrMoneyAfterRestart]' passed (0.012 seconds).
+Test Suite 'PickupModelTests' passed at 2026-11-03 17:13:03.366.
+	 Executed 11 tests, with 0 failures (0 unexpected) in 0.133 (0.136) seconds
+Test Case '-[RoomInTheCartTests.PickupOfferEvaluationTests testBasketWithinCapDoesNotOverrideManualOfferCeilingAndMissingProvenanceFails]' passed (0.028 seconds).
+Test Case '-[RoomInTheCartTests.PickupOfferEvaluationTests testCutoffExpiryDoesNotConfirmFillResponseOrMoneyAndOldOfferDecodes]' passed (0.006 seconds).
+Test Case '-[RoomInTheCartTests.PickupOfferEvaluationTests testKnownLineMaximumConstrainsRetailerNoteWithoutWholeCheckoutCap]' passed (0.005 seconds).
+Test Case '-[RoomInTheCartTests.PickupOfferEvaluationTests testProtectedReservationsDeclinedAndExcludedDishesDoNotReuseSupply]' passed (0.005 seconds).
+Test Case '-[RoomInTheCartTests.PickupOfferEvaluationTests testRetainedOriginalAndExplicitFixedFeesConsumeJointAndLineHeadroom]' passed (0.004 seconds).
+Test Case '-[RoomInTheCartTests.PickupOfferEvaluationTests testSavedForecastAndEffectiveNoteCeilingSurviveSQLiteAndRejectStaleSaveAndCopy]' passed (0.032 seconds).
+Test Case '-[RoomInTheCartTests.PickupOfferEvaluationTests testSimultaneousOffersShareAllowanceAndCannotDuplicateOneOriginalLine]' passed (0.008 seconds).
+Test Case '-[RoomInTheCartTests.PickupOfferEvaluationTests testSourceChangesInvalidateButCopyEventsAndSavingDoNot]' passed (0.004 seconds).
+Test Case '-[RoomInTheCartTests.PickupOfferEvaluationTests testUnknownChargesNeverInventZeroAndBoundedCrossingStaysConditional]' passed (0.007 seconds).
+Test Case '-[RoomInTheCartTests.PickupOfferEvaluationTests testUnknownYieldConversionAndDishApprovalRemainConditional]' passed (0.006 seconds).
+Test Suite 'PickupOfferEvaluationTests' passed at 2026-11-03 17:13:03.475.
+	 Executed 10 tests, with 0 failures (0 unexpected) in 0.104 (0.108) seconds
+Test Case '-[RoomInTheCartTests.PickupOfferReviewTests testCeilingEvidenceNeverConvertsUnknownToZeroOrConditionalToAffordable]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.PickupOfferReviewTests testCopyEventsRequireExactReviewedOfferAndJourneyAndReplayOnce]' passed (0.022 seconds).
+Test Case '-[RoomInTheCartTests.PickupOfferReviewTests testFailedPersistenceKeepsPriorOfferAndBlocksFurtherChanges]' passed (0.024 seconds).
+Test Case '-[RoomInTheCartTests.PickupOfferReviewTests testReviewedUpdateSurvivesSQLiteRestartAndPreservesUnrelatedFacts]' passed (0.050 seconds).
+Test Case '-[RoomInTheCartTests.PickupOfferReviewTests testStaleOfferAndWrongJourneyCannotOverwriteAndNewDraftUsesDistinctID]' passed (0.036 seconds).
+Test Case '-[RoomInTheCartTests.PickupOfferReviewTests testValidationRejectsIncompatibleExcessiveAndUnboundedEvidence]' passed (0.004 seconds).
+Test Suite 'PickupOfferReviewTests' passed at 2026-11-03 17:13:03.616.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.139 (0.141) seconds
+Test Case '-[RoomInTheCartTests.PickupRecipientHandoffTests testFullFallbackForUnknownWrongRecipientContextAndLapseAndPrivateCopies]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.PickupRecipientHandoffTests testRetailerCorrectionComparesTwoFrozenVersionsAndOmitsPriceReasons]' passed (0.054 seconds).
+Test Case '-[RoomInTheCartTests.PickupRecipientHandoffTests testSentAndAcknowledgedSurviveRestartAndEraseWithPickup]' passed (0.053 seconds).
+Test Case '-[RoomInTheCartTests.PickupRecipientHandoffTests testSpanishCookUsesOnlyTheSelectedRecipientsLastExplicitVersionAndLiveSeat]' passed (0.032 seconds).
+Test Case '-[RoomInTheCartTests.PickupRecipientHandoffTests testTypedChangesKeepSameNameQuantitiesAndUnresolvedNeedsSeparate]' passed (0.000 seconds).
+Test Suite 'PickupRecipientHandoffTests' passed at 2026-11-03 17:13:03.761.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.142 (0.144) seconds
+Test Case '-[RoomInTheCartTests.PickupStockBatchTests testBatchQuantityPluralFormsFollowTheRecipientLanguage]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.PickupStockBatchTests testDatedStockCanReserveAnIngredientBeforePlacementWithoutCreatingAReceipt]' passed (0.019 seconds).
+Test Case '-[RoomInTheCartTests.PickupStockBatchTests testReviewedCorrectionReallocatesOnceAndCarriesOnlyFreshlyCountedFood]' passed (0.033 seconds).
+Test Case '-[RoomInTheCartTests.PickupStockBatchTests testUnassignedBatchOnFreshInstallNeedsExplicitMatchEvenWithSameFoodName]' passed (0.018 seconds).
+Test Case '-[RoomInTheCartTests.PickupStockBatchTests testUseFirstReservesPreferredLotAndLegacyBytesDecodeWithoutAHint]' passed (0.001 seconds).
+Test Suite 'PickupStockBatchTests' passed at 2026-11-03 17:13:03.834.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.071 (0.073) seconds
+Test Case '-[RoomInTheCartTests.PickupStockReviewTests testCarriedBatchReviewExpiresWhenItsOriginalShopChanges]' passed (0.021 seconds).
+Test Case '-[RoomInTheCartTests.PickupStockReviewTests testChangedRevisionSelectedShopAndEveryLiveScopeFieldInvalidatePreview]' passed (0.016 seconds).
+Test Case '-[RoomInTheCartTests.PickupStockReviewTests testMultiMealPreviewCancelAndExplicitApplyOnceKeepProtectedLunch]' passed (0.018 seconds).
+Test Case '-[RoomInTheCartTests.PickupStockReviewTests testOtherProcessCommitRejectsOtherwiseCurrentPreviewWithoutOverwritingItsMeal]' passed (0.014 seconds).
+Test Case '-[RoomInTheCartTests.PickupStockReviewTests testUrgentAddThenCorrectProjectsCurrentExactNeedAndReadbackAfterRestart]' passed (0.014 seconds).
+Test Suite 'PickupStockReviewTests' passed at 2026-11-03 17:13:03.918.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.082 (0.084) seconds
+Test Case '-[RoomInTheCartTests.PlacementFlowTests testAbsentExpiredStatusPreservesOriginalEvidenceWithoutAssumingSuccess]' passed (0.056 seconds).
+Test Case '-[RoomInTheCartTests.PlacementFlowTests testAuthorityScopeChangeDuringCaptureCannotPersistLateSnapshot]' passed (0.004 seconds).
+Test Case '-[RoomInTheCartTests.PlacementFlowTests testCaptureNeedsExplicitApprovalAndPersistsOriginalSnapshotBeforeExternalAction]' passed (0.006 seconds).
+Test Case '-[RoomInTheCartTests.PlacementFlowTests testDeletionEpochRejectsLateCaptureAndLateReportSeal]' passed (0.013 seconds).
+Test Case '-[RoomInTheCartTests.PlacementFlowTests testExpiredReportNeverMintsAnotherWindowAndRecoversMinimalStatus]' passed (0.017 seconds).
+Test Case '-[RoomInTheCartTests.PlacementFlowTests testFormerShopperRetriesOriginalReportWithoutFetchingNewShopperFacts]' passed (0.015 seconds).
+Test Case '-[RoomInTheCartTests.PlacementFlowTests testKnownHandledReconciliationStatusPreventsResendAndExplicitRetirementKeepsEvidence]' passed (0.024 seconds).
+Test Case '-[RoomInTheCartTests.PlacementFlowTests testLocalLoadNeverFetchesCurrentShopperDataOrSends]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.PlacementFlowTests testMismatchedFrozenReportCannotApplyButCanExplicitlyReject]' passed (0.051 seconds).
+Test Case '-[RoomInTheCartTests.PlacementFlowTests testNewAccountCannotReadOldActorsCapture]' passed (0.007 seconds).
+Test Case '-[RoomInTheCartTests.PlacementFlowTests testOfflineReportSealsExactTimeIdentityAndBytesBeforeFirstSend]' passed (0.016 seconds).
+Test Case '-[RoomInTheCartTests.PlacementFlowTests testOnlyExplicitUnreportedDiscardAllowsFreshCaptureOfSameSnapshot]' passed (0.025 seconds).
+Test Case '-[RoomInTheCartTests.PlacementFlowTests testPersistingConfirmedReportReceiptCanRetryWithoutResending]' passed (0.027 seconds).
+Test Case '-[RoomInTheCartTests.PlacementFlowTests testReconciliationLostResponsePreservesExactBaseAndRetry]' passed (0.010 seconds).
+Test Case '-[RoomInTheCartTests.PlacementFlowTests testReconciliationRequiresCurrentFrozenMatchAndExplicitReview]' passed (0.011 seconds).
+Test Case '-[RoomInTheCartTests.PlacementFlowTests testReviewerTransferClearsLiveDataButKeepsOriginalReporterEvidence]' passed (0.007 seconds).
+Test Case '-[RoomInTheCartTests.PlacementFlowTests testSealedTimeCannotBeRewrittenAndScopedPurgePreservesOtherActors]' passed (0.023 seconds).
+Test Case '-[RoomInTheCartTests.PlacementFlowTests testSealFailureNeverSendsAndTimeEditInvalidatesApproval]' passed (0.011 seconds).
+Test Case '-[RoomInTheCartTests.PlacementFlowTests testStatusFailureCannotRetirePendingReconciliation]' passed (0.010 seconds).
+Test Suite 'PlacementFlowTests' passed at 2026-11-03 17:13:04.259.
+	 Executed 19 tests, with 0 failures (0 unexpected) in 0.335 (0.341) seconds
+Test Case '-[RoomInTheCartTests.RecipeCaptureAdapterTests testBilingualHeadingsSeparateIngredientsAndInstructions]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.RecipeCaptureAdapterTests testReviewedRecipeKeepsOriginalSeparateAndDoesNotChooseAMeal]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.RecipeCaptureAdapterTests testUnknownServingsAndUnreviewedRowsRequireCorrection]' passed (0.002 seconds).
+Test Suite 'RecipeCaptureAdapterTests' passed at 2026-11-03 17:13:04.264.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.004 (0.005) seconds
+Test Case '-[RoomInTheCartTests.RecipeCaptureIntegrationTests testEditingRecipePreservesOriginalEvidenceAndRevisionRules]' passed (0.002 seconds).
+Test Suite 'RecipeCaptureIntegrationTests' passed at 2026-11-03 17:13:04.266.
+Test Case '-[RoomInTheCartTests.RecordsAdapterTests testComparisonNativeRoundTripAndNestedAuthorityFieldRejection]' passed (0.003 seconds).
+Test Case '-[RoomInTheCartTests.RecordsAdapterTests testConfirmedLedgerDeletionSurvivesRestartAndRetriesOriginalReceiptUntilCleanup]' passed (0.034 seconds).
+Test Case '-[RoomInTheCartTests.RecordsAdapterTests testEarlierLedgerV1DefaultsPlanningButRejectsInjectedAccessFlags]' passed (0.003 seconds).
+Test Case '-[RoomInTheCartTests.RecordsAdapterTests testFailedDeletionIntentWriteNeverCallsDestructiveStoreOperation]' passed (0.011 seconds).
+Test Case '-[RoomInTheCartTests.RecordsAdapterTests testHelperExportDropsNativeFinanceAndPersonalExportRequiresWorkingKey]' passed (0.027 seconds).
+Test Case '-[RoomInTheCartTests.RecordsAdapterTests testHelperOnlyImportReconcilesRetiredOriginBeforeReview]' passed (0.027 seconds).
+Test Case '-[RoomInTheCartTests.RecordsAdapterTests testLedgerCanonicalRoundTripPreservesOriginalImportAndUUIDDecisionMap]' passed (0.005 seconds).
+Test Case '-[RoomInTheCartTests.RecordsAdapterTests testPickupCanonicalRoundTripOrdersSetAndUUIDQuoteMapWithoutChangingValues]' passed (0.005 seconds).
+Test Case '-[RoomInTheCartTests.RecordsAdapterTests testRetiredModelCannotSaveOldWorkspaceIntoReplacement]' passed (0.028 seconds).
+Test Case '-[RoomInTheCartTests.RecordsAdapterTests testScopedDinnerPlanningRecoveryRetainsSourceReferencesWithoutAuthority]' passed (0.017 seconds).
+Test Case '-[RoomInTheCartTests.RecordsAdapterTests testSourceErasureBetweenSelectionAndExportCannotExportCachedPrivateData]' passed (0.003 seconds).
+Test Case '-[RoomInTheCartTests.RecordsAdapterTests testStaleEntireLedgerReviewDeletesNothingAndAllowsFreshReview]' passed (0.022 seconds).
+Test Case '-[RoomInTheCartTests.RecordsAdapterTests testUnsupportedNativeImportStagesNothingAndPreservesRegistryBytes]' passed (0.019 seconds).
+Test Case '-[RoomInTheCartTests.RecordsAdapterTests testWholeLedgerErasurePurgesAllReviewedHistoryAndRecoveryOriginOnly]' passed (0.048 seconds).
+Test Suite 'RecordsAdapterTests' passed at 2026-11-03 17:13:04.523.
+	 Executed 14 tests, with 0 failures (0 unexpected) in 0.252 (0.257) seconds
+Test Case '-[RoomInTheCartTests.RecordsErasureCleanupTests testFailedPrivateProjectionCleanupKeepsExactRetirementPendingAcrossRestart]' passed (0.032 seconds).
+Test Suite 'RecordsErasureCleanupTests' passed at 2026-11-03 17:13:04.555.
+Test Case '-[RoomInTheCartTests.RecordsListingTests testUnreadableNativeSiblingsAreReportedAndExcludedFromHealthyExportWithoutChangingBytes]' passed (0.016 seconds).
+Test Suite 'RecordsListingTests' passed at 2026-11-03 17:13:04.572.
+Test Case '-[RoomInTheCartTests.RecordsMediaTests testActionOutcomeAnchorChangesOnlyAfterCompletedDeletionAndClearsOnFailure]' passed (0.026 seconds).
+Test Case '-[RoomInTheCartTests.RecordsMediaTests testCaptureArchiveListingCannotEscapeLiveNamespaceAndHonorsRemovalMarkers]' passed (0.010 seconds).
+Test Case '-[RoomInTheCartTests.RecordsMediaTests testCorruptOptionalSidecarIsReportedWithoutBlockingHealthyRecordBackupOrReplacingBytes]' passed (0.010 seconds).
+Test Case '-[RoomInTheCartTests.RecordsMediaTests testLiveScopeChangeDuringValidationClearsPrivateExportAndStagedImport]' passed (0.073 seconds).
+Test Case '-[RoomInTheCartTests.RecordsMediaTests testReceiptAndRecipeEvidenceStayBoundToTheirOwnedRecord]' passed (0.009 seconds).
+Test Case '-[RoomInTheCartTests.RecordsMediaTests testRecoveredEditProjectionFiltersMediaForRemovedTargetsNewShopsAndMealLibrary]' passed (0.011 seconds).
+Test Case '-[RoomInTheCartTests.RecordsMediaTests testSelectedReducedJPEGRoundTripAndCorruptImageRejectsWholeBatch]' passed (0.024 seconds).
+Test Case '-[RoomInTheCartTests.RecordsMediaTests testSelectionDefaultsOffHelperExcludesEvidenceAndSelectedEncryptedRecoveryWorksBesideNewer]' passed (0.042 seconds).
+Test Case '-[RoomInTheCartTests.RecordsMediaTests testUntrustedNestedAuthorityWrongOwnerUnsupportedImageAndVersionFailWithoutRegistryMutation]' passed (0.009 seconds).
+Test Suite 'RecordsMediaTests' passed at 2026-11-03 17:13:04.791.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.215 (0.218) seconds
+Test Case '-[RoomInTheCartTests.RecordsRecoveryCaptureTests testActualRecoveredLedgerNewPhotoReexportSiblingAndCleanupPreservePhysicalIdentity]' passed (0.122 seconds).
+Test Case '-[RoomInTheCartTests.RecordsRecoveryCaptureTests testCancelledOpenCannotReplaceCompletedDeletionOutcomeAndDeniedDeletionCannotMutateRegistry]' passed (0.016 seconds).
+Test Case '-[RoomInTheCartTests.RecordsRecoveryCaptureTests testDeletionCancelsInFlightLeaseAndDrainPreventsLateFolderRecreation]' passed (0.018 seconds).
+Test Case '-[RoomInTheCartTests.RecordsRecoveryCaptureTests testDrainWaitsForCancelledInFlightUser]' passed (0.008 seconds).
+Test Case '-[RoomInTheCartTests.RecordsRecoveryCaptureTests testJournalIsBoundToActualDatabaseAndCopyAndUnknownFieldsFailClosed]' passed (0.048 seconds).
+Test Case '-[RoomInTheCartTests.RecordsRecoveryCaptureTests testMediaScrubRetainsCopyDirectoryAndReopensUsingFreshReceipt]' passed (0.041 seconds).
+Test Case '-[RoomInTheCartTests.RecordsRecoveryCaptureTests testRecoveredPickupReceiptAndRecipeSourceUseActualStoreAndRetainNativeBinding]' passed (0.051 seconds).
+Test Case '-[RoomInTheCartTests.RecordsRecoveryCaptureTests testSymlinksAndDeniedAuthorizationCannotCreateRecoveryStores]' passed (0.032 seconds).
+Test Case '-[RoomInTheCartTests.RecordsRecoveryCaptureTests testWrongPhysicalMappingRejectedAndImportedUnrelatedMappingNeverMintsLiveScope]' passed (0.033 seconds).
+Test Suite 'RecordsRecoveryCaptureTests' passed at 2026-11-03 17:13:05.162.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.368 (0.371) seconds
+Test Case '-[RoomInTheCartTests.RequestDuplicateComparisonTests testAuthorizationShopIdentityAndEmptyNamesCannotCreatePrivateOrFalseGroups]' passed (0.010 seconds).
+Test Case '-[RoomInTheCartTests.RequestDuplicateComparisonTests testClarificationUsesOnlySelectedRequestThenReviewedLinkKeepsOtherAuthorUntouched]' passed (0.149 seconds).
+Test Case '-[RoomInTheCartTests.RequestDuplicateComparisonTests testCursorOverlapUsesOneLatestRevisionPerRequestAndGroupIdentityStaysStable]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.RequestDuplicateComparisonTests testDuplicateAcrossPageBoundaryCanBeReadWithoutChangingSelectedRequestOrWriting]' passed (0.032 seconds).
+Test Case '-[RoomInTheCartTests.RequestDuplicateComparisonTests testExplicitDecisionsKeepSeparateOutcomesAndLinkNeverAddsOrSumsPacks]' passed (0.063 seconds).
+Test Case '-[RoomInTheCartTests.RequestDuplicateComparisonTests testFixtureInterceptsUnexpectedNetworkDestinations]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.RequestDuplicateComparisonTests testMatchingChangesOnlyCaseWhitespaceAndCanonicalUnicodeNotMeaningfulWords]' passed (0.003 seconds).
+Test Case '-[RoomInTheCartTests.RequestDuplicateComparisonTests testNonAdjacentNamesBecomeAdjacentWithoutLosingAuthorsUsesOrCompletedOutcomes]' passed (0.001 seconds).
+Test Suite 'RequestDuplicateComparisonTests' passed at 2026-11-03 17:13:05.423.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 0.259 (0.261) seconds
+Test Case '-[RoomInTheCartTests.ScanMediaStoreTests testDEBUGStoreIsolation]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.ScanMediaStoreTests testErasureAndRemovalRejectLateCallbacksAfterRestart]' passed (0.018 seconds).
+Test Case '-[RoomInTheCartTests.ScanMediaStoreTests testExactReplayAndCurrentNamespaceAndTargetBinding]' passed (0.012 seconds).
+Test Case '-[RoomInTheCartTests.ScanMediaStoreTests testPersistedImageCountBoundAndNoAutomaticEviction]' passed (0.050 seconds).
+Test Case '-[RoomInTheCartTests.ScanMediaStoreTests testPickupRecordErasurePreservesOtherJourneys]' passed (0.008 seconds).
+Test Case '-[RoomInTheCartTests.ScanMediaStoreTests testScopeInvalidationDuringSaveLeavesNoNewEvidence]' passed (0.007 seconds).
+Test Case '-[RoomInTheCartTests.ScanMediaStoreTests testSymlinkEvidenceFileCannotEscapeStore]' passed (0.009 seconds).
+Test Suite 'ScanMediaStoreTests' passed at 2026-11-03 17:13:05.532.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.105 (0.108) seconds
+Test Case '-[RoomInTheCartTests.ScanModelTests testLatePhotoCompletionCannotRestoreClosedSource]' passed (0.005 seconds).
+Test Case '-[RoomInTheCartTests.ScanModelTests testPasteKeepsOriginalAfterUserCorrection]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.ScanModelTests testRevokingPhotoConsentRejectsLateResultAndKeepsTyping]' passed (0.003 seconds).
+Test Case '-[RoomInTheCartTests.ScanModelTests testTypedFallbackAndExactlyOneReviewedCallback]' passed (0.001 seconds).
+Test Suite 'ScanModelTests' passed at 2026-11-03 17:13:05.542.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.009 (0.010) seconds
+Test Case '-[RoomInTheCartTests.ScanParsingTests testGTINCheckDigitDoesNotConferProductIdentity]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.ScanParsingTests testImageNormalizationStripsLocationAndRejectsUnsupportedBytes]' passed (0.003 seconds).
+Test Case '-[RoomInTheCartTests.ScanParsingTests testRealVisionFindsCodeWithoutInventingAProduct]' passed (0.582 seconds).
+Test Case '-[RoomInTheCartTests.ScanParsingTests testReceiptLinesKeepPrintedTextAndUnknownAmounts]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.ScanParsingTests testSelectedFileReadRejectsOversizeAndSymlink]' passed (0.011 seconds).
+Test Suite 'ScanParsingTests' passed at 2026-11-03 17:13:06.144.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.598 (0.600) seconds
+Test Case '-[RoomInTheCartTests.SharedMealChangeTests testAssignedShopperSeedRequiresExactFreshSourceAndNeverSendsPlannerProposal]' passed (0.011 seconds).
+Test Case '-[RoomInTheCartTests.SharedMealChangeTests testChangedNativeIdentityOrRoleCannotPublishLateReadOrSendReview]' passed (0.016 seconds).
+Test Case '-[RoomInTheCartTests.SharedMealChangeTests testExplicitLocalRetryClearDoesNotClaimUndoOrSendAnything]' passed (0.008 seconds).
+Test Case '-[RoomInTheCartTests.SharedMealChangeTests testFormerPlannerNowShopperCanClearOwnHiddenRetryButCannotTransmitIt]' passed (0.005 seconds).
+Test Case '-[RoomInTheCartTests.SharedMealChangeTests testGuestSeedUsesResultingBindingsAndNeverMutatesReviewedPlanningState]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.SharedMealChangeTests testLostResponseRestartsWithSameExactBytesAndNeverReprepares]' passed (0.006 seconds).
+Test Case '-[RoomInTheCartTests.SharedMealChangeTests testNativeSeedUsesExactContributionIDsAndDoesNotInferGroupBindings]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.SharedMealChangeTests testOldMealEncodingRemainsCompatibleAndUnknownQuantityIsExplicitNull]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.SharedMealChangeTests testPaidLapseHidesPrivatePendingPayloadAndProposalProjection]' passed (0.003 seconds).
+Test Case '-[RoomInTheCartTests.SharedMealChangeTests testProtectedRetrySurvivesRestartAndScopedPurgeRejectsLateWrites]' passed (0.004 seconds).
+Test Case '-[RoomInTheCartTests.SharedMealChangeTests testReenrolledActorCanExplicitlyClearHiddenOldDeviceRetryWithoutSendingOrExposingIt]' passed (0.005 seconds).
+Test Case '-[RoomInTheCartTests.SharedMealChangeTests testSameActorReenrollmentStillInvalidatesReviewedProposal]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.SharedMealChangeTests testScopeChangeDuringStatusReadCannotClearAnotherRuntimePending]' passed (0.004 seconds).
+Test Case '-[RoomInTheCartTests.SharedMealChangeTests testStoredBytesCannotBeAlteredWithoutMatchingReviewedPayload]' passed (0.002 seconds).
+Test Suite 'SharedMealChangeTests' passed at 2026-11-03 17:13:06.217.
+	 Executed 14 tests, with 0 failures (0 unexpected) in 0.069 (0.073) seconds
+Test Case '-[RoomInTheCartTests.SharedMealCivilDateTests testDateLabelsUseGregorianCivilDayEvenWhenLocalePrefersAnotherCalendar]' passed (0.004 seconds).
+Test Case '-[RoomInTheCartTests.SharedMealCivilDateTests testLocalizedCivilDayKeepsTheExactGregorianWireDayAcrossUSDSTBoundaries]' passed (0.006 seconds).
+Test Case '-[RoomInTheCartTests.SharedMealCivilDateTests testMalformedOrImpossibleCivilDaysDoNotProduceADifferentDayLabel]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.SharedMealCivilDateTests testRenderingDoesNotAlterTheMealOrEncodedWireDay]' passed (0.001 seconds).
+Test Suite 'SharedMealCivilDateTests' passed at 2026-11-03 17:13:06.230.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.011 (0.013) seconds
+Test Case '-[RoomInTheCartTests.SharedMealIdeaTests testApprovalCannotBeSentForUnsavedOrUnreviewedIdea]' passed (0.004 seconds).
+Test Case '-[RoomInTheCartTests.SharedMealIdeaTests testApprovedFractionalPageRetainsExactSupplyAndProposedQuantity]' passed (0.017 seconds).
+Test Case '-[RoomInTheCartTests.SharedMealIdeaTests testChangingAccountOrEnrollmentScopeDiscardsLateReadAndBlocksWrite]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.SharedMealIdeaTests testFractionalEvidenceSurvivesLostResponseRetryExactly]' passed (0.004 seconds).
+Test Case '-[RoomInTheCartTests.SharedMealIdeaTests testFractionEntryRejectsInvalidOrOutOfRangeEvidenceWithoutRounding]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.SharedMealIdeaTests testLostResponseBlocksEditedWriteAndRetriesExactOriginalKeyAndEvidence]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.SharedMealIdeaTests testNewProposalRequiresExplicitApprovedIdeaAndEncodesNullOriginalRevision]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.SharedMealIdeaTests testOunceAndFluidOunceStayDistinctAcrossHouseholdAndProposalRoundTrip]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.SharedMealIdeaTests testUnknownHouseholdEvidenceEncodesAsExplicitNullNotPrivateDefaults]' passed (0.000 seconds).
+Test Suite 'SharedMealIdeaTests' passed at 2026-11-03 17:13:06.263.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.031 (0.034) seconds
+Test Case '-[RoomInTheCartTests.SharedShopFlowTests testChangedShopperAuthorityClearsPrivateViewsBeforeRequestListFailure]' passed (0.072 seconds).
+Test Case '-[RoomInTheCartTests.SharedShopFlowTests testConfirmedCreationSurvivesReadFailureAndCannotCreateAnotherShop]' passed (0.051 seconds).
+Test Case '-[RoomInTheCartTests.SharedShopFlowTests testFinancialEvidenceStaysWithTheAssignedShopperAndClearsOnTransfer]' passed (0.042 seconds).
+Test Case '-[RoomInTheCartTests.SharedShopFlowTests testFreshHouseholdNativeFlowCreatesInvitesReceivesApprovesFreezesAndReopens]' passed (0.100 seconds).
+Test Case '-[RoomInTheCartTests.SharedShopFlowTests testLockClearsSharedBudgetAndPreventsRetainedModelFromPublishing]' passed (0.050 seconds).
+Test Case '-[RoomInTheCartTests.SharedShopFlowTests testLostCreateResponseCanRecoverOriginalOperationWithoutSecondShop]' passed (0.082 seconds).
+Test Case '-[RoomInTheCartTests.SharedShopFlowTests testOrganizerReviewsTransferAndLosesShopperBudgetAfterConfirmation]' passed (0.035 seconds).
+Test Case '-[RoomInTheCartTests.SharedShopFlowTests testSharedMealReviewBindsPacksDateAndRevisionAndRejectsAStaleEditor]' passed (0.043 seconds).
+Test Case '-[RoomInTheCartTests.SharedShopFlowTests testShopDraftRequiresExplicitReviewAndEditsInvalidateIt]' passed (0.022 seconds).
+Test Suite 'SharedShopFlowTests' passed at 2026-11-03 17:13:06.765.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.498 (0.501) seconds
+Test Case '-[RoomInTheCartTests.SharedStoreQuoteTests testAccountOrEnrollmentChangeDiscardsLateReadAndBlocksSend]' passed (0.007 seconds).
+Test Case '-[RoomInTheCartTests.SharedStoreQuoteTests testFrozenShopDoesNotPrepareNewPrivateSave]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.SharedStoreQuoteTests testFrozenShopperCanReviewRevokingNamedBudgetAccessWithoutBasketWrite]' passed (0.014 seconds).
+Test Case '-[RoomInTheCartTests.SharedStoreQuoteTests testLostReplySurvivesRestartRetriesSameBytesAndBlocksEditedSave]' passed (0.024 seconds).
+Test Case '-[RoomInTheCartTests.SharedStoreQuoteTests testMissingChargesUnavailableAndUnreviewedEligibilityCannotCrownWinner]' passed (0.020 seconds).
+Test Case '-[RoomInTheCartTests.SharedStoreQuoteTests testNativeCoreEngineShowsOneDollarMoreEighteenMinutesAndThreeDollarBreakEven]' passed (0.015 seconds).
+Test Case '-[RoomInTheCartTests.SharedStoreQuoteTests testNewShopperEpochHidesOldPendingAndAllowsExplicitLocalClearWithoutRebase]' passed (0.033 seconds).
+Test Case '-[RoomInTheCartTests.SharedStoreQuoteTests testPurgeAdvancesEpochAndRejectsPreDeletionWrite]' passed (0.018 seconds).
+Test Case '-[RoomInTheCartTests.SharedStoreQuoteTests testRevocationHidesProtectedRetryAndCannotReplayPriorSuccess]' passed (0.056 seconds).
+Test Suite 'SharedStoreQuoteTests' passed at 2026-11-03 17:13:06.957.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.189 (0.192) seconds
+Test Case '-[RoomInTheCartTests.StructuredCaptureTests testCaptureBoundsRejectOversizedInput]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.StructuredCaptureTests testConflictingTotalAndPackEvidenceFailsAtomically]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.StructuredCaptureTests testDestinationMustBeExplicitlyTheHostDestination]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.StructuredCaptureTests testEnglishAndSpanishQuantitiesRemainExact]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.StructuredCaptureTests testGuestWordingCannotImplicitlyBecomeAList]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.StructuredCaptureTests testMassAndFluidOuncesAreNotInterchanged]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.StructuredCaptureTests testMaterialEditInvalidatesConfirmationAndPreservesIdentity]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.StructuredCaptureTests testNegationIsVisibleAndNeverDeletesOrSilentlyBecomesQuantity]' passed (0.000 seconds).
+Test Case '-[RoomInTheCartTests.StructuredCaptureTests testPackEvidenceCommitsTogetherWithExclusionsAndOriginal]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.StructuredCaptureTests testPackWithoutUsableAmountStaysUnknown]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.StructuredCaptureTests testRepeatedCaptureCallbackKeepsOneReceiptAndChangedBodyFails]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.StructuredCaptureTests testSpanishPackParsingAndSuffixOrder]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.StructuredCaptureTests testUndoneCaptureCannotBeResubmittedByOldCallback]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.StructuredCaptureTests testUnknownMeasureAndAmbiguousCommaNeverBecomeKnownCount]' passed (0.001 seconds).
+Test Suite 'StructuredCaptureTests' passed at 2026-11-03 17:13:06.974.
+	 Executed 14 tests, with 0 failures (0 unexpected) in 0.012 (0.017) seconds
+Test Case '-[RoomInTheCartTests.SurfaceIntegrationTests testAuthorityChangingDuringCommitDoesNotAcknowledge]' passed (0.010 seconds).
+Test Case '-[RoomInTheCartTests.SurfaceIntegrationTests testChangedScopeCannotReadOrCommitReview]' passed (0.007 seconds).
+Test Case '-[RoomInTheCartTests.SurfaceIntegrationTests testCommitPersistsFullReviewAndAcknowledgesOnce]' passed (0.012 seconds).
+Test Case '-[RoomInTheCartTests.SurfaceIntegrationTests testErasureAndExpiryRemovePrivateReviewCopies]' passed (0.044 seconds).
+Test Case '-[RoomInTheCartTests.SurfaceIntegrationTests testExplicitStaleReviewRetainsOperationAndPriorConfirmedAttempt]' passed (0.018 seconds).
+Test Case '-[RoomInTheCartTests.SurfaceIntegrationTests testFutureReviewSchemaFailsClosedWithoutReplacingBytes]' passed (0.008 seconds).
+Test Case '-[RoomInTheCartTests.SurfaceIntegrationTests testInterruptedAcknowledgmentReopensReceiptWithoutRestaging]' passed (0.010 seconds).
+Test Case '-[RoomInTheCartTests.SurfaceIntegrationTests testInterruptedBeforeCommitKeepsAllIDsAndDecisions]' passed (0.011 seconds).
+Test Case '-[RoomInTheCartTests.SurfaceIntegrationTests testJournalRejectsChangedIdentityWithoutReplacingHealthyDraft]' passed (0.006 seconds).
+Test Case '-[RoomInTheCartTests.SurfaceIntegrationTests testRacingOldReceiptIsRecognizedAfterExplicitFreshReview]' passed (0.012 seconds).
+Test Case '-[RoomInTheCartTests.SurfaceIntegrationTests testReceiptMismatchCannotConsumeInbox]' passed (0.007 seconds).
+Test Case '-[RoomInTheCartTests.SurfaceIntegrationTests testRouteStoreIdempotencyAndExactScopeRemoval]' passed (0.003 seconds).
+Test Suite 'SurfaceIntegrationTests' passed at 2026-11-03 17:13:07.126.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 0.148 (0.152) seconds
+Test Case '-[RoomInTheCartTests.SurfaceReconciliationGateTests testPreReadyLedgerPreservesDurableRouteAndReminder]' passed (0.066 seconds).
+Test Case '-[RoomInTheCartTests.SurfaceReconciliationGateTests testPreReadyPickupPreservesDurableRouteAndReminder]' passed (0.009 seconds).
+Test Case '-[RoomInTheCartTests.SurfaceReconciliationGateTests testSavingPendingAndRetirementSnapshotsNeverInferOrphans]' passed (0.008 seconds).
+Test Case '-[RoomInTheCartTests.SurfaceReconciliationGateTests testSourceChangingAcrossAwaitPreventsCleanupUntilFreshCompleteReview]' passed (0.009 seconds).
+Test Suite 'SurfaceReconciliationGateTests' passed at 2026-11-03 17:13:07.220.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.092 (0.094) seconds
+Test Case '-[RoomInTheCartTests.SurfaceRuntimeIsolationTests testDefaultUIFlagUsesOwnedTestRootOnlyInDebug]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.SurfaceRuntimeIsolationTests testInjectedDirectoryWinsAndCanNeverBeResetByFlags]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.SurfaceRuntimeIsolationTests testNormalRuntimeUsesExplicitLiveFactoriesAndEffects]' passed (0.003 seconds).
+Test Case '-[RoomInTheCartTests.SurfaceRuntimeIsolationTests testRedirectedTestRootCannotDeleteDevelopmentState]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.SurfaceRuntimeIsolationTests testResetDeletesOnlyOwnedTestDirectoryAndPreservesDevelopmentFiles]' passed (0.003 seconds).
+Test Case '-[RoomInTheCartTests.SurfaceRuntimeIsolationTests testResetFlagWithoutUITestingNeverDeletesLiveDirectory]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.SurfaceRuntimeIsolationTests testUITestFactoriesCannotOpenLiveGroupsOrInvokeSystemEffects]' passed (0.008 seconds).
+Test Case '-[RoomInTheCartTests.SurfaceRuntimeIsolationTests testUITestReminderCannotRequestRegisterOrRemoveRealNotifications]' passed (0.006 seconds).
+Test Suite 'SurfaceRuntimeIsolationTests' passed at 2026-11-03 17:13:07.246.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 0.023 (0.026) seconds
+Test Case '-[RoomInTheCartTests.WorkspaceAccessTests testFirstPrivateUseDoesNotRequireAnAccountOrDeviceAuthentication]' passed (0.003 seconds).
+Test Case '-[RoomInTheCartTests.WorkspaceAccessTests testSharedPersonaProtectionSurvivesRelaunch]' passed (0.004 seconds).
+Test Suite 'WorkspaceAccessTests' passed at 2026-11-03 17:13:07.255.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.008 (0.009) seconds
+Test Suite 'RoomInTheCartTests.xctest' passed at 2026-11-03 17:13:07.255.
+	 Executed 518 tests, with 0 failures (0 unexpected) in 13.195 (13.445) seconds
+Test Suite 'Selected tests' passed at 2026-11-03 17:13:07.255.
+	 Executed 518 tests, with 0 failures (0 unexpected) in 13.195 (13.446) seconds
+Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testCorrectFreezerBatchAndReadReservationsAfterRestart]' failed (93.004 seconds).
+Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop]' passed (343.263 seconds).
+Test Suite 'FreeJourneyUITests' failed at 2026-11-03 17:20:35.317.
+	 Executed 2 tests, with 1 failure (0 unexpected) in 436.267 (436.276) seconds
+Test Case '-[RoomInTheCartUITests.LedgerConfirmedStockPackUITests testFullyCoveredSavesUseAtHomePlanWithoutPurchasedItemOrRetailerOrder]' passed (80.700 seconds).
+Test Case '-[RoomInTheCartUITests.LedgerConfirmedStockPackUITests testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack]' passed (85.432 seconds).
+Test Suite 'LedgerConfirmedStockPackUITests' passed at 2026-11-03 17:23:21.452.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 166.133 (166.135) seconds
+Test Suite 'RoomInTheCartUITests.xctest' failed at 2026-11-03 17:23:21.459.
+	 Executed 4 tests, with 1 failure (0 unexpected) in 602.400 (602.418) seconds
+Test Suite 'Selected tests' failed at 2026-11-03 17:23:21.460.
+	 Executed 4 tests, with 1 failure (0 unexpected) in 602.400 (602.420) seconds
+** TEST FAILED **

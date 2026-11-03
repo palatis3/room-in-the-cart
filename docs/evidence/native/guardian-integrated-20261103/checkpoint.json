@@ -1,0 +1,60 @@
+{
+  "recordedAtUTC": "2026-11-03T21:41:03.755894+00:00",
+  "source": "/Users/palatis/Room in the Cart/.build/GuardianIntegratedSource-20261103T213405Z",
+  "baseCommit": "f5e8aeb",
+  "initialModelRun": {
+    "tests": 478,
+    "pass": 477,
+    "fail": 1,
+    "skipped": 0,
+    "resultBundle": ".build/GuardianIntegratedModels-20261103.xcresult",
+    "log": ".build/GuardianIntegratedModels-20261103.log",
+    "failure": "GuardianChildBoundaryTests did not create a shop before expecting widget publication. Dedicated test-only correction is pending rerun."
+  },
+  "householdClient": {
+    "tests": 80,
+    "pass": 77,
+    "skipped": 3,
+    "fail": 0,
+    "skips": "Three actual PostgreSQL wire tests require the configured service integration harness; standalone package run does not substitute.",
+    "log": ".build/GuardianRoot-HouseholdClient.log"
+  },
+  "releaseArchive": {
+    "compiled": true,
+    "signedForDistribution": false,
+    "path": ".build/RoomInTheCart-GuardianIntegrated-20261103.xcarchive",
+    "metadataCheck": "Passed Release and Debug compiled metadata checks; no production account, billing or policy readiness implied."
+  },
+  "localization": {
+    "passed": true,
+    "catalogs": 16,
+    "entries": 3582,
+    "literalSourceKeys": 3427,
+    "checker": "Root check_localization.py relative .build fix, invoked with ROOT pointing to exact immutable snapshot; initial copied checker falsely skipped every catalog because its absolute ancestor contained .build.",
+    "checkerTests": 13
+  },
+  "binaryIdentities": [
+    {
+      "path": ".build/GuardianIntegratedDD-20261103/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart",
+      "sha256": "d45700ffa22608a77fc99d52c512efd065bb60c64496b1cb9e9a631ca4c82e6a",
+      "bytes": 40496
+    },
+    {
+      "path": ".build/GuardianIntegratedDD-20261103/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart.debug.dylib",
+      "sha256": "2260f441d7009ed27f3051bb309dd8bc4a4bbcc90e201aa23b97e30fb7c0dfee",
+      "bytes": 49059632
+    },
+    {
+      "path": ".build/RoomInTheCart-GuardianIntegrated-20261103.xcarchive/Products/Applications/RoomInTheCart.app/RoomInTheCart",
+      "sha256": "0df81cc1c2b1b8e837a9973ee4e57b72b35b9001c96ba97eca1224afc9475fad",
+      "bytes": 17260176
+    },
+    {
+      "path": ".build/GuardianIntegratedDD-20261103/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/RoomInTheCartTests",
+      "sha256": "cd4c74c8948e398026500f8bbea27275c79468f72239e864a2d766862127795c",
+      "bytes": 11185168
+    }
+  ],
+  "scope": "Includes final guardian production native/client/root and civil-date code. Excludes subsequent S21 devices, S23 duplicate comparison, S24 meal context and stock/cook corrections under construction. Not a final app or release acceptance.",
+  "debugProductNotice": "The tested Debug product embeds its XCTest plug-in. Do not install this product into the user preview; build an ordinary app in a separate clean DerivedData directory."
+}

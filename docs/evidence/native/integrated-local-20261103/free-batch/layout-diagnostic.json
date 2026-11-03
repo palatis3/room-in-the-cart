@@ -1,0 +1,25 @@
+{
+  "recordedAtUTC": "2026-11-03T23:05:16.345364+00:00",
+  "status": "Unresolved layout diagnostic; no demonstrated visible defect",
+  "reviewer": "child_root_review",
+  "result": ".build/IntegratedFreeBatch-20261103.xcresult",
+  "warning": "Invalid frame dimension (negative or non-finite).",
+  "reportedIssues": 1,
+  "actualAppStdoutOccurrences": 5,
+  "occurrenceTimesLocal": [
+    "17:58:55.043894",
+    "17:59:13.736605",
+    "17:59:14.322624",
+    "17:59:16.450911",
+    "17:59:27.810502"
+  ],
+  "context": "First follows urgentRepairShortcut navigation before field editing; later occurrences during keyboard/form interaction.",
+  "retainedStack": {
+    "frames": 51,
+    "addressStrings": "all zero",
+    "symbolsOrSourceLocations": 0
+  },
+  "sourceComparison": "Theme.swift, RoomInTheCartApp.swift and PickupRepairView.swift match test and final470snapshot; dynamic viewport values finite/clamped.",
+  "uiOutcome": "Pass, final screenshot inspected and readable; no wrong allocation or clipped action demonstrated.",
+  "conclusion": "Neither a production defect nor a system-only cause is established. No blind source change made. Retain warning for a future symbolic reproduction if visible defect emerges."
+}

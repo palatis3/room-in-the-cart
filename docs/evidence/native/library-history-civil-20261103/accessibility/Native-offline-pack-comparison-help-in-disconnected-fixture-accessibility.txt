@@ -1,0 +1,63 @@
+Attributes: Application, 0x1117acdc0, pid: 65459, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x1117acdc0, pid: 65459, label: 'Room in the Cart'
+    Window (Main), 0x1117ad040, {{0.0, 0.0}, {390.0, 844.0}}
+      Other, 0x1117ad180, {{0.0, 0.0}, {390.0, 844.0}}
+        Other, 0x1117ad2c0, {{0.0, 0.0}, {390.0, 844.0}}
+          Other, 0x1117ae1c0, {{0.0, 0.0}, {390.0, 844.0}}
+            Other, 0x1117aebc0, {{0.0, 0.0}, {390.0, 844.0}}
+              StaticText, 0x1117ae300, {{101.3, 47.0}, {187.3, 13.3}}, identifier: 'fixture.corrections.english', label: 'N04 English entries: 0 · enabled: no'
+              StaticText, 0x1117ae440, {{98.0, 62.3}, {194.0, 13.3}}, identifier: 'fixture.corrections.spanish', label: 'N04 Spanish entries: 1 · enabled: yes'
+              StaticText, 0x1117ae580, {{107.5, 77.7}, {175.0, 13.3}}, identifier: 'fixture.corrections.sourceUnchanged', label: 'N04 local source unchanged: yes'
+              Other, 0x1117ae6c0, {{0.0, 93.0}, {390.0, 751.0}}
+                NavigationBar, 0x1117ae800, {{0.0, 103.0}, {390.0, 54.0}}, identifier: 'Compare two packs'
+                  Button, 0x1117ae940, {{16.0, 103.0}, {44.0, 44.0}}, identifier: 'BackButton', label: 'Help'
+                  StaticText, 0x1117acf00, {{116.3, 114.7}, {157.3, 20.7}}, label: 'Compare two packs'
+                Other, 0x1117af200, {{0.0, 93.0}, {390.0, 751.0}}
+                  Other, 0x1117af340, {{0.0, 93.0}, {390.0, 751.0}}
+                    Other, 0x1117af480, {{0.0, 93.0}, {390.0, 751.0}}
+                      Other, 0x1117aef80, {{0.0, 93.0}, {390.0, 751.0}}
+                        CollectionView, 0x1117ad400, {{0.0, 93.0}, {390.0, 751.0}}
+                          Other, 0x1117af0c0, {{-16.0, -1345.0}, {422.0, 3408.0}}
+                          Other, 0x1117aea80, {{0.0, 93.0}, {390.0, 751.0}}
+                            Other, 0x1117aed00, {{0.0, 93.0}, {390.0, 104.0}}
+                          Other, 0x1117aee40, {{0.0, 93.0}, {390.0, 751.0}}
+                          Cell, 0x1117af840, {{16.0, 192.0}, {358.0, 116.3}}
+                            Other, 0x1117af980, {{16.0, 192.0}, {358.0, 116.3}}
+                              Other, 0x1117afac0, {{16.0, 192.0}, {358.0, 116.3}}
+                            Other, 0x1117afc00, {{16.0, 192.0}, {358.0, 116.3}}
+                              Other, 0x1117af700, {{16.0, 192.0}, {358.0, 116.3}}
+                                Other, 0x1117afd40, {{16.0, 192.0}, {358.0, 116.3}}
+                                  StaticText, 0x1117afe80, {{16.0, 192.0}, {358.0, 116.3}}, label: 'Open Compare packs in Shop. Enter the amount you need, each pack’s usable amount and its price. Keep the same unit for the need and both packs.'
+                          Cell, 0x1117adf40, {{16.0, 308.3}, {358.0, 138.3}}
+                            Other, 0x1117aca00, {{16.0, 308.3}, {358.0, 138.3}}
+                              Other, 0x1117acb40, {{16.0, 308.3}, {358.0, 138.3}}
+                            Other, 0x1117acc80, {{16.0, 308.3}, {358.0, 138.3}}
+                              Other, 0x110ea0b40, {{16.0, 308.3}, {358.0, 138.3}}
+                                Other, 0x110ea0dc0, {{16.0, 308.3}, {358.0, 138.3}}
+                                  StaticText, 0x110ea1180, {{16.0, 308.3}, {358.0, 138.3}}, label: 'Review the whole packs needed, the usable food and the cost. An unknown usable amount or missing price stays unresolved. Save the comparison to reopen it in Records.'
+                          Other, 0x110ea12c0, {{32.0, 307.3}, {326.0, 1.0}}
+                          Cell, 0x110ea0a00, {{16.0, 446.7}, {358.0, 94.3}}
+                            Other, 0x110ea0640, {{16.0, 446.7}, {358.0, 94.3}}
+                              Other, 0x110ea2a80, {{16.0, 446.7}, {358.0, 94.3}}
+                            Other, 0x110ea35c0, {{16.0, 446.7}, {358.0, 94.3}}
+                              Other, 0x110ea0c80, {{16.0, 446.7}, {358.0, 94.3}}
+                                Other, 0x110ea2f80, {{16.0, 446.7}, {358.0, 94.3}}
+                                  StaticText, 0x110ea1a40, {{16.0, 446.7}, {358.0, 94.3}}, label: 'A pack comparison covers that item only. To judge the whole pickup, review the shopping list and its checkout costs.'
+                          Other, 0x110ea1b80, {{32.0, 445.7}, {326.0, 1.0}}
+                          Other, 0x110ea1680, {{357.0, 157.0}, {30.0, 639.7}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                            Other, 0x110ea1f40, {{384.0, 791.3}, {3.0, 7.0}}
+                          Other, 0x110ea0780, {{357.0, 157.0}, {30.0, 639.7}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                            Other, 0x110ea2080, {{384.0, 791.3}, {3.0, 7.0}}
+                Toolbar, 0x110ea1540, {{0.0, 93.0}, {390.0, 751.0}}, identifier: 'Toolbar', label: 'Toolbar'
+                  Other, 0x110ea2800, {{0.0, 93.0}, {390.0, 751.0}}
+    Window, 0x110ea17c0, {{0.0, 0.0}, {390.0, 844.0}}
+      Other, 0x110ea3340, {{0.0, 0.0}, {390.0, 844.0}}
+        Other, 0x110ea1900, {{0.0, 0.0}, {390.0, 844.0}}
+Path to element:
+ →Application, 0x1117acdc0, pid: 65459, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x110ea30c0, pid: 65459, label: 'Room in the Cart'
+  }

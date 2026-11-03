@@ -1,0 +1,24 @@
+{
+  "recordedAt": "2026-11-03T22:51:33.454673+00:00",
+  "device": {
+    "dataPath": "/Users/palatis/Library/Developer/CoreSimulator/Devices/65B8A2FE-51FE-44A5-A9C7-F2524E33179B/data",
+    "dataPathSize": 3979681792,
+    "logPath": "/Users/palatis/Library/Logs/CoreSimulator/65B8A2FE-51FE-44A5-A9C7-F2524E33179B",
+    "udid": "65B8A2FE-51FE-44A5-A9C7-F2524E33179B",
+    "lastUsedAt": "2026-11-03T20:42:47Z",
+    "isAvailable": true,
+    "logPathSize": 671744,
+    "deviceTypeIdentifier": "com.apple.CoreSimulator.SimDeviceType.iPhone-SE--2nd-generation-",
+    "state": "Shutdown",
+    "name": "Room in the Cart iOS 17 Small"
+  },
+  "action": "Shutdown only explicitly assigned SE after all owned processes exited; no erase/reset/data deletion and no other simulator action",
+  "ownedBuildTestPIDsAbsent": [
+    92307,
+    93565,
+    93898,
+    96283,
+    96969
+  ],
+  "evidence": "Bounded ps -p check returned no rows after final2UI exit0; teardown terminated test app"
+}

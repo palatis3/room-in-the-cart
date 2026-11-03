@@ -1,0 +1,54 @@
+{
+  "status": "COMPLETE_NO_OWNED_HEAVY_RUNNER",
+  "recordedAt": "2026-11-03T22:53:43.610600+00:00",
+  "repositoryEvidence": "/Users/palatis/Room in the Cart/docs/evidence/native/guardian-enrollment-20261103",
+  "readyManifest": "BUILD-READY-FINAL.json",
+  "frozenE": {
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "manifest": "ui-final-e-acceptance-run.json"
+  },
+  "separateParentExitNoticeSupplement": {
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "manifest": "root-exit-notice-run.json"
+  },
+  "fiveFinalGuardianUIOverlayHashes": [
+    {
+      "path": "ios/Features/Household/GuardianEnrollmentViews.swift",
+      "sha256": "b07114b4c01dfa5a4d056bda3aa945a2f95be5b91f8d923cadcdac4000c6f87d"
+    },
+    {
+      "path": "ios/Features/Household/GuardianChildView.swift",
+      "sha256": "1c70f5de0f6d02d4d969203737f97b42061b643bb6cc62236b821b17309bae74"
+    },
+    {
+      "path": "ios/UITestSupport/GuardianEnrollmentUIFixture.swift",
+      "sha256": "a29319340d1500851d60e7873c65ad2ee1824e4bae9f0e750ce2614e67d681c8"
+    },
+    {
+      "path": "ios/UITestSupport/GuardianRootTransitionUIFixture.swift",
+      "sha256": "22b13ce2a58f2f4226c134a80f57ede57b9deecce9ab602c1784efae7ef1d295"
+    },
+    {
+      "path": "ios/UITests/GuardianEnrollmentUITests.swift",
+      "sha256": "a236bf4095b8b07c88a8d85ccfa0ea50417db81d9c4646ecb304e2a7ad6426f1"
+    }
+  ],
+  "parentOwnedRootDelta": [
+    {
+      "path": "ios/App/RoomInTheCartApp.swift",
+      "sha256": "dfd54165f2abe662b601594e92e25b4b3ef345de0851a58e2a6562f0530f03d3"
+    },
+    {
+      "path": "ios/App/WorkspaceAccess.swift",
+      "sha256": "dc7d8c92fa41bfdfa0aa1646fe8486490d67e7667b554432406d9783510a8c92"
+    }
+  ],
+  "coordinatorGuardedFixtureFactorySHA256": "c48903ec26f933150d937ee34b3512c2e9980d1047bed68f0e463884b4128d8a",
+  "deviceRelease": "device-release.json",
+  "scope": "Exact frozen E8 artifact plus reviewed2case parent UI-only supplement; concurrent current release not claimed",
+  "git": "No staging or commits performed"
+}

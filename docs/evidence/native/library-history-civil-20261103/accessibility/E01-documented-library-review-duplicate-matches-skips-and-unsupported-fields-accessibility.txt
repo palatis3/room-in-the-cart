@@ -1,0 +1,127 @@
+Attributes: Application, 0x107873340, pid: 65644, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x107873340, pid: 65644, label: 'Room in the Cart'
+    Window (Main), 0x107873480, {{0.0, 0.0}, {390.0, 844.0}}
+      Other, 0x107870c80, {{0.0, 0.0}, {390.0, 844.0}}
+        Other, 0x107872300, {{0.0, 0.0}, {390.0, 844.0}}
+          Other, 0x107872d00, {{0.0, 0.0}, {390.0, 844.0}}
+            Other, 0x1078726c0, {{0.0, 0.0}, {390.0, 844.0}}
+              StaticText, 0x1078712c0, {{142.0, 47.0}, {106.0, 13.3}}, identifier: 'fixture.library.recipeCount', label: 'E01 saved recipes: 1'
+              StaticText, 0x107871180, {{106.7, 62.3}, {176.7, 13.3}}, identifier: 'fixture.library.existingPreserved', label: 'E01 original recipe preserved: yes'
+              StaticText, 0x107871cc0, {{109.3, 77.7}, {171.3, 13.3}}, identifier: 'fixture.library.sourceUnchanged', label: 'E01 local source unchanged: yes'
+              Button, 0x107873d40, {{32.7, 101.0}, {155.3, 28.3}}, identifier: 'fixture.library.selectLibrary', label: 'Use library picker input'
+              Button, 0x107872bc0, {{196.0, 101.0}, {161.3, 28.3}}, identifier: 'fixture.library.selectCorrupt', label: 'Use corrupt picker input'
+              StaticText, 0x107872f80, {{133.8, 139.0}, {122.3, 13.3}}, identifier: 'fixture.library.fileSelections', label: 'E01 picker selections: 1'
+              Other, 0x1078730c0, {{0.0, 154.3}, {390.0, 689.7}}
+                NavigationBar, 0x107872e40, {{0.0, 164.3}, {390.0, 54.0}}, identifier: 'Data and recovery'
+                  StaticText, 0x107873200, {{122.7, 176.0}, {144.7, 20.7}}, label: 'Data and recovery'
+                Other, 0x107870a00, {{0.0, 154.3}, {390.0, 689.7}}
+                  Other, 0x107872a80, {{0.0, 154.3}, {390.0, 689.7}}
+                    Other, 0x107873c00, {{0.0, 154.3}, {390.0, 689.7}}
+                      Other, 0x107872440, {{0.0, 154.3}, {390.0, 689.7}}
+                        CollectionView, 0x1078735c0, {{0.0, 154.3}, {390.0, 689.7}}, identifier: 'records.tools'
+                          Other, 0x107873700, {{-16.0, 47.0}, {422.0, 871.0}}
+                          Cell, 0x107873980, {{16.0, 139.3}, {358.0, 72.3}}
+                            Other, 0x107873ac0, {{16.0, 139.3}, {358.0, 72.3}}
+                              Other, 0x107873840, {{16.0, 139.3}, {358.0, 72.3}}
+                            Other, 0x107871400, {{16.0, 139.3}, {358.0, 72.3}}
+                              Other, 0x107872800, {{16.0, 139.3}, {358.0, 72.3}}
+                                Other, 0x107871f40, {{16.0, 139.3}, {358.0, 72.3}}
+                                  StaticText, 0x107871b80, {{16.0, 139.3}, {358.0, 72.3}}, label: 'The recipe file does not supply a saved date.'
+                          Other, 0x107871040, {{0.0, 154.3}, {390.0, 689.7}}
+                            Other, 0x107872940, {{0.0, 154.3}, {390.0, 104.0}}
+                          Other, 0x107871900, {{0.0, 154.3}, {390.0, 689.7}}
+                            Other, 0x1078721c0, {{0.0, 154.3}, {390.0, 104.0}}
+                          Cell, 0x107872580, {{16.0, 211.7}, {358.0, 72.3}}
+                            Other, 0x104a89400, {{16.0, 211.7}, {358.0, 72.3}}
+                              Other, 0x104a8af80, {{16.0, 211.7}, {358.0, 72.3}}
+                            Other, 0x104a8b340, {{16.0, 211.7}, {358.0, 72.3}}
+                              Other, 0x104a8ae40, {{16.0, 211.7}, {358.0, 72.3}}
+                                Other, 0x104a8b700, {{16.0, 211.7}, {358.0, 72.3}}
+                                  StaticText, 0x104a8b5c0, {{16.0, 211.7}, {358.0, 72.3}}, label: '2 recipes ready · 2 duplicates · 2 rows skipped'
+                          Other, 0x104a8b840, {{32.0, 210.7}, {326.0, 1.0}}
+                          Cell, 0x104a8b980, {{16.0, 284.0}, {358.0, 52.0}}
+                            Other, 0x104a8bc00, {{16.0, 284.0}, {358.0, 52.0}}
+                              Other, 0x104a8bac0, {{16.0, 284.0}, {358.0, 52.0}}
+                            Other, 0x104a892c0, {{16.0, 284.0}, {358.0, 52.0}}
+                              Other, 0x112160000, {{16.0, 284.0}, {358.0, 52.0}}
+                                Other, 0x112160140, {{16.0, 284.0}, {358.0, 52.0}}
+                                  StaticText, 0x112160280, {{16.0, 284.0}, {358.0, 52.0}}, label: 'Unsupported fields: nutrition'
+                          Other, 0x1121603c0, {{32.0, 283.0}, {326.0, 1.0}}
+                          Cell, 0x112160500, {{16.0, 336.0}, {358.0, 52.0}}
+                            Other, 0x112160640, {{16.0, 336.0}, {358.0, 52.0}}
+                              Other, 0x112160780, {{16.0, 336.0}, {358.0, 52.0}}
+                            Other, 0x1121608c0, {{16.0, 336.0}, {358.0, 52.0}}
+                              Other, 0x112160a00, {{16.0, 336.0}, {358.0, 52.0}}
+                                Other, 0x112160b40, {{16.0, 336.0}, {358.0, 52.0}}
+                                  StaticText, 0x112160c80, {{16.0, 336.0}, {358.0, 52.0}}, label: 'Arroz sin cambiar'
+                          Other, 0x112160dc0, {{32.0, 335.0}, {326.0, 1.0}}
+                          Cell, 0x112160f00, {{16.0, 388.0}, {358.0, 52.0}}
+                            Other, 0x112161040, {{16.0, 388.0}, {358.0, 52.0}}
+                              Other, 0x112161180, {{16.0, 388.0}, {358.0, 52.0}}
+                            Other, 0x1121612c0, {{16.0, 388.0}, {358.0, 52.0}}
+                              Other, 0x112161400, {{16.0, 388.0}, {358.0, 52.0}}
+                                Other, 0x112161540, {{16.0, 388.0}, {358.0, 52.0}}
+                                  StaticText, 0x112161680, {{16.0, 388.0}, {358.0, 52.0}}, identifier: 'records.importDisposition.2826ecd1137c7ef9a9cb8bf4623e35b0cad27a7009172ed57bfe8737f1dff831', label: 'Absent here — recover separately'
+                          Other, 0x1121617c0, {{32.0, 387.0}, {326.0, 1.0}}
+                          Cell, 0x112161900, {{16.0, 440.0}, {358.0, 76.3}}
+                            Other, 0x112161a40, {{16.0, 440.0}, {358.0, 76.3}}
+                              Other, 0x112161b80, {{16.0, 440.0}, {358.0, 76.3}}
+                            Other, 0x112161cc0, {{16.0, 440.0}, {358.0, 76.3}}
+                              Other, 0x112161e00, {{16.0, 440.0}, {358.0, 76.3}}
+                                Other, 0x112161f40, {{16.0, 440.0}, {358.0, 76.3}}
+                                  StaticText, 0x112162080, {{16.0, 440.0}, {358.0, 76.3}}, label: 'Revision: 2826ecd1137c7ef9a9cb8bf4623e35b0cad27a7009172ed57bfe8737f1dff831'
+                          Other, 0x1121621c0, {{32.0, 439.0}, {326.0, 1.0}}
+                          Cell, 0x112162300, {{16.0, 516.3}, {358.0, 52.0}}
+                            Other, 0x112162440, {{16.0, 516.3}, {358.0, 52.0}}
+                              Other, 0x112162580, {{16.0, 516.3}, {358.0, 52.0}}
+                            Other, 0x1121626c0, {{16.0, 516.3}, {358.0, 52.0}}
+                              Other, 0x112162800, {{16.0, 516.3}, {358.0, 52.0}}
+                                Other, 0x112162940, {{16.0, 516.3}, {358.0, 52.0}}
+                                  StaticText, 0x112162a80, {{16.0, 516.3}, {358.0, 52.0}}, label: 'Lemon pasta'
+                          Other, 0x112162bc0, {{32.0, 515.3}, {326.0, 1.0}}
+                          Cell, 0x112162d00, {{16.0, 568.3}, {358.0, 52.0}}
+                            Other, 0x112162e40, {{16.0, 568.3}, {358.0, 52.0}}
+                              Other, 0x112162f80, {{16.0, 568.3}, {358.0, 52.0}}
+                            Other, 0x1121630c0, {{16.0, 568.3}, {358.0, 52.0}}
+                              Other, 0x112163200, {{16.0, 568.3}, {358.0, 52.0}}
+                                Other, 0x112163340, {{16.0, 568.3}, {358.0, 52.0}}
+                                  StaticText, 0x112163480, {{16.0, 568.3}, {358.0, 52.0}}, identifier: 'records.importDisposition.34c9e0390e595b406e2007ca4befeafe14c59e6ff09f48b1ece0dd7a977ae890', label: 'Absent here — recover separately'
+                          Other, 0x1121635c0, {{32.0, 567.3}, {326.0, 1.0}}
+                          Cell, 0x112163700, {{16.0, 620.3}, {358.0, 76.3}}
+                            Other, 0x112163840, {{16.0, 620.3}, {358.0, 76.3}}
+                              Other, 0x112163980, {{16.0, 620.3}, {358.0, 76.3}}
+                            Other, 0x112163ac0, {{16.0, 620.3}, {358.0, 76.3}}
+                              Other, 0x112163c00, {{16.0, 620.3}, {358.0, 76.3}}
+                                Other, 0x112163d40, {{16.0, 620.3}, {358.0, 76.3}}
+                                  StaticText, 0x112163e80, {{16.0, 620.3}, {358.0, 76.3}}, label: 'Revision: 34c9e0390e595b406e2007ca4befeafe14c59e6ff09f48b1ece0dd7a977ae890'
+                          Other, 0x112170000, {{32.0, 619.3}, {326.0, 1.0}}
+                          Cell, 0x112170140, {{16.0, 696.7}, {358.0, 99.7}}
+                            Other, 0x112170280, {{16.0, 696.7}, {358.0, 99.7}}
+                              Other, 0x1121703c0, {{16.0, 696.7}, {358.0, 99.7}}
+                            Other, 0x112170500, {{16.0, 696.7}, {358.0, 99.7}}
+                              Other, 0x112170640, {{16.0, 696.7}, {358.0, 99.7}}
+                                Other, 0x112170780, {{16.0, 696.7}, {358.0, 99.7}}
+                                  StaticText, 0x1121708c0, {{16.0, 696.7}, {358.0, 99.7}}, label: 'Current and newer work stays in place. Different revisions become separate copies; identical imports reopen the saved copy. A conflicting digest or erased identity blocks this batch.'
+                          Other, 0x112170a00, {{32.0, 695.7}, {326.0, 1.0}}
+                          Cell, 0x112170b40, {{16.0, 796.3}, {358.0, 52.0}}
+                            Other, 0x112170c80, {{16.0, 796.3}, {358.0, 52.0}}
+                              Other, 0x112170dc0, {{16.0, 796.3}, {358.0, 52.0}}
+                            Other, 0x112170f00, {{16.0, 796.3}, {358.0, 52.0}}
+                              Other, 0x112171040, {{16.0, 796.3}, {358.0, 52.0}}
+                                Other, 0x112171180, {{16.0, 796.3}, {358.0, 52.0}}
+                                  Button, 0x1121712c0, {{16.0, 796.3}, {358.0, 52.0}}, identifier: 'records.applyImport', label: 'Import reviewed copies'
+                          Other, 0x112171400, {{32.0, 795.3}, {326.0, 1.0}}
+                          Other, 0x112171540, {{357.0, 218.3}, {30.0, 578.3}}, label: 'Vertical scroll bar, 5 pages', value: 70%
+                            Other, 0x112171680, {{384.0, 532.3}, {3.0, 131.0}}
+                          Other, 0x1121717c0, {{357.0, 218.3}, {30.0, 578.3}}, label: 'Vertical scroll bar, 5 pages', value: 70%
+                            Other, 0x112171900, {{384.0, 532.3}, {3.0, 131.0}}
+                Toolbar, 0x112171a40, {{0.0, 154.3}, {390.0, 689.7}}, identifier: 'Toolbar', label: 'Toolbar'
+                  Other, 0x112171b80, {{0.0, 154.3}, {390.0, 689.7}}
+Path to element:
+ →Application, 0x107873340, pid: 65644, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x112171cc0, pid: 65644, label: 'Room in the Cart'
+  }

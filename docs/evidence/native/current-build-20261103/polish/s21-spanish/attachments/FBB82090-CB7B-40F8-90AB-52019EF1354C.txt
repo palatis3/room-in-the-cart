@@ -1,0 +1,1 @@
+Application state at capture: 4. Full-screen evidence is retained even when the app process is absent. No restart or recovery was attempted.

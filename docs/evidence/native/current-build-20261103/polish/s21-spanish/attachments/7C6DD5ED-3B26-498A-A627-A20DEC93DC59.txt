@@ -1,0 +1,45 @@
+Attributes: Application, 0x11e70c9b0, pid: 9710, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x11e70c9b0, pid: 9710, label: 'Room in the Cart'
+    Window (Main), 0x11e710080, {{0.0, 0.0}, {375.0, 667.0}}
+      Other, 0x11e712c50, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x11e712d70, {{0.0, 0.0}, {375.0, 667.0}}
+          Other, 0x11e7128c0, {{0.0, 0.0}, {375.0, 667.0}}
+            Other, 0x11e7129e0, {{0.0, 0.0}, {375.0, 667.0}}
+              Other, 0x11e712b00, {{0.0, 0.0}, {375.0, 667.0}}
+                NavigationBar, 0x11e712e90, {{0.0, 20.0}, {375.0, 44.0}}, identifier: 'Dispositivos del hogar'
+                  StaticText, 0x11e712fb0, {{82.0, 28.0}, {211.5, 25.5}}, label: 'Dispositivos del hogar'
+                Other, 0x11e7130d0, {{0.0, 0.0}, {375.0, 667.0}}
+                  Other, 0x11e7131f0, {{0.0, 0.0}, {375.0, 667.0}}
+                    Other, 0x11e713310, {{0.0, 0.0}, {375.0, 667.0}}
+                      Other, 0x11e713430, {{0.0, 0.0}, {375.0, 667.0}}
+                        CollectionView, 0x11e713550, {{0.0, 0.0}, {375.0, 667.0}}
+                          Other, 0x11e713670, {{-16.0, -2656.5}, {407.0, 2724.0}}
+                          Cell, 0x11e713790, {{16.0, -97.5}, {343.0, 147.5}}
+                            Other, 0x11e7138b0, {{16.0, -97.5}, {343.0, 147.5}}
+                              Other, 0x11e7139d0, {{16.0, -97.5}, {343.0, 147.5}}
+                            Other, 0x11e713af0, {{16.0, -97.5}, {343.0, 147.5}}
+                              Other, 0x11e713c10, {{16.0, -97.5}, {343.0, 147.5}}
+                                Other, 0x11e713d30, {{16.0, -97.5}, {343.0, 147.5}}
+                                  Button, 0x11e713e50, {{16.0, -97.5}, {343.0, 147.5}}, identifier: 'household.devices.refresh', label: 'Actualizar dispositivos'
+                          Other, 0x11e713f70, {{-16.0, 67.5}, {407.0, 1891.0}}
+                          Cell, 0x11e714090, {{16.0, 85.0}, {343.0, 519.5}}
+                            Other, 0x11e7141b0, {{16.0, 85.0}, {343.0, 519.5}}
+                              Other, 0x11e7142d0, {{16.0, 85.0}, {343.0, 519.5}}
+                            Other, 0x11e7143f0, {{16.0, 85.0}, {343.0, 519.5}}
+                              Other, 0x11e714510, {{16.0, 85.0}, {343.0, 519.5}}
+                                Other, 0x11e714630, {{16.0, 85.0}, {343.0, 519.5}}
+                                  StaticText, 0x11e714750, {{16.0, 85.0}, {343.0, 519.5}}, identifier: 'household.devices.result', label: 'Se revocó el acceso del dispositivo. Actualiza los dispositivos para revisar el acceso actual.'
+                          Other, 0x11e714870, {{342.0, 64.0}, {30.0, 560.5}}, label: 'Barra de desplazamiento vertical, 4 páginas', value: 100%
+                            Other, 0x11e714990, {{369.0, 441.5}, {3.0, 180.0}}
+                        StaticText, 0x11e714ab0, {{5.0, 636.5}, {365.0, 26.5}}, identifier: 'household.devices.fixtureSummary', label: 'writes=1;current=active;target=revoked;sibling=active;membership=active;shopper=Mia'
+    Window, 0x11e714bd0, {{0.0, 0.0}, {375.0, 667.0}}
+      Other, 0x11e714cf0, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x11e714e10, {{0.0, 0.0}, {375.0, 667.0}}
+Path to element:
+ →Application, 0x11e70c9b0, pid: 9710, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x11e4b8c90, pid: 9710, label: 'Room in the Cart'
+  }

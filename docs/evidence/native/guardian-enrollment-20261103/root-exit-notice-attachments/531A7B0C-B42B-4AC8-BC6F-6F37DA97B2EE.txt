@@ -1,0 +1,31 @@
+Attributes: Application, 0x10547dcb0, pid: 97120, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x10547dcb0, pid: 97120, label: 'Room in the Cart'
+    Window (Main), 0x105481170, {{0.0, 0.0}, {375.0, 667.0}}
+      Other, 0x105481530, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x105481650, {{0.0, 0.0}, {375.0, 667.0}}
+          Other, 0x105481290, {{0.0, 0.0}, {375.0, 667.0}}
+            Other, 0x1054813b0, {{0.0, 0.0}, {375.0, 667.0}}
+              Other, 0x105481770, {{0.0, 0.0}, {375.0, 595.5}}
+                Other, 0x105481890, {{0.0, 0.0}, {375.0, 595.5}}
+                  Other, 0x1054819b0, {{0.0, 0.0}, {375.0, 595.5}}
+                    Other, 0x105481ad0, {{0.0, 0.0}, {375.0, 595.5}}
+                      Other, 0x105481bf0, {{0.0, 0.0}, {375.0, 595.5}}
+                        ScrollView, 0x105481d10, {{0.0, 0.0}, {375.0, 595.5}}
+                          Other, 0x105481e30, {{0.0, 20.0}, {375.0, 410.5}}
+                            StaticText, 0x105481f50, {{20.0, 99.0}, {292.0, 41.0}}, label: 'Private workspace'
+                            StaticText, 0x105482070, {{20.0, 160.0}, {314.5, 42.5}}, label: 'Unlock to return to your saved groceries, meals and costs.'
+                            Button, 0x105482190, {{20.0, 222.5}, {335.0, 52.0}}, label: 'Unlock private workspace'
+                            Button, 0x1054822b0, {{20.0, 306.5}, {153.0, 20.5}}, label: 'Household requests'
+                            StaticText, 0x1054823d0, {{20.0, 358.5}, {318.5, 52.0}}, identifier: 'guardian.childExitNotice', label: 'Child access was removed from this device. Remote device revocation could not be confirmed; ask your guardian to review active permission.'
+                          Other, 0x1054824f0, {{342.0, 20.0}, {30.0, 575.5}}, label: 'Vertical scroll bar, 1 page', value: 0%
+              StaticText, 0x105482610, {{150.5, 599.5}, {74.0, 14.5}}, identifier: 'guardian.fixture.rootReady', label: 'Fixture ready'
+              Button, 0x105482730, {{110.5, 616.0}, {154.0, 14.5}}, identifier: 'guardian.fixture.checkPreservation', label: 'Fixture: check preservation'
+              StaticText, 0x105482850, {{32.5, 632.5}, {310.0, 30.5}}, identifier: 'guardian.fixture.preservation', label: 'adult records and inbox preserved; child vaults empty; adult locked'
+Path to element:
+ →Application, 0x10547dcb0, pid: 97120, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x10546a730, pid: 97120, label: 'Room in the Cart'
+  }

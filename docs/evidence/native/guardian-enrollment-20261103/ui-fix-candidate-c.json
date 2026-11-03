@@ -1,0 +1,20 @@
+{
+  "status": "FIXED_CANDIDATE_C_READY",
+  "preparedAt": "2026-11-03T22:28:15.082755+00:00",
+  "baseline": "ui-fixed-b-run.json",
+  "files": [
+    {
+      "path": "ios/UITestSupport/GuardianRootTransitionUIFixture.swift",
+      "sha256": "22b13ce2a58f2f4226c134a80f57ede57b9deecce9ab602c1784efae7ef1d295"
+    }
+  ],
+  "changes": [
+    "Allocate actual RootView and fixture evidence footer as separate VStack siblings so evidence cannot overlay Household entry"
+  ],
+  "assertionsPreserved": true,
+  "productionChanges": false,
+  "targetedCases": [
+    "testRealRootLeaveCancelAndConfirmedExitRestoreLockedAdultAccess",
+    "testRealRootColdChildMarkerAndSyntheticVaultCleanupPreserveAdultData"
+  ]
+}

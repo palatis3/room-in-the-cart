@@ -1,0 +1,23 @@
+{
+  "inspectedCurrentCaptures": "FinalFixture-20261103 finalized S21 initial/no-container/issue/teardown captures; six full AX trees inspected",
+  "currentFormBars": "Only vertical indicators: English Vertical scroll bar,2pages0%; Spanish Barra de desplazamiento vertical,4p\u00e1ginas0%. No horizontal indicator is demonstrated in these Form trees.",
+  "historicalHorizontalEvidence": {
+    "file": "English-native-popover-full-AX.txt",
+    "lines": [
+      151,
+      155,
+      164,
+      168
+    ],
+    "scope": "The original native confirmationDialog popover has Horizontal scroll bar,1page,value0%, alongside its vertical0% indicators. The current helper rejects active modals, so this does not prove a horizontal-bar cause for the latest startup failures."
+  },
+  "change": "One-line vertical-only guard in scrollPosition; preserves English and Spanish indicator matching. Limits the boundary algorithm to the axis it actually drags.",
+  "candidateSHA256": "d78d6ad1c714472e8b0b407d129825fe42b02998a69fc630e2ddc9ae198f3df5",
+  "frozenSERunSHA256": "02d225a3d7251cef891d36f28d1c54168f6fb806008cd1ebe4071661daa5dd50",
+  "runtimeRetest": "Parent decides from the active SE17 run; frozen source was not changed.",
+  "checks": [
+    "Swift frontend parse passed",
+    "git diff --check passed"
+  ],
+  "actions": "No simulator, build, production or Git/index changes"
+}

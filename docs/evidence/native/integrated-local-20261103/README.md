@@ -1,0 +1,3 @@
+The two preserved runs passed all model tests (518 and526 on different frozen sources). They had mixed UI results. Exact passing cases, original failures, source differences, binary identities, actual runtime summaries and selected screenshots are recorded in [evidence.json](evidence.json). These counts are not added together.
+
+The ordinary full Free journey and both stock-aware pack journeys passed. Two stock-correction journeys also passed, including cancel, approval, stale revisions, protected lunch and current cook/readback after restart. The six S21/S23/S24 failures and later corrected targeted proof remain separate. No release-complete claim is made.

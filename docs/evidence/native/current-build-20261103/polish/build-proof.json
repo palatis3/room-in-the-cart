@@ -1,0 +1,37 @@
+{
+  "recordedAtUTC": "2026-11-03T23:28:43.115608+00:00",
+  "sourceSHA256": "36479321a5cadd46a6226c553d3e6946958e04b822dbf7aff73b2457a4f6c0bc",
+  "sourceInputs": 470,
+  "release": {
+    "status": "unsignedphysicalarm64archivecompiled,check_built_appReleasepassed",
+    "archive": "/Users/palatis/Room in the Cart/.build/RoomInTheCart-NativePolish-20261103.xcarchive",
+    "bundle": "dev.roominthecart.app",
+    "minimumOS": "17.0",
+    "operator": "Venture House Group LLC",
+    "supportEmail": "hello@roominthecart.com",
+    "binarySHA256": "12373872e17c549ab35f32955266f2c55a9e40b87fd6c9069fc5d3fbca2110c7",
+    "privacySHA256": "8c7d98854976ca3bdf570ed0cfb50b4e9652a7cdc543256b3b944999ac47906d",
+    "privacyTypes": 7,
+    "analyticsPurposes": [
+      "NSPrivacyCollectedDataTypeUserID",
+      "NSPrivacyCollectedDataTypeOtherUserContent",
+      "NSPrivacyCollectedDataTypePurchaseHistory"
+    ],
+    "tracking": false,
+    "xctestBundles": 0,
+    "fixtureEntryMarkers": []
+  },
+  "ordinaryPreview": {
+    "status": "compiled, metadata verified, installed and launched without testflags or reset",
+    "installProof": "preview-install.json",
+    "durableFilesPreservedExactly": 22,
+    "screenshot": "ordinary-preview.png",
+    "visualReview": {
+      "reviewer": "root",
+      "reviewedAtUTC": "2026-11-03T23:32:57.467267+00:00",
+      "captureTiming": "First instant capture retained aslaunch-transition.png; readyordinarycapture reviewedseparately."
+    }
+  },
+  "distributionReady": false,
+  "scope": "Compilation/resourceverification; neither realprovider/hostedconfiguration nor signeddistribution proven."
+}

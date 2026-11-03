@@ -1,0 +1,176 @@
+[
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/948B3569-28C5-4783-A12A-C71A249235BB.txt",
+    "caption": "S23-duplicate-comparison-completed-accessibility_0_6EA57C7B-E738-46F7-A118-BECD73600294.txt",
+    "sha256": "cf94b8b85d612f3c3cf647895589f5e450cc448d38e6de5ce3bbfa5c8804896f"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/AE62DFC9-FE0B-4168-ABEB-7B6E12CC0CAB.png",
+    "caption": "S23-duplicate-comparison-completed_0_20EA61BC-F74C-4919-BFB2-607D47346A06.png",
+    "sha256": "e9a918484a17be2a76ed3c0481451802893eec5fb84bd573c5d19d63c84fef96"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/49E76DA9-1665-420C-A98D-42E9A1329FD6.txt",
+    "caption": "S23-Spanish-large-type-original-request-words-accessibility_0_68310D79-C6EE-49E5-B7DC-99E2E7CEF797.txt",
+    "sha256": "8c599f75fc96230287e9283c7d37fc905692c2a7d0259d6c4c3afad4cbde08b5"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/C34B5E01-F4CB-4624-B798-F7D99EE20541.png",
+    "caption": "S23-Spanish-large-type-original-request-words_0_73566E15-1B56-48EF-A406-D5E512EAAE09.png",
+    "sha256": "b5b32aa616f8fce45f6464664b5aa4f544f2c7d65e148c6d5c048d747b6e078d"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/EAE07EB9-1A83-4E25-A4B0-E3C7D9155117.png",
+    "caption": "S23-reveal-0-Cada solicitante conserva un resultado por separado._0_0A2E79AA-68B5-4F6C-91F6-14F135820AEB.png",
+    "sha256": "193cd3a5ecd203668ba5579255b7f5c6033ee7e007970c4887d297534dc328df"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/43AD43E0-9D91-4DC7-8FF1-3B97D2015E21.txt",
+    "caption": "S23-reveal-0-lee-amount-2 boxes for the school snack drive-accessibility_0_0B6CC0A3-4666-49A0-A96A-43D67C1B0C7D.txt",
+    "sha256": "bc4264aecec58d47aaadcb4c137a86fdb9bc905ea196721bc0f94874ef81b93b"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/C816F0B7-5E5A-445B-BC47-EF31C8359E30.png",
+    "caption": "S23-reveal-0-lee-amount-2 boxes for the school snack drive_0_8F639097-705C-4B09-BE5B-96235D1FD3C2.png",
+    "sha256": "a7f8246bab2c0dfbe068317ed96cc3d0059bb04f2fc8d762d72e7443ce58b515"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/66BA4E82-3952-48AE-9438-AA17058E05A8.txt",
+    "caption": "S23-reveal-0-lee-author-Lee-accessibility_0_3066C0DE-A2DC-45FC-AA86-D4513F91C24A.txt",
+    "sha256": "1a31c9739475ebe19a1b6eb8b98a540ca1d21643e4352675bf81b46d4e64794a"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/FC4B55DB-FD53-48C6-8BC9-A2C9A1026185.png",
+    "caption": "S23-reveal-0-lee-author-Lee_0_C8B376CA-0032-4995-ACF4-FC435ACEC745.png",
+    "sha256": "6e33fb96ead53da79e74f47627ca40b014b7f10c2fd674cc155953e7ea098ca3"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/151A6D33-5095-4E3B-9577-3553091C394F.txt",
+    "caption": "S23-reveal-24-sam-selection-Decidiendo esta solicitud-accessibility_0_5DEA177A-09B4-40A6-BFCC-3788AE1F2315.txt",
+    "sha256": "ab8538268b7582f1b998d776b63bb80798b03c6326909e2d0e6d8127facf5dbe"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/FAD19F7E-CAAE-4A9B-8436-B13CA667E4BB.png",
+    "caption": "S23-reveal-24-sam-selection-Decidiendo esta solicitud_0_1DA07954-BB36-4689-842D-53DF589289EB.png",
+    "sha256": "32008c0570aaa78c3daf2364f0d813303c2b1e6dccb11186fb5c69ceec66fdd3"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/737C6671-EE39-450B-BECD-5D8C33DD452D.txt",
+    "caption": "S23-reveal-16-sam-selection-Decidiendo esta solicitud-accessibility_0_A2A11DAF-5C66-439C-A0E1-1CF297974CF5.txt",
+    "sha256": "f0de541dbfba93f2389dc011c35d197fe93c4865418048dee570441741f3ccd8"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/A4750DCC-8321-44F4-A167-2ECCF181CF81.png",
+    "caption": "S23-reveal-16-sam-selection-Decidiendo esta solicitud_0_EF092C33-1DEA-485E-B7B4-0AA12B59012A.png",
+    "sha256": "0410183c7f77aa626497995be49aee079f68f9eb8d1c604b17e7a827195626c6"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/72C94304-16FE-4BAA-BACF-54DFDE5CE625.txt",
+    "caption": "S23-reveal-8-sam-selection-Decidiendo esta solicitud-accessibility_0_F1D39CE1-BD03-4386-996F-C2F5FC297407.txt",
+    "sha256": "481b165b8ff4052551fab4dd6f2cad79138e7403baf67184fe206a0640d439cd"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/146D1C6B-6332-4F20-8E8A-AD53EB70998C.png",
+    "caption": "S23-reveal-8-sam-selection-Decidiendo esta solicitud_0_B124CEE0-AE9A-4711-A232-7E545A06C720.png",
+    "sha256": "9f2b875502b83c7bc3c6d6753a98f17f2f0c495cc859e13d5c0bd4c5ba435e16"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/66A4BE9C-EFB3-4F9F-A671-36188C66DE81.txt",
+    "caption": "S23-reveal-0-sam-selection-Decidiendo esta solicitud-accessibility_0_8ED7A0D1-FD9B-4291-9164-0B196EAA529F.txt",
+    "sha256": "33198c07cff6017f7f0cb0c3d105e9b1d3628d3d4bce1e438acabef67d2c4805"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/8CAA4259-E233-4DBC-BD23-9D549D25CB6A.png",
+    "caption": "S23-reveal-0-sam-selection-Decidiendo esta solicitud_0_A09DFD4A-5701-4CD4-958E-EEB0FF4679D4.png",
+    "sha256": "c1146cbf0ee774365b95fd73d8ed8be3b07cc14dcfbc2e600b1c7e5332a7e4bc"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/2D33D010-FE5B-4EFB-9803-8E769E48DBA6.txt",
+    "caption": "S23-Spanish-page-two-loaded-in-same-decision-sheet-accessibility_0_0AD242A2-B52E-4DDD-92BE-DCDCC7A5519B.txt",
+    "sha256": "9539fc9b8de88decdd4bfda57ffbb4e589d0445bcbe6347670b460dc3c24231e"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/8745C9A7-7CFD-49F3-B098-57A7A1C36DB1.png",
+    "caption": "S23-Spanish-page-two-loaded-in-same-decision-sheet_0_1766D3C1-4B87-4EA7-B412-6214C72C159A.png",
+    "sha256": "d6f9998937d013a86a2294d75483d5913c15e2a77d5590bf29bc2417cf51b63a"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/298B9847-599A-453D-9ACE-BB3CF6E94F92.txt",
+    "caption": "S23-reveal-8-unmaterialized-control-accessibility_0_552E7DF1-822B-4E9A-BD9A-C56F8EE029B6.txt",
+    "sha256": "b84ff28400574c5885872a86d37327c3d5b1d7fd2fde52eb8d1b75d4fb1acb77"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/8DC5063A-5E09-470D-8444-67E4106CA9B6.png",
+    "caption": "S23-reveal-8-unmaterialized-control_0_1EDFC524-FB27-486D-A41A-BF0400577E53.png",
+    "sha256": "b6e1b6054f6f7691172e0cecb803e10e25b80e0f4235c98977faeb03bbce01b2"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/0A52EBF1-D354-45AE-A4B2-DC927706A1A3.txt",
+    "caption": "S23-reveal-0-unmaterialized-control-accessibility_0_52E58309-A3A4-43E2-8807-D15E5F85F754.txt",
+    "sha256": "befeb985d8bed08e6caab1cdb294b129cb7345242b20d9336234a922b603c515"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/19A49708-CCC3-4D6E-A73C-C23FEDC52575.png",
+    "caption": "S23-reveal-0-unmaterialized-control_0_135CA11B-B0E6-4285-B126-B5E73D7426B8.png",
+    "sha256": "4939a6e0257987165fe11003ecc049e91a759a5611e54b0e70ae29eb0245a907"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/3728A81B-872D-400B-9829-3757C014B861.txt",
+    "caption": "S23-opened-Spanish-Sam-page-one-accessibility_0_5A4914A3-B978-4D79-A094-7FFC1B5C9102.txt",
+    "sha256": "fe9b15748ac858f3edcee87d2a343cead672ab3f1c56f44417d0381c64638854"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/13094165-AED3-4FCB-9DA6-1635507EBD03.png",
+    "caption": "S23-opened-Spanish-Sam-page-one_0_5387A65A-C0DF-4DE0-ACEF-D91EB3DE4D19.png",
+    "sha256": "4939a6e0257987165fe11003ecc049e91a759a5611e54b0e70ae29eb0245a907"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/108B6D55-6ABC-4A25-B1AF-CCD2C8D4ADE4.txt",
+    "caption": "S23-reveal-0-unmaterialized-control-accessibility_0_799C1044-6A0C-449F-B414-78F6B26AE011.txt",
+    "sha256": "00b8adb401453485734d71d38a896d535a1c29df3864f2a52182493c029865c8"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/4B54AD52-BC4B-4F9B-9F87-8C17F17D4A17.png",
+    "caption": "S23-reveal-0-unmaterialized-control_0_37433C72-B6CC-445E-B3A1-853BF2701602.png",
+    "sha256": "42a29dc458f8d167d1f9758eda9c036148944e02c5ebd1e7d6f192a4dcb53873"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/F2730E6D-C760-4953-B446-90E0349D0136.txt",
+    "caption": "S23-launched-es-accessibility_0_FD3938A2-B61C-4343-8C01-3F7271319665.txt",
+    "sha256": "a3dab11125721ce404e2ff3a88f11a2370ad6f6f4b092a8e8b6eae2fdb950115"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/A18CBF91-9050-4B88-8B01-372AA57E2C92.png",
+    "caption": "S23-launched-es_0_9FE3F11C-A2BB-452C-BDD4-6D396EFB1854.png",
+    "sha256": "42a29dc458f8d167d1f9758eda9c036148944e02c5ebd1e7d6f192a4dcb53873"
+  }
+]

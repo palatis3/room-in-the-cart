@@ -1,0 +1,41 @@
+Attributes: Application, 0x104a40590, pid: 9710, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x104a40590, pid: 9710, label: 'Room in the Cart'
+    Window (Main), 0x104a408f0, {{0.0, 0.0}, {375.0, 667.0}}
+      Other, 0x104a46980, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x104a46cf0, {{0.0, 0.0}, {375.0, 667.0}}
+          Other, 0x104a40fc0, {{0.0, 0.0}, {375.0, 667.0}}
+            Other, 0x104a40c40, {{0.0, 0.0}, {375.0, 667.0}}
+              Other, 0x104a47060, {{0.0, 0.0}, {375.0, 667.0}}
+                NavigationBar, 0x104a473a0, {{0.0, 20.0}, {375.0, 117.0}}, identifier: 'Dispositivos del hogar'
+                  StaticText, 0x104a41d70, {{16.0, 64.0}, {338.0, 72.0}}, label: 'Dispositivos del hogar'
+                Other, 0x104a41a00, {{0.0, 0.0}, {375.0, 667.0}}
+                  Other, 0x104a42460, {{0.0, 0.0}, {375.0, 667.0}}
+                    Other, 0x104a462c0, {{0.0, 0.0}, {375.0, 667.0}}
+                      Other, 0x104a46610, {{0.0, 0.0}, {375.0, 667.0}}
+                        CollectionView, 0x104a4db00, {{0.0, 0.0}, {375.0, 667.0}}
+                          Other, 0x104a4d790, {{-16.0, -1197.0}, {407.0, 2724.0}}
+                          Cell, 0x104a4d420, {{16.0, 137.0}, {343.0, 457.5}}
+                            Other, 0x104a4de80, {{16.0, 137.0}, {343.0, 457.5}}
+                              Other, 0x104a4e1e0, {{16.0, 137.0}, {343.0, 457.5}}
+                            Other, 0x104a4e560, {{16.0, 137.0}, {343.0, 457.5}}
+                              Other, 0x104a4e8b0, {{16.0, 137.0}, {343.0, 457.5}}
+                                Other, 0x104a4ec50, {{16.0, 137.0}, {343.0, 457.5}}
+                                  StaticText, 0x104a4efa0, {{16.0, 137.0}, {343.0, 457.5}}, label: 'Acceso registrado de este hogar. Cada referencia identifica un registro.'
+                          Cell, 0x104a4f2f0, {{16.0, 594.5}, {343.0, 767.5}}
+                            Other, 0x104a4f650, {{16.0, 594.5}, {343.0, 767.5}}
+                              Other, 0x104a4f9b0, {{16.0, 594.5}, {343.0, 767.5}}
+                            Other, 0x104a4fd20, {{16.0, 594.5}, {343.0, 767.5}}
+                              Other, 0x104a50070, {{16.0, 594.5}, {343.0, 767.5}}
+                                Other, 0x104a503d0, {{16.0, 594.5}, {343.0, 767.5}}
+                                  StaticText, 0x104a50740, {{16.0, 594.5}, {343.0, 767.5}}, label: 'Una persona puede tener varios registros en un teléfono o navegador. Usa la fecha y la referencia para elegir el acceso que deseas terminar.'
+                          Other, 0x104a50e20, {{32.0, 593.5}, {327.0, 1.0}}
+                          Other, 0x104a51180, {{342.0, 137.0}, {30.0, 487.5}}, label: 'Barra de desplazamiento vertical, 6 páginas', value: 0%
+                        StaticText, 0x104a521c0, {{4.0, 636.5}, {367.0, 26.5}}, identifier: 'household.devices.fixtureSummary', label: 'writes=0;current=active;target=active;sibling=active;membership=active;shopper=Mia'
+Path to element:
+ →Application, 0x104a40590, pid: 9710, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x106010c50, pid: 9710, label: 'Room in the Cart'
+  }

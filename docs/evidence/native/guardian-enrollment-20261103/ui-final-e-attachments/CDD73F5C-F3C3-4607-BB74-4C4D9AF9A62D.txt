@@ -1,0 +1,28 @@
+Attributes: Application, 0x1043369f0, pid: 94864, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x1043369f0, pid: 94864, label: 'Room in the Cart'
+    Window (Main), 0x1043377d0, {{0.0, 0.0}, {375.0, 667.0}}
+      Other, 0x104337d70, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x104339070, {{0.0, 0.0}, {375.0, 667.0}}
+          Other, 0x104339cd0, {{0.0, 0.0}, {375.0, 667.0}}
+            Other, 0x1043398b0, {{0.0, 0.0}, {375.0, 667.0}}
+              Other, 0x10433abb0, {{0.0, 0.0}, {375.0, 595.5}}
+                Other, 0x10433d130, {{0.0, 0.0}, {375.0, 595.5}}
+                  Other, 0x10433d250, {{0.0, 0.0}, {375.0, 595.5}}
+                    Other, 0x10433d370, {{0.0, 0.0}, {375.0, 595.5}}
+                      Other, 0x10433d490, {{0.0, 0.0}, {375.0, 595.5}}
+                        Image, 0x10433d5b0, {{26.0, 42.5}, {28.0, 34.0}}, label: 'lock.shield'
+                        StaticText, 0x10433d6d0, {{20.0, 99.0}, {292.0, 41.0}}, label: 'Private workspace'
+                        StaticText, 0x10433d7f0, {{20.0, 160.0}, {314.5, 42.5}}, label: 'Unlock to return to your saved groceries, meals and costs.'
+                        Button, 0x10433d910, {{20.0, 222.5}, {335.0, 52.0}}, label: 'Unlock private workspace'
+                        Button, 0x10433da30, {{20.0, 306.5}, {153.0, 20.5}}, label: 'Household requests'
+              StaticText, 0x10433db50, {{150.5, 599.5}, {74.0, 14.5}}, identifier: 'guardian.fixture.rootReady', label: 'Fixture ready'
+              Button, 0x10433dc70, {{110.5, 616.0}, {154.0, 14.5}}, identifier: 'guardian.fixture.checkPreservation', label: 'Fixture: check preservation'
+              StaticText, 0x10433dd90, {{32.5, 632.5}, {310.0, 30.5}}, identifier: 'guardian.fixture.preservation', label: 'adult records and inbox preserved; child vaults empty; adult locked'
+Path to element:
+ →Application, 0x1043369f0, pid: 94864, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x10305b330, pid: 94864, label: 'Room in the Cart'
+  }

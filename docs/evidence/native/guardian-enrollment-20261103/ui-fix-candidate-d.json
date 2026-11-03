@@ -1,0 +1,19 @@
+{
+  "status": "FIXED_CANDIDATE_D_READY",
+  "preparedAt": "2026-11-03T22:30:18.919532+00:00",
+  "baseline": "ui-fixed-c-run.json",
+  "files": [
+    {
+      "path": "ios/UITests/GuardianEnrollmentUITests.swift",
+      "sha256": "a469acd05c8ce7db227c3bf1ba87d16d412c89208471d42c29afe7674bfa49b9"
+    }
+  ],
+  "changes": [
+    "Align oversized Spanish warning first line below the real navigation bar before beginning screenshot; retain continuation capture and exact unavailable assertions"
+  ],
+  "assertionsPreserved": true,
+  "productionChanges": false,
+  "targetedCases": [
+    "testSpanishLargestTextUnavailableGateRemainsReadableAndClosed"
+  ]
+}

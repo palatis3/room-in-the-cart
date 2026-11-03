@@ -1,0 +1,44 @@
+{
+  "status": "FIXED_CANDIDATE_A_READY",
+  "preparedAt": "2026-11-03T22:10:33.240824+00:00",
+  "baseline": ".build/GuardianUIFinalSource-20261103",
+  "files": [
+    {
+      "path": "ios/Features/Household/GuardianEnrollmentViews.swift",
+      "sha256": "b07114b4c01dfa5a4d056bda3aa945a2f95be5b91f8d923cadcdac4000c6f87d"
+    },
+    {
+      "path": "ios/Features/Household/GuardianChildView.swift",
+      "sha256": "1c70f5de0f6d02d4d969203737f97b42061b643bb6cc62236b821b17309bae74"
+    },
+    {
+      "path": "ios/UITestSupport/GuardianRootTransitionUIFixture.swift",
+      "sha256": "ac9e32ea50edec00a67533ae1ad9fe3e6c70c99693572811de6416460e2524a8"
+    },
+    {
+      "path": "ios/UITestSupport/GuardianEnrollmentUIFixture.swift",
+      "sha256": "a29319340d1500851d60e7873c65ad2ee1824e4bae9f0e750ce2614e67d681c8"
+    },
+    {
+      "path": "ios/UITests/GuardianEnrollmentUITests.swift",
+      "sha256": "0ba6efd311c479eb66a434d5b140b1d937adb7637a20924287a5e3c45371cb2e"
+    }
+  ],
+  "modelChanges": false,
+  "productionChanges": "Two stable accessibility identifiers only; no layout/actions/authority change",
+  "fixtureChanges": [
+    "evidence footer safeAreaInset instead of overlay",
+    "provider callbacks in separate Form rows instead of overlapping toolbar"
+  ],
+  "testChanges": [
+    "failure screenshot+AX before terminate",
+    "actual Form/nav/toolbar/keyboard bounds instead of bottom80px",
+    "no fallthrough tap after failed reveal",
+    "button-first query",
+    "explicit current enrollment selection after refresh",
+    "scroll to status before exact assertion",
+    "Spanish launch waits Form then scrolls rather than waits offscreenRefresh"
+  ],
+  "assertionsPreserved": true,
+  "evidence": "ui-diagnostic-run.json and ui-diagnostic-all-attachments/{root,child,permission}-failure.{png,txt}"
+}

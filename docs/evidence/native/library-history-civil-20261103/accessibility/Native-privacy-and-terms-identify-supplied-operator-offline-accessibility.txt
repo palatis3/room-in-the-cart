@@ -1,0 +1,103 @@
+Attributes: Application, 0x111364b40, pid: 65459, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x111364b40, pid: 65459, label: 'Room in the Cart'
+    Window (Main), 0x111367700, {{0.0, 0.0}, {390.0, 844.0}}
+      Other, 0x111366e40, {{0.0, 0.0}, {390.0, 844.0}}
+        Other, 0x111365680, {{0.0, 0.0}, {390.0, 844.0}}
+          Other, 0x111364140, {{0.0, 0.0}, {390.0, 844.0}}
+            Other, 0x111364280, {{0.0, 0.0}, {390.0, 844.0}}
+              StaticText, 0x1113643c0, {{101.3, 47.0}, {187.3, 13.3}}, identifier: 'fixture.corrections.english', label: 'N04 English entries: 0 · enabled: no'
+              StaticText, 0x111364500, {{98.0, 62.3}, {194.0, 13.3}}, identifier: 'fixture.corrections.spanish', label: 'N04 Spanish entries: 1 · enabled: yes'
+              StaticText, 0x111364640, {{107.5, 77.7}, {175.0, 13.3}}, identifier: 'fixture.corrections.sourceUnchanged', label: 'N04 local source unchanged: yes'
+              Other, 0x111364780, {{0.0, 93.0}, {390.0, 751.0}}
+                NavigationBar, 0x1113648c0, {{0.0, 103.0}, {390.0, 54.0}}, identifier: 'Privacy and data'
+                  Button, 0x111364a00, {{16.0, 103.0}, {44.0, 44.0}}, identifier: 'BackButton', label: 'Settings'
+                  StaticText, 0x111365900, {{129.0, 114.7}, {132.0, 20.7}}, label: 'Privacy and data'
+                Other, 0x111366300, {{0.0, 93.0}, {390.0, 751.0}}
+                  Other, 0x111365a40, {{0.0, 93.0}, {390.0, 751.0}}
+                    Other, 0x111365b80, {{0.0, 93.0}, {390.0, 751.0}}
+                      Other, 0x111365cc0, {{0.0, 93.0}, {390.0, 751.0}}
+                        CollectionView, 0x111366d00, {{0.0, 93.0}, {390.0, 751.0}}
+                          Other, 0x1113675c0, {{-16.0, -82.3}, {422.0, 328.0}}
+                          Cell, 0x1113661c0, {{16.0, -42.0}, {358.0, 270.3}}
+                            Other, 0x111366440, {{16.0, -42.0}, {358.0, 270.3}}
+                              Other, 0x111366580, {{16.0, -42.0}, {358.0, 270.3}}
+                            Other, 0x1113666c0, {{16.0, -42.0}, {358.0, 270.3}}
+                              Other, 0x111366800, {{16.0, -42.0}, {358.0, 270.3}}
+                                Other, 0x111366940, {{16.0, -42.0}, {358.0, 270.3}}
+                                  StaticText, 0x111366a80, {{16.0, -42.0}, {358.0, 270.3}}, label: 'The app’s capture tools process speech and images on this iPhone. Raw voice recordings are not retained or uploaded by the app. Saved evidence photos stay in protected local storage. Readable and helper exports exclude photos. An encrypted recovery file can include evidence photos only after you select and review them. Apple may download a photo you select from iCloud before delivering it to the app.'
+                          Other, 0x111366bc0, {{0.0, 93.0}, {390.0, 751.0}}
+                            Other, 0x111365f40, {{0.0, 93.0}, {390.0, 104.0}}
+                          Other, 0x111366f80, {{0.0, 93.0}, {390.0, 751.0}}
+                            Other, 0x1113670c0, {{0.0, 93.0}, {390.0, 104.0}}
+                          Other, 0x111367200, {{-16.0, 246.0}, {422.0, 430.7}}
+                          Cell, 0x111367340, {{16.0, 246.0}, {358.0, 40.3}}
+                            Other, 0x111367480, {{16.0, 246.0}, {358.0, 40.3}}
+                            Other, 0x111366080, {{16.0, 246.0}, {358.0, 40.3}}
+                              Other, 0x111367840, {{16.0, 246.0}, {358.0, 40.3}}
+                                Other, 0x111367980, {{16.0, 246.0}, {358.0, 40.3}}
+                                  StaticText, 0x111367ac0, {{16.0, 246.0}, {358.0, 40.3}}, label: 'Export and deletion'
+                          Cell, 0x111367c00, {{16.0, 286.3}, {358.0, 138.3}}
+                            Other, 0x111367d40, {{16.0, 286.3}, {358.0, 138.3}}
+                              Other, 0x111367e80, {{16.0, 286.3}, {358.0, 138.3}}
+                            Other, 0x110eef340, {{16.0, 286.3}, {358.0, 138.3}}
+                              Other, 0x110eef480, {{16.0, 286.3}, {358.0, 138.3}}
+                                Other, 0x110eef5c0, {{16.0, 286.3}, {358.0, 138.3}}
+                                  StaticText, 0x110eef0c0, {{16.0, 286.3}, {358.0, 138.3}}, label: 'Open Records, then Recovery, exports and saved records to preview an export, recover a file or review local deletion. Removing local work does not remove copies you already saved or sent.'
+                          Cell, 0x110eef200, {{16.0, 424.7}, {358.0, 182.3}}
+                            Other, 0x110eeee40, {{16.0, 424.7}, {358.0, 182.3}}
+                              Other, 0x110eeef80, {{16.0, 424.7}, {358.0, 182.3}}
+                            Other, 0x110eeebc0, {{16.0, 424.7}, {358.0, 182.3}}
+                              Other, 0x110eeed00, {{16.0, 424.7}, {358.0, 182.3}}
+                                Other, 0x110eee1c0, {{16.0, 424.7}, {358.0, 182.3}}
+                                  StaticText, 0x110eee580, {{16.0, 424.7}, {358.0, 182.3}}, label: 'Household account deletion has its own scope and status. Review it in household controls. Signing out or leaving a household is separate from deleting an account, and deleting an account does not cancel an Apple subscription. Manage that subscription through Apple.'
+                          Other, 0x110eee6c0, {{32.0, 423.7}, {326.0, 1.0}}
+                          Cell, 0x110eee800, {{16.0, 607.0}, {358.0, 52.0}}
+                            Other, 0x110eeea80, {{16.0, 607.0}, {358.0, 52.0}}
+                              Other, 0x110eee940, {{16.0, 607.0}, {358.0, 52.0}}
+                            Other, 0x110eee300, {{16.0, 607.0}, {358.0, 52.0}}
+                              Other, 0x110eee440, {{16.0, 607.0}, {358.0, 52.0}}
+                                Other, 0x110eeda40, {{16.0, 607.0}, {358.0, 52.0}}
+                                  Button, 0x110eedcc0, {{16.0, 607.0}, {358.0, 52.0}}, label: 'Open household and account controls'
+                                    StaticText, 0x110eede00, {{32.0, 622.8}, {290.0, 20.3}}, label: 'Open household and account controls'
+                                    Image, 0x110eedf40, {{348.7, 627.0}, {7.0, 12.0}}, identifier: 'chevron.forward'
+                          Other, 0x110eee080, {{32.0, 606.0}, {326.0, 1.0}}
+                          Other, 0x110eedb80, {{-16.0, 676.3}, {422.0, 1833.0}}
+                          Cell, 0x110eed900, {{16.0, 676.3}, {358.0, 40.3}}
+                            Other, 0x110eed7c0, {{16.0, 676.3}, {358.0, 40.3}}
+                            Other, 0x110eecf00, {{16.0, 676.3}, {358.0, 40.3}}
+                              Other, 0x110eed2c0, {{16.0, 676.3}, {358.0, 40.3}}
+                                Other, 0x110eed400, {{16.0, 676.3}, {358.0, 40.3}}
+                                  StaticText, 0x110eed540, {{16.0, 676.3}, {358.0, 40.3}}, label: 'Policy and terms'
+                          Cell, 0x110eed680, {{16.0, 716.7}, {358.0, 52.0}}
+                            Other, 0x110eed040, {{16.0, 716.7}, {358.0, 52.0}}
+                              Other, 0x110eed180, {{16.0, 716.7}, {358.0, 52.0}}
+                            Other, 0x110eecdc0, {{16.0, 716.7}, {358.0, 52.0}}
+                              Other, 0x110eec500, {{16.0, 716.7}, {358.0, 52.0}}
+                                Other, 0x110eec8c0, {{16.0, 716.7}, {358.0, 52.0}}
+                                  StaticText, 0x110eeca00, {{16.0, 716.7}, {358.0, 52.0}}, identifier: 'help.policy.operator', label: 'Operator, Venture House Group LLC'
+                                  StaticText, 0x110eecb40, {{32.0, 732.5}, {68.3, 20.3}}, label: 'Operator'
+                          Cell, 0x110eecc80, {{16.0, 768.7}, {358.0, 94.3}}
+                            Other, 0x110eec640, {{16.0, 768.7}, {358.0, 94.3}}
+                              Other, 0x110eec780, {{16.0, 768.7}, {358.0, 94.3}}
+                            Other, 0x110eec000, {{16.0, 768.7}, {358.0, 94.3}}
+                              Other, 0x110eec140, {{16.0, 768.7}, {358.0, 94.3}}
+                                Other, 0x110eec3c0, {{16.0, 768.7}, {358.0, 94.3}}
+                                  StaticText, 0x110eec280, {{16.0, 768.7}, {358.0, 94.3}}, label: 'This guide describes the app’s data controls. The operator’s privacy policy and terms are separate pages.'
+                          Other, 0x110ea0dc0, {{32.0, 767.7}, {326.0, 1.0}}
+                          Other, 0x110ea2940, {{357.0, 157.0}, {30.0, 639.7}}, label: 'Vertical scroll bar, 4 pages', value: 87%
+                            Other, 0x110ea3200, {{384.0, 533.7}, {3.0, 206.0}}
+                          Other, 0x110ea2bc0, {{357.0, 157.0}, {30.0, 639.7}}, label: 'Vertical scroll bar, 4 pages', value: 87%
+                            Other, 0x110ea1e00, {{384.0, 533.7}, {3.0, 206.0}}
+                Toolbar, 0x110ea1180, {{0.0, 93.0}, {390.0, 751.0}}, identifier: 'Toolbar', label: 'Toolbar'
+                  Other, 0x110ea12c0, {{0.0, 93.0}, {390.0, 751.0}}
+    Window, 0x110ea2a80, {{0.0, 0.0}, {390.0, 844.0}}
+      Other, 0x110ea0a00, {{0.0, 0.0}, {390.0, 844.0}}
+        Other, 0x110ea0280, {{0.0, 0.0}, {390.0, 844.0}}
+Path to element:
+ →Application, 0x111364b40, pid: 65459, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x110ea1680, pid: 65459, label: 'Room in the Cart'
+  }

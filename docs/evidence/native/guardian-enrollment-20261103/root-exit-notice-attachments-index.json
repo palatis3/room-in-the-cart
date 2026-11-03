@@ -1,0 +1,117 @@
+{
+  "scope": "Separate2rootcase supplement to immutable E8 proof; parent Root/App exit-notice display plus dedicated exact visible notice assertions, no authority changes/models",
+  "runManifest": "root-exit-notice-run.json",
+  "source": "/Users/palatis/Room in the Cart/.build/GuardianRootExitNoticeSource-20261103T224849Z",
+  "products": "/Users/palatis/Room in the Cart/.build/GuardianRootExitNoticeProducts-20261103T224849Z",
+  "result": "/Users/palatis/Room in the Cart/.build/GuardianRootExitNotice-20261103T224849Z.xcresult",
+  "collectedAt": "2026-11-03T22:50:49.399181+00:00",
+  "testExit": 0,
+  "passed": 2,
+  "failed": 0,
+  "skipped": 0,
+  "total": 2,
+  "devicesAndConfigurations": [
+    {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "65B8A2FE-51FE-44A5-A9C7-F2524E33179B",
+        "deviceName": "Room in the Cart iOS 17 Small",
+        "modelName": "iPhone SE",
+        "osBuildNumber": "21A328",
+        "osVersion": "17.0",
+        "platform": "iOS Simulator"
+      },
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "passedTests": 2,
+      "skippedTests": 0,
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      }
+    }
+  ],
+  "attachments": [
+    {
+      "caption": "Synthetic child vaults preserved private records and inbox accessibility_0_0A85FA0E-D709-45DE-B456-F4CDEA8F3DB1.txt",
+      "file": "root-exit-notice-attachments/1537DB8A-E0CD-434F-B69D-AED01C9BF4B8.txt",
+      "sha256": "6db170c1b319ea2b10cc1e0c1459241bcb5c716a97d6965895aee73ca5409245"
+    },
+    {
+      "caption": "Synthetic child vaults preserved private records and inbox_0_07051561-65EA-4930-8248-CB8B2C0CA1EB.png",
+      "file": "root-exit-notice-attachments/E377C3CA-D152-4333-966D-E388BCADD007.png",
+      "sha256": "291ef1dffddc92b548194b2923e079a097c78172e0349958e11cadc46af64b29"
+    },
+    {
+      "caption": "Synthetic child vaults locked adult exit with honest remote cleanup notice accessibility_0_AC76D4A6-C418-4C1E-B105-9A6ED6C7856D.txt",
+      "file": "root-exit-notice-attachments/75A46323-57EE-48D9-9CE9-9FC76BAA7338.txt",
+      "sha256": "a5bb0edf0f25101c5dc456aa46777eb4ff46e717f758a2d8322522c970dabf5e"
+    },
+    {
+      "caption": "Synthetic child vaults locked adult exit with honest remote cleanup notice_0_65C0B939-A2C1-4741-9BEA-2C06DACFDFCF.png",
+      "file": "root-exit-notice-attachments/2F3C0CFC-1DC1-4EAA-ACCD-A8C871F11826.png",
+      "sha256": "18ca6eb9487eb7cd6b86483ec775b7b28725eecfc2312545cc4ddb12ddec0b92"
+    },
+    {
+      "caption": "Synthetic child vaults cold child root accessibility_0_DA9B6059-CD1C-42CD-ABE0-F399383B8036.txt",
+      "file": "root-exit-notice-attachments/50D99CB0-02B7-4143-955D-225C43F7C6FC.txt",
+      "sha256": "daf5b1c921e2c43f0eb9a404b2252e63504756864a794714e0118bfaa053be62"
+    },
+    {
+      "caption": "Synthetic child vaults cold child root_0_46A62F11-8A5C-47EF-B4E2-502403F774CC.png",
+      "file": "root-exit-notice-attachments/58B7080A-6F0D-4B9B-A757-3C6CD4F944F0.png",
+      "sha256": "dcb62a3630564531f9618438b3c292443fa3e2c420cadb5e510cb47fe4d30d09"
+    },
+    {
+      "caption": "Synthetic child vaults child root after cancel accessibility_0_0ACE8F5D-7B1F-4374-ACBE-7E1E0B72114C.txt",
+      "file": "root-exit-notice-attachments/8A97010F-0444-4DC5-AC30-24920485871A.txt",
+      "sha256": "71df440361bb782ed72b649ad08b002f2145dfb4c8fa2a72d90e7512bdbe7b8e"
+    },
+    {
+      "caption": "Synthetic child vaults child root after cancel_0_25BE9902-ACCA-441E-8C75-288FD4607DDC.png",
+      "file": "root-exit-notice-attachments/116C1978-5D07-4565-8D81-A07D00BB791B.png",
+      "sha256": "d8fd0f1fc27f8e23a937cbdb95288cc26c2ea6cc123f0250d3b4c0504f51a7e3"
+    },
+    {
+      "caption": "Empty child vaults preserved private records and inbox accessibility_0_84454C4A-6347-4C19-8550-78915C432350.txt",
+      "file": "root-exit-notice-attachments/531A7B0C-B42B-4AC8-BC6F-6F37DA97B2EE.txt",
+      "sha256": "538df4454a05b1680e247df041a7aa6b9ae46fb1ad7fc6d6890ab678b9961035"
+    },
+    {
+      "caption": "Empty child vaults preserved private records and inbox_0_87D8B0F2-4966-4006-BA6B-FC7BB9B04265.png",
+      "file": "root-exit-notice-attachments/82D861A1-6BA8-4F67-BDCF-AA9DB6930FB7.png",
+      "sha256": "288d46038bdd8f26725d656a8369a61ca132a9549e9a0e9dce5ced9e60e1390b"
+    },
+    {
+      "caption": "Empty child vaults locked adult exit with honest remote cleanup notice accessibility_0_2595A6AD-E15A-41A3-94F4-ED28766DCFDA.txt",
+      "file": "root-exit-notice-attachments/40469D58-968B-4C0C-8E02-A49BE66342F3.txt",
+      "sha256": "448fb5e2e657667bd03a560c1cd5684134f082cf1a3a368b4ff770a7f6d2bccd"
+    },
+    {
+      "caption": "Empty child vaults locked adult exit with honest remote cleanup notice_0_AC6EA303-13EA-456A-A221-25ADD37A8C97.png",
+      "file": "root-exit-notice-attachments/76F3C02C-52F5-445D-A511-8B2904743ADF.png",
+      "sha256": "de14cba21e7132ca28b2c5f037d1186caa020026bd2c970661ef2bf83156b0a6"
+    },
+    {
+      "caption": "Empty child vaults cold child root accessibility_0_9FEE7C76-2D55-4299-A064-A9CC976ACC36.txt",
+      "file": "root-exit-notice-attachments/FD2C0A59-7D70-4F7D-93C2-B6413870C615.txt",
+      "sha256": "0afdd1326f182170a1a905a42186bf1ff0e570dcb12abf02ddb71dc62844fa49"
+    },
+    {
+      "caption": "Empty child vaults cold child root_0_01F04650-5E98-49E3-BF8B-E4EB3D63ECB3.png",
+      "file": "root-exit-notice-attachments/7B0ABE3D-1508-4FC2-BD81-DDA31ABCC3E8.png",
+      "sha256": "d7aeada7a0e55b9ee746c37126972295afc352fac6a01033ef78c830e66d301f"
+    },
+    {
+      "caption": "Empty child vaults child root after cancel accessibility_0_FC5D079A-4DF5-4A3B-9EB8-9696557E2D50.txt",
+      "file": "root-exit-notice-attachments/83B2B0AE-11C7-4608-840F-F458AAECC629.txt",
+      "sha256": "4b323c36719cd43b1e3a4c9e5b0bda8899d2c78ecee4fd5af03415a886763e6c"
+    },
+    {
+      "caption": "Empty child vaults child root after cancel_0_5D9339C7-1218-4B26-B89F-D944B8016346.png",
+      "file": "root-exit-notice-attachments/63661597-F9C4-4C9F-9BDC-889D2FC15748.png",
+      "sha256": "d7aeada7a0e55b9ee746c37126972295afc352fac6a01033ef78c830e66d301f"
+    }
+  ],
+  "visualReview": "Images must be separately inspected; attachment export does not imply a visual approval."
+}

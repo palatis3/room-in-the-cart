@@ -1,0 +1,81 @@
+Attributes: Application, 0x106c2de10, pid: 91995, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x106c2de10, pid: 91995, label: 'Room in the Cart'
+    Window (Main), 0x106c11bd0, {{0.0, 0.0}, {375.0, 667.0}}
+      Other, 0x106c1f2c0, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x106c1f3e0, {{0.0, 0.0}, {375.0, 667.0}}
+          Other, 0x106c33b40, {{0.0, 0.0}, {375.0, 667.0}}
+            Other, 0x106c306a0, {{0.0, 0.0}, {375.0, 667.0}}
+              Other, 0x106c307c0, {{0.0, 0.0}, {375.0, 667.0}}
+                NavigationBar, 0x106c2c240, {{0.0, 20.0}, {375.0, 96.0}}, identifier: 'Guardian controls'
+                  StaticText, 0x106c2c360, {{16.0, 67.5}, {281.5, 41.0}}, label: 'Guardian controls'
+                Other, 0x106c2a2b0, {{0.0, 0.0}, {375.0, 667.0}}
+                  Other, 0x106c2a3d0, {{0.0, 0.0}, {375.0, 667.0}}
+                    Other, 0x106c62e30, {{0.0, 0.0}, {375.0, 667.0}}
+                      Other, 0x106c62f50, {{0.0, 0.0}, {375.0, 667.0}}
+                        CollectionView, 0x106c62a10, {{0.0, 0.0}, {375.0, 667.0}}
+                          Other, 0x106c62b30, {{-16.0, -1218.0}, {407.0, 1568.5}}
+                          Cell, 0x106c63670, {{16.0, 116.0}, {343.0, 108.5}}
+                            Other, 0x106c63790, {{16.0, 116.0}, {343.0, 108.5}}
+                              Other, 0x106c33ee0, {{16.0, 116.0}, {343.0, 108.5}}
+                            Other, 0x106c34000, {{16.0, 116.0}, {343.0, 108.5}}
+                              Other, 0x106c63250, {{16.0, 116.0}, {343.0, 108.5}}
+                                Other, 0x106c63370, {{16.0, 116.0}, {343.0, 108.5}}
+                                  StaticText, 0x106cf2420, {{16.0, 116.0}, {343.0, 108.5}}, label: 'Children can send and see only their own requests. Verification of adulthood, guardian permission, and device confirmation are separate steps.'
+                          Cell, 0x106cf2540, {{16.0, 224.5}, {343.0, 64.5}}
+                            Other, 0x106cf2660, {{16.0, 224.5}, {343.0, 64.5}}
+                              Other, 0x106c2b1b0, {{16.0, 224.5}, {343.0, 64.5}}
+                            Other, 0x106c2b2d0, {{16.0, 224.5}, {343.0, 64.5}}
+                              Other, 0x106c2b3f0, {{16.0, 224.5}, {343.0, 64.5}}
+                                Other, 0x106c2b510, {{16.0, 224.5}, {343.0, 64.5}}
+                                  StaticText, 0x106c2b630, {{16.0, 224.5}, {343.0, 64.5}}, label: 'Fictional guardian fixture · no real emails or accounts'
+                          Other, 0x106c2b930, {{32.0, 224.0}, {327.0, 0.5}}
+                          Cell, 0x106c2ba50, {{16.0, 289.0}, {343.0, 44.0}}
+                            Other, 0x106c2bb70, {{16.0, 289.0}, {343.0, 44.0}}
+                              Other, 0x106c2bc90, {{16.0, 289.0}, {343.0, 44.0}}
+                            Other, 0x106c2bdb0, {{16.0, 289.0}, {343.0, 44.0}}
+                              Other, 0x106c2bed0, {{16.0, 289.0}, {343.0, 44.0}}
+                                Other, 0x106c2bff0, {{16.0, 289.0}, {343.0, 44.0}}
+                                  StaticText, 0x106c31490, {{16.0, 289.0}, {343.0, 44.0}}, identifier: 'guardian.fixture.verificationRequests', label: '0'
+                          Other, 0x106c315b0, {{32.0, 288.5}, {327.0, 0.5}}
+                          Other, 0x106c316d0, {{-16.0, 350.5}, {407.0, 1570.0}}
+                          Cell, 0x106c317f0, {{16.0, 350.5}, {343.0, 39.0}}
+                            Other, 0x106c31910, {{16.0, 350.5}, {343.0, 39.0}}
+                            Other, 0x106c31a30, {{16.0, 350.5}, {343.0, 39.0}}
+                              Other, 0x106c31b50, {{16.0, 350.5}, {343.0, 39.0}}
+                                Other, 0x106c31c70, {{16.0, 350.5}, {343.0, 39.0}}
+                                  StaticText, 0x106c31d90, {{16.0, 350.5}, {343.0, 39.0}}, label: 'Current guardian notice'
+                          Cell, 0x106c31eb0, {{16.0, 389.5}, {343.0, 44.0}}
+                            Other, 0x106c31fd0, {{16.0, 389.5}, {343.0, 44.0}}
+                              Other, 0x106c320f0, {{16.0, 389.5}, {343.0, 44.0}}
+                            Other, 0x106c32210, {{16.0, 389.5}, {343.0, 44.0}}
+                              Other, 0x106c32330, {{16.0, 389.5}, {343.0, 44.0}}
+                                Other, 0x106c32450, {{16.0, 389.5}, {343.0, 44.0}}
+                                  StaticText, 0x106c32570, {{32.0, 401.2}, {124.0, 20.5}}, label: 'Notice language'
+                                  Button, 0x106c32690, {{16.0, 389.5}, {343.0, 44.0}}, label: 'Notice language, English'
+                                    StaticText, 0x106c327b0, {{272.0, 401.5}, {55.0, 20.5}}, label: 'English'
+                          Cell, 0x106c328d0, {{16.0, 433.5}, {343.0, 44.0}}
+                            Other, 0x106c32bf0, {{16.0, 433.5}, {343.0, 44.0}}
+                              Other, 0x106c32d10, {{16.0, 433.5}, {343.0, 44.0}}
+                            Other, 0x106c32e30, {{16.0, 433.5}, {343.0, 44.0}}
+                              Other, 0x106c32f50, {{16.0, 433.5}, {343.0, 44.0}}
+                                Other, 0x106c33070, {{16.0, 433.5}, {343.0, 44.0}}
+                                  Button, 0x106c33190, {{16.0, 433.5}, {343.0, 44.0}}, identifier: 'guardian.refresh', label: 'Refresh notice and setup status'
+                          Other, 0x106c332b0, {{32.0, 433.0}, {327.0, 0.5}}
+                          Cell, 0x106c333d0, {{16.0, 477.5}, {343.0, 89.0}}
+                            Other, 0x106c334f0, {{16.0, 477.5}, {343.0, 89.0}}
+                              Other, 0x106c343e0, {{16.0, 477.5}, {343.0, 89.0}}
+                            Other, 0x106c34500, {{16.0, 477.5}, {343.0, 89.0}}
+                              Other, 0x106c34620, {{16.0, 477.5}, {343.0, 89.0}}
+                                Other, 0x106c34740, {{16.0, 477.5}, {343.0, 89.0}}
+                                  Image, 0x106c34860, {{37.0, 490.5}, {18.0, 21.5}}, identifier: 'guardian.unavailable', label: 'lock.shield'
+                                  StaticText, 0x106c34980, {{16.0, 477.5}, {343.0, 89.0}}, identifier: 'guardian.unavailable', label: 'Child setup is unavailable until the verification service and current notices are approved.'
+                          Other, 0x106c34aa0, {{32.0, 477.0}, {327.0, 0.5}}
+                          Other, 0x106c34bc0, {{342.0, 116.0}, {30.0, 551.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+Path to element:
+ →Application, 0x106c2de10, pid: 91995, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x105535860, pid: 91995, label: 'Room in the Cart'
+  }

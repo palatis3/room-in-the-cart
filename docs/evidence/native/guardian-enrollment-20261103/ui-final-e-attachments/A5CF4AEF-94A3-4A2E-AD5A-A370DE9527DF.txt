@@ -1,0 +1,118 @@
+Attributes: Application, 0x11da69310, pid: 94073, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x11da69310, pid: 94073, label: 'Room in the Cart'
+    Window (Main), 0x11da64be0, {{0.0, 0.0}, {375.0, 667.0}}
+      Other, 0x11da61060, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x11da68cd0, {{0.0, 0.0}, {375.0, 667.0}}
+          Other, 0x11da665b0, {{0.0, 0.0}, {375.0, 667.0}}
+            Other, 0x11da6a0f0, {{0.0, 0.0}, {375.0, 667.0}}
+              Other, 0x11da6a6e0, {{0.0, 0.0}, {375.0, 667.0}}
+                NavigationBar, 0x11da6a800, {{0.0, 20.0}, {375.0, 44.0}}, identifier: 'Guardian controls'
+                  StaticText, 0x11da6a920, {{117.0, 32.0}, {141.5, 20.5}}, label: 'Guardian controls'
+                Other, 0x11da6aa40, {{0.0, 0.0}, {375.0, 667.0}}
+                  Other, 0x11da6ab60, {{0.0, 0.0}, {375.0, 667.0}}
+                    Other, 0x11da6ac80, {{0.0, 0.0}, {375.0, 667.0}}
+                      Other, 0x11da6ada0, {{0.0, 0.0}, {375.0, 667.0}}
+                        CollectionView, 0x11da6aec0, {{0.0, 0.0}, {375.0, 667.0}}
+                          Other, 0x11da6afe0, {{-16.0, -58.5}, {407.0, 136.0}}
+                          Cell, 0x11da6b100, {{16.0, -19.5}, {343.0, 79.5}}
+                            Other, 0x11da6b220, {{16.0, -19.5}, {343.0, 79.5}}
+                              Other, 0x11da6b340, {{16.0, -19.5}, {343.0, 79.5}}
+                            Other, 0x11da6b460, {{16.0, -19.5}, {343.0, 79.5}}
+                              Other, 0x11da6b580, {{16.0, -19.5}, {343.0, 79.5}}
+                                Other, 0x11da6b6a0, {{16.0, -19.5}, {343.0, 79.5}}
+                                  Button, 0x11da6b7c0, {{16.0, -19.5}, {343.0, 79.5}}, identifier: 'guardian.enrollment.10000000-0000-4000-8000-000000000001', label: 'Sam, Child device confirmed; finish on that device, 00000001'
+                                    StaticText, 0x11da6b8e0, {{32.0, -8.5}, {34.0, 20.5}}, label: 'Sam'
+                                    StaticText, 0x11da6ba00, {{32.0, 16.0}, {252.0, 14.5}}, label: 'Child device confirmed; finish on that device'
+                                    StaticText, 0x11da6bb20, {{32.0, 34.5}, {59.5, 14.5}}, label: '00000001'
+                          Other, 0x11da6bc40, {{-16.0, 77.5}, {407.0, 339.5}}
+                          Cell, 0x11da6bd60, {{16.0, 77.5}, {343.0, 39.0}}
+                            Other, 0x11da6be80, {{16.0, 77.5}, {343.0, 39.0}}
+                            Other, 0x11da6bfd0, {{16.0, 77.5}, {343.0, 39.0}}
+                              Other, 0x11da6c0f0, {{16.0, 77.5}, {343.0, 39.0}}
+                                Other, 0x11da6c210, {{16.0, 77.5}, {343.0, 39.0}}
+                                  StaticText, 0x11da6c330, {{16.0, 77.5}, {343.0, 39.0}}, label: 'Selected setup'
+                          Cell, 0x11da6c450, {{16.0, 116.5}, {343.0, 44.0}}
+                            Other, 0x11da6c570, {{16.0, 116.5}, {343.0, 44.0}}
+                              Other, 0x11da6c690, {{16.0, 116.5}, {343.0, 44.0}}
+                            Other, 0x11da6c7b0, {{16.0, 116.5}, {343.0, 44.0}}
+                              Other, 0x11da6c8d0, {{16.0, 116.5}, {343.0, 44.0}}
+                                Other, 0x11da6c9f0, {{16.0, 116.5}, {343.0, 44.0}}
+                                  StaticText, 0x11da6cb10, {{16.0, 116.5}, {343.0, 44.0}}, label: 'Sam'
+                          Cell, 0x11da6cc30, {{16.0, 160.5}, {343.0, 64.5}}
+                            Other, 0x11da6cd50, {{16.0, 160.5}, {343.0, 64.5}}
+                              Other, 0x11da6ce70, {{16.0, 160.5}, {343.0, 64.5}}
+                            Other, 0x11da6cf90, {{16.0, 160.5}, {343.0, 64.5}}
+                              Other, 0x11da6d0b0, {{16.0, 160.5}, {343.0, 64.5}}
+                                Other, 0x11da6d1d0, {{16.0, 160.5}, {343.0, 64.5}}
+                                  StaticText, 0x11da6d2f0, {{16.0, 160.5}, {343.0, 64.5}}, identifier: 'guardian.state', label: 'Child device confirmed; finish on that device'
+                          Other, 0x11da6d410, {{32.0, 160.0}, {327.0, 0.5}}
+                          Cell, 0x11da6d530, {{16.0, 225.0}, {343.0, 44.0}}
+                            Other, 0x11da6d650, {{16.0, 225.0}, {343.0, 44.0}}
+                              Other, 0x11da6d770, {{16.0, 225.0}, {343.0, 44.0}}
+                            Other, 0x11da6d890, {{16.0, 225.0}, {343.0, 44.0}}
+                              Other, 0x11da6d9b0, {{16.0, 225.0}, {343.0, 44.0}}
+                                Other, 0x11da6dad0, {{16.0, 225.0}, {343.0, 44.0}}
+                                  StaticText, 0x11da6dbf0, {{32.0, 236.8}, {55.5, 20.5}}, label: 'Expires'
+                                  StaticText, 0x11da6dd10, {{16.0, 225.0}, {343.0, 44.0}}, label: 'Expires, Dec 31, 2098 at 7:00 PM'
+                          Other, 0x11da6de30, {{32.0, 224.5}, {327.0, 0.5}}
+                          Cell, 0x11da6df50, {{16.0, 269.0}, {343.0, 86.5}}
+                            Other, 0x11da6e070, {{16.0, 269.0}, {343.0, 86.5}}
+                              Other, 0x11da6e190, {{16.0, 269.0}, {343.0, 86.5}}
+                            Other, 0x11da6e2b0, {{16.0, 269.0}, {343.0, 86.5}}
+                              Other, 0x11da6e3d0, {{16.0, 269.0}, {343.0, 86.5}}
+                                Other, 0x11da6e4f0, {{16.0, 269.0}, {343.0, 86.5}}
+                                  StaticText, 0x11da6e610, {{16.0, 269.0}, {343.0, 86.5}}, label: 'This device was confirmed. The child can finish setup in their own authenticated session.'
+                          Other, 0x11da6e730, {{32.0, 268.5}, {327.0, 0.5}}
+                          Cell, 0x11da6e850, {{16.0, 355.5}, {343.0, 44.0}}
+                            Other, 0x11da6e970, {{16.0, 355.5}, {343.0, 44.0}}
+                              Other, 0x11da6ea90, {{16.0, 355.5}, {343.0, 44.0}}
+                            Other, 0x11da6ebb0, {{16.0, 355.5}, {343.0, 44.0}}
+                              Other, 0x11da6ecd0, {{16.0, 355.5}, {343.0, 44.0}}
+                                Other, 0x11da6edf0, {{16.0, 355.5}, {343.0, 44.0}}
+                                  Button, 0x11da6ef10, {{16.0, 355.5}, {343.0, 44.0}}, label: 'Cancel this setup'
+                          Other, 0x11da6f030, {{32.0, 355.0}, {327.0, 0.5}}
+                          Other, 0x11da6f150, {{-16.0, 417.0}, {407.0, 317.5}}
+                          Cell, 0x11da6f270, {{16.0, 417.0}, {343.0, 39.0}}
+                            Other, 0x11da6f390, {{16.0, 417.0}, {343.0, 39.0}}
+                            Other, 0x11da6f4b0, {{16.0, 417.0}, {343.0, 39.0}}
+                              Other, 0x11da6f5d0, {{16.0, 417.0}, {343.0, 39.0}}
+                                Other, 0x11da6f6f0, {{16.0, 417.0}, {343.0, 39.0}}
+                                  StaticText, 0x11da6f810, {{16.0, 417.0}, {343.0, 39.0}}, label: 'Begin a new child setup'
+                          Cell, 0x11da6f930, {{16.0, 456.0}, {343.0, 44.0}}
+                            Other, 0x11da6fa50, {{16.0, 456.0}, {343.0, 44.0}}
+                              Other, 0x11da6fb70, {{16.0, 456.0}, {343.0, 44.0}}
+                            Other, 0x11da6fc90, {{16.0, 456.0}, {343.0, 44.0}}
+                              Other, 0x11da6fdb0, {{16.0, 456.0}, {343.0, 44.0}}
+                                Other, 0x11da6fed0, {{16.0, 456.0}, {343.0, 44.0}}
+                                  TextField, 0x11da6fff0, {{16.0, 456.0}, {343.0, 44.0}}, identifier: 'guardian.childLocation', placeholderValue: 'Child's country or region code', value: US
+                          Cell, 0x11da70110, {{16.0, 500.0}, {343.0, 64.5}}
+                            Other, 0x11da70230, {{16.0, 500.0}, {343.0, 64.5}}
+                              Other, 0x11da70350, {{16.0, 500.0}, {343.0, 64.5}}
+                            Other, 0x11da70470, {{16.0, 500.0}, {343.0, 64.5}}
+                              Other, 0x11da70590, {{16.0, 500.0}, {343.0, 64.5}}
+                                Other, 0x11da706b0, {{16.0, 500.0}, {343.0, 64.5}}
+                                  Switch, 0x11da707d0, {{16.0, 500.0}, {343.0, 64.5}}, identifier: 'guardian.declaration', label: 'I am this child's parent or legal guardian', value: 0
+                                    StaticText, 0x11da708f0, {{32.0, 511.0}, {195.5, 42.5}}, label: 'I am this child's parent or legal guardian'
+                                    Switch, 0x11da70a10, {{294.0, 517.0}, {51.0, 31.0}}, value: 0
+                          Other, 0x11da70b30, {{32.0, 499.5}, {327.0, 0.5}}
+                          Cell, 0x11da70c50, {{16.0, 564.5}, {343.0, 108.5}}
+                            Other, 0x11da70d70, {{16.0, 564.5}, {343.0, 108.5}}
+                              Other, 0x11da70e90, {{16.0, 564.5}, {343.0, 108.5}}
+                            Other, 0x11da70fb0, {{16.0, 564.5}, {343.0, 108.5}}
+                              Other, 0x11da710d0, {{16.0, 564.5}, {343.0, 108.5}}
+                                Other, 0x11da711f0, {{16.0, 564.5}, {343.0, 108.5}}
+                                  StaticText, 0x11da71310, {{16.0, 564.5}, {343.0, 108.5}}, label: 'This is your declaration. The verification provider checks adulthood and does not independently establish your relationship to the child.'
+                          Other, 0x11da71430, {{32.0, 564.0}, {327.0, 0.5}}
+                          Other, 0x11da71550, {{342.0, 64.0}, {30.0, 603.0}}, label: 'Vertical scroll bar, 3 pages', value: 83%
+    Window, 0x11da71670, {{0.0, 0.0}, {375.0, 667.0}}
+      Other, 0x11da71790, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x11da718b0, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x11da719d0, {{0.0, 667.0}, {375.0, 216.0}}
+Path to element:
+ →Application, 0x11da69310, pid: 94073, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x121f072d0, pid: 94073, label: 'Room in the Cart'
+  }

@@ -1,0 +1,99 @@
+Attributes: Application, 0x103153960, pid: 5371, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x103153960, pid: 5371, label: 'Room in the Cart'
+    Window (Main), 0x1031ef370, {{0.0, 0.0}, {375.0, 667.0}}
+      Other, 0x1031f0510, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x1031f0630, {{0.0, 0.0}, {375.0, 667.0}}
+          Other, 0x1031f03c0, {{0.0, 0.0}, {375.0, 667.0}}
+            Other, 0x1031f0990, {{0.0, 0.0}, {375.0, 667.0}}
+              Other, 0x1031ee200, {{0.0, 0.0}, {375.0, 667.0}}
+                NavigationBar, 0x1031f0750, {{0.0, 20.0}, {375.0, 96.0}}, identifier: 'Household devices'
+                  StaticText, 0x1031f0870, {{16.0, 67.5}, {301.0, 41.0}}, label: 'Household devices'
+                Other, 0x1031f0ab0, {{0.0, 0.0}, {375.0, 667.0}}
+                  Other, 0x1031f0bd0, {{0.0, 0.0}, {375.0, 667.0}}
+                    Other, 0x1031f0da0, {{0.0, 0.0}, {375.0, 667.0}}
+                      Other, 0x1031f0ec0, {{0.0, 0.0}, {375.0, 667.0}}
+                        CollectionView, 0x1031f0fe0, {{0.0, 0.0}, {375.0, 667.0}}
+                          Other, 0x1031f1100, {{-16.0, -1218.0}, {407.0, 1568.5}}
+                          Cell, 0x1031f1220, {{16.0, 116.0}, {343.0, 64.5}}
+                            Other, 0x1031f1340, {{16.0, 116.0}, {343.0, 64.5}}
+                              Other, 0x1031f1460, {{16.0, 116.0}, {343.0, 64.5}}
+                            Other, 0x1031f1580, {{16.0, 116.0}, {343.0, 64.5}}
+                              Other, 0x1031f16a0, {{16.0, 116.0}, {343.0, 64.5}}
+                                Other, 0x1031f17c0, {{16.0, 116.0}, {343.0, 64.5}}
+                                  StaticText, 0x1031f18e0, {{16.0, 116.0}, {343.0, 64.5}}, label: 'Enrolled access for this household. Each reference identifies one enrollment.'
+                          Cell, 0x1031f1a00, {{16.0, 180.5}, {343.0, 108.5}}
+                            Other, 0x1031f1b20, {{16.0, 180.5}, {343.0, 108.5}}
+                              Other, 0x1031f1c40, {{16.0, 180.5}, {343.0, 108.5}}
+                            Other, 0x1031f1d60, {{16.0, 180.5}, {343.0, 108.5}}
+                              Other, 0x1031f1e80, {{16.0, 180.5}, {343.0, 108.5}}
+                                Other, 0x1031f1fa0, {{16.0, 180.5}, {343.0, 108.5}}
+                                  StaticText, 0x1031f20c0, {{16.0, 180.5}, {343.0, 108.5}}, label: 'A person may have several enrollments on one phone or browser. Use the enrollment date and reference to choose the access to end.'
+                          Other, 0x1031f21e0, {{32.0, 180.0}, {327.0, 0.5}}
+                          Cell, 0x1031f2300, {{16.0, 289.0}, {343.0, 44.0}}
+                            Other, 0x1031f2420, {{16.0, 289.0}, {343.0, 44.0}}
+                              Other, 0x1031f2540, {{16.0, 289.0}, {343.0, 44.0}}
+                            Other, 0x1031f2660, {{16.0, 289.0}, {343.0, 44.0}}
+                              Other, 0x1031f2780, {{16.0, 289.0}, {343.0, 44.0}}
+                                Other, 0x1031f28a0, {{16.0, 289.0}, {343.0, 44.0}}
+                                  Button, 0x1031f29c0, {{16.0, 289.0}, {343.0, 44.0}}, identifier: 'household.devices.refresh', label: 'Refresh devices'
+                          Other, 0x1031f2ae0, {{32.0, 288.5}, {327.0, 0.5}}
+                          Other, 0x1031f2c00, {{-16.0, 350.5}, {407.0, 275.5}}
+                          Cell, 0x1031f2d20, {{16.0, 368.0}, {343.0, 44.0}}
+                            Other, 0x1031f2e40, {{16.0, 368.0}, {343.0, 44.0}}
+                              Other, 0x1031f2f60, {{16.0, 368.0}, {343.0, 44.0}}
+                            Other, 0x1031f3080, {{16.0, 368.0}, {343.0, 44.0}}
+                              Other, 0x1031f31a0, {{16.0, 368.0}, {343.0, 44.0}}
+                                Other, 0x1031f32c0, {{16.0, 368.0}, {343.0, 44.0}}
+                                  StaticText, 0x1031f33e0, {{16.0, 368.0}, {343.0, 44.0}}, identifier: 'household.devices.alias.30000000-0000-4000-8000-000000000004', label: 'Mia'
+                          Cell, 0x1031f3500, {{16.0, 412.0}, {343.0, 44.0}}
+                            Other, 0x1031f3620, {{16.0, 412.0}, {343.0, 44.0}}
+                              Other, 0x1031f3740, {{16.0, 412.0}, {343.0, 44.0}}
+                            Other, 0x1031f3860, {{16.0, 412.0}, {343.0, 44.0}}
+                              Other, 0x1031f3980, {{16.0, 412.0}, {343.0, 44.0}}
+                                Other, 0x1031f3aa0, {{16.0, 412.0}, {343.0, 44.0}}
+                                  StaticText, 0x1031f3bc0, {{32.0, 423.8}, {129.0, 20.5}}, label: 'Device reference'
+                                  StaticText, 0x1031f3ce0, {{16.0, 412.0}, {343.0, 44.0}}, label: 'Device reference, 00000004'
+                          Other, 0x1031f3e00, {{32.0, 411.5}, {327.0, 0.5}}
+                          Cell, 0x1031f3f20, {{16.0, 456.0}, {343.0, 44.0}}
+                            Other, 0x1031f4040, {{16.0, 456.0}, {343.0, 44.0}}
+                              Other, 0x1031f4160, {{16.0, 456.0}, {343.0, 44.0}}
+                            Other, 0x1031f4280, {{16.0, 456.0}, {343.0, 44.0}}
+                              Other, 0x1031f43a0, {{16.0, 456.0}, {343.0, 44.0}}
+                                Other, 0x1031f44c0, {{16.0, 456.0}, {343.0, 44.0}}
+                                  StaticText, 0x1031f45e0, {{32.0, 467.8}, {62.0, 20.5}}, label: 'Enrolled'
+                                  StaticText, 0x1031f4700, {{16.0, 456.0}, {343.0, 44.0}}, label: 'Enrolled, Nov 1, 2026 at 7:00 AM'
+                          Other, 0x1031f4820, {{32.0, 455.5}, {327.0, 0.5}}
+                          Cell, 0x1031f4940, {{16.0, 500.0}, {343.0, 64.5}}
+                            Other, 0x1031f4a60, {{16.0, 500.0}, {343.0, 64.5}}
+                              Other, 0x1031f4b80, {{16.0, 500.0}, {343.0, 64.5}}
+                            Other, 0x1031f4ca0, {{16.0, 500.0}, {343.0, 64.5}}
+                              Other, 0x1031f4dc0, {{16.0, 500.0}, {343.0, 64.5}}
+                                Other, 0x1031f4ee0, {{16.0, 500.0}, {343.0, 64.5}}
+                                  StaticText, 0x1031f5000, {{16.0, 500.0}, {343.0, 64.5}}, label: 'This device. Use Sign out in household settings to end this enrollment.'
+                          Other, 0x1031f5120, {{32.0, 499.5}, {327.0, 0.5}}
+                          Cell, 0x1031f5240, {{16.0, 564.5}, {343.0, 44.0}}
+                            Other, 0x1031f5360, {{16.0, 564.5}, {343.0, 44.0}}
+                              Other, 0x1031f5480, {{16.0, 564.5}, {343.0, 44.0}}
+                            Other, 0x1031f55a0, {{16.0, 564.5}, {343.0, 44.0}}
+                              Other, 0x1031f56c0, {{16.0, 564.5}, {343.0, 44.0}}
+                                Other, 0x1031f57e0, {{16.0, 564.5}, {343.0, 44.0}}
+                                  StaticText, 0x1031f5900, {{16.0, 564.5}, {343.0, 44.0}}, identifier: 'household.devices.active.30000000-0000-4000-8000-000000000004', label: 'Active enrollment'
+                          Other, 0x1031f5a20, {{32.0, 564.0}, {327.0, 0.5}}
+                          Other, 0x1031f5b40, {{-16.0, 626.0}, {407.0, 255.0}}
+                          Cell, 0x1031f5c60, {{16.0, 643.5}, {343.0, 44.0}}
+                            Other, 0x1031f5d80, {{16.0, 643.5}, {343.0, 44.0}}
+                              Other, 0x1031f5ea0, {{16.0, 643.5}, {343.0, 44.0}}
+                            Other, 0x1031f5fc0, {{16.0, 643.5}, {343.0, 44.0}}
+                              Other, 0x1031f60e0, {{16.0, 643.5}, {343.0, 44.0}}
+                                Other, 0x1031f6200, {{16.0, 643.5}, {343.0, 44.0}}
+                                  StaticText, 0x1031f6320, {{16.0, 643.5}, {343.0, 44.0}}, identifier: 'household.devices.alias.30000000-0000-4000-8000-000000000005', label: 'Alex'
+                          Other, 0x1031f6440, {{342.0, 116.0}, {30.0, 508.5}}, label: 'Vertical scroll bar, 2 pages', value: 0%
+                        StaticText, 0x1031f6560, {{4.0, 636.5}, {367.0, 26.5}}, identifier: 'household.devices.fixtureSummary', label: 'writes=0;current=active;target=active;sibling=active;membership=active;shopper=Mia'
+Path to element:
+ →Application, 0x103153960, pid: 5371, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x1031f68a0, pid: 5371, label: 'Room in the Cart'
+  }

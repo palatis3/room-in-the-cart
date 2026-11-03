@@ -1,0 +1,49 @@
+Attributes: Application, 0x10665d540, pid: 1839, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x10665d540, pid: 1839, label: 'Room in the Cart'
+    Window (Main), 0x10665d2c0, {{0.0, 0.0}, {390.0, 844.0}}
+      Other, 0x10665ca00, {{0.0, 0.0}, {390.0, 844.0}}
+        Other, 0x10665cb40, {{0.0, 0.0}, {390.0, 844.0}}
+          Other, 0x10665d680, {{0.0, 0.0}, {390.0, 844.0}}
+            Other, 0x10665d400, {{0.0, 0.0}, {390.0, 844.0}}
+              Other, 0x10665d900, {{0.0, 0.0}, {390.0, 844.0}}
+                NavigationBar, 0x10665df40, {{0.0, 47.0}, {390.0, 127.0}}, identifier: 'Dispositivos del hogar'
+                  StaticText, 0x10665e800, {{16.0, 101.0}, {338.0, 71.7}}, label: 'Dispositivos del hogar'
+                Other, 0x10665d7c0, {{0.0, 0.0}, {390.0, 844.0}}
+                  Other, 0x10665db80, {{0.0, 0.0}, {390.0, 844.0}}
+                    Other, 0x10665dcc0, {{0.0, 0.0}, {390.0, 844.0}}
+                      Other, 0x10665de00, {{0.0, 0.0}, {390.0, 844.0}}
+                        CollectionView, 0x10665e1c0, {{0.0, 0.0}, {390.0, 844.0}}
+                          Other, 0x10665e300, {{-16.0, -1514.0}, {422.0, 3005.3}}
+                          Other, 0x10665e6c0, {{0.0, 0.0}, {390.0, 844.0}}
+                            Other, 0x10665f200, {{0.0, 0.0}, {390.0, 87.0}}
+                          Other, 0x10665e940, {{0.0, 0.0}, {390.0, 844.0}}
+                          Cell, 0x10665e080, {{16.0, 174.0}, {358.0, 465.3}}
+                            Other, 0x10665e440, {{16.0, 174.0}, {358.0, 465.3}}
+                              Other, 0x10665e580, {{16.0, 174.0}, {358.0, 465.3}}
+                            Other, 0x10665ebc0, {{16.0, 174.0}, {358.0, 465.3}}
+                              Other, 0x10665ed00, {{16.0, 174.0}, {358.0, 465.3}}
+                                Other, 0x10665f840, {{16.0, 174.0}, {358.0, 465.3}}
+                                  StaticText, 0x10665ea80, {{16.0, 174.0}, {358.0, 465.3}}, label: 'Acceso registrado de este hogar. Cada referencia identifica un registro.'
+                          Cell, 0x10665ee40, {{16.0, 639.3}, {358.0, 775.3}}
+                            Other, 0x10665ef80, {{16.0, 639.3}, {358.0, 775.3}}
+                              Other, 0x10665f0c0, {{16.0, 639.3}, {358.0, 775.3}}
+                            Other, 0x10665f480, {{16.0, 639.3}, {358.0, 775.3}}
+                              Other, 0x10665f340, {{16.0, 639.3}, {358.0, 775.3}}
+                                Other, 0x10665f700, {{16.0, 639.3}, {358.0, 775.3}}
+                                  StaticText, 0x10665fc00, {{16.0, 639.3}, {358.0, 775.3}}, label: 'Una persona puede tener varios registros en un teléfono o navegador. Usa la fecha y la referencia para elegir el acceso que deseas terminar.'
+                          Other, 0x10665fd40, {{32.0, 638.3}, {326.0, 1.0}}
+                          Other, 0x10665fac0, {{357.0, 101.0}, {30.0, 666.7}}, label: 'Barra de desplazamiento vertical, 4 páginas', value: 0%
+                            Other, 0x10665cdc0, {{384.0, 757.7}, {3.0, 7.0}}
+                          Other, 0x10665cf00, {{357.0, 101.0}, {30.0, 666.7}}, label: 'Barra de desplazamiento vertical, 4 páginas', value: 0%
+                            Other, 0x102f96f80, {{384.0, 757.7}, {3.0, 7.0}}
+                        StaticText, 0x102f97200, {{4.2, 779.7}, {381.7, 26.3}}, identifier: 'household.devices.fixtureSummary', label: 'writes=0;current=active;target=active;sibling=active;membership=active;shopper=Mia'
+                Toolbar, 0x102f97340, {{0.0, 0.0}, {390.0, 844.0}}, identifier: 'Toolbar', label: 'Barra de herramientas'
+                  Other, 0x102f970c0, {{0.0, 0.0}, {390.0, 844.0}}
+Path to element:
+ →Application, 0x10665d540, pid: 1839, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x102f97480, pid: 1839, label: 'Room in the Cart'
+  }

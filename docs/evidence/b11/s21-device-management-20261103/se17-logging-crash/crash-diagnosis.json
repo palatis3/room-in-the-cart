@@ -1,0 +1,230 @@
+{
+  "unmutedResult": ".build/FinalDevices-20261103.xcresult",
+  "sourceFreeze": ".build/FinalDevicesSource-20261103T231101Z",
+  "results": {
+    "English": "passed54.187s",
+    "Spanish": "failed90.285s; capture atline124 masked underlying process termination"
+  },
+  "crashReport": {
+    "originalPath": "/Users/palatis/Library/Logs/DiagnosticReports/RoomInTheCart-2026-11-03-181440.ips",
+    "sha256": "5c48078f4f7277c81962fee978a06996447d90f764b75bcd95141ab9fcc1600d",
+    "pid": 5630,
+    "launched": "2026-11-03 18:13:11.9288 -0500",
+    "captured": "2026-11-03 18:14:36.9765 -0500",
+    "faultingThread": 1,
+    "exception": {
+      "codes": "0x0000000000000001, 0x0000000000000000",
+      "rawCodes": [
+        1,
+        0
+      ],
+      "type": "EXC_BAD_ACCESS",
+      "signal": "SIGSEGV",
+      "subtype": "KERN_INVALID_ADDRESS at 0x0000000000000000"
+    },
+    "termination": {
+      "flags": 0,
+      "code": 11,
+      "namespace": "SIGNAL",
+      "indicator": "Segmentation fault: 11",
+      "byProc": "exc handler",
+      "byPid": 5630
+    },
+    "crashingStack": [
+      {
+        "image": "libsystem_platform.dylib",
+        "symbol": "_platform_strcmp$VARIANT$Base",
+        "offset": 64
+      },
+      {
+        "image": "XCTAutomationSupport",
+        "symbol": "runtime_issue_os_log_fault_callback",
+        "offset": 104
+      },
+      {
+        "image": "libsystem_trace.dylib",
+        "symbol": "_os_log_invoke_callback",
+        "offset": 200
+      },
+      {
+        "image": "libsystem_trace.dylib",
+        "symbol": "_os_log_impl_flatten_and_send",
+        "offset": 6976
+      },
+      {
+        "image": "libsystem_trace.dylib",
+        "symbol": "_os_log",
+        "offset": 148
+      },
+      {
+        "image": "libsystem_trace.dylib",
+        "symbol": "_os_log_fault_impl",
+        "offset": 16
+      },
+      {
+        "image": "libsystem_trace.dylib",
+        "symbol": "__LIBTRACE_CLIENT_QUARANTINED_DUE_TO_HIGH_LOGGING_VOLUME__",
+        "offset": 100
+      },
+      {
+        "image": "libdispatch.dylib",
+        "symbol": "firehose_client_start_quarantine",
+        "offset": 52
+      },
+      {
+        "image": "libdispatch.dylib",
+        "symbol": "firehose_buffer_stream_chunk_install",
+        "offset": 1016
+      },
+      {
+        "image": "libdispatch.dylib",
+        "symbol": "voucher_activity_trace_v_2",
+        "offset": 1096
+      },
+      {
+        "image": "libsystem_trace.dylib",
+        "symbol": "_os_log_impl_flatten_and_send",
+        "offset": 6496
+      },
+      {
+        "image": "libsystem_trace.dylib",
+        "symbol": "_os_log",
+        "offset": 148
+      },
+      {
+        "image": "libsystem_trace.dylib",
+        "symbol": "_os_log_impl",
+        "offset": 16
+      },
+      {
+        "image": "XCTAutomationSupport",
+        "symbol": "__62-[XCTAutomationSession attributesForElement:attributes:reply:]_block_invoke",
+        "offset": 524
+      },
+      {
+        "image": "libdispatch.dylib",
+        "symbol": "_dispatch_call_block_and_release",
+        "offset": 24
+      },
+      {
+        "image": "libdispatch.dylib",
+        "symbol": "_dispatch_client_callout",
+        "offset": 16
+      },
+      {
+        "image": "libdispatch.dylib",
+        "symbol": "_dispatch_lane_serial_drain",
+        "offset": 960
+      },
+      {
+        "image": "libdispatch.dylib",
+        "symbol": "_dispatch_lane_invoke",
+        "offset": 388
+      },
+      {
+        "image": "libdispatch.dylib",
+        "symbol": "_dispatch_root_queue_drain_deferred_wlh",
+        "offset": 276
+      },
+      {
+        "image": "libdispatch.dylib",
+        "symbol": "_dispatch_workloop_worker_thread",
+        "offset": 448
+      },
+      {
+        "image": "libsystem_pthread.dylib",
+        "symbol": "_pthread_wqthread",
+        "offset": 288
+      },
+      {
+        "image": "libsystem_pthread.dylib",
+        "symbol": "start_wqthread",
+        "offset": 8
+      }
+    ],
+    "mainThreadTopFrames": [
+      {
+        "image": "libobjc.A.dylib",
+        "symbol": "getMethodNoSuper_nolock(objc_class*, objc_selector*)"
+      },
+      {
+        "image": "libobjc.A.dylib",
+        "symbol": "lookUpImpOrForward"
+      },
+      {
+        "image": "libobjc.A.dylib",
+        "symbol": "class_respondsToSelector_inst"
+      },
+      {
+        "image": "BaseBoard",
+        "symbol": "-[BSDescriptionBuilder appendObject:withName:skipIfNil:]"
+      },
+      {
+        "image": "UIKitCore",
+        "symbol": "__63-[_UIKeyWindowEvaluator descriptionBuilderWithMultilinePrefix:]_block_invoke_2"
+      },
+      {
+        "image": "BaseBoard",
+        "symbol": "-[BSDescriptionBuilder appendBodySectionWithName:multilinePrefix:block:]"
+      },
+      {
+        "image": "UIKitCore",
+        "symbol": "__63-[_UIKeyWindowEvaluator descriptionBuilderWithMultilinePrefix:]_block_invoke"
+      },
+      {
+        "image": "BaseBoard",
+        "symbol": "-[BSDescriptionBuilder modifyBody:]"
+      },
+      {
+        "image": "UIKitCore",
+        "symbol": "-[_UIKeyWindowEvaluator descriptionBuilderWithMultilinePrefix:]"
+      },
+      {
+        "image": "UIKitCore",
+        "symbol": "__30-[_UIKeyWindowEvaluator _init]_block_invoke"
+      },
+      {
+        "image": "BaseBoard",
+        "symbol": "___BSLogAddStateCaptureBlockWithTitle_block_invoke"
+      },
+      {
+        "image": "libsystem_trace.dylib",
+        "symbol": "___os_state_request_for_self_impl_block_invoke"
+      }
+    ]
+  },
+  "stdoutProvenance": {
+    "originalPath": ".build/FinalDevices-20261103-diagnostics/0_Test_Room in the Cart iOS 17 Small_Diagnostics/RoomInTheCartUITests-B94C0545-723E-4308-9CAD-428581D3F3A3-Configuration-Test Scheme Action-Iteration-1/RoomInTheCartUITests-2DCD2259-CDC7-436B-98D9-FCB4AB5C8585/StandardOutputAndStandardError-dev.roominthecart.app.debug.txt",
+    "bytes": 119543266,
+    "sha256": "9480beffcc8dd44830ff22a204db83e3a0402ba7b61e3626fe847bab9cd74ea1",
+    "preservedBoundedExcerpt": "app-stdout-final100lines.txt",
+    "finalLine": "2026-11-03 18:14:36.919481-0500 RoomInTheCart[5630:9484366] QUARANTINED DUE TO HIGH LOGGING VOLUME"
+  },
+  "sessionProvenance": {
+    "originalPath": ".build/FinalDevices-20261103-diagnostics/0_Test_Room in the Cart iOS 17 Small_Diagnostics/RoomInTheCartUITests-B94C0545-723E-4308-9CAD-428581D3F3A3-Configuration-Test Scheme Action-Iteration-1/RoomInTheCartUITests-2DCD2259-CDC7-436B-98D9-FCB4AB5C8585/Session-RoomInTheCartUITests-2026-11-03_181201-03nSjz.log",
+    "sha256": "bfd12ce561d4774b1af5a127787448df4362130786c1bd215bd6f0e56b0216a4",
+    "preservedBoundedExcerpt": "session-process-death-excerpt.txt"
+  },
+  "assessment": "Concrete SIGSEGV at NULL in XCTAutomationSupport runtime_issue_os_log_fault_callback while os_log enters high-volume quarantine. Target process termination coincides with its final QUARANTINED DUE TO HIGH LOGGING VOLUME line and XCTest SIG11 death notice. No application frame occurs in the crashing thread; main thread is servicing UIKit/BaseBoard logging state capture. No jetsam termination is indicated. This identifies the instrumentation/logging failure, without proving general absence of app defects.",
+  "existingAccommodations": [
+    "ios/UITests/GuardianEnrollmentUITests.swift per-app OS_ACTIVITY_MODE=disable",
+    "ios/UITests/ContextualReminderUITests.swift per-app launch workaround and explanation",
+    "docs/evidence/native/contextual-reminders-local.json harness_setting documents same callback/quarantine stack",
+    "docs/evidence/native/photo-recovery-checkpoint.md + f07-recovered-20261103/evidence.json record test-only logging accommodation"
+  ],
+  "limits": "Accommodated UI evidence cannot establish absence of runtime warnings because app-process unified logs are suppressed; retain this unmuted baseline and separate unfiltered runtime/accessibility audits.",
+  "approvedTestOnlyChanges": [
+    "Per-app launch environment OS_ACTIVITY_MODE=disable in the guarded HouseholdDevices UI fixture launch, matching existing guardian/contextual-reminder tests.",
+    "Full-screen screenshot plus app-state metadata; AX queried only for a running foreground/background process. No relaunch, skip or crash recovery."
+  ],
+  "candidateSHA256": {
+    "ios/UITests/HouseholdDevicesUITests.swift": "143865e9cc386d3fcea3121058da04c03fc54917178c16438f46998658f8cfb2"
+  },
+  "sourceBaselineSHA256": "02d225a3d7251cef891d36f28d1c54168f6fb806008cd1ebe4071661daa5dd50",
+  "additionalPreviouslyApprovedDelta": "Vertical-only scrollPosition indicator guard, recorded in ui-diagnosis/vertical-scrollbar-evidence.json; no production behavior changes.",
+  "checks": [
+    "Swift frontend parse passed",
+    "git diff --check passed"
+  ],
+  "validation": "Parent-owned accommodated Spanish SE/iOS17 testcase passed102.291s. Selected screenshots and AX visually reviewed; exact source and limitations in ../ui-acceptance-20261103/acceptance.json. English unmuted baseline passed54.187s; Spanish unmuted crash remains preserved."
+}

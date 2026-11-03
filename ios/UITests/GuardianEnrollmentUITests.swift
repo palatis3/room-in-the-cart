@@ -39,7 +39,7 @@ import XCTest
         for toolbar in app.toolbars.allElementsBoundByIndex where toolbar.exists && toolbar.frame.minY > top {
             bottom = min(bottom,toolbar.frame.minY)
         }
-        let evidence = app.descendants(matching:.any).matching(identifier:"guardian.fixture.evidence").firstMatch
+        let evidence = app.staticTexts.matching(identifier:"guardian.fixture.rootReady").firstMatch
         if evidence.exists { bottom = min(bottom,evidence.frame.minY) }
         return CGRect(x:bounds.minX+8,y:top+4,width:max(1,bounds.width-16),height:max(1,bottom-top-8))
     }
@@ -56,6 +56,9 @@ import XCTest
             return value.isHittable && frame.minY >= area.minY && frame.maxY <= area.maxY && area.contains(CGPoint(x:frame.midX,y:frame.midY))
         }
         let intersection = area.intersection(frame)
+        if frame.height > area.height {
+            return !intersection.isNull && intersection.height >= area.height*0.80 && frame.minY <= area.minY+area.height*0.15
+        }
         return !intersection.isNull && intersection.height >= min(44,frame.height)
     }
     private func scrollContent(upward: Bool) {
@@ -65,6 +68,22 @@ import XCTest
         let start = container.coordinate(withNormalizedOffset:.zero).withOffset(CGVector(dx:area.midX-bounds.minX,dy:(upward ? area.maxY-area.height*0.20 : area.minY+area.height*0.20)-bounds.minY))
         let end = container.coordinate(withNormalizedOffset:.zero).withOffset(CGVector(dx:area.midX-bounds.minX,dy:(upward ? area.minY+area.height*0.20 : area.maxY-area.height*0.20)-bounds.minY))
         start.press(forDuration:0.05,thenDragTo:end)
+    }
+    private func alignTextBeginning(_ value: XCUIElement) {
+        // An oversized accessibility label can intersect most of the viewport
+        // while its first lines remain above the navigation bar. Capture the
+        // actual beginning as well as the continuation of the warning.
+        for _ in 0..<8 {
+            let area=viewport(), delta=area.minY+12-value.frame.minY
+            if abs(delta) <= 12 { break }
+            let container=app.collectionViews.firstMatch, bounds=container.frame
+            let distance=max(-area.height*0.40,min(area.height*0.40,delta))
+            let start=container.coordinate(withNormalizedOffset:.zero).withOffset(CGVector(dx:area.midX-bounds.minX,dy:area.midY-bounds.minY))
+            let end=start.withOffset(CGVector(dx:0,dy:distance))
+            start.press(forDuration:0.05,thenDragTo:end,withVelocity:.slow,thenHoldForDuration:0.3)
+        }
+        XCTAssertGreaterThanOrEqual(value.frame.minY,viewport().minY-4)
+        XCTAssertLessThanOrEqual(value.frame.minY,viewport().minY+40)
     }
     private func reveal(_ value: XCUIElement, hitTarget: Bool = true) {
         for attempt in 0..<32 {
@@ -141,7 +160,12 @@ import XCTest
         XCTAssertEqual(app.tabBars.count,0)
         XCTAssertFalse(app.buttons["Shop"].exists); XCTAssertFalse(app.buttons["Records"].exists)
         XCTAssertFalse(app.staticTexts["Fictional adult private item"].exists)
-        capture(evidence + " locked adult exit")
+        let exitNotice=app.staticTexts.matching(identifier:"guardian.childExitNotice").firstMatch
+        XCTAssertTrue(exitNotice.waitForExistence(timeout:5))
+        XCTAssertTrue(visible(exitNotice,hitTarget:true))
+        XCTAssertEqual(exitNotice.label,"Child access was removed from this device. Remote device revocation could not be confirmed; ask your guardian to review active permission.")
+        XCTAssertFalse(app.staticTexts["Fictional adult private item"].exists)
+        capture(evidence + " locked adult exit with honest remote cleanup notice")
         element("guardian.fixture.checkPreservation").tap()
         let preserved=element("guardian.fixture.preservation")
         XCTAssertEqual(XCTWaiter.wait(for:[XCTNSPredicateExpectation(predicate:NSPredicate(format:"label == %@","adult records and inbox preserved; child vaults empty; adult locked"),object:preserved)],timeout:10),.completed)
@@ -160,10 +184,14 @@ import XCTest
     }
     func testSpanishLargestTextUnavailableGateRemainsReadableAndClosed() {
         launch("--guardian-fixture-unavailable",spanish:true)
-        let unavailable=element("guardian.unavailable"); reveal(unavailable,hitTarget:false)
+        let unavailable=app.staticTexts.matching(identifier:"guardian.unavailable").firstMatch
+        reveal(unavailable,hitTarget:false)
+        alignTextBeginning(unavailable)
         XCTAssertTrue(unavailable.label.contains("no está disponible"))
         XCTAssertFalse(element("guardian.create").exists); XCTAssertFalse(element("guardian.verify").exists)
-        capture("Guardian unavailable Spanish largest text")
+        capture("Guardian unavailable Spanish largest text beginning")
+        scrollContent(upward:true)
+        capture("Guardian unavailable Spanish largest text continuation")
     }
     func testUncertainAttemptCanRefreshButCannotSendAnotherVerification() {
         launch("--guardian-fixture-uncertain")

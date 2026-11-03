@@ -1,0 +1,106 @@
+Attributes: Application, 0x1113648c0, pid: 65459, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x1113648c0, pid: 65459, label: 'Room in the Cart'
+    Window (Main), 0x111366a80, {{0.0, 0.0}, {390.0, 844.0}}
+      Other, 0x111366440, {{0.0, 0.0}, {390.0, 844.0}}
+        Other, 0x111366f80, {{0.0, 0.0}, {390.0, 844.0}}
+          Other, 0x1113670c0, {{0.0, 0.0}, {390.0, 844.0}}
+            Other, 0x111364780, {{0.0, 0.0}, {390.0, 844.0}}
+              StaticText, 0x111364b40, {{101.3, 47.0}, {187.3, 13.3}}, identifier: 'fixture.corrections.english', label: 'N04 English entries: 0 · enabled: no'
+              StaticText, 0x111367700, {{98.0, 62.3}, {194.0, 13.3}}, identifier: 'fixture.corrections.spanish', label: 'N04 Spanish entries: 1 · enabled: yes'
+              StaticText, 0x111366e40, {{107.5, 77.7}, {175.0, 13.3}}, identifier: 'fixture.corrections.sourceUnchanged', label: 'N04 local source unchanged: yes'
+              Other, 0x111365680, {{0.0, 93.0}, {390.0, 751.0}}
+                NavigationBar, 0x111364140, {{0.0, 103.0}, {390.0, 54.0}}, identifier: 'Support'
+                  Button, 0x111364280, {{16.0, 103.0}, {44.0, 44.0}}, identifier: 'BackButton', label: 'Settings'
+                  StaticText, 0x111366bc0, {{162.7, 114.7}, {64.7, 20.7}}, label: 'Support'
+                Other, 0x111365f40, {{0.0, 93.0}, {390.0, 751.0}}
+                  Other, 0x1113661c0, {{0.0, 93.0}, {390.0, 751.0}}
+                    Other, 0x1113666c0, {{0.0, 93.0}, {390.0, 751.0}}
+                      Other, 0x111366800, {{0.0, 93.0}, {390.0, 751.0}}
+                        CollectionView, 0x111367200, {{0.0, 93.0}, {390.0, 751.0}}
+                          Other, 0x111364a00, {{-16.0, -1642.7}, {422.0, 1897.3}}
+                          Other, 0x111364640, {{0.0, 93.0}, {390.0, 751.0}}
+                            Other, 0x111364500, {{0.0, 93.0}, {390.0, 104.0}}
+                          Other, 0x1113643c0, {{0.0, 93.0}, {390.0, 751.0}}
+                            Other, 0x111365e00, {{0.0, 93.0}, {390.0, 104.0}}
+                          Cell, 0x108046440, {{16.0, 90.7}, {358.0, 94.3}}
+                            Other, 0x108047c00, {{16.0, 90.7}, {358.0, 94.3}}
+                              Other, 0x108044f00, {{16.0, 90.7}, {358.0, 94.3}}
+                            Other, 0x1080475c0, {{16.0, 90.7}, {358.0, 94.3}}
+                              Other, 0x108046bc0, {{16.0, 90.7}, {358.0, 94.3}}
+                                Other, 0x108047480, {{16.0, 90.7}, {358.0, 94.3}}
+                                  StaticText, 0x108047ac0, {{16.0, 90.7}, {358.0, 94.3}}, label: 'Choose your email app and review the message before sending. No message is sent automatically.'
+                          Cell, 0x108045900, {{16.0, 185.0}, {358.0, 52.0}}
+                            Other, 0x110eee580, {{16.0, 185.0}, {358.0, 52.0}}
+                              Other, 0x110eee1c0, {{16.0, 185.0}, {358.0, 52.0}}
+                            Other, 0x110eef0c0, {{16.0, 185.0}, {358.0, 52.0}}
+                              Other, 0x110eef340, {{16.0, 185.0}, {358.0, 52.0}}
+                                Other, 0x110eeee40, {{16.0, 185.0}, {358.0, 52.0}}
+                                  Button, 0x110eed680, {{16.0, 185.0}, {358.0, 52.0}}, label: 'Read offline help'
+                                    StaticText, 0x110eef480, {{32.0, 200.8}, {127.7, 20.3}}, label: 'Read offline help'
+                                    Image, 0x110eee300, {{348.7, 205.0}, {7.0, 12.0}}, identifier: 'chevron.forward'
+                          Other, 0x110eeda40, {{32.0, 184.0}, {326.0, 1.0}}
+                          Other, 0x110eedcc0, {{-16.0, 254.7}, {422.0, 2107.3}}
+                          Cell, 0x110eedf40, {{16.0, 254.7}, {358.0, 40.3}}
+                            Other, 0x110eede00, {{16.0, 254.7}, {358.0, 40.3}}
+                            Other, 0x110eeea80, {{16.0, 254.7}, {358.0, 40.3}}
+                              Other, 0x110eef5c0, {{16.0, 254.7}, {358.0, 40.3}}
+                                Other, 0x110eee940, {{16.0, 254.7}, {358.0, 40.3}}
+                                  StaticText, 0x110eee6c0, {{16.0, 254.7}, {358.0, 40.3}}, label: 'Review support summary'
+                          Cell, 0x110eee080, {{16.0, 294.7}, {358.0, 182.3}}
+                            Other, 0x110eef200, {{16.0, 294.7}, {358.0, 182.3}}
+                              Other, 0x110eeebc0, {{16.0, 294.7}, {358.0, 182.3}}
+                            Other, 0x110eeed00, {{16.0, 294.7}, {358.0, 182.3}}
+                              Other, 0x1052a2e40, {{16.0, 294.7}, {358.0, 182.3}}
+                                Other, 0x1052a3980, {{16.0, 294.7}, {358.0, 182.3}}
+                                  StaticText, 0x1052a3480, {{16.0, 294.7}, {358.0, 182.3}}, label: 'This summary contains only the app version, build, iOS version, interface language, build environment and whether service and membership configuration are present. It contains no groceries, money, account or device identifiers, credentials, logs or photos.'
+                          Cell, 0x1052a30c0, {{16.0, 477.0}, {358.0, 172.3}}
+                            Other, 0x1052a35c0, {{16.0, 477.0}, {358.0, 172.3}}
+                              Other, 0x1052a08c0, {{16.0, 477.0}, {358.0, 172.3}}
+                            Other, 0x1052a1040, {{16.0, 477.0}, {358.0, 172.3}}
+                              Other, 0x1052a3200, {{16.0, 477.0}, {358.0, 172.3}}
+                                Other, 0x1052a2f80, {{16.0, 477.0}, {358.0, 172.3}}
+                                  StaticText, 0x110ea2a80, {{16.0, 477.0}, {358.0, 172.3}}, identifier: 'help.support.summary', label: 'Room in the Cart
+diagnostic-format: 1
+app-version: 0.1.0
+app-build: 1
+system: iOS 27.0
+interface-language: en
+build-environment: Debug
+household-service-configured: true
+membership-configured: false'
+                          Other, 0x110ea0a00, {{32.0, 476.0}, {326.0, 1.0}}
+                          Cell, 0x110ea0280, {{16.0, 649.7}, {358.0, 52.0}}
+                            Other, 0x110ea1180, {{16.0, 649.7}, {358.0, 52.0}}
+                              Other, 0x110ea12c0, {{16.0, 649.7}, {358.0, 52.0}}
+                            Other, 0x110ea2bc0, {{16.0, 649.7}, {358.0, 52.0}}
+                              Other, 0x110ea1e00, {{16.0, 649.7}, {358.0, 52.0}}
+                                Other, 0x110ea2940, {{16.0, 649.7}, {358.0, 52.0}}
+                                  Button, 0x110ea3200, {{16.0, 649.7}, {358.0, 52.0}}, identifier: 'help.support.share', label: 'Share support summary'
+                                    Image, 0x110ea0dc0, {{34.7, 663.0}, {19.0, 25.7}}, identifier: 'square.and.arrow.up', label: 'Share'
+                                    StaticText, 0x110ea1680, {{34.7, 663.0}, {220.0, 25.7}}, label: 'Share support summary'
+                          Other, 0x110ea35c0, {{32.0, 648.7}, {326.0, 1.0}}
+                          Cell, 0x110ea2800, {{16.0, 701.7}, {358.0, 138.3}}
+                            Other, 0x110ea0500, {{16.0, 701.7}, {358.0, 138.3}}
+                              Other, 0x110ea2e40, {{16.0, 701.7}, {358.0, 138.3}}
+                            Other, 0x110ea17c0, {{16.0, 701.7}, {358.0, 138.3}}
+                              Other, 0x110ea3340, {{16.0, 701.7}, {358.0, 138.3}}
+                                Other, 0x110ea1900, {{16.0, 701.7}, {358.0, 138.3}}
+                                  StaticText, 0x110ea30c0, {{16.0, 701.7}, {358.0, 138.3}}, label: 'Nothing is sent automatically. Review the summary and choose its destination in the share sheet. A personal recovery file is a separate private export; support does not need it by default.'
+                          Other, 0x110ea1540, {{72.0, 700.7}, {286.0, 1.0}}
+                          Other, 0x110ea0780, {{357.0, 157.0}, {30.0, 639.7}}, label: 'Vertical scroll bar, 2 pages', value: 86%
+                            Other, 0x110ea2080, {{384.0, 331.7}, {3.0, 433.0}}
+                          Other, 0x110ea1f40, {{357.0, 157.0}, {30.0, 639.7}}, label: 'Vertical scroll bar, 2 pages', value: 86%
+                            Other, 0x110ea0640, {{384.0, 331.7}, {3.0, 433.0}}
+                Toolbar, 0x110ea1a40, {{0.0, 93.0}, {390.0, 751.0}}, identifier: 'Toolbar', label: 'Toolbar'
+                  Other, 0x110ea1b80, {{0.0, 93.0}, {390.0, 751.0}}
+    Window, 0x110ea0b40, {{0.0, 0.0}, {390.0, 844.0}}
+      Other, 0x110ea0c80, {{0.0, 0.0}, {390.0, 844.0}}
+        Other, 0x110ea2f80, {{0.0, 0.0}, {390.0, 844.0}}
+Path to element:
+ →Application, 0x1113648c0, pid: 65459, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x111366940, pid: 65459, label: 'Room in the Cart'
+  }

@@ -10,7 +10,7 @@ import XCTest
         expectsDecisionSheet = false
     }
     override func tearDownWithError() throws {
-        if testRun?.failureCount ?? 0 > 0 { capture("S23-duplicate-comparison-failure") }
+        capture(testRun?.failureCount ?? 0 > 0 ? "S23-duplicate-comparison-failure" : "S23-duplicate-comparison-completed")
         app.terminate()
     }
     func testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam() {
@@ -22,11 +22,12 @@ import XCTest
         capture("S23-page-one-before-check-more")
         tap(element("household.duplicates.loadMore"))
         capture("S23-page-two-loaded-in-same-decision-sheet")
-        assertVisible("Deciding this request")
-        assertVisible("1 box for breakfasts")
-        assertVisible("Lee")
-        assertVisible("2 boxes for the school snack drive")
-        assertVisible("Handled")
+        assertComparisonValue("selection",request:"sam",value:"Deciding this request")
+        assertComparisonValue("author",request:"sam",value:"Sam",contains:true)
+        assertComparisonValue("amount",request:"sam",value:"1 box for breakfasts")
+        assertComparisonValue("author",request:"lee",value:"Lee",contains:true)
+        assertComparisonValue("amount",request:"lee",value:"2 boxes for the school snack drive")
+        assertComparisonValue("outcome",request:"pat",value:"Handled",contains:true)
         capture("S23-original-authors-uses-and-separate-outcomes")
         closeDecision()
         XCTAssertEqual(element("fixture.s23.commands").label,"Fixture applied decisions: 0")
@@ -43,9 +44,11 @@ import XCTest
         tap(app.buttons["Load more requests"])
         let lee = element("household.request.a4444444-4444-4444-8444-444444444443")
         openRequest(lee,step:"Lee-after-Sam-outcome")
-        assertVisible("2 boxes for the school snack drive")
-        assertVisible("Received, waiting for review")
-        assertVisible("Saved for next shop")
+        assertComparisonValue("outcome",request:"sam",value:"Saved for next shop",contains:true)
+        assertComparisonValue("selection",request:"lee",value:"Deciding this request")
+        assertComparisonValue("author",request:"lee",value:"Lee",contains:true)
+        assertComparisonValue("amount",request:"lee",value:"2 boxes for the school snack drive")
+        assertComparisonValue("outcome",request:"lee",value:"Received, waiting for review",contains:true)
         capture("S23-one-decision-keeps-other-request-pending")
     }
     func testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison() {
@@ -54,9 +57,12 @@ import XCTest
         openRequest(sam,step:"Spanish-Sam-page-one")
         tap(element("household.duplicates.loadMore"))
         capture("S23-Spanish-page-two-loaded-in-same-decision-sheet")
-        assertVisible("Cantidad y uso, tal como se escribieron")
-        assertVisible("1 box for breakfasts")
-        assertVisible("2 boxes for the school snack drive")
+        assertComparisonValue("selection",request:"sam",value:"Decidiendo esta solicitud")
+        assertComparisonValue("author",request:"sam",value:"Sam",contains:true)
+        assertComparisonValue("amountLabel",request:"sam",value:"Cantidad y uso, tal como se escribieron")
+        assertComparisonValue("amount",request:"sam",value:"1 box for breakfasts")
+        assertComparisonValue("author",request:"lee",value:"Lee",contains:true)
+        assertComparisonValue("amount",request:"lee",value:"2 boxes for the school snack drive")
         assertVisible("Cada solicitante conserva un resultado por separado.",contains:true)
         capture("S23-Spanish-large-type-original-request-words")
         closeDecision()
@@ -89,6 +95,27 @@ import XCTest
     }
     private func element(_ id:String)->XCUIElement { app.descendants(matching:.any).matching(identifier:id).firstMatch }
     private func tap(_ target:XCUIElement) { reveal(target); XCTAssertTrue(target.isHittable,target.debugDescription); target.tap() }
+    private func assertComparisonValue(_ field:String,request:String,value:String,contains:Bool=false) {
+        let suffix: String
+        switch request {
+        case "sam": suffix = "1"
+        case "lee": suffix = "3"
+        case "pat": suffix = "4"
+        default: XCTFail("Unknown fictional request identity"); return
+        }
+        let id = "household.duplicates.\(field).a4444444-4444-4444-8444-44444444444\(suffix)"
+        let predicate = NSPredicate(format:contains ? "label CONTAINS %@" : "label == %@",value)
+        // LabeledContent speaks its caption and value together. Require the
+        // actual typed static-text value for this request inside the comparison,
+        // rather than a same-word node in the covered inbox or request summary.
+        let matches = app.staticTexts.matching(identifier:id).matching(predicate)
+        let found = scanForVisibleElement(description:"\(request)-\(field)-\(value)") {
+            matches.allElementsBoundByIndex.first { $0.exists && $0.isHittable }
+        } candidate: {
+            matches.allElementsBoundByIndex.last ?? matches.firstMatch
+        }
+        XCTAssertTrue(found,"Missing visible comparison value \(id): \(value)")
+    }
     private func assertVisible(_ text:String,contains:Bool=false) {
         let predicate = NSPredicate(format:contains ? "label CONTAINS %@" : "label == %@",text)
         let matches = app.staticTexts.matching(predicate)
@@ -180,7 +207,8 @@ import XCTest
     private func scrollPosition(in container:XCUIElement)->Double? {
         for element in container.descendants(matching:.other).allElementsBoundByIndex.reversed() {
             let label = element.label.lowercased()
-            guard label.contains("scroll") || label.contains("desplazamiento"),
+            guard label.contains("vertical"),
+                  label.contains("scroll") || label.contains("desplazamiento"),
                   let value = element.value as? String, value.hasSuffix("%"),
                   let percent = Double(value.dropLast().replacingOccurrences(of:",",with:".")) else { continue }
             return percent

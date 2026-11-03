@@ -1,0 +1,34 @@
+{
+  "recordedAtUTC": "2026-11-03T23:08:23.392660+00:00",
+  "sourceSHA256": "4b91cfce67372ca1b047985ce3531cd806d627c0eb4a60311ed0bead9beb7af0",
+  "sourceInputs": 470,
+  "release": {
+    "configuration": "Release",
+    "bundle": "dev.roominthecart.app",
+    "minimumOS": "17.0",
+    "operator": "Venture House Group LLC",
+    "supportEmail": "hello@roominthecart.com",
+    "environment": "Release",
+    "application": "/Users/palatis/Room in the Cart/.build/RoomInTheCart-FinalLocal-20261103.xcarchive/Products/Applications/RoomInTheCart.app",
+    "binarySHA256": "36140b8e2db82ee5c408816558b25dd2aaf27951fd92a41bc683ae114416154f",
+    "binaryBytes": 17708888,
+    "logSHA256": "9f468e90f5c4fa105a97ad84e0725a8e38a6c19f694c35ab46ffbee5aee242b7",
+    "embeddedExtensions": [
+      "RoomInTheCartShare.appex",
+      "RoomInTheCartWidget.appex"
+    ],
+    "xctestBundles": 0,
+    "fixtureEntryMarkers": [],
+    "checkBuiltApp": "passed",
+    "signedDistribution": false,
+    "productionMetadataComplete": false
+  },
+  "ordinaryPreview": {
+    "status": "compiled, metadata verified, installed and launched on existing user preview simulator",
+    "evidence": "preview-install.json",
+    "screenshot": "ordinary-preview.png",
+    "data": "22durable files preserved byte-for-byte before launch; no reset/erase/testarguments; app container URL changed during replacement, contentpreserved"
+  },
+  "scope": "Current physical arm64 unsigned archive compilation and compiled metadata only. Does not establish device installation, TestFlight/AppStore/signing/realStoreKit/SMTP/KWS/productionconfiguration or screen acceptance.",
+  "status": "Release compiled locally; whole release remains unaccepted"
+}

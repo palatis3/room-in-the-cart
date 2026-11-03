@@ -1,0 +1,102 @@
+{
+  "recordedAtUTC": "2026-11-03T22:59:55.936793+00:00",
+  "status": "Scoped passing cases retained from mixed-result runs; entire UI suites are not green",
+  "runs": [
+    {
+      "name": "ordinary",
+      "source": "/Users/palatis/Room in the Cart/.build/IntegratedCandidateSource-20261103T221055Z",
+      "manifest": "ordinary/source-manifest.json",
+      "sourceSHA256": "09641e332160fe27749dbab61c744ac7f149ebc7a0c9802f68409bafadf859f4",
+      "nativeModels": {
+        "passed": 518,
+        "failed": 0,
+        "skipped": 0
+      },
+      "ui": {
+        "passed": 3,
+        "failed": 1,
+        "skipped": 0
+      },
+      "resultBundle": "/Users/palatis/Room in the Cart/.build/IntegratedCandidate-20261103.xcresult",
+      "logSHA256": "cb5dfd66758013150a023ef45a7298417fd69e9bb11abe6b968805178b829956",
+      "binaryIdentities": [
+        {
+          "path": ".build/IntegratedCandidateDD-20261103/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart",
+          "bytes": 40496,
+          "sha256": "b3bbafd62b02252846559ae7b083c32f8d85f127b159d0ae84b6a292f517800d"
+        },
+        {
+          "path": ".build/IntegratedCandidateDD-20261103/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart.debug.dylib",
+          "bytes": 50505792,
+          "sha256": "ee0d59dfb27b0b3cfd15bdf8ce8afab0fffd933d5b8023f3e05a46e421d17844"
+        },
+        {
+          "path": ".build/IntegratedCandidateDD-20261103/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/RoomInTheCartTests",
+          "bytes": 12185840,
+          "sha256": "bd7f90333411bcf46ee48eaf84cebb841b64925c390eecb4ab33b13a09c466ce"
+        }
+      ],
+      "currentDifferenceFile": "ordinary/current-source-differences.json"
+    },
+    {
+      "name": "fixtures",
+      "source": "/Users/palatis/Room in the Cart/.build/IntegratedFixtureSource-20261103T223750Z",
+      "manifest": "fixtures/source-manifest.json",
+      "sourceSHA256": "bb0fbbde8c1c184ace9979a1da339bd23682d5bab8f95fd525f780b77c7023f5",
+      "nativeModels": {
+        "passed": 526,
+        "failed": 0,
+        "skipped": 0
+      },
+      "ui": {
+        "passed": 3,
+        "failed": 6,
+        "skipped": 0
+      },
+      "resultBundle": "/Users/palatis/Room in the Cart/.build/IntegratedFixture-20261103.xcresult",
+      "logSHA256": "3f730c99365c80638131830b0daac9ec8ab74058b96d5771d1c6f68fce45d47d",
+      "binaryIdentities": [
+        {
+          "path": ".build/IntegratedFixtureDD-20261103/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart",
+          "bytes": 40496,
+          "sha256": "547867f8da370304ef72e49a46dabfd417a91599822ade4bfc1baa8a49d08ba6"
+        },
+        {
+          "path": ".build/IntegratedFixtureDD-20261103/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart.debug.dylib",
+          "bytes": 53003728,
+          "sha256": "f6e7488e6df67545b7adcdc2cf365bfe23895f3b5772799081a2b3d8f667dc9a"
+        },
+        {
+          "path": ".build/IntegratedFixtureDD-20261103/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/RoomInTheCartTests",
+          "bytes": 12397632,
+          "sha256": "1098b234ac902614fcbd0e412e18f3623698d546b30628b96211d91db1f892e2"
+        }
+      ],
+      "currentDifferenceFile": "fixtures/current-source-differences.json"
+    }
+  ],
+  "recordArchive": {
+    "passed": 33,
+    "failed": 0,
+    "source": "IntegratedFixtureSource-20261103T223750Z",
+    "logSHA256": "3fb47ebedcf2377491a7f2c4fcff616b65b2082fb197b3cd74b87b1472696b13"
+  },
+  "visualReview": {
+    "reviewer": "root",
+    "inspected": [
+      "ordinary/attachments/27F03FDC-02FA-4D6B-B83D-D82E9412DCEC.png",
+      "ordinary/attachments/3CB98F8A-D8F5-461D-A7B6-825602420691.png",
+      "fixtures/attachments/CA9DC5A7-2751-4CD5-A686-F537B54EF9EC.png",
+      "fixtures/attachments/1AEA6493-5E96-4A33-B5C6-A58B7D74654B.png"
+    ],
+    "observed": "12 gross need and8confirmed allocated shows1eight-pack; fullycovered12keepsmealneedwithnoorder; correction preview showsprotectedlunch unchanged while dinnerallocation3to1/shortfall1to3; restartedcookinstruction revision4 matchescurrentallocationandreadback. Readablewithnormal scrolling; fixtureheadersaretestonly."
+  },
+  "limitations": [
+    "518 and526 are separate frozen source results, never additive counts.",
+    "Ordinary three passing UI: fullFree journey plus two confirmed-stock pack cases. The fourth batch regression failed old Dinner selector; corrected rerun pending.",
+    "Fixtures three passing UI: priorS24pack comparison and two stock correction/cook cases. Six S21/S23/S24 cases failed; their diagnosis, fixes and targeted rerun remain separate.",
+    "Eight private offline scope tests are included in526. OS owner authentication is represented only by completed-unlock postcondition, not LA automation.",
+    "No physical-device, human Spanish, hosted provider or final current Release acceptance is established here.",
+    "Test-built products embed XCTest and must not be installed as user preview."
+  ]
+}

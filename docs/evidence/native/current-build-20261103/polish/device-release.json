@@ -1,0 +1,14 @@
+{
+  "recordedAtUTC": "2026-11-03T23:33:43.037217+00:00",
+  "testDevicesReleased": [
+    "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "65B8A2FE-51FE-44A5-A9C7-F2524E33179B"
+  ],
+  "states": {
+    "2BE8542F-00D9-48B7-BCDE-8AB169497969": "Shutdown",
+    "65B8A2FE-51FE-44A5-A9C7-F2524E33179B": "Shutdown"
+  },
+  "userPreviewUntouchedAndBooted": "5FDE1E82-1FF7-4556-9C14-0746F6295944",
+  "dataEraseOrReset": false,
+  "scope": "Only root-owned assigned17e/SE test simulators shut down after actual runners exited. No other device/app was stopped."
+}

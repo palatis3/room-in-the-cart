@@ -1,0 +1,212 @@
+[
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/43A62EF8-E0A2-45AF-AA5E-670212CBC1CD.txt",
+    "caption": "S21-device-completed accessibility_0_4E0B844F-93FF-474C-BC17-A34D0FAA368A.txt",
+    "sha256": "c1c4bf3bca91495f60d291cc871d8b04cc96dadf310cd22031c03293d3a958ea"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/BF830AE2-55E9-481F-85B5-CB8CE88D1851.txt",
+    "caption": "S21-device-completed application state_0_F0A17663-DEA0-439C-954C-7772AFC0B34A.txt",
+    "sha256": "7d0d0bc291eceae188278be6096994cb5719a8f3d13aed9a8cf6257974509358"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/209952C0-40AC-4993-86D1-E894BA77DA6A.png",
+    "caption": "S21-device-completed_0_76F16360-336B-4271-9E4A-F942CB7BD8D4.png",
+    "sha256": "eff35bee455621ae066fda48c4fef9acfd39e5d19648ed224869a2b6a7eb796f"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/7540967C-424B-48CD-88F1-F4D495032E34.txt",
+    "caption": "Spanish largest text precise device revocation accessibility_0_02634D9C-F569-43F7-B4F8-F95389638125.txt",
+    "sha256": "62eca745f1f66c0c6b0e6681054a24dfc49da202bb1f4720c7664ccdf35eebee"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/91EBC691-49C8-41BC-8DA7-0DC68696D04E.txt",
+    "caption": "Spanish largest text precise device revocation application state_0_057283F2-363B-4B2D-AB46-DB8244F95484.txt",
+    "sha256": "7d0d0bc291eceae188278be6096994cb5719a8f3d13aed9a8cf6257974509358"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/8F28ACEF-3133-427B-8085-21AD10FBC5D3.png",
+    "caption": "Spanish largest text precise device revocation_0_CD559B1C-6508-4EC6-BB96-F03D100F8F7E.png",
+    "sha256": "eff35bee455621ae066fda48c4fef9acfd39e5d19648ed224869a2b6a7eb796f"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/3CC2B53F-BD63-4766-96C0-CAE3659CF3E4.txt",
+    "caption": "S21-reveal-0-household.devices.active.30000000-0000-4000-8000-000000000006 accessibility_0_4B42E146-44E2-426B-9C98-0179DC4F3203.txt",
+    "sha256": "ef459aada4badc4ba32403f28dd548029302346458896e772420a33e2f200f09"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/D9A32392-5B9F-41EF-BCC6-5578FD24E98E.txt",
+    "caption": "S21-reveal-0-household.devices.active.30000000-0000-4000-8000-000000000006 application state_0_7B00E7D3-712A-4E18-A548-EBF24F591488.txt",
+    "sha256": "7d0d0bc291eceae188278be6096994cb5719a8f3d13aed9a8cf6257974509358"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/C2E5E56F-9922-4F44-8B8C-0016A4610488.txt",
+    "caption": "S21-reveal-0-household.devices.revoked.30000000-0000-4000-8000-000000000005 accessibility_0_4A5611E2-F2EA-4BC4-92F4-ED484FD17FDD.txt",
+    "sha256": "a9132ce3aef765facbd7c9d3bceea46271f4201c6277807c6d4dc2715d298a23"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/FBB82090-CB7B-40F8-90AB-52019EF1354C.txt",
+    "caption": "S21-reveal-0-household.devices.revoked.30000000-0000-4000-8000-000000000005 application state_0_2C8D05EB-3482-481D-B245-8229B7306F25.txt",
+    "sha256": "7d0d0bc291eceae188278be6096994cb5719a8f3d13aed9a8cf6257974509358"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/3C93E128-00CF-40E9-9388-477B77C75816.txt",
+    "caption": "S21-reveal-0-household.devices.active.30000000-0000-4000-8000-000000000004 accessibility_0_6F09CAEE-1885-4B43-872E-08698A3EEF49.txt",
+    "sha256": "c79d420f30a2a612db584ab665da7407faff4db4f5fc074c84485394200f1b88"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/66546E9A-A1B0-4492-B265-C3A7133C502A.txt",
+    "caption": "S21-reveal-0-household.devices.active.30000000-0000-4000-8000-000000000004 application state_0_0F7CCCB1-7400-474A-823D-EE01A20602DC.txt",
+    "sha256": "7d0d0bc291eceae188278be6096994cb5719a8f3d13aed9a8cf6257974509358"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/7C6DD5ED-3B26-498A-A627-A20DEC93DC59.txt",
+    "caption": "S21-reveal-0-household.devices.refresh accessibility_0_63CA1BB0-6537-47F4-9E17-112476123CD9.txt",
+    "sha256": "02c98f8ff1e17b45925df22ab4610c0b8452321a6916a047ff10f3d17e6f6c4a"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/092875B7-6BE1-479D-BEAF-3E3DEDC61DE5.txt",
+    "caption": "S21-reveal-0-household.devices.refresh application state_0_6358FCA3-0413-4C8A-BD9A-FA3EDAA35580.txt",
+    "sha256": "7d0d0bc291eceae188278be6096994cb5719a8f3d13aed9a8cf6257974509358"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/23E150F2-0427-4136-BA97-A4A73A2D0E97.txt",
+    "caption": "S21-reveal-0-household.devices.result accessibility_0_35566AF1-2F86-4B2D-8028-EE2D95CE3D1C.txt",
+    "sha256": "86afbfeef359ca7f0343cd73751cd492dcb6e4a917eb71e2f0b70791b26c7223"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/A62951C1-6A5F-4639-B4E5-AE73AD976E10.txt",
+    "caption": "S21-reveal-0-household.devices.result application state_0_A255FB65-74C5-4D74-8AC5-11A0EEBF3AFC.txt",
+    "sha256": "7d0d0bc291eceae188278be6096994cb5719a8f3d13aed9a8cf6257974509358"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/C23536AD-5455-4E67-AC7D-C05C492BB418.txt",
+    "caption": "S21-reveal-0-household.devices.revoke.30000000-0000-4000-8000-000000000005 accessibility_0_3352FB97-4D54-45D3-9CC3-7BDB6D78FD10.txt",
+    "sha256": "d8ecfe0529ed46a60c9cdebdf213ceedfe3325230b3a4868418e4bf1e5f0d46b"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/81A52D47-5FF9-4DD0-8A77-352CFA54169B.txt",
+    "caption": "S21-reveal-0-household.devices.revoke.30000000-0000-4000-8000-000000000005 application state_0_E7F10818-550A-4341-ABE7-55218DF3C5E8.txt",
+    "sha256": "7d0d0bc291eceae188278be6096994cb5719a8f3d13aed9a8cf6257974509358"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/A786C436-1CEF-49AA-9088-2D45410C9BBC.txt",
+    "caption": "Spanish largest text device page accessibility_0_35D33F5E-979A-4440-9ACE-B1A555B3D24A.txt",
+    "sha256": "6180dfebf0b35a6825203ad1cefb0932bf07653e9bd62973ffafcd55ca7a0d7c"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/12B40D99-7C39-4509-8D40-6A7B4D2FB46A.txt",
+    "caption": "Spanish largest text device page application state_0_7887FEEB-5A09-4484-94D8-258635C68FCB.txt",
+    "sha256": "7d0d0bc291eceae188278be6096994cb5719a8f3d13aed9a8cf6257974509358"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/D8F0FB9E-6299-41BE-8706-F37BD565D982.png",
+    "caption": "Spanish largest text device page_0_6CFB5FA7-5454-468F-B286-0F65DEC1821E.png",
+    "sha256": "0d44b221ba0963555ca969b39791a45a6b21dcf6727fb09fd7b1e1a80073fa9b"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/B8A58F69-0199-4C6D-95C1-E0143FA37BC8.txt",
+    "caption": "S21-reveal-0-household.devices.active.30000000-0000-4000-8000-000000000006 accessibility_0_99838171-5A77-4E6A-96AF-8612325D11A4.txt",
+    "sha256": "3fdf46ae35b72f666fe97290a1f4a4c0a1a7c48e65882f524a16f6671829af99"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/ECEF50CC-F4D1-4A5A-BA55-F8128DDF4834.txt",
+    "caption": "S21-reveal-0-household.devices.active.30000000-0000-4000-8000-000000000006 application state_0_57BAE174-1B4B-4F67-9379-C3E0A8C40258.txt",
+    "sha256": "7d0d0bc291eceae188278be6096994cb5719a8f3d13aed9a8cf6257974509358"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/ABDB499B-4784-48B4-89DF-8CDFBD94CE6E.txt",
+    "caption": "S21-reveal-0-household.devices.more accessibility_0_FA9EACEC-AFBA-4D2C-B8AC-C85B07A591A0.txt",
+    "sha256": "c0d22e57593ba79ac3eae178f96b712a397f729a56089a8888d6e63477bfc5eb"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/5E9A1A9E-FF4C-402C-9421-5456F07D535F.txt",
+    "caption": "S21-reveal-0-household.devices.more application state_0_4C0F5BC3-3E33-4613-9F63-5FFE34A4F8EC.txt",
+    "sha256": "7d0d0bc291eceae188278be6096994cb5719a8f3d13aed9a8cf6257974509358"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/8AD9D640-44F5-4F29-BA84-4A544D84C56F.txt",
+    "caption": "Spanish largest text device revoke review accessibility_0_B1E936FD-405B-4E79-8D90-1F25D0872158.txt",
+    "sha256": "4fe9636556e1ef0481dee2cdc73a8e241f8f7ea14a4f501e075bbcc347c929df"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/2D772179-963E-46B6-A6A4-4414F36797E0.txt",
+    "caption": "Spanish largest text device revoke review application state_0_B1963C8C-0A60-4AAC-9F33-7D63F9670BCE.txt",
+    "sha256": "7d0d0bc291eceae188278be6096994cb5719a8f3d13aed9a8cf6257974509358"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/209677AA-75EF-4840-8879-5533182B31C5.png",
+    "caption": "Spanish largest text device revoke review_0_1AA7DB48-E652-4DE9-A4EB-28E9BB2FFD88.png",
+    "sha256": "9b254fbf44365f280c21c43724ba2050485191a45e0f75f63677ab182f008c0b"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/007EB73B-1891-4726-BDEF-6290BA0CF383.txt",
+    "caption": "S21-reveal-0-household.devices.revoke.30000000-0000-4000-8000-000000000005 accessibility_0_49E6116E-9C70-4B8D-9790-B312A49B8C10.txt",
+    "sha256": "a897eb92d0915e1ecefbb428b8fb39d85b322838a570124691736a2d1c9e890b"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/4F7CE3E6-D8FB-4D25-A266-5DA4242DA977.txt",
+    "caption": "S21-reveal-0-household.devices.revoke.30000000-0000-4000-8000-000000000005 application state_0_4F24C216-4EC2-45D2-913F-EFCB74B04270.txt",
+    "sha256": "7d0d0bc291eceae188278be6096994cb5719a8f3d13aed9a8cf6257974509358"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/FA2E850D-8262-4AC3-A6AB-2D0B005DF35A.txt",
+    "caption": "S21-Spanish-largest-text-launched accessibility_0_DCF8AFBB-38CD-4250-A6D6-7F3861978AE9.txt",
+    "sha256": "4702f2010a2244b8b09e5e634d062446bbc263ad55b4c379dcd69cdc8887c52b"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/D175A24E-D360-4568-B8AC-773C3AE698B3.txt",
+    "caption": "S21-Spanish-largest-text-launched application state_0_AF8A22A9-BE58-4680-A948-F96B357DA462.txt",
+    "sha256": "7d0d0bc291eceae188278be6096994cb5719a8f3d13aed9a8cf6257974509358"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/409272B9-FE39-4A24-8D37-B7DD4C080D4C.png",
+    "caption": "S21-Spanish-largest-text-launched_0_1CD3960D-131C-4909-BB32-C0ACA819B821.png",
+    "sha256": "e240bcb8ac9602975ec04103398a6a6c397b06bf7cee86ed416aed5920f615de"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/91AEB4E5-6DCA-4F0F-90D5-75B9CBA5E3C3.txt",
+    "caption": "S21-reveal-0-household.devices.refresh accessibility_0_3B078D8D-64E7-4A49-B673-EB1A5542F8D9.txt",
+    "sha256": "2b88f48510a18ddf3937ae607af425bf70b934c3017affd4f5f05e52fcb70f35"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+    "file": "attachments/904414DC-0E55-4136-8C9B-7F10AB651094.txt",
+    "caption": "S21-reveal-0-household.devices.refresh application state_0_6CE5B9B9-0DF5-4CB9-8901-4EC8505EFA04.txt",
+    "sha256": "7d0d0bc291eceae188278be6096994cb5719a8f3d13aed9a8cf6257974509358"
+  }
+]

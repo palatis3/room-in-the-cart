@@ -123,15 +123,17 @@
       "failed": 0,
       "host": "macOS SwiftPM isolated model/view/fixture typecheck; not a signed/native device build"
     },
-    "localization": "18 catalogs, 3668 en/es entries, 3510 literal source keys, matching format arguments."
+    "localization": "18 catalogs, 3668 en/es entries, 3510 literal source keys, matching format arguments.",
+    "nativeUI": {
+      "english": "passed54.187s onSE/iOS17.0 simulator,unmuted",
+      "spanish": "passed102.291s,es_US/accessibility5,per-app logging accommodation",
+      "visualQA": "Selected native alert,cancel/no-write,paged,current-active,target-revoked and sibling-active screenshots/AX reviewed",
+      "report": "ui-acceptance-20261103/acceptance.json"
+    }
   },
-  "preparedNotExecuted": [
-    "HouseholdDevicesUITests English precise revoke/cancel/page journey",
-    "HouseholdDevicesUITests Spanish accessibility5 journey"
-  ],
+  "preparedNotExecuted": [],
   "pending": [
     "Root integrated001\u2013023 migration/restore after journal022 lands",
-    "Root actual simulator/UI execution and visualinspection",
     "Physical iPhone VoiceOver/large-text signoff",
     "Independent SQL authority review outcome"
   ],
@@ -142,5 +144,7 @@
     "largestTextFlag": "--device-fixture-largest-text"
   },
   "sharedHooks": "http devices list/revoke routes + repository.enroll fence check only; lifecycle whole-member revocation unchanged",
-  "remoteActions": "None; no provider calls, deployment, index or commits"
+  "remoteActions": "None; no provider calls, deployment, index or commits",
+  "initialSourceSnapshotNote": "The sourceSHA256/checks above identify the original focused implementation validation on2026-11-03T22:01Z. Later UI presentation/test fixes and exact accepted source hashes are recorded in nativeUIAcceptance.",
+  "nativeUIAcceptance": "ui-acceptance-20261103/acceptance.json"
 }

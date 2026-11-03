@@ -1,0 +1,172 @@
+Application, 0x106071180, pid: 93999, label: 'Room in the Cart' <App element pid: 93999>
+  Window (Main), 0x106070f00, {{0.0, 0.0}, {390.0, 844.0}} <AX element pid: 93999, elementOrHash.elementID: 4352361472.4>
+    Other, 0x106071400, {{0.0, 0.0}, {390.0, 844.0}} <AX element pid: 93999, elementOrHash.elementID: 4618051904.144>
+    Other, 0x106071900, {{0.0, 0.0}, {390.0, 844.0}} <AX element pid: 93999, elementOrHash.elementID: 4353196544.5>
+      Other, 0x106071b80, {{0.0, 0.0}, {390.0, 844.0}} <AX element pid: 93999, elementOrHash.elementID: 4358664704.6>
+        Other, 0x106071cc0, {{0.0, 0.0}, {390.0, 844.0}} <AX element pid: 93999, elementOrHash.elementID: 4352360448.7>
+          Other, 0x106071e00, {{0.0, 0.0}, {390.0, 844.0}} <AX element pid: 93999, elementOrHash.elementID: 4458143712.8>
+            Other, 0x106072080, {{0.0, 0.0}, {390.0, 844.0}} <AX element pid: 93999, elementOrHash.elementID: 4353204224.9>
+              NavigationBar, 0x106071f40, {{0.0, 47.0}, {390.0, 54.0}}, identifier: 'Household devices' <AX element pid: 93999, elementOrHash.elementID: 4358461440.10>
+                StaticText, 0x106072300, {{119.3, 58.7}, {151.0, 20.7}}, label: 'Household devices' <AX element pid: 93999, elementOrHash.elementID: 4361151680.108>
+              Other, 0x106072440, {{0.0, 0.0}, {390.0, 844.0}} <AX element pid: 93999, elementOrHash.elementID: 4361146752.11>
+                Other, 0x1060721c0, {{0.0, 0.0}, {390.0, 844.0}} <AX element pid: 93999, elementOrHash.elementID: 4361152576.14>
+                  Other, 0x106072580, {{0.0, 0.0}, {390.0, 844.0}} <AX element pid: 93999, elementOrHash.elementID: 4359356416.16>
+                    Other, 0x106072800, {{0.0, 0.0}, {390.0, 844.0}} <AX element pid: 93999, elementOrHash.elementID: 4458144192.17>
+                      CollectionView, 0x106072940, {{0.0, 0.0}, {390.0, 844.0}} <AX element pid: 93999, elementOrHash.elementID: 4353409024.18>
+                        Other, 0x106072bc0, {{-16.0, -1878.3}, {422.0, 1946.0}} <AX element pid: 93999, elementOrHash.elementID: 4358608896.20>
+                        Other, 0x106073e80, {{0.0, 0.0}, {390.0, 844.0}} <AX element pid: 93999, elementOrHash.elementID: 4361146304.21>
+                          Other, 0x106070500, {{0.0, 0.0}, {390.0, 141.0}} <AX element pid: 93999, elementOrHash.elementID: 4361152128.43>
+                        Other, 0x106071a40, {{0.0, 0.0}, {390.0, 844.0}} <AX element pid: 93999, elementOrHash.elementID: 4361145856.22>
+                          Other, 0x106072d00, {{0.0, 0.0}, {390.0, 141.0}} <AX element pid: 93999, elementOrHash.elementID: 4358627456.117>
+                        Cell, 0x106072e40, {{16.0, -1.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4352450048.26>
+                          Other, 0x1060730c0, {{16.0, -1.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4358607360.48>
+                            Other, 0x106072f80, {{16.0, -1.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4361157056.69>
+                          Other, 0x106073200, {{16.0, -1.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4361156608.49>
+                            Other, 0x106073480, {{16.0, -1.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4352433664.70>
+                              Other, 0x1060735c0, {{16.0, -1.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4458146592.87>
+                                Button, 0x106073340, {{16.0, -1.7}, {358.0, 52.0}}, identifier: 'household.devices.refresh', label: 'Refresh devices' <AX element pid: 93999, elementOrHash.elementID: 4458142112.97>
+                        Other, 0x106073700, {{-16.0, 67.7}, {422.0, 315.3}} <AX element pid: 93999, elementOrHash.elementID: 4358557696.28>
+                        Cell, 0x106073980, {{16.0, 85.3}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4352452608.29>
+                          Other, 0x106073ac0, {{16.0, 85.3}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4358602752.50>
+                            Other, 0x106073840, {{16.0, 85.3}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4458168320.71>
+                          Other, 0x106073c00, {{16.0, 85.3}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4361153920.51>
+                            Other, 0x106073d40, {{16.0, 85.3}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4352436736.72>
+                              Other, 0x106070640, {{16.0, 85.3}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4458143552.88>
+                                StaticText, 0x103257ac0, {{16.0, 85.3}, {358.0, 52.0}}, identifier: 'household.devices.alias.30000000-0000-4000-8000-000000000004', label: 'Mia' <AX element pid: 93999, elementOrHash.elementID: 4458140512.98>
+                        Cell, 0x103257c00, {{16.0, 137.3}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4352453888.30>
+                          Other, 0x103257980, {{16.0, 137.3}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4358612480.52>
+                            Other, 0x1032552c0, {{16.0, 137.3}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4458169216.73>
+                          Other, 0x103255400, {{16.0, 137.3}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4458168768.53>
+                            Other, 0x107768000, {{16.0, 137.3}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4352438272.74>
+                              Other, 0x107768140, {{16.0, 137.3}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4458144992.89>
+                                StaticText, 0x107768280, {{16.0, 137.3}, {358.0, 52.0}}, label: 'Device reference, 00000004' <AX element pid: 93999, elementOrHash.elementID: 4458135552.99>
+                                StaticText, 0x1077683c0, {{32.0, 153.2}, {129.0, 20.3}}, label: 'Device reference' <AX element pid: 93999, elementOrHash.elementID: 4458138912.100>
+                        Other, 0x107768500, {{32.0, 136.3}, {326.0, 1.0}} <AX element pid: 93999, elementOrHash.elementID: 4358558208.31>
+                        Cell, 0x107768640, {{16.0, 189.3}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4352455168.32>
+                          Other, 0x107768780, {{16.0, 189.3}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4358617088.54>
+                            Other, 0x1077688c0, {{16.0, 189.3}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4458170112.75>
+                          Other, 0x107768a00, {{16.0, 189.3}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4458169664.55>
+                            Other, 0x107768b40, {{16.0, 189.3}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4352439808.76>
+                              Other, 0x107768c80, {{16.0, 189.3}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4458140032.90>
+                                StaticText, 0x107768dc0, {{16.0, 189.3}, {358.0, 52.0}}, label: 'Enrolled, Nov 1, 2026 at 7:00 AM' <AX element pid: 93999, elementOrHash.elementID: 4458145472.101>
+                                StaticText, 0x107768f00, {{32.0, 205.2}, {61.7, 20.3}}, label: 'Enrolled' <AX element pid: 93999, elementOrHash.elementID: 4458145312.102>
+                        Other, 0x107769040, {{32.0, 188.3}, {326.0, 1.0}} <AX element pid: 93999, elementOrHash.elementID: 4358556160.33>
+                        Cell, 0x107769180, {{16.0, 241.3}, {358.0, 72.3}} <AX element pid: 93999, elementOrHash.elementID: 4352456448.34>
+                          Other, 0x1077692c0, {{16.0, 241.3}, {358.0, 72.3}} <AX element pid: 93999, elementOrHash.elementID: 4358618624.56>
+                            Other, 0x107769400, {{16.0, 241.3}, {358.0, 72.3}} <AX element pid: 93999, elementOrHash.elementID: 4458171008.77>
+                          Other, 0x107769540, {{16.0, 241.3}, {358.0, 72.3}} <AX element pid: 93999, elementOrHash.elementID: 4458170560.57>
+                            Other, 0x107769680, {{16.0, 241.3}, {358.0, 72.3}} <AX element pid: 93999, elementOrHash.elementID: 4352000000.78>
+                              Other, 0x1077697c0, {{16.0, 241.3}, {358.0, 72.3}} <AX element pid: 93999, elementOrHash.elementID: 4458141952.91>
+                                StaticText, 0x107769900, {{16.0, 241.3}, {358.0, 72.3}}, label: 'This device. Use Sign out in household settings to end this enrollment.' <AX element pid: 93999, elementOrHash.elementID: 4458148512.103>
+                        Other, 0x107769a40, {{32.0, 240.3}, {326.0, 1.0}} <AX element pid: 93999, elementOrHash.elementID: 4358555648.35>
+                        Cell, 0x107769b80, {{16.0, 313.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4479598592.36>
+                          Other, 0x107769cc0, {{16.0, 313.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4353207296.58>
+                            Other, 0x107769e00, {{16.0, 313.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4458171904.79>
+                          Other, 0x107769f40, {{16.0, 313.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4458171456.59>
+                            Other, 0x10776a080, {{16.0, 313.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4352001536.80>
+                              Other, 0x10776a1c0, {{16.0, 313.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4458148672.92>
+                                StaticText, 0x10776a300, {{16.0, 313.7}, {358.0, 52.0}}, identifier: 'household.devices.active.30000000-0000-4000-8000-000000000004', label: 'Active enrollment' <AX element pid: 93999, elementOrHash.elementID: 4458148832.104>
+                        Other, 0x10776a440, {{32.0, 312.7}, {326.0, 1.0}} <AX element pid: 93999, elementOrHash.elementID: 4358557184.37>
+                        Other, 0x10776a580, {{-16.0, 383.3}, {422.0, 295.0}} <AX element pid: 93999, elementOrHash.elementID: 4358610432.38>
+                        Cell, 0x10776a6c0, {{16.0, 400.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4479599872.39>
+                          Other, 0x10776a800, {{16.0, 400.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4353210368.60>
+                            Other, 0x10776a940, {{16.0, 400.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4458172800.81>
+                          Other, 0x10776aa80, {{16.0, 400.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4458172352.61>
+                            Other, 0x10776abc0, {{16.0, 400.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4352003072.82>
+                              Other, 0x10776ad00, {{16.0, 400.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4458148992.93>
+                                StaticText, 0x10776ae40, {{16.0, 400.7}, {358.0, 52.0}}, identifier: 'household.devices.alias.30000000-0000-4000-8000-000000000005', label: 'Alex' <AX element pid: 93999, elementOrHash.elementID: 4458149152.105>
+                        Cell, 0x10776af80, {{16.0, 452.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4479601152.40>
+                          Other, 0x10776b0c0, {{16.0, 452.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4358554112.62>
+                            Other, 0x10776b200, {{16.0, 452.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4458173696.83>
+                          Other, 0x10776b340, {{16.0, 452.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4458173248.63>
+                            Other, 0x10776b480, {{16.0, 452.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4352004608.84>
+                              Other, 0x10776b5c0, {{16.0, 452.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4458149632.94>
+                                StaticText, 0x10776b700, {{16.0, 452.7}, {358.0, 52.0}}, label: 'Device reference, 00000005' <AX element pid: 93999, elementOrHash.elementID: 4458149312.106>
+                                StaticText, 0x10776b840, {{32.0, 468.5}, {129.0, 20.3}}, label: 'Device reference' <AX element pid: 93999, elementOrHash.elementID: 4458149472.107>
+                        Other, 0x10776b980, {{32.0, 451.7}, {326.0, 1.0}} <AX element pid: 93999, elementOrHash.elementID: 4358556672.41>
+                        Cell, 0x10776bac0, {{16.0, 504.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4479602432.109>
+                          Other, 0x10776bc00, {{16.0, 504.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4358612992.118>
+                            Other, 0x10776bd40, {{16.0, 504.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4458177728.126>
+                          Other, 0x10776be80, {{16.0, 504.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4458176832.119>
+                            Other, 0x10776c000, {{16.0, 504.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4352007680.127>
+                              Other, 0x10776c140, {{16.0, 504.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4361072992.134>
+                                StaticText, 0x10776c280, {{16.0, 504.7}, {358.0, 52.0}}, label: 'Enrolled, Nov 1, 2026 at 7:00 AM' <AX element pid: 93999, elementOrHash.elementID: 4361070112.138>
+                                StaticText, 0x10776c3c0, {{32.0, 520.5}, {61.7, 20.3}}, label: 'Enrolled' <AX element pid: 93999, elementOrHash.elementID: 4361075552.139>
+                        Other, 0x10776c500, {{32.0, 503.7}, {326.0, 1.0}} <AX element pid: 93999, elementOrHash.elementID: 4358615040.110>
+                        Cell, 0x10776c640, {{16.0, 556.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4479603712.111>
+                          Other, 0x10776c780, {{16.0, 556.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4358568960.120>
+                            Other, 0x10776c8c0, {{16.0, 556.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4458178624.128>
+                          Other, 0x10776ca00, {{16.0, 556.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4458178176.121>
+                            Other, 0x10776cb40, {{16.0, 556.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4352006144.129>
+                              Other, 0x10776cc80, {{16.0, 556.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4361075712.135>
+                                StaticText, 0x10776cdc0, {{16.0, 556.7}, {358.0, 52.0}}, identifier: 'household.devices.active.30000000-0000-4000-8000-000000000005', label: 'Active enrollment' <AX element pid: 93999, elementOrHash.elementID: 4361074592.140>
+                        Other, 0x10776cf00, {{32.0, 555.7}, {326.0, 1.0}} <AX element pid: 93999, elementOrHash.elementID: 4358569472.112>
+                        Cell, 0x10776d040, {{16.0, 608.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4479604992.113>
+                          Other, 0x10776d180, {{16.0, 608.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4358488064.122>
+                            Other, 0x10776d2c0, {{16.0, 608.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4458179520.130>
+                          Other, 0x10776d400, {{16.0, 608.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4458179072.123>
+                            Other, 0x10776d540, {{16.0, 608.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4352009216.131>
+                              Other, 0x10776d680, {{16.0, 608.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4361074752.136>
+                                Button, 0x10776d7c0, {{16.0, 608.7}, {358.0, 52.0}}, identifier: 'household.devices.revoke.30000000-0000-4000-8000-000000000005', label: 'Revoke this device' <AX element pid: 93999, elementOrHash.elementID: 4361074912.141>
+                        Other, 0x10776d900, {{32.0, 607.7}, {326.0, 1.0}} <AX element pid: 93999, elementOrHash.elementID: 4358489600.114>
+                        Other, 0x10776da40, {{-16.0, 678.3}, {422.0, 1777.7}} <AX element pid: 93999, elementOrHash.elementID: 4358490112.115>
+                        Cell, 0x10776db80, {{16.0, 695.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4479606272.116>
+                          Other, 0x10776dcc0, {{16.0, 695.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4358489088.124>
+                            Other, 0x10776de00, {{16.0, 695.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4458180416.132>
+                          Other, 0x10776df40, {{16.0, 695.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4458179968.125>
+                            Other, 0x10776e080, {{16.0, 695.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4352010752.133>
+                              Other, 0x10776e1c0, {{16.0, 695.7}, {358.0, 52.0}} <AX element pid: 93999, elementOrHash.elementID: 4361075072.137>
+                                Button, 0x10776e300, {{16.0, 695.7}, {358.0, 52.0}}, identifier: 'household.devices.more', label: 'More devices' <AX element pid: 93999, elementOrHash.elementID: 4361073952.142>
+                        Other, 0x10776e440, {{357.0, 101.0}, {30.0, 666.7}}, label: 'Vertical scroll bar, 2 pages', value: 100% <AX element pid: 93999, elementOrHash.elementID: 4353210880.42>
+                          Other, 0x10776e580, {{384.0, 273.7}, {3.0, 491.0}} <AX element pid: 93999, elementOrHash.elementID: 4361154368.64>
+                        Other, 0x10776e6c0, {{357.0, 101.0}, {30.0, 666.7}}, label: 'Vertical scroll bar, 2 pages', value: 100% <AX element pid: 93999, elementOrHash.elementID: 4353210880.42>
+                          Other, 0x10776e800, {{384.0, 273.7}, {3.0, 491.0}} <AX element pid: 93999, elementOrHash.elementID: 4361154368.64>
+                      StaticText, 0x10776e940, {{4.2, 779.7}, {381.7, 26.3}}, identifier: 'household.devices.fixtureSummary', label: 'writes=0;current=active;target=active;sibling=active;membership=active;shopper=Mia' <AX element pid: 93999, elementOrHash.elementID: 4458143072.19>
+              Toolbar, 0x10776ea80, {{0.0, 0.0}, {390.0, 844.0}}, identifier: 'Toolbar', label: 'Toolbar' <AX element pid: 93999, elementOrHash.elementID: 4353204736.12>
+                Other, 0x10776ebc0, {{0.0, 0.0}, {390.0, 844.0}} <AX element pid: 93999, elementOrHash.elementID: 4353205248.15>
+    Other, 0x10776ed00, {{0.0, 0.0}, {390.0, 844.0}} <AX element pid: 93999, elementOrHash.elementID: 4358498816.145>
+      Other, 0x10776ee40, {{0.0, 0.0}, {390.0, 844.0}}, identifier: 'PopoverDismissRegion', label: 'dismiss popup' <AX element pid: 93999, elementOrHash.elementID: 4481829376.147>
+      Popover, 0x10776ef80, {{75.0, 47.0}, {240.0, 307.3}} <AX element pid: 93999, elementOrHash.elementID: 4481834496.148>
+        Other, 0x10776f0c0, {{75.0, 47.0}, {240.0, 307.3}} <AX element pid: 93999, elementOrHash.elementID: 4481835136.150>
+          Other, 0x10776f200, {{75.0, 47.0}, {240.0, 307.3}} <AX element pid: 93999, elementOrHash.elementID: 4358500352.151>
+            Other, 0x10776f340, {{75.0, 47.0}, {240.0, 307.3}} <AX element pid: 93999, elementOrHash.elementID: 4481835776.152>
+              Other, 0x10776f480, {{75.0, 47.0}, {240.0, 294.3}} <AX element pid: 93999, elementOrHash.elementID: 4618054144.153>
+                Other, 0x10776f5c0, {{75.0, 47.0}, {240.0, 294.3}} <AX element pid: 93999, elementOrHash.elementID: 4618054592.154>
+                  Other, 0x10776f700, {{75.0, 47.0}, {0.0, 0.0}} <AX element pid: 93999, elementOrHash.elementID: 4618055040.155>
+                    Other, 0x10776f840, {{75.0, 47.0}, {240.0, 294.3}} <AX element pid: 93999, elementOrHash.elementID: 4358501888.156>
+                      Other, 0x10776f980, {{75.0, 47.0}, {240.0, 294.3}} <AX element pid: 93999, elementOrHash.elementID: 4618055936.157>
+                        Other, 0x10776fac0, {{75.0, 47.0}, {240.0, 294.3}} <AX element pid: 93999, elementOrHash.elementID: 4618077696.158>
+                          Other, 0x10776fc00, {{75.0, 47.0}, {240.0, 294.3}} <AX element pid: 93999, elementOrHash.elementID: 4618053696.159>
+                            Sheet, 0x10776fd40, {{75.0, 47.0}, {240.0, 294.3}}, label: 'Revoke this enrolled device?' <AX element pid: 93999, elementOrHash.elementID: 4479610112.160>
+                              Other, 0x10776fe80, {{75.0, 47.0}, {240.0, 294.3}} <AX element pid: 93999, elementOrHash.elementID: 4458180864.161>
+                                Other, 0x107774000, {{75.0, 47.0}, {240.0, 294.3}} <AX element pid: 93999, elementOrHash.elementID: 4358469888.162>
+                                  Other, 0x107774140, {{75.0, 47.0}, {240.0, 294.3}} <AX element pid: 93999, elementOrHash.elementID: 4619043264.163>
+                                  Other, 0x107774280, {{75.0, 47.0}, {240.0, 294.3}} <AX element pid: 93999, elementOrHash.elementID: 4458182208.164>
+                                    ScrollView, 0x1077743c0, {{75.0, 47.0}, {240.0, 214.3}} <AX element pid: 93999, elementOrHash.elementID: 4351906816.165>
+                                      Other, 0x107774500, {{75.0, 47.0}, {240.0, 214.3}} <AX element pid: 93999, elementOrHash.elementID: 4618045632.167>
+                                        StaticText, 0x107774640, {{105.0, 69.0}, {180.0, 42.3}}, label: 'Revoke this enrolled device?' <AX element pid: 93999, elementOrHash.elementID: 4618047424.173>
+                                        StaticText, 0x107774780, {{105.0, 119.0}, {180.0, 138.0}}, label: 'Alex · reference 00000005. This ends this enrollment's online reads, queued writes and web access. Other devices and household membership stay active.' <AX element pid: 93999, elementOrHash.elementID: 4618047872.174>
+                                      Other, 0x1077748c0, {{282.0, 81.0}, {30.0, 180.3}}, label: 'Vertical scroll bar, 1 page', value: 0% <AX element pid: 93999, elementOrHash.elementID: 4358445568.168>
+                                        Other, 0x107774a00, {{309.0, 8.0}, {3.0, 36.0}} <AX element pid: 93999, elementOrHash.elementID: 4618058176.175>
+                                      Other, 0x107774b40, {{75.0, 228.3}, {240.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0% <AX element pid: 93999, elementOrHash.elementID: 4358443520.169>
+                                        Other, 0x107774c80, {{36.0, 255.3}, {36.0, 3.0}} <AX element pid: 93999, elementOrHash.elementID: 4618057728.176>
+                                      Other, 0x107774dc0, {{282.0, 81.0}, {30.0, 180.3}}, label: 'Vertical scroll bar, 1 page', value: 0% <AX element pid: 93999, elementOrHash.elementID: 4358445568.168>
+                                        Other, 0x107774f00, {{309.0, 8.0}, {3.0, 36.0}} <AX element pid: 93999, elementOrHash.elementID: 4618058176.175>
+                                      Other, 0x107775040, {{75.0, 228.3}, {240.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0% <AX element pid: 93999, elementOrHash.elementID: 4358443520.169>
+                                        Other, 0x107775180, {{36.0, 255.3}, {36.0, 3.0}} <AX element pid: 93999, elementOrHash.elementID: 4618057728.176>
+                                    ScrollView, 0x1077752c0, {{75.0, 261.3}, {240.0, 80.0}} <AX element pid: 93999, elementOrHash.elementID: 4351901696.166>
+                                      Other, 0x107775400, {{75.0, 261.3}, {240.0, 80.0}} <AX element pid: 93999, elementOrHash.elementID: 4358494720.170>
+                                        Other, 0x107775540, {{91.0, 277.3}, {208.0, 48.0}} <AX element pid: 93999, elementOrHash.elementID: 4458183552.177>
+                                          Button, 0x107775680, {{91.0, 277.3}, {208.0, 48.0}}, identifier: 'household.devices.confirm', label: 'Revoke this device' <AX element pid: 93999, elementOrHash.elementID: 4358448640.180>
+                                            Button, 0x1077757c0, {{91.0, 277.3}, {208.0, 48.0}}, identifier: 'household.devices.confirm', label: 'Revoke this device' <AX element pid: 93999, elementOrHash.elementID: 4618076160.181>
+                                      Other, 0x107775900, {{282.0, 261.3}, {30.0, 46.0}}, label: 'Vertical scroll bar, 1 page', value: 0% <AX element pid: 93999, elementOrHash.elementID: 4358447616.171>
+                                        Other, 0x107775a40, {{309.0, 351.3}, {3.0, 7.0}} <AX element pid: 93999, elementOrHash.elementID: 4619042816.178>
+                                      Other, 0x107775b80, {{109.0, 308.3}, {172.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0% <AX element pid: 93999, elementOrHash.elementID: 4358446592.172>
+                                        Other, 0x107775cc0, {{165.0, 335.3}, {7.0, 3.0}} <AX element pid: 93999, elementOrHash.elementID: 4618059072.179>
+                                      Other, 0x107775e00, {{282.0, 261.3}, {30.0, 46.0}}, label: 'Vertical scroll bar, 1 page', value: 0% <AX element pid: 93999, elementOrHash.elementID: 4358447616.171>
+                                        Other, 0x107775f40, {{309.0, 351.3}, {3.0, 7.0}} <AX element pid: 93999, elementOrHash.elementID: 4619042816.178>
+                                      Other, 0x107776080, {{109.0, 308.3}, {172.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0% <AX element pid: 93999, elementOrHash.elementID: 4358446592.172>
+                                        Other, 0x1077761c0, {{165.0, 335.3}, {7.0, 3.0}} <AX element pid: 93999, elementOrHash.elementID: 4618059072.179>
+  Window, 0x107776300, {{0.0, 0.0}, {390.0, 844.0}} <AX element pid: 93999, elementOrHash.elementID: 4479611392.143>
+    Other, 0x107776440, {{0.0, 0.0}, {390.0, 844.0}} <AX element pid: 93999, elementOrHash.elementID: 4358499328.146>
+      Other, 0x107776580, {{0.0, 0.0}, {390.0, 844.0}} <AX element pid: 93999, elementOrHash.elementID: 4618052800.149>

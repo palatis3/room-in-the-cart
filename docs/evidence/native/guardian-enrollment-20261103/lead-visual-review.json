@@ -1,0 +1,83 @@
+{
+  "scope": "Personal screenshot review including final E eight-case passing artifact; later child-exit notice delta excluded",
+  "reviewed": [
+    {
+      "file": "ui-fixed-c-attachments/8016C41F-BA93-43BF-A874-CC6EDD9E9758.png",
+      "finding": "Cold child sign-in root is visible without adult tabs; disabled covered-sign-in gate shown."
+    },
+    {
+      "file": "ui-fixed-c-attachments/23A98C3D-3012-4F25-99E3-B700140F8E21.png",
+      "finding": "After child removal, Private workspace unlock screen is visible; no private records are disclosed."
+    },
+    {
+      "file": "ui-fixed-c-attachments/64F6D87C-C127-4793-8EC3-F596C9E028F7.png",
+      "finding": "Locked workspace remains visible and fixture reports adult records/inbox preserved, child vaults empty, adult locked."
+    },
+    {
+      "file": "ui-final-d-attachments/3E4770C7-9D1B-4965-875F-4ECE4DC072C7.png",
+      "finding": "Selected setup clearly says permission recorded and child invitation needed; Create invitation and Cancel visible."
+    },
+    {
+      "file": "ui-final-d-attachments/89EF0E80-D5A9-4C17-9B65-BEA631CA8C49.png",
+      "finding": "Pairing confirmation clearly requires child to finish in their own authenticated session; no parent-side activation claim."
+    },
+    {
+      "file": "ui-final-d-attachments/E9E260E7-61F9-4106-A813-DB05D1E708EB.png",
+      "finding": "English unavailable gate is fully readable; only notice refresh is available, no create/verify action."
+    },
+    {
+      "file": "ui-final-d-attachments/AE06D995-3753-4661-BC59-5C21AD2D4DBF.png",
+      "finding": "Spanish largest-text warning first line is obscured above viewport; confirms D screenshot alignment failure. Remaining warning text has readable wrapping. Final beginning/continuation capture still required."
+    },
+    {
+      "file": "ui-final-e-targeted-attachments/531F8CDA-756D-4B87-8825-E0FCD8FCBE3A.png",
+      "finding": "Spanish largest-text warning beginning La configuraci\u00f3n is fully below navigation. Words wrap visibly without horizontal clipping; continuation is scrollable."
+    },
+    {
+      "file": "ui-final-e-targeted-attachments/8A56D750-351D-48F8-81F9-9536273F2B48.png",
+      "finding": "Continuation displays remaining unavailable warning through los avisos actuales; paired beginning and continuation cover entire message."
+    },
+    {
+      "file": "ui-final-e-attachments/6FA297E0-F92D-4582-A8BE-E47D6FFC1106.png",
+      "sha256": "9de7c0060c31e83aaabb21c47ce881fafc27cb2b972490eb827c586af491e6a7",
+      "finding": "Final E Spanish largest-text warning begins below navigation and wraps without horizontal truncation."
+    },
+    {
+      "file": "ui-final-e-attachments/9DB49446-8207-42D2-B2CD-C4F53583AE92.png",
+      "sha256": "f87c1b35242cfdde7d7f3d10219c9d0257ff8f198a3f58abb2389351efe4ad4e",
+      "finding": "Final E continuation completes the unavailable warning through los avisos actuales."
+    },
+    {
+      "file": "ui-final-e-attachments/AB148EF2-0ADE-4A5E-A0AC-C47FFD06BD66.png",
+      "sha256": "bb5da2543f359c29755e3ceab2f19180a260a4caa6c79b08e5d462a0e2fd80f7",
+      "finding": "Final E pairing confirmation says child must finish on their own authenticated device/session."
+    },
+    {
+      "file": "ui-final-e-attachments/E4A7469E-369D-44FD-823E-7015CA033B06.png",
+      "sha256": "1810b9d5c3fc7ee5bf4a75c362e2306eb97a40ab8bfcd5c1ddd87d66489646b8",
+      "finding": "Final E separate consent recorded; invitation still separately required."
+    },
+    {
+      "file": "ui-final-e-attachments/D13DB403-B923-4FCC-B354-22EFA1AFCDFE.png",
+      "sha256": "b8a4fc077d37b55b3939e560a42da8c5a6ee3db433a347279129590c33a76f89",
+      "finding": "Final E cold child root has covered-sign-in disabled notice and no adult tabs."
+    },
+    {
+      "file": "ui-final-e-attachments/41BACBD1-7701-4346-855D-0826DFF5AF3B.png",
+      "sha256": "7eda8aca64723a0efd794a9628eec37e2255782b0473312a42e6e064d9b121ba",
+      "finding": "Final E locked adult workspace, preserved private records/inbox and empty child vault fixture result. New remote-cleanup notice is absent in this historical artifact and remains separately tracked."
+    },
+    {
+      "file": "ui-final-e-attachments/8B686372-1BC2-4F44-B52C-9CE33A6AE6F9.png",
+      "sha256": "e628188ed4307b5eee7fdb91dc098cd015f80133f3b3ae45f1ca26f42f0262ce",
+      "finding": "Final E English unavailable gate fully visible; no create or verification action."
+    }
+  ],
+  "limitations": [
+    "Static screenshots alone do not prove underlying storage invariants; those are checked by the actual root fixture assertions and paired AX evidence.",
+    "No real provider, email, account or child identity was activated.",
+    "Human Spanish language review remains separate."
+  ],
+  "finalEPassed": 8,
+  "laterExitNoticeDeltaAccepted": false
+}

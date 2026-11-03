@@ -1,0 +1,122 @@
+[
+  {
+    "test": "HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite()",
+    "file": "attachments/0377D91E-30FB-4813-BB00-7C036523F805.png",
+    "caption": "S24-shopper-access-ended-clears-private-context_0_BB3C5989-B23E-40C2-922D-67DA58AFF645.png",
+    "sha256": "6082ec74dc421febd3eb8a0284c64e5ef76d12c49781a9de924b2acd1de07ca6"
+  },
+  {
+    "test": "HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite()",
+    "file": "attachments/28713C68-84EB-4BEA-ACA0-4B184838464F.png",
+    "caption": "S24-cereal-checkout-with-two-named-protected-lunches_0_69196BE1-ABFA-42AC-9E25-EC1C6A2ECD99.png",
+    "sha256": "0debebdd81adbc5fab91a6b8c98eaf99da5cf7c3f6c74d37c80172f8a2c7206b"
+  },
+  {
+    "test": "HouseholdRequestPackUITests/testUnavailableMealFactsRemainUnknownInRequestDecision()",
+    "file": "attachments/C02DB3F9-7FF4-45E9-A414-145ACCC0B884.png",
+    "caption": "S24-unavailable-meal-commitments-stay-unknown_0_61637972-2E70-4EF3-A046-01390E8715AD.png",
+    "sha256": "a74ed58f464a9c21c18138158ace4fc52bae3a0fcc5dddb01fc6e6ff647e59cb"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/9749D9B2-077E-4E2A-9B1E-AC781AB754BB.txt",
+    "caption": "S23-duplicate-comparison-completed-accessibility_0_07ACE10C-6F83-4A4C-A506-63B2652E3C3A.txt",
+    "sha256": "ae53f51be5e4b7a8754d0020ec102566f8d71403497976fdc9eaa209dd7f37dc"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/7AB232AF-D7AF-441A-85AF-CAC0522B1F8B.png",
+    "caption": "S23-duplicate-comparison-completed_0_BFF18DA8-9410-42C6-8B07-8BE609ABA16B.png",
+    "sha256": "a4ec4dbbfd992af76aba6a7714b1b6526bb9472b87aa86d453b24dc8c3e14141"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/4FB0B49A-2E97-4BCC-B70F-1CCE1F5C93E4.txt",
+    "caption": "S23-Spanish-large-type-original-request-words-accessibility_0_13C3FC57-9E29-4AF4-A504-A78A37A7E244.txt",
+    "sha256": "f9e0ccc55e21924640a3f489ebe694c4978fb0d2c73b01b54620b2535054bade"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/36D500C3-774A-4269-B0BF-C31A11DC7A60.png",
+    "caption": "S23-Spanish-large-type-original-request-words_0_BC7F2F0B-D701-4CCF-8C52-DEEB99985393.png",
+    "sha256": "c52e014d684fc45ec05deb2c4370fa25102ec95e3d53429fe39bf2833a83022e"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/9231471D-A711-4B69-B2AA-99E6C927D966.png",
+    "caption": "S23-reveal-0-Cada solicitante conserva un resultado por separado._0_AFE599B7-A53C-49C5-9E07-79C15B034958.png",
+    "sha256": "2110eef04e0dc63fc9456da0490e100042582116654ec05b246699f3fd8f88a7"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/34935DE4-C03E-4D27-841F-6B552B145F38.txt",
+    "caption": "S23-reveal-0-lee-author-Lee-accessibility_0_46F52ACF-4379-4288-98F7-771A0E6742A7.txt",
+    "sha256": "ae68ee5fbbc541e19f40d59d730cd05819ca9e0dfbc85a57e11965b024c0ea2a"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+    "file": "attachments/54389F2B-C690-4283-8A29-C1EACE60D6FD.png",
+    "caption": "S23-reveal-0-lee-author-Lee_0_865A4836-3C4D-4CEB-8E67-D212F5FBD409.png",
+    "sha256": "aa6e1864f5eb96b2898d06f257d92298cb339bb4de6c695e4131077ea2e4990b"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam()",
+    "file": "attachments/766516E9-79F6-4231-B5C4-A05B6D46247F.txt",
+    "caption": "S23-duplicate-comparison-completed-accessibility_0_55C5C8F8-CBC5-4103-A958-75274F7D00AC.txt",
+    "sha256": "fca8928a3987207dadccf070c9d7a4390575f55f7bd5fb6f36fe4ff6b0d0cb45"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam()",
+    "file": "attachments/D86152F8-D74B-489E-8605-0472DEFCAE1B.png",
+    "caption": "S23-duplicate-comparison-completed_0_9419CBC3-899A-40C9-A0B3-63F8F8295ED0.png",
+    "sha256": "f8571324c4d7a217f613df43c703507d51ddbd776ca20363cf86b7727570452c"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam()",
+    "file": "attachments/3224134C-E53E-430E-9FDA-8E28EF0149F3.txt",
+    "caption": "S23-one-decision-keeps-other-request-pending-accessibility_0_CE7D605F-96E8-409E-973A-2B9BE4B36A53.txt",
+    "sha256": "256cdb410a1d60e172ac0b3833d4c38a2ad77f42c7909c4761412d01c5112a90"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam()",
+    "file": "attachments/21ACA229-5F9B-47F0-98B7-501DFA7E8CBB.png",
+    "caption": "S23-one-decision-keeps-other-request-pending_0_1E7C2844-8FBC-44FF-8D1A-E701CC9E6197.png",
+    "sha256": "f8571324c4d7a217f613df43c703507d51ddbd776ca20363cf86b7727570452c"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam()",
+    "file": "attachments/94C56BE4-1EB8-4739-82B8-19605D6C6883.txt",
+    "caption": "S23-original-authors-uses-and-separate-outcomes-accessibility_0_F6ACF371-57AA-4BCF-8385-8D7174EF5529.txt",
+    "sha256": "225940905748e3e86caee661c9381bcf3f79158636ba043bae88dd85daa6ae08"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam()",
+    "file": "attachments/F2F5A4A5-33C7-42CA-AB61-AD8DB2FEC737.png",
+    "caption": "S23-original-authors-uses-and-separate-outcomes_0_6E9C3149-1902-4A43-97C4-42F015ED307E.png",
+    "sha256": "61dc0d7f410a0be59b8631927e085405a6432f1015672cf0f6981d97afa4c501"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam()",
+    "file": "attachments/AB801EFC-D0E9-417A-98EC-9992372626A9.txt",
+    "caption": "S23-page-two-loaded-in-same-decision-sheet-accessibility_0_215E1DED-AB24-44FD-8297-74A2F74BA885.txt",
+    "sha256": "b955d89cf8d419015899d7b2e5f1d86dcf470eeaa785e9d41ddd70a91b7ccd20"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam()",
+    "file": "attachments/11A2C0D0-376A-4221-AD21-723781FC65B7.png",
+    "caption": "S23-page-two-loaded-in-same-decision-sheet_0_6EDEB919-E6AF-439E-83DA-651B05A50F36.png",
+    "sha256": "5ae771ce2ad2ea918231a1eb13ed2325031eb4eddd46b847ca41c33f2b5e4c67"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam()",
+    "file": "attachments/B45CB6AB-1620-4D6F-A88A-264261C11644.txt",
+    "caption": "S23-page-one-before-check-more-accessibility_0_9386DE5D-8D80-44B5-AB31-6C8571321481.txt",
+    "sha256": "9b91bac5dd1a412b8cfebd7794c742a0981d5698d563bafd9c304b227bd7db1d"
+  },
+  {
+    "test": "RequestDuplicateComparisonUITests/testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam()",
+    "file": "attachments/833D4AA5-B4FB-4C72-A2CC-9B5145130965.png",
+    "caption": "S23-page-one-before-check-more_0_05E131A7-42DD-46E6-BE26-181E4DE6A686.png",
+    "sha256": "e37b31830e3f185c4c551bf72398c9d060517c8118528c66472dac692a9f59db"
+  }
+]

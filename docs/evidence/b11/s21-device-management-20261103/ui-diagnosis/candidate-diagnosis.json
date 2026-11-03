@@ -1,0 +1,76 @@
+{
+  "frozenSource": "/Users/palatis/Room in the Cart/.build/IntegratedFixtureSource-20261103T223750Z",
+  "frozenSHA256": {
+    "ios/Features/Household/HouseholdDevicesView.swift": "4a4ac2b1df7569afaa8ad898c474a80c675d30098924c4c5c53d99c36a85fd31",
+    "ios/UITests/HouseholdDevicesUITests.swift": "a8ed2d03bc22245c0727caaf9fda4e75c9da828c544dd82a9316d4b9e70c4de0"
+  },
+  "candidateSHA256": {
+    "ios/Features/Household/HouseholdDevicesView.swift": "00412aabfd4250311fb427ec24a2d31234df1a40efbcfb4e3fbfb9731f3c31d6",
+    "ios/UITests/HouseholdDevicesUITests.swift": "01d7087f50cc3db0bec8b302b48458f1f2da03583b5180013da228a56c4fdd1e"
+  },
+  "observedEnglishFailure": {
+    "source": "English-native-popover-full-AX.txt",
+    "nativeContainer": "Sheet label='Revoke this enrolled device?'",
+    "reviewMessage": "Alex \u00b7 reference 00000005. This ends this enrollment's online reads, queued writes and web access. Other devices and household membership stay active.",
+    "visibleActions": [
+      "Revoke this device (household.devices.confirm)"
+    ],
+    "explicitCancelPresent": false,
+    "diagnosis": "Native confirmationDialog popover suppresses role.cancel action; changing a test selector alone cannot provide the required explicit cancellation."
+  },
+  "observedSpanishFailure": {
+    "source": "Spanish-largest-text-launch-full-AX.txt",
+    "firstIntroHeight": 465.3,
+    "secondIntroHeight": 775.3,
+    "refreshMaterializedAtLaunch": false,
+    "footer": "writes=0;current=active;target=active;sibling=active;membership=active;shopper=Mia",
+    "diagnosis": "Existence-only startup wait never scrolls lazy Form far enough to materialize Refresh/current enrollment."
+  },
+  "screenEvidence": {
+    "English-native-popover-before-failure.png": {
+      "sourceRecording": "131CD26C-6631-43B7-9211-EC4ECA829A6E.mp4",
+      "seconds": 18,
+      "inspection": "Popover visibly shows exact Alex/reference and Revoke; no explicit Cancel."
+    },
+    "Spanish-largest-text-launch-before-failure.png": {
+      "sourceRecording": "0751A48E-29BB-4435-A7B3-6ABA00DAF2EE.mp4",
+      "seconds": 21,
+      "inspection": "Largest text introductory paragraphs occupy the viewport; fixed fixture footer remains visible."
+    }
+  },
+  "fix": [
+    "Use native alert instead of popover-capable confirmationDialog so explicit Cancel remains available",
+    "Scope Cancel/confirm selectors inside native alert and verify Alex plus exact enrollment reference before either action",
+    "Assert actual alert dismissal after explicit Cancel, retain zero-write assertion",
+    "Wait non-lazy fixture footer then reveal lazy Refresh/current/result rows using active Form container; drag only inside nav/footer-safe area",
+    "Capture screenshots and full AX immediately on any XCTest issue and before teardown termination",
+    "Preserve both English and Spanish accessibility5 journeys, paging, sibling/current data, exact target and one-write assertions"
+  ],
+  "checks": [
+    {
+      "command": [
+        "xcrun",
+        "swiftc",
+        "-frontend",
+        "-parse",
+        "ios/Features/Household/HouseholdDevicesView.swift",
+        "ios/UITests/HouseholdDevicesUITests.swift"
+      ],
+      "exitCode": 0,
+      "output": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check",
+        "--",
+        "ios/Features/Household/HouseholdDevicesView.swift",
+        "ios/UITests/HouseholdDevicesUITests.swift"
+      ],
+      "exitCode": 0,
+      "output": ""
+    }
+  ],
+  "runtimeValidation": "Pending parent-owned focused UI rerun; no build or simulator interaction performed by this lane."
+}

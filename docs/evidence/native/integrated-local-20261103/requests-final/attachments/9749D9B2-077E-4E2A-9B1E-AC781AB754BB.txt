@@ -1,0 +1,62 @@
+Optional(Attributes: Application, 0x102f95e00, pid: 2282, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x102f95e00, pid: 2282, label: 'Room in the Cart'
+    Window (Main), 0x102f95040, {{0.0, 0.0}, {390.0, 844.0}}
+      Other, 0x102f95a40, {{0.0, 0.0}, {390.0, 844.0}}
+        Other, 0x102f94f00, {{0.0, 0.0}, {390.0, 844.0}}
+          Other, 0x102f94dc0, {{0.0, 0.0}, {390.0, 844.0}}
+            Other, 0x102f94a00, {{0.0, 0.0}, {390.0, 844.0}}
+              StaticText, 0x102f95680, {{99.7, 47.0}, {190.7, 13.3}}, identifier: 'fixture.s23.commands', label: 'Fixture applied decisions: 0'
+              StaticText, 0x102f95180, {{120.2, 60.3}, {149.7, 13.3}}, identifier: 'fixture.s23.lines', label: 'Fixture saved lines: 1'
+              StaticText, 0x102f95900, {{106.5, 75.7}, {177.0, 13.3}}, identifier: 'fixture.s23.loaded', label: 'Fixture loaded requests: 4'
+              Other, 0x102f94c80, {{0.0, 95.7}, {390.0, 748.3}}
+                NavigationBar, 0x102f96bc0, {{0.0, 105.7}, {390.0, 54.0}}, identifier: 'S23 request comparison'
+                  StaticText, 0x102f97480, {{77.3, 115.0}, {235.0, 25.3}}, label: 'S23 request comparison'
+                Other, 0x106661e00, {{0.0, 95.7}, {390.0, 748.3}}
+                  Other, 0x106660f00, {{0.0, 95.7}, {390.0, 748.3}}
+                    Other, 0x1066612c0, {{0.0, 95.7}, {390.0, 748.3}}
+                      Other, 0x106660140, {{0.0, 95.7}, {390.0, 748.3}}
+                        CollectionView, 0x106661180, {{0.0, 95.7}, {390.0, 748.3}}
+                          Other, 0x106661540, {{-16.0, -1888.0}, {422.0, 2197.0}}
+                          Cell, 0x106660b40, {{16.0, -236.0}, {358.0, 527.3}}
+                            Other, 0x106661040, {{16.0, -236.0}, {358.0, 527.3}}
+                              Other, 0x106660500, {{16.0, -236.0}, {358.0, 527.3}}
+                            Other, 0x106660640, {{16.0, -236.0}, {358.0, 527.3}}
+                              Other, 0x106660c80, {{16.0, -236.0}, {358.0, 527.3}}
+                                Other, 0x106660780, {{16.0, -236.0}, {358.0, 527.3}}
+                                  StaticText, 0x106661f40, {{16.0, -236.0}, {358.0, 527.3}}, label: 'Cada solicitud conserva su propio resultado. Vincular un artículo no agrega otro paquete.'
+                          Other, 0x1066617c0, {{0.0, 95.7}, {390.0, 748.3}}
+                            Other, 0x106661680, {{0.0, 95.7}, {390.0, 104.0}}
+                          Other, 0x1066621c0, {{0.0, 95.7}, {390.0, 748.3}}
+                            Other, 0x106662580, {{0.0, 95.7}, {390.0, 104.0}}
+                          Other, 0x106660a00, {{-16.0, 309.0}, {422.0, 4248.0}}
+                          Cell, 0x106660dc0, {{16.0, 309.0}, {358.0, 207.3}}
+                            Other, 0x106660000, {{16.0, 309.0}, {358.0, 207.3}}
+                            Other, 0x106662440, {{16.0, 309.0}, {358.0, 207.3}}
+                              Other, 0x106661900, {{16.0, 309.0}, {358.0, 207.3}}
+                                Other, 0x106661400, {{16.0, 309.0}, {358.0, 207.3}}
+                                  StaticText, 0x106661cc0, {{16.0, 309.0}, {358.0, 207.3}}, label: 'Solicitudes para esta compra'
+                          Cell, 0x106661b80, {{16.0, 516.3}, {358.0, 630.0}}
+                            Other, 0x1066608c0, {{16.0, 516.3}, {358.0, 630.0}}
+                              Other, 0x106662080, {{16.0, 516.3}, {358.0, 630.0}}
+                            Other, 0x106661a40, {{16.0, 516.3}, {358.0, 630.0}}
+                              Other, 0x10665d040, {{16.0, 516.3}, {358.0, 630.0}}
+                                Other, 0x10665d180, {{16.0, 516.3}, {358.0, 630.0}}
+                                  StaticText, 0x10665fe80, {{16.0, 516.3}, {358.0, 630.0}}, identifier: 'household.duplicates.group.a4444444-4444-4444-8444-444444444441', label: 'Comparar estas solicitudes, Los nombres coinciden. Revisa la cantidad y el uso de cada persona antes de decidir.'
+                                    StaticText, 0x10665c280, {{43.0, 531.3}, {315.0, 187.3}}, label: 'Comparar estas solicitudes'
+                                    Image, 0x10665c3c0, {{43.0, 540.3}, {45.3, 45.0}}, identifier: 'square.on.square', label: 'Pestañas'
+                                    StaticText, 0x10665c500, {{32.0, 724.7}, {303.7, 406.7}}, label: 'Los nombres coinciden. Revisa la cantidad y el uso de cada persona antes de decidir.'
+                          Other, 0x10665c8c0, {{357.0, 159.7}, {30.0, 637.0}}, label: 'Barra de desplazamiento vertical, 6 páginas', value: 20%
+                            Other, 0x10665f5c0, {{384.0, 278.0}, {3.0, 156.3}}
+                          Other, 0x10665c780, {{357.0, 159.7}, {30.0, 637.0}}, label: 'Barra de desplazamiento vertical, 6 páginas', value: 20%
+                            Other, 0x10665c640, {{384.0, 278.0}, {3.0, 156.3}}
+                Toolbar, 0x10665f980, {{0.0, 95.7}, {390.0, 748.3}}, identifier: 'Toolbar', label: 'Barra de herramientas'
+                  Other, 0x110432bc0, {{0.0, 95.7}, {390.0, 748.3}}
+Path to element:
+ →Application, 0x102f95e00, pid: 2282, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x110430000, pid: 2282, label: 'Room in the Cart'
+  }
+)

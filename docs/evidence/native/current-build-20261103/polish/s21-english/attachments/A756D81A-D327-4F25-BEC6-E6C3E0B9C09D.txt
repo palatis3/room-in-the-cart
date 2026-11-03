@@ -1,0 +1,129 @@
+Attributes: Application, 0x11bef2d90, pid: 5371, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x11bef2d90, pid: 5371, label: 'Room in the Cart'
+    Window (Main), 0x11befc2f0, {{0.0, 0.0}, {375.0, 667.0}}
+      Other, 0x11befc6b0, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x11befc7d0, {{0.0, 0.0}, {375.0, 667.0}}
+          Other, 0x11befc410, {{0.0, 0.0}, {375.0, 667.0}}
+            Other, 0x11befc530, {{0.0, 0.0}, {375.0, 667.0}}
+              Other, 0x11befc8f0, {{0.0, 0.0}, {375.0, 667.0}}
+                NavigationBar, 0x11befca10, {{0.0, 20.0}, {375.0, 44.0}}, identifier: 'Household devices'
+                  StaticText, 0x11befcb30, {{112.0, 32.0}, {151.0, 20.5}}, label: 'Household devices'
+                Other, 0x11befcc50, {{0.0, 0.0}, {375.0, 667.0}}
+                  Other, 0x11befcd70, {{0.0, 0.0}, {375.0, 667.0}}
+                    Other, 0x11befce90, {{0.0, 0.0}, {375.0, 667.0}}
+                      Other, 0x11befcfb0, {{0.0, 0.0}, {375.0, 667.0}}
+                        CollectionView, 0x11befd0d0, {{0.0, 0.0}, {375.0, 667.0}}
+                          Other, 0x11befd1f0, {{-16.0, -163.5}, {407.0, 275.5}}
+                          Cell, 0x11befd310, {{16.0, -14.0}, {343.0, 64.5}}
+                            Other, 0x11befd430, {{16.0, -14.0}, {343.0, 64.5}}
+                              Other, 0x11befd550, {{16.0, -14.0}, {343.0, 64.5}}
+                            Other, 0x11befd670, {{16.0, -14.0}, {343.0, 64.5}}
+                              Other, 0x11befd790, {{16.0, -14.0}, {343.0, 64.5}}
+                                Other, 0x11befd8b0, {{16.0, -14.0}, {343.0, 64.5}}
+                                  StaticText, 0x11befd9d0, {{16.0, -14.0}, {343.0, 64.5}}, label: 'This device. Use Sign out in household settings to end this enrollment.'
+                          Cell, 0x11befdaf0, {{16.0, 50.5}, {343.0, 44.0}}
+                            Other, 0x11befdc10, {{16.0, 50.5}, {343.0, 44.0}}
+                              Other, 0x11befdd30, {{16.0, 50.5}, {343.0, 44.0}}
+                            Other, 0x11befde50, {{16.0, 50.5}, {343.0, 44.0}}
+                              Other, 0x11befdf70, {{16.0, 50.5}, {343.0, 44.0}}
+                                Other, 0x11befe090, {{16.0, 50.5}, {343.0, 44.0}}
+                                  StaticText, 0x11befe1b0, {{16.0, 50.5}, {343.0, 44.0}}, identifier: 'household.devices.active.30000000-0000-4000-8000-000000000004', label: 'Active enrollment'
+                          Other, 0x11befe2d0, {{32.0, 50.0}, {327.0, 0.5}}
+                          Other, 0x11befe3f0, {{-16.0, 112.0}, {407.0, 255.0}}
+                          Cell, 0x11befe510, {{16.0, 129.5}, {343.0, 44.0}}
+                            Other, 0x11befe630, {{16.0, 129.5}, {343.0, 44.0}}
+                              Other, 0x11befe750, {{16.0, 129.5}, {343.0, 44.0}}
+                            Other, 0x11befe870, {{16.0, 129.5}, {343.0, 44.0}}
+                              Other, 0x11befe990, {{16.0, 129.5}, {343.0, 44.0}}
+                                Other, 0x11befeab0, {{16.0, 129.5}, {343.0, 44.0}}
+                                  StaticText, 0x11befebd0, {{16.0, 129.5}, {343.0, 44.0}}, identifier: 'household.devices.alias.30000000-0000-4000-8000-000000000005', label: 'Alex'
+                          Cell, 0x11befecf0, {{16.0, 173.5}, {343.0, 44.0}}
+                            Other, 0x11befee10, {{16.0, 173.5}, {343.0, 44.0}}
+                              Other, 0x11befef30, {{16.0, 173.5}, {343.0, 44.0}}
+                            Other, 0x11beff050, {{16.0, 173.5}, {343.0, 44.0}}
+                              Other, 0x11beff170, {{16.0, 173.5}, {343.0, 44.0}}
+                                Other, 0x11beff290, {{16.0, 173.5}, {343.0, 44.0}}
+                                  StaticText, 0x11beff3b0, {{32.0, 185.2}, {129.0, 20.5}}, label: 'Device reference'
+                                  StaticText, 0x11beff4d0, {{16.0, 173.5}, {343.0, 44.0}}, label: 'Device reference, 00000005'
+                          Other, 0x11beff5f0, {{32.0, 173.0}, {327.0, 0.5}}
+                          Cell, 0x11beff710, {{16.0, 217.5}, {343.0, 44.0}}
+                            Other, 0x11bf58a80, {{16.0, 217.5}, {343.0, 44.0}}
+                              Other, 0x11bf78a90, {{16.0, 217.5}, {343.0, 44.0}}
+                            Other, 0x11bf79df0, {{16.0, 217.5}, {343.0, 44.0}}
+                              Other, 0x11bf79f10, {{16.0, 217.5}, {343.0, 44.0}}
+                                Other, 0x11bf7a030, {{16.0, 217.5}, {343.0, 44.0}}
+                                  StaticText, 0x11bf7a150, {{32.0, 229.2}, {62.0, 20.5}}, label: 'Enrolled'
+                                  StaticText, 0x11bf7a270, {{16.0, 217.5}, {343.0, 44.0}}, label: 'Enrolled, Nov 1, 2026 at 7:00 AM'
+                          Other, 0x11bf7a390, {{32.0, 217.0}, {327.0, 0.5}}
+                          Cell, 0x11bf7a4b0, {{16.0, 261.5}, {343.0, 44.0}}
+                            Other, 0x11bf7a5d0, {{16.0, 261.5}, {343.0, 44.0}}
+                              Other, 0x11bf7a6f0, {{16.0, 261.5}, {343.0, 44.0}}
+                            Other, 0x11bf7a810, {{16.0, 261.5}, {343.0, 44.0}}
+                              Other, 0x11bf7a930, {{16.0, 261.5}, {343.0, 44.0}}
+                                Other, 0x11bf7aa50, {{16.0, 261.5}, {343.0, 44.0}}
+                                  StaticText, 0x11bf7ab70, {{16.0, 261.5}, {343.0, 44.0}}, identifier: 'household.devices.active.30000000-0000-4000-8000-000000000005', label: 'Active enrollment'
+                          Other, 0x11bf7ac90, {{32.0, 261.0}, {327.0, 0.5}}
+                          Cell, 0x11bf7adb0, {{16.0, 305.5}, {343.0, 44.0}}
+                            Other, 0x11bf7aed0, {{16.0, 305.5}, {343.0, 44.0}}
+                              Other, 0x11bf7aff0, {{16.0, 305.5}, {343.0, 44.0}}
+                            Other, 0x11bf7b110, {{16.0, 305.5}, {343.0, 44.0}}
+                              Other, 0x11bf7b230, {{16.0, 305.5}, {343.0, 44.0}}
+                                Other, 0x11bf7b350, {{16.0, 305.5}, {343.0, 44.0}}
+                                  Button, 0x11bf7b470, {{16.0, 305.5}, {343.0, 44.0}}, identifier: 'household.devices.revoke.30000000-0000-4000-8000-000000000005', label: 'Revoke this device'
+                          Other, 0x11bf7b590, {{32.0, 305.0}, {327.0, 0.5}}
+                          Other, 0x11bf7b6b0, {{-16.0, 367.0}, {407.0, 1591.5}}
+                          Cell, 0x11bf7b7d0, {{16.0, 384.5}, {343.0, 44.0}}
+                            Other, 0x11bf7b8f0, {{16.0, 384.5}, {343.0, 44.0}}
+                              Other, 0x11bf7ba10, {{16.0, 384.5}, {343.0, 44.0}}
+                            Other, 0x11bf7bb30, {{16.0, 384.5}, {343.0, 44.0}}
+                              Other, 0x11bf7bc50, {{16.0, 384.5}, {343.0, 44.0}}
+                                Other, 0x11bf7bd70, {{16.0, 384.5}, {343.0, 44.0}}
+                                  StaticText, 0x11bf7be90, {{16.0, 384.5}, {343.0, 44.0}}, identifier: 'household.devices.alias.30000000-0000-4000-8000-000000000006', label: 'Alex'
+                          Cell, 0x11bf7bfb0, {{16.0, 428.5}, {343.0, 44.0}}
+                            Other, 0x11bf7c0d0, {{16.0, 428.5}, {343.0, 44.0}}
+                              Other, 0x11bf7c1f0, {{16.0, 428.5}, {343.0, 44.0}}
+                            Other, 0x11bf7c310, {{16.0, 428.5}, {343.0, 44.0}}
+                              Other, 0x11bf7c430, {{16.0, 428.5}, {343.0, 44.0}}
+                                Other, 0x11bf7c550, {{16.0, 428.5}, {343.0, 44.0}}
+                                  StaticText, 0x11bf7c670, {{32.0, 440.2}, {129.0, 20.5}}, label: 'Device reference'
+                                  StaticText, 0x11bf7c790, {{16.0, 428.5}, {343.0, 44.0}}, label: 'Device reference, 00000006'
+                          Other, 0x11bf7c8b0, {{32.0, 428.0}, {327.0, 0.5}}
+                          Cell, 0x11bf7c9d0, {{16.0, 472.5}, {343.0, 44.0}}
+                            Other, 0x11bf7caf0, {{16.0, 472.5}, {343.0, 44.0}}
+                              Other, 0x11bf7cc10, {{16.0, 472.5}, {343.0, 44.0}}
+                            Other, 0x11bf7cd30, {{16.0, 472.5}, {343.0, 44.0}}
+                              Other, 0x11bf7ce50, {{16.0, 472.5}, {343.0, 44.0}}
+                                Other, 0x11bf7cf70, {{16.0, 472.5}, {343.0, 44.0}}
+                                  StaticText, 0x11bf7d090, {{32.0, 484.2}, {62.0, 20.5}}, label: 'Enrolled'
+                                  StaticText, 0x11bf7d1b0, {{16.0, 472.5}, {343.0, 44.0}}, label: 'Enrolled, Nov 2, 2026 at 7:00 AM'
+                          Other, 0x11bf7d2d0, {{32.0, 472.0}, {327.0, 0.5}}
+                          Cell, 0x11bf7d3f0, {{16.0, 516.5}, {343.0, 44.0}}
+                            Other, 0x11bf7d510, {{16.0, 516.5}, {343.0, 44.0}}
+                              Other, 0x11bf7d630, {{16.0, 516.5}, {343.0, 44.0}}
+                            Other, 0x11bf7d750, {{16.0, 516.5}, {343.0, 44.0}}
+                              Other, 0x11bf7d870, {{16.0, 516.5}, {343.0, 44.0}}
+                                Other, 0x11bf7d990, {{16.0, 516.5}, {343.0, 44.0}}
+                                  StaticText, 0x11bf7dab0, {{16.0, 516.5}, {343.0, 44.0}}, identifier: 'household.devices.active.30000000-0000-4000-8000-000000000006', label: 'Active enrollment'
+                          Other, 0x11bf7dbd0, {{32.0, 516.0}, {327.0, 0.5}}
+                          Cell, 0x11bf7dcf0, {{16.0, 560.5}, {343.0, 44.0}}
+                            Other, 0x11bf7de10, {{16.0, 560.5}, {343.0, 44.0}}
+                              Other, 0x11bf7df30, {{16.0, 560.5}, {343.0, 44.0}}
+                            Other, 0x11bf7e050, {{16.0, 560.5}, {343.0, 44.0}}
+                              Other, 0x11bf7e170, {{16.0, 560.5}, {343.0, 44.0}}
+                                Other, 0x11bf7e290, {{16.0, 560.5}, {343.0, 44.0}}
+                                  Button, 0x11bf7e3b0, {{16.0, 560.5}, {343.0, 44.0}}, identifier: 'household.devices.revoke.30000000-0000-4000-8000-000000000006', label: 'Revoke this device'
+                          Other, 0x11bf7e4d0, {{32.0, 560.0}, {327.0, 0.5}}
+                          Other, 0x11bf7e5f0, {{342.0, 64.0}, {30.0, 560.5}}, label: 'Vertical scroll bar, 2 pages', value: 100%
+                            Other, 0x11bf7e710, {{369.0, 294.0}, {3.0, 327.5}}
+                        StaticText, 0x11bf7ea30, {{4.0, 636.5}, {367.0, 26.5}}, identifier: 'household.devices.fixtureSummary', label: 'writes=0;current=active;target=active;sibling=active;membership=active;shopper=Mia'
+    Window, 0x11bf7eb50, {{0.0, 0.0}, {375.0, 667.0}}
+      Other, 0x11bf7ec70, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x11bf7ed90, {{0.0, 0.0}, {375.0, 667.0}}
+Path to element:
+ →Application, 0x11bef2d90, pid: 5371, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x11befb4c0, pid: 5371, label: 'Room in the Cart'
+  }

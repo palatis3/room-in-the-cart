@@ -1,0 +1,23 @@
+{
+  "ios/Features/Capture/CorrectionSettingsView.swift": {
+    "live": {
+      "beforeSHA256": "5ecf08184c8bcb694a29bfc2b18682202131ec01981afe98a57cfccb8a17259a",
+      "afterSHA256": "904153f4197ad107e09033aedbc6eae34cd67b5b674a610df911a8df527ed7e6"
+    },
+    "frozen": {
+      "beforeSHA256": "5ecf08184c8bcb694a29bfc2b18682202131ec01981afe98a57cfccb8a17259a",
+      "afterSHA256": "904153f4197ad107e09033aedbc6eae34cd67b5b674a610df911a8df527ed7e6"
+    }
+  },
+  "ios/Features/History/HistoryViews.swift": {
+    "live": {
+      "beforeSHA256": "db42ce9c3c3f61caca139ccc4ba36bd25b031c211ed1558464b38ff33505c39d",
+      "afterSHA256": "b960bd5ba5e51385805097eb2aed8fe3d651c9ca7339f553117d121fbddfb3d3"
+    },
+    "frozen": {
+      "beforeSHA256": "db42ce9c3c3f61caca139ccc4ba36bd25b031c211ed1558464b38ff33505c39d",
+      "afterSHA256": "b960bd5ba5e51385805097eb2aed8fe3d651c9ca7339f553117d121fbddfb3d3"
+    }
+  },
+  "approvedAtApplication": "2026-11-03T21:10:43.524033+00:00"
+}

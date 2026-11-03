@@ -1,0 +1,71 @@
+{
+  "devicesAndConfigurations" : [
+    {
+      "device" : {
+        "architecture" : "arm64",
+        "deviceId" : "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+        "deviceName" : "iPhone 17e",
+        "modelName" : "iPhone 17e",
+        "osBuildNumber" : "24A434",
+        "osVersion" : "27.0",
+        "platform" : "iOS Simulator"
+      },
+      "expectedFailures" : 0,
+      "failedTests" : 1,
+      "passedTests" : 521,
+      "skippedTests" : 0,
+      "testPlanConfiguration" : {
+        "configurationId" : "1",
+        "configurationName" : "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription" : "RoomInTheCart · Built with macOS 27.2",
+  "expectedFailures" : 0,
+  "failedTests" : 1,
+  "finishTime" : 1793744601.883,
+  "passedTests" : 521,
+  "result" : "Failed",
+  "runtimeWarnings" : [
+    {
+      "issueType" : "Runtime Warning",
+      "message" : "Invalid frame dimension (negative or non-finite)."
+    },
+    {
+      "issueType" : "Runtime Warning",
+      "message" : "Invalid frame dimension (negative or non-finite)."
+    },
+    {
+      "issueType" : "Runtime Warning",
+      "message" : "Invalid frame dimension (negative or non-finite)."
+    },
+    {
+      "issueType" : "Runtime Warning",
+      "message" : "Invalid frame dimension (negative or non-finite)."
+    }
+  ],
+  "skippedTests" : 0,
+  "startTime" : 1793743872.07,
+  "statistics" : [
+
+  ],
+  "testFailures" : [
+    {
+      "failureText" : "XCTAssertTrue failed - Missing actionable UI element: Query chain:\n →Find: Target Application 'dev.roominthecart.app.debug'\n  ↪︎Find: Descendants matching type Button\n    ↪︎Find: Elements matching predicate '\"Dinner\" IN identifiers'\nNo matches found for Elements matching predicate '\"Dinner\" IN identifiers' from input {(\n    Button, {{62.0, 765.0}, {94.0, 54.0}}, identifier: 'cart', label: 'Shop', Selected,\n    Button, {{148.0, 765.0}, {94.0, 54.0}}, identifier: 'fork.knife', label: 'Dinners',\n    Button, {{234.0, 765.0}, {94.0, 54.0}}, identifier: 'clock.arrow.circlepath', label: 'Records',\n    Button, {{16.0, 47.0}, {44.0, 44.0}}, identifier: 'BackButton', label: 'Something is missing',\n    Button, {{16.0, 473.7}, {358.0, 52.0}}, label: 'Mark handled after reviewing the meal',\n    Button, {{32.0, 598.5}, {326.0, 58.8}}, label: 'Reviewed matching food need, Keep unassigned until a meal is reviewed',\n    Button, {{32.0, 785.7}, {326.0, 34.3}}, label: 'Unit, units',\n    Button, {{32.0, 837.7}, {326.0, 34.3}}, label: 'Stock source, Freezer'\n)}\n",
+      "targetName" : "RoomInTheCartUITests",
+      "testIdentifier" : 519,
+      "testIdentifierString" : "FreeJourneyUITests/testCorrectFreezerBatchAndReadReservationsAfterRestart()",
+      "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testCorrectFreezerBatchAndReadReservationsAfterRestart",
+      "testName" : "testCorrectFreezerBatchAndReadReservationsAfterRestart()"
+    }
+  ],
+  "title" : "Test - RoomInTheCart",
+  "topInsights" : [
+    {
+      "category" : "Longest Test Runs",
+      "impact" : "25% of duration",
+      "text" : "4 longest test runs with outlier durations exceeding 0.29s (three standard deviations)"
+    }
+  ],
+  "totalTestCount" : 522
+}

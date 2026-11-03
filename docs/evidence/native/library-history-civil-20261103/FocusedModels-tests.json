@@ -1,0 +1,277 @@
+{
+  "devices" : [
+    {
+      "architecture" : "arm64",
+      "deviceId" : "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+      "deviceName" : "iPhone 17e",
+      "modelName" : "iPhone 17e",
+      "osBuildNumber" : "24A434",
+      "osVersion" : "27.0",
+      "platform" : "iOS Simulator"
+    }
+  ],
+  "testNodes" : [
+    {
+      "children" : [
+        {
+          "children" : [
+            {
+              "children" : [
+                {
+                  "duration" : "0.029s",
+                  "durationInSeconds" : 0.029082059860229492,
+                  "name" : "testAuthorityFingerprintChangeStopsPreparationAndClearsVisibleFacts()",
+                  "nodeIdentifier" : "HistoryFlowTests/testAuthorityFingerprintChangeStopsPreparationAndClearsVisibleFacts()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/HistoryFlowTests/testAuthorityFingerprintChangeStopsPreparationAndClearsVisibleFacts",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0085s",
+                  "durationInSeconds" : 0.008522987365722656,
+                  "name" : "testBudgetGrantAloneCannotBeginOrReviewPriceObservationAndDoesNotGateFuturePeriodDraft()",
+                  "nodeIdentifier" : "HistoryFlowTests/testBudgetGrantAloneCannotBeginOrReviewPriceObservationAndDoesNotGateFuturePeriodDraft()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/HistoryFlowTests/testBudgetGrantAloneCannotBeginOrReviewPriceObservationAndDoesNotGateFuturePeriodDraft",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.032s",
+                  "durationInSeconds" : 0.0316699743270874,
+                  "name" : "testConfirmedReceiptCleanupRetryDoesNotResend()",
+                  "nodeIdentifier" : "HistoryFlowTests/testConfirmedReceiptCleanupRetryDoesNotResend()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/HistoryFlowTests/testConfirmedReceiptCleanupRetryDoesNotResend",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0035s",
+                  "durationInSeconds" : 0.0035430192947387695,
+                  "name" : "testExplicitReviewApprovalAndPersistenceBeforeNetwork()",
+                  "nodeIdentifier" : "HistoryFlowTests/testExplicitReviewApprovalAndPersistenceBeforeNetwork()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/HistoryFlowTests/testExplicitReviewApprovalAndPersistenceBeforeNetwork",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0036s",
+                  "durationInSeconds" : 0.0036240816116333008,
+                  "name" : "testExplicitStatusClearDoesNotSendOrInventConfirmation()",
+                  "nodeIdentifier" : "HistoryFlowTests/testExplicitStatusClearDoesNotSendOrInventConfirmation()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/HistoryFlowTests/testExplicitStatusClearDoesNotSendOrInventConfirmation",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0039s",
+                  "durationInSeconds" : 0.003920078277587891,
+                  "name" : "testLostResponseRestoresExactIntentWithoutAutomaticSend()",
+                  "nodeIdentifier" : "HistoryFlowTests/testLostResponseRestoresExactIntentWithoutAutomaticSend()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/HistoryFlowTests/testLostResponseRestoresExactIntentWithoutAutomaticSend",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0095s",
+                  "durationInSeconds" : 0.00946509838104248,
+                  "name" : "testMoneyUnknownPackAndTerminalReservationEvidenceRemainDistinct()",
+                  "nodeIdentifier" : "HistoryFlowTests/testMoneyUnknownPackAndTerminalReservationEvidenceRemainDistinct()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/HistoryFlowTests/testMoneyUnknownPackAndTerminalReservationEvidenceRemainDistinct",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0075s",
+                  "durationInSeconds" : 0.007508993148803711,
+                  "name" : "testOriginalPeriodRevisionAndBytesSurviveUncertainRetry()",
+                  "nodeIdentifier" : "HistoryFlowTests/testOriginalPeriodRevisionAndBytesSurviveUncertainRetry()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/HistoryFlowTests/testOriginalPeriodRevisionAndBytesSurviveUncertainRetry",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0082s",
+                  "durationInSeconds" : 0.008244991302490234,
+                  "name" : "testPaidLapseClearsAnalysisAndRawPathNeedsFreshRead()",
+                  "nodeIdentifier" : "HistoryFlowTests/testPaidLapseClearsAnalysisAndRawPathNeedsFreshRead()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/HistoryFlowTests/testPaidLapseClearsAnalysisAndRawPathNeedsFreshRead",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0034s",
+                  "durationInSeconds" : 0.0033570528030395508,
+                  "name" : "testPartialPeriodClearsFullEnvelopeBeforeAwaitAndHidesPendingPlan()",
+                  "nodeIdentifier" : "HistoryFlowTests/testPartialPeriodClearsFullEnvelopeBeforeAwaitAndHidesPendingPlan()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/HistoryFlowTests/testPartialPeriodClearsFullEnvelopeBeforeAwaitAndHidesPendingPlan",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0091s",
+                  "durationInSeconds" : 0.009086012840270996,
+                  "name" : "testPartialResponseHidesPendingPrivatePlanAndBlocksNewWrite()",
+                  "nodeIdentifier" : "HistoryFlowTests/testPartialResponseHidesPendingPrivatePlanAndBlocksNewWrite()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/HistoryFlowTests/testPartialResponseHidesPendingPrivatePlanAndBlocksNewWrite",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0043s",
+                  "durationInSeconds" : 0.004305005073547363,
+                  "name" : "testPendingPlanIsNotExposedAfterLostPaidOrSourceAuthority()",
+                  "nodeIdentifier" : "HistoryFlowTests/testPendingPlanIsNotExposedAfterLostPaidOrSourceAuthority()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/HistoryFlowTests/testPendingPlanIsNotExposedAfterLostPaidOrSourceAuthority",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0042s",
+                  "durationInSeconds" : 0.004200935363769531,
+                  "name" : "testPricePaginationFilterAndAuthorizationFailureDoNotRetainHistory()",
+                  "nodeIdentifier" : "HistoryFlowTests/testPricePaginationFilterAndAuthorizationFailureDoNotRetainHistory()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/HistoryFlowTests/testPricePaginationFilterAndAuthorizationFailureDoNotRetainHistory",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0033s",
+                  "durationInSeconds" : 0.003309011459350586,
+                  "name" : "testPurgeDuringPreparationCannotRecreatePrivatePending()",
+                  "nodeIdentifier" : "HistoryFlowTests/testPurgeDuringPreparationCannotRecreatePrivatePending()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/HistoryFlowTests/testPurgeDuringPreparationCannotRecreatePrivatePending",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.018s",
+                  "durationInSeconds" : 0.017948031425476074,
+                  "name" : "testRealPendingStoreEpochAndAtomicCompletion()",
+                  "nodeIdentifier" : "HistoryFlowTests/testRealPendingStoreEpochAndAtomicCompletion()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/HistoryFlowTests/testRealPendingStoreEpochAndAtomicCompletion",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0026s",
+                  "durationInSeconds" : 0.002606034278869629,
+                  "name" : "testRepeatedCursorIsRejectedWithoutDuplicateRows()",
+                  "nodeIdentifier" : "HistoryFlowTests/testRepeatedCursorIsRejectedWithoutDuplicateRows()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/HistoryFlowTests/testRepeatedCursorIsRejectedWithoutDuplicateRows",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0019s",
+                  "durationInSeconds" : 0.0019049644470214844,
+                  "name" : "testSavedObservationReferencesUseReadGrantsWithoutAddingWritableShops()",
+                  "nodeIdentifier" : "HistoryFlowTests/testSavedObservationReferencesUseReadGrantsWithoutAddingWritableShops()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/HistoryFlowTests/testSavedObservationReferencesUseReadGrantsWithoutAddingWritableShops",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0023s",
+                  "durationInSeconds" : 0.0023250579833984375,
+                  "name" : "testSavedReferenceAccessPaginationAndRevokedRecordClearVisibleFacts()",
+                  "nodeIdentifier" : "HistoryFlowTests/testSavedReferenceAccessPaginationAndRevokedRecordClearVisibleFacts()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/HistoryFlowTests/testSavedReferenceAccessPaginationAndRevokedRecordClearVisibleFacts",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0038s",
+                  "durationInSeconds" : 0.003805994987487793,
+                  "name" : "testSaveFailureNeverSendsAndDraftEditInvalidatesReview()",
+                  "nodeIdentifier" : "HistoryFlowTests/testSaveFailureNeverSendsAndDraftEditInvalidatesReview()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/HistoryFlowTests/testSaveFailureNeverSendsAndDraftEditInvalidatesReview",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0028s",
+                  "durationInSeconds" : 0.002763032913208008,
+                  "name" : "testSelectedGrantedShopIsNeverDefaultedIntoObservationWhenAnotherShopIsOwned()",
+                  "nodeIdentifier" : "HistoryFlowTests/testSelectedGrantedShopIsNeverDefaultedIntoObservationWhenAnotherShopIsOwned()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/HistoryFlowTests/testSelectedGrantedShopIsNeverDefaultedIntoObservationWhenAnotherShopIsOwned",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0035s",
+                  "durationInSeconds" : 0.003544926643371582,
+                  "name" : "testStatusClearNeedsFreshAuthorityAndPreservesPrivateRetryOnDenial()",
+                  "nodeIdentifier" : "HistoryFlowTests/testStatusClearNeedsFreshAuthorityAndPreservesPrivateRetryOnDenial()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/HistoryFlowTests/testStatusClearNeedsFreshAuthorityAndPreservesPrivateRetryOnDenial",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                }
+              ],
+              "name" : "HistoryFlowTests",
+              "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/HistoryFlowTests",
+              "nodeType" : "Test Suite",
+              "result" : "Passed"
+            },
+            {
+              "children" : [
+                {
+                  "duration" : "0.0021s",
+                  "durationInSeconds" : 0.0020689964294433594,
+                  "name" : "testDateLabelsUseGregorianCivilDayEvenWhenLocalePrefersAnotherCalendar()",
+                  "nodeIdentifier" : "SharedMealCivilDateTests/testDateLabelsUseGregorianCivilDayEvenWhenLocalePrefersAnotherCalendar()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/SharedMealCivilDateTests/testDateLabelsUseGregorianCivilDayEvenWhenLocalePrefersAnotherCalendar",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.011s",
+                  "durationInSeconds" : 0.011040925979614258,
+                  "name" : "testLocalizedCivilDayKeepsTheExactGregorianWireDayAcrossUSDSTBoundaries()",
+                  "nodeIdentifier" : "SharedMealCivilDateTests/testLocalizedCivilDayKeepsTheExactGregorianWireDayAcrossUSDSTBoundaries()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/SharedMealCivilDateTests/testLocalizedCivilDayKeepsTheExactGregorianWireDayAcrossUSDSTBoundaries",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.00075s",
+                  "durationInSeconds" : 0.0007489919662475586,
+                  "name" : "testMalformedOrImpossibleCivilDaysDoNotProduceADifferentDayLabel()",
+                  "nodeIdentifier" : "SharedMealCivilDateTests/testMalformedOrImpossibleCivilDaysDoNotProduceADifferentDayLabel()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/SharedMealCivilDateTests/testMalformedOrImpossibleCivilDaysDoNotProduceADifferentDayLabel",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0025s",
+                  "durationInSeconds" : 0.0024989843368530273,
+                  "name" : "testRenderingDoesNotAlterTheMealOrEncodedWireDay()",
+                  "nodeIdentifier" : "SharedMealCivilDateTests/testRenderingDoesNotAlterTheMealOrEncodedWireDay()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/SharedMealCivilDateTests/testRenderingDoesNotAlterTheMealOrEncodedWireDay",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                }
+              ],
+              "name" : "SharedMealCivilDateTests",
+              "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/SharedMealCivilDateTests",
+              "nodeType" : "Test Suite",
+              "result" : "Passed"
+            }
+          ],
+          "name" : "RoomInTheCartTests",
+          "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests",
+          "nodeType" : "Unit test bundle",
+          "result" : "Passed"
+        }
+      ],
+      "name" : "RoomInTheCart",
+      "nodeType" : "Test Plan",
+      "result" : "Passed"
+    }
+  ],
+  "testPlanConfigurations" : [
+    {
+      "configurationId" : "1",
+      "configurationName" : "Test Scheme Action"
+    }
+  ]
+}

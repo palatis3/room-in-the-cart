@@ -1,0 +1,52 @@
+Attributes: Application, 0x11e1db880, pid: 9710, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x11e1db880, pid: 9710, label: 'Room in the Cart'
+    Window (Main), 0x11e1d75f0, {{0.0, 0.0}, {375.0, 667.0}}
+      Other, 0x11e1dbe60, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x11e1dbf80, {{0.0, 0.0}, {375.0, 667.0}}
+          Other, 0x11e1dbd10, {{0.0, 0.0}, {375.0, 667.0}}
+            Other, 0x11e1d7090, {{0.0, 0.0}, {375.0, 667.0}}
+              Other, 0x11e1dc0a0, {{0.0, 0.0}, {375.0, 667.0}}
+                NavigationBar, 0x11e1dc1c0, {{0.0, 20.0}, {375.0, 44.0}}, identifier: 'Dispositivos del hogar'
+                  StaticText, 0x11e1dc2e0, {{82.0, 28.0}, {211.5, 25.5}}, label: 'Dispositivos del hogar'
+                Other, 0x11e1dc400, {{0.0, 0.0}, {375.0, 667.0}}
+                  Other, 0x11e1dc520, {{0.0, 0.0}, {375.0, 667.0}}
+                    Other, 0x11e1dc640, {{0.0, 0.0}, {375.0, 667.0}}
+                      Other, 0x11e1d8320, {{0.0, 0.0}, {375.0, 667.0}}
+                        CollectionView, 0x11e1d8440, {{0.0, 0.0}, {375.0, 667.0}}
+                          Other, 0x11e1d8560, {{-16.0, -2106.0}, {407.0, 2724.0}}
+                          Cell, 0x11e1d8680, {{16.0, -314.5}, {343.0, 767.5}}
+                            Other, 0x11e1d87a0, {{16.0, -314.5}, {343.0, 767.5}}
+                              Other, 0x11e1d88c0, {{16.0, -314.5}, {343.0, 767.5}}
+                            Other, 0x11e1d89e0, {{16.0, -314.5}, {343.0, 767.5}}
+                              Other, 0x11e1d8b00, {{16.0, -314.5}, {343.0, 767.5}}
+                                Other, 0x11e1d8c20, {{16.0, -314.5}, {343.0, 767.5}}
+                                  StaticText, 0x11e1d8d40, {{16.0, -314.5}, {343.0, 767.5}}, label: 'Una persona puede tener varios registros en un teléfono o navegador. Usa la fecha y la referencia para elegir el acceso que deseas terminar.'
+                          Cell, 0x11e1d8f90, {{16.0, 453.0}, {343.0, 147.5}}
+                            Other, 0x11e1d90b0, {{16.0, 453.0}, {343.0, 147.5}}
+                              Other, 0x11e1d91d0, {{16.0, 453.0}, {343.0, 147.5}}
+                            Other, 0x11e1d92f0, {{16.0, 453.0}, {343.0, 147.5}}
+                              Other, 0x11e1dd8b0, {{16.0, 453.0}, {343.0, 147.5}}
+                                Other, 0x11e1dd9d0, {{16.0, 453.0}, {343.0, 147.5}}
+                                  Button, 0x11e1ddaf0, {{16.0, 453.0}, {343.0, 147.5}}, identifier: 'household.devices.refresh', label: 'Actualizar dispositivos'
+                          Other, 0x11e1ddc10, {{32.0, 452.0}, {327.0, 1.0}}
+                          Other, 0x11e1ddd30, {{-16.0, 618.0}, {407.0, 1891.0}}
+                          Cell, 0x11e1dde50, {{16.0, 635.5}, {343.0, 519.5}}
+                            Other, 0x11e1ddf70, {{16.0, 635.5}, {343.0, 519.5}}
+                              Other, 0x11e1de090, {{16.0, 635.5}, {343.0, 519.5}}
+                            Other, 0x11e1de1b0, {{16.0, 635.5}, {343.0, 519.5}}
+                              Other, 0x11e1de2d0, {{16.0, 635.5}, {343.0, 519.5}}
+                                Other, 0x11e1de3f0, {{16.0, 635.5}, {343.0, 519.5}}
+                                  StaticText, 0x11e1de510, {{16.0, 635.5}, {343.0, 519.5}}, identifier: 'household.devices.result', label: 'Se revocó el acceso del dispositivo. Actualiza los dispositivos para revisar el acceso actual.'
+                          Other, 0x11e1de630, {{342.0, 64.0}, {30.0, 560.5}}, label: 'Barra de desplazamiento vertical, 4 páginas', value: 60%
+                        StaticText, 0x11e1de750, {{5.0, 636.5}, {365.0, 26.5}}, identifier: 'household.devices.fixtureSummary', label: 'writes=1;current=active;target=revoked;sibling=active;membership=active;shopper=Mia'
+    Window, 0x11e1de870, {{0.0, 0.0}, {375.0, 667.0}}
+      Other, 0x11e1de990, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x11e1deab0, {{0.0, 0.0}, {375.0, 667.0}}
+Path to element:
+ →Application, 0x11e1db880, pid: 9710, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x11e4172c0, pid: 9710, label: 'Room in the Cart'
+  }

@@ -1,0 +1,113 @@
+Optional(Attributes: Application, 0x115818a00, pid: 8069, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x115818a00, pid: 8069, label: 'Room in the Cart'
+    Window (Main), 0x115818b40, {{0.0, 0.0}, {390.0, 844.0}}
+      Other, 0x11581abc0, {{0.0, 0.0}, {390.0, 844.0}}
+        Other, 0x1150eebc0, {{0.0, 0.0}, {390.0, 844.0}}
+          Other, 0x11580df40, {{-390.0, -844.0}, {1170.0, 2532.0}}
+          Other, 0x11580e080, {{0.0, 0.0}, {390.0, 844.0}}
+            Other, 0x115839680, {{0.0, 0.0}, {390.0, 844.0}}
+              StaticText, 0x115839540, {{99.7, 47.0}, {190.7, 13.3}}, identifier: 'fixture.s23.commands', label: 'Fixture applied decisions: 0'
+              StaticText, 0x11582d680, {{120.2, 60.3}, {149.7, 13.3}}, identifier: 'fixture.s23.lines', label: 'Fixture saved lines: 1'
+              StaticText, 0x11582d540, {{106.5, 75.7}, {177.0, 13.3}}, identifier: 'fixture.s23.loaded', label: 'Fixture loaded requests: 4'
+              Other, 0x115804140, {{0.0, 95.7}, {390.0, 748.3}}
+                NavigationBar, 0x115804000, {{0.0, 105.7}, {390.0, 54.0}}, identifier: 'S23 request comparison'
+                  StaticText, 0x115805900, {{77.3, 115.0}, {235.0, 25.3}}, label: 'S23 request comparison'
+                Other, 0x115805a40, {{0.0, 95.7}, {390.0, 748.3}}
+                  Other, 0x115805b80, {{0.0, 95.7}, {390.0, 748.3}}
+                    Other, 0x115805cc0, {{0.0, 95.7}, {390.0, 748.3}}
+                      Other, 0x115805e00, {{0.0, 95.7}, {390.0, 748.3}}
+                        CollectionView, 0x1158057c0, {{0.0, 95.7}, {390.0, 748.3}}
+                          Other, 0x1157fa800, {{-16.0, -1889.3}, {422.0, 2197.0}}
+                          Cell, 0x1157fa940, {{16.0, -237.3}, {358.0, 527.3}}
+                            Other, 0x1157fb5c0, {{16.0, -237.3}, {358.0, 527.3}}
+                              Other, 0x1157fb700, {{16.0, -237.3}, {358.0, 527.3}}
+                            Other, 0x1157fb840, {{16.0, -237.3}, {358.0, 527.3}}
+                              Other, 0x1157fb980, {{16.0, -237.3}, {358.0, 527.3}}
+                                Other, 0x1157fbac0, {{16.0, -237.3}, {358.0, 527.3}}
+                                  StaticText, 0x1157fbc00, {{16.0, -237.3}, {358.0, 527.3}}, label: 'Cada solicitud conserva su propio resultado. Vincular un artículo no agrega otro paquete.'
+                          Other, 0x1157fa6c0, {{0.0, 95.7}, {390.0, 748.3}}
+                            Other, 0x1157fb480, {{0.0, 95.7}, {390.0, 104.0}}
+                          Other, 0x1157fb340, {{0.0, 95.7}, {390.0, 748.3}}
+                            Other, 0x1157eebc0, {{0.0, 95.7}, {390.0, 104.0}}
+                          Other, 0x1157eea80, {{-16.0, 307.7}, {422.0, 3716.0}}
+                          Cell, 0x1157ed180, {{16.0, 307.7}, {358.0, 207.3}}
+                            Other, 0x1157ed040, {{16.0, 307.7}, {358.0, 207.3}}
+                            Other, 0x1157e35c0, {{16.0, 307.7}, {358.0, 207.3}}
+                              Other, 0x1157e17c0, {{16.0, 307.7}, {358.0, 207.3}}
+                                Other, 0x1157e1180, {{16.0, 307.7}, {358.0, 207.3}}
+                                  StaticText, 0x1157e3200, {{16.0, 307.7}, {358.0, 207.3}}, label: 'Solicitudes para esta compra'
+                          Cell, 0x1157e30c0, {{16.0, 515.0}, {358.0, 630.0}}
+                            Other, 0x1157e2f80, {{16.0, 515.0}, {358.0, 630.0}}
+                              Other, 0x1157e3340, {{16.0, 515.0}, {358.0, 630.0}}
+                            Other, 0x11584a440, {{16.0, 515.0}, {358.0, 630.0}}
+                              Other, 0x11584a580, {{16.0, 515.0}, {358.0, 630.0}}
+                                Other, 0x11584b340, {{16.0, 515.0}, {358.0, 630.0}}
+                                  StaticText, 0x11584b480, {{16.0, 515.0}, {358.0, 630.0}}, identifier: 'household.duplicates.group.a4444444-4444-4444-8444-444444444441', label: 'Comparar estas solicitudes, Los nombres coinciden. Revisa la cantidad y el uso de cada persona antes de decidir.'
+                                    StaticText, 0x1157dd180, {{43.0, 530.0}, {315.0, 187.3}}, label: 'Comparar estas solicitudes'
+                                    Image, 0x1157dd2c0, {{43.0, 539.0}, {45.3, 45.0}}, identifier: 'square.on.square', label: 'Pestañas'
+                                    StaticText, 0x1157dd680, {{32.0, 723.3}, {303.7, 406.7}}, label: 'Los nombres coinciden. Revisa la cantidad y el uso de cada persona antes de decidir.'
+                          Other, 0x1157dd540, {{357.0, 159.7}, {30.0, 637.0}}, label: 'Barra de desplazamiento vertical, 5 páginas', value: 24%
+                            Other, 0x1157dd400, {{384.0, 278.3}, {3.0, 156.3}}
+                          Other, 0x1157dd040, {{357.0, 159.7}, {30.0, 637.0}}, label: 'Barra de desplazamiento vertical, 5 páginas', value: 24%
+                            Other, 0x115846d00, {{384.0, 278.3}, {3.0, 156.3}}
+                Toolbar, 0x115846e40, {{0.0, 95.7}, {390.0, 748.3}}, identifier: 'Toolbar', label: 'Barra de herramientas'
+                  Other, 0x115847c00, {{0.0, 95.7}, {390.0, 748.3}}
+      Other, 0x115847d40, {{0.0, 0.0}, {390.0, 844.0}}
+        Other, 0x115847e80, {{-390.0, -844.0}, {1170.0, 2532.0}}
+        Other, 0x115846f80, {{0.0, 47.0}, {390.0, 797.0}}
+          Other, 0x1158470c0, {{0.0, 47.0}, {390.0, 797.0}}
+            Other, 0x115847200, {{0.0, 47.0}, {390.0, 797.0}}
+              Other, 0x115847340, {{0.0, 47.0}, {390.0, 797.0}}
+                Other, 0x115847480, {{0.0, 47.0}, {390.0, 797.0}}
+                  NavigationBar, 0x1158475c0, {{0.0, 63.0}, {390.0, 54.0}}, identifier: 'Revisar solicitud'
+                    Other, 0x115847700, {{20.0, 67.0}, {105.3, 36.0}}
+                      Other, 0x115847840, {{20.0, 67.0}, {105.3, 36.0}}
+                        Button, 0x115847980, {{20.0, 67.0}, {105.3, 36.0}}, identifier: 'household.decision.cancel', label: 'Cancelar'
+                    StaticText, 0x115847ac0, {{141.3, 72.3}, {156.7, 25.3}}, label: 'Revisar solicitud'
+                  Other, 0x1159ec000, {{0.0, 47.0}, {390.0, 797.0}}
+                    Other, 0x1159ec140, {{0.0, 47.0}, {390.0, 797.0}}
+                      Other, 0x1159ec280, {{0.0, 47.0}, {390.0, 797.0}}
+                        Other, 0x1159ec3c0, {{0.0, 47.0}, {390.0, 797.0}}
+                          CollectionView, 0x1159ec500, {{0.0, 47.0}, {390.0, 797.0}}
+                            Other, 0x1159ec640, {{-16.0, -1933.3}, {422.0, 3957.7}}
+                            Cell, 0x1159ec780, {{16.0, -83.0}, {358.0, 1584.0}}
+                              Other, 0x1159ec8c0, {{16.0, -83.0}, {358.0, 1584.0}}
+                                Other, 0x1159eca00, {{16.0, -83.0}, {358.0, 1584.0}}
+                              Other, 0x1159ecb40, {{16.0, -83.0}, {358.0, 1584.0}}
+                                Other, 0x1159ecc80, {{16.0, -83.0}, {358.0, 1584.0}}
+                                  Other, 0x1159ecdc0, {{16.0, -83.0}, {358.0, 1584.0}}
+                                    Other, 0x1159ecf00, {{32.0, -64.0}, {316.3, 1546.0}}
+                                      StaticText, 0x1159ed040, {{32.0, -64.0}, {316.3, 63.3}}, identifier: 'household.duplicates.selection.a4444444-4444-4444-8444-444444444443', label: 'Otra solicitud'
+                                      StaticText, 0x1159ed180, {{32.0, 7.3}, {307.3, 63.3}}, label: 'Solicitado por'
+                                      StaticText, 0x1159ed2c0, {{32.0, 7.3}, {307.3, 130.7}}, identifier: 'household.duplicates.author.a4444444-4444-4444-8444-444444444443', label: 'Solicitado por, Lee'
+                                      StaticText, 0x1159ed400, {{32.0, 146.0}, {301.7, 51.3}}, label: 'Solicitud original'
+                                      StaticText, 0x1159ed540, {{32.0, 201.3}, {190.0, 63.3}}, identifier: 'household.duplicates.original.a4444444-4444-4444-8444-444444444443', label: 'CEREAL'
+                                      StaticText, 0x1159ed680, {{32.0, 272.7}, {289.3, 153.3}}, identifier: 'household.duplicates.amountLabel.a4444444-4444-4444-8444-444444444443', label: 'Cantidad y uso, tal como se escribieron'
+                                      StaticText, 0x1159ed7c0, {{32.0, 430.0}, {256.3, 187.3}}, identifier: 'household.duplicates.amount.a4444444-4444-4444-8444-444444444443', label: '2 boxes for the school snack drive'
+                                      StaticText, 0x1159ed900, {{32.0, 625.3}, {279.3, 130.7}}, label: 'Destino, Esta compra'
+                                      StaticText, 0x1159eda40, {{32.0, 625.3}, {173.0, 63.3}}, label: 'Destino'
+                                      StaticText, 0x1159edb80, {{32.0, 764.0}, {268.0, 125.3}}, label: 'Revisión de la solicitud'
+                                      StaticText, 0x1159edcc0, {{32.0, 764.0}, {268.0, 192.7}}, label: 'Revisión de la solicitud, 1'
+                                      StaticText, 0x1159ede00, {{32.0, 964.7}, {195.3, 63.3}}, label: 'Recibida'
+                                      StaticText, 0x1159edf40, {{32.0, 964.7}, {290.0, 192.7}}, label: 'Recibida, nov 3, 2026, 10:01 a.m.'
+                                      StaticText, 0x1159ee080, {{32.0, 1165.3}, {304.3, 125.3}}, label: 'Resultado de esta solicitud'
+                                      StaticText, 0x1159ee1c0, {{32.0, 1165.3}, {304.3, 316.7}}, identifier: 'household.duplicates.outcome.a4444444-4444-4444-8444-444444444443', label: 'Resultado de esta solicitud, Recibido, pendiente de revisión'
+                            Other, 0x1159ee300, {{0.0, 47.0}, {390.0, 797.0}}
+                              Other, 0x1159ee440, {{0.0, 47.0}, {390.0, 110.0}}
+                            Other, 0x1159ee580, {{0.0, 47.0}, {390.0, 797.0}}
+                              Other, 0x1159ee6c0, {{0.0, 47.0}, {390.0, 110.0}}
+                            Other, 0x1159ee800, {{357.0, 117.0}, {30.0, 679.7}}, label: 'Barra de desplazamiento vertical, 9 páginas', value: 61%
+                              Other, 0x1159ee940, {{384.0, 473.3}, {3.0, 94.0}}
+                            Other, 0x1159eea80, {{357.0, 117.0}, {30.0, 679.7}}, label: 'Barra de desplazamiento vertical, 9 páginas', value: 61%
+                              Other, 0x1159eebc0, {{384.0, 473.3}, {3.0, 94.0}}
+                  Toolbar, 0x1159eed00, {{0.0, 47.0}, {390.0, 797.0}}, identifier: 'Toolbar', label: 'Barra de herramientas'
+                    Other, 0x1159eee40, {{0.0, 47.0}, {390.0, 797.0}}
+Path to element:
+ →Application, 0x115818a00, pid: 8069, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x1159eef80, pid: 8069, label: 'Room in the Cart'
+  }
+)

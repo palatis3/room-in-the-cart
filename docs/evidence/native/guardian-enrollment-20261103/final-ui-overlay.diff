@@ -1,0 +1,252 @@
+--- before/ios/Features/Household/GuardianEnrollmentViews.swift
++++ after/ios/Features/Household/GuardianEnrollmentViews.swift
+@@ -96,6 +96,7 @@
+                                 Text(String(enrollment.enrollmentId.suffix(8))).font(.caption.monospaced())
+                             }
+                         }.buttonStyle(.borderless)
++                            .accessibilityIdentifier("guardian.enrollment." + enrollment.enrollmentId)
+                     }
+                 }
+             }
+--- before/ios/Features/Household/GuardianChildView.swift
++++ after/ios/Features/Household/GuardianChildView.swift
+@@ -60,6 +60,7 @@
+             if model.hasPending {
+                 Section {
+                     Button(GuardianCopy.text("Remove setup secrets from this device"), role: .destructive) { forget = true }
++                        .accessibilityIdentifier("guardian.childForget")
+                 }
+             }
+         }.disabled(model.busy || !model.live)
+--- before/ios/UITestSupport/GuardianEnrollmentUIFixture.swift
++++ after/ios/UITestSupport/GuardianEnrollmentUIFixture.swift
+@@ -148,11 +148,11 @@
+             GuardianEnrollmentView(model:model) {
+                 Text("Fictional guardian fixture · no real emails or accounts")
+                 Text(String(verificationCount)).accessibilityIdentifier("guardian.fixture.verificationRequests")
+-            }
+-            .toolbar {
+-                ToolbarItemGroup(placement:.bottomBar) {
++                if model.selected?.state == .verificationPending {
+                     Button("Fixture: verified adulthood") { Task { try? await fixture.completeProvider(); await model.load() } }
+                         .accessibilityIdentifier("guardian.fixture.providerVerified")
++                }
++                if model.selected?.state == .consented {
+                     Button("Fixture: child claimed") { Task { try? await fixture.childClaims(); await model.load() } }
+                         .accessibilityIdentifier("guardian.fixture.childClaimed")
+                 }
+--- before/ios/UITestSupport/GuardianRootTransitionUIFixture.swift
++++ after/ios/UITestSupport/GuardianRootTransitionUIFixture.swift
+@@ -145,20 +145,21 @@
+     var body: some View {
+         // Fixture state never forwards coordinator.objectWillChange. Production
+         // RootView's subscribed GuardianBoundaryRoot owns every root transition.
+-        RootView()
+-            .environment(\.pickupLedger,state.ledger)
+-            .environmentObject(state.app).environmentObject(state.ledger).environmentObject(state.pickup)
+-            .environmentObject(state.household).environmentObject(state.access).environmentObject(state.surfaces)
+-            .environmentObject(state.membership).environmentObject(state.navigation)
+-            .environmentObject(state.coordinator).environment(\.guardianChildCoordinator,state.coordinator)
+-            .overlay(alignment:.bottom) {
+-                VStack {
+-                    if state.ready { Text("Fixture ready").accessibilityIdentifier("guardian.fixture.rootReady") }
+-                    Button("Fixture: check preservation") { Task { await state.verifyPreservation() } }
+-                        .accessibilityIdentifier("guardian.fixture.checkPreservation")
+-                    Text(state.preservation).accessibilityIdentifier("guardian.fixture.preservation")
+-                }.font(.caption).padding(4).background(.regularMaterial)
+-            }
++        VStack(spacing:0) {
++            RootView()
++                .environment(\.pickupLedger,state.ledger)
++                .environmentObject(state.app).environmentObject(state.ledger).environmentObject(state.pickup)
++                .environmentObject(state.household).environmentObject(state.access).environmentObject(state.surfaces)
++                .environmentObject(state.membership).environmentObject(state.navigation)
++                .environmentObject(state.coordinator).environment(\.guardianChildCoordinator,state.coordinator)
++                .frame(maxWidth:.infinity,maxHeight:.infinity)
++            VStack {
++                if state.ready { Text("Fixture ready").accessibilityIdentifier("guardian.fixture.rootReady") }
++                Button("Fixture: check preservation") { Task { await state.verifyPreservation() } }
++                    .accessibilityIdentifier("guardian.fixture.checkPreservation")
++                Text(state.preservation).accessibilityIdentifier("guardian.fixture.preservation")
++            }.font(.caption).padding(4).frame(maxWidth:.infinity).background(.regularMaterial)
++        }
+             .task { await state.start() }
+             .onChange(of:phase) { _, value in state.phaseChanged(value) }
+     }
+--- before/ios/UITests/GuardianEnrollmentUITests.swift
++++ after/ios/UITests/GuardianEnrollmentUITests.swift
+@@ -4,7 +4,10 @@
+ @MainActor final class GuardianEnrollmentUITests: XCTestCase {
+     private let app = XCUIApplication(bundleIdentifier:"dev.roominthecart.app.debug")
+     override func setUpWithError() throws { continueAfterFailure = false }
+-    override func tearDownWithError() throws { app.terminate() }
++    override func tearDownWithError() throws {
++        if (testRun?.failureCount ?? 0) > 0 { capture("Guardian failure " + name) }
++        app.terminate()
++    }
+     private func launch(_ scenario: String? = nil, spanish: Bool = false, rootSynthetic: Bool = false) {
+         app.launchEnvironment["OS_ACTIVITY_MODE"] = "disable"
+         app.launchArguments = ["--ui-testing","--guardian-enrollment-fixture","-AppleLanguages",spanish ? "(es)" : "(en)","-AppleLocale",spanish ? "es_US" : "en_US"]
+@@ -17,17 +20,82 @@
+             XCTAssertTrue(app.buttons["Unlock private workspace"].waitForExistence(timeout:15))
+             XCTAssertTrue(element("guardian.fixture.rootReady").waitForExistence(timeout:15))
+         } else {
+-            XCTAssertTrue(element(scenario == "--guardian-fixture-child" ? "guardian.childClaim" : "guardian.refresh").waitForExistence(timeout:15))
+-        }
+-    }
+-    private func element(_ id: String) -> XCUIElement { app.descendants(matching:.any).matching(identifier:id).firstMatch }
+-    private func reveal(_ value: XCUIElement) {
+-        for attempt in 0..<36 {
+-            if value.exists && value.isHittable && value.frame.midY > app.navigationBars.firstMatch.frame.maxY && value.frame.midY < app.frame.maxY - 80 { return }
+-            if value.exists && value.frame.midY < app.frame.midY { app.swipeDown() }
+-            else if attempt < 22 { app.swipeUp() } else { app.swipeDown() }
+-        }
+-        XCTAssertTrue(value.exists && value.isHittable,value.debugDescription)
++            XCTAssertTrue(app.collectionViews.firstMatch.waitForExistence(timeout:15))
++            if scenario == "--guardian-fixture-child" { reveal(element("guardian.childClaim")) }
++        }
++    }
++    private func element(_ id: String) -> XCUIElement {
++        let button = app.buttons.matching(identifier:id).firstMatch
++        if button.exists { return button }
++        return app.descendants(matching:.any).matching(identifier:id).firstMatch
++    }
++    private func viewport() -> CGRect {
++        let container = app.collectionViews.firstMatch
++        let bounds = container.exists ? container.frame.intersection(app.frame) : app.frame
++        let nav = app.navigationBars.firstMatch, keyboard = app.keyboards.firstMatch
++        var top = bounds.minY, bottom = bounds.maxY
++        if nav.exists, nav.frame.intersects(bounds) { top = max(top,nav.frame.maxY) }
++        if keyboard.exists { bottom = min(bottom,keyboard.frame.minY) }
++        for toolbar in app.toolbars.allElementsBoundByIndex where toolbar.exists && toolbar.frame.minY > top {
++            bottom = min(bottom,toolbar.frame.minY)
++        }
++        let evidence = app.staticTexts.matching(identifier:"guardian.fixture.rootReady").firstMatch
++        if evidence.exists { bottom = min(bottom,evidence.frame.minY) }
++        return CGRect(x:bounds.minX+8,y:top+4,width:max(1,bounds.width-16),height:max(1,bottom-top-8))
++    }
++    private func isInBar(_ value: XCUIElement) -> Bool {
++        guard !value.identifier.isEmpty else { return false }
++        return app.navigationBars.descendants(matching:.any).matching(identifier:value.identifier).firstMatch.exists ||
++            app.toolbars.descendants(matching:.any).matching(identifier:value.identifier).firstMatch.exists
++    }
++    private func visible(_ value: XCUIElement, hitTarget: Bool) -> Bool {
++        guard value.exists, !value.frame.isEmpty else { return false }
++        if isInBar(value) { return value.isHittable && app.frame.contains(CGPoint(x:value.frame.midX,y:value.frame.midY)) }
++        let area = viewport(), frame = value.frame
++        if hitTarget {
++            return value.isHittable && frame.minY >= area.minY && frame.maxY <= area.maxY && area.contains(CGPoint(x:frame.midX,y:frame.midY))
++        }
++        let intersection = area.intersection(frame)
++        if frame.height > area.height {
++            return !intersection.isNull && intersection.height >= area.height*0.80 && frame.minY <= area.minY+area.height*0.15
++        }
++        return !intersection.isNull && intersection.height >= min(44,frame.height)
++    }
++    private func scrollContent(upward: Bool) {
++        let container = app.collectionViews.firstMatch
++        guard container.exists else { XCTFail("No Form scroll container"); return }
++        let area = viewport(), bounds = container.frame
++        let start = container.coordinate(withNormalizedOffset:.zero).withOffset(CGVector(dx:area.midX-bounds.minX,dy:(upward ? area.maxY-area.height*0.20 : area.minY+area.height*0.20)-bounds.minY))
++        let end = container.coordinate(withNormalizedOffset:.zero).withOffset(CGVector(dx:area.midX-bounds.minX,dy:(upward ? area.minY+area.height*0.20 : area.maxY-area.height*0.20)-bounds.minY))
++        start.press(forDuration:0.05,thenDragTo:end)
++    }
++    private func alignTextBeginning(_ value: XCUIElement) {
++        // An oversized accessibility label can intersect most of the viewport
++        // while its first lines remain above the navigation bar. Capture the
++        // actual beginning as well as the continuation of the warning.
++        for _ in 0..<8 {
++            let area=viewport(), delta=area.minY+12-value.frame.minY
++            if abs(delta) <= 12 { break }
++            let container=app.collectionViews.firstMatch, bounds=container.frame
++            let distance=max(-area.height*0.40,min(area.height*0.40,delta))
++            let start=container.coordinate(withNormalizedOffset:.zero).withOffset(CGVector(dx:area.midX-bounds.minX,dy:area.midY-bounds.minY))
++            let end=start.withOffset(CGVector(dx:0,dy:distance))
++            start.press(forDuration:0.05,thenDragTo:end,withVelocity:.slow,thenHoldForDuration:0.3)
++        }
++        XCTAssertGreaterThanOrEqual(value.frame.minY,viewport().minY-4)
++        XCTAssertLessThanOrEqual(value.frame.minY,viewport().minY+40)
++    }
++    private func reveal(_ value: XCUIElement, hitTarget: Bool = true) {
++        for attempt in 0..<32 {
++            if visible(value,hitTarget:hitTarget) { return }
++            let area = viewport()
++            let upward: Bool
++            if value.exists, !value.frame.isEmpty { upward = value.frame.midY > area.midY }
++            else { upward = attempt < 22 }
++            scrollContent(upward:upward)
++        }
++        capture("Could not reveal " + value.identifier)
++        XCTAssertTrue(visible(value,hitTarget:hitTarget),value.debugDescription)
+     }
+     private func tap(_ id: String) { let value=element(id); reveal(value); value.tap() }
+     private func toggle(_ id: String) {
+@@ -35,8 +103,9 @@
+         if value.value as? String != "1" { value.coordinate(withNormalizedOffset:CGVector(dx:0.92,dy:0.5)).tap() }
+     }
+     private func type(_ id: String,_ value:String) { let field=element(id); reveal(field); field.tap(); field.typeText(value); if app.keyboards.buttons["Return"].exists { app.keyboards.buttons["Return"].tap() } }
++    private func selectSetup() { tap("guardian.enrollment.10000000-0000-4000-8000-000000000001") }
+     private func state(_ expected:String) {
+-        let result=element("guardian.state")
++        let result=element("guardian.state"); reveal(result,hitTarget:false)
+         XCTAssertEqual(XCTWaiter.wait(for:[XCTNSPredicateExpectation(predicate:NSPredicate(format:"label == %@",expected),object:result)],timeout:10),.completed)
+     }
+     private func capture(_ name: String) {
+@@ -110,17 +179,23 @@
+     }
+     func testSpanishLargestTextUnavailableGateRemainsReadableAndClosed() {
+         launch("--guardian-fixture-unavailable",spanish:true)
+-        let unavailable=element("guardian.unavailable"); reveal(unavailable)
++        let unavailable=app.staticTexts.matching(identifier:"guardian.unavailable").firstMatch
++        reveal(unavailable,hitTarget:false)
++        alignTextBeginning(unavailable)
+         XCTAssertTrue(unavailable.label.contains("no está disponible"))
+         XCTAssertFalse(element("guardian.create").exists); XCTAssertFalse(element("guardian.verify").exists)
+-        capture("Guardian unavailable Spanish largest text")
++        capture("Guardian unavailable Spanish largest text beginning")
++        scrollContent(upward:true)
++        capture("Guardian unavailable Spanish largest text continuation")
+     }
+     func testUncertainAttemptCanRefreshButCannotSendAnotherVerification() {
+         launch("--guardian-fixture-uncertain")
++        selectSetup()
+         state("Verification result is not confirmed")
+         XCTAssertFalse(element("guardian.verify").exists)
+         tap("guardian.refresh")
+         XCTAssertFalse(element("guardian.verify").exists)
++        reveal(element("guardian.fixture.verificationRequests"),hitTarget:false)
+         XCTAssertEqual(element("guardian.fixture.verificationRequests").label,"0")
+     }
+     func testNoticeDeclarationVerificationPermissionPairingAndDialogCancellation() {
+@@ -154,7 +229,7 @@
+         type("guardian.childToken","fixture-invitation"); tap("guardian.childClaim")
+         XCTAssertTrue(element("guardian.childPairingCode").waitForExistence(timeout:10))
+         let code=element("guardian.childPairingCode").label
+-        let forget=app.buttons["Remove setup secrets from this device"]; reveal(forget); forget.tap()
++        tap("guardian.childForget")
+         XCTAssertTrue(element("guardian.childForgetCancel").waitForExistence(timeout:5)); element("guardian.childForgetCancel").tap()
+         XCTAssertEqual(element("guardian.childPairingCode").label,code)
+         XCUIDevice.shared.press(.home); app.activate()
+@@ -164,16 +239,17 @@
+     }
+     func testCancelSetupDialogHasExplicitCancelAndForegroundRestoresStatus() {
+         launch("--guardian-fixture-awaiting")
++        selectSetup()
+         let cancel=app.buttons["Cancel this setup"]; reveal(cancel); cancel.tap()
+         XCTAssertTrue(element("guardian.cancelSetupCancel").waitForExistence(timeout:5)); element("guardian.cancelSetupCancel").tap()
+         state("Adulthood verification needed")
+         XCUIDevice.shared.press(.home); app.activate()
+-        XCTAssertTrue(element("guardian.refresh").waitForExistence(timeout:10))
++        XCTAssertTrue(app.collectionViews.firstMatch.waitForExistence(timeout:10))
+         tap("guardian.refresh")
+-        let row=app.buttons.containing(.staticText,identifier:"Child setup").firstMatch
+-        if row.exists { reveal(row); row.tap() }
+-        // Explicit refresh and selecting current server setup restores usable controls.
+-        XCTAssertTrue(element("guardian.verify").waitForExistence(timeout:10))
++        selectSetup()
++        state("Adulthood verification needed")
++        reveal(element("guardian.verify"))
++        XCTAssertTrue(element("guardian.verify").exists)
+     }
+ }
+ #endif

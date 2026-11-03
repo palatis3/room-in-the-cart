@@ -1,0 +1,86 @@
+[
+  {
+    "test": "HouseholdDevicesUITests/testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess()",
+    "file": "attachments/E98CB1FB-3FA4-4DC1-A763-19824EA76BE2.txt",
+    "caption": "S21-device-completed accessibility_0_1F9E3ACA-540C-40FE-88B3-CE90C0360F59.txt",
+    "sha256": "aa7198e6c1e5c8e3485b103f4bed22ef173dbe0540e15584cedc582cfd20f4eb"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess()",
+    "file": "attachments/A2229F19-644A-43AF-8DF5-B5BDEB052991.png",
+    "caption": "S21-device-completed_0_492289D5-10C3-4AE0-B8C9-55FEA8C52D69.png",
+    "sha256": "5410ce662ff29d67af8cd37c45d1c59dda932d02316633f8464bc64dae2eda3e"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess()",
+    "file": "attachments/29C95CE0-FA2B-4455-9777-7E4675B540EE.txt",
+    "caption": "Precise device revocation accessibility_0_4C2FDE33-37E4-43D5-8524-331A4F84F135.txt",
+    "sha256": "2b16aeb9174b702f12758b9dab6e1ee866ce07c2bdd6064c4b42af889a52e3c2"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess()",
+    "file": "attachments/71EDB429-0E00-436D-9780-0919B62934FF.png",
+    "caption": "Precise device revocation_0_5F4ACD9F-AC7A-469A-AF60-475FFD49CCE7.png",
+    "sha256": "b21099942b43ef29fb10ff84d902e5a1bfcd017e0bdb5d7630b8dc323e9baca4"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess()",
+    "file": "attachments/79ACFA0D-D61F-4E83-9EE5-E6C85E7AF457.txt",
+    "caption": "S21-reveal-0-household.devices.active.30000000-0000-4000-8000-000000000006 accessibility_0_4B3523B0-BDC9-4BB1-9EA7-5C6AFED7CE67.txt",
+    "sha256": "938c164a10ae71c95f766af3440afc29fcc0eed29a3672859aba710dd05cb3d3"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess()",
+    "file": "attachments/FC7AD8AD-C62F-4B2B-8080-EA971273DEF5.txt",
+    "caption": "S21-reveal-0-household.devices.revoked.30000000-0000-4000-8000-000000000005 accessibility_0_5EF4D4C3-DC73-448B-9FB3-1F875783D218.txt",
+    "sha256": "8b27aced083a42b388bcdeb390e54d6ab90fe54dd4cd38a01528f0f8fc36d755"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess()",
+    "file": "attachments/A756D81A-D327-4F25-BEC6-E6C3E0B9C09D.txt",
+    "caption": "Device page accessibility_0_91D6D082-AC40-4BAA-B6C2-4B3E43B4D65C.txt",
+    "sha256": "ebb40d876f6cd83871286c7ac95214b8655be0390cb2ff1639fa0e8a0cae2579"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess()",
+    "file": "attachments/B0746D23-C11A-4A91-B07A-8AD54611ED41.png",
+    "caption": "Device page_0_BCE59AB5-9255-475F-9B05-02A774646425.png",
+    "sha256": "71fdc5dc41df6a3fbe6614ec3658716f1b79588892ffe31f67021a30898f9c5f"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess()",
+    "file": "attachments/2DBF4566-667B-449C-9823-853EBA98EA47.txt",
+    "caption": "S21-reveal-0-household.devices.active.30000000-0000-4000-8000-000000000006 accessibility_0_939F0B93-D424-448D-8111-978B0DC09B9A.txt",
+    "sha256": "5ed10d270fec7799bfbd5820d2c3192b3b8fdab8d428f2fe67b35900c20b0e31"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess()",
+    "file": "attachments/5C627E67-0DD8-43D3-9940-C46080E42F6B.txt",
+    "caption": "Device revoke review accessibility_0_6F56C8CD-1D81-4D54-BCA7-2DFFF640786E.txt",
+    "sha256": "e1af2f2b8be5637e0a3e89f12cd567924153e835439372177d284bb48a760641"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess()",
+    "file": "attachments/9EDDEE3B-610C-414E-A8E9-C7B96C636DFF.png",
+    "caption": "Device revoke review_0_29AF59DC-5FF3-480E-90E6-9D3053FD92ED.png",
+    "sha256": "a26197f0c3336184d9488af0b9cd1a5430bd0b61b0cb950d0a20618e366f76a5"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess()",
+    "file": "attachments/869E8B9B-6889-4187-874D-24DD592C9356.txt",
+    "caption": "S21-reveal-0-household.devices.revoke.30000000-0000-4000-8000-000000000005 accessibility_0_87AFC940-758C-4DE0-8E36-86FA75BF1DC6.txt",
+    "sha256": "aa0ae47e8a370e95d3e2aa2f6f9dd52075c296ac112d03081db2f8ef51d89e31"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess()",
+    "file": "attachments/3F746E97-F73C-40D4-8BA7-352766B38DB1.txt",
+    "caption": "S21-English-launched accessibility_0_890DF277-B031-46FB-823E-9F3585A706F0.txt",
+    "sha256": "b086da968a8a0e34569d4c5d1768ca3b940c153e3488a3cfb621fb1dc5f17b5e"
+  },
+  {
+    "test": "HouseholdDevicesUITests/testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess()",
+    "file": "attachments/DD2212A7-8A59-49DA-A61C-FE46AEB0A065.png",
+    "caption": "S21-English-launched_0_E0E85F3C-9514-45D0-A099-65EEE79BD80E.png",
+    "sha256": "53645b23ef7313a14db1d31bc9e9e0f58a6e2f16a1a1a055ae58cd66d9b21e5c"
+  }
+]

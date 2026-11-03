@@ -1,0 +1,17 @@
+{
+  "recordedAtUTC": "2026-11-03T23:02:22.623902+00:00",
+  "status": "Passed",
+  "passed": 1,
+  "failed": 0,
+  "skipped": 0,
+  "source": "/Users/palatis/Room in the Cart/.build/IntegratedFreeBatchSource-20261103T225702Z",
+  "test": "FreeJourneyUITests/testCorrectFreezerBatchAndReadReservationsAfterRestart",
+  "variant": "ordinary DEBUG only; no fixture compilation flags",
+  "result": "/Users/palatis/Room in the Cart/.build/IntegratedFreeBatch-20261103.xcresult",
+  "logSHA256": "27d9c7d4b24b1d9b3a6e9b75f4bdec645c920c6becd997b48e01bc1b41d8645e",
+  "screenshotSHA256": "9077851df97d80d8f376ddd6c91504dac69f430d62a938b20e609d76a6e5b2f6",
+  "visualReview": "Root inspected corrected-reservations-after-restart.png. Actual batch1unit, Dinner1unit, unreserved0 visible; correction fields remain editable after restart. Required mealshortfall3 checked by test.",
+  "scope": "Actual ordinary production route creates urgent need, confirms separate batch, previews effect, explicitly acknowledges meal effects, saves correctedbatch and restarts. Prior old Dinner-picker selector failure remains in ordinary mixedresult, not relabeled.",
+  "runtimeDiagnostic": "Result retains one Invalid frame dimension (negative or non-finite) warning without source location; visible finalscreen/readback correct, investigation separate.",
+  "releaseClaim": false
+}

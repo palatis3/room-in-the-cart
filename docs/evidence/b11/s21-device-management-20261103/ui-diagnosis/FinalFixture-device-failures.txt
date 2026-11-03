@@ -1,0 +1,92 @@
+Test Suite 'HouseholdDevicesUITests' started at 2026-11-03 18:02:21.145.
+Test Case '-[RoomInTheCartUITests.HouseholdDevicesUITests testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess]' started.
+    t =     0.01s Start Test at 2026-11-03 18:02:21.155
+    t =     0.19s Set Up
+    t =     0.19s Open dev.roominthecart.app.debug
+    t =     0.20s     Launch dev.roominthecart.app.debug
+2026-11-03 18:02:21.496 xcodebuild[105:9448144] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-03 18:02:21.496 xcodebuild[105:9448144] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-03 18:02:21.524 xcodebuild[105:9448144] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+objc[1724]: Class UIAccessibilityLoaderWebShared is implemented in both /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.cRwd7q/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x102b84398) and /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.cRwd7q/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x1061d0310). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     2.92s         Setting up automation session
+    t =     6.44s         Wait for dev.roominthecart.app.debug to idle
+    t =     8.22s Waiting 15.0s for "household.devices.fixtureSummary" Any to exist
+    t =     9.29s     Checking `Expect predicate `existsNoRetry == 1` for object "household.devices.fixtureSummary" Any`
+    t =     9.29s         Checking existence of `"household.devices.fixtureSummary" Any`
+    t =     9.45s Get all elements bound by index for: Descendants matching type CollectionView
+    t =     9.53s Get all elements bound by index for: Descendants matching type Table
+    t =     9.59s Get all elements bound by index for: Descendants matching type ScrollView
+    t =     9.62s Checking existence of `CollectionView (Element at index 0)`
+    t =     9.64s Find the CollectionView (Element at index 0)
+    t =     9.74s Find the Target Application 'dev.roominthecart.app.debug'
+    t =     9.88s Added attachment named 'S21-no-active-scroll-container'
+    t =     9.88s Requesting snapshot of accessibility hierarchy for app with pid 1784
+    t =    10.20s Requesting snapshot of accessibility hierarchy for app with pid 1784
+    t =    10.25s Added attachment named 'S21-no-active-scroll-container accessibility'
+    t =    10.25s Find the "household.devices.refresh" Any
+    t =    10.45s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    10.58s Added attachment named 'S21-device-issue-0'
+    t =    10.58s Requesting snapshot of accessibility hierarchy for app with pid 1784
+    t =    10.91s Requesting snapshot of accessibility hierarchy for app with pid 1784
+    t =    10.95s Added attachment named 'S21-device-issue-0 accessibility'
+/Users/palatis/Room in the Cart/.build/FinalNativeSource-20261103T230030Z/ios/UITests/HouseholdDevicesUITests.swift:40: error: -[RoomInTheCartUITests.HouseholdDevicesUITests testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess] : failed - No active Form collection while revealing household.devices.refresh
+    t =    11.40s Tear Down
+    t =    11.40s     Find the Target Application 'dev.roominthecart.app.debug'
+    t =    11.53s     Added attachment named 'S21-device-failure-before-termination'
+    t =    11.53s     Requesting snapshot of accessibility hierarchy for app with pid 1784
+    t =    11.76s     Requesting snapshot of accessibility hierarchy for app with pid 1784
+    t =    11.80s     Added attachment named 'S21-device-failure-before-termination accessibility'
+    t =    11.80s     Terminate dev.roominthecart.app.debug:1784
+2026-11-03 18:02:32.966 xcodebuild[105:9448144] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-03 18:02:32.966 xcodebuild[105:9448144] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-03 18:02:32.967 xcodebuild[105:9448144] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+Test Case '-[RoomInTheCartUITests.HouseholdDevicesUITests testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess]' failed (12.960 seconds).
+Test Case '-[RoomInTheCartUITests.HouseholdDevicesUITests testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke]' started.
+    t =     0.00s Start Test at 2026-11-03 18:02:34.115
+    t =     0.02s Set Up
+    t =     0.02s Open dev.roominthecart.app.debug
+    t =     0.03s     Launch dev.roominthecart.app.debug
+2026-11-03 18:02:34.142 xcodebuild[105:9448144] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-03 18:02:34.142 xcodebuild[105:9448144] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-03 18:02:34.165 xcodebuild[105:9448144] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+    t =     0.26s         Setting up automation session
+    t =     3.73s         Wait for dev.roominthecart.app.debug to idle
+    t =     5.40s Waiting 15.0s for "household.devices.fixtureSummary" Any to exist
+    t =     6.46s     Checking `Expect predicate `existsNoRetry == 1` for object "household.devices.fixtureSummary" Any`
+    t =     6.46s         Checking existence of `"household.devices.fixtureSummary" Any`
+    t =     6.54s Get all elements bound by index for: Descendants matching type CollectionView
+    t =     6.59s Get all elements bound by index for: Descendants matching type Table
+    t =     6.60s Get all elements bound by index for: Descendants matching type ScrollView
+    t =     6.62s Checking existence of `CollectionView (Element at index 0)`
+    t =     6.63s Find the CollectionView (Element at index 0)
+    t =     6.71s Find the Target Application 'dev.roominthecart.app.debug'
+    t =     6.84s Added attachment named 'S21-no-active-scroll-container'
+    t =     6.84s Requesting snapshot of accessibility hierarchy for app with pid 1839
+    t =     6.97s Requesting snapshot of accessibility hierarchy for app with pid 1839
+    t =     6.99s Added attachment named 'S21-no-active-scroll-container accessibility'
+    t =     7.00s Find the "household.devices.refresh" Any
+    t =     8.08s     Find the "household.devices.refresh" Any (retry 1)
+    t =     9.17s     Find the "household.devices.refresh" Any (retry 2)
+    t =     9.32s     Collecting debug information to assist test failure triage
+    t =     9.33s         Requesting snapshot of accessibility hierarchy for app with pid 1839
+    t =     9.35s     Requesting snapshot of accessibility hierarchy for app with pid 1839
+    t =     9.39s     Requesting snapshot of accessibility hierarchy for app with pid 1839
+    t =     9.41s     Find the Target Application 'dev.roominthecart.app.debug'
+    t =     9.54s Added attachment named 'S21-device-issue-103'
+    t =     9.54s     Requesting snapshot of accessibility hierarchy for app with pid 1839
+    t =     9.65s     Requesting snapshot of accessibility hierarchy for app with pid 1839
+    t =     9.68s Added attachment named 'S21-device-issue-103 accessibility'
+/Users/palatis/Room in the Cart/.build/FinalNativeSource-20261103T230030Z/ios/UITests/HouseholdDevicesUITests.swift:40: error: -[RoomInTheCartUITests.HouseholdDevicesUITests testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke] : Failed to get matching snapshot: No matches found for first query match sequence: `Descendants matching type Any` -> `Elements matching predicate '"household.devices.refresh" IN identifiers'`, given input App element pid: 1839
+    t =     9.69s Tear Down
+    t =     9.69s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =     9.81s     Added attachment named 'S21-device-failure-before-termination'
+    t =     9.81s         Requesting snapshot of accessibility hierarchy for app with pid 1839
+    t =     9.92s         Requesting snapshot of accessibility hierarchy for app with pid 1839
+    t =     9.95s     Added attachment named 'S21-device-failure-before-termination accessibility'
+    t =     9.95s         Terminate dev.roominthecart.app.debug:1839
+2026-11-03 18:02:44.076 xcodebuild[105:9448144] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-03 18:02:44.077 xcodebuild[105:9448144] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-03 18:02:44.077 xcodebuild[105:9448144] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+Test Case '-[RoomInTheCartUITests.HouseholdDevicesUITests testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke]' failed (11.037 seconds).
+Test Suite 'HouseholdDevicesUITests' failed at 2026-11-03 18:02:45.152.
+	 Executed 2 tests, with 2 failures (0 unexpected) in 23.997 (24.007) seconds

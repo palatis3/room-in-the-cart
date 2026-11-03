@@ -1,0 +1,34 @@
+Attributes: Application, 0x105a45af0, pid: 93639, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x105a45af0, pid: 93639, label: 'Room in the Cart'
+    Window (Main), 0x105a464b0, {{0.0, 0.0}, {375.0, 667.0}}
+      Other, 0x105a49270, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x105a48e50, {{0.0, 0.0}, {375.0, 667.0}}
+          Other, 0x105b36410, {{0.0, 0.0}, {375.0, 667.0}}
+            Other, 0x105b39270, {{0.0, 0.0}, {375.0, 667.0}}
+              Other, 0x105b39690, {{0.0, 0.0}, {375.0, 667.0}}
+                NavigationBar, 0x105b3a970, {{0.0, 20.0}, {375.0, 44.0}}, identifier: 'Controles del tutor'
+                  StaticText, 0x105b3aa90, {{98.0, 28.0}, {179.0, 25.5}}, label: 'Controles del tutor'
+                Other, 0x105b3abb0, {{0.0, 0.0}, {375.0, 667.0}}
+                  Other, 0x105b3acd0, {{0.0, 0.0}, {375.0, 667.0}}
+                    Other, 0x105b3adf0, {{0.0, 0.0}, {375.0, 667.0}}
+                      Other, 0x105b3af10, {{0.0, 0.0}, {375.0, 667.0}}
+                        CollectionView, 0x105c21780, {{0.0, 0.0}, {375.0, 667.0}}
+                          Other, 0x105c39220, {{-16.0, -726.0}, {407.0, 2727.0}}
+                          Cell, 0x105c3c300, {{16.0, -65.0}, {343.0, 712.0}}
+                            Other, 0x105c3c420, {{16.0, -65.0}, {343.0, 712.0}}
+                              Other, 0x105c3c540, {{16.0, -65.0}, {343.0, 712.0}}
+                            Other, 0x105c3c660, {{16.0, -65.0}, {343.0, 712.0}}
+                              Other, 0x105c3c780, {{16.0, -65.0}, {343.0, 712.0}}
+                                Other, 0x105c3c8a0, {{16.0, -65.0}, {343.0, 712.0}}
+                                  Image, 0x105c3c9c0, {{43.5, -48.0}, {55.0, 67.0}}, identifier: 'guardian.unavailable', label: 'lock.shield'
+                                  StaticText, 0x105a49690, {{16.0, -65.0}, {343.0, 712.0}}, identifier: 'guardian.unavailable', label: 'La configuración para menores no está disponible hasta que se aprueben el servicio de verificación y los avisos actuales.'
+                          Other, 0x105a48a30, {{342.0, 64.0}, {30.0, 603.0}}, label: 'Barra de desplazamiento vertical, 5 páginas', value: 100%
+                            Other, 0x105d40a10, {{369.0, 527.0}, {3.0, 137.0}}
+Path to element:
+ →Application, 0x105a45af0, pid: 93639, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x10343e3f0, pid: 93639, label: 'Room in the Cart'
+  }

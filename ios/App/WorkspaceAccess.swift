@@ -51,9 +51,11 @@ import LocalAuthentication
 struct WorkspaceUnlockView: View {
     @ObservedObject var access: WorkspaceAccess
     @ObservedObject var household: HouseholdModel
+    var childExitNotice: String? = nil
     var body: some View {
         NavigationStack {
-            VStack(alignment: .leading, spacing: 20) {
+            ScrollView {
+              VStack(alignment: .leading, spacing: 20) {
                 Image(systemName: "lock.shield").font(.largeTitle).accessibilityHidden(true)
                 Text(tr("Private workspace")).font(.largeTitle.bold())
                 Text(tr("Unlock to return to your saved groceries, meals and costs."))
@@ -62,8 +64,13 @@ struct WorkspaceUnlockView: View {
                 NavigationLink(tr("Household requests")) { HouseholdSettingsView(model: household) }
                     .frame(minHeight: 44)
                 if let error = access.error { Text(error).foregroundStyle(Color("error")) }
-                Spacer()
-            }.padding(20).workingSurface()
+                if let childExitNotice {
+                    Text(childExitNotice).font(.footnote).foregroundStyle(Theme.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("guardian.childExitNotice")
+                }
+              }.frame(maxWidth: .infinity, alignment: .leading).padding(20)
+            }.workingSurface()
         }
     }
 }

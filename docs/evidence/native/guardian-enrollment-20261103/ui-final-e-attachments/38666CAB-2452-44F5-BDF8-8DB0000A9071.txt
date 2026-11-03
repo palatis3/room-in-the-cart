@@ -1,0 +1,28 @@
+Attributes: Application, 0x100811b10, pid: 94769, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x100811b10, pid: 94769, label: 'Room in the Cart'
+    Window (Main), 0x100814360, {{0.0, 0.0}, {375.0, 667.0}}
+      Other, 0x10082b290, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x10081f390, {{0.0, 0.0}, {375.0, 667.0}}
+          Other, 0x100829a90, {{0.0, 0.0}, {375.0, 667.0}}
+            Other, 0x10081d7a0, {{0.0, 0.0}, {375.0, 667.0}}
+              Other, 0x100826a70, {{0.0, 0.0}, {375.0, 611.5}}
+                Other, 0x10081adb0, {{0.0, 0.0}, {375.0, 611.5}}
+                  Other, 0x1008213a0, {{0.0, 0.0}, {375.0, 611.5}}
+                    Other, 0x10082aef0, {{0.0, 0.0}, {375.0, 611.5}}
+                      Other, 0x100809550, {{0.0, 0.0}, {375.0, 611.5}}
+                        Image, 0x10080fc60, {{26.0, 42.5}, {28.0, 34.0}}, label: 'lock.shield'
+                        StaticText, 0x100819530, {{20.0, 99.0}, {292.0, 41.0}}, label: 'Private workspace'
+                        StaticText, 0x10080d130, {{20.0, 160.0}, {314.5, 42.5}}, label: 'Unlock to return to your saved groceries, meals and costs.'
+                        Button, 0x100815f10, {{20.0, 222.5}, {335.0, 52.0}}, label: 'Unlock private workspace'
+                        Button, 0x10080bbe0, {{20.0, 306.5}, {153.0, 20.5}}, label: 'Household requests'
+              StaticText, 0x10080ea00, {{150.5, 615.5}, {74.0, 14.5}}, identifier: 'guardian.fixture.rootReady', label: 'Fixture ready'
+              Button, 0x100812940, {{110.5, 632.0}, {154.0, 14.5}}, identifier: 'guardian.fixture.checkPreservation', label: 'Fixture: check preservation'
+              StaticText, 0x100822260, {{152.5, 648.5}, {70.0, 14.5}}, identifier: 'guardian.fixture.preservation', label: 'not checked'
+Path to element:
+ →Application, 0x100811b10, pid: 94769, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x1041382d0, pid: 94769, label: 'Room in the Cart'
+  }

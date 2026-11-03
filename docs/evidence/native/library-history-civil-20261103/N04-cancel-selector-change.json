@@ -1,0 +1,12 @@
+{
+  "live": {
+    "beforeSHA256": "77cce6f55a1dd9e6df85d4fa4317ccdf78bc6d14685ce51ce945dc71f654a02c",
+    "afterSHA256": "7917211d04a06adaa6ea852d16a947789a314bac8679785264c134ce636aa436"
+  },
+  "frozen": {
+    "beforeSHA256": "77cce6f55a1dd9e6df85d4fa4317ccdf78bc6d14685ce51ce945dc71f654a02c",
+    "afterSHA256": "7917211d04a06adaa6ea852d16a947789a314bac8679785264c134ce636aa436"
+  },
+  "reason": "Exact stable observed Cancel identifier with existing firstMatch helper resolves nested parent/child AX ambiguity; retains actual Cancel and all preservation assertions",
+  "changedAt": "2026-11-03T21:20:49.702811+00:00"
+}

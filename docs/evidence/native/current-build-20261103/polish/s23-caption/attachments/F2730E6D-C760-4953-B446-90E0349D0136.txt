@@ -1,0 +1,49 @@
+Optional(Attributes: Application, 0x104a63480, pid: 8069, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x104a63480, pid: 8069, label: 'Room in the Cart'
+    Window (Main), 0x104a63700, {{0.0, 0.0}, {390.0, 844.0}}
+      Other, 0x104a63840, {{0.0, 0.0}, {390.0, 844.0}}
+        Other, 0x104a63980, {{0.0, 0.0}, {390.0, 844.0}}
+          Other, 0x104a63c00, {{0.0, 0.0}, {390.0, 844.0}}
+            Other, 0x104a63ac0, {{0.0, 0.0}, {390.0, 844.0}}
+              StaticText, 0x104a612c0, {{99.7, 47.0}, {190.7, 13.3}}, identifier: 'fixture.s23.commands', label: 'Fixture applied decisions: 0'
+              StaticText, 0x104a61400, {{120.2, 60.3}, {149.7, 13.3}}, identifier: 'fixture.s23.lines', label: 'Fixture saved lines: 1'
+              StaticText, 0x10784c780, {{106.5, 75.7}, {177.0, 13.3}}, identifier: 'fixture.s23.loaded', label: 'Fixture loaded requests: 2'
+              Other, 0x10784db80, {{0.0, 95.7}, {390.0, 748.3}}
+                NavigationBar, 0x10784cc80, {{0.0, 105.7}, {390.0, 127.0}}, identifier: 'S23 request comparison'
+                  StaticText, 0x10784cdc0, {{16.0, 159.7}, {347.3, 71.7}}, label: 'S23 request comparison'
+                Other, 0x10784d180, {{0.0, 95.7}, {390.0, 748.3}}
+                  Other, 0x10784cf00, {{0.0, 95.7}, {390.0, 748.3}}
+                    Other, 0x10784d040, {{0.0, 95.7}, {390.0, 748.3}}
+                      Other, 0x10784d2c0, {{0.0, 95.7}, {390.0, 748.3}}
+                        CollectionView, 0x10784d400, {{0.0, 95.7}, {390.0, 748.3}}
+                          Other, 0x10784d900, {{-16.0, -1264.0}, {422.0, 2197.0}}
+                          Cell, 0x10784da40, {{16.0, 232.7}, {358.0, 155.3}}
+                            Other, 0x10784de00, {{16.0, 232.7}, {358.0, 155.3}}
+                              Other, 0x10784dcc0, {{16.0, 232.7}, {358.0, 155.3}}
+                            Other, 0x10784df40, {{16.0, 232.7}, {358.0, 155.3}}
+                              Other, 0x10784e080, {{16.0, 232.7}, {358.0, 155.3}}
+                                Other, 0x10784e440, {{16.0, 232.7}, {358.0, 155.3}}
+                                  Button, 0x10784e1c0, {{16.0, 232.7}, {358.0, 155.3}}, label: 'Actualizar solicitudes'
+                          Cell, 0x10784e580, {{16.0, 388.0}, {358.0, 527.3}}
+                            Other, 0x10784e300, {{16.0, 388.0}, {358.0, 527.3}}
+                              Other, 0x10784e940, {{16.0, 388.0}, {358.0, 527.3}}
+                            Other, 0x10784e800, {{16.0, 388.0}, {358.0, 527.3}}
+                              Other, 0x10784ea80, {{16.0, 388.0}, {358.0, 527.3}}
+                                Other, 0x10784ebc0, {{16.0, 388.0}, {358.0, 527.3}}
+                                  StaticText, 0x10784ee40, {{16.0, 388.0}, {358.0, 527.3}}, label: 'Cada solicitud conserva su propio resultado. Vincular un artículo no agrega otro paquete.'
+                          Other, 0x10784ed00, {{32.0, 387.0}, {326.0, 1.0}}
+                          Other, 0x10784ef80, {{357.0, 159.7}, {30.0, 637.0}}, label: 'Barra de desplazamiento vertical, 2 páginas', value: 0%
+                            Other, 0x10784f200, {{384.0, 800.0}, {3.0, 7.0}}
+                          Other, 0x10784f340, {{357.0, 159.7}, {30.0, 637.0}}, label: 'Barra de desplazamiento vertical, 2 páginas', value: 0%
+                            Other, 0x10784f0c0, {{384.0, 800.0}, {3.0, 7.0}}
+                Toolbar, 0x10784f480, {{0.0, 95.7}, {390.0, 748.3}}, identifier: 'Toolbar', label: 'Barra de herramientas'
+                  Other, 0x10784f700, {{0.0, 95.7}, {390.0, 748.3}}
+Path to element:
+ →Application, 0x104a63480, pid: 8069, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x10784f840, pid: 8069, label: 'Room in the Cart'
+  }
+)

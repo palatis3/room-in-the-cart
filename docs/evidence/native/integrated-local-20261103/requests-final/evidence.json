@@ -1,0 +1,46 @@
+{
+  "recordedAtUTC": "2026-11-03T23:17:09.162324+00:00",
+  "sourceSHA256": "4b91cfce67372ca1b047985ce3531cd806d627c0eb4a60311ed0bead9beb7af0",
+  "sourceInputs": 470,
+  "resultBundle": "/Users/palatis/Room in the Cart/.build/FinalFixture-20261103.xcresult",
+  "wholeRun": {
+    "passed": 4,
+    "failed": 2,
+    "skipped": 0
+  },
+  "acceptedScope": {
+    "S24cerealWithTwoNamedLunches": {
+      "passed": true,
+      "durationSeconds": 71.241
+    },
+    "S24unknownMeals": {
+      "passed": true,
+      "durationSeconds": 23.061
+    },
+    "S23SpanishLargestText": {
+      "passed": true,
+      "durationSeconds": 338.314
+    },
+    "S23separateAuthorOutcomes": {
+      "passed": true,
+      "durationSeconds": 114.8
+    }
+  },
+  "otherFailures": "Two S21startup harness failures from requiring an interactive Form container; later separate minOS run and diagnosis remain independent.",
+  "logSHA256": "a18df9cadb97d905d1d6a88d56bba1a3bd2e4d64524b0027eb829085c0de1f2d",
+  "visualReview": {
+    "reviewer": "root",
+    "inspected": [
+      "attachments/28713C68-84EB-4BEA-ACA0-4B184838464F.png",
+      "attachments/9231471D-A711-4B69-B2AA-99E6C927D966.png"
+    ],
+    "S24": "Both current/proposedwholecheckout, overcap and two named dated protected lunches visibletogether.",
+    "S23": "Originalamount/use fullyreadableataccessibility5; amount/usecaptionellipsis observed; narrowwrappingfixandnewSpanishproofpending. FulloriginalvalueandAXcaptionretained."
+  },
+  "scopeLimits": [
+    "ActualSwiftUI withfictionalboundedservices, nothostedhousehold/provider proof.",
+    "DefaultEnglishS24, EnglishandlargestUSSpanishS23. Humanlanguage/VoiceOver remains.",
+    "PassingS24attachments are3screenshots, no standalonepassingAXdump; exactleafassertions areinexecutedtest/log.",
+    "Whole6caseinvocationfailed; do notlabelitallgreen. Laterwrapfixrequiresseparateacceptance."
+  ]
+}

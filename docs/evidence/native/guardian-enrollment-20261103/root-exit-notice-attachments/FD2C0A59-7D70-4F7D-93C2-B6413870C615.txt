@@ -1,0 +1,85 @@
+Attributes: Application, 0x104a1dd40, pid: 97120, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x104a1dd40, pid: 97120, label: 'Room in the Cart'
+    Window (Main), 0x104a18b60, {{0.0, 0.0}, {375.0, 667.0}}
+      Other, 0x104a1bae0, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x104a18eb0, {{0.0, 0.0}, {375.0, 667.0}}
+          Other, 0x104a10170, {{0.0, 0.0}, {375.0, 667.0}}
+            Other, 0x104a1e0d0, {{0.0, 0.0}, {375.0, 667.0}}
+              Other, 0x104a1fd40, {{0.0, 0.0}, {375.0, 611.5}}
+                NavigationBar, 0x104a21540, {{0.0, 20.0}, {375.0, 96.0}}, identifier: 'Child sign-in'
+                  Other, 0x104a21f90, {{215.5, 28.0}, {143.5, 28.5}}, identifier: 'guardian.leaveChildSpace', label: 'Leave child space'
+                    Other, 0x104a144d0, {{215.5, 28.0}, {143.5, 28.5}}
+                      Button, 0x104a1e460, {{215.5, 28.0}, {143.5, 28.5}}, identifier: 'guardian.leaveChildSpace', label: 'Leave child space'
+                  StaticText, 0x104a292b0, {{16.0, 67.5}, {201.0, 41.0}}, label: 'Child sign-in'
+                Other, 0x104a198e0, {{0.0, 0.0}, {375.0, 611.5}}
+                  Other, 0x104a1cfa0, {{0.0, 0.0}, {375.0, 611.5}}
+                    Other, 0x104a1ef60, {{0.0, 0.0}, {375.0, 611.5}}
+                      Other, 0x104a21c20, {{0.0, 0.0}, {375.0, 611.5}}
+                        CollectionView, 0x104a23490, {{0.0, 0.0}, {375.0, 611.5}}
+                          Other, 0x104a22670, {{-16.0, -1107.0}, {407.0, 1349.0}}
+                          Cell, 0x104a22a10, {{16.0, 116.0}, {343.0, 108.5}}
+                            Other, 0x104a230f0, {{16.0, 116.0}, {343.0, 108.5}}
+                              Other, 0x104a22d70, {{16.0, 116.0}, {343.0, 108.5}}
+                            Other, 0x104a218c0, {{16.0, 116.0}, {343.0, 108.5}}
+                              Other, 0x104a22300, {{16.0, 116.0}, {343.0, 108.5}}
+                                Other, 0x104a23bb0, {{16.0, 116.0}, {343.0, 108.5}}
+                                  StaticText, 0x104a249c0, {{16.0, 116.0}, {343.0, 108.5}}, label: 'Use only the email your guardian approved for this invitation. This child sign-in is separate from any adult account on the device.'
+                          Other, 0x104a26980, {{-16.0, 242.0}, {407.0, 124.0}}
+                          Cell, 0x104a23830, {{16.0, 259.5}, {343.0, 89.0}}
+                            Other, 0x104a23f50, {{16.0, 259.5}, {343.0, 89.0}}
+                              Other, 0x104a242c0, {{16.0, 259.5}, {343.0, 89.0}}
+                            Other, 0x104a24640, {{16.0, 259.5}, {343.0, 89.0}}
+                              Other, 0x104a250d0, {{16.0, 259.5}, {343.0, 89.0}}
+                                Other, 0x104a25460, {{16.0, 259.5}, {343.0, 89.0}}
+                                  Image, 0x104a26610, {{37.0, 272.5}, {18.0, 21.5}}, identifier: 'guardian.nativeAuthUnavailable', label: 'lock.shield'
+                                  StaticText, 0x104a299a0, {{16.0, 259.5}, {343.0, 89.0}}, identifier: 'guardian.nativeAuthUnavailable', label: 'Child sign-in is unavailable until the covered email service and current notices are approved.'
+                          Other, 0x104a27390, {{-16.0, 366.0}, {407.0, 188.5}}
+                          Cell, 0x104a24d30, {{16.0, 366.0}, {343.0, 39.0}}
+                            Other, 0x104a257c0, {{16.0, 366.0}, {343.0, 39.0}}
+                            Other, 0x104a25b10, {{16.0, 366.0}, {343.0, 39.0}}
+                              Other, 0x104a28120, {{16.0, 366.0}, {343.0, 39.0}}
+                                Other, 0x104a27020, {{16.0, 366.0}, {343.0, 39.0}}
+                                  StaticText, 0x104a2ae80, {{16.0, 366.0}, {343.0, 39.0}}, label: 'Guardian-approved invitation'
+                          Cell, 0x104a28480, {{16.0, 405.0}, {343.0, 44.0}}
+                            Other, 0x104a28f20, {{16.0, 405.0}, {343.0, 44.0}}
+                              Other, 0x104a28b80, {{16.0, 405.0}, {343.0, 44.0}}
+                            Other, 0x104a29d40, {{16.0, 405.0}, {343.0, 44.0}}
+                              Other, 0x104a29630, {{16.0, 405.0}, {343.0, 44.0}}
+                                Other, 0x104a26cd0, {{16.0, 405.0}, {343.0, 44.0}}
+                                  SecureTextField, 0x104a27700, {{16.0, 405.0}, {343.0, 44.0}}, identifier: 'guardian.nativeAuthToken', placeholderValue: 'Child invitation code'
+                          Cell, 0x104a2a0c0, {{16.0, 449.0}, {343.0, 44.0}}
+                            Other, 0x104a287e0, {{16.0, 449.0}, {343.0, 44.0}}
+                              Other, 0x104a2bc70, {{16.0, 449.0}, {343.0, 44.0}}
+                            Other, 0x104a2b8f0, {{16.0, 449.0}, {343.0, 44.0}}
+                              Other, 0x104a2ab00, {{16.0, 449.0}, {343.0, 44.0}}
+                                Other, 0x104a27dc0, {{16.0, 449.0}, {343.0, 44.0}}
+                                  TextField, 0x104a2b210, {{16.0, 449.0}, {343.0, 44.0}}, identifier: 'guardian.nativeAuthEmail', placeholderValue: 'Exact email approved by your guardian'
+                          Other, 0x104a1f9d0, {{32.0, 448.5}, {327.0, 0.5}}
+                          Cell, 0x104a2b580, {{16.0, 493.0}, {343.0, 44.0}}
+                            Other, 0x104a2a790, {{16.0, 493.0}, {343.0, 44.0}}
+                              Other, 0x104a2c010, {{16.0, 493.0}, {343.0, 44.0}}
+                            Other, 0x104a27a50, {{16.0, 493.0}, {343.0, 44.0}}
+                              Other, 0x104a1aa00, {{16.0, 493.0}, {343.0, 44.0}}
+                                Other, 0x104a2a420, {{16.0, 493.0}, {343.0, 44.0}}
+                                  Button, 0x104a14bc0, {{16.0, 493.0}, {343.0, 44.0}}, identifier: 'guardian.nativeAuthStart', label: 'Request the child sign-in code', Disabled
+                          Other, 0x104a1c200, {{32.0, 492.5}, {327.0, 0.5}}
+                          Other, 0x104a1f650, {{-16.0, 554.5}, {407.0, 1347.0}}
+                          Cell, 0x104a2ca50, {{16.0, 572.0}, {343.0, 86.5}}
+                            Other, 0x104a1ad50, {{16.0, 572.0}, {343.0, 86.5}}
+                              Other, 0x104a163a0, {{16.0, 572.0}, {343.0, 86.5}}
+                            Other, 0x104a13a80, {{16.0, 572.0}, {343.0, 86.5}}
+                              Other, 0x104a1be60, {{16.0, 572.0}, {343.0, 86.5}}
+                                Other, 0x104a1f2f0, {{16.0, 572.0}, {343.0, 86.5}}
+                                  StaticText, 0x104a19590, {{16.0, 572.0}, {343.0, 86.5}}, identifier: 'guardian.nativeAuthResult', label: 'Child sign-in is unavailable until the covered email service and current notices are approved.'
+                          Other, 0x104a1cc30, {{342.0, 116.0}, {30.0, 495.5}}, label: 'Vertical scroll bar, 2 pages', value: 0%
+              StaticText, 0x104a152b0, {{150.5, 615.5}, {74.0, 14.5}}, identifier: 'guardian.fixture.rootReady', label: 'Fixture ready'
+              Button, 0x104a1c570, {{110.5, 632.0}, {154.0, 14.5}}, identifier: 'guardian.fixture.checkPreservation', label: 'Fixture: check preservation'
+              StaticText, 0x104a14830, {{152.5, 648.5}, {70.0, 14.5}}, identifier: 'guardian.fixture.preservation', label: 'not checked'
+Path to element:
+ →Application, 0x104a1dd40, pid: 97120, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x105552560, pid: 97120, label: 'Room in the Cart'
+  }

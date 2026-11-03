@@ -1,0 +1,19 @@
+{
+  "status": "FIXED_CANDIDATE_E_PREPARED",
+  "preparedAt": "2026-11-03T22:37:18.739602+00:00",
+  "baseline": "ui-final-d-run.json",
+  "files": [
+    {
+      "path": "ios/UITests/GuardianEnrollmentUITests.swift",
+      "sha256": "b4bee2dc783629167deb19bed1f4bb6fd683d35c9c3deb144d48516dfc50d6bc"
+    }
+  ],
+  "changes": [
+    "Oversized-warning alignment drag uses slow velocity and holds before release; measured default500pt/sec coasted112ptrequesteddrag into293ptscroll then oscillated; all first-line frame/availability assertions unchanged"
+  ],
+  "assertionsPreserved": true,
+  "productionChanges": false,
+  "targetedCases": [
+    "testSpanishLargestTextUnavailableGateRemainsReadableAndClosed"
+  ]
+}

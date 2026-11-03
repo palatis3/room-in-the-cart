@@ -1,0 +1,28 @@
+{
+  "scope": "Personal visual review of separate passed two-case root exit-notice supplement",
+  "result": "GuardianRootExitNotice-20261103T224849Z.xcresult",
+  "reviewed": [
+    {
+      "file": "root-exit-notice-attachments/2F3C0CFC-1DC1-4EAA-ACCD-A8C871F11826.png",
+      "sha256": "18ca6eb9487eb7cd6b86483ec775b7b28725eecfc2312545cc4ddb12ddec0b92"
+    },
+    {
+      "file": "root-exit-notice-attachments/E377C3CA-D152-4333-966D-E388BCADD007.png",
+      "sha256": "291ef1dffddc92b548194b2923e079a097c78172e0349958e11cadc46af64b29"
+    },
+    {
+      "file": "root-exit-notice-attachments/76F3C02C-52F5-445D-A511-8B2904743ADF.png",
+      "sha256": "de14cba21e7132ca28b2c5f037d1186caa020026bd2c970661ef2bf83156b0a6"
+    }
+  ],
+  "findings": [
+    "Empty and synthetic child exit screens both show the entire generic remote-revocation warning below locked adult access.",
+    "Warning is readable without clipping at this tested text size; no parent or child identity, private record or inbox contents are displayed.",
+    "Synthetic preservation screenshot retains warning plus fixture confirmation: adult records and inbox preserved, child vaults empty, adult locked."
+  ],
+  "limits": [
+    "Largest-text exit notice was not part of these two tests.",
+    "Provider revocation itself remains unconfirmed; no provider completion claim.",
+    "Actual persistence invariants are established by test assertions, not screenshots alone."
+  ]
+}

@@ -60,7 +60,9 @@ struct HouseholdDevicesView: View {
             if phase == .active { Task { await model.resume() } } else { selected = nil; model.suspend() }
         }
         .onChange(of: model.message) { _, value in if value != nil { resultFocused = true } }
-        .confirmationDialog(DeviceManagementCopy.text("Revoke this enrolled device?"), isPresented: Binding(get: { selected != nil }, set: { if !$0 { selected = nil } }), titleVisibility: .visible) {
+        // A confirmationDialog can become a popover and omit its cancel action.
+        // This destructive review always needs a visible, explicit way to cancel.
+        .alert(DeviceManagementCopy.text("Revoke this enrolled device?"), isPresented: Binding(get: { selected != nil }, set: { if !$0 { selected = nil } })) {
             if let device = selected {
                 Button(DeviceManagementCopy.text("Revoke this device"), role: .destructive) { selected = nil; Task { await model.revoke(device) } }
                     .accessibilityIdentifier("household.devices.confirm")

@@ -1,0 +1,53 @@
+Attributes: Application, 0x104132670, pid: 94720, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x104132670, pid: 94720, label: 'Room in the Cart'
+    Window (Main), 0x104133d30, {{0.0, 0.0}, {375.0, 667.0}}
+      Other, 0x104135450, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x104135570, {{0.0, 0.0}, {375.0, 667.0}}
+          Other, 0x1041332b0, {{0.0, 0.0}, {375.0, 667.0}}
+            Other, 0x104134150, {{0.0, 0.0}, {375.0, 667.0}}
+              Other, 0x104135690, {{0.0, 0.0}, {375.0, 611.5}}
+                NavigationBar, 0x1041357b0, {{0.0, 20.0}, {375.0, 44.0}}, identifier: '_TtGC7SwiftUI32NavigationStackHosting'
+                  Other, 0x1041358d0, {{215.5, 28.0}, {143.5, 28.5}}, identifier: 'guardian.leaveChildSpace', label: 'Leave child space'
+                    Other, 0x1041359f0, {{215.5, 28.0}, {143.5, 28.5}}
+                      Button, 0x104135b10, {{215.5, 28.0}, {143.5, 28.5}}, identifier: 'guardian.leaveChildSpace', label: 'Leave child space'
+                Other, 0x104135c30, {{0.0, 0.0}, {375.0, 611.5}}
+                  Other, 0x104135d50, {{0.0, 0.0}, {375.0, 611.5}}
+                    Other, 0x104135e70, {{0.0, 0.0}, {375.0, 611.5}}
+                      Other, 0x104135f90, {{0.0, 0.0}, {375.0, 611.5}}
+                        CollectionView, 0x1041360b0, {{0.0, 0.0}, {375.0, 611.5}}
+                          Other, 0x1041361d0, {{-16.0, -1159.0}, {407.0, 2697.5}}
+                          Cell, 0x1041362f0, {{16.0, 99.0}, {343.0, 44.0}}
+                            Other, 0x104136410, {{16.0, 99.0}, {343.0, 44.0}}
+                              Other, 0x104136530, {{16.0, 99.0}, {343.0, 44.0}}
+                            Other, 0x104136650, {{16.0, 99.0}, {343.0, 44.0}}
+                              Other, 0x104136770, {{16.0, 99.0}, {343.0, 44.0}}
+                                Other, 0x104136890, {{16.0, 99.0}, {343.0, 44.0}}
+                                  StaticText, 0x1041369b0, {{16.0, 99.0}, {343.0, 44.0}}, label: 'Child sign-in is not available yet'
+                          Cell, 0x104136ad0, {{16.0, 143.0}, {343.0, 108.5}}
+                            Other, 0x104136bf0, {{16.0, 143.0}, {343.0, 108.5}}
+                              Other, 0x104136d10, {{16.0, 143.0}, {343.0, 108.5}}
+                            Other, 0x104136e30, {{16.0, 143.0}, {343.0, 108.5}}
+                              Other, 0x104136f50, {{16.0, 143.0}, {343.0, 108.5}}
+                                Other, 0x104137070, {{16.0, 143.0}, {343.0, 108.5}}
+                                  StaticText, 0x104137190, {{16.0, 143.0}, {343.0, 108.5}}, identifier: 'guardian.childRootResult', label: 'Child access could not be reopened. Adult work remains locked. You can remove this child session from the device.'
+                          Other, 0x1041372b0, {{32.0, 142.5}, {327.0, 0.5}}
+                          Cell, 0x1041373d0, {{16.0, 251.5}, {343.0, 44.0}}
+                            Other, 0x1041374f0, {{16.0, 251.5}, {343.0, 44.0}}
+                              Other, 0x104137610, {{16.0, 251.5}, {343.0, 44.0}}
+                            Other, 0x104137730, {{16.0, 251.5}, {343.0, 44.0}}
+                              Other, 0x104137850, {{16.0, 251.5}, {343.0, 44.0}}
+                                Other, 0x104137970, {{16.0, 251.5}, {343.0, 44.0}}
+                                  Button, 0x104137a90, {{16.0, 251.5}, {343.0, 44.0}}, label: 'Check child access again'
+                          Other, 0x104137bb0, {{32.0, 251.0}, {327.0, 0.5}}
+                          Other, 0x104137cd0, {{342.0, 64.0}, {30.0, 547.5}}, label: 'Vertical scroll bar, 1 page', value: 0%
+              StaticText, 0x104137df0, {{150.5, 615.5}, {74.0, 14.5}}, identifier: 'guardian.fixture.rootReady', label: 'Fixture ready'
+              Button, 0x104137f10, {{110.5, 632.0}, {154.0, 14.5}}, identifier: 'guardian.fixture.checkPreservation', label: 'Fixture: check preservation'
+              StaticText, 0x104138030, {{152.5, 648.5}, {70.0, 14.5}}, identifier: 'guardian.fixture.preservation', label: 'not checked'
+Path to element:
+ →Application, 0x104132670, pid: 94720, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x104132550, pid: 94720, label: 'Room in the Cart'
+  }

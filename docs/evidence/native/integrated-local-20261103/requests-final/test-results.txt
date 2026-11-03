@@ -1,0 +1,19 @@
+/Users/palatis/Room in the Cart/.build/FinalNativeSource-20261103T230030Z/ios/UITests/HouseholdDevicesUITests.swift:40: error: -[RoomInTheCartUITests.HouseholdDevicesUITests testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess] : failed - No active Form collection while revealing household.devices.refresh
+Test Case '-[RoomInTheCartUITests.HouseholdDevicesUITests testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess]' failed (12.960 seconds).
+/Users/palatis/Room in the Cart/.build/FinalNativeSource-20261103T230030Z/ios/UITests/HouseholdDevicesUITests.swift:40: error: -[RoomInTheCartUITests.HouseholdDevicesUITests testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke] : Failed to get matching snapshot: No matches found for first query match sequence: `Descendants matching type Any` -> `Elements matching predicate '"household.devices.refresh" IN identifiers'`, given input App element pid: 1839
+Test Case '-[RoomInTheCartUITests.HouseholdDevicesUITests testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke]' failed (11.037 seconds).
+Test Suite 'HouseholdDevicesUITests' failed at 2026-11-03 18:02:45.152.
+	 Executed 2 tests, with 2 failures (0 unexpected) in 23.997 (24.007) seconds
+Test Case '-[RoomInTheCartUITests.HouseholdRequestPackUITests testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite]' passed (71.241 seconds).
+Test Case '-[RoomInTheCartUITests.HouseholdRequestPackUITests testUnavailableMealFactsRemainUnknownInRequestDecision]' passed (23.061 seconds).
+Test Suite 'HouseholdRequestPackUITests' passed at 2026-11-03 18:04:19.457.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 94.302 (94.304) seconds
+Test Case '-[RoomInTheCartUITests.RequestDuplicateComparisonUITests testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison]' passed (338.314 seconds).
+Test Case '-[RoomInTheCartUITests.RequestDuplicateComparisonUITests testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam]' passed (114.800 seconds).
+Test Suite 'RequestDuplicateComparisonUITests' passed at 2026-11-03 18:11:52.574.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 453.114 (453.116) seconds
+Test Suite 'RoomInTheCartUITests.xctest' failed at 2026-11-03 18:11:52.580.
+	 Executed 6 tests, with 2 failures (0 unexpected) in 571.413 (571.435) seconds
+Test Suite 'Selected tests' failed at 2026-11-03 18:11:52.580.
+	 Executed 6 tests, with 2 failures (0 unexpected) in 571.413 (571.436) seconds
+** TEST FAILED **

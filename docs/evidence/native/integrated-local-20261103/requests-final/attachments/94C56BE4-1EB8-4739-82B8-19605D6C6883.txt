@@ -1,0 +1,217 @@
+Optional(Attributes: Application, 0x11f8f83c0, pid: 4194, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x11f8f83c0, pid: 4194, label: 'Room in the Cart'
+    Window (Main), 0x11f8f8500, {{0.0, 0.0}, {390.0, 844.0}}
+      Other, 0x11f8f8640, {{0.0, 0.0}, {390.0, 844.0}}
+        Other, 0x11f8f8780, {{0.0, 0.0}, {390.0, 844.0}}
+          Other, 0x11f8f88c0, {{-390.0, -844.0}, {1170.0, 2532.0}}
+          Other, 0x11f8f8a00, {{0.0, 0.0}, {390.0, 844.0}}
+            Other, 0x11f8f8b40, {{0.0, 0.0}, {390.0, 844.0}}
+              StaticText, 0x11f8f8c80, {{99.7, 47.0}, {190.7, 13.3}}, identifier: 'fixture.s23.commands', label: 'Fixture applied decisions: 0'
+              StaticText, 0x11f8f8dc0, {{120.2, 60.3}, {149.7, 13.3}}, identifier: 'fixture.s23.lines', label: 'Fixture saved lines: 1'
+              StaticText, 0x11f8f8f00, {{106.5, 75.7}, {177.0, 13.3}}, identifier: 'fixture.s23.loaded', label: 'Fixture loaded requests: 4'
+              Other, 0x11f8f9040, {{0.0, 95.7}, {390.0, 748.3}}
+                NavigationBar, 0x11f8f9180, {{0.0, 105.7}, {390.0, 106.0}}, identifier: 'S23 request comparison'
+                  StaticText, 0x11f8f92c0, {{16.0, 163.3}, {344.7, 40.7}}, label: 'S23 request comparison'
+                Other, 0x11f8f9400, {{0.0, 95.7}, {390.0, 748.3}}
+                  Other, 0x11f8f9540, {{0.0, 95.7}, {390.0, 748.3}}
+                    Other, 0x11f8f9680, {{0.0, 95.7}, {390.0, 748.3}}
+                      Other, 0x11f8f97c0, {{0.0, 95.7}, {390.0, 748.3}}
+                        CollectionView, 0x11f8f9900, {{0.0, 95.7}, {390.0, 748.3}}
+                          Other, 0x11f8f9a40, {{-16.0, -1285.0}, {422.0, 1638.3}}
+                          Cell, 0x11f8f9b80, {{16.0, 211.7}, {358.0, 52.0}}
+                            Other, 0x11f8f9cc0, {{16.0, 211.7}, {358.0, 52.0}}
+                              Other, 0x11f8f9e00, {{16.0, 211.7}, {358.0, 52.0}}
+                            Other, 0x11f8f9f40, {{16.0, 211.7}, {358.0, 52.0}}
+                              Other, 0x11f8fa080, {{16.0, 211.7}, {358.0, 52.0}}
+                                Other, 0x11f8fa1c0, {{16.0, 211.7}, {358.0, 52.0}}
+                                  Button, 0x11f8fa300, {{16.0, 211.7}, {358.0, 52.0}}, label: 'Refresh requests'
+                          Cell, 0x11f8fa440, {{16.0, 263.7}, {358.0, 72.3}}
+                            Other, 0x11f8fa580, {{16.0, 263.7}, {358.0, 72.3}}
+                              Other, 0x11f8fa6c0, {{16.0, 263.7}, {358.0, 72.3}}
+                            Other, 0x11f8fa800, {{16.0, 263.7}, {358.0, 72.3}}
+                              Other, 0x11f8fa940, {{16.0, 263.7}, {358.0, 72.3}}
+                                Other, 0x11f8faa80, {{16.0, 263.7}, {358.0, 72.3}}
+                                  StaticText, 0x11f8fabc0, {{16.0, 263.7}, {358.0, 72.3}}, label: 'Each request keeps its own outcome. Linking a line does not add another pack.'
+                          Other, 0x11f8fad00, {{32.0, 262.7}, {326.0, 1.0}}
+                          Other, 0x11f8fae40, {{-16.0, 353.3}, {422.0, 2240.7}}
+                          Cell, 0x11f8faf80, {{16.0, 353.3}, {358.0, 40.3}}
+                            Other, 0x11f8fb0c0, {{16.0, 353.3}, {358.0, 40.3}}
+                            Other, 0x11f8fb200, {{16.0, 353.3}, {358.0, 40.3}}
+                              Other, 0x11f8fb340, {{16.0, 353.3}, {358.0, 40.3}}
+                                Other, 0x11f8fb480, {{16.0, 353.3}, {358.0, 40.3}}
+                                  StaticText, 0x11f8fb5c0, {{16.0, 353.3}, {358.0, 40.3}}, label: 'Requests for this shop'
+                          Cell, 0x11f8fb700, {{16.0, 394.0}, {358.0, 94.3}}
+                            Other, 0x11f8fb840, {{16.0, 394.0}, {358.0, 94.3}}
+                              Other, 0x11f8fb980, {{16.0, 394.0}, {358.0, 94.3}}
+                            Other, 0x11f8fbac0, {{16.0, 394.0}, {358.0, 94.3}}
+                              Other, 0x11f8fbc00, {{16.0, 394.0}, {358.0, 94.3}}
+                                Other, 0x11f8fbd40, {{16.0, 394.0}, {358.0, 94.3}}
+                                  StaticText, 0x11f8fbe80, {{16.0, 394.0}, {358.0, 94.3}}, identifier: 'household.duplicates.group.a4444444-4444-4444-8444-444444444441', label: 'Compare these requests, The names match. Check each person's amount and use before deciding.'
+                                    StaticText, 0x11f8e5180, {{32.3, 407.7}, {235.0, 23.0}}, label: 'Compare these requests'
+                                    Image, 0x11f8e52c0, {{32.3, 407.7}, {23.3, 23.0}}, identifier: 'square.on.square', label: 'Tabs'
+                                    StaticText, 0x11f8e4f00, {{32.0, 435.3}, {278.3, 38.0}}, label: 'The names match. Check each person's amount and use before deciding.'
+                          Cell, 0x11f8e5040, {{16.0, 488.3}, {358.0, 147.3}}
+                            Other, 0x11f8e4c80, {{16.0, 488.3}, {358.0, 147.3}}
+                              Other, 0x11f8e4dc0, {{16.0, 488.3}, {358.0, 147.3}}
+                            Other, 0x11f8e4b40, {{16.0, 488.3}, {358.0, 147.3}}
+                              Other, 0x11f8e4a00, {{16.0, 488.3}, {358.0, 147.3}}
+                                Other, 0x11f8e48c0, {{16.0, 488.3}, {358.0, 147.3}}
+                                  Button, 0x11f8e4780, {{16.0, 488.3}, {358.0, 147.3}}, identifier: 'household.request.a4444444-4444-4444-8444-444444444441', label: 'Cereal, Sam, 1 box for breakfasts, Received, waiting for review, Nov 3, 2026 at 10:01 AM'
+                                    StaticText, 0x11f8e4640, {{32.0, 503.3}, {51.3, 20.3}}, label: 'Cereal'
+                                    StaticText, 0x11f8e4500, {{32.0, 529.7}, {30.3, 18.0}}, label: 'Sam'
+                                    StaticText, 0x11f8e43c0, {{32.0, 553.7}, {149.0, 20.3}}, label: '1 box for breakfasts'
+                                    StaticText, 0x11f8e4280, {{32.0, 580.0}, {212.0, 20.3}}, label: 'Received, waiting for review'
+                                    StaticText, 0x11f8e4140, {{32.0, 606.3}, {137.3, 14.3}}, label: 'Nov 3, 2026 at 10:01 AM'
+                          Other, 0x11f8e4000, {{72.0, 487.3}, {286.0, 1.0}}
+                          Cell, 0x12165d680, {{16.0, 635.7}, {358.0, 147.3}}
+                            Other, 0x1203635c0, {{16.0, 635.7}, {358.0, 147.3}}
+                              Other, 0x120363340, {{16.0, 635.7}, {358.0, 147.3}}
+                            Other, 0x120363480, {{16.0, 635.7}, {358.0, 147.3}}
+                              Other, 0x1203630c0, {{16.0, 635.7}, {358.0, 147.3}}
+                                Other, 0x120363200, {{16.0, 635.7}, {358.0, 147.3}}
+                                  Button, 0x120362e40, {{16.0, 635.7}, {358.0, 147.3}}, identifier: 'household.request.a4444444-4444-4444-8444-444444444443', label: 'CEREAL, Lee, 2 boxes for the school snack drive, Received, waiting for review, Nov 3, 2026 at 10:01 AM'
+                                    StaticText, 0x120362f80, {{32.0, 650.7}, {64.3, 20.3}}, label: 'CEREAL'
+                                    StaticText, 0x120362d00, {{32.0, 677.0}, {24.7, 18.0}}, label: 'Lee'
+                                    StaticText, 0x120363700, {{32.0, 701.0}, {259.3, 20.3}}, label: '2 boxes for the school snack drive'
+                                    StaticText, 0x120363840, {{32.0, 727.3}, {212.0, 20.3}}, label: 'Received, waiting for review'
+                                    StaticText, 0x120363980, {{32.0, 753.7}, {137.3, 14.3}}, label: 'Nov 3, 2026 at 10:01 AM'
+                          Other, 0x120363ac0, {{32.0, 634.7}, {326.0, 1.0}}
+                          Cell, 0x120362bc0, {{16.0, 783.0}, {358.0, 147.3}}
+                            Other, 0x120362a80, {{16.0, 783.0}, {358.0, 147.3}}
+                              Other, 0x120363e80, {{16.0, 783.0}, {358.0, 147.3}}
+                            Other, 0x120363d40, {{16.0, 783.0}, {358.0, 147.3}}
+                              Other, 0x120363c00, {{16.0, 783.0}, {358.0, 147.3}}
+                                Other, 0x120362800, {{16.0, 783.0}, {358.0, 147.3}}
+                                  Button, 0x120362940, {{16.0, 783.0}, {358.0, 147.3}}, identifier: 'household.request.a4444444-4444-4444-8444-444444444444', label: 'Cereal, Pat, 1 box for the weekend, Handled, Nov 3, 2026 at 10:01 AM'
+                                    StaticText, 0x1202970c0, {{32.0, 798.0}, {51.3, 20.3}}, label: 'Cereal'
+                                    StaticText, 0x120296f80, {{32.0, 824.3}, {22.3, 18.0}}, label: 'Pat'
+                                    StaticText, 0x120296300, {{32.0, 848.3}, {166.3, 20.3}}, label: '1 box for the weekend'
+                                    StaticText, 0x120296e40, {{32.0, 874.7}, {64.0, 20.3}}, label: 'Handled'
+                                    StaticText, 0x120296d00, {{32.0, 901.0}, {137.3, 14.3}}, label: 'Nov 3, 2026 at 10:01 AM'
+                          Other, 0x120295f40, {{32.0, 782.0}, {326.0, 1.0}}
+                          Other, 0x120295e00, {{357.0, 159.7}, {30.0, 637.0}}, label: 'Vertical scroll bar, 2 pages', value: 0%
+                            Other, 0x120297840, {{384.0, 212.3}, {3.0, 581.3}}
+                          Other, 0x120297980, {{357.0, 159.7}, {30.0, 637.0}}, label: 'Vertical scroll bar, 2 pages', value: 0%
+                            Other, 0x1202975c0, {{384.0, 212.3}, {3.0, 581.3}}
+                Toolbar, 0x120297480, {{0.0, 95.7}, {390.0, 748.3}}, identifier: 'Toolbar', label: 'Toolbar'
+                  Other, 0x120297e80, {{0.0, 95.7}, {390.0, 748.3}}
+      Other, 0x120297700, {{0.0, 0.0}, {390.0, 844.0}}
+        Other, 0x120296580, {{-390.0, -844.0}, {1170.0, 2532.0}}
+        Other, 0x1202961c0, {{0.0, 47.0}, {390.0, 797.0}}
+          Other, 0x120296080, {{0.0, 47.0}, {390.0, 797.0}}
+            Other, 0x120296800, {{0.0, 47.0}, {390.0, 797.0}}
+              Other, 0x120297340, {{0.0, 47.0}, {390.0, 797.0}}
+                Other, 0x120296440, {{0.0, 47.0}, {390.0, 797.0}}
+                  NavigationBar, 0x120287480, {{0.0, 63.0}, {390.0, 54.0}}, identifier: 'Review request'
+                    Other, 0x120287340, {{20.0, 67.0}, {76.7, 36.0}}
+                      Other, 0x120287ac0, {{20.0, 67.0}, {76.7, 36.0}}
+                        Button, 0x120287d40, {{20.0, 67.0}, {76.7, 36.0}}, identifier: 'household.decision.cancel', label: 'Cancel'
+                    StaticText, 0x120287c00, {{134.0, 74.7}, {122.0, 20.7}}, label: 'Review request'
+                  Other, 0x120286a80, {{0.0, 47.0}, {390.0, 797.0}}
+                    Other, 0x1202875c0, {{0.0, 47.0}, {390.0, 797.0}}
+                      Other, 0x120287e80, {{0.0, 47.0}, {390.0, 797.0}}
+                        Other, 0x120287980, {{0.0, 47.0}, {390.0, 797.0}}
+                          CollectionView, 0x11f89b340, {{0.0, 47.0}, {390.0, 797.0}}
+                            Other, 0x11f89b200, {{-16.0, -329.7}, {422.0, 1163.7}}
+                            Cell, 0x11f8992c0, {{16.0, -195.3}, {358.0, 318.0}}
+                              Other, 0x11f89b480, {{16.0, -195.3}, {358.0, 318.0}}
+                                Other, 0x11f89bac0, {{16.0, -195.3}, {358.0, 318.0}}
+                              Other, 0x11f89a940, {{16.0, -195.3}, {358.0, 318.0}}
+                                Other, 0x120a89a40, {{16.0, -195.3}, {358.0, 318.0}}
+                                  Other, 0x1202cf480, {{16.0, -195.3}, {358.0, 318.0}}
+                                    Other, 0x1202cfc00, {{32.0, -176.2}, {326.0, 279.7}}
+                                      StaticText, 0x1202cf200, {{32.0, -176.2}, {169.0, 20.3}}, identifier: 'household.duplicates.selection.a4444444-4444-4444-8444-444444444441', label: 'Deciding this request'
+                                      StaticText, 0x1202ced00, {{32.0, -147.8}, {104.7, 20.3}}, label: 'Requested by'
+                                      StaticText, 0x1202cef80, {{32.0, -147.8}, {326.0, 20.3}}, identifier: 'household.duplicates.author.a4444444-4444-4444-8444-444444444441', label: 'Requested by, Sam'
+                                      StaticText, 0x1202cfd40, {{32.0, -119.5}, {90.3, 14.3}}, label: 'Original request'
+                                      StaticText, 0x1202cfe80, {{32.0, -101.2}, {49.0, 20.3}}, identifier: 'household.duplicates.original.a4444444-4444-4444-8444-444444444441', label: 'Cereal'
+                                      StaticText, 0x1202cf340, {{32.0, -72.8}, {154.7, 14.3}}, identifier: 'household.duplicates.amountLabel.a4444444-4444-4444-8444-444444444441', label: 'Amount and use, as written'
+                                      StaticText, 0x1202cee40, {{32.0, -54.5}, {149.0, 20.3}}, identifier: 'household.duplicates.amount.a4444444-4444-4444-8444-444444444441', label: '1 box for breakfasts'
+                                      StaticText, 0x1202cebc0, {{32.0, -26.2}, {86.3, 20.3}}, label: 'Destination'
+                                      StaticText, 0x1202cea80, {{32.0, -26.2}, {326.0, 20.3}}, label: 'Destination, This shop'
+                                      StaticText, 0x1202ce6c0, {{32.0, 2.2}, {126.0, 20.3}}, label: 'Request revision'
+                                      StaticText, 0x1202cf980, {{32.0, 2.2}, {326.0, 20.3}}, label: 'Request revision, 1'
+                                      StaticText, 0x1202cf840, {{32.0, 30.5}, {69.7, 20.3}}, label: 'Received'
+                                      StaticText, 0x1202cf700, {{32.0, 30.5}, {326.0, 20.3}}, label: 'Received, Nov 3, 2026 at 10:01 AM'
+                                      StaticText, 0x1202cf5c0, {{32.0, 58.8}, {212.0, 44.7}}, identifier: 'household.duplicates.outcome.a4444444-4444-4444-8444-444444444441', label: 'This request's outcome, Received, waiting for review'
+                                      StaticText, 0x1202cfac0, {{32.0, 58.8}, {179.0, 20.3}}, label: 'This request's outcome'
+                            Other, 0x1202cf0c0, {{0.0, 47.0}, {390.0, 797.0}}
+                              Other, 0x1202ce580, {{0.0, 47.0}, {390.0, 110.0}}
+                            Other, 0x1202ce440, {{0.0, 47.0}, {390.0, 797.0}}
+                              Other, 0x1202ce940, {{0.0, 47.0}, {390.0, 110.0}}
+                            Cell, 0x1202ce800, {{16.0, 123.0}, {358.0, 318.0}}
+                              Other, 0x1202fa800, {{16.0, 123.0}, {358.0, 318.0}}
+                                Other, 0x1202fa6c0, {{16.0, 123.0}, {358.0, 318.0}}
+                              Other, 0x12030c000, {{16.0, 123.0}, {358.0, 318.0}}
+                                Other, 0x12032b5c0, {{16.0, 123.0}, {358.0, 318.0}}
+                                  Other, 0x12032b700, {{16.0, 123.0}, {358.0, 318.0}}
+                                    Other, 0x12032b840, {{32.0, 142.2}, {326.0, 279.7}}
+                                      StaticText, 0x12032a6c0, {{32.0, 142.2}, {110.7, 20.3}}, identifier: 'household.duplicates.selection.a4444444-4444-4444-8444-444444444443', label: 'Other request'
+                                      StaticText, 0x12032b480, {{32.0, 170.5}, {326.0, 20.3}}, identifier: 'household.duplicates.author.a4444444-4444-4444-8444-444444444443', label: 'Requested by, Lee'
+                                      StaticText, 0x12032b340, {{32.0, 170.5}, {104.7, 20.3}}, label: 'Requested by'
+                                      StaticText, 0x12032ae40, {{32.0, 198.8}, {90.3, 14.3}}, label: 'Original request'
+                                      StaticText, 0x12032b200, {{32.0, 217.2}, {62.3, 20.3}}, identifier: 'household.duplicates.original.a4444444-4444-4444-8444-444444444443', label: 'CEREAL'
+                                      StaticText, 0x12032b980, {{32.0, 245.5}, {154.7, 14.3}}, identifier: 'household.duplicates.amountLabel.a4444444-4444-4444-8444-444444444443', label: 'Amount and use, as written'
+                                      StaticText, 0x12032a440, {{32.0, 263.8}, {259.3, 20.3}}, identifier: 'household.duplicates.amount.a4444444-4444-4444-8444-444444444443', label: '2 boxes for the school snack drive'
+                                      StaticText, 0x12032a300, {{32.0, 292.2}, {326.0, 20.3}}, label: 'Destination, This shop'
+                                      StaticText, 0x12032af80, {{32.0, 292.2}, {86.3, 20.3}}, label: 'Destination'
+                                      StaticText, 0x12032b0c0, {{32.0, 320.5}, {126.0, 20.3}}, label: 'Request revision'
+                                      StaticText, 0x12032ad00, {{32.0, 320.5}, {326.0, 20.3}}, label: 'Request revision, 1'
+                                      StaticText, 0x12032abc0, {{32.0, 348.8}, {69.7, 20.3}}, label: 'Received'
+                                      StaticText, 0x12032aa80, {{32.0, 348.8}, {326.0, 20.3}}, label: 'Received, Nov 3, 2026 at 10:01 AM'
+                                      StaticText, 0x12032a580, {{32.0, 377.2}, {212.0, 44.7}}, identifier: 'household.duplicates.outcome.a4444444-4444-4444-8444-444444444443', label: 'This request's outcome, Received, waiting for review'
+                                      StaticText, 0x1217370c0, {{32.0, 377.2}, {179.0, 20.3}}, label: 'This request's outcome'
+                            Other, 0x121737200, {{32.0, 122.0}, {326.0, 1.0}}
+                            Cell, 0x121737340, {{16.0, 441.0}, {358.0, 293.7}}
+                              Other, 0x121737480, {{16.0, 441.0}, {358.0, 293.7}}
+                                Other, 0x1217375c0, {{16.0, 441.0}, {358.0, 293.7}}
+                              Other, 0x121737700, {{16.0, 441.0}, {358.0, 293.7}}
+                                Other, 0x121737840, {{16.0, 441.0}, {358.0, 293.7}}
+                                  Other, 0x121737980, {{16.0, 441.0}, {358.0, 293.7}}
+                                    Other, 0x121737ac0, {{32.0, 460.2}, {326.0, 255.3}}
+                                      StaticText, 0x121737c00, {{32.0, 460.2}, {110.7, 20.3}}, identifier: 'household.duplicates.selection.a4444444-4444-4444-8444-444444444444', label: 'Other request'
+                                      StaticText, 0x121737d40, {{32.0, 488.5}, {326.0, 20.3}}, identifier: 'household.duplicates.author.a4444444-4444-4444-8444-444444444444', label: 'Requested by, Pat'
+                                      StaticText, 0x121737e80, {{32.0, 488.5}, {104.7, 20.3}}, label: 'Requested by'
+                                      StaticText, 0x1214cb840, {{32.0, 516.8}, {90.3, 14.3}}, label: 'Original request'
+                                      StaticText, 0x1214c8780, {{32.0, 535.2}, {49.0, 20.3}}, identifier: 'household.duplicates.original.a4444444-4444-4444-8444-444444444444', label: 'Cereal'
+                                      StaticText, 0x1214c88c0, {{32.0, 563.5}, {154.7, 14.3}}, identifier: 'household.duplicates.amountLabel.a4444444-4444-4444-8444-444444444444', label: 'Amount and use, as written'
+                                      StaticText, 0x1214c8a00, {{32.0, 581.8}, {166.3, 20.3}}, identifier: 'household.duplicates.amount.a4444444-4444-4444-8444-444444444444', label: '1 box for the weekend'
+                                      StaticText, 0x1214ca800, {{32.0, 610.2}, {86.3, 20.3}}, label: 'Destination'
+                                      StaticText, 0x1214ca940, {{32.0, 610.2}, {326.0, 20.3}}, label: 'Destination, This shop'
+                                      StaticText, 0x1214caa80, {{32.0, 638.5}, {326.0, 20.3}}, label: 'Request revision, 1'
+                                      StaticText, 0x1214ca580, {{32.0, 638.5}, {126.0, 20.3}}, label: 'Request revision'
+                                      StaticText, 0x1214c9900, {{32.0, 666.8}, {326.0, 20.3}}, label: 'Received, Nov 3, 2026 at 10:01 AM'
+                                      StaticText, 0x1214c9a40, {{32.0, 666.8}, {69.7, 20.3}}, label: 'Received'
+                                      StaticText, 0x1214c9b80, {{32.0, 695.2}, {179.0, 20.3}}, label: 'This request's outcome'
+                                      StaticText, 0x1214c9cc0, {{32.0, 695.2}, {326.0, 20.3}}, identifier: 'household.duplicates.outcome.a4444444-4444-4444-8444-444444444444', label: 'This request's outcome, Handled'
+                            Other, 0x1214c9e00, {{32.0, 440.0}, {326.0, 1.0}}
+                            Cell, 0x1214c9f40, {{16.0, 734.7}, {358.0, 81.7}}
+                              Other, 0x1214c8f00, {{16.0, 734.7}, {358.0, 81.7}}
+                                Other, 0x1214ca1c0, {{16.0, 734.7}, {358.0, 81.7}}
+                              Other, 0x1214ca300, {{16.0, 734.7}, {358.0, 81.7}}
+                                Other, 0x1214c9400, {{16.0, 734.7}, {358.0, 81.7}}
+                                  Other, 0x1214ca440, {{16.0, 734.7}, {358.0, 81.7}}
+                                    StaticText, 0x120260000, {{16.0, 734.7}, {358.0, 81.7}}, label: 'Comparing changes nothing. Quantities are not added together. Each requester keeps a separate outcome.'
+                            Other, 0x120260140, {{32.0, 733.7}, {326.0, 1.0}}
+                            Other, 0x120260280, {{-16.0, 833.7}, {422.0, 162.0}}
+                            Cell, 0x1202603c0, {{16.0, 833.7}, {358.0, 40.3}}
+                              Other, 0x120260500, {{16.0, 833.7}, {358.0, 40.3}}
+                              Other, 0x120260640, {{16.0, 833.7}, {358.0, 40.3}}
+                                Other, 0x120260780, {{16.0, 833.7}, {358.0, 40.3}}
+                                  Other, 0x1202608c0, {{16.0, 833.7}, {358.0, 40.3}}
+                                    StaticText, 0x120260a00, {{16.0, 833.7}, {358.0, 40.3}}, label: 'Choose an outcome'
+                            Other, 0x120260b40, {{357.0, 117.0}, {30.0, 679.7}}, label: 'Vertical scroll bar, 3 pages', value: 63%
+                              Other, 0x120260c80, {{384.0, 377.0}, {3.0, 268.0}}
+                            Other, 0x120260dc0, {{357.0, 117.0}, {30.0, 679.7}}, label: 'Vertical scroll bar, 3 pages', value: 63%
+                              Other, 0x120260f00, {{384.0, 377.0}, {3.0, 268.0}}
+                  Toolbar, 0x120261040, {{0.0, 47.0}, {390.0, 797.0}}, identifier: 'Toolbar', label: 'Toolbar'
+                    Other, 0x120261180, {{0.0, 47.0}, {390.0, 797.0}}
+Path to element:
+ →Application, 0x11f8f83c0, pid: 4194, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x1202612c0, pid: 4194, label: 'Room in the Cart'
+  }
+)

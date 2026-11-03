@@ -264,7 +264,7 @@ import XCTest
         fill("0", into: "Usable amount available now")
         enableSwitch("I checked this food’s identity and usable amount")
         tap(app.buttons["Save need and repair meal"])
-        choose("Reviewed matching food need", value: "Dinner")
+        choose("Reviewed matching food need", value: "Wraps")
         fill("Opened freezer wraps", into: "Actual food or freezer batch")
         fill("3", into: "Confirmed usable amount")
         enableSwitch("Use this batch first")

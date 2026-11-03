@@ -1,0 +1,49 @@
+{
+  "sourceFreeze": "/Users/palatis/Room in the Cart/.build/FinalNativeSource-20261103T230030Z",
+  "resultBundle": ".build/FinalFixture-20261103.xcresult",
+  "frozenSHA256": {
+    "ios/UITests/HouseholdDevicesUITests.swift": "01d7087f50cc3db0bec8b302b48458f1f2da03583b5180013da228a56c4fdd1e",
+    "ios/Features/Household/HouseholdDevicesView.swift": "00412aabfd4250311fb427ec24a2d31234df1a40efbcfb4e3fbfb9731f3c31d6",
+    "ios/UITestSupport/HouseholdDevicesUIFixture.swift": "38df85c16fb0811d3faa4ea76e411d0545c6a8c7844f51c3cd897d607a178274"
+  },
+  "candidateSHA256": {
+    "ios/UITests/HouseholdDevicesUITests.swift": "02d225a3d7251cef891d36f28d1c54168f6fb806008cd1ebe4071661daa5dd50",
+    "ios/Features/Household/HouseholdDevicesView.swift": "00412aabfd4250311fb427ec24a2d31234df1a40efbcfb4e3fbfb9731f3c31d6",
+    "ios/UITestSupport/HouseholdDevicesUIFixture.swift": "38df85c16fb0811d3faa4ea76e411d0545c6a8c7844f51c3cd897d607a178274"
+  },
+  "observedCause": [
+    "The CollectionView query returns an existing full-screen {0,0,390,844} Form. XCTest computes {-1,-1}, not hittable, for that container in English and Spanish. Rejecting this noninteractive container prevents every reveal before target checks.",
+    "English Refresh resolves in the captured diagnostic. The Spanish lazy Refresh does not exist initially, and reading value.identifier while composing the failure triggers a secondary unmatched-snapshot error."
+  ],
+  "fix": [
+    "Boundedly wait for the mounted Form and an actual first cell after the footer appears.",
+    "Select exposed Form content from valid on-screen geometry and real cells/static children, rejecting sheets and alerts, without requiring the noninteractive container itself to be tappable.",
+    "Use visible navigation-bar geometry for safe scroll bounds even if the navigation container is noninteractive.",
+    "Keep target rows fully on screen and hittable; require every tapped action to be hittable and enabled.",
+    "Pass literal requested IDs to all reveal diagnostics and captures; no lazy-target identifier or debugDescription read remains.",
+    "Retain exact native-alert review naming Alex and the target reference, explicit Cancel with zero writes, paging, one exact revoke, actual current/sibling rows and Spanish accessibility5."
+  ],
+  "checks": [
+    "Swift frontend parse passed",
+    "git diff --check passed"
+  ],
+  "validationLimits": [
+    "Finalized English and Spanish failure screenshots and all six S21 AX captures have now been inspected; this confirms the observed noninteractive-container and unmaterialized-target diagnostic causes.",
+    "No build, simulator interaction, provider action or Git/index operation was performed by this lane.",
+    "Runtime validation of this test-only candidate remains parent-owned, including optional SE/iOS17 acceptance."
+  ],
+  "finalizedCaptureInspection": {
+    "result": ".build/FinalFixture-20261103.xcresult",
+    "English": {
+      "screen": "FinalFixture-English-visible-Form-before-failure.png",
+      "AX": "FinalFixture-English-Form-full-AX.txt",
+      "observed": "Refresh and the actual Mia enrollment are already visibly present. The Form is populated, enabled-looking and unobscured; the test rejects only the noninteractive CollectionView hit point, before checking these rows."
+    },
+    "Spanish": {
+      "screen": "FinalFixture-Spanish-visible-Form-before-failure.png",
+      "AX": "FinalFixture-Spanish-Form-full-AX.txt",
+      "observed": "The accessibility5 introductory cells fill the viewport. The Form and fixture footer are present, with no modal, but Refresh is not materialized until this valid content is scrolled."
+    },
+    "scrollIndicators": "Only vertical bars in all six finalized S21 Form AX captures; historical popover horizontal bars are separately documented, not alleged as this startup cause."
+  }
+}

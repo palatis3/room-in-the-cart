@@ -1,0 +1,210 @@
+{
+  "status": "BUILD_READY_NATIVE_GUARDIAN_COMPLETE_SCOPED_ARTIFACT_PROOF",
+  "verifiedAt": "2026-11-03T22:53:05.872001+00:00",
+  "scope": "Native guardian E8 frozen proof plus reviewed parent UI-only exit-notice2case supplement; not a claim about concurrent current Release",
+  "eProof": {
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "run": "ui-final-e-acceptance-run.json",
+    "hashes": "final-inclusion.json",
+    "report": "FINAL-E-REPORT.md"
+  },
+  "supplement": {
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "run": "root-exit-notice-run.json",
+    "hashes": "root-exit-notice-inclusion.json",
+    "report": "ROOT-EXIT-NOTICE-REPORT.md"
+  },
+  "finalOwnedTestSHA256": "a236bf4095b8b07c88a8d85ccfa0ea50417db81d9c4646ecb304e2a7ad6426f1",
+  "catalogSHA256": "996241a552ccebb602edcc690f49ca87678d8547eb62336e4b51f055de088a09",
+  "deviceRelease": "device-release.json",
+  "dependencies": [
+    "Covered email/provider and notice runtime availability stays server-authoritative; no actual emails/accounts/deploy performed",
+    "Human Spanish review pending"
+  ],
+  "files": [
+    {
+      "path": "ios/App/DeviceSurfacesComposition.swift",
+      "sha256": "e407fd35ba98f5800fbf62cba28e9ffc586fc09119d5a9099c35c4c607e1c12f",
+      "liveMatchesFrozen": true
+    },
+    {
+      "path": "ios/App/RoomInTheCartApp.swift",
+      "sha256": "dfd54165f2abe662b601594e92e25b4b3ef345de0851a58e2a6562f0530f03d3",
+      "liveMatchesFrozen": true
+    },
+    {
+      "path": "ios/App/WorkspaceAccess.swift",
+      "sha256": "dc7d8c92fa41bfdfa0aa1646fe8486490d67e7667b554432406d9783510a8c92",
+      "liveMatchesFrozen": true
+    },
+    {
+      "path": "ios/Features/Household/Guardian.xcstrings",
+      "sha256": "996241a552ccebb602edcc690f49ca87678d8547eb62336e4b51f055de088a09",
+      "liveMatchesFrozen": true
+    },
+    {
+      "path": "ios/Features/Household/GuardianChildCoordinator.swift",
+      "sha256": "c48903ec26f933150d937ee34b3512c2e9980d1047bed68f0e463884b4128d8a",
+      "liveMatchesFrozen": true
+    },
+    {
+      "path": "ios/Features/Household/GuardianChildModel.swift",
+      "sha256": "4b099bd463ed3eed94a91b1cf5373c3b8ba935409c0a17938d466baa4fb4c9a6",
+      "liveMatchesFrozen": true
+    },
+    {
+      "path": "ios/Features/Household/GuardianChildRootView.swift",
+      "sha256": "4bc3ab370d0312f8a820a3fd2006368ed934c11a2caba2901b957e5755640ba3",
+      "liveMatchesFrozen": true
+    },
+    {
+      "path": "ios/Features/Household/GuardianChildView.swift",
+      "sha256": "1c70f5de0f6d02d4d969203737f97b42061b643bb6cc62236b821b17309bae74",
+      "liveMatchesFrozen": true
+    },
+    {
+      "path": "ios/Features/Household/GuardianEnrollmentModel.swift",
+      "sha256": "ffb7e0d936ba2b5515e8fadbfcd85a56b9f3a6e53ba79e6f5426b50cb7272331",
+      "liveMatchesFrozen": true
+    },
+    {
+      "path": "ios/Features/Household/GuardianEnrollmentViews.swift",
+      "sha256": "b07114b4c01dfa5a4d056bda3aa945a2f95be5b91f8d923cadcdac4000c6f87d",
+      "liveMatchesFrozen": true
+    },
+    {
+      "path": "ios/Features/Household/GuardianLocalization.swift",
+      "sha256": "7362f1da9d1c246a1a9262151e817c098c83fb008e5f75216a298757b452aa02",
+      "liveMatchesFrozen": true
+    },
+    {
+      "path": "ios/Features/Household/GuardianNativeAuthenticationModel.swift",
+      "sha256": "89b708614ff0b7469a7ae63f367473bebaf8c2ea114ceb093eb4b13794b6c53c",
+      "liveMatchesFrozen": true
+    },
+    {
+      "path": "ios/Features/Household/HouseholdLifecycleModel.swift",
+      "sha256": "3b2e05fd79d9eb106988d316b7f505bf36c182514b2a144729d535268c71f3e7",
+      "liveMatchesFrozen": false
+    },
+    {
+      "path": "ios/Features/Household/HouseholdLifecycleViews.swift",
+      "sha256": "a8b2409d47c7ca2c6906abe5e3a3cdc5088f3a73f08f148e696657ff49a5ede6",
+      "liveMatchesFrozen": false
+    },
+    {
+      "path": "ios/Features/Household/HouseholdModel.swift",
+      "sha256": "75a45f49e9078953cfa21c3c92e2a8cfcea35f228cb2be81846c1f32ad17a279",
+      "liveMatchesFrozen": false
+    },
+    {
+      "path": "ios/Features/Household/HouseholdSettingsView.swift",
+      "sha256": "7821263cae526c0afc6f1226a1a644f6afc741584fc2280ada5f9755592bc27d",
+      "liveMatchesFrozen": false
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Sources/HouseholdClient/AdultAuth.swift",
+      "sha256": "8f9068d54673aea35005d7a155e4889eebaa1b2ad7f55a516f3d45a2210959d6",
+      "liveMatchesFrozen": true
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Sources/HouseholdClient/GuardianChildClient.swift",
+      "sha256": "0de1dc599d3509ce446b3b514aa7c1f284fef63e19c82e635b2a43630e9e7c3e",
+      "liveMatchesFrozen": true
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Sources/HouseholdClient/GuardianContracts.swift",
+      "sha256": "ed27db337dc21a0cb22e74d0c8f0e7efe5812e219262a92f6275ff121b22ffea",
+      "liveMatchesFrozen": true
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Sources/HouseholdClient/GuardianIntents.swift",
+      "sha256": "f4372fe40bb15825079cb715908803d75aeae5249ca04f04b298249455606990",
+      "liveMatchesFrozen": true
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Sources/HouseholdClient/GuardianNativeAuth.swift",
+      "sha256": "6129446eb8921b3285464808d2ebf174b24bc415d1e00b8247b84277531f6c0f",
+      "liveMatchesFrozen": true
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Sources/HouseholdClient/GuardianService.swift",
+      "sha256": "b52720f545e3e0d3b7488f8e3148150c388224beee4f47b0eb6585ca0837e279",
+      "liveMatchesFrozen": true
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Sources/HouseholdClient/HouseholdService.swift",
+      "sha256": "06e918e34ff3ceb3e509a61c91115aee9f5e922d1beb5ea653217482c6cb6e42",
+      "liveMatchesFrozen": true
+    },
+    {
+      "path": "ios/Packages/HouseholdClient/Tests/HouseholdClientTests/GuardianClientTests.swift",
+      "sha256": "7f8e203e53def3e54afd73862885c0280cbf18b40df036581c33d40729480068",
+      "liveMatchesFrozen": true
+    },
+    {
+      "path": "ios/Tests/GuardianChildBoundaryTests.swift",
+      "sha256": "542b811883267cf7327332309ca241b0728ff133ca687f7ba438021e4542c1a0",
+      "liveMatchesFrozen": true
+    },
+    {
+      "path": "ios/Tests/GuardianChildTests.swift",
+      "sha256": "c3966628c92c72910a171926f370917c2cf433bb6ab3dea94a1e5187e23f97ad",
+      "liveMatchesFrozen": true
+    },
+    {
+      "path": "ios/Tests/GuardianEnrollmentTests.swift",
+      "sha256": "aebefdd51d2fe28481500e6e13b31afbc82e012c6efad8602d39f1b3bef12824",
+      "liveMatchesFrozen": true
+    },
+    {
+      "path": "ios/Tests/GuardianNativeAuthenticationTests.swift",
+      "sha256": "76750839992b579e0ec83a219cb5f3def0c9420fc38ca7ceaccba56b70e3c289",
+      "liveMatchesFrozen": true
+    },
+    {
+      "path": "ios/Tests/GuardianRootPrivacyTests.swift",
+      "sha256": "e5dc68bbe7345ffdd97caf9a3af3fdad31c65afb4e7cc014d90945fe723f7669",
+      "liveMatchesFrozen": true
+    },
+    {
+      "path": "ios/UITestSupport/ContributorRequestUIFixture.swift",
+      "sha256": "e0ed0aea3780bd15e9a0fdf6afe1a76a4566c5d72f8a9e3847d9da0bf0d25966",
+      "liveMatchesFrozen": false
+    },
+    {
+      "path": "ios/UITestSupport/GuardianChildUIFixture.swift",
+      "sha256": "ca797c6a73f4e7369ac37082c6646d3d1c776fdbfa69c07001c2e33a30059837",
+      "liveMatchesFrozen": true
+    },
+    {
+      "path": "ios/UITestSupport/GuardianEnrollmentUIFixture.swift",
+      "sha256": "a29319340d1500851d60e7873c65ad2ee1824e4bae9f0e750ce2614e67d681c8",
+      "liveMatchesFrozen": true
+    },
+    {
+      "path": "ios/UITestSupport/GuardianRootTransitionUIFixture.swift",
+      "sha256": "22b13ce2a58f2f4226c134a80f57ede57b9deecce9ab602c1784efae7ef1d295",
+      "liveMatchesFrozen": true
+    },
+    {
+      "path": "ios/UITests/GuardianEnrollmentUITests.swift",
+      "sha256": "a236bf4095b8b07c88a8d85ccfa0ea50417db81d9c4646ecb304e2a7ad6426f1",
+      "liveMatchesFrozen": true
+    },
+    {
+      "path": "scripts/check_localization.py",
+      "sha256": "c43a1bd909dcbade498c62c98fd3e7f842f301ee48b4dc5ebd13196bcef7121b",
+      "liveMatchesFrozen": true
+    },
+    {
+      "path": "shared/contracts/guardian-enrollment-v1.d.ts",
+      "sha256": "fd88eee34a27137bd167131a45a1e720b5abc07c795135285b6293f43db5dd02",
+      "liveMatchesFrozen": true
+    }
+  ]
+}

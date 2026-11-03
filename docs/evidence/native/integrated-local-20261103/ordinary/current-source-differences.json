@@ -1,0 +1,72 @@
+[
+  {
+    "path": "ios/App/RoomInTheCartApp.swift",
+    "acceptedSHA256": "87f13b8c45ab3dfd451ee77fd9b8351577f009b8047cce7c070fb11336c4e47b",
+    "currentSHA256": "dfd54165f2abe662b601594e92e25b4b3ef345de0851a58e2a6562f0530f03d3"
+  },
+  {
+    "path": "ios/App/WorkspaceAccess.swift",
+    "acceptedSHA256": "cb8c4ebc2ba5d5d035adc21f5149615cf8762a7f4c007603e2b57d4970b72ed1",
+    "currentSHA256": "dc7d8c92fa41bfdfa0aa1646fe8486490d67e7667b554432406d9783510a8c92"
+  },
+  {
+    "path": "ios/Features/Household/HouseholdDevicesView.swift",
+    "acceptedSHA256": "4a4ac2b1df7569afaa8ad898c474a80c675d30098924c4c5c53d99c36a85fd31",
+    "currentSHA256": "00412aabfd4250311fb427ec24a2d31234df1a40efbcfb4e3fbfb9731f3c31d6"
+  },
+  {
+    "path": "ios/Features/Household/HouseholdInboxView.swift",
+    "acceptedSHA256": "066c49d30b80d989d39f85a4d7267cf0c846aea3dce42e5b221c484a22fa6408",
+    "currentSHA256": "11c274e820957af4e1533df5b45c1b8e6a4c3d5bfe5112f5943905e5ac055e27"
+  },
+  {
+    "path": "ios/Features/Household/HouseholdRequestMealContext.swift",
+    "acceptedSHA256": "779c576322c760915066626e5358ef3a5e3ed57ffc21c5b796644f50efd07664",
+    "currentSHA256": "7f24cc32c776a2a77f4c268ef9a9c452631e2fc5cc4456e8cae73caf8d6b1e64"
+  },
+  {
+    "path": "ios/Features/Household/RequestDuplicateComparisonView.swift",
+    "acceptedSHA256": "53a89afd2314c015bfc2d101aa6ced2d5eba317b495a120678f8711046d0527e",
+    "currentSHA256": "11088e22ac1bea6960a771fb078b774ab9f62ff6b4a1f014bc23a3a10f272330"
+  },
+  {
+    "path": "ios/Features/Pickup/PickupSavedStockSection.swift",
+    "acceptedSHA256": "4d5e4db3376d20091e8e79bb1cbfc133d74bbd08717122927708b21c8037f080",
+    "currentSHA256": "718ec706ec6ce238b7472420657681b7d8a2a4932e027736fee4f0b5407940ac"
+  },
+  {
+    "path": "ios/Features/Pickup/PickupStockReview.swift",
+    "acceptedSHA256": "e592f1ea092c41b32dd9764a95429e3d8cce0aa6e3e3fc3047c8f5e325c1089b",
+    "currentSHA256": "e27577bd44dc0159bedd34a2e11660f17d475a2c003090ff0e70c3b0db082b69"
+  },
+  {
+    "path": "ios/RoomInTheCart.xcodeproj/project.pbxproj",
+    "acceptedSHA256": "360a8bf8b0b94f5d6ac3d1b4c90483ee2539a18acd43d853fe035a0ffefb327d",
+    "currentSHA256": "f7e9f988378259062d945ac41e974a43fb88e3899de4743b85ee8086d33d2ec3"
+  },
+  {
+    "path": "ios/UITestSupport/GuardianRootTransitionUIFixture.swift",
+    "acceptedSHA256": "ac9e32ea50edec00a67533ae1ad9fe3e6c70c99693572811de6416460e2524a8",
+    "currentSHA256": "22b13ce2a58f2f4226c134a80f57ede57b9deecce9ab602c1784efae7ef1d295"
+  },
+  {
+    "path": "ios/UITests/FreeJourneyUITests.swift",
+    "acceptedSHA256": "edbfc0d5cb868675e32b917716deaa53db18c4b4d5727e8950f2b9288488494e",
+    "currentSHA256": "95284884d5862a177846e990594508e0885fa13df8c0cc3dc638ef827f8721fe"
+  },
+  {
+    "path": "ios/UITests/GuardianEnrollmentUITests.swift",
+    "acceptedSHA256": "0ba6efd311c479eb66a434d5b140b1d937adb7637a20924287a5e3c45371cb2e",
+    "currentSHA256": "a236bf4095b8b07c88a8d85ccfa0ea50417db81d9c4646ecb304e2a7ad6426f1"
+  },
+  {
+    "path": "ios/UITests/HouseholdDevicesUITests.swift",
+    "acceptedSHA256": "a8ed2d03bc22245c0727caaf9fda4e75c9da828c544dd82a9316d4b9e70c4de0",
+    "currentSHA256": "01d7087f50cc3db0bec8b302b48458f1f2da03583b5180013da228a56c4fdd1e"
+  },
+  {
+    "path": "ios/UITests/RequestDuplicateComparisonUITests.swift",
+    "acceptedSHA256": "ccbae346a8cfdaa6a4826041a5d7ecfb6386cb3b90f89b15ebbebb29df96b7cc",
+    "currentSHA256": "b3e4cf1033a5bd396969600c9d65a3e24e6814c93ce89852ded0b840b6cfd0af"
+  }
+]

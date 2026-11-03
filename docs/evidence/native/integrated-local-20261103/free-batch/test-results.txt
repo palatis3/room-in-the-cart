@@ -1,0 +1,8 @@
+Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testCorrectFreezerBatchAndReadReservationsAfterRestart]' passed (80.984 seconds).
+Test Suite 'FreeJourneyUITests' passed at 2026-11-03 17:59:53.323.
+	 Executed 1 test, with 0 failures (0 unexpected) in 80.984 (81.398) seconds
+Test Suite 'RoomInTheCartUITests.xctest' passed at 2026-11-03 17:59:53.323.
+	 Executed 1 test, with 0 failures (0 unexpected) in 80.984 (81.399) seconds
+Test Suite 'Selected tests' passed at 2026-11-03 17:59:53.324.
+	 Executed 1 test, with 0 failures (0 unexpected) in 80.984 (81.407) seconds
+** TEST SUCCEEDED **

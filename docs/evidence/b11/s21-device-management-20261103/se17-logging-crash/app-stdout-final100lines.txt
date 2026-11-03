@@ -1,0 +1,100 @@
+2026-11-03 18:14:36.916950-0500 RoomInTheCart[5630:9484366] [Default] Other is not actually a child of Other, including at this point anyway (rdar://problem/20738636)
+2026-11-03 18:14:36.916990-0500 RoomInTheCart[5630:9484366] [Default] App orientation is 0 (not portrait) and UITextEffectsWindow window Window is not main window
+2026-11-03 18:14:36.917025-0500 RoomInTheCart[5630:9484366] [Default] Leaving frame unchanged for Window: either already correct or we can't detect it.
+2026-11-03 18:14:36.917077-0500 RoomInTheCart[5630:9484366] [Default] XCTPerformOnMainRunLoop[not MT]: about to CFRunLoopPerform
+2026-11-03 18:14:36.917107-0500 RoomInTheCart[5630:9484366] [Default] XCTPerformOnMainRunLoop[not MT]: waiting with 30.00s responsiveness timeout
+2026-11-03 18:14:36.917113-0500 RoomInTheCart[5630:9484324] [Default] XCTPerformOnMainRunLoop[MT]: inside CFRunLoopPerform
+2026-11-03 18:14:36.917139-0500 RoomInTheCart[5630:9484324] [Default] XCTPerformOnMainRunLoop[MT]: MT responded in time (won the race to the busy flag)
+2026-11-03 18:14:36.917142-0500 RoomInTheCart[5630:9484366] [Default] XCTPerformOnMainRunLoop[not MT]: waiting 60.00s for work to complete
+2026-11-03 18:14:36.917168-0500 RoomInTheCart[5630:9484324] [Default] XCTElementQuery: set data source for rootElementSnapshot to <XCTAutomationSession: 0x60000260d1a0>
+2026-11-03 18:14:36.917213-0500 RoomInTheCart[5630:9484366] [Default] Finding all matches with input Application, pid: 5630 using transformers 
+↪︎ Descendants matching type CollectionView
+    ↪︎ Element at index 0
+2026-11-03 18:14:36.917383-0500 RoomInTheCart[5630:9484366] [Default] [Match All] applied transformer `Descendants matching type CollectionView` to input {(
+    Application, pid: 5630
+)}, found {(
+    CollectionView
+)}
+2026-11-03 18:14:36.917422-0500 RoomInTheCart[5630:9484366] [Default] [Match All] applied transformer `Element at index 0` to input {(
+    CollectionView
+)}, found {(
+    CollectionView
+)}
+2026-11-03 18:14:36.917447-0500 RoomInTheCart[5630:9484366] [Default] [Match All] setting out related elements {(
+)}
+2026-11-03 18:14:36.917810-0500 RoomInTheCart[5630:9484366] [Default] Current tree:
+Application, 0x119231cb0, pid: 5630 <App element pid: 5630>
+  Window (Main), 0x11924e640 <AX element pid: 5630, elementOrHash.elementID: 4308643200.4>
+    Other, 0x11924e3c0 <AX element pid: 5630, elementOrHash.elementID: 4718650384.5>
+      Other, 0x11924b970 <AX element pid: 5630, elementOrHash.elementID: 4718652240.6>
+        Other, 0x119242fb0 <AX element pid: 5630, elementOrHash.elementID: 4717591744.7>
+          Other, 0x119241670 <AX element pid: 5630, elementOrHash.elementID: 105553169925216.8>
+            Other, 0x11923fe00 <AX element pid: 5630, elementOrHash.elementID: 4718687760.9>
+              NavigationBar, 0x11924c1b0, identifier: 'Dispositivos del hogar' <AX element pid: 5630, elementOrHash.elementID: 4718688704.10>
+                StaticText, 0x11923d080 <AX element pid: 5630, elementOrHash.elementID: 4308766960.35>
+              Other, 0x11938c660 <AX element pid: 5630, elementOrHash.elementID: 4718711008.11>
+                Other, 0x119399bf0 <AX element pid: 5630, elementOrHash.elementID: 4716561840.13>
+                  Other, 0x1193353c0 <AX element pid: 5630, elementOrHash.elementID: 4718679376.14>
+                    Other, 0x119328730 <AX element pid: 5630, elementOrHash.elementID: 105553169895648.15>
+                      CollectionView, 0x119380dc0 <AX element pid: 5630, elementOrHash.elementID: 4848824320.16>
+                        Other, 0x11935f4f0 <AX element pid: 5630, elementOrHash.elementID: 4716704576.44>
+                        Cell, 0x11932eee0 <AX element pid: 5630, elementOrHash.elementID: 4718902720.85>
+                          Other, 0x11932f900 <AX element pid: 5630, elementOrHash.elementID: 4718904208.88>
+                            Other, 0x119338aa0 <AX element pid: 5630, elementOrHash.elementID: 4718904688.92>
+                          Other, 0x119324790 <AX element pid: 5630, elementOrHash.elementID: 4718898416.89>
+                            Other, 0x119348150 <AX element pid: 5630, elementOrHash.elementID: 4865547264.93>
+                              Other, 0x1193294b0 <AX element pid: 5630, elementOrHash.elementID: 105553169767456.244>
+                                StaticText, 0x11934e8e0 <AX element pid: 5630, elementOrHash.elementID: 105553169772576.246>
+                                StaticText, 0x119346940 <AX element pid: 5630, elementOrHash.elementID: 105553169773216.247>
+                        Cell, 0x1193409b0 <AX element pid: 5630, elementOrHash.elementID: 4719021936.248>
+                          Other, 0x11932e7f0 <AX element pid: 5630, elementOrHash.elementID: 4719012752.249>
+                            Other, 0x119359070 <AX element pid: 5630, elementOrHash.elementID: 4719013232.251>
+                          Other, 0x11934b1d0 <AX element pid: 5630, elementOrHash.elementID: 4719022944.250>
+                            Other, 0x119332cf0 <AX element pid: 5630, elementOrHash.elementID: 4865937408.252>
+                              Other, 0x11931fe60 <AX element pid: 5630, elementOrHash.elementID: 105553169904608.253>
+                                StaticText, 0x11934ca20 <AX element pid: 5630, elementOrHash.elementID: 105553169900128.254>
+                                StaticText, 0x119319270 <AX element pid: 5630, elementOrHash.elementID: 105553169903008.255>
+                        Other, 0x119330340 <AX element pid: 5630, elementOrHash.elementID: 4716705856.47>
+                        Cell, 0x11931e9f0 <AX element pid: 5630, elementOrHash.elementID: 4845498032.70>
+                          Other, 0x11934a430 <AX element pid: 5630, elementOrHash.elementID: 4845499920.71>
+                            Other, 0x119332960 <AX element pid: 5630, elementOrHash.elementID: 4845500400.73>
+                          Other, 0x1193492c0 <AX element pid: 5630, elementOrHash.elementID: 4845499040.72>
+                            Other, 0x11934f2f0 <AX element pid: 5630, elementOrHash.elementID: 4890591744.74>
+                              Other, 0x119354c20 <AX element pid: 5630, elementOrHash.elementID: 105553169903328.256>
+                                StaticText, 0x119356450 <AX element pid: 5630, elementOrHash.elementID: 105553169903168.257>
+                        Other, 0x119366480 <AX element pid: 5630, elementOrHash.elementID: 4716703072.62>
+                        Other, 0x119321410 <AX element pid: 5630, elementOrHash.elementID: 4718734128.22>
+                          Other, 0x119334cc0 <AX element pid: 5630, elementOrHash.elementID: 4718734576.36>
+                      StaticText, 0x11931b6b0, identifier: 'household.devices.fixtureSummary' <AX element pid: 5630, elementOrHash.elementID: 105553169896288.17>
+  Window, 0x119438ca0 <AX element pid: 5630, elementOrHash.elementID: 4849516544.128>
+    Other, 0x11923d1a0 <AX element pid: 5630, elementOrHash.elementID: 4718943968.130>
+      Other, 0x11921b290 <AX element pid: 5630, elementOrHash.elementID: 4718952304.134>
+2026-11-03 18:14:36.918074-0500 RoomInTheCart[5630:9484366] [Default] Query ↪︎ Descendants matching type CollectionView
+    ↪︎ Element at index 0 found matching snapshots: {(
+    CollectionView
+)} (error: (null))
+2026-11-03 18:14:36.918134-0500 RoomInTheCart[5630:9484366] [Default] Replying to query ↪︎ Descendants matching type CollectionView
+    ↪︎ Element at index 0 with results: <XCTElementQueryResults: 0x600000cfa670> (error: (null))
+2026-11-03 18:14:36.919217-0500 RoomInTheCart[5630:9484366] [Default] Received attributes request for element: AX element pid: 5630, elementOrHash.elementID: 4848824320.16. Attributes: (
+    "XC_kAXXCAttributeFrame",
+    "XC_kAXXCAttributeWindowDisplayId",
+    "XC_kAXXCAttributeWindowContextId"
+)
+2026-11-03 18:14:36.919250-0500 RoomInTheCart[5630:9484366] [Default] XCTPerformOnMainRunLoop[not MT]: about to CFRunLoopPerform
+2026-11-03 18:14:36.919282-0500 RoomInTheCart[5630:9484366] [Default] XCTPerformOnMainRunLoop[not MT]: waiting with 30.00s responsiveness timeout
+2026-11-03 18:14:36.919284-0500 RoomInTheCart[5630:9484324] [Default] XCTPerformOnMainRunLoop[MT]: inside CFRunLoopPerform
+2026-11-03 18:14:36.919309-0500 RoomInTheCart[5630:9484324] [Default] XCTPerformOnMainRunLoop[MT]: MT responded in time (won the race to the busy flag)
+2026-11-03 18:14:36.919311-0500 RoomInTheCart[5630:9484366] [Default] XCTPerformOnMainRunLoop[not MT]: waiting 60.00s for work to complete
+2026-11-03 18:14:36.919336-0500 RoomInTheCart[5630:9484324] [Default] Fetching AX attributes XC_kAXXCAttributeFrame, XC_kAXXCAttributeWindowDisplayId, XC_kAXXCAttributeWindowContextId for AX element pid: 5630, elementOrHash.elementID: 4848824320.16
+2026-11-03 18:14:36.919399-0500 RoomInTheCart[5630:9484324] [Default] Got attributes, transferring to dictionary for return.
+2026-11-03 18:14:36.919452-0500 RoomInTheCart[5630:9484366] [Default] Replying with attribute values: {
+    "XC_kAXXCAttributeFrame" =     {
+        Height = 667;
+        Width = 375;
+        X = 0;
+        Y = 0;
+    };
+    "XC_kAXXCAttributeWindowContextId" = 3505225346;
+    "XC_kAXXCAttributeWindowDisplayId" = 1;
+}
+2026-11-03 18:14:36.919481-0500 RoomInTheCart[5630:9484366] QUARANTINED DUE TO HIGH LOGGING VOLUME

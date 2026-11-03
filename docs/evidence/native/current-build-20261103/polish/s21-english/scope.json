@@ -1,0 +1,9 @@
+{
+  "tag": "s21-english",
+  "result": "/Users/palatis/Room in the Cart/.build/FinalDevices-20261103.xcresult",
+  "acceptedCaseCount": 1,
+  "wholeRunPassed": false,
+  "source": "FinalDevicesSource-20261103T231101Z",
+  "loggingAccommodation": false,
+  "limits": "S21Spanish uses per-app OS_ACTIVITY_MODEdisable against provenXCTestloggingcrash; noabsence-of-runtimewarningsclaim. Englishsourcewholerun1pass/1Spanishinstrumentationcrash preserved. S23captionpostpolish1/1, priorEnglishseparateprodviewIDs unchangedexceptcaptionlayout."
+}

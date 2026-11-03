@@ -1,0 +1,28 @@
+{
+  "status": "FIXED_CANDIDATE_B_READY",
+  "preparedAt": "2026-11-03T22:20:32.926270+00:00",
+  "baseline": "ui-fixed-a-run.json",
+  "files": [
+    {
+      "path": "ios/UITestSupport/GuardianRootTransitionUIFixture.swift",
+      "sha256": "ebee1561d7def00172f4c02740bd14e4592daabdda1185cf22aa59e15e380741"
+    },
+    {
+      "path": "ios/UITests/GuardianEnrollmentUITests.swift",
+      "sha256": "aad869dcfe999ab13e39bb1a2201e552f92d759628703b4dc468a073e0d5db79"
+    }
+  ],
+  "changes": [
+    "Remove fixture VStack accessibility ID that propagates to descendant IDs; ready/verify/preservation child IDs preserved",
+    "Footer viewport uses existing rootReady StaticText bounds",
+    "Spanish unavailable query uses StaticText rather than same-id decorative Image",
+    "Largest-text capture aligns long warning and captures its continuation"
+  ],
+  "assertionsPreserved": true,
+  "productionChanges": false,
+  "targetedCases": [
+    "testRealRootLeaveCancelAndConfirmedExitRestoreLockedAdultAccess",
+    "testRealRootColdChildMarkerAndSyntheticVaultCleanupPreserveAdultData",
+    "testSpanishLargestTextUnavailableGateRemainsReadableAndClosed"
+  ]
+}

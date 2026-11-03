@@ -1,0 +1,63 @@
+Attributes: Application, 0x125593940, pid: 9710, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x125593940, pid: 9710, label: 'Room in the Cart'
+    Window (Main), 0x125595db0, {{0.0, 0.0}, {375.0, 667.0}}
+      Other, 0x125596170, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x125596290, {{0.0, 0.0}, {375.0, 667.0}}
+          Other, 0x125595ed0, {{0.0, 0.0}, {375.0, 667.0}}
+            Other, 0x125595ff0, {{0.0, 0.0}, {375.0, 667.0}}
+              Other, 0x1255963b0, {{0.0, 0.0}, {375.0, 667.0}}
+                NavigationBar, 0x1255964d0, {{0.0, 20.0}, {375.0, 44.0}}, identifier: 'Dispositivos del hogar'
+                  StaticText, 0x1255965f0, {{82.0, 28.0}, {211.5, 25.5}}, label: 'Dispositivos del hogar'
+                Other, 0x125596710, {{0.0, 0.0}, {375.0, 667.0}}
+                  Other, 0x125596830, {{0.0, 0.0}, {375.0, 667.0}}
+                    Other, 0x125596950, {{0.0, 0.0}, {375.0, 667.0}}
+                      Other, 0x125596a70, {{0.0, 0.0}, {375.0, 667.0}}
+                        CollectionView, 0x125596b90, {{0.0, 0.0}, {375.0, 667.0}}
+                          Other, 0x125596cb0, {{-16.0, -302.0}, {407.0, 2357.0}}
+                          Cell, 0x125596dd0, {{16.0, -199.0}, {343.0, 333.5}}
+                            Other, 0x125596ef0, {{16.0, -199.0}, {343.0, 333.5}}
+                              Other, 0x125597010, {{16.0, -199.0}, {343.0, 333.5}}
+                            Other, 0x125597130, {{16.0, -199.0}, {343.0, 333.5}}
+                              Other, 0x125597250, {{16.0, -199.0}, {343.0, 333.5}}
+                                Other, 0x125597370, {{16.0, -199.0}, {343.0, 333.5}}
+                                  StaticText, 0x125597490, {{32.0, -188.0}, {147.5, 311.5}}, label: 'Referencia del dispositivo'
+                                  StaticText, 0x1255975b0, {{16.0, -199.0}, {343.0, 333.5}}, label: 'Referencia del dispositivo, 00000006'
+                          Cell, 0x1255976d0, {{16.0, 134.5}, {343.0, 271.5}}
+                            Other, 0x1255977f0, {{16.0, 134.5}, {343.0, 271.5}}
+                              Other, 0x125597910, {{16.0, 134.5}, {343.0, 271.5}}
+                            Other, 0x125597a30, {{16.0, 134.5}, {343.0, 271.5}}
+                              Other, 0x125597b50, {{16.0, 134.5}, {343.0, 271.5}}
+                                Other, 0x125597c70, {{16.0, 134.5}, {343.0, 271.5}}
+                                  StaticText, 0x125597d90, {{32.0, 207.5}, {148.5, 125.5}}, label: 'Registrado'
+                                  StaticText, 0x125597eb0, {{16.0, 134.5}, {343.0, 271.5}}, label: 'Registrado, nov 2, 2026, 7:00 a.m.'
+                          Other, 0x125597fd0, {{32.0, 133.5}, {327.0, 1.0}}
+                          Cell, 0x1255980f0, {{16.0, 406.0}, {343.0, 147.5}}
+                            Other, 0x125598210, {{16.0, 406.0}, {343.0, 147.5}}
+                              Other, 0x125598330, {{16.0, 406.0}, {343.0, 147.5}}
+                            Other, 0x125598450, {{16.0, 406.0}, {343.0, 147.5}}
+                              Other, 0x125598570, {{16.0, 406.0}, {343.0, 147.5}}
+                                Other, 0x125598690, {{16.0, 406.0}, {343.0, 147.5}}
+                                  StaticText, 0x1255987b0, {{16.0, 406.0}, {343.0, 147.5}}, identifier: 'household.devices.active.30000000-0000-4000-8000-000000000006', label: 'Registro activo'
+                          Other, 0x1255988d0, {{32.0, 405.0}, {327.0, 1.0}}
+                          Cell, 0x1255989f0, {{16.0, 553.5}, {343.0, 147.5}}
+                            Other, 0x125598b10, {{16.0, 553.5}, {343.0, 147.5}}
+                              Other, 0x125598c30, {{16.0, 553.5}, {343.0, 147.5}}
+                            Other, 0x125598d50, {{16.0, 553.5}, {343.0, 147.5}}
+                              Other, 0x125598e70, {{16.0, 553.5}, {343.0, 147.5}}
+                                Other, 0x125598f90, {{16.0, 553.5}, {343.0, 147.5}}
+                                  Button, 0x1255990b0, {{16.0, 553.5}, {343.0, 147.5}}, identifier: 'household.devices.revoke.30000000-0000-4000-8000-000000000006', label: 'Revocar este dispositivo'
+                          Other, 0x1255991d0, {{32.0, 552.5}, {327.0, 1.0}}
+                          Other, 0x1255992f0, {{342.0, 64.0}, {30.0, 560.5}}, label: 'Barra de desplazamiento vertical, 9 páginas', value: 98%
+                            Other, 0x125599410, {{369.0, 535.0}, {3.0, 75.5}}
+                        StaticText, 0x125599530, {{5.0, 636.5}, {365.0, 26.5}}, identifier: 'household.devices.fixtureSummary', label: 'writes=1;current=active;target=revoked;sibling=active;membership=active;shopper=Mia'
+    Window, 0x125599650, {{0.0, 0.0}, {375.0, 667.0}}
+      Other, 0x125599770, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x125599890, {{0.0, 0.0}, {375.0, 667.0}}
+Path to element:
+ →Application, 0x125593940, pid: 9710, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x1253f5630, pid: 9710, label: 'Room in the Cart'
+  }

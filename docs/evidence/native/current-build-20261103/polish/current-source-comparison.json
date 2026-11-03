@@ -1,0 +1,9 @@
+{
+  "comparedInputs": 470,
+  "currentMatchesQuietSource": true,
+  "sourceSHA256": "4c52bc094ae775c2b476c53bbd1cea4a13df67f5140c4721c236adbe3728d56b",
+  "productionBuildSourceSHA256": "36479321a5cadd46a6226c553d3e6946958e04b822dbf7aff73b2457a4f6c0bc",
+  "onlyQuietVsBuildDelta": "ios/UITests/HouseholdDevicesUITests.swift",
+  "deltaIsTestOnly": true,
+  "sourceOrMetadataChangedAfterBuild": false
+}

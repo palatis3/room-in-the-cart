@@ -1,0 +1,73 @@
+{
+  "stamp": "20261103T224849Z",
+  "source": "/Users/palatis/Room in the Cart/.build/GuardianRootExitNoticeSource-20261103T224849Z",
+  "dd": "/Users/palatis/Room in the Cart/.build/GuardianRootExitNoticeDD-20261103T224849Z",
+  "products": "/Users/palatis/Room in the Cart/.build/GuardianRootExitNoticeProducts-20261103T224849Z",
+  "buildLog": "/Users/palatis/Room in the Cart/.build/GuardianRootExitNoticeBuild-20261103T224849Z.log",
+  "testLog": "/Users/palatis/Room in the Cart/.build/GuardianRootExitNotice-20261103T224849Z.log",
+  "result": "/Users/palatis/Room in the Cart/.build/GuardianRootExitNotice-20261103T224849Z.xcresult",
+  "device": "65B8A2FE-51FE-44A5-A9C7-F2524E33179B",
+  "tests": [
+    "testRealRootLeaveCancelAndConfirmedExitRestoreLockedAdultAccess",
+    "testRealRootColdChildMarkerAndSyntheticVaultCleanupPreserveAdultData"
+  ],
+  "scope": "Separate2rootcase supplement to immutable E8 proof; parent Root/App exit-notice display plus dedicated exact visible notice assertions, no authority changes/models",
+  "baselineRun": "ui-final-e-acceptance-run.json",
+  "overlays": [
+    {
+      "path": "ios/App/RoomInTheCartApp.swift",
+      "sha256": "dfd54165f2abe662b601594e92e25b4b3ef345de0851a58e2a6562f0530f03d3",
+      "owner": "parent"
+    },
+    {
+      "path": "ios/App/WorkspaceAccess.swift",
+      "sha256": "dc7d8c92fa41bfdfa0aa1646fe8486490d67e7667b554432406d9783510a8c92",
+      "owner": "parent"
+    },
+    {
+      "path": "ios/UITests/GuardianEnrollmentUITests.swift",
+      "sha256": "a236bf4095b8b07c88a8d85ccfa0ea50417db81d9c4646ecb304e2a7ad6426f1",
+      "owner": "guardian_native"
+    }
+  ],
+  "buildPID": 96283,
+  "buildCommand": [
+    "/usr/bin/xcodebuild",
+    "-project",
+    "ios/RoomInTheCart.xcodeproj",
+    "-scheme",
+    "RoomInTheCart",
+    "-configuration",
+    "Debug",
+    "-destination",
+    "platform=iOS Simulator,id=65B8A2FE-51FE-44A5-A9C7-F2524E33179B",
+    "-derivedDataPath",
+    "/Users/palatis/Room in the Cart/.build/GuardianRootExitNoticeDD-20261103T224849Z",
+    "-parallel-testing-enabled",
+    "NO",
+    "SWIFT_ACTIVE_COMPILATION_CONDITIONS=DEBUG CONTRIBUTOR_CAPTURE_UI_FIXTURE",
+    "CODE_SIGN_IDENTITY=-",
+    "build-for-testing"
+  ],
+  "buildExit": 0,
+  "xctestrun": "/Users/palatis/Room in the Cart/.build/GuardianRootExitNoticeProducts-20261103T224849Z/RoomInTheCart_iphonesimulator27.1-arm64.xctestrun",
+  "testPID": 96969,
+  "testCommand": [
+    "/usr/bin/xcodebuild",
+    "test-without-building",
+    "-xctestrun",
+    "/Users/palatis/Room in the Cart/.build/GuardianRootExitNoticeProducts-20261103T224849Z/RoomInTheCart_iphonesimulator27.1-arm64.xctestrun",
+    "-destination",
+    "platform=iOS Simulator,id=65B8A2FE-51FE-44A5-A9C7-F2524E33179B",
+    "-resultBundlePath",
+    "/Users/palatis/Room in the Cart/.build/GuardianRootExitNotice-20261103T224849Z.xcresult",
+    "-collect-test-diagnostics",
+    "never",
+    "-parallel-testing-enabled",
+    "NO",
+    "-skip-testing:RoomInTheCartTests",
+    "-only-testing:RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootLeaveCancelAndConfirmedExitRestoreLockedAdultAccess",
+    "-only-testing:RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootColdChildMarkerAndSyntheticVaultCleanupPreserveAdultData"
+  ],
+  "testExit": 0
+}

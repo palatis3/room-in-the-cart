@@ -1,0 +1,137 @@
+Attributes: Application, 0x112b2ad00, pid: 65644, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x112b2ad00, pid: 65644, label: 'Room in the Cart'
+    Window (Main), 0x112b29900, {{0.0, 0.0}, {390.0, 844.0}}
+      Other, 0x112b2ae40, {{0.0, 0.0}, {390.0, 844.0}}
+        Other, 0x112b2bd40, {{0.0, 0.0}, {390.0, 844.0}}
+          Other, 0x112b292c0, {{0.0, 0.0}, {390.0, 844.0}}
+            Other, 0x112b2a580, {{0.0, 0.0}, {390.0, 844.0}}
+              StaticText, 0x112b2a800, {{142.0, 47.0}, {106.0, 13.3}}, identifier: 'fixture.library.recipeCount', label: 'E01 saved recipes: 1'
+              StaticText, 0x112b2a940, {{106.7, 62.3}, {176.7, 13.3}}, identifier: 'fixture.library.existingPreserved', label: 'E01 original recipe preserved: yes'
+              StaticText, 0x112b2a300, {{109.3, 77.7}, {171.3, 13.3}}, identifier: 'fixture.library.sourceUnchanged', label: 'E01 local source unchanged: yes'
+              Button, 0x112b2a440, {{32.7, 101.0}, {155.3, 28.3}}, identifier: 'fixture.library.selectLibrary', label: 'Use library picker input'
+              Button, 0x112b2a080, {{196.0, 101.0}, {161.3, 28.3}}, identifier: 'fixture.library.selectCorrupt', label: 'Use corrupt picker input'
+              StaticText, 0x112b297c0, {{132.8, 139.0}, {124.3, 13.3}}, identifier: 'fixture.library.fileSelections', label: 'E01 picker selections: 3'
+              Other, 0x112b29b80, {{0.0, 154.3}, {390.0, 689.7}}
+                NavigationBar, 0x112b28dc0, {{0.0, 164.3}, {390.0, 54.0}}, identifier: 'Data and recovery'
+                  StaticText, 0x112b2aa80, {{122.7, 176.0}, {144.7, 20.7}}, label: 'Data and recovery'
+                Other, 0x112b29cc0, {{0.0, 154.3}, {390.0, 689.7}}
+                  Other, 0x112b29e00, {{0.0, 154.3}, {390.0, 689.7}}
+                    Other, 0x112b2b200, {{0.0, 154.3}, {390.0, 689.7}}
+                      Other, 0x112b29400, {{0.0, 154.3}, {390.0, 689.7}}
+                        CollectionView, 0x112b29680, {{0.0, 154.3}, {390.0, 689.7}}, identifier: 'records.tools'
+                          Other, 0x112b29180, {{-16.0, -1410.3}, {422.0, 1611.3}}
+                          Cell, 0x112b2a1c0, {{16.0, 119.7}, {358.0, 63.7}}
+                            Other, 0x112b2bac0, {{16.0, 119.7}, {358.0, 63.7}}
+                              Other, 0x112b2bc00, {{16.0, 119.7}, {358.0, 63.7}}
+                            Other, 0x112b2b840, {{16.0, 119.7}, {358.0, 63.7}}
+                              Other, 0x112b2b980, {{16.0, 119.7}, {358.0, 63.7}}
+                                Other, 0x112b2b5c0, {{16.0, 119.7}, {358.0, 63.7}}
+                                  StaticText, 0x112b2b700, {{16.0, 119.7}, {358.0, 63.7}}, label: 'Recovery saves a separate copy. A file never restores membership, consent, permissions or a retailer order.'
+                          Other, 0x112b29f40, {{0.0, 154.3}, {390.0, 689.7}}
+                            Other, 0x112b2b480, {{0.0, 154.3}, {390.0, 104.0}}
+                          Other, 0x112b2abc0, {{0.0, 154.3}, {390.0, 689.7}}
+                            Other, 0x112b2af80, {{0.0, 154.3}, {390.0, 104.0}}
+                          Other, 0x112b2b0c0, {{-16.0, 201.0}, {422.0, 87.0}}
+                          Cell, 0x112b2a6c0, {{16.0, 218.3}, {358.0, 52.0}}
+                            Other, 0x112b29a40, {{16.0, 218.3}, {358.0, 52.0}}
+                              Other, 0x112b29540, {{16.0, 218.3}, {358.0, 52.0}}
+                            Other, 0x112b28f00, {{16.0, 218.3}, {358.0, 52.0}}
+                              Other, 0x112b29040, {{16.0, 218.3}, {358.0, 52.0}}
+                                Other, 0x112b28c80, {{16.0, 218.3}, {358.0, 52.0}}
+                                  StaticText, 0x112b283c0, {{16.0, 218.3}, {358.0, 52.0}}, identifier: 'records.status', label: 'The imported batch was undone.'
+                          Other, 0x112b28780, {{-16.0, 288.0}, {422.0, 255.3}}
+                          Cell, 0x112b288c0, {{16.0, 288.0}, {358.0, 40.3}}
+                            Other, 0x112b28a00, {{16.0, 288.0}, {358.0, 40.3}}
+                            Other, 0x112b28b40, {{16.0, 288.0}, {358.0, 40.3}}
+                              Other, 0x112b28500, {{16.0, 288.0}, {358.0, 40.3}}
+                                Other, 0x112b28640, {{16.0, 288.0}, {358.0, 40.3}}
+                                  StaticText, 0x112b28280, {{16.0, 288.0}, {358.0, 40.3}}, label: 'Choose records to export'
+                          Cell, 0x112b28000, {{16.0, 328.3}, {358.0, 52.0}}
+                            Other, 0x112b28140, {{16.0, 328.3}, {358.0, 52.0}}
+                              Other, 0x112b2be80, {{16.0, 328.3}, {358.0, 52.0}}
+                            Other, 0x104a8b980, {{16.0, 328.3}, {358.0, 52.0}}
+                              Other, 0x104a8af80, {{16.0, 328.3}, {358.0, 52.0}}
+                                Other, 0x104a8b840, {{16.0, 328.3}, {358.0, 52.0}}
+                                  Button, 0x104a8bc00, {{16.0, 328.3}, {358.0, 52.0}}, label: 'Select all readable records'
+                          Cell, 0x104a89400, {{16.0, 380.3}, {358.0, 72.7}}
+                            Other, 0x104a8ae40, {{16.0, 380.3}, {358.0, 72.7}}
+                              Other, 0x104a8b700, {{16.0, 380.3}, {358.0, 72.7}}
+                            Other, 0x104a892c0, {{16.0, 380.3}, {358.0, 72.7}}
+                              Other, 0x104a8b5c0, {{16.0, 380.3}, {358.0, 72.7}}
+                                Other, 0x104a8bac0, {{16.0, 380.3}, {358.0, 72.7}}
+                                  Switch, 0x104a8b340, {{32.0, 391.7}, {326.0, 27.7}}, identifier: 'records.source.757B4E26-A4B2-4FAC-93EF-B884861E00C9', label: 'E01 unchanged local pickup', value: 0
+                                    StaticText, 0x112172d00, {{32.0, 395.3}, {212.3, 20.3}}, label: 'E01 unchanged local pickup'
+                                    Switch, 0x1121703c0, {{297.0, 391.7}, {63.0, 28.0}}, value: 0
+                                  StaticText, 0x112171680, {{32.0, 423.7}, {143.7, 14.3}}, label: 'Shopping list and dinners'
+                          Other, 0x112171900, {{32.0, 379.3}, {326.0, 1.0}}
+                          Cell, 0x112172800, {{16.0, 453.0}, {358.0, 72.7}}
+                            Other, 0x112172bc0, {{16.0, 453.0}, {358.0, 72.7}}
+                              Other, 0x112173e80, {{16.0, 453.0}, {358.0, 72.7}}
+                            Other, 0x112170140, {{16.0, 453.0}, {358.0, 72.7}}
+                              Other, 0x112170280, {{16.0, 453.0}, {358.0, 72.7}}
+                                Other, 0x112170780, {{16.0, 453.0}, {358.0, 72.7}}
+                                  Switch, 0x112172f80, {{32.0, 464.3}, {326.0, 27.7}}, identifier: 'records.source.4001f24780d749ef4d4421a8e24785509d2ae22fb39a5639f99e454aa3132a15', label: 'Existing family soup', value: 0
+                                    StaticText, 0x112170f00, {{32.0, 468.0}, {151.0, 20.3}}, label: 'Existing family soup'
+                                    Switch, 0x112172440, {{297.0, 464.3}, {63.0, 28.0}}, value: 0
+                                  StaticText, 0x112172080, {{32.0, 496.3}, {38.7, 14.3}}, label: 'Recipe'
+                          Other, 0x112171f40, {{32.0, 452.0}, {326.0, 1.0}}
+                          Other, 0x112171e00, {{-16.0, 543.0}, {422.0, 615.7}}
+                          Cell, 0x112172580, {{16.0, 543.0}, {358.0, 40.3}}
+                            Other, 0x1121712c0, {{16.0, 543.0}, {358.0, 40.3}}
+                            Other, 0x112170a00, {{16.0, 543.0}, {358.0, 40.3}}
+                              Other, 0x112170640, {{16.0, 543.0}, {358.0, 40.3}}
+                                Other, 0x112170000, {{16.0, 543.0}, {358.0, 40.3}}
+                                  StaticText, 0x1121735c0, {{16.0, 543.0}, {358.0, 40.3}}, label: 'Export selected records'
+                          Cell, 0x112170c80, {{16.0, 583.3}, {358.0, 81.7}}
+                            Other, 0x112170b40, {{16.0, 583.3}, {358.0, 81.7}}
+                              Other, 0x112172a80, {{16.0, 583.3}, {358.0, 81.7}}
+                            Other, 0x112171cc0, {{16.0, 583.3}, {358.0, 81.7}}
+                              Other, 0x112170dc0, {{16.0, 583.3}, {358.0, 81.7}}
+                                Other, 0x112172300, {{16.0, 583.3}, {358.0, 81.7}}
+                                  StaticText, 0x112173d40, {{16.0, 583.3}, {358.0, 81.7}}, label: 'Cook and helper copies include selected food labels, amounts, purposes and actions. They leave out native financial and private record data.'
+                          Cell, 0x1121717c0, {{16.0, 665.0}, {358.0, 52.0}}
+                            Other, 0x112171b80, {{16.0, 665.0}, {358.0, 52.0}}
+                              Other, 0x112172e40, {{16.0, 665.0}, {358.0, 52.0}}
+                            Other, 0x112173980, {{16.0, 665.0}, {358.0, 52.0}}
+                              Other, 0x112172940, {{16.0, 665.0}, {358.0, 52.0}}
+                                Other, 0x1078721c0, {{16.0, 665.0}, {358.0, 52.0}}
+                                  Button, 0x107873840, {{16.0, 665.0}, {358.0, 52.0}}, label: 'Prepare readable cook copy', Disabled
+                          Other, 0x107872d00, {{32.0, 664.0}, {326.0, 1.0}}
+                          Cell, 0x107871040, {{16.0, 717.0}, {358.0, 52.0}}
+                            Other, 0x107873ac0, {{16.0, 717.0}, {358.0, 52.0}}
+                              Other, 0x1078726c0, {{16.0, 717.0}, {358.0, 52.0}}
+                            Other, 0x107871b80, {{16.0, 717.0}, {358.0, 52.0}}
+                              Other, 0x107872800, {{16.0, 717.0}, {358.0, 52.0}}
+                                Other, 0x107871900, {{16.0, 717.0}, {358.0, 52.0}}
+                                  Button, 0x107872e40, {{16.0, 717.0}, {358.0, 52.0}}, label: 'Prepare structured helper copy', Disabled
+                          Other, 0x107871f40, {{32.0, 716.0}, {326.0, 1.0}}
+                          Cell, 0x107871180, {{16.0, 769.0}, {358.0, 52.0}}
+                            Other, 0x107872f80, {{16.0, 769.0}, {358.0, 52.0}}
+                              Other, 0x107873480, {{16.0, 769.0}, {358.0, 52.0}}
+                            Other, 0x107872580, {{16.0, 769.0}, {358.0, 52.0}}
+                              Other, 0x107872a80, {{16.0, 769.0}, {358.0, 52.0}}
+                                Other, 0x107872940, {{16.0, 769.0}, {358.0, 52.0}}
+                                  StaticText, 0x1078712c0, {{16.0, 769.0}, {358.0, 52.0}}, label: 'Choose one source for each cook or helper copy.'
+                          Other, 0x107873980, {{32.0, 768.0}, {326.0, 1.0}}
+                          Cell, 0x107871cc0, {{16.0, 821.0}, {358.0, 99.7}}
+                            Other, 0x107872300, {{16.0, 821.0}, {358.0, 99.7}}
+                              Other, 0x107873d40, {{16.0, 821.0}, {358.0, 99.7}}
+                            Other, 0x107872bc0, {{16.0, 821.0}, {358.0, 99.7}}
+                              Other, 0x107873200, {{16.0, 821.0}, {358.0, 99.7}}
+                                Other, 0x1078735c0, {{16.0, 821.0}, {358.0, 99.7}}
+                                  StaticText, 0x107870c80, {{16.0, 821.0}, {358.0, 99.7}}, label: 'A shop backup includes its linked dinner evidence and quote history. Reusable dinners, rotations and saved ideas are a separate library selection. Imported planning never restores paid access or permissions.'
+                          Other, 0x107871e00, {{32.0, 820.0}, {326.0, 1.0}}
+                          Other, 0x107871400, {{357.0, 218.3}, {30.0, 578.3}}, label: 'Vertical scroll bar, 4 pages', value: 16%
+                            Other, 0x1078730c0, {{384.0, 269.0}, {3.0, 131.7}}
+                          Other, 0x107873c00, {{357.0, 218.3}, {30.0, 578.3}}, label: 'Vertical scroll bar, 4 pages', value: 16%
+                            Other, 0x107873340, {{384.0, 269.0}, {3.0, 131.7}}
+                Toolbar, 0x107870a00, {{0.0, 154.3}, {390.0, 689.7}}, identifier: 'Toolbar', label: 'Toolbar'
+                  Other, 0x107873700, {{0.0, 154.3}, {390.0, 689.7}}
+Path to element:
+ →Application, 0x112b2ad00, pid: 65644, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x107872440, pid: 65644, label: 'Room in the Cart'
+  }

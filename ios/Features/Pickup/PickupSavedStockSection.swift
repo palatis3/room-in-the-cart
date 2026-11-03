@@ -49,6 +49,8 @@ private struct PickupBatchReview: View {
     @EnvironmentObject private var access: WorkspaceAccess
     @EnvironmentObject private var household: HouseholdModel
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.guardianChildCoordinator) private var guardianChild
+    @State private var reviewSession = PickupStockReviewSession()
     @FocusState private var amountFocused: Bool
     @AccessibilityFocusState private var previewFocused: Bool
     @State private var review: PickupStockLotReview?
@@ -153,7 +155,10 @@ private struct PickupBatchReview: View {
             .onChange(of: foodID) { _, _ in checked = false; cancelPreview() }
             .onChange(of: observedAt) { _, _ in checked = false; cancelPreview() }
             .onChange(of: useFirst) { _, _ in checked = false; cancelPreview() }
-            .onChange(of: currentScope) { _, _ in effectsConfirmed = false }
+            .onAppear { if reviewSession.refresh(presentation) { cancelPreview() } }
+            .onChange(of: presentation) { _, value in
+                if reviewSession.refresh(value) { cancelPreview() }
+            }
             .onChange(of: model.journey?.revision) { _, _ in effectsConfirmed = false }
             .onChange(of: scenePhase) { _, phase in if phase != .active { cancelPreview() } }
             .scrollDismissesKeyboard(.interactively)
@@ -164,14 +169,12 @@ private struct PickupBatchReview: View {
             }
     }
 
-    private var currentScope: PickupStockReviewScope? {
-        guard scenePhase == .active, access.unlocked, !household.locked, let workspaceID = model.sourceWorkspaceID else { return nil }
-        if let projection = household.projection {
-            guard household.identity != nil, projection.enrolled, ["shopper", "organizer"].contains(projection.role) else { return nil }
-        } else if household.identity != nil { return nil }
-        return .init(workspaceID: workspaceID, localActorID: access.localActorID, accountSubject: household.identity?.subject,
-            householdID: household.projection?.household.id, memberID: household.projection?.memberId, role: household.projection?.role)
+    private var presentation: PickupStockReviewPresentation {
+        .current(workspaceID: model.sourceWorkspaceID, localActorID: access.localActorID,
+            workspaceUnlocked: access.unlocked, sceneActive: scenePhase == .active,
+            childPresented: guardianChild?.presented == true, household: household)
     }
+    private var currentScope: PickupStockReviewScope? { reviewSession.scope(for: presentation) }
     private func cancelPreview() { review = nil; effectsConfirmed = false }
     private func coverage(_ value: StockDemandCoverage?) -> String {
         let allocated = value.flatMap { value in value.allocated.map { pQuantity($0, unit: value.unit) } } ?? pTr("Unresolved")
@@ -274,5 +277,20 @@ struct PickupNewStockSection: View {
                 }
             }
         } catch { model.error = pTr("Check the confirmed food amounts and matching units.") }
+    }
+}
+
+// The factory reads live app facts; imported/recovered documents never supply this admission.
+extension PickupStockReviewPresentation {
+    @MainActor static func current(workspaceID: UUID?, localActorID: UUID, workspaceUnlocked: Bool,
+                                   sceneActive: Bool, childPresented: Bool, household: HouseholdModel) -> Self {
+        let projection = household.projection.map {
+            PickupStockReviewProjection(householdID: $0.household.id, memberID: $0.memberId, role: $0.role,
+                enrolled: $0.enrolled, shopID: $0.shopId, grantID: $0.grantId, capabilities: $0.capabilities.sorted(),
+                selectionRequired: $0.selectionRequired, canSelectShop: $0.canSelectShop)
+        }
+        return Self(workspaceID: workspaceID, localActorID: localActorID, workspaceUnlocked: workspaceUnlocked,
+            sceneActive: sceneActive, childPresented: childPresented, guardianChildOnly: household.guardianChildOnly,
+            accountSubject: household.identity?.subject, householdLocked: household.locked, projection: projection)
     }
 }

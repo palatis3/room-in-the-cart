@@ -1,0 +1,124 @@
+Attributes: Application, 0x11c0f88a0, pid: 94073, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x11c0f88a0, pid: 94073, label: 'Room in the Cart'
+    Window (Main), 0x11c0f94d0, {{0.0, 0.0}, {375.0, 667.0}}
+      Other, 0x11c0f9fe0, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x11c0fa100, {{0.0, 0.0}, {375.0, 667.0}}
+          Other, 0x11c0f8c90, {{0.0, 0.0}, {375.0, 667.0}}
+            Other, 0x11c0f90b0, {{0.0, 0.0}, {375.0, 667.0}}
+              Other, 0x11c0fa220, {{0.0, 0.0}, {375.0, 667.0}}
+                NavigationBar, 0x11c0fa340, {{0.0, 20.0}, {375.0, 44.0}}, identifier: 'Guardian controls'
+                  StaticText, 0x11c0fa460, {{117.0, 32.0}, {141.5, 20.5}}, label: 'Guardian controls'
+                Other, 0x11c0fa580, {{0.0, 0.0}, {375.0, 667.0}}
+                  Other, 0x11c0fa6a0, {{0.0, 0.0}, {375.0, 667.0}}
+                    Other, 0x11c0fa7c0, {{0.0, 0.0}, {375.0, 667.0}}
+                      Other, 0x11c0fa8e0, {{0.0, 0.0}, {375.0, 667.0}}
+                        CollectionView, 0x11c0faa00, {{0.0, 0.0}, {375.0, 667.0}}
+                          Other, 0x11c0fab20, {{-16.0, -12.5}, {407.0, 136.0}}
+                          Cell, 0x11c0fac40, {{16.0, -12.5}, {343.0, 39.0}}
+                            Other, 0x11c0fad60, {{16.0, -12.5}, {343.0, 39.0}}
+                            Other, 0x11c0fae80, {{16.0, -12.5}, {343.0, 39.0}}
+                              Other, 0x11c0fafa0, {{16.0, -12.5}, {343.0, 39.0}}
+                                Other, 0x11c0fb0c0, {{16.0, -12.5}, {343.0, 39.0}}
+                                  StaticText, 0x11c0fb1e0, {{16.0, -12.5}, {343.0, 39.0}}, label: 'Your child setups'
+                          Cell, 0x11c0fb300, {{16.0, 26.5}, {343.0, 79.5}}
+                            Other, 0x11c0fb420, {{16.0, 26.5}, {343.0, 79.5}}
+                              Other, 0x11c0fb540, {{16.0, 26.5}, {343.0, 79.5}}
+                            Other, 0x11c0fb660, {{16.0, 26.5}, {343.0, 79.5}}
+                              Other, 0x11c0fb780, {{16.0, 26.5}, {343.0, 79.5}}
+                                Other, 0x11c0fb8a0, {{16.0, 26.5}, {343.0, 79.5}}
+                                  Button, 0x11c0fb9c0, {{16.0, 26.5}, {343.0, 79.5}}, identifier: 'guardian.enrollment.10000000-0000-4000-8000-000000000001', label: 'Sam, Permission recorded; child invitation needed, 00000001'
+                                    StaticText, 0x11c0fbae0, {{32.0, 37.5}, {34.0, 20.5}}, label: 'Sam'
+                                    StaticText, 0x11c0fbc00, {{32.0, 62.0}, {251.5, 14.5}}, label: 'Permission recorded; child invitation needed'
+                                    StaticText, 0x11c0fbd20, {{32.0, 80.5}, {59.5, 14.5}}, label: '00000001'
+                          Other, 0x11c0fbe40, {{-16.0, 123.5}, {407.0, 297.0}}
+                          Cell, 0x11c0fbf60, {{16.0, 123.5}, {343.0, 39.0}}
+                            Other, 0x11c0fc080, {{16.0, 123.5}, {343.0, 39.0}}
+                            Other, 0x11c0fc1a0, {{16.0, 123.5}, {343.0, 39.0}}
+                              Other, 0x11c0fc2c0, {{16.0, 123.5}, {343.0, 39.0}}
+                                Other, 0x11c0fc3e0, {{16.0, 123.5}, {343.0, 39.0}}
+                                  StaticText, 0x11c0fc500, {{16.0, 123.5}, {343.0, 39.0}}, label: 'Selected setup'
+                          Cell, 0x11c0fc620, {{16.0, 162.5}, {343.0, 44.0}}
+                            Other, 0x11c0fc740, {{16.0, 162.5}, {343.0, 44.0}}
+                              Other, 0x11c0fc860, {{16.0, 162.5}, {343.0, 44.0}}
+                            Other, 0x11c0fc980, {{16.0, 162.5}, {343.0, 44.0}}
+                              Other, 0x11c0fcaa0, {{16.0, 162.5}, {343.0, 44.0}}
+                                Other, 0x11c0fcbc0, {{16.0, 162.5}, {343.0, 44.0}}
+                                  StaticText, 0x11c0fcce0, {{16.0, 162.5}, {343.0, 44.0}}, label: 'Sam'
+                          Cell, 0x11c0fce00, {{16.0, 206.5}, {343.0, 64.5}}
+                            Other, 0x11c0fcf20, {{16.0, 206.5}, {343.0, 64.5}}
+                              Other, 0x11c0fd040, {{16.0, 206.5}, {343.0, 64.5}}
+                            Other, 0x11c0fd160, {{16.0, 206.5}, {343.0, 64.5}}
+                              Other, 0x11c0fd280, {{16.0, 206.5}, {343.0, 64.5}}
+                                Other, 0x11c0fd3a0, {{16.0, 206.5}, {343.0, 64.5}}
+                                  StaticText, 0x11c0fd4c0, {{16.0, 206.5}, {343.0, 64.5}}, identifier: 'guardian.state', label: 'Permission recorded; child invitation needed'
+                          Other, 0x11c0fd5e0, {{32.0, 206.0}, {327.0, 0.5}}
+                          Cell, 0x11c0fd700, {{16.0, 271.0}, {343.0, 44.0}}
+                            Other, 0x11c0fd820, {{16.0, 271.0}, {343.0, 44.0}}
+                              Other, 0x11c0fd940, {{16.0, 271.0}, {343.0, 44.0}}
+                            Other, 0x11c0fda60, {{16.0, 271.0}, {343.0, 44.0}}
+                              Other, 0x11c0fdb80, {{16.0, 271.0}, {343.0, 44.0}}
+                                Other, 0x11c0fdca0, {{16.0, 271.0}, {343.0, 44.0}}
+                                  StaticText, 0x11c0fddc0, {{32.0, 282.8}, {55.5, 20.5}}, label: 'Expires'
+                                  StaticText, 0x11c0fdee0, {{16.0, 271.0}, {343.0, 44.0}}, label: 'Expires, Dec 31, 2098 at 7:00 PM'
+                          Other, 0x11c0fe000, {{32.0, 270.5}, {327.0, 0.5}}
+                          Cell, 0x11c0fe120, {{16.0, 315.0}, {343.0, 44.0}}
+                            Other, 0x11c0fe240, {{16.0, 315.0}, {343.0, 44.0}}
+                              Other, 0x11c0fe360, {{16.0, 315.0}, {343.0, 44.0}}
+                            Other, 0x11c0fe480, {{16.0, 315.0}, {343.0, 44.0}}
+                              Other, 0x11c0fe5a0, {{16.0, 315.0}, {343.0, 44.0}}
+                                Other, 0x11c0fe6c0, {{16.0, 315.0}, {343.0, 44.0}}
+                                  Button, 0x11c0fe7e0, {{16.0, 315.0}, {343.0, 44.0}}, identifier: 'guardian.invite', label: 'Create a child invitation'
+                          Other, 0x11c0fe900, {{32.0, 314.5}, {327.0, 0.5}}
+                          Cell, 0x11c0fea20, {{16.0, 359.0}, {343.0, 44.0}}
+                            Other, 0x11c0feb40, {{16.0, 359.0}, {343.0, 44.0}}
+                              Other, 0x11c0fec60, {{16.0, 359.0}, {343.0, 44.0}}
+                            Other, 0x11c0fed80, {{16.0, 359.0}, {343.0, 44.0}}
+                              Other, 0x11c0feea0, {{16.0, 359.0}, {343.0, 44.0}}
+                                Other, 0x11c0fefc0, {{16.0, 359.0}, {343.0, 44.0}}
+                                  Button, 0x11c0ff0e0, {{16.0, 359.0}, {343.0, 44.0}}, label: 'Cancel this setup'
+                          Other, 0x11c0ff200, {{32.0, 358.5}, {327.0, 0.5}}
+                          Other, 0x11c0ff320, {{-16.0, 420.5}, {407.0, 317.5}}
+                          Cell, 0x11c0ff440, {{16.0, 420.5}, {343.0, 39.0}}
+                            Other, 0x11c0ff560, {{16.0, 420.5}, {343.0, 39.0}}
+                            Other, 0x11c0ff680, {{16.0, 420.5}, {343.0, 39.0}}
+                              Other, 0x11c0ff7a0, {{16.0, 420.5}, {343.0, 39.0}}
+                                Other, 0x11c0ff8c0, {{16.0, 420.5}, {343.0, 39.0}}
+                                  StaticText, 0x11c0ff9e0, {{16.0, 420.5}, {343.0, 39.0}}, label: 'Begin a new child setup'
+                          Cell, 0x11c0ffb00, {{16.0, 459.5}, {343.0, 44.0}}
+                            Other, 0x11c0ffc20, {{16.0, 459.5}, {343.0, 44.0}}
+                              Other, 0x11c0ffd40, {{16.0, 459.5}, {343.0, 44.0}}
+                            Other, 0x11c0ffe60, {{16.0, 459.5}, {343.0, 44.0}}
+                              Other, 0x11c504080, {{16.0, 459.5}, {343.0, 44.0}}
+                                Other, 0x11c5041a0, {{16.0, 459.5}, {343.0, 44.0}}
+                                  TextField, 0x11c5042c0, {{16.0, 459.5}, {343.0, 44.0}}, identifier: 'guardian.childLocation', placeholderValue: 'Child's country or region code', value: US
+                          Cell, 0x11c5043e0, {{16.0, 503.5}, {343.0, 64.5}}
+                            Other, 0x11c504500, {{16.0, 503.5}, {343.0, 64.5}}
+                              Other, 0x11c504620, {{16.0, 503.5}, {343.0, 64.5}}
+                            Other, 0x11c504740, {{16.0, 503.5}, {343.0, 64.5}}
+                              Other, 0x11c504860, {{16.0, 503.5}, {343.0, 64.5}}
+                                Other, 0x11c504980, {{16.0, 503.5}, {343.0, 64.5}}
+                                  Switch, 0x11c504aa0, {{16.0, 503.5}, {343.0, 64.5}}, identifier: 'guardian.declaration', label: 'I am this child's parent or legal guardian', value: 0
+                                    StaticText, 0x11c504bc0, {{32.0, 514.5}, {195.5, 42.5}}, label: 'I am this child's parent or legal guardian'
+                                    Switch, 0x11c504ce0, {{294.0, 520.5}, {51.0, 31.0}}, value: 0
+                          Other, 0x11c504e00, {{32.0, 503.0}, {327.0, 0.5}}
+                          Cell, 0x11c504f20, {{16.0, 568.0}, {343.0, 108.5}}
+                            Other, 0x11c505040, {{16.0, 568.0}, {343.0, 108.5}}
+                              Other, 0x11c505160, {{16.0, 568.0}, {343.0, 108.5}}
+                            Other, 0x11c505280, {{16.0, 568.0}, {343.0, 108.5}}
+                              Other, 0x11c5053a0, {{16.0, 568.0}, {343.0, 108.5}}
+                                Other, 0x11c5054c0, {{16.0, 568.0}, {343.0, 108.5}}
+                                  StaticText, 0x11c5055e0, {{16.0, 568.0}, {343.0, 108.5}}, label: 'This is your declaration. The verification provider checks adulthood and does not independently establish your relationship to the child.'
+                          Other, 0x11c505700, {{32.0, 567.5}, {327.0, 0.5}}
+                          Other, 0x11c505820, {{342.0, 64.0}, {30.0, 603.0}}, label: 'Vertical scroll bar, 3 pages', value: 81%
+    Window, 0x11c505940, {{0.0, 0.0}, {375.0, 667.0}}
+      Other, 0x11c505a60, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x11c505b80, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x11c505ca0, {{0.0, 667.0}, {375.0, 216.0}}
+Path to element:
+ →Application, 0x11c0f88a0, pid: 94073, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x11c3400e0, pid: 94073, label: 'Room in the Cart'
+  }

@@ -1,5 +1,5 @@
 {
-  "status": "open; integration-owned common formatter",
+  "status": "Resolved in separately frozen civil-date component UI acceptance; original red evidence retained",
   "component": "ios/Features/Household/SharedMealViews.swift: SharedMealFacts",
   "simulatorTimeZone": "America/New_York",
   "runtime": "iOS27.0 (24A434)",
@@ -10,7 +10,62 @@
   "newWireDayEvidence": "sharedMealDay(day) uses UTC civil components; day starts Date(), the test did not change its DatePicker, and the run clock is November3UTC. POST body was not separately archived.",
   "screenshot": "screenshots/S26-shopper-applied-once-original-and-half-cup-meals-retained.png",
   "screenshotSHA256": "879dc5e23fe3ac684e57504653b3e922d96b9c1ef773614ecfd42bd85aeafb56",
-  "scope": "Quantity/proposal/shopper-Apply assertions passed; displayed civil dates were not asserted and are not accepted. Wire/model day handling was not changed by this lane.",
+  "scope": "Original S26 run: Quantity/proposal/shopper-Apply assertions passed; displayed civil dates were not asserted and are not accepted. Wire/model day handling was not changed by this lane.",
   "parentNotified": true,
-  "commonSourceEditedByThisLane": false
+  "commonSourceEditedByThisLane": false,
+  "originalStatus": "open; integration-owned common formatter",
+  "resolution": {
+    "recordedAt": "2026-11-03T21:22:32.873579+00:00",
+    "productionFile": "ios/Features/Household/SharedMealViews.swift",
+    "productionSHA256": "4dce8c7731ede0e8f2e8a2f0f63b364de472c40b1617d9a492aeac59d4837589",
+    "fix": "Resolve localized Gregorian UTC civil-day String first and render Text(verbatim:), so SwiftUI timeZone environment cannot shift it",
+    "modelTests": {
+      "passed": 4,
+      "result": "../library-history-civil-20261103/focused-models-summary.json"
+    },
+    "uiTests": {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "assertedProductionLabels": 64,
+      "dates": [
+        "2026-03-07",
+        "2026-03-08",
+        "2026-03-09",
+        "2026-10-31",
+        "2026-11-01",
+        "2026-11-02",
+        "2026-11-03",
+        "2026-11-05"
+      ],
+      "zones": [
+        "America/New_York",
+        "America/Los_Angeles",
+        "America/Phoenix",
+        "Pacific/Honolulu"
+      ],
+      "languages": [
+        "en_US",
+        "es_US"
+      ],
+      "result": "../library-history-civil-20261103/CivilDateScreens-summary.json"
+    },
+    "newYorkScreens": [
+      {
+        "locale": "en_US",
+        "wireDay": "2026-11-05",
+        "visibleDay": "November 5, 2026",
+        "screenshot": "../library-history-civil-20261103/screenshots/shared-civil-day-America-New_York-en_US-2026-11-05.png",
+        "sha256": "8bdf52bfc05b421909c20881aaa639d321d109807f2ee31090c5db52f43adc6e"
+      },
+      {
+        "locale": "es_US",
+        "wireDay": "2026-11-05",
+        "visibleDay": "5 de noviembre de 2026",
+        "screenshot": "../library-history-civil-20261103/screenshots/shared-civil-day-America-New_York-es_US-2026-11-05.png",
+        "sha256": "eee4c6164c4e0529e340a673baca35f47e1e54d8356ba0b3d7effd1304663ee3"
+      }
+    ],
+    "scope": "Actual production SharedMealFacts Text in guarded component fixture under SwiftUI zone environment. This closes display defect for tested dates/locales/zones; prior whole S26 flow was not rerun. Original wire data was not changed."
+  }
 }

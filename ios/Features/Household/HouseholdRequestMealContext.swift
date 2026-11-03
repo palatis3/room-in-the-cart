@@ -56,7 +56,7 @@ struct HouseholdRequestMealContextView: View {
             }
             Text(ht("Check usable food separately; this review does not confirm meal coverage."))
                 .font(.caption).foregroundStyle(.secondary)
-        }.accessibilityIdentifier("household.decision.meals")
+        }
     }
 }
 

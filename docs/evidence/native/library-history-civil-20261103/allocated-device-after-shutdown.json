@@ -1,0 +1,39 @@
+{
+  "recordedAt": "2026-11-03T21:27:18.666735+00:00",
+  "action": [
+    "xcrun",
+    "simctl",
+    "shutdown",
+    "2BE8542F-00D9-48B7-BCDE-8AB169497969"
+  ],
+  "returnCode": 0,
+  "stdout": "",
+  "stderr": "",
+  "before": {
+    "dataPath": "/Users/palatis/Library/Developer/CoreSimulator/Devices/2BE8542F-00D9-48B7-BCDE-8AB169497969/data",
+    "dataPathSize": 5302112256,
+    "logPath": "/Users/palatis/Library/Logs/CoreSimulator/2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "udid": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "lastUsedAt": "2026-11-03T20:43:41Z",
+    "isAvailable": true,
+    "logPathSize": 589824,
+    "deviceTypeIdentifier": "com.apple.CoreSimulator.SimDeviceType.iPhone-17e",
+    "state": "Booted",
+    "name": "iPhone 17e",
+    "runtime": "com.apple.CoreSimulator.SimRuntime.iOS-27-0"
+  },
+  "after": {
+    "dataPath": "/Users/palatis/Library/Developer/CoreSimulator/Devices/2BE8542F-00D9-48B7-BCDE-8AB169497969/data",
+    "dataPathSize": 5027332096,
+    "logPath": "/Users/palatis/Library/Logs/CoreSimulator/2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "udid": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "lastUsedAt": "2026-11-03T20:43:41Z",
+    "isAvailable": true,
+    "logPathSize": 589824,
+    "deviceTypeIdentifier": "com.apple.CoreSimulator.SimDeviceType.iPhone-17e",
+    "state": "Shutdown",
+    "name": "iPhone 17e",
+    "runtime": "com.apple.CoreSimulator.SimRuntime.iOS-27-0"
+  },
+  "scope": "Only assigned17e; no delete, erase, data removal, global service action or unowned device signal. All selected cases and screenshot exports completed before shutdown."
+}

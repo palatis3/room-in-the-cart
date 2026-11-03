@@ -1,0 +1,50 @@
+{
+  "status": "Interrupted batch; raw result lacks Info.plist; do not count as completed six-test acceptance",
+  "recordedAt": "2026-11-03T21:12:40.462006+00:00",
+  "sourceManifest": "source-manifest-build2.json",
+  "binaryManifest": "binary-manifest-build2.json",
+  "knownProcess": {
+    "xcodebuildPID": 56916,
+    "lostToolSessionID": 20491,
+    "laterVerifiedAbsent": true,
+    "signalsSentByThisLane": false
+  },
+  "lastLogModifiedAt": "2026-11-03T20:54:00.959422+00:00",
+  "exitRecordExists": false,
+  "cause": "unknown; neither a completed test run nor an attributed runtime failure",
+  "loggedCaseOutcomes": [
+    {
+      "case": "CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp",
+      "status": "failed",
+      "reason": "Explicit Cancel missing in presented iOS27 popover",
+      "screenshot": "recovered-interrupted-screenshots/partial-03.png"
+    },
+    {
+      "case": "HistoryGrantReadUITests/testFreeGrantDiscoversReadOnlyShopOpensRawRecordsAndRejectsPaidAndForeignAccess",
+      "status": "failed",
+      "reason": "Review period totals tap performed another raw-plan read instead of paid analysis; raw reads4->5, paid denied stays1, writes0",
+      "before": "recovered-interrupted-screenshots/partial-06.png",
+      "after": "recovered-interrupted-screenshots/partial-07.png"
+    },
+    {
+      "case": "HistoryGrantReadUITests/testRevokedBudgetGrantClearsPreviouslyOpenedRawPeriodAndRememberedSource",
+      "status": "passed in log; final result incomplete",
+      "seconds": 52.612
+    },
+    {
+      "case": "RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo",
+      "status": "interrupted",
+      "lastCompletedAssertions": "2ready/2duplicates/2skipped, original/source unchanged, real Cancel count1 unchanged; interrupted returning to file chooser before corrupt selection"
+    },
+    {
+      "case": "SharedMealCivilDateUITests English and Spanish",
+      "status": "not started"
+    }
+  ],
+  "recoveredImages": "recovered-interrupted-screenshots/manifest.json",
+  "originalRawBundle": "PreparedScreens.xcresult",
+  "readerErrors": [
+    "prepared-ui-partial-summary-error.txt",
+    "attachments-prepared-partial-export.log"
+  ]
+}

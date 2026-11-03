@@ -1,0 +1,109 @@
+Attributes: Application, 0x1052a35c0, pid: 65459, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x1052a35c0, pid: 65459, label: 'Room in the Cart'
+    Window (Main), 0x1052a2e40, {{0.0, 0.0}, {390.0, 844.0}}
+      Other, 0x1052a3480, {{0.0, 0.0}, {390.0, 844.0}}
+        Other, 0x1052a30c0, {{0.0, 0.0}, {390.0, 844.0}}
+          Other, 0x1052a1040, {{0.0, 0.0}, {390.0, 844.0}}
+            Other, 0x1052a3200, {{0.0, 0.0}, {390.0, 844.0}}
+              StaticText, 0x1052a3980, {{101.3, 47.0}, {187.3, 13.3}}, identifier: 'fixture.corrections.english', label: 'N04 English entries: 0 · enabled: no'
+              StaticText, 0x1052a2f80, {{98.0, 62.3}, {194.0, 13.3}}, identifier: 'fixture.corrections.spanish', label: 'N04 Spanish entries: 1 · enabled: yes'
+              StaticText, 0x110ea3200, {{107.5, 77.7}, {175.0, 13.3}}, identifier: 'fixture.corrections.sourceUnchanged', label: 'N04 local source unchanged: yes'
+              Other, 0x110ea0640, {{0.0, 93.0}, {390.0, 751.0}}
+                NavigationBar, 0x110ea2bc0, {{0.0, 103.0}, {390.0, 106.0}}, identifier: 'Spelling corrections'
+                  Button, 0x110ea2940, {{16.0, 103.0}, {44.0, 44.0}}, identifier: 'BackButton', label: 'Settings'
+                  StaticText, 0x110ea1e00, {{16.0, 160.7}, {315.7, 40.7}}, label: 'Spelling corrections'
+                Other, 0x110ea2080, {{0.0, 93.0}, {390.0, 751.0}}
+                  Other, 0x110ea1f40, {{0.0, 93.0}, {390.0, 751.0}}
+                    Other, 0x110ea1b80, {{0.0, 93.0}, {390.0, 751.0}}
+                      Other, 0x110ea1a40, {{0.0, 93.0}, {390.0, 751.0}}
+                        CollectionView, 0x110ea1900, {{0.0, 93.0}, {390.0, 751.0}}
+                          Other, 0x110ea0dc0, {{-16.0, -1293.0}, {422.0, 1706.3}}
+                          Other, 0x110ea0a00, {{0.0, 93.0}, {390.0, 751.0}}
+                            Other, 0x110ea0280, {{0.0, 93.0}, {390.0, 104.0}}
+                          Other, 0x110ea2a80, {{0.0, 93.0}, {390.0, 751.0}}
+                          Cell, 0x110ea0c80, {{16.0, 209.0}, {358.0, 40.3}}
+                            Other, 0x110ea12c0, {{16.0, 209.0}, {358.0, 40.3}}
+                            Other, 0x110ea2800, {{16.0, 209.0}, {358.0, 40.3}}
+                              Other, 0x110ea35c0, {{16.0, 209.0}, {358.0, 40.3}}
+                                Other, 0x110ea1180, {{16.0, 209.0}, {358.0, 40.3}}
+                                  StaticText, 0x110ea1680, {{16.0, 209.0}, {358.0, 40.3}}, label: 'Spelling language'
+                          Cell, 0x110ea1540, {{16.0, 249.3}, {358.0, 52.0}}
+                            Other, 0x110ea17c0, {{16.0, 249.3}, {358.0, 52.0}}
+                              Other, 0x110ea2f80, {{16.0, 249.3}, {358.0, 52.0}}
+                            Other, 0x110ea0780, {{16.0, 249.3}, {358.0, 52.0}}
+                              Other, 0x110ea30c0, {{16.0, 249.3}, {358.0, 52.0}}
+                                Other, 0x110ea0500, {{16.0, 249.3}, {358.0, 52.0}}
+                                  Button, 0x110ea3340, {{32.0, 258.3}, {326.0, 34.3}}, identifier: 'corrections.language', label: 'Spelling language, English spellings'
+                                    StaticText, 0x110ea2e40, {{215.3, 265.3}, {126.3, 20.3}}, label: 'English spellings'
+                                  StaticText, 0x110ea0b40, {{32.0, 265.2}, {135.0, 20.3}}, label: 'Spelling language'
+                          Cell, 0x108046d00, {{16.0, 301.3}, {358.0, 94.3}}
+                            Other, 0x108047340, {{16.0, 301.3}, {358.0, 94.3}}
+                              Other, 0x108045900, {{16.0, 301.3}, {358.0, 94.3}}
+                            Other, 0x1080461c0, {{16.0, 301.3}, {358.0, 94.3}}
+                              Other, 0x108046e40, {{16.0, 301.3}, {358.0, 94.3}}
+                                Other, 0x108046440, {{16.0, 301.3}, {358.0, 94.3}}
+                                  StaticText, 0x108046bc0, {{16.0, 301.3}, {358.0, 94.3}}, label: 'These spellings belong to this private workspace and the selected language. They stay on this iPhone.'
+                          Other, 0x108046f80, {{32.0, 300.3}, {326.0, 1.0}}
+                          Other, 0x108046940, {{-16.0, 413.3}, {422.0, 152.3}}
+                          Cell, 0x108047480, {{16.0, 413.3}, {358.0, 40.3}}
+                            Other, 0x1080470c0, {{16.0, 413.3}, {358.0, 40.3}}
+                            Other, 0x108044c80, {{16.0, 413.3}, {358.0, 40.3}}
+                              Other, 0x108047d40, {{16.0, 413.3}, {358.0, 40.3}}
+                                Other, 0x108044dc0, {{16.0, 413.3}, {358.0, 40.3}}
+                                  StaticText, 0x108046080, {{16.0, 413.3}, {358.0, 40.3}}, label: 'Spelling result'
+                          Cell, 0x1080452c0, {{16.0, 453.7}, {358.0, 94.3}}
+                            Other, 0x1080475c0, {{16.0, 453.7}, {358.0, 94.3}}
+                              Other, 0x108047e80, {{16.0, 453.7}, {358.0, 94.3}}
+                            Other, 0x108047ac0, {{16.0, 453.7}, {358.0, 94.3}}
+                              Other, 0x108047c00, {{16.0, 453.7}, {358.0, 94.3}}
+                                Other, 0x108045f40, {{16.0, 453.7}, {358.0, 94.3}}
+                                  StaticText, 0x108044f00, {{16.0, 453.7}, {358.0, 94.3}}, identifier: 'corrections.result', label: 'Spelling memory is off. Saved spellings for this workspace and language were deleted.'
+                          Other, 0x108046a80, {{-16.0, 565.3}, {422.0, 363.0}}
+                          Cell, 0x108047700, {{16.0, 565.3}, {358.0, 40.3}}
+                            Other, 0x108045b80, {{16.0, 565.3}, {358.0, 40.3}}
+                            Other, 0x1080466c0, {{16.0, 565.3}, {358.0, 40.3}}
+                              Other, 0x108045e00, {{16.0, 565.3}, {358.0, 40.3}}
+                                Other, 0x108045180, {{16.0, 565.3}, {358.0, 40.3}}
+                                  StaticText, 0x108047840, {{16.0, 565.3}, {358.0, 40.3}}, label: 'Optional spelling memory'
+                          Cell, 0x1080457c0, {{16.0, 605.7}, {358.0, 72.3}}
+                            Other, 0x110eec000, {{16.0, 605.7}, {358.0, 72.3}}
+                              Other, 0x110eec140, {{16.0, 605.7}, {358.0, 72.3}}
+                            Other, 0x110eec280, {{16.0, 605.7}, {358.0, 72.3}}
+                              Other, 0x110eec3c0, {{16.0, 605.7}, {358.0, 72.3}}
+                                Other, 0x110eec500, {{16.0, 605.7}, {358.0, 72.3}}
+                                  Switch, 0x110eec640, {{16.0, 605.7}, {358.0, 72.3}}, identifier: 'corrections.enabled', label: 'Remember product spellings on this device', value: 0
+                                    StaticText, 0x110eec780, {{32.0, 620.7}, {246.7, 42.3}}, label: 'Remember product spellings on this device'
+                                    Switch, 0x110eec8c0, {{297.0, 628.0}, {63.0, 28.0}}, value: 0
+                          Cell, 0x110eeca00, {{16.0, 678.0}, {358.0, 116.3}}
+                            Other, 0x110eecb40, {{16.0, 678.0}, {358.0, 116.3}}
+                              Other, 0x110eecc80, {{16.0, 678.0}, {358.0, 116.3}}
+                            Other, 0x110eecdc0, {{16.0, 678.0}, {358.0, 116.3}}
+                              Other, 0x110eecf00, {{16.0, 678.0}, {358.0, 116.3}}
+                                Other, 0x110eed040, {{16.0, 678.0}, {358.0, 116.3}}
+                                  StaticText, 0x110eed180, {{16.0, 678.0}, {358.0, 116.3}}, label: 'Only spellings you explicitly remember are saved for this profile and language. Turning this off deletes them. Previous records never change.'
+                          Other, 0x110eed2c0, {{32.0, 677.0}, {326.0, 1.0}}
+                          Cell, 0x110eed400, {{16.0, 794.3}, {358.0, 116.3}}
+                            Other, 0x110eed540, {{16.0, 794.3}, {358.0, 116.3}}
+                              Other, 0x110eed680, {{16.0, 794.3}, {358.0, 116.3}}
+                            Other, 0x110eed7c0, {{16.0, 794.3}, {358.0, 116.3}}
+                              Other, 0x110eed900, {{16.0, 794.3}, {358.0, 116.3}}
+                                Other, 0x110eeda40, {{16.0, 794.3}, {358.0, 116.3}}
+                                  StaticText, 0x110eedb80, {{16.0, 794.3}, {358.0, 116.3}}, label: 'Manage saved spellings here. New spellings are remembered only when you explicitly choose that action during a capture review.'
+                          Other, 0x110eedcc0, {{32.0, 793.3}, {326.0, 1.0}}
+                          Other, 0x110eede00, {{357.0, 157.0}, {30.0, 639.7}}, label: 'Vertical scroll bar, 2 pages', value: 0%
+                            Other, 0x110eedf40, {{384.0, 160.0}, {3.0, 510.7}}
+                          Other, 0x110eee080, {{357.0, 157.0}, {30.0, 639.7}}, label: 'Vertical scroll bar, 2 pages', value: 0%
+                            Other, 0x110eee1c0, {{384.0, 160.0}, {3.0, 510.7}}
+                Toolbar, 0x110eee300, {{0.0, 93.0}, {390.0, 751.0}}, identifier: 'Toolbar', label: 'Toolbar'
+                  Other, 0x110eee440, {{0.0, 93.0}, {390.0, 751.0}}
+    Window, 0x110eee580, {{0.0, 0.0}, {390.0, 844.0}}
+      Other, 0x110eee6c0, {{0.0, 0.0}, {390.0, 844.0}}
+        Other, 0x110eee800, {{0.0, 0.0}, {390.0, 844.0}}
+Path to element:
+ →Application, 0x1052a35c0, pid: 65459, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x110eee940, pid: 65459, label: 'Room in the Cart'
+  }

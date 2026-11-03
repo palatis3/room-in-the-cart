@@ -122,7 +122,7 @@ struct RootView: View {
         if let role = household.projection?.role, !["shopper", "organizer"].contains(role) {
             NavigationStack { HouseholdSettingsView(model: household) }
         } else if !access.unlocked {
-            WorkspaceUnlockView(access: access, household: household)
+            WorkspaceUnlockView(access: access, household: household, childExitNotice: guardianChild?.message)
         } else { tabs }
     }
     private var tabs: some View { RestorableAdultTabs() }

@@ -1,0 +1,42 @@
+Attributes: Application, 0x1008b0ef0, pid: 94902, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x1008b0ef0, pid: 94902, label: 'Room in the Cart'
+    Window (Main), 0x10438d5c0, {{0.0, 0.0}, {375.0, 667.0}}
+      Other, 0x104394e50, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x104396ea0, {{0.0, 0.0}, {375.0, 667.0}}
+          Other, 0x1043968e0, {{0.0, 0.0}, {375.0, 667.0}}
+            Other, 0x104394640, {{0.0, 0.0}, {375.0, 667.0}}
+              Other, 0x1043978c0, {{0.0, 0.0}, {375.0, 667.0}}
+                NavigationBar, 0x104390c10, {{0.0, 20.0}, {375.0, 44.0}}, identifier: 'Controles del tutor'
+                  StaticText, 0x10439a760, {{98.0, 28.0}, {179.0, 25.5}}, label: 'Controles del tutor'
+                Other, 0x10439ab80, {{0.0, 0.0}, {375.0, 667.0}}
+                  Other, 0x104395800, {{0.0, 0.0}, {375.0, 667.0}}
+                    Other, 0x10439c0a0, {{0.0, 0.0}, {375.0, 667.0}}
+                      Other, 0x10439c1c0, {{0.0, 0.0}, {375.0, 667.0}}
+                        CollectionView, 0x10439c2e0, {{0.0, 0.0}, {375.0, 667.0}}
+                          Other, 0x10439c400, {{-16.0, -591.5}, {407.0, 2727.0}}
+                          Cell, 0x10439c520, {{16.0, -202.0}, {343.0, 271.5}}
+                            Other, 0x10439c640, {{16.0, -202.0}, {343.0, 271.5}}
+                              Other, 0x10439c760, {{16.0, -202.0}, {343.0, 271.5}}
+                            Other, 0x10439c880, {{16.0, -202.0}, {343.0, 271.5}}
+                              Other, 0x10439c9a0, {{16.0, -202.0}, {343.0, 271.5}}
+                                Other, 0x10439cac0, {{16.0, -202.0}, {343.0, 271.5}}
+                                  Button, 0x10439cbe0, {{16.0, -202.0}, {343.0, 271.5}}, identifier: 'guardian.refresh', label: 'Actualizar el aviso y el estado de configuración'
+                          Cell, 0x10439cd00, {{16.0, 69.5}, {343.0, 712.0}}
+                            Other, 0x10439ce20, {{16.0, 69.5}, {343.0, 712.0}}
+                              Other, 0x10439cf40, {{16.0, 69.5}, {343.0, 712.0}}
+                            Other, 0x10439d060, {{16.0, 69.5}, {343.0, 712.0}}
+                              Other, 0x10439d180, {{16.0, 69.5}, {343.0, 712.0}}
+                                Other, 0x10439d2a0, {{16.0, 69.5}, {343.0, 712.0}}
+                                  Image, 0x10439d3c0, {{43.5, 86.5}, {55.0, 67.0}}, identifier: 'guardian.unavailable', label: 'lock.shield'
+                                  StaticText, 0x10439d4e0, {{16.0, 69.5}, {343.0, 712.0}}, identifier: 'guardian.unavailable', label: 'La configuración para menores no está disponible hasta que se aprueben el servicio de verificación y los avisos actuales.'
+                          Other, 0x10439d710, {{32.0, 68.5}, {327.0, 1.0}}
+                          Other, 0x10439d830, {{342.0, 64.0}, {30.0, 603.0}}, label: 'Barra de desplazamiento vertical, 5 páginas', value: 94%
+                            Other, 0x10439d950, {{369.0, 499.5}, {3.0, 137.0}}
+Path to element:
+ →Application, 0x1008b0ef0, pid: 94902, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x1008bf400, pid: 94902, label: 'Room in the Cart'
+  }

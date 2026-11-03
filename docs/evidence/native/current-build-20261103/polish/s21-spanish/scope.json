@@ -1,0 +1,9 @@
+{
+  "tag": "s21-spanish",
+  "result": "/Users/palatis/Room in the Cart/.build/DeviceQuiet-20261103.xcresult",
+  "acceptedCaseCount": 1,
+  "wholeRunPassed": true,
+  "source": "DeviceQuietSource-20261103T232237Z",
+  "loggingAccommodation": true,
+  "limits": "S21Spanish uses per-app OS_ACTIVITY_MODEdisable against provenXCTestloggingcrash; noabsence-of-runtimewarningsclaim. Englishsourcewholerun1pass/1Spanishinstrumentationcrash preserved. S23captionpostpolish1/1, priorEnglishseparateprodviewIDs unchangedexceptcaptionlayout."
+}

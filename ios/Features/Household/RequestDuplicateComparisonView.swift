@@ -66,20 +66,27 @@ private struct RequestDuplicateComparisonRow: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(isSelected ? requestDuplicateText("Deciding this request") : requestDuplicateText("Other request"))
                 .font(.headline)
+                .accessibilityIdentifier("household.duplicates.selection.\(request.id)")
             LabeledContent(requestDuplicateText("Requested by"), value: request.authorAlias ?? requestDuplicateText("Alias unavailable"))
+                .accessibilityIdentifier("household.duplicates.author.\(request.id)")
             VStack(alignment: .leading, spacing: 4) {
                 Text(requestDuplicateText("Original request")).font(.caption).foregroundStyle(.secondary)
                 Text(request.originalItem).fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("household.duplicates.original.\(request.id)")
             }
             VStack(alignment: .leading, spacing: 4) {
                 Text(requestDuplicateText("Amount and use, as written")).font(.caption).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("household.duplicates.amountLabel.\(request.id)")
                 Text(request.ownQuantity ?? requestDuplicateText("No amount or use supplied"))
                     .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("household.duplicates.amount.\(request.id)")
             }
             LabeledContent(requestDuplicateText("Destination"), value: destination)
             LabeledContent(requestDuplicateText("Request revision"), value: request.revision.formatted())
             LabeledContent(requestDuplicateText("Received"), value: householdTime(request.receivedAt))
             LabeledContent(requestDuplicateText("This request's outcome"), value: shopperRequestStatus(request))
+                .accessibilityIdentifier("household.duplicates.outcome.\(request.id)")
             if let clarification = request.clarification {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(requestDuplicateText("Clarification for this requester")).font(.caption).foregroundStyle(.secondary)
@@ -89,7 +96,6 @@ private struct RequestDuplicateComparisonRow: View {
         }
         .padding(.vertical, 4)
         .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("household.duplicates.request.\(request.id)")
     }
     private var destination: String {
         switch request.route {

@@ -1,0 +1,92 @@
+{
+  "scope": "Actual final E eight-case result screenshot and paired AX review",
+  "run": "ui-final-e-acceptance-run.json",
+  "reviewedAt": "2026-11-03T22:47:56.195693+00:00",
+  "reviewed": [
+    {
+      "caption": "Guardian pairing confirmed without local activation",
+      "screenshot": "ui-final-e-attachments/AB148EF2-0ADE-4A5E-A0AC-C47FFD06BD66.png",
+      "accessibility": "ui-final-e-attachments/A5CF4AEF-94A3-4A2E-AD5A-A370DE9527DF.txt",
+      "finding": "Device confirmed but child must finish in their own authenticated session; no local activation claim."
+    },
+    {
+      "caption": "Guardian separate permission recorded",
+      "screenshot": "ui-final-e-attachments/E4A7469E-369D-44FD-823E-7015CA033B06.png",
+      "accessibility": "ui-final-e-attachments/2FB3F6AE-E8B0-4A06-8577-B3444E0B1E57.txt",
+      "finding": "Permission recorded; invitation still needed; declaration remains distinct and no activation claim."
+    },
+    {
+      "caption": "Synthetic child vaults preserved private records and inbox",
+      "screenshot": "ui-final-e-attachments/41BACBD1-7701-4346-855D-0826DFF5AF3B.png",
+      "accessibility": "ui-final-e-attachments/75BFA031-CEE5-481F-B590-4D210C0CD361.txt",
+      "finding": "Adult unlock screen remains; fixture reports unchanged ledger/inbox, empty child vaults and locked adult. Storage invariants are proven by assertions, not by screenshot alone."
+    },
+    {
+      "caption": "Synthetic child vaults locked adult exit",
+      "screenshot": "ui-final-e-attachments/01C7842D-C226-489D-8BBE-0AB4A1C3D7C4.png",
+      "accessibility": "ui-final-e-attachments/38666CAB-2452-44F5-BDF8-8DB0000A9071.txt",
+      "finding": "Private workspace requires unlock; no adult tabs/private item disclosed. E predates separate parent exit-notice supplement."
+    },
+    {
+      "caption": "Synthetic child vaults cold child root",
+      "screenshot": "ui-final-e-attachments/D13DB403-B923-4FCC-B354-22EFA1AFCDFE.png",
+      "accessibility": "ui-final-e-attachments/75D82588-A1C9-4998-9D48-027E98FEEF4F.txt",
+      "finding": "Cold launch remains child sign-in root, availability closed, no adult tabs/unlock/private item."
+    },
+    {
+      "caption": "Synthetic child vaults child root after cancel",
+      "screenshot": "ui-final-e-attachments/05814A96-439A-48AA-8002-3570037D638D.png",
+      "accessibility": "ui-final-e-attachments/10CD8FDD-DBDB-48AE-B060-E63093176F01.txt",
+      "finding": "Leave Cancel retains child root (blocked or unavailable as server fixture dictates); no adult escape or private item."
+    },
+    {
+      "caption": "Empty child vaults preserved private records and inbox",
+      "screenshot": "ui-final-e-attachments/C2697447-B2B0-48F1-9A1E-3E1ABA6A3969.png",
+      "accessibility": "ui-final-e-attachments/CDD73F5C-F3C3-4607-BB74-4C4D9AF9A62D.txt",
+      "finding": "Adult unlock screen remains; fixture reports unchanged ledger/inbox, empty child vaults and locked adult. Storage invariants are proven by assertions, not by screenshot alone."
+    },
+    {
+      "caption": "Empty child vaults locked adult exit",
+      "screenshot": "ui-final-e-attachments/C64EB7CA-6595-4F15-B881-4CD693A32DB6.png",
+      "accessibility": "ui-final-e-attachments/33300192-CD9C-4D3D-84CD-D762066645BA.txt",
+      "finding": "Private workspace requires unlock; no adult tabs/private item disclosed. E predates separate parent exit-notice supplement."
+    },
+    {
+      "caption": "Empty child vaults cold child root",
+      "screenshot": "ui-final-e-attachments/58315FC3-3314-42EC-AE65-1547802B03B3.png",
+      "accessibility": "ui-final-e-attachments/54AD18C8-51CC-4DFF-8119-D2E9CDB478BD.txt",
+      "finding": "Cold launch remains child sign-in root, availability closed, no adult tabs/unlock/private item."
+    },
+    {
+      "caption": "Empty child vaults child root after cancel",
+      "screenshot": "ui-final-e-attachments/55820912-D4B1-43D7-8188-DF0208F8D558.png",
+      "accessibility": "ui-final-e-attachments/A12AB450-B80B-4D7B-AB16-49E760673238.txt",
+      "finding": "Leave Cancel retains child root (blocked or unavailable as server fixture dictates); no adult escape or private item."
+    },
+    {
+      "caption": "Guardian unavailable Spanish largest text continuation",
+      "screenshot": "ui-final-e-attachments/9DB49446-8207-42D2-B2CD-C4F53583AE92.png",
+      "accessibility": "ui-final-e-attachments/5C56673D-3203-41A1-9B15-5CF697B7797D.txt",
+      "finding": "Largest text is readable by scrolling; beginning starts with La configuraci\u00f3n below navigation, continuation reaches actuales.; no create/verify control."
+    },
+    {
+      "caption": "Guardian unavailable Spanish largest text beginning",
+      "screenshot": "ui-final-e-attachments/6FA297E0-F92D-4582-A8BE-E47D6FFC1106.png",
+      "accessibility": "ui-final-e-attachments/CE0B7B2E-F369-4D16-850F-0728A6423A59.txt",
+      "finding": "Largest text is readable by scrolling; beginning starts with La configuraci\u00f3n below navigation, continuation reaches actuales.; no create/verify control."
+    },
+    {
+      "caption": "Guardian unavailable English",
+      "screenshot": "ui-final-e-attachments/8B686372-1BC2-4F44-B52C-9CE33A6AE6F9.png",
+      "accessibility": "ui-final-e-attachments/9A406129-1D08-461F-A947-1D9D2998D258.txt",
+      "finding": "Entire unavailable warning readable; notice refresh shown, no creation or verification action."
+    }
+  ],
+  "previousReview": "lead-visual-review.json includes preserved C/D and final E review, separately excludes the later exit-notice delta",
+  "limitations": [
+    "Fictional local fixtures only; no provider/email/account activation",
+    "Human Spanish language review remains pending",
+    "Static images do not themselves prove storage invariants; actual root assertions verify payload/revision/inbox/vaults",
+    "Separate parent Root exit notice change is outside this E artifact"
+  ]
+}

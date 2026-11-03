@@ -1,0 +1,122 @@
+{
+  "status": "Passed selected acceptance across explicitly frozen QA bundles",
+  "recordedAt": "2026-11-03T21:29:18.627989+00:00",
+  "frozenBaseCommit": "ec1c243e7846892d9991620160e4365d8edf5ebb",
+  "device": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+  "deviceName": "iPhone17e",
+  "runtime": "iOS27.0; SDK27.1; Xcode27.1 (27A9275)",
+  "selectedModelCases": 25,
+  "selectedUICases": 6,
+  "results": [
+    {
+      "area": "FocusedModels",
+      "summary": "focused-models-summary.json",
+      "resultBundle": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/FocusedModels.xcresult",
+      "passed": 25,
+      "failed": 0,
+      "skipped": 0,
+      "sourceManifest": "source-manifest-build2.json",
+      "binaryManifest": "binary-manifest-build2.json"
+    },
+    {
+      "area": "CivilDateScreens",
+      "summary": "CivilDateScreens-summary.json",
+      "resultBundle": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/CivilDateScreens.xcresult",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "sourceManifest": "source-manifest-build3.json",
+      "binaryManifest": "binary-manifest-build3.json"
+    },
+    {
+      "area": "HistoryGrantScreens",
+      "summary": "HistoryGrantScreens-summary.json",
+      "resultBundle": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/HistoryGrantScreens.xcresult",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "sourceManifest": "source-manifest-build3.json",
+      "binaryManifest": "binary-manifest-build3.json"
+    },
+    {
+      "area": "RecipeLibraryFinal",
+      "summary": "RecipeLibraryFinal-summary.json",
+      "resultBundle": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/RecipeLibraryFinal.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "sourceManifest": "source-manifest-build4.json",
+      "binaryManifest": "binary-manifest-build4.json"
+    },
+    {
+      "area": "CorrectionPrivacyFinal",
+      "summary": "CorrectionPrivacyFinal-summary.json",
+      "resultBundle": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/CorrectionPrivacyFinal.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "sourceManifest": "source-manifest-build4.json",
+      "binaryManifest": "binary-manifest-build4.json"
+    }
+  ],
+  "sourceVariants": {
+    "2": {
+      "manifest": "source-manifest-build2.json",
+      "sourceIdentity": "3f2b7559ad4c6db0fed7e446e2b5328ee8ae1be6ade1e4113fe3f73c51915712",
+      "sourceCopy": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/FrozenSource-build2"
+    },
+    "3": {
+      "manifest": "source-manifest-build3.json",
+      "sourceIdentity": "605c36fd5b2603261df81e8a54e49580db28178ef20ebc26128334afb77d6487",
+      "sourceCopy": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/FrozenSource-build3"
+    },
+    "4": {
+      "manifest": "source-manifest-build4.json",
+      "sourceIdentity": "1ef6a0774afb548fa1c4028ef33a0aa30c7aeecd21d53f890f2e9752606bfbe0",
+      "sourceCopy": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/FrozenSource-build4"
+    }
+  },
+  "binaryVariants": {
+    "2": {
+      "manifest": "binary-manifest-build2.json",
+      "appSHA256": "949a400f8a442cd152474e59ec4375489259644c125d46ad9596a5f38f9b9fff",
+      "products": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/FrozenProducts-build2"
+    },
+    "3": {
+      "manifest": "binary-manifest-build3.json",
+      "appSHA256": "ec465d892e06e87c3cfd55cf7b4d2dbe34875adad186f055da13e720bbf6bf47",
+      "products": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/FrozenProducts-build3"
+    },
+    "4": {
+      "manifest": "binary-manifest-build4.json",
+      "appSHA256": "ec465d892e06e87c3cfd55cf7b4d2dbe34875adad186f055da13e720bbf6bf47",
+      "products": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/FrozenProducts-build4"
+    }
+  },
+  "screenshots": "screenshots.json",
+  "ownedLiveChanges": [
+    "ios/Features/Capture/CorrectionSettingsView.swift",
+    "ios/Features/History/HistoryViews.swift",
+    "ios/UITests/LibraryPrivacyUITests.swift"
+  ],
+  "civilWorkerFiles": [
+    "ios/Features/Household/SharedMealViews.swift",
+    "ios/UITestSupport/SharedMealChangeUIFixture.swift",
+    "ios/Tests/SharedMealCivilDateTests.swift",
+    "ios/UITests/SharedMealCivilDateUITests.swift"
+  ],
+  "compileOnlyOverlay": "Frozen snapshot alone adds @MainActor to RecordsRecoveryCapture.Scope, matching independently installed Records-owner fix. Full concurrent Records file never copied.",
+  "durableEvidenceRoot": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103",
+  "limitations": [
+    "Exact ec1c243 tracked ios/scripts/config snapshot plus four SHA-verified civil files, one snapshot-only compile annotation, two approved view fixes, one dedicated test selector correction. Concurrent later Records/guardian integration is excluded.",
+    "Production screens/components execute in a DEBUG+CONTRIBUTOR_CAPTURE_UI_FIXTURE app. Fictional initial data, document-picker input and .invalid transport are explicit fixture boundaries. These runs do not certify the system document picker or real-service/PostgreSQL authority.",
+    "Civil dates use actual SharedMealFacts Text under SwiftUI timeZone environments; this is focused component UI proof, not a rerun of the entire S26 functional journey.",
+    "Static localization passed15catalogs/3451en-es entries/3309literalkeys; excludes32dynamic helper expressions and106runtime compositions. Human Spanish review and physical VoiceOver remain separate."
+  ],
+  "earlierAttempts": [
+    "Original build1 failed baseline actor isolation; retained BuildForTesting.xcresult/log.",
+    "Original6-UI batch interrupted with no exit record/Info.plist; two logged failures, one logged pass, E01 partial, civil unstarted. Raw result,9PNG-signature recovered screenshots and provenance retained. Causeunknown; no signal sent by this lane.",
+    "Build3 N04 rerun failed test query ambiguity because actual Cancel is nested parent/child AX; complete failed xcresult retained. Stable observed identifier firstMatch fixes only selector.",
+    "Build3 E01 rerun stopped at a pre-scroll existence wait for the lazy corrupt-file error above the viewport. Complete failed xcresult retained; final test reveals the actual error before asserting it."
+  ]
+}

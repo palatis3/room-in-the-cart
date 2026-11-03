@@ -1,0 +1,168 @@
+{
+  "reviewedAtUTC": "2026-11-03T23:30:57.913688+00:00",
+  "scope": "Foundation2.1 S21 enrolled-device inventory and precise device revocation; dedicated synthetic SwiftUI fixture on SE/iOS17 simulator.",
+  "status": "Scoped English and Spanish largest-text native UI acceptance passed; selected screenshots visually inspected and exact AX reviewed.",
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "65B8A2FE-51FE-44A5-A9C7-F2524E33179B",
+    "deviceName": "Room in the Cart iOS 17 Small",
+    "modelName": "iPhone SE",
+    "osBuildNumber": "21A328",
+    "osVersion": "17.0",
+    "platform": "iOS Simulator"
+  },
+  "english": {
+    "test": "HouseholdDevicesUITests/testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess",
+    "result": "passed",
+    "seconds": 54.187,
+    "resultBundle": ".build/FinalDevices-20261103.xcresult",
+    "sourceRoot": ".build/FinalDevicesSource-20261103T231101Z",
+    "aggregateSHA256": "24e0cd839291fc8aa4d14c914ae9bd3ef937ed37c76ea7ff4783116b33a9e16d",
+    "sourceSHA256": {
+      "ios/UITests/HouseholdDevicesUITests.swift": "02d225a3d7251cef891d36f28d1c54168f6fb806008cd1ebe4071661daa5dd50",
+      "ios/Features/Household/HouseholdDevicesView.swift": "00412aabfd4250311fb427ec24a2d31234df1a40efbcfb4e3fbfb9731f3c31d6",
+      "ios/Features/Household/HouseholdDevicesModel.swift": "652a18e28e51852c1d6c44f1b81c0c48c356c9dacfebcd0248ff3bc6df8429da",
+      "ios/Features/Household/DeviceManagement.xcstrings": "670980e95a0f849d4512708062e2cc9dbf966c98e599604e1a266fe08b10050d",
+      "ios/UITestSupport/HouseholdDevicesUIFixture.swift": "38df85c16fb0811d3faa4ea76e411d0545c6a8c7844f51c3cd897d607a178274",
+      "ios/Packages/HouseholdClient/Sources/HouseholdClient/DeviceManagement.swift": "0491d7f2204f74cdde96c614a35ad5d3c5243c8013be35895fd5762b14b63f3f"
+    },
+    "logging": "Unmuted app process; OS_ACTIVITY_MODE=info in preserved baseline.",
+    "bundleCaveat": "The same two-test bundle contains the separately retained Spanish XCTest logging-quarantine crash. Its overall result is failed; only this exact English testcase is accepted."
+  },
+  "spanish": {
+    "test": "HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke",
+    "result": "passed",
+    "seconds": 102.291,
+    "resultBundle": ".build/DeviceQuiet-20261103.xcresult",
+    "summary": "spanish-result-summary.json",
+    "sourceRoot": ".build/DeviceQuietSource-20261103T232237Z",
+    "aggregateSHA256": "4c52bc094ae775c2b476c53bbd1cea4a13df67f5140c4721c236adbe3728d56b",
+    "sourceSHA256": {
+      "ios/UITests/HouseholdDevicesUITests.swift": "143865e9cc386d3fcea3121058da04c03fc54917178c16438f46998658f8cfb2",
+      "ios/Features/Household/HouseholdDevicesView.swift": "00412aabfd4250311fb427ec24a2d31234df1a40efbcfb4e3fbfb9731f3c31d6",
+      "ios/Features/Household/HouseholdDevicesModel.swift": "652a18e28e51852c1d6c44f1b81c0c48c356c9dacfebcd0248ff3bc6df8429da",
+      "ios/Features/Household/DeviceManagement.xcstrings": "670980e95a0f849d4512708062e2cc9dbf966c98e599604e1a266fe08b10050d",
+      "ios/UITestSupport/HouseholdDevicesUIFixture.swift": "38df85c16fb0811d3faa4ea76e411d0545c6a8c7844f51c3cd897d607a178274",
+      "ios/Packages/HouseholdClient/Sources/HouseholdClient/DeviceManagement.swift": "0491d7f2204f74cdde96c614a35ad5d3c5243c8013be35895fd5762b14b63f3f"
+    },
+    "deltaFromNativePolish": [
+      "ios/UITests/HouseholdDevicesUITests.swift"
+    ],
+    "dynamicType": "accessibility5",
+    "language": "es",
+    "locale": "es_US",
+    "logging": "OS_ACTIVITY_MODE=disable only on the launched fixture app process; XCTest action/assertion logs,manual screen/AX artifacts and crash reporting remain.",
+    "noWarningAbsenceClaim": true
+  },
+  "validatedJourney": [
+    "Actual Mia current enrollment and Alex target/sibling enrollments; exact references00000004/00000005/00000006.",
+    "Native alert names Alex and exact target00000005,explains scope,and exposes explicit Cancel/Cancelar and Revoke controls.",
+    "Cancel is explicitly tapped;alert dismisses;fixture confirms zero writes.",
+    "More devices pages actual model rows;sibling remains active.",
+    "Explicitly reviewing and confirming the same target applies one precise revocation.",
+    "Refresh shows the actual target revoked,date present,actual current enrollment active and sibling enrollment active;membership and shopper remain distinct."
+  ],
+  "visualReview": [
+    "Spanish native alert title,message,Cancel and Revoke controls are fully legible on375x667 SE screen.",
+    "At accessibility5 metadata labels and dates wrap across lines and use vertical scrolling; inspected status text remains visible and unambiguous.",
+    "Spanish target Acceso revocado and its date are visible in a separate capture from the sibling Registro activo state; exact IDs are confirmed by corresponding AX and passing assertions.",
+    "English final screenshot shows target00000005 revoked and sibling00000006 active together; named enrollment references remain distinguishable.",
+    "Technical fixture footer records test writes/access state; it is test-only and is not production UI."
+  ],
+  "artifacts": [
+    {
+      "file": "en-alert-review.png",
+      "sha256": "a26197f0c3336184d9488af0b9cd1a5430bd0b61b0cb950d0a20618e366f76a5",
+      "source": ".build/FinalDevices-20261103-attachments/9EDDEE3B-610C-414E-A8E9-C7B96C636DFF.png",
+      "review": "Explicit Cancel and Revoke are visible. The native alert names Alex and exact reference00000005 and explains the single-enrollment scope."
+    },
+    {
+      "file": "en-alert-review-AX.txt",
+      "sha256": "e1af2f2b8be5637e0a3e89f12cd567924153e835439372177d284bb48a760641",
+      "source": ".build/FinalDevices-20261103-attachments/5C627E67-0DD8-43D3-9940-C46080E42F6B.txt",
+      "review": "Native alert labels and44-point actions; exact alias/reference and writes0."
+    },
+    {
+      "file": "en-final-access.png",
+      "sha256": "b21099942b43ef29fb10ff84d902e5a1bfcd017e0bdb5d7630b8dc323e9baca4",
+      "source": ".build/FinalDevices-20261103-attachments/71EDB429-0E00-436D-9780-0919B62934FF.png",
+      "review": "Target reference00000005 is Access revoked with date; sibling reference00000006 remains Active enrollment. Footer confirms one write,current/member/shopper preserved."
+    },
+    {
+      "file": "en-final-access-AX.txt",
+      "sha256": "2b16aeb9174b702f12758b9dab6e1ee866ce07c2bdd6064c4b42af889a52e3c2",
+      "source": ".build/FinalDevices-20261103-attachments/29C95CE0-FA2B-4455-9777-7E4675B540EE.txt",
+      "review": "Exact target and sibling IDs/states are independently represented in actual rows."
+    },
+    {
+      "file": "es-alert-review.png",
+      "sha256": "9b254fbf44365f280c21c43724ba2050485191a45e0f75f63677ab182f008c0b",
+      "source": ".build/DeviceQuiet-20261103-attachments/209677AA-75EF-4840-8879-5533182B31C5.png",
+      "review": "Native alert and its full single-enrollment explanation are legible on SE. Alex/reference00000005, Revocar este dispositivo and Cancelar are visible; no outside-dismiss workaround."
+    },
+    {
+      "file": "es-alert-review-AX.txt",
+      "sha256": "4fe9636556e1ef0481dee2cdc73a8e241f8f7ea14a4f501e075bbcc347c929df",
+      "source": ".build/DeviceQuiet-20261103-attachments/8AD9D640-44F5-4F29-BA84-4A544D84C56F.txt",
+      "review": "Alert,exact target message,44-point confirm and cancel actions,zero-write footer."
+    },
+    {
+      "file": "es-page-after-cancel.png",
+      "sha256": "0d44b221ba0963555ca969b39791a45a6b21dcf6727fb09fd7b1e1a80073fa9b",
+      "source": ".build/DeviceQuiet-20261103-attachments/D8F0FB9E-6299-41BE-8706-F37BD565D982.png",
+      "review": "Paged sibling Registro activo remains visible at accessibility5,with writes0 after explicit Cancel."
+    },
+    {
+      "file": "es-page-after-cancel-AX.txt",
+      "sha256": "6180dfebf0b35a6825203ad1cefb0932bf07653e9bd62973ffafcd55ca7a0d7c",
+      "source": ".build/DeviceQuiet-20261103-attachments/A786C436-1CEF-49AA-9088-2D45410C9BBC.txt",
+      "review": "Sibling ID00000006 active and footer writes0; root test verifies alert dismissal."
+    },
+    {
+      "file": "es-current-active-after-revoke.png",
+      "sha256": "059be434c47bf24fb22dcc73660d7404b553da9f95efeea57253050a2465845a",
+      "source": ".build/DeviceQuiet-20261103-attachments/5254AA10-A304-4020-A2F3-B993B0304CE3.png",
+      "review": "Current enrollment Registro activo remains visible after refresh; exact target Alex/reference begins next row. Footer confirms writes1,currentactive,targetrevoked."
+    },
+    {
+      "file": "es-current-active-after-revoke-AX.txt",
+      "sha256": "a9132ce3aef765facbd7c9d3bceea46271f4201c6277807c6d4dc2715d298a23",
+      "source": ".build/DeviceQuiet-20261103-attachments/C2E5E56F-9922-4F44-8B8C-0016A4610488.txt",
+      "review": "Actual current ID00000004 active; target alias/reference are separate."
+    },
+    {
+      "file": "es-target-revoked.png",
+      "sha256": "0ac9f6829175159ff85af2d05ca3e1ccec76c987ec9194966d60ce3c7c0735eb",
+      "source": ".build/DeviceQuiet-20261103-attachments/2DD0499A-9AA6-41AE-9A14-BEB2BBB3486F.png",
+      "review": "Acceso revocado and dated status are visible,wrapping at accessibility5; next sibling alias Alex remains a separate enrollment. No status is conveyed by color alone."
+    },
+    {
+      "file": "es-target-revoked-AX.txt",
+      "sha256": "ef459aada4badc4ba32403f28dd548029302346458896e772420a33e2f200f09",
+      "source": ".build/DeviceQuiet-20261103-attachments/3CC2B53F-BD63-4766-96C0-CAE3659CF3E4.txt",
+      "review": "Exact target ID00000005 has Acceso revocado date; next sibling ID00000006 is distinct."
+    },
+    {
+      "file": "es-sibling-active-final.png",
+      "sha256": "eff35bee455621ae066fda48c4fef9acfd39e5d19648ed224869a2b6a7eb796f",
+      "source": ".build/DeviceQuiet-20261103-attachments/8F28ACEF-3133-427B-8085-21AD10FBC5D3.png",
+      "review": "Sibling Registro activo remains legible at accessibility5 after paging; footer preserves current,member,shopper and one exact target revoke."
+    },
+    {
+      "file": "es-sibling-active-final-AX.txt",
+      "sha256": "62eca745f1f66c0c6b0e6681054a24dfc49da202bb1f4720c7664ccdf35eebee",
+      "source": ".build/DeviceQuiet-20261103-attachments/7540967C-424B-48CD-88F1-F4D495032E34.txt",
+      "review": "Actual sibling ID00000006 is active; footer writes1,targetrevoked,currentactive,memberactive,shopperMia."
+    }
+  ],
+  "preservedFailures": [
+    "../se17-logging-crash/crash-diagnosis.json",
+    "../ui-diagnosis/candidate-diagnosis.json",
+    "../ui-diagnosis/FinalFixture-container-candidate.json"
+  ],
+  "limitations": [
+    "Spanish accommodated pass cannot establish absence of runtime warnings because app-process unified logging is suppressed. The unmuted crash and bounded provenance remain preserved.",
+    "This is simulator fixture evidence,not a live provider/household end-to-end claim or physical iPhone VoiceOver/Switch Control signoff.",
+    "No production code,tests,build,simulator state or Git/index was changed during this evidence review."
+  ]
+}

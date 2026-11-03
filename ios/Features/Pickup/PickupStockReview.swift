@@ -9,9 +9,79 @@ struct PickupStockReviewScope: Equatable {
     let householdID: String?
     let memberID: String?
     let role: String?
+    let householdLocked: Bool
+    let projection: PickupStockReviewProjection?
+    let presentationID: UUID?
+    init(workspaceID: UUID, localActorID: UUID, accountSubject: String?, householdID: String?, memberID: String?, role: String?,
+         householdLocked: Bool = false, projection: PickupStockReviewProjection? = nil, presentationID: UUID? = nil) {
+        self.workspaceID = workspaceID; self.localActorID = localActorID; self.accountSubject = accountSubject
+        self.householdID = householdID; self.memberID = memberID; self.role = role
+        self.householdLocked = householdLocked; self.projection = projection; self.presentationID = presentationID
+    }
     var permitsReview: Bool {
-        guard let role else { return accountSubject == nil && householdID == nil && memberID == nil }
+        // A retained sign-in is a boundary fingerprint, not permission over this private SQLite workspace.
+        guard let role else { return householdID == nil && memberID == nil && projection == nil }
+        if let projection {
+            guard projection.enrolled, projection.householdID == householdID, projection.memberID == memberID,
+                  projection.role == role else { return false }
+        }
         return ["shopper", "organizer"].contains(role) && accountSubject != nil && householdID != nil && memberID != nil
+    }
+}
+
+struct PickupStockReviewProjection: Equatable {
+    let householdID: String
+    let memberID: String
+    let role: String
+    let enrolled: Bool
+    let shopID: String?
+    let grantID: String?
+    let capabilities: [String]
+    let selectionRequired: Bool?
+    let canSelectShop: Bool?
+    init(householdID: String, memberID: String, role: String, enrolled: Bool, shopID: String?, grantID: String?,
+         capabilities: [String], selectionRequired: Bool? = nil, canSelectShop: Bool? = nil) {
+        self.householdID = householdID; self.memberID = memberID; self.role = role; self.enrolled = enrolled
+        self.shopID = shopID; self.grantID = grantID; self.capabilities = capabilities
+        self.selectionRequired = selectionRequired; self.canSelectShop = canSelectShop
+    }
+}
+
+/// The local device-owner admission is independent of network account unlock.
+/// Account/projection facts remain in the fingerprint so no review crosses a persona transition.
+struct PickupStockReviewPresentation: Equatable {
+    let workspaceID: UUID?
+    let localActorID: UUID
+    let workspaceUnlocked: Bool
+    let sceneActive: Bool
+    let childPresented: Bool
+    let guardianChildOnly: Bool
+    let accountSubject: String?
+    let householdLocked: Bool
+    let projection: PickupStockReviewProjection?
+
+    func scope(presentationID: UUID) -> PickupStockReviewScope? {
+        guard sceneActive, workspaceUnlocked, !childPresented, !guardianChildOnly, let workspaceID else { return nil }
+        if let projection {
+            guard accountSubject != nil, projection.enrolled, ["shopper", "organizer"].contains(projection.role) else { return nil }
+        }
+        return .init(workspaceID: workspaceID, localActorID: localActorID, accountSubject: accountSubject,
+            householdID: projection?.householdID, memberID: projection?.memberID, role: projection?.role,
+            householdLocked: householdLocked, projection: projection, presentationID: presentationID)
+    }
+}
+
+/// A changed boundary cancels the draft and rotates its ephemeral lease, even for A → B → A.
+struct PickupStockReviewSession {
+    private(set) var presentation: PickupStockReviewPresentation?
+    private(set) var id = UUID()
+    @discardableResult mutating func refresh(_ value: PickupStockReviewPresentation) -> Bool {
+        guard presentation != value else { return false }
+        presentation = value; id = UUID(); return true
+    }
+    func scope(for current: PickupStockReviewPresentation) -> PickupStockReviewScope? {
+        guard presentation == current else { return nil }
+        return current.scope(presentationID: id)
     }
 }
 

@@ -1,0 +1,167 @@
+{
+  "scope": "final eight guardian UI cases only, no models; identical immutable Products to passed E strict Spanish target",
+  "runManifest": "ui-final-e-acceptance-run.json",
+  "source": "/Users/palatis/Room in the Cart/.build/GuardianUIFinalESource-20261103T223806Z",
+  "products": "/Users/palatis/Room in the Cart/.build/GuardianUIFinalEProducts-20261103T223806Z",
+  "result": "/Users/palatis/Room in the Cart/.build/GuardianUIFinalEAcceptance-20261103T223951Z.xcresult",
+  "collectedAt": "2026-11-03T22:46:22.547987+00:00",
+  "testExit": 0,
+  "passed": 8,
+  "failed": 0,
+  "skipped": 0,
+  "total": 8,
+  "devicesAndConfigurations": [
+    {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "65B8A2FE-51FE-44A5-A9C7-F2524E33179B",
+        "deviceName": "Room in the Cart iOS 17 Small",
+        "modelName": "iPhone SE",
+        "osBuildNumber": "21A328",
+        "osVersion": "17.0",
+        "platform": "iOS Simulator"
+      },
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "passedTests": 8,
+      "skippedTests": 0,
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      }
+    }
+  ],
+  "attachments": [
+    {
+      "caption": "Guardian pairing confirmed without local activation accessibility_0_44D2123B-2346-4445-BBEE-89DDDAE3B9B9.txt",
+      "file": "ui-final-e-attachments/A5CF4AEF-94A3-4A2E-AD5A-A370DE9527DF.txt",
+      "sha256": "49c6433054c80457c20381a376c0217f11b489f15d3a953e8a59a7d96866d9df"
+    },
+    {
+      "caption": "Guardian pairing confirmed without local activation_0_4F8B94DA-64BE-4DFC-82AB-72633B8444C7.png",
+      "file": "ui-final-e-attachments/AB148EF2-0ADE-4A5E-A0AC-C47FFD06BD66.png",
+      "sha256": "bb5da2543f359c29755e3ceab2f19180a260a4caa6c79b08e5d462a0e2fd80f7"
+    },
+    {
+      "caption": "Guardian separate permission recorded accessibility_0_06400967-CCEA-43E0-96C7-5AA8ABB54899.txt",
+      "file": "ui-final-e-attachments/2FB3F6AE-E8B0-4A06-8577-B3444E0B1E57.txt",
+      "sha256": "628e0dc076508d956fc647352e26f5b05f4b9d8d7375d726b0e0869afb0d2daa"
+    },
+    {
+      "caption": "Guardian separate permission recorded_0_5A2234F9-726F-40E9-8B4C-8CBDF522C7ED.png",
+      "file": "ui-final-e-attachments/E4A7469E-369D-44FD-823E-7015CA033B06.png",
+      "sha256": "1810b9d5c3fc7ee5bf4a75c362e2306eb97a40ab8bfcd5c1ddd87d66489646b8"
+    },
+    {
+      "caption": "Synthetic child vaults preserved private records and inbox accessibility_0_DA7A144F-7FFF-4715-B65F-C4CA4632568A.txt",
+      "file": "ui-final-e-attachments/75BFA031-CEE5-481F-B590-4D210C0CD361.txt",
+      "sha256": "3ff3d35894d05ace958dc96baad163886db9a2d4ad74e176ebe4ffaa535a7e86"
+    },
+    {
+      "caption": "Synthetic child vaults preserved private records and inbox_0_1BB9A086-82FB-41DB-B8E1-CC7F92123EF8.png",
+      "file": "ui-final-e-attachments/41BACBD1-7701-4346-855D-0826DFF5AF3B.png",
+      "sha256": "7eda8aca64723a0efd794a9628eec37e2255782b0473312a42e6e064d9b121ba"
+    },
+    {
+      "caption": "Synthetic child vaults locked adult exit accessibility_0_FCCCCC7C-B1D7-4118-95A0-EEFA526765FB.txt",
+      "file": "ui-final-e-attachments/38666CAB-2452-44F5-BDF8-8DB0000A9071.txt",
+      "sha256": "06be98263f2209f197cb11dbba4e2f0240bfde415a9e5fc47c47258ef2f0278d"
+    },
+    {
+      "caption": "Synthetic child vaults locked adult exit_0_80E75DE0-07BC-4A9D-9C61-3E8EB8B68A85.png",
+      "file": "ui-final-e-attachments/01C7842D-C226-489D-8BBE-0AB4A1C3D7C4.png",
+      "sha256": "a9ee2c374c1e47a94f828b863c19a3da482c98cdc571cae12e34f94b4e093e36"
+    },
+    {
+      "caption": "Synthetic child vaults cold child root accessibility_0_7082558D-EFE9-4755-AA5B-CE1FD3908E7A.txt",
+      "file": "ui-final-e-attachments/75D82588-A1C9-4998-9D48-027E98FEEF4F.txt",
+      "sha256": "b6f3db319b985df62132842db76c5c94509cad67aa573b0a6b5970c1ac57fc8e"
+    },
+    {
+      "caption": "Synthetic child vaults cold child root_0_59093D98-9DE3-48C2-A5C7-3F916F0D7623.png",
+      "file": "ui-final-e-attachments/D13DB403-B923-4FCC-B354-22EFA1AFCDFE.png",
+      "sha256": "b8a4fc077d37b55b3939e560a42da8c5a6ee3db433a347279129590c33a76f89"
+    },
+    {
+      "caption": "Synthetic child vaults child root after cancel accessibility_0_95B69249-38E6-45B9-8670-5E1A6D9B9C8C.txt",
+      "file": "ui-final-e-attachments/10CD8FDD-DBDB-48AE-B060-E63093176F01.txt",
+      "sha256": "c5ddbfd29f3000dad6de8d2cef63991fc36e885977c9790c1d02b23a8b78b744"
+    },
+    {
+      "caption": "Synthetic child vaults child root after cancel_0_569019EB-DFC8-4CF7-AF98-1A7A51723C6D.png",
+      "file": "ui-final-e-attachments/05814A96-439A-48AA-8002-3570037D638D.png",
+      "sha256": "e93144c09d2da7f87b357df61aa3004a428db37d6070ccc9a880c5df665c788a"
+    },
+    {
+      "caption": "Empty child vaults preserved private records and inbox accessibility_0_022B997D-62E3-4BE6-B8A0-A22DFBE9F78B.txt",
+      "file": "ui-final-e-attachments/CDD73F5C-F3C3-4607-BB74-4C4D9AF9A62D.txt",
+      "sha256": "352d021a60e5e6edc56ca5f9f474f5a9604375a8a120f5da88b45d65e7908af7"
+    },
+    {
+      "caption": "Empty child vaults preserved private records and inbox_0_6CA918FD-F7FC-41B8-B804-326835FB616D.png",
+      "file": "ui-final-e-attachments/C2697447-B2B0-48F1-9A1E-3E1ABA6A3969.png",
+      "sha256": "7eda8aca64723a0efd794a9628eec37e2255782b0473312a42e6e064d9b121ba"
+    },
+    {
+      "caption": "Empty child vaults locked adult exit accessibility_0_14163B5B-A11A-425C-BEC6-8DA34178D503.txt",
+      "file": "ui-final-e-attachments/33300192-CD9C-4D3D-84CD-D762066645BA.txt",
+      "sha256": "aba93af21b9e182eb7129b6d878754fcaab8363cfd508d8ef860a49c15b2625c"
+    },
+    {
+      "caption": "Empty child vaults locked adult exit_0_0BB8AC89-CF15-4AE1-9005-182E2B106F5A.png",
+      "file": "ui-final-e-attachments/C64EB7CA-6595-4F15-B881-4CD693A32DB6.png",
+      "sha256": "a9ee2c374c1e47a94f828b863c19a3da482c98cdc571cae12e34f94b4e093e36"
+    },
+    {
+      "caption": "Empty child vaults cold child root accessibility_0_F531B001-D2CE-4FC6-8C3F-64B9D876B400.txt",
+      "file": "ui-final-e-attachments/54AD18C8-51CC-4DFF-8119-D2E9CDB478BD.txt",
+      "sha256": "86d5163ace4580c70ddbd3e3764a6f2283b970f53aab3803db1b05ded2870430"
+    },
+    {
+      "caption": "Empty child vaults cold child root_0_1ECF91A1-B96E-4FA2-B638-0449F07753C9.png",
+      "file": "ui-final-e-attachments/58315FC3-3314-42EC-AE65-1547802B03B3.png",
+      "sha256": "b9e598b5b6461b142d60fe553709abd1fdcc0e2c1582ccafed6823e8c3b542c4"
+    },
+    {
+      "caption": "Empty child vaults child root after cancel accessibility_0_C5E9F7F0-CB83-404F-BB50-784F11D77EA6.txt",
+      "file": "ui-final-e-attachments/A12AB450-B80B-4D7B-AB16-49E760673238.txt",
+      "sha256": "550b91ed45d5f56ecf6f313bb951920dfb3f2a19fa088290fe3e6cd4eab73b93"
+    },
+    {
+      "caption": "Empty child vaults child root after cancel_0_5A5C29D0-EA66-4F5D-9378-33240B4F156E.png",
+      "file": "ui-final-e-attachments/55820912-D4B1-43D7-8188-DF0208F8D558.png",
+      "sha256": "b9e598b5b6461b142d60fe553709abd1fdcc0e2c1582ccafed6823e8c3b542c4"
+    },
+    {
+      "caption": "Guardian unavailable Spanish largest text continuation accessibility_0_7A5BF0FF-BA07-4ED3-95DF-FA1265EE2A32.txt",
+      "file": "ui-final-e-attachments/5C56673D-3203-41A1-9B15-5CF697B7797D.txt",
+      "sha256": "bda2662279b982791b9562cd5245198020331e33dc33af4704b049ed652e3396"
+    },
+    {
+      "caption": "Guardian unavailable Spanish largest text continuation_0_316C6EB4-13DC-4F36-9302-A71971CC6923.png",
+      "file": "ui-final-e-attachments/9DB49446-8207-42D2-B2CD-C4F53583AE92.png",
+      "sha256": "f87c1b35242cfdde7d7f3d10219c9d0257ff8f198a3f58abb2389351efe4ad4e"
+    },
+    {
+      "caption": "Guardian unavailable Spanish largest text beginning accessibility_0_9649D2F8-5B05-413A-AE55-E96CCB989CA9.txt",
+      "file": "ui-final-e-attachments/CE0B7B2E-F369-4D16-850F-0728A6423A59.txt",
+      "sha256": "1e23daef59099ee6631b2b2182f614f3363a8711648c1302aeb2a2b41a80e5b9"
+    },
+    {
+      "caption": "Guardian unavailable Spanish largest text beginning_0_4BEC9D25-4477-4098-91E5-DEC61D73FA71.png",
+      "file": "ui-final-e-attachments/6FA297E0-F92D-4582-A8BE-E47D6FFC1106.png",
+      "sha256": "9de7c0060c31e83aaabb21c47ce881fafc27cb2b972490eb827c586af491e6a7"
+    },
+    {
+      "caption": "Guardian unavailable English accessibility_0_D14C5193-461D-4574-B09E-6F4F380C7895.txt",
+      "file": "ui-final-e-attachments/9A406129-1D08-461F-A947-1D9D2998D258.txt",
+      "sha256": "ee1d41cbf75a2722708e87d1fd6e0a721a80c9ebec0f32b41e458c9af48da560"
+    },
+    {
+      "caption": "Guardian unavailable English_0_83C3B73D-D668-49B6-849B-7E6931D06162.png",
+      "file": "ui-final-e-attachments/8B686372-1BC2-4F44-B52C-9CE33A6AE6F9.png",
+      "sha256": "e628188ed4307b5eee7fdb91dc098cd015f80133f3b3ae45f1ca26f42f0262ce"
+    }
+  ],
+  "visualReview": "Images must be separately inspected; attachment export does not imply a visual approval."
+}

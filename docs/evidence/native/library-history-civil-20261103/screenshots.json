@@ -1,0 +1,412 @@
+[
+  {
+    "area": "CivilDateScreens",
+    "testIdentifier": "SharedMealCivilDateUITests/testEnglishCivilDaysStayExactUnderUSTimeZoneEnvironments()",
+    "name": "shared-civil-day-Pacific-Honolulu-en_US-2026-11-05_0_70C4D174-A1AE-4E51-A391-95CF1599F5C4.png",
+    "path": "screenshots/shared-civil-day-Pacific-Honolulu-en_US-2026-11-05.png",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-CivilDateScreens/D9DF0314-6AAF-4E42-8B58-E8D6105BDEFD.png",
+    "sha256": "02800b16786a167e35d8041814ca1f95ec58f0c77ed4156fa55f290d58fe6a7e",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793740364.558
+  },
+  {
+    "area": "CivilDateScreens",
+    "testIdentifier": "SharedMealCivilDateUITests/testEnglishCivilDaysStayExactUnderUSTimeZoneEnvironments()",
+    "name": "shared-civil-day-America-Phoenix-en_US-2026-11-05_0_62EF121E-1FA6-44E2-B862-FE16F457DB1F.png",
+    "path": "screenshots/shared-civil-day-America-Phoenix-en_US-2026-11-05.png",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-CivilDateScreens/F40CD833-8BB3-44DE-A24A-BF23425F4018.png",
+    "sha256": "b3421f54f00187e2144e4f2ca282fbf41f8aff73026441a645a74bebab9ace5b",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793740356.394
+  },
+  {
+    "area": "CivilDateScreens",
+    "testIdentifier": "SharedMealCivilDateUITests/testEnglishCivilDaysStayExactUnderUSTimeZoneEnvironments()",
+    "name": "shared-civil-day-America-Los_Angeles-en_US-2026-11-05_0_7669FA7A-81CB-48DE-A46F-8792C199BA2A.png",
+    "path": "screenshots/shared-civil-day-America-Los_Angeles-en_US-2026-11-05.png",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-CivilDateScreens/1CD0B31D-8943-4CA8-A445-128F3BC92321.png",
+    "sha256": "8fe0cfa5d3e17805c57ad4f6ded2f7842ff4c309e1aaaebe54765196f180a1a4",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793740348.199
+  },
+  {
+    "area": "CivilDateScreens",
+    "testIdentifier": "SharedMealCivilDateUITests/testEnglishCivilDaysStayExactUnderUSTimeZoneEnvironments()",
+    "name": "shared-civil-day-America-New_York-en_US-2026-11-05_0_29A7AED1-162E-42AF-B2CC-C8E914F8E5C2.png",
+    "path": "screenshots/shared-civil-day-America-New_York-en_US-2026-11-05.png",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-CivilDateScreens/79A72F62-8B22-4478-AC35-A145DAF67B12.png",
+    "sha256": "8bdf52bfc05b421909c20881aaa639d321d109807f2ee31090c5db52f43adc6e",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793740340.041
+  },
+  {
+    "area": "CivilDateScreens",
+    "testIdentifier": "SharedMealCivilDateUITests/testSpanishCivilDaysStayExactUnderUSTimeZoneEnvironments()",
+    "name": "shared-civil-day-Pacific-Honolulu-es_US-2026-11-05_0_FD42F9CD-899E-4169-88A9-AAB7B73B38FE.png",
+    "path": "screenshots/shared-civil-day-Pacific-Honolulu-es_US-2026-11-05.png",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-CivilDateScreens/8DF319D1-B451-48D7-81D0-9AE2D7443038.png",
+    "sha256": "072405a2734fc3e3c66a0c97046a2caffd4b126f6eef70deb3e291a573048fb4",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793740397.308
+  },
+  {
+    "area": "CivilDateScreens",
+    "testIdentifier": "SharedMealCivilDateUITests/testSpanishCivilDaysStayExactUnderUSTimeZoneEnvironments()",
+    "name": "shared-civil-day-America-Phoenix-es_US-2026-11-05_0_5C59E7EF-1505-42D0-B7F6-EBF18A5DEBA6.png",
+    "path": "screenshots/shared-civil-day-America-Phoenix-es_US-2026-11-05.png",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-CivilDateScreens/E7E33AFA-44F4-46E2-970A-B6147EC4F0C1.png",
+    "sha256": "020222696c4627c2d2df87b9ea7a2bd03bdb611d34c920f1e18240d069dddd22",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793740389.007
+  },
+  {
+    "area": "CivilDateScreens",
+    "testIdentifier": "SharedMealCivilDateUITests/testSpanishCivilDaysStayExactUnderUSTimeZoneEnvironments()",
+    "name": "shared-civil-day-America-Los_Angeles-es_US-2026-11-05_0_90C836DA-5686-4D67-B869-3C847B5050FD.png",
+    "path": "screenshots/shared-civil-day-America-Los_Angeles-es_US-2026-11-05.png",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-CivilDateScreens/B54EDDB5-332C-4366-896A-88A4659B6FE6.png",
+    "sha256": "c73d4993111fa814cdac207fc800fedee4d26fc1879f14afc70877dec6e0d7fb",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793740380.936
+  },
+  {
+    "area": "CivilDateScreens",
+    "testIdentifier": "SharedMealCivilDateUITests/testSpanishCivilDaysStayExactUnderUSTimeZoneEnvironments()",
+    "name": "shared-civil-day-America-New_York-es_US-2026-11-05_0_68F1CF8C-D6B4-4756-BBA5-DA45574CB898.png",
+    "path": "screenshots/shared-civil-day-America-New_York-es_US-2026-11-05.png",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-CivilDateScreens/8FA940ED-F58C-401E-BD13-C552F2365692.png",
+    "sha256": "eee4c6164c4e0529e340a673baca35f47e1e54d8356ba0b3d7effd1304663ee3",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793740372.85
+  },
+  {
+    "area": "HistoryGrantScreens",
+    "testIdentifier": "HistoryGrantReadUITests/testFreeGrantDiscoversReadOnlyShopOpensRawRecordsAndRejectsPaidAndForeignAccess()",
+    "name": "E09-foreign-reference-clears-protected-disclosure_0_DBA16E75-4C38-4036-BE5F-8A3E080FF5E9.png",
+    "path": "screenshots/E09-foreign-reference-clears-protected-disclosure.png",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-HistoryGrantScreens/18220A48-7341-4FE3-AAD9-AD6064D58C9F.png",
+    "sha256": "be9772eca7a078bb73561dbfb1b2ae3f18358e4f108c8f188fe60755abf53821",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793740521.134
+  },
+  {
+    "area": "HistoryGrantScreens",
+    "testIdentifier": "HistoryGrantReadUITests/testFreeGrantDiscoversReadOnlyShopOpensRawRecordsAndRejectsPaidAndForeignAccess()",
+    "name": "E09-free-paid-analysis-and-write-denied-without-mutation_0_B60D928D-756B-4389-93C1-55C291B33184.png",
+    "path": "screenshots/E09-free-paid-analysis-and-write-denied-without-mutation.png",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-HistoryGrantScreens/04F63B16-4EDC-47C9-BE48-668AB09F19AE.png",
+    "sha256": "ad21ddfbf545e9aecd40eaa6d02951cfc550f5a73cb37a73a0fb6fd68c2dc32e",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793740510.938
+  },
+  {
+    "area": "HistoryGrantScreens",
+    "testIdentifier": "HistoryGrantReadUITests/testFreeGrantDiscoversReadOnlyShopOpensRawRecordsAndRejectsPaidAndForeignAccess()",
+    "name": "E09-free-saved-period-envelope-without-calculated-balance_0_C42C4934-4EBD-4EE5-B512-208A1F9CF7C3.png",
+    "path": "screenshots/E09-free-saved-period-envelope-without-calculated-balance.png",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-HistoryGrantScreens/06C86423-86B4-4164-A893-2616157A3576.png",
+    "sha256": "c344efd2984d3bb8835225073460a6d380be07d96db98c654c69e893551be7fb",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793740498.541
+  },
+  {
+    "area": "HistoryGrantScreens",
+    "testIdentifier": "HistoryGrantReadUITests/testFreeGrantDiscoversReadOnlyShopOpensRawRecordsAndRejectsPaidAndForeignAccess()",
+    "name": "E09-free-granted-observation-without-shopper-authority_0_A5A79FEA-C835-4B76-A26B-7D2250220B97.png",
+    "path": "screenshots/E09-free-granted-observation-without-shopper-authority.png",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-HistoryGrantScreens/0786AF02-4FCA-43A3-A1DE-D443DCAFF4C6.png",
+    "sha256": "e4aaa40f8ac665d5807e123360fd128b708ac0ae6e21f27b13bd6fe79690fbc2",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793740465.985
+  },
+  {
+    "area": "HistoryGrantScreens",
+    "testIdentifier": "HistoryGrantReadUITests/testFreeGrantDiscoversReadOnlyShopOpensRawRecordsAndRejectsPaidAndForeignAccess()",
+    "name": "E09-grant-only-shop-discovered-independently-of-owned-shops_0_CDC4F27B-C610-44CD-8B56-A328926AB934.png",
+    "path": "screenshots/E09-grant-only-shop-discovered-independently-of-owned-shops.png",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-HistoryGrantScreens/05BA18A4-F100-418D-BFB9-E281C2377F47.png",
+    "sha256": "4e3f78d64184911351bd26710da2e0ad74b9b20b246856b56ca9c8e3b19855ad",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793740461.542
+  },
+  {
+    "area": "HistoryGrantScreens",
+    "testIdentifier": "HistoryGrantReadUITests/testRevokedBudgetGrantClearsPreviouslyOpenedRawPeriodAndRememberedSource()",
+    "name": "E09-revocation-clears-raw-envelope-and-saved-source_0_E4A24F82-9242-49C1-92BB-8283685635DE.png",
+    "path": "screenshots/E09-revocation-clears-raw-envelope-and-saved-source.png",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-HistoryGrantScreens/BA9E262E-EADE-406C-AB41-95769C1CC926.png",
+    "sha256": "a981402ca9b8b499d48f533aab82a03a87b1b998e45f2bd052b8ca5d6d7852ca",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793740572.991
+  },
+  {
+    "area": "HistoryGrantScreens",
+    "testIdentifier": "HistoryGrantReadUITests/testRevokedBudgetGrantClearsPreviouslyOpenedRawPeriodAndRememberedSource()",
+    "name": "E09-grant-only-shop-discovered-independently-of-owned-shops_0_FD47B457-96C7-4E10-99E0-31763612390B.png",
+    "path": "screenshots/E09-grant-only-shop-discovered-independently-of-owned-shops--060A74B7.png",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-HistoryGrantScreens/060A74B7-1496-4CC2-976D-684C4995E485.png",
+    "sha256": "75bc93a40c9904cdc0ef7571be6c57c85d9953839e9b4c83693660e7bb163297",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793740537.441
+  },
+  {
+    "area": "RecipeLibraryFinal",
+    "testIdentifier": "RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo()",
+    "name": "E01 whole-batch undo keeps pre-existing recipe and current pickup accessibility_0_F636A15F-7888-4042-9C97-BC418E7D774A.txt",
+    "path": "accessibility/E01-whole-batch-undo-keeps-pre-existing-recipe-and-current-pickup-accessibility.txt",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-RecipeLibraryFinal/852EFC83-1404-450E-9D8F-9DE4A4AE46A7.txt",
+    "sha256": "48b02cf64b32b9593e52305c92fea35b7ca972dc68b27eba2bbdc1092f9fb952",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793741186.766
+  },
+  {
+    "area": "RecipeLibraryFinal",
+    "testIdentifier": "RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo()",
+    "name": "E01 whole-batch undo keeps pre-existing recipe and current pickup_0_B5D3262D-20EC-45BB-B289-47B758D7023B.png",
+    "path": "screenshots/E01-whole-batch-undo-keeps-pre-existing-recipe-and-current-pickup.png",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-RecipeLibraryFinal/7FDE997E-0274-4D28-A3B9-8A8BE9CB8066.png",
+    "sha256": "0fc12858d9f00585c4c90f3064570413ade5158abbb44f414a48fec25a5b3ef5",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793741186.602
+  },
+  {
+    "area": "RecipeLibraryFinal",
+    "testIdentifier": "RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo()",
+    "name": "E01 imported original yield ingredients instructions and inert source preserved accessibility_0_AA291F68-3671-4501-A70C-5329F0ACF1E4.txt",
+    "path": "accessibility/E01-imported-original-yield-ingredients-instructions-and-inert-source-preserved-accessibility.txt",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-RecipeLibraryFinal/E5D4DA39-ADDC-477C-B3C8-D08980EFA9FB.txt",
+    "sha256": "fa5d941af1cc4917fae5627787872c3a6b7b4010bcc8d6c6b2d2ca12f9fe68f3",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793741178.951
+  },
+  {
+    "area": "RecipeLibraryFinal",
+    "testIdentifier": "RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo()",
+    "name": "E01 imported original yield ingredients instructions and inert source preserved_0_05476A89-9F66-4144-A624-48736EDA80A8.png",
+    "path": "screenshots/E01-imported-original-yield-ingredients-instructions-and-inert-source-preserved.png",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-RecipeLibraryFinal/9311ED3B-6846-4BF5-B71F-BD98A4136563.png",
+    "sha256": "ddee2ad7ed13b82356b611afaac1790e2bce0eec682d26433306eb0a7a244f2b",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793741178.795
+  },
+  {
+    "area": "RecipeLibraryFinal",
+    "testIdentifier": "RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo()",
+    "name": "E01 reviewed whole recipe batch applied as separate saved copies accessibility_0_58AA6166-D941-435B-9B32-71ABA67543DD.txt",
+    "path": "accessibility/E01-reviewed-whole-recipe-batch-applied-as-separate-saved-copies-accessibility.txt",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-RecipeLibraryFinal/652C0495-F1D1-48E0-ADEE-4DD11A20D844.txt",
+    "sha256": "acb30e68104df2cb5980346f9f975d91091a484797d3001704680f88cd9120c6",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793741170.889
+  },
+  {
+    "area": "RecipeLibraryFinal",
+    "testIdentifier": "RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo()",
+    "name": "E01 reviewed whole recipe batch applied as separate saved copies_0_B427FDBC-2013-47F8-AF08-C68466AAD4B7.png",
+    "path": "screenshots/E01-reviewed-whole-recipe-batch-applied-as-separate-saved-copies.png",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-RecipeLibraryFinal/80F7FD61-996E-439C-97F0-58087BAF89E4.png",
+    "sha256": "b1afd8d8f82d3773255aa3d5c5b355b4a11b02c0ca8bca8d38ce1043b1b05e24",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793741170.736
+  },
+  {
+    "area": "RecipeLibraryFinal",
+    "testIdentifier": "RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo()",
+    "name": "E01 corrupt Recipe JSON-LD preserves existing records accessibility_0_4F131727-8DBF-4106-9D53-762F94DCD3B4.txt",
+    "path": "accessibility/E01-corrupt-Recipe-JSON-LD-preserves-existing-records-accessibility.txt",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-RecipeLibraryFinal/75C1BECD-2844-4A9E-AE6D-00E26BBA4B56.txt",
+    "sha256": "888cbc4183def85c3a18439c599da94248a9f25e6e392a00b8d022ad5db9d893",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793741110.814
+  },
+  {
+    "area": "RecipeLibraryFinal",
+    "testIdentifier": "RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo()",
+    "name": "E01 corrupt Recipe JSON-LD preserves existing records_0_44C380ED-1618-4A7E-BA8E-4F590205595B.png",
+    "path": "screenshots/E01-corrupt-Recipe-JSON-LD-preserves-existing-records.png",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-RecipeLibraryFinal/18991681-A14D-4C04-9365-5BBFE5411CF8.png",
+    "sha256": "855601285c49c599dbf3755d661128224cd106298d0a9a4c198a68c9cb1b5618",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793741110.672
+  },
+  {
+    "area": "RecipeLibraryFinal",
+    "testIdentifier": "RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo()",
+    "name": "E01 cancelled library review preserves saved recipe and local source accessibility_0_7F5B2D89-51C9-4A73-B096-DB97997B7C42.txt",
+    "path": "accessibility/E01-cancelled-library-review-preserves-saved-recipe-and-local-source-accessibility.txt",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-RecipeLibraryFinal/741F8DC8-C903-4755-9629-1C6435B67D3D.txt",
+    "sha256": "4e2ae5ae291792090d440a61d73630a689dc1acb9de8b9ac07edc15fb7f6ab86",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793741056.761
+  },
+  {
+    "area": "RecipeLibraryFinal",
+    "testIdentifier": "RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo()",
+    "name": "E01 cancelled library review preserves saved recipe and local source_0_98D6AA79-1178-4846-8B0E-5E37A134CFB0.png",
+    "path": "screenshots/E01-cancelled-library-review-preserves-saved-recipe-and-local-source.png",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-RecipeLibraryFinal/C92F70A6-5524-4918-B4A7-972299623DAC.png",
+    "sha256": "40c51d4f4c8183a8fc3086be6cfac0da2b30ca7e069b27cb2c58632eeeb1be7e",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793741056.604
+  },
+  {
+    "area": "RecipeLibraryFinal",
+    "testIdentifier": "RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo()",
+    "name": "E01 documented library review duplicate matches skips and unsupported fields accessibility_0_E43450FF-1729-4E65-BB6F-A5C9DA7D54FD.txt",
+    "path": "accessibility/E01-documented-library-review-duplicate-matches-skips-and-unsupported-fields-accessibility.txt",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-RecipeLibraryFinal/8BFAD765-A6CB-46FB-8DA9-3D548E3F6E12.txt",
+    "sha256": "882b56e51211b2242cfe4f04708662ad30aa456f7d7778033bc416784a20040a",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793741050.092
+  },
+  {
+    "area": "RecipeLibraryFinal",
+    "testIdentifier": "RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo()",
+    "name": "E01 documented library review duplicate matches skips and unsupported fields_0_94FEA100-21D1-4CAE-8166-51B2C8D33CDE.png",
+    "path": "screenshots/E01-documented-library-review-duplicate-matches-skips-and-unsupported-fields.png",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-RecipeLibraryFinal/11089C95-DC02-48C3-90D9-0DF65D245152.png",
+    "sha256": "a6b2aff80e481781a121989ceba20231d12fd85a8e7553fb7087cb28e2e55a24",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793741049.944
+  },
+  {
+    "area": "CorrectionPrivacyFinal",
+    "testIdentifier": "CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp()",
+    "name": "Native offline pack comparison help in disconnected fixture accessibility_0_ACE84CE5-0858-44E6-8E96-91A992210BE5.txt",
+    "path": "accessibility/Native-offline-pack-comparison-help-in-disconnected-fixture-accessibility.txt",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-CorrectionPrivacyFinal/21A31D31-6D4D-41F7-BDB8-359CE227246E.txt",
+    "sha256": "bda46dd2fc1ab45a0cf8c2c8ecd73cbb3f68bcc6c901e2dd6bd10957813c37b8",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793740977.127
+  },
+  {
+    "area": "CorrectionPrivacyFinal",
+    "testIdentifier": "CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp()",
+    "name": "Native offline pack comparison help in disconnected fixture_0_CBAE81BA-D542-439B-ABC0-9AA14B54D299.png",
+    "path": "screenshots/Native-offline-pack-comparison-help-in-disconnected-fixture.png",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-CorrectionPrivacyFinal/F9C9ED17-2365-482E-9270-1FBA59CB4137.png",
+    "sha256": "5355ae2dc30d793d74d6fa08712afcaf9a4bb352764d4072b9cf749d8f1157c5",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793740977.05
+  },
+  {
+    "area": "CorrectionPrivacyFinal",
+    "testIdentifier": "CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp()",
+    "name": "Native support shows supplied contact and redacted metadata without sending accessibility_0_2AFD5E8A-B4F4-40C0-8CC9-B06D99876984.txt",
+    "path": "accessibility/Native-support-shows-supplied-contact-and-redacted-metadata-without-sending-accessibility.txt",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-CorrectionPrivacyFinal/3087B87E-5B63-4B14-AB20-C5F202602E55.txt",
+    "sha256": "822b3604298ed9be9a71f7b7826a724e426a997dcc9ac09ee000a7cd8529450f",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793740974.409
+  },
+  {
+    "area": "CorrectionPrivacyFinal",
+    "testIdentifier": "CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp()",
+    "name": "Native support shows supplied contact and redacted metadata without sending_0_50565496-783C-41AD-AA1F-DD29169B38F8.png",
+    "path": "screenshots/Native-support-shows-supplied-contact-and-redacted-metadata-without-sending.png",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-CorrectionPrivacyFinal/82079802-6D52-4032-8F31-AF9C58639ED3.png",
+    "sha256": "2e1a28269cf405d7dc9cd247de209b80162c04fe9ad04ed73989f924889c888b",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793740974.288
+  },
+  {
+    "area": "CorrectionPrivacyFinal",
+    "testIdentifier": "CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp()",
+    "name": "Native privacy and terms identify supplied operator offline accessibility_0_B2F0A1FF-E5F6-4AD3-BA2D-D9920F84D7FC.txt",
+    "path": "accessibility/Native-privacy-and-terms-identify-supplied-operator-offline-accessibility.txt",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-CorrectionPrivacyFinal/0E6278E6-385E-4E80-BD86-C520DD92B6EB.txt",
+    "sha256": "b59fe90a93bc41685c8fc2a2234da14283aac6aec04e6ad108e1135bd11badf0",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793740970.849
+  },
+  {
+    "area": "CorrectionPrivacyFinal",
+    "testIdentifier": "CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp()",
+    "name": "Native privacy and terms identify supplied operator offline_0_2307DEBC-BAD1-4BA0-AE09-41FC8A0E9B30.png",
+    "path": "screenshots/Native-privacy-and-terms-identify-supplied-operator-offline.png",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-CorrectionPrivacyFinal/63E12F4B-2D04-45CD-AB57-AF2061BA6EC5.png",
+    "sha256": "30a98d3a2b88335fc997d2e65eda06f026efb67d0483c318c6b3db17c535de3b",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793740970.731
+  },
+  {
+    "area": "CorrectionPrivacyFinal",
+    "testIdentifier": "CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp()",
+    "name": "N04 separate Spanish spelling memory survives English opt-out accessibility_0_9E87D30D-38AF-4B05-9040-3D79AB23C258.txt",
+    "path": "accessibility/N04-separate-Spanish-spelling-memory-survives-English-opt-out-accessibility.txt",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-CorrectionPrivacyFinal/CEE2D9D5-14C1-4E71-8507-CE55DE5959E9.txt",
+    "sha256": "0c31cbcd9523ab570ff978ead912ca99fe6e64070f6d81ab3ca10c5c683ea600",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793740961.921
+  },
+  {
+    "area": "CorrectionPrivacyFinal",
+    "testIdentifier": "CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp()",
+    "name": "N04 separate Spanish spelling memory survives English opt-out_0_086FC966-5FBE-49FC-98EB-D0EDE641FB31.png",
+    "path": "screenshots/N04-separate-Spanish-spelling-memory-survives-English-opt-out.png",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-CorrectionPrivacyFinal/DD21760F-A1F3-4583-AFB4-4186E9FE77EB.png",
+    "sha256": "26e11a0b1bd7a4b38495bdb27e500e7969f84b581f14d2a9567e9cf426308002",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793740961.791
+  },
+  {
+    "area": "CorrectionPrivacyFinal",
+    "testIdentifier": "CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp()",
+    "name": "N04 confirmed opt-out deletes only selected workspace language accessibility_0_074B3B4C-3144-49A1-B9C8-1091DE3064B5.txt",
+    "path": "accessibility/N04-confirmed-opt-out-deletes-only-selected-workspace-language-accessibility.txt",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-CorrectionPrivacyFinal/92AFB814-55B1-451A-A8BF-C858CB31DE3F.txt",
+    "sha256": "ea12a25afa45c4e6337f9a0047f5c947cf6aca2902da4993acf0fecfe37ba2a3",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793740952.795
+  },
+  {
+    "area": "CorrectionPrivacyFinal",
+    "testIdentifier": "CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp()",
+    "name": "N04 confirmed opt-out deletes only selected workspace language_0_12964812-A507-4669-96BB-B75C8A8D134D.png",
+    "path": "screenshots/N04-confirmed-opt-out-deletes-only-selected-workspace-language.png",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-CorrectionPrivacyFinal/A838240A-4DC5-434F-892A-D7E3A77E2ECA.png",
+    "sha256": "47a2df802b532a2f67dc8fb6e8e09bb8cc314e6d94c0eada085e71dec9ab1ace",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793740952.65
+  },
+  {
+    "area": "CorrectionPrivacyFinal",
+    "testIdentifier": "CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp()",
+    "name": "N04 last saved spelling removed with visible action result accessibility_0_AA66AF65-5832-400D-8F52-FE2EA479C962.txt",
+    "path": "accessibility/N04-last-saved-spelling-removed-with-visible-action-result-accessibility.txt",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-CorrectionPrivacyFinal/323D6332-EC85-4A0E-BDF6-55AA45D91147.txt",
+    "sha256": "9b20125d4ad77b4c2a0288f0f1e09563ba703377ccef3994b6a928707f707f52",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793740929.392
+  },
+  {
+    "area": "CorrectionPrivacyFinal",
+    "testIdentifier": "CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp()",
+    "name": "N04 last saved spelling removed with visible action result_0_8AFCE15F-5717-47FF-B241-8460D3D8D4B8.png",
+    "path": "screenshots/N04-last-saved-spelling-removed-with-visible-action-result.png",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-CorrectionPrivacyFinal/9B4A711D-01E5-4D4E-B70E-9B842F05BA36.png",
+    "sha256": "4cfb317b9af26c837b8807524b17d810bb23753354ca7677e98075cb030527c7",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793740929.257
+  },
+  {
+    "area": "CorrectionPrivacyFinal",
+    "testIdentifier": "CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp()",
+    "name": "N04 named spelling forget leaves durable scoped outcome accessibility_0_BDBF4DE8-9113-4FC0-9A8B-A23610F2DBC3.txt",
+    "path": "accessibility/N04-named-spelling-forget-leaves-durable-scoped-outcome-accessibility.txt",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-CorrectionPrivacyFinal/F6855955-7201-44C2-B19A-62F1AB862315.txt",
+    "sha256": "84ace4990cb9f51f6bbc583a5947be5f9d9441d6b1f7be427aa92bee86e002a9",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793740922.252
+  },
+  {
+    "area": "CorrectionPrivacyFinal",
+    "testIdentifier": "CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp()",
+    "name": "N04 named spelling forget leaves durable scoped outcome_0_66FC1045-6C3A-41BA-A2DA-A0635A8D73DD.png",
+    "path": "screenshots/N04-named-spelling-forget-leaves-durable-scoped-outcome.png",
+    "originalAttachment": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/library-history-civil-20261103/attachments-CorrectionPrivacyFinal/15AC15F7-405A-4C2D-9215-CC362AF0E7B2.png",
+    "sha256": "4349abb84cad3038cbc19e6eef4d3f3a675ddb33e96c944fa9b42458b845fe9c",
+    "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "timestamp": 1793740922.018
+  }
+]

@@ -1,0 +1,19 @@
+{
+  "recordedAtUTC": "2026-11-03T23:30:34.897631+00:00",
+  "device": "5FDE1E82-1FF7-4556-9C14-0746F6295944",
+  "bundle": "dev.roominthecart.app.debug",
+  "sourceSHA256": "36479321a5cadd46a6226c553d3e6946958e04b822dbf7aff73b2457a4f6c0bc",
+  "configuration": "ordinaryDEBUG, no fixture flags",
+  "xctestBundles": 0,
+  "fixtureEntryMarkers": [],
+  "privacySHA256": "8c7d98854976ca3bdf570ed0cfb50b4e9652a7cdc543256b3b944999ac47906d",
+  "durableFilesPreservedExactly": 22,
+  "preservationScope": "Documents, Library/Application Support, Library/Preferences before relaunch; AppGroups/keychain not separately inventoried",
+  "containerPathUnchanged": false,
+  "terminateExit": 0,
+  "install": "succeeded",
+  "launchArguments": [],
+  "dataResetOrErase": false,
+  "binarySHA256": "18acf05e1eb0f5de4a46293594b1fdae4b162beaff603d34126142a75ddf31a0",
+  "launch": "dev.roominthecart.app.debug: 11372"
+}

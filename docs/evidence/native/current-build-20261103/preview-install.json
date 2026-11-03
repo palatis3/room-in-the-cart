@@ -1,0 +1,19 @@
+{
+  "recordedAtUTC": "2026-11-03T23:08:59.087465+00:00",
+  "device": "5FDE1E82-1FF7-4556-9C14-0746F6295944",
+  "bundle": "dev.roominthecart.app.debug",
+  "sourceSHA256": "4b91cfce67372ca1b047985ce3531cd806d627c0eb4a60311ed0bead9beb7af0",
+  "configuration": "ordinary DEBUG, no fixture compilation flags",
+  "xctestBundles": 0,
+  "fixtureEntryMarkers": [],
+  "durableFilesPreservedExactly": 22,
+  "durableFileContentPrinted": false,
+  "containerPreserved": false,
+  "terminateExit": 0,
+  "install": "succeeded",
+  "launchArguments": [],
+  "dataResetOrErase": false,
+  "binarySHA256": "ef0a11cef9c1b9b0891860fac1b20a3933d6e02470e0f59d8f54bebeeeebd710",
+  "launch": "dev.roominthecart.app.debug: 4016",
+  "preservationScope": "App Documents, Library/Application Support and Library/Preferences files compared byte-for-byte after stopping app and before relaunch. App Group containers/keychain were not independently inventoried; no erase/uninstall performed."
+}

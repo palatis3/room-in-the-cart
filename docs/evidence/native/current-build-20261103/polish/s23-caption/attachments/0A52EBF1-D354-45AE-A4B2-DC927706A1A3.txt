@@ -1,0 +1,130 @@
+Optional(Attributes: Application, 0x112080b40, pid: 8069, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x112080b40, pid: 8069, label: 'Room in the Cart'
+    Window (Main), 0x112080c80, {{0.0, 0.0}, {390.0, 844.0}}
+      Other, 0x111ede6c0, {{0.0, 0.0}, {390.0, 844.0}}
+        Other, 0x112063480, {{0.0, 0.0}, {390.0, 844.0}}
+          Other, 0x1120635c0, {{-390.0, -844.0}, {1170.0, 2532.0}}
+          Other, 0x112062440, {{0.0, 0.0}, {390.0, 844.0}}
+            Other, 0x112063200, {{0.0, 0.0}, {390.0, 844.0}}
+              StaticText, 0x112063340, {{99.7, 47.0}, {190.7, 13.3}}, identifier: 'fixture.s23.commands', label: 'Fixture applied decisions: 0'
+              StaticText, 0x112063ac0, {{120.2, 60.3}, {149.7, 13.3}}, identifier: 'fixture.s23.lines', label: 'Fixture saved lines: 1'
+              StaticText, 0x112063c00, {{106.5, 75.7}, {177.0, 13.3}}, identifier: 'fixture.s23.loaded', label: 'Fixture loaded requests: 2'
+              Other, 0x112062300, {{0.0, 95.7}, {390.0, 748.3}}
+                NavigationBar, 0x112063d40, {{0.0, 105.7}, {390.0, 54.0}}, identifier: 'S23 request comparison'
+                  StaticText, 0x112063e80, {{77.3, 115.0}, {235.0, 25.3}}, label: 'S23 request comparison'
+                Other, 0x112074640, {{0.0, 95.7}, {390.0, 748.3}}
+                  Other, 0x112074780, {{0.0, 95.7}, {390.0, 748.3}}
+                    Other, 0x1120748c0, {{0.0, 95.7}, {390.0, 748.3}}
+                      Other, 0x112074a00, {{0.0, 95.7}, {390.0, 748.3}}
+                        CollectionView, 0x112074b40, {{0.0, 95.7}, {390.0, 748.3}}
+                          Other, 0x112074c80, {{-16.0, -1889.3}, {422.0, 2197.0}}
+                          Cell, 0x112074dc0, {{16.0, -237.3}, {358.0, 527.3}}
+                            Other, 0x112074f00, {{16.0, -237.3}, {358.0, 527.3}}
+                              Other, 0x11205c3c0, {{16.0, -237.3}, {358.0, 527.3}}
+                            Other, 0x11204da40, {{16.0, -237.3}, {358.0, 527.3}}
+                              Other, 0x11204db80, {{16.0, -237.3}, {358.0, 527.3}}
+                                Other, 0x11204dcc0, {{16.0, -237.3}, {358.0, 527.3}}
+                                  StaticText, 0x11204de00, {{16.0, -237.3}, {358.0, 527.3}}, label: 'Cada solicitud conserva su propio resultado. Vincular un artículo no agrega otro paquete.'
+                          Other, 0x11204d2c0, {{0.0, 95.7}, {390.0, 748.3}}
+                            Other, 0x11204d400, {{0.0, 95.7}, {390.0, 104.0}}
+                          Other, 0x11204d540, {{0.0, 95.7}, {390.0, 748.3}}
+                            Other, 0x11204e6c0, {{0.0, 95.7}, {390.0, 104.0}}
+                          Other, 0x11204ee40, {{-16.0, 307.7}, {422.0, 2965.0}}
+                          Cell, 0x11204ef80, {{16.0, 307.7}, {358.0, 207.3}}
+                            Other, 0x11204c3c0, {{16.0, 307.7}, {358.0, 207.3}}
+                            Other, 0x11204f0c0, {{16.0, 307.7}, {358.0, 207.3}}
+                              Other, 0x11204d680, {{16.0, 307.7}, {358.0, 207.3}}
+                                Other, 0x11204d7c0, {{16.0, 307.7}, {358.0, 207.3}}
+                                  StaticText, 0x11204d040, {{16.0, 307.7}, {358.0, 207.3}}, label: 'Solicitudes para esta compra'
+                          Cell, 0x11204ed00, {{16.0, 515.0}, {358.0, 591.0}}
+                            Other, 0x11204d180, {{16.0, 515.0}, {358.0, 591.0}}
+                              Other, 0x11204df40, {{16.0, 515.0}, {358.0, 591.0}}
+                            Other, 0x11204e300, {{16.0, 515.0}, {358.0, 591.0}}
+                              Other, 0x11204e440, {{16.0, 515.0}, {358.0, 591.0}}
+                                Other, 0x11204f200, {{16.0, 515.0}, {358.0, 591.0}}
+                                  Button, 0x11204f340, {{16.0, 515.0}, {358.0, 591.0}}, identifier: 'household.request.a4444444-4444-4444-8444-444444444441', label: 'Cereal, Sam, 1 box for breakfasts, Recibido, pendiente de revisión, nov 3, 2026, 10:01 a.m.'
+                                    StaticText, 0x11204e800, {{32.0, 530.0}, {153.7, 63.3}}, label: 'Cereal'
+                                    StaticText, 0x11204e940, {{32.0, 599.3}, {94.3, 58.7}}, label: 'Sam'
+                                    StaticText, 0x11204ea80, {{32.0, 664.0}, {233.7, 125.3}}, label: '1 box for breakfasts'
+                                    StaticText, 0x11204ebc0, {{32.0, 795.3}, {304.3, 187.3}}, label: 'Recibido, pendiente de revisión'
+                                    StaticText, 0x11204e580, {{32.0, 988.7}, {236.7, 102.3}}, label: 'nov 3, 2026, 10:01 a.m.'
+                          Other, 0x11204c500, {{357.0, 159.7}, {30.0, 637.0}}, label: 'Barra de desplazamiento vertical, 4 páginas', value: 36%
+                            Other, 0x11204e080, {{384.0, 316.3}, {3.0, 208.3}}
+                          Other, 0x11204c280, {{357.0, 159.7}, {30.0, 637.0}}, label: 'Barra de desplazamiento vertical, 4 páginas', value: 36%
+                            Other, 0x1120c0000, {{384.0, 316.3}, {3.0, 208.3}}
+                Toolbar, 0x1120c0140, {{0.0, 95.7}, {390.0, 748.3}}, identifier: 'Toolbar', label: 'Barra de herramientas'
+                  Other, 0x1120c0280, {{0.0, 95.7}, {390.0, 748.3}}
+      Other, 0x1120c03c0, {{0.0, 0.0}, {390.0, 844.0}}
+        Other, 0x1120c0500, {{-390.0, -844.0}, {1170.0, 2532.0}}
+        Other, 0x1120c0640, {{0.0, 47.0}, {390.0, 797.0}}
+          Other, 0x1120c0780, {{0.0, 47.0}, {390.0, 797.0}}
+            Other, 0x1120c08c0, {{0.0, 47.0}, {390.0, 797.0}}
+              Other, 0x1120c0a00, {{0.0, 47.0}, {390.0, 797.0}}
+                Other, 0x1120c0b40, {{0.0, 47.0}, {390.0, 797.0}}
+                  NavigationBar, 0x1120c0c80, {{0.0, 63.0}, {390.0, 127.0}}, identifier: 'Revisar solicitud'
+                    Other, 0x1120c0dc0, {{20.0, 67.0}, {105.3, 36.0}}
+                      Other, 0x1120c0f00, {{20.0, 67.0}, {105.3, 36.0}}
+                        Button, 0x1120c1040, {{20.0, 67.0}, {105.3, 36.0}}, identifier: 'household.decision.cancel', label: 'Cancelar'
+                    StaticText, 0x1120c1180, {{16.0, 117.0}, {342.7, 71.7}}, label: 'Revisar solicitud'
+                  Other, 0x1120c12c0, {{0.0, 47.0}, {390.0, 797.0}}
+                    Other, 0x1120c1400, {{0.0, 47.0}, {390.0, 797.0}}
+                      Other, 0x1120c1540, {{0.0, 47.0}, {390.0, 797.0}}
+                        Other, 0x1120c1680, {{0.0, 47.0}, {390.0, 797.0}}
+                          CollectionView, 0x1120c17c0, {{0.0, 47.0}, {390.0, 797.0}}
+                            Other, 0x1120c1900, {{-16.0, -1404.0}, {422.0, 2544.3}}
+                            Other, 0x1120c1a40, {{0.0, 47.0}, {390.0, 797.0}}
+                              Other, 0x1120c1b80, {{0.0, 47.0}, {390.0, 110.0}}
+                            Other, 0x1120c1cc0, {{0.0, 47.0}, {390.0, 797.0}}
+                            Cell, 0x1120c1e00, {{16.0, 190.0}, {358.0, 83.3}}
+                              Other, 0x1120c1f40, {{16.0, 190.0}, {358.0, 83.3}}
+                              Other, 0x1120c2080, {{16.0, 190.0}, {358.0, 83.3}}
+                                Other, 0x1120c21c0, {{16.0, 190.0}, {358.0, 83.3}}
+                                  Other, 0x1120c2300, {{16.0, 190.0}, {358.0, 83.3}}
+                                    StaticText, 0x1120c2440, {{16.0, 190.0}, {358.0, 83.3}}, label: 'Solicitud'
+                            Cell, 0x1120c2580, {{16.0, 273.3}, {358.0, 93.3}}
+                              Other, 0x1120c26c0, {{16.0, 273.3}, {358.0, 93.3}}
+                                Other, 0x1120c2800, {{16.0, 273.3}, {358.0, 93.3}}
+                              Other, 0x1120c2940, {{16.0, 273.3}, {358.0, 93.3}}
+                                Other, 0x1120c2a80, {{16.0, 273.3}, {358.0, 93.3}}
+                                  Other, 0x1120c2bc0, {{16.0, 273.3}, {358.0, 93.3}}
+                                    StaticText, 0x1120c2d00, {{16.0, 273.3}, {358.0, 93.3}}, label: 'Cereal'
+                            Cell, 0x1120c2e40, {{16.0, 366.7}, {358.0, 160.7}}
+                              Other, 0x1120c2f80, {{16.0, 366.7}, {358.0, 160.7}}
+                                Other, 0x1120c30c0, {{16.0, 366.7}, {358.0, 160.7}}
+                              Other, 0x1120c3200, {{16.0, 366.7}, {358.0, 160.7}}
+                                Other, 0x1120c3340, {{16.0, 366.7}, {358.0, 160.7}}
+                                  Other, 0x1120c3480, {{16.0, 366.7}, {358.0, 160.7}}
+                                    StaticText, 0x1120c35c0, {{16.0, 366.7}, {358.0, 160.7}}, label: 'Solicitado por, Sam'
+                                    StaticText, 0x1120c3700, {{32.0, 381.7}, {307.3, 63.3}}, label: 'Solicitado por'
+                            Other, 0x1120c3840, {{32.0, 365.7}, {326.0, 1.0}}
+                            Cell, 0x1120c3980, {{16.0, 527.3}, {358.0, 155.3}}
+                              Other, 0x1120c3ac0, {{16.0, 527.3}, {358.0, 155.3}}
+                                Other, 0x1120c3c00, {{16.0, 527.3}, {358.0, 155.3}}
+                              Other, 0x1120c3d40, {{16.0, 527.3}, {358.0, 155.3}}
+                                Other, 0x1120c3e80, {{16.0, 527.3}, {358.0, 155.3}}
+                                  Other, 0x1120d0000, {{16.0, 527.3}, {358.0, 155.3}}
+                                    StaticText, 0x1120d0140, {{16.0, 527.3}, {358.0, 155.3}}, label: '1 box for breakfasts'
+                            Other, 0x1120d0280, {{32.0, 526.3}, {326.0, 1.0}}
+                            Cell, 0x1120d03c0, {{16.0, 682.7}, {358.0, 217.3}}
+                              Other, 0x1120d0500, {{16.0, 682.7}, {358.0, 217.3}}
+                                Other, 0x1120d0640, {{16.0, 682.7}, {358.0, 217.3}}
+                              Other, 0x1120d0780, {{16.0, 682.7}, {358.0, 217.3}}
+                                Other, 0x1120d08c0, {{16.0, 682.7}, {358.0, 217.3}}
+                                  Other, 0x1120d0a00, {{16.0, 682.7}, {358.0, 217.3}}
+                                    StaticText, 0x1120d0b40, {{16.0, 682.7}, {358.0, 217.3}}, label: 'Recibido, pendiente de revisión'
+                            Other, 0x1120d0c80, {{32.0, 681.7}, {326.0, 1.0}}
+                            Other, 0x1120d0dc0, {{357.0, 117.0}, {30.0, 679.7}}, label: 'Barra de desplazamiento vertical, 3 páginas', value: 0%
+                              Other, 0x1120d0f00, {{384.0, 786.7}, {3.0, 7.0}}
+                            Other, 0x1120d1040, {{357.0, 117.0}, {30.0, 679.7}}, label: 'Barra de desplazamiento vertical, 3 páginas', value: 0%
+                              Other, 0x1120d1180, {{384.0, 786.7}, {3.0, 7.0}}
+                  Toolbar, 0x1120d12c0, {{0.0, 47.0}, {390.0, 797.0}}, identifier: 'Toolbar', label: 'Barra de herramientas'
+                    Other, 0x1120d1400, {{0.0, 47.0}, {390.0, 797.0}}
+Path to element:
+ →Application, 0x112080b40, pid: 8069, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x1120d1540, pid: 8069, label: 'Room in the Cart'
+  }
+)

@@ -1,0 +1,74 @@
+[
+  {
+    "test": "FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop()",
+    "caption": "Free-saved-repair-decision-without-inferred-outcome_0_8D31539F-72F6-42C8-AFDB-30E039B7C978.png",
+    "file": "ordinary/attachments/961B3237-8B50-4604-B7E1-6C2C7EFA83F3.png",
+    "sha256": "267e2cdd308e5f95e601fc4a65a597d364159d9e3e07f1485d058a3f6698dac3"
+  },
+  {
+    "test": "FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop()",
+    "caption": "Free-one-dinner-reused-for-next-shop_0_6EDDDBD9-1AE8-4FA8-BD4F-9EC00B7C43B2.png",
+    "file": "ordinary/attachments/0D43612A-DB79-465F-971E-4D85E2CFBECF.png",
+    "sha256": "764a9cd546f473f92358e051e0c296bd49cac86a42e0a546eea5708b92edc1f9"
+  },
+  {
+    "test": "FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop()",
+    "caption": "Free-settlement-keeps-food-separate_0_7C72EDDC-B5F1-436A-9DEA-20E5671D029E.png",
+    "file": "ordinary/attachments/A9928630-B3BE-4D6F-8880-749A80B049C3.png",
+    "sha256": "80475a8809095e1f43a94810ae7a5ead9cec2ad544d09b9deddfaa4706c04907"
+  },
+  {
+    "test": "FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop()",
+    "caption": "Free-complete-cook-note_0_86A5ED5B-B7D9-4CC1-B53A-167E8FAB4C52.png",
+    "file": "ordinary/attachments/A7FC7CB7-D96D-4A71-8038-122E0BEC0F92.png",
+    "sha256": "d97bb844f02ca60055f5bc98969be0c3e3f9b282b711311df1020d397b276fa0"
+  },
+  {
+    "test": "FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop()",
+    "caption": "Free-observed-short-fill_0_4E2DEC9D-026A-44C2-BA5B-A7E1CF483229.png",
+    "file": "ordinary/attachments/28A2CD1B-8BC6-4A6E-B80B-727F9E68090B.png",
+    "sha256": "e82324837de43c44a7241ea3b1904b2d322afbe91d34f20190b569bc8b8da6d6"
+  },
+  {
+    "test": "FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop()",
+    "caption": "Free-frozen-placement-unconfirmed_0_AAB5A8B0-07EA-4F6B-81B4-9CEBD161737C.png",
+    "file": "ordinary/attachments/198D6D3C-AAC8-41E8-B772-3E1B3F1B84A9.png",
+    "sha256": "1005cdb553c9429a89c178864b153d7408c0676fd30c7f062237f9ae78a08fea"
+  },
+  {
+    "test": "FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop()",
+    "caption": "Free-whole-packs-saved-for-checkout-review_0_0601D8EB-3E45-4F9F-8FF9-B8F1E9DB1852.png",
+    "file": "ordinary/attachments/1B46BDCA-2D29-4028-8AA1-70D18E34FE90.png",
+    "sha256": "2bfbda8842ec432baca8822b3eaf4a6cde9b3524a86b43489694e672239150bf"
+  },
+  {
+    "test": "FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop()",
+    "caption": "Free-dinner-and-protected-lunch_0_50E5D69D-1388-4490-AD5B-66C244AD483D.png",
+    "file": "ordinary/attachments/787D92B6-1C69-4A41-B849-63DBD5D0D99E.png",
+    "sha256": "245373a96e6b788b55cd263589bed8084f4fa5df3c3275cd75de7296ad0bc3ef"
+  },
+  {
+    "test": "LedgerConfirmedStockPackUITests/testFullyCoveredSavesUseAtHomePlanWithoutPurchasedItemOrRetailerOrder()",
+    "caption": "use-at-home-plan-durable-without-retailer-placement_0_BEFECD07-8934-414E-882B-5058A66021C6.png",
+    "file": "ordinary/attachments/6E25D3D7-D614-489F-99B4-B3B8F80DF1A1.png",
+    "sha256": "9d6cfc8c39f49db98745dbbadd9777082278bef69aa85e254d3661024f1b9937"
+  },
+  {
+    "test": "LedgerConfirmedStockPackUITests/testFullyCoveredSavesUseAtHomePlanWithoutPurchasedItemOrRetailerOrder()",
+    "caption": "fully-covered-explicit-use-at-home-plan_0_5772D470-5D57-4538-9064-F8998264DC92.png",
+    "file": "ordinary/attachments/3CB98F8A-D8F5-461D-A7B6-825602420691.png",
+    "sha256": "9d6cfc8c39f49db98745dbbadd9777082278bef69aa85e254d3661024f1b9937"
+  },
+  {
+    "test": "LedgerConfirmedStockPackUITests/testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack()",
+    "caption": "confirmed-stock-pack-choice-durable-after-restart_0_1A0C7723-8F9A-4145-A196-6047F5E91DF2.png",
+    "file": "ordinary/attachments/9CF6296C-1587-48BC-80BA-20AE260D80AB.png",
+    "sha256": "9a4cbb4c2fe271cf47ac9febe02a96efd63c2a32dfd2f9dcae2456bd7a67b4e0"
+  },
+  {
+    "test": "LedgerConfirmedStockPackUITests/testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack()",
+    "caption": "twelve-needed-eight-confirmed-one-eight-pack_0_A290F644-682F-406F-87D0-D74C5D1F6C8E.png",
+    "file": "ordinary/attachments/27F03FDC-02FA-4D6B-B83D-D82E9412DCEC.png",
+    "sha256": "b36cb6278e04e8a2b6375179e242fa50f27c10e77f1e75c64d999c0c7f53dda8"
+  }
+]
