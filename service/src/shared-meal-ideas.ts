@@ -5,12 +5,23 @@ import { digest } from './database.js';
 import { ServiceError } from './errors.js';
 const id = z.string().uuid().transform(value => value.toLowerCase()), label = z.string().trim().min(1).max(240);
 const positive = z.number().int().min(1).max(1_000_000), nonnegative = z.number().int().min(0).max(1_000_000);
+const amount = z.union([nonnegative,z.object({numerator:nonnegative,denominator:positive}).strict()]);
+const positiveAmount = amount.refine(v=>typeof v==='number'?v>0:v.numerator>0);
+export type IdeaAmount = z.infer<typeof amount>;
+type Fraction = {n:bigint;d:bigint};
+const fraction=(v:IdeaAmount):Fraction=>typeof v==='number'?{n:BigInt(v),d:1n}:{n:BigInt(v.numerator),d:BigInt(v.denominator)};
+function reduced(v:Fraction):Fraction {let a=v.n<0n?-v.n:v.n,b=v.d;while(b){const r=a%b;a=b;b=r;}return{n:v.n/(a||1n),d:v.d/(a||1n)};}
+const add=(a:Fraction,b:Fraction)=>reduced({n:a.n*b.d+b.n*a.d,d:a.d*b.d});
+const subtract=(a:Fraction,b:Fraction)=>reduced({n:a.n*b.d>b.n*a.d?a.n*b.d-b.n*a.d:0n,d:a.d*b.d});
+function wire(v:Fraction):IdeaAmount|null {const q=reduced(v),limit=BigInt(Number.MAX_SAFE_INTEGER);if(q.n>limit||q.d>limit)return null;return q.d===1n?Number(q.n):{numerator:Number(q.n),denominator:Number(q.d)};}
+function literal(v:IdeaAmount):string {return typeof v==='number'?String(v):v.denominator===1?String(v.numerator):`${v.numerator}/${v.denominator}`;}
+
 export const sharedIdeaDraftSchema = z.object({
   title: label, source: z.enum(['manual','app_template']), servings: positive.max(1000), minutes: positive.nullable(),
   assumedExtras: z.array(label).max(20), exclusions: z.array(label).max(20),
-  ingredients: z.array(z.object({ id, name: label, required: positive.nullable(), unit: z.enum(['count','gram','milliliter']),
-    stock: nonnegative.nullable(), reservations: z.array(z.object({name:label,amount:positive}).strict()).max(20),
-    pack: positive.nullable(), usableNumerator: positive.nullable(), usableDenominator: positive.nullable(),
+  ingredients: z.array(z.object({ id, name: label, required: positiveAmount.nullable(), unit: z.enum(['count','gram','kilogram','ounce','pound','milliliter','liter','fluidOunce','cup']),
+    stock: amount.nullable(), reservations: z.array(z.object({name:label,amount:positiveAmount}).strict()).max(20),
+    pack: positiveAmount.nullable(), usableNumerator: positive.nullable(), usableDenominator: positive.nullable(),
     evidence: label,
   }).strict()).min(1).max(60),
 }).strict().superRefine((value,ctx) => {
@@ -23,13 +34,19 @@ const fold=(value:string)=>value.normalize('NFKD').replace(/\p{M}/gu,'').toLocal
 export function evaluateSharedIdea(value:SharedIdeaDraft) {
   const ingredients=value.ingredients.map(i=>{
     const excluded=value.exclusions.some(e=>fold(i.name).includes(fold(e)));
-    const reserved=i.reservations.reduce((sum,r)=>sum+r.amount,0);
-    const remaining=i.stock===null?null:Math.max(0,i.stock-reserved);
-    const shortage=i.required===null||remaining===null?null:Math.max(0,i.required-remaining);
-    const complete=shortage!==null&&i.pack!==null&&i.usableNumerator!==null&&i.usableDenominator!==null;
+    const reserved=i.reservations.reduce((sum,r)=>add(sum,fraction(r.amount)),{n:0n,d:1n});
+    const remaining=i.stock===null?null:subtract(fraction(i.stock),reserved);
+    const shortage=i.required===null||remaining===null?null:subtract(fraction(i.required),remaining);
     let wholePacks:number|null=null;
-    if(complete){const numerator=BigInt(shortage!)*BigInt(i.usableDenominator!),denominator=BigInt(i.pack!)*BigInt(i.usableNumerator!);wholePacks=Number((numerator+denominator-1n)/denominator);}
-    return {ingredientId:i.id,excluded,reserved,remaining,shortage,wholePacks,unresolvedPrice:true};
+    if(shortage!==null&&i.pack!==null&&i.usableNumerator!==null&&i.usableDenominator!==null){
+      const pack=fraction(i.pack),numerator=shortage.n*pack.d*BigInt(i.usableDenominator),denominator=shortage.d*pack.n*BigInt(i.usableNumerator);
+      const packs=(numerator+denominator-1n)/denominator;
+      if(packs<=BigInt(Number.MAX_SAFE_INTEGER))wholePacks=Number(packs);
+    }
+    const reservedWire=wire(reserved),remainingWire=remaining===null?null:wire(remaining),shortageWire=shortage===null?null:wire(shortage);
+    const arithmeticUnavailable=reservedWire===null||(remaining!==null&&remainingWire===null)||(shortage!==null&&shortageWire===null);
+    return {ingredientId:i.id,excluded,reserved:reservedWire,remaining:remainingWire,shortage:shortageWire,
+      wholePacks:arithmeticUnavailable?null:wholePacks,unresolvedPrice:true,arithmeticUnavailable};
   });
   return {canApprove:ingredients.every(i=>!i.excluded&&i.wholePacks!==null),ingredients};
 }
@@ -79,6 +96,6 @@ export async function requireApprovedSharedIdea(ctx:Context,shopId:string,author
   if(!row)throw stale();
   const draft=sharedIdeaDraftSchema.parse(row.draft),day=(meal as {day?:unknown})?.day;
   const expected={title:draft.title,day,kind:'dinner',portions:draft.servings,protected:false,
-    planning:{groups:[],ingredients:draft.ingredients.map(i=>({id:i.id,name:i.name,quantity:i.required===null?null:{amount:{numerator:i.required,denominator:1},unit:i.unit,originalLiteral:`${i.required} ${i.unit}`},groupIds:[],exclusions:[]}))}};
+    planning:{groups:[],ingredients:draft.ingredients.map(i=>({id:i.id,name:i.name,quantity:i.required===null?null:{amount:typeof i.required==='number'?{numerator:i.required,denominator:1}:i.required,unit:i.unit,originalLiteral:`${literal(i.required)} ${i.unit}`},groupIds:[],exclusions:[]}))}};
   if(!evaluateSharedIdea(draft).canApprove||digest(meal)!==digest(expected))throw stale();
 }

@@ -132,3 +132,17 @@ if(process.env.RITC_TEST_NATIVE_WIRE==='1') test('actual Swift planner proposal 
  const current=ok(await call(f.owner,f.path));assert.equal(current.shopRevision,3);assert.equal(current.meals[0].meal.title,'Reviewed native guest plan');
  assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.shared_meal_change WHERE household_id=$1',[f.h])).rows[0].n,1);
 });
+
+
+test('concurrent planning grant revocation and shopper apply serialize without a partially consumed proposal',async()=>{
+ const f=await mealFixture();ok(await call(f.planner,f.changePath,'POST',f.proposal));
+ const edit={occurrenceId:f.proposal.occurrenceId,baseMealRevision:2,meal:f.changed,changeProposalId:f.proposal.proposalId};
+ const [revocation,application]=await Promise.all([
+  call(f.owner,f.path+'/meal-plan/planner','PUT',{authorityEpoch:1,grantRevision:1,plannerId:null}),
+  call(f.owner,f.base+'/commands','POST',f.patch(2,edit))]);
+ ok(revocation);assert.ok([200,409].includes(application.status),JSON.stringify(application));
+ const applied=application.status===200,shop=ok(await call(f.owner,f.path));
+ assert.equal(shop.shopRevision,applied?3:2);assert.deepEqual(shop.meals[0].meal,applied?f.changed:f.meal);
+ const state=(await admin.query('SELECT state FROM ritc.shared_meal_change WHERE household_id=$1 AND proposal_id=$2',[f.h,f.proposal.proposalId])).rows[0].state;
+ assert.equal(state,applied?'applied':'pending');assert.equal((await call(f.planner,f.changePath,'POST',f.proposal)).status,404);
+});

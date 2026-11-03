@@ -1,5 +1,19 @@
 # B11 acceptance reconciliation — 2026-11-03
 
+## Current verification checkpoint — November 3 follow-up
+
+**Paused for Terrance’s restart.** All lane workers and jobs stopped; diagnostic E03 shut down; Android never booted. Latest source integration and unrun checks are recorded in `/Users/palatis/Documents/Codex/2026-11-03/task-2/RESTART-HANDOFF.md`. No automatic continuation scheduled.
+
+The initial findings below are a retained baseline. Later implementation supersedes its S07 full-evaluation and browser received-status recovery gaps:
+
+- Full S07 combined checkout and per-dish evaluation plus contextual routes passed **63/63 signed native tests** (61 model, 2 visible journeys), zero skips/failures: `/tmp/ritc-b11-completion/FrozenNative.xcresult`. Exact source and four compiled binary identities are in `frozen-source-manifest.json` and `compiled-frozen-normal.json`. Saved offer restart, explicit exclusions, usable yield, remaining quantities, combined cap/overage, cancellation, S12 reopening, and contextual routes were exercised.
+- Browser recovery now discovers accepted submissions through authorized server reads after full reload while leaving unconsented unsent text unpersisted. **66/66 web**, **12/12 local PostgreSQL/API wire**, and **2/2 real Mobile Safari** tests passed. Safari asserted the recovered row/status in its accessibility tree; saved screenshots do not prove those below-the-fold rows were visible. Android Chrome tooling and frozen fixture are prepared; its real-device acceptance is pending.
+- S24 reviewed sufficient available-pack selection passed host8/8, validator4/4, local PostgreSQL35/35, and the real native Cancel/select/review/explicit-overage/Apply journey. The shared fixture run had **31 pass/1 contributor UI harness failure**, so it is not a green combined gate. Contributor models pass; its corrected focused screen rerun subsequently passed1/1 in `ContributorTargetedFinal.xcresult` (separate run).
+- Shared noncalendar meal proposals, confirmed physical carryover, and household-adult idea approval are being integrated in dedicated lanes. Earlier frozen test results do not certify these new sources. Local shopper S26 and accessibility remain the lead's lanes.
+
+Consolidated source/binary evidence and screenshots: `/Users/palatis/Documents/Codex/2026-11-03/task-2/b11-completion-evidence`. Diagnostic runtime: iPhone17e iOS27.0 (24A434), ad-hoc signed with normal App Groups, SDK27.1. No deployment or production-provider action occurred. This remains scoped implementation evidence, not acceptance of all 52 requirements or all 27 routes.
+
+
 This is a local source/evidence reconciliation, not release acceptance. The audited baseline is `a58ef744ec30c0f26959a6de36fa08ba4de85156` plus concurrently changing local work. The three timestamped inspections below preserve what was observed before follow-up fixes. New results and source identities must be read alongside those inventories.
 
 ## Complete coverage

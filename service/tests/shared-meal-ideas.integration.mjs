@@ -45,7 +45,7 @@ async function mealFixture() {
 }
 
 const ideaDraft=()=>({title:'Household rice bowls',source:'app_template',servings:2,minutes:25,assumedExtras:['Water'],exclusions:[],ingredients:[{id:randomUUID(),name:'Rice',required:600,unit:'gram',stock:500,reservations:[{name:'Protected Tuesday lunch',amount:250}],pack:400,usableNumerator:3,usableDenominator:4,evidence:'Household stock checked; package label entered'}]});
-function mealFor(draft){return{title:draft.title,day:'2026-11-09',kind:'dinner',portions:draft.servings,protected:false,planning:{groups:[],ingredients:draft.ingredients.map(i=>({id:i.id,name:i.name,quantity:{amount:{numerator:i.required,denominator:1},unit:i.unit,originalLiteral:`${i.required} ${i.unit}`},groupIds:[],exclusions:[]}))}};}
+function mealFor(draft){return{title:draft.title,day:'2026-11-09',kind:'dinner',portions:draft.servings,protected:false,planning:{groups:[],ingredients:draft.ingredients.map(i=>({id:i.id,name:i.name,quantity:{amount:typeof i.required==='number'?{numerator:i.required,denominator:1}:i.required,unit:i.unit,originalLiteral:`${typeof i.required==='number'?i.required:i.required.denominator===1?i.required.numerator:i.required.numerator+'/'+i.required.denominator} ${i.unit}`},groupIds:[],exclusions:[]}))}};}
 async function approved(f,author=f.planner,draft=ideaDraft()){
  const path=f.base+'/shops/'+f.shopId+'/meal-plan/ideas',page=ok(await call(author,path));
  const save={clientKey:randomUUID(),ideaId:randomUUID(),baseRevision:null,shopRevision:page.shopRevision,authorityEpoch:page.authorityEpoch,grantRevision:page.grantRevision,action:'save',draft,reviewedHouseholdEvidence:false};
@@ -112,4 +112,15 @@ test('deleting idea author erases drafts, approvals and retry receipts',async()=
  assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.shared_meal_idea WHERE household_id=$1',[f.h])).rows[0].n,0);
  assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.shared_idea_receipt WHERE household_id=$1',[f.h])).rows[0].n,0);
  assert.equal((await call(f.planner,f.changePath,'POST',a.proposal)).status,404);
+});
+
+test('exact fractional cups survive save edit approve proposal and shopper apply; ounce and fluid ounce remain distinct',async()=>{
+ const f=await mealFixture(),draft=ideaDraft();Object.assign(draft.ingredients[0],{unit:'cup',required:{numerator:1,denominator:2},stock:{numerator:1,denominator:4},reservations:[{name:'Named lunch',amount:{numerator:1,denominator:8}}],pack:1,usableNumerator:1,usableDenominator:2});
+ for(const unit of ['ounce','fluidOunce'])draft.ingredients.push({...draft.ingredients[0],id:randomUUID(),unit,name:unit,required:{numerator:1,denominator:3}});
+ const a=await approved(f,f.planner,draft),page=ok(await call(f.planner,a.path)),idea=page.ideas[0];assert.deepEqual(idea.draft,draft);
+ assert.deepEqual(idea.preview.ingredients[0].remaining,{numerator:1,denominator:8});assert.deepEqual(idea.preview.ingredients[0].shortage,{numerator:3,denominator:8});assert.equal(idea.preview.ingredients[0].wholePacks,1);
+ ok(await call(f.planner,f.changePath,'POST',a.proposal));const exact=ok(await call(f.owner,f.changePath)).proposals[0].request.meal;assert.deepEqual(exact.planning.ingredients[0].quantity,{amount:{numerator:1,denominator:2},unit:'cup',originalLiteral:'1/2 cup'});
+ assert.equal(exact.planning.ingredients[1].quantity.unit,'ounce');assert.equal(exact.planning.ingredients[2].quantity.unit,'fluidOunce');
+ ok(await call(f.owner,f.base+'/commands','POST',f.patch(2,{occurrenceId:a.proposal.occurrenceId,baseMealRevision:null,meal:exact,changeProposalId:a.proposal.proposalId})));
+ assert.deepEqual(ok(await call(f.owner,f.path)).meals.find(m=>m.occurrenceId===a.proposal.occurrenceId).meal,exact);
 });

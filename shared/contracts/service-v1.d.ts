@@ -35,18 +35,32 @@ export interface RequestPreview {
 }
 export interface ServiceError { error: { code: string; correlationId: string; recovery: string } }
 
+export interface SharedMealAmount { numerator: number; denominator: number }
+export interface SharedMealQuantity {
+  amount: SharedMealAmount;
+  unit: 'count'|'gram'|'kilogram'|'ounce'|'pound'|'milliliter'|'liter'|'fluidOunce'|'cup';
+  originalLiteral: string;
+}
+export interface SharedMealPlanning {
+  sourceOccurrenceId?: string; // Explicit reviewed local-to-shared mapping; never an authority claim.
+  groups: Array<{id:string;name:string;servings:SharedMealAmount;protected:boolean}>;
+  ingredients: Array<{id:string;name:string;quantity:SharedMealQuantity|null;groupIds:string[];exclusions:string[]}>;
+  bindings?: Array<{id:string;groupId:string;ingredientId:string;quantity:SharedMealQuantity}>;
+}
 export interface SharedMeal {
   title: string;
   day: string; // Civil date, YYYY-MM-DD
   kind: 'dinner' | 'lunch' | 'side';
   portions: number;
   protected: boolean;
+  planning?: SharedMealPlanning;
 }
 export interface SharedMealEdit {
   occurrenceId: string;
   baseMealRevision: number | null;
   meal: SharedMeal | null;
   proposalId?: string;
+  changeProposalId?: string; // Mutually exclusive with date proposalId.
 }
 export interface SharedMealPlan {
   shopId: string;
@@ -68,3 +82,27 @@ export interface ReviewedRequestPackEvidence {
   quoteSource:string; quoteObservedAt:string; reviewedAt:string;
 }
 export type ShopperRequestDecision={choice:'add';line:BasketLine;promote:boolean;reviewedPackEvidence?:ReviewedRequestPackEvidence}|{choice:'link';lineId:string;promote:boolean}|{choice:'defer'|'dismiss'|'handled'};
+
+/** Existing occurrence changes require positive baseMealRevision, an unchanged date, and the current named planning adult. */
+export interface SharedMealChangeRequest {
+  proposalId: string;
+  occurrenceId: string;
+  baseMealRevision: number | null;
+  shopRevision: number;
+  authorityEpoch: number;
+  grantRevision: number;
+  meal: SharedMeal;
+  reason: string;
+  approvedIdeaId?: string; // Required with approvedIdeaRevision for explicit new-occurrence creation only.
+  approvedIdeaRevision?: number;
+}
+export interface SharedMealChangePage {
+  shopId: string;
+  shopRevision: number;
+  authorityEpoch: number;
+  grantRevision: number;
+  phase: 'draft'|'frozen'|'placed'|'closed';
+  shopper: boolean;
+  meals: Array<{occurrenceId:string;revision:number;meal:SharedMeal}>;
+  proposals: Array<{proposalId:string;request:SharedMealChangeRequest;original:SharedMeal|null;state:'pending'|'applied'|'dismissed'}>;
+}
