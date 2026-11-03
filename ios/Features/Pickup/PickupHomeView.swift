@@ -192,7 +192,11 @@ struct PickupCheckoutView: View {
                 }
                 Button(pTr("Save and evaluate checkout")) { saveQuote() }.buttonStyle(.borderedProminent)
                 if let formError { Text(formError).foregroundStyle(.red) }
-                if let result = model.result { PickupResultView(result: result) }
+                if let result = model.result, let id = model.journey?.id {
+                    NavigationLink(pTr("Check price by weight")) { PickupWeightReview(model: model, shopID: id) }
+                        .accessibilityIdentifier("checkout.weightReview")
+                    PickupResultView(result: result)
+                }
             }
             Section(pTr("Payment hold · separate from spending")) {
                 PickupEvidenceField(title: "Retailer-displayed hold", amount: $hold)
@@ -232,6 +236,13 @@ struct PickupCheckoutView: View {
                 }
             }
         }.navigationTitle(pTr("Whole checkout"))
+        .scrollDismissesKeyboard(.interactively)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button(pTr("Done")) { UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil) }
+            }
+        }
         .disabled(model.saving)
         .onAppear { populate() }
     }
@@ -318,5 +329,99 @@ struct PickupHandoffView: View {
                 Task { await model.recordHandoff(completed ? .shareCompleted : .shareCancelled, destination: destination) }
             }
         }
+    }
+}
+
+private struct PickupWeightReview: View {
+    @ObservedObject var model: PickupModel
+    let shopID: UUID
+    @State private var lineID: UUID?
+    @State private var rate = ""
+    @State private var increment = ""
+    @State private var unit: UnitOfMeasure = .pound
+    @State private var rounding: WeightChargeRounding = .unknown
+    @FocusState private var typing: Bool
+
+    private var journey: PickupJourney? { model.journey.flatMap { $0.id == shopID ? $0 : nil } }
+    private var currentQuote: CheckoutQuote? {
+        guard let journey, let basket = journey.basket, journey.quotedRevisionID == basket.current.id,
+              let quote = journey.quote, quote.context == journey.context, quote.context.commitmentsID == shopID,
+              case .components(let lines, _, _, _, _, _) = quote.pricing,
+              Set(lines.map(\.id)) == Set(basket.current.lines.map(\.id)) else { return nil }
+        return quote
+    }
+    private var limit: CheckoutWeightLimit {
+        guard let lineID, let quote = currentQuote, let price = try? ComparisonModel.money(rate),
+              let step = try? Rational(decimal: increment) else { return .unresolved }
+        return (try? CheckoutEngine.maximumWeight(quote: quote, cap: journey?.cap, lineID: lineID,
+            rate: price, increment: step, rounding: rounding)) ?? .unresolved
+    }
+
+    private func billedWeight(_ amount: Rational) -> String {
+        let value = Decimal(amount.numerator) / Decimal(amount.denominator)
+        let unitName = pTr(amount == .one ? unit.rawValue : "Quantity plural " + unit.rawValue)
+        return "\(value.formatted(.number.precision(.fractionLength(0...18)))) \(unitName)"
+    }
+    private func clearRate() { rate = ""; increment = ""; rounding = .unknown }
+
+    var body: some View {
+        Form {
+            Section {
+                Text(pTr("Use the latest saved checkout terms. Choose one item sold by weight. The other items and their charges stay in the calculation."))
+                if let quote = currentQuote {
+                    Text("\(quote.context.branchID) · \(quote.context.slot)")
+                    Text("\(quote.context.source) · \(quote.context.observedAt.formatted())")
+                }
+                if let cap = journey?.cap, cap.scope == .wholeCheckout {
+                    LabeledContent(pTr("Spending cap"), value: pMoney(cap.amount))
+                }
+            }
+            Section(pTr("Weighed item")) {
+                Picker(pTr("Weighed item"), selection: $lineID) {
+                    Text(pTr("Choose an item")).tag(UUID?.none)
+                    ForEach(journey?.basket?.current.lines ?? []) { line in Text(line.name).tag(Optional(line.id)) }
+                }.accessibilityIdentifier("checkout.weightLine")
+                Picker(pTr("Price and increment unit"), selection: $unit) {
+                    ForEach([UnitOfMeasure.pound, .ounce, .kilogram, .gram], id: \.self) { Text(pTr($0.rawValue)).tag($0) }
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(pTr("Price per selected weight unit")).font(.caption).accessibilityHidden(true)
+                    PickupEvidenceField(title: "Price per selected weight unit", amount: $rate)
+                        .focused($typing).accessibilityIdentifier("checkout.weightRate")
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(pTr("Retailer billing increment")).font(.caption).accessibilityHidden(true)
+                    TextField(pTr("Retailer billing increment"), text: $increment)
+                        .keyboardType(.decimalPad).focused($typing).accessibilityIdentifier("checkout.weightIncrement")
+                }
+                Text(pTr("Enter the smallest weight the retailer bills in that unit, such as 0.01 lb."))
+                Picker(pTr("Fractional-cent rounding"), selection: $rounding) {
+                    Text(pTr("Not confirmed")).tag(WeightChargeRounding.unknown)
+                    Text(pTr("Round up to a cent")).tag(WeightChargeRounding.up)
+                    Text(pTr("Nearest cent, half up")).tag(WeightChargeRounding.nearestCent)
+                }
+            }
+            Section(pTr("Maximum weight that fits")) {
+                switch limit {
+                case let .maximum(weight, lineCost, checkout):
+                    LabeledContent(pTr("Maximum billed weight"), value: billedWeight(weight))
+                        .accessibilityIdentifier("checkout.maximumWeight")
+                    LabeledContent(pTr("Item charge at that weight"), value: pMoney(lineCost))
+                        .accessibilityIdentifier("checkout.maximumLineCharge")
+                    LabeledContent(pTr("Whole pickup at that weight"), value: pMoney(checkout))
+                        .accessibilityIdentifier("checkout.maximumTotal")
+                    Text(pTr("Confirm the retailer’s actual weight and total before placing the order."))
+                case .noPositiveIncrement: Text(pTr("No positive billing increment fits this cap with the entered charges."))
+                case .unresolved:
+                    Text(pTr("Weight limit unresolved. Review the whole-pickup cap, the other items, fees, discounts, tax and deposits. Enter the rate, billing increment and any required rounding."))
+                        .accessibilityIdentifier("checkout.weightUnresolved")
+                }
+            }
+        }
+        .onChange(of: lineID) { _, _ in clearRate() }
+        .onChange(of: unit) { _, _ in clearRate() }
+        .navigationTitle(pTr("Check price by weight"))
+        .scrollDismissesKeyboard(.interactively)
+        .toolbar { ToolbarItemGroup(placement: .keyboard) { Spacer(); Button(pTr("Done")) { typing = false } } }
     }
 }

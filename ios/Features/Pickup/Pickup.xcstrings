@@ -9305,6 +9305,310 @@
           }
         }
       }
+    },
+    "Use the latest saved checkout terms. Choose one item sold by weight. The other items and their charges stay in the calculation.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use the latest saved checkout terms. Choose one item sold by weight. The other items and their charges stay in the calculation."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se usan las últimas condiciones de pago guardadas. Elige un artículo que se venda por peso. Los demás artículos y sus cargos siguen en el cálculo."
+          }
+        }
+      }
+    },
+    "Weighed item": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weighed item"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artículo que se vende por peso"
+          }
+        }
+      }
+    },
+    "Choose an item": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose an item"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige un artículo"
+          }
+        }
+      }
+    },
+    "Price and increment unit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price and increment unit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unidad del precio y del incremento"
+          }
+        }
+      }
+    },
+    "Price per selected weight unit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price per selected weight unit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio por unidad de peso seleccionada"
+          }
+        }
+      }
+    },
+    "Retailer billing increment": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retailer billing increment"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incremento de peso que cobra la tienda"
+          }
+        }
+      }
+    },
+    "Enter the smallest weight the retailer bills in that unit, such as 0.01 lb.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the smallest weight the retailer bills in that unit, such as 0.01 lb."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresa el menor incremento de peso que cobra la tienda en esa unidad, por ejemplo, 0.01 lb."
+          }
+        }
+      }
+    },
+    "Fractional-cent rounding": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fractional-cent rounding"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redondeo de fracciones de centavo"
+          }
+        }
+      }
+    },
+    "Round up to a cent": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Round up to a cent"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redondear al centavo superior"
+          }
+        }
+      }
+    },
+    "Nearest cent, half up": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nearest cent, half up"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al centavo más cercano, con mitades hacia arriba"
+          }
+        }
+      }
+    },
+    "Maximum weight that fits": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maximum weight that fits"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Peso máximo que cabe en el presupuesto"
+          }
+        }
+      }
+    },
+    "Maximum billed weight": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maximum billed weight"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Peso máximo facturable"
+          }
+        }
+      }
+    },
+    "Item charge at that weight": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item charge at that weight"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargo del artículo a ese peso"
+          }
+        }
+      }
+    },
+    "Whole pickup at that weight": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whole pickup at that weight"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total de la recogida a ese peso"
+          }
+        }
+      }
+    },
+    "Confirm the retailer’s actual weight and total before placing the order.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm the retailer’s actual weight and total before placing the order."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirma el peso real y el total de la tienda antes de hacer el pedido."
+          }
+        }
+      }
+    },
+    "No positive billing increment fits this cap with the entered charges.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No positive billing increment fits this cap with the entered charges."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Con estos cargos, ni el menor incremento de peso cabe en el presupuesto."
+          }
+        }
+      }
+    },
+    "Weight limit unresolved. Review the whole-pickup cap, the other items, fees, discounts, tax and deposits. Enter the rate, billing increment and any required rounding.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weight limit unresolved. Review the whole-pickup cap, the other items, fees, discounts, tax and deposits. Enter the rate, billing increment and any required rounding."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El límite de peso está sin resolver. Revisa el presupuesto de toda la recogida, los demás artículos, cargos, descuentos, impuestos y depósitos. Ingresa el precio, el incremento de peso y el redondeo que corresponda."
+          }
+        }
+      }
+    },
+    "Check price by weight": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check price by weight"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar el precio por peso"
+          }
+        }
+      }
+    },
+    "Done": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listo"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

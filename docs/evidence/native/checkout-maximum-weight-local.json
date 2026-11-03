@@ -1,0 +1,30 @@
+{
+  "routes": [
+    "S05"
+  ],
+  "date": "2026-11-03",
+  "runtime": "iPhone SE (2nd generation), iOS 17.0 Simulator",
+  "resultBundle": ".build/S05WeightRenderedProof.xcresult",
+  "sameBuildRetry": ".build/S05WeightUnknownTaxRetry.xcresult",
+  "previousCompleteBundle": ".build/S05WeightAcceptance.xcresult",
+  "testRunner": "Both normal cases passed together on the preceding build. The final positive case passed with explicit assertions for 2 lb, $4.00 and $38.00. In the combined final run an XCTest accessibility callback terminated the app when starting the second case. The same final binary passed the conditional case in isolation.",
+  "tests": {
+    "normalEnglishFreeUI": 2,
+    "CoreDomain": 160,
+    "failures": 0
+  },
+  "journey": "Shop → enter a two-item pickup → review checkout copy → whole checkout. With $34 of other items, $38 cap, $2/lb and a 0.01 lb billing increment, unconfirmed tax leaves the maximum unresolved. An independent normal-entry journey with confirmed zero tax shows a maximum of 2 lb, a $4.00 line and $38.00 pickup. Returning to checkout leaves the actual weighed price blank.",
+  "coverage": [
+    "Saved quote and cap must refer to the same commitments and to a current, complete whole pickup. Inclusive-only prices, missing line identity and unconfirmed monetary components stay unresolved.",
+    "The solver uses the entered discrete billing increment and confirmed fractional-cent rounding where required. It checks the actual affordable increment against fee thresholds, ineligible items and discounts. A discounted or fee-waived heavier basket can fit even when a lighter basket costs more.",
+    "Price, unit and weight choices are a read-only local estimate. Changing the item or mass unit clears its entered rate and increment."
+  ],
+  "limits": [
+    "The native journey ran in English. English and US Spanish catalog entries were checked for structural coverage. The local fixture uses entered retail terms without a live retailer or physical scale."
+  ],
+  "attachments": [
+    "docs/evidence/native/checkout-maximum-billed-weight.png",
+    "docs/evidence/native/checkout-unknown-tax-weight.png"
+  ],
+  "localization": "Frozen source passed 13 catalogs and 3,025 English/US Spanish entries. US Spanish has not had human language review."
+}

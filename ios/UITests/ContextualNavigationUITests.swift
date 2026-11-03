@@ -12,6 +12,57 @@ import XCTest
         app.terminate()
     }
 
+    func testUnknownProduceWeightUsesSavedWholePickupCapAndBillingIncrement() {
+        enterWeighedPickup(knownTax: true)
+    }
+
+    func testUnknownTaxKeepsWeighedPickupUnresolved() {
+        enterWeighedPickup(knownTax: false)
+    }
+
+    private func enterWeighedPickup(knownTax: Bool) {
+        launch(reset: true)
+        shopRoot(); tap(element("openPickupList")); tap(element("ledgerStartShop"))
+        fill("Weighed produce", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
+        tap(element("ledgerImport")); fill("1 apples\n1 rice", into: "ledgerImportText")
+        tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
+        shopRoot(); tap(app.buttons["Review checkout"]); tap(app.buttons["Continue to checkout review"])
+        tap(app.buttons["Apply reviewed checkout copy"]); tap(app.buttons["Review whole checkout"])
+        fill("Family market", into: "Store", replacing: true)
+        fill("Main branch", into: "Branch", replacing: true)
+        fill("Tuesday 5 PM", into: "Pickup or delivery slot", replacing: true)
+        fill("Retailer quote", into: "Source of these prices", replacing: true)
+        fill("38", into: "Spending cap", replacing: true)
+        fill("34", into: "rice")
+        fill("0", into: "Fee below threshold or fixed fee")
+        fill("0", into: "Eligible discount")
+        fill("0", into: "Deposits and other charges")
+        if knownTax { fill("0", into: "Tax") }
+        tap(app.buttons["Save and evaluate checkout"])
+        tap(element("checkout.weightReview"))
+        tap(element("checkout.weightLine")); tap(app.buttons["apples"])
+        fill("2", into: "checkout.weightRate"); fill("0.01", into: "checkout.weightIncrement")
+        if !knownTax {
+            reveal(element("checkout.weightUnresolved"))
+            capture("S05-unknown-tax-keeps-weight-conditional")
+            return
+        }
+        let result = element("checkout.maximumWeight")
+        reveal(result)
+        XCTAssertTrue(result.label.contains("2 pounds") || (result.value as? String)?.contains("2 pounds") == true, result.debugDescription)
+        for (id, amount) in [("checkout.maximumLineCharge", "$4.00"), ("checkout.maximumTotal", "$38.00")] {
+            let row = element(id)
+            reveal(row)
+            XCTAssertTrue(row.label.contains(amount) || (row.value as? String)?.contains(amount) == true, row.debugDescription)
+        }
+        capture("S05-billed-weight-under-saved-cap")
+        tap(app.navigationBars["Check price by weight"].buttons["Whole checkout"])
+        XCTAssertTrue(app.navigationBars["Whole checkout"].waitForExistence(timeout: 5))
+        let price = app.textFields["apples"]
+        reveal(price)
+        XCTAssertTrue(price.value as? String == price.placeholderValue || price.value as? String == "", price.debugDescription)
+    }
+
     func testFreeContextualRoutesKeepPrivateAndSharedWorkSeparate() throws {
         launch(reset: true)
         XCTAssertFalse(element("shop.familyInbox").exists)

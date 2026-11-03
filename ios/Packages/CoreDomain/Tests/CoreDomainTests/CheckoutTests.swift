@@ -9,6 +9,72 @@ final class CheckoutTests: XCTestCase {
                         commitmentsID: commitments, observedAt: time, source: "Shopper-entered quote")
     }
 
+    private func weightResult(other: Int64 = 3400, capCents: Int64 = 3800, rate: Int64 = 200,
+                              step: Rational = .one, rounding: WeightChargeRounding = .unknown,
+                              fees: [CheckoutFee] = [], tax: CostEvidence = .exact(.zero), complete: Bool = true,
+                              eligible: Bool = true, scope: CheckoutScope = .wholeCheckout, discount: Int64 = 0) throws -> CheckoutWeightLimit {
+        let variable = CheckoutLine(id: UUID(), name: "Produce", cost: .unknown(reason: "Not weighed"), thresholdEligible: eligible)
+        let quote = CheckoutQuote(scope: scope, context: context, pricing: .components(lines: [
+            .init(id: UUID(), name: "Other items", cost: .exact(Money(minorUnits: other))), variable
+        ], lineSetComplete: complete, fees: fees, discounts: [.init(id: "discount", amount: .exact(Money(minorUnits: discount)), reducesEligibleSubtotal: true)],
+        tax: tax, deposits: .exact(.zero)))
+        return try CheckoutEngine.maximumWeight(quote: quote, cap: .init(scope: .wholeCheckout, commitmentsID: commitments, amount: .init(minorUnits: capCents)),
+            lineID: variable.id, rate: .init(minorUnits: rate), increment: step, rounding: rounding)
+    }
+
+    func testUnknownWeightHasMaximumAtRetailerBillingIncrementUnderWholeCap() throws {
+        XCTAssertEqual(try weightResult(step: Rational(1,100)), .maximum(weight: try Rational(2), lineCost: .init(minorUnits: 400), checkout: .init(minorUnits: 3800)))
+        XCTAssertEqual(try weightResult(other: 3801), .noPositiveIncrement)
+        XCTAssertEqual(try weightResult(complete: false), .unresolved)
+        XCTAssertEqual(try weightResult(tax: .unknown(reason: "tax")), .unresolved)
+        XCTAssertEqual(try weightResult(scope: .item), .unresolved)
+        XCTAssertEqual(try weightResult(rate: 0), .unresolved)
+        XCTAssertEqual(try weightResult(step: .zero), .unresolved)
+    }
+
+    func testInclusiveUnrelatedAndMissingWeighedLineLeaveMaximumUnresolved() throws {
+        let item = CheckoutLine(id: UUID(), name: "Produce", cost: .unknown(reason: "Scale"))
+        let cap = CheckoutCap(scope: .wholeCheckout, commitmentsID: commitments, amount: .init(minorUnits: 3800))
+        let quote = CheckoutQuote(scope: .wholeCheckout, context: context, pricing: .components(lines: [item], lineSetComplete: true,
+            fees: [], discounts: [], tax: .exact(.zero), deposits: .exact(.zero)))
+        func check(_ quote: CheckoutQuote, cap: CheckoutCap?, id: UUID) throws -> CheckoutWeightLimit {
+            try CheckoutEngine.maximumWeight(quote: quote, cap: cap, lineID: id, rate: .init(minorUnits: 200), increment: .one, rounding: .unknown)
+        }
+        XCTAssertEqual(try check(quote, cap: nil, id: item.id), .unresolved)
+        XCTAssertEqual(try check(quote, cap: cap, id: UUID()), .unresolved)
+        XCTAssertEqual(try check(quote, cap: .init(scope: .wholeCheckout, commitmentsID: UUID(), amount: cap.amount), id: item.id), .unresolved)
+        XCTAssertEqual(try check(.init(scope: quote.scope, context: context, pricing: .inclusiveTotal(.exact(cap.amount))), cap: cap, id: item.id), .unresolved)
+    }
+
+    func testWeightCeilingRechecksFeeAtActualBilledIncrementAndRetainsDiscount() throws {
+        let fee = CheckoutFee(id: "small-order", rule: .waivedAt(threshold: .init(minorUnits: 3500),
+            belowThreshold: .exact(.init(minorUnits: 495)), basis: .eligibleItemsAfterEligibleDiscounts))
+        // Removing the weighed item incurs the fee and exceeds the cap, yet a larger item weighs in under the waived fee.
+        XCTAssertEqual(try weightResult(other: 3400, capCents: 3600, rate: 100, fees: [fee]), .maximum(weight: try Rational(2), lineCost: .init(minorUnits: 200), checkout: .init(minorUnits: 3600)))
+        XCTAssertEqual(try weightResult(other: 3400, capCents: 3500, rate: 200, fees: [fee]), .noPositiveIncrement)
+        XCTAssertEqual(try weightResult(other: 3400, capCents: 3800, rate: 100, fees: [fee], eligible: false), .noPositiveIncrement)
+        XCTAssertEqual(try weightResult(other: 3400, capCents: 3800, rate: 100, fees: [fee], discount: 200), .maximum(weight: try Rational(6), lineCost: .init(minorUnits: 600), checkout: .init(minorUnits: 3800)))
+        let first = CheckoutFee(id: "base", rule: .fixed(.exact(.init(minorUnits: 100))))
+        let second = CheckoutFee(id: "threshold", rule: .waivedAt(threshold: .init(minorUnits: 950),
+            belowThreshold: .exact(.init(minorUnits: 200)), basis: .eligibleItemsBeforeDiscounts))
+        // Ten units exceed the cap with the first charge. Nine activates the second charge. Seven fits both.
+        XCTAssertEqual(try weightResult(other: 0, capCents: 1000, rate: 100, fees: [first, second]),
+            .maximum(weight: try Rational(7), lineCost: .init(minorUnits: 700), checkout: .init(minorUnits: 1000)))
+        let unknown = CheckoutFee(id: "?", rule: .fixed(.unknown(reason: "service charge")))
+        XCTAssertEqual(try weightResult(fees: [unknown]), .unresolved)
+    }
+
+    func testFractionalCentRoundingAndUnknownIncrementRemainExplicit() throws {
+        // At 13 cents per unit, a quarter costs 3.25 cents. Six cents covers two quarters only if the line rounds 6.5 down; half-up charges 7.
+        let step = try Rational(1,4)
+        XCTAssertEqual(try weightResult(other: 0, capCents: 3, rate: 13, step: step, rounding: .nearestCent),
+            .maximum(weight: step, lineCost: .init(minorUnits: 3), checkout: .init(minorUnits: 3)))
+        XCTAssertEqual(try weightResult(other: 0, capCents: 3, rate: 13, step: step, rounding: .up), .noPositiveIncrement)
+        XCTAssertEqual(try weightResult(other: 0, capCents: 6, rate: 13, step: step, rounding: .nearestCent),
+            .maximum(weight: step, lineCost: .init(minorUnits: 3), checkout: .init(minorUnits: 3)))
+        XCTAssertEqual(try weightResult(other: 0, capCents: 3, rate: 13, step: step), .unresolved)
+    }
+
     func testSharedCheckoutVectors() throws {
         var root = URL(fileURLWithPath: #filePath)
         for _ in 0..<6 { root.deleteLastPathComponent() }
