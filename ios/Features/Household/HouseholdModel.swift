@@ -38,6 +38,10 @@ import HouseholdClient
     private let sharedShopOutbox: OperationOutbox
     private let lifecycleStore: LifecycleIntentStore
     private let historyStore: HistoryPendingStore
+    private let placementStore: PlacementPendingStore
+    @Published private(set) var placementEvidenceUnlocked = false
+    @Published private(set) var placementEvidenceNotice: String?
+    private var placementEvidenceIdentity: (subject: String, householdID: String, memberID: String)?
     private var pending: PendingOperation?
     private var attempts = 0
     private var retryAfter = Date.distantPast
@@ -53,6 +57,7 @@ import HouseholdClient
         sharedShopOutbox = OperationOutbox(url: queueURL.deletingPathExtension().appendingPathExtension("shared-shop.json"))
         lifecycleStore = LifecycleIntentStore(url: queueURL.deletingPathExtension().appendingPathExtension("lifecycle.json"))
         historyStore = HistoryPendingStore(url: queueURL.deletingPathExtension().appendingPathExtension("history.json"))
+        placementStore = PlacementPendingStore(url: queueURL.deletingPathExtension().appendingPathExtension("placement.json"))
         if let auth, let service {
             self.auth = auth; self.service = service; configured = true
             householdExit = HouseholdExitModel(service: service, vault: exitVault ?? KeychainRefreshTokenVault(service: "RoomInTheCart.injected", account: "household-exits"))
@@ -306,9 +311,14 @@ import HouseholdClient
     }
     /// Scene transitions hide protected projections; returning requires OS owner authentication and fresh authorization.
     func lock() {
+        placementEvidenceUnlocked = false
+        if let identity, let scope = projection, scope.enrolled, scope.grantId == nil,
+           ["organizer", "shopper", "contributor"].contains(scope.role) {
+            placementEvidenceIdentity = (identity.subject, scope.household.id, scope.memberId)
+        }
         accountDeletion?.clearReview(); householdExit?.clear()
         onScopeChange?(); generation = UUID(); locked = identity != nil
-        clearProjection(); lifecycle?.clear(); lifecycle = nil; workspaces = []; code = ""; notice = nil
+        clearProjection(preservePlacementEvidence: true); lifecycle?.clear(); lifecycle = nil; workspaces = []; code = ""; notice = nil
     }
     func unlock() async {
         guard let auth, let service, !busy else { return }
@@ -328,6 +338,10 @@ import HouseholdClient
     }
     func hideExitingScope(_ intent: HouseholdExitIntent) async {
         guard let identity, identity.subject == intent.subject else { return }
+        if let saved = placementEvidenceIdentity, saved.subject == intent.subject,
+           saved.householdID == intent.householdID, saved.memberID == intent.memberID {
+            generation = UUID(); placementEvidenceIdentity = nil; placementEvidenceUnlocked = false
+        }
         workspaces.removeAll { $0.householdId == intent.householdID }
         if projection?.household.id == intent.householdID, projection?.memberId == intent.memberID {
             generation = UUID(); onScopeChange?(); clearProjection()
@@ -346,6 +360,7 @@ import HouseholdClient
         }
         do { try await lifecycleStore.purge(householdID: householdID, memberID: intent.memberID, subject: subject) } catch { cleanupFailed = true }
         do { try await historyStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
+        do { try await placementStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
         guard start == generation, self.identity?.subject == subject, !locked else { return }
         do {
             let list = try await service.workspaces()
@@ -390,6 +405,7 @@ import HouseholdClient
         do { try await sharedShopOutbox.purge() } catch { failed = true }
         do { try await lifecycleStore.purge() } catch { failed = true }
         do { try await historyStore.purge() } catch { failed = true }
+        do { try await placementStore.purge() } catch { failed = true }
         do {
             if alreadyRevoked { try await auth?.clearLocalSession() }
             else { try await auth?.signOut(allDevices: allDevices) }
@@ -411,7 +427,8 @@ import HouseholdClient
         guard start == generation, !locked else { throw ClientError.cancelled }
         return token
     }
-    private func clearProjection() {
+    private func clearProjection(preservePlacementEvidence: Bool = false) {
+        if !preservePlacementEvidence { placementEvidenceIdentity = nil; placementEvidenceUnlocked = false; placementEvidenceNotice = nil }
         lifecycle?.clearScope()
         shopperInbox?.clear(); shopperInbox = nil; sharedShop?.clear(); sharedShop = nil
         projection = nil; requests = []; nextRequestCursor = nil; pending = nil
@@ -463,6 +480,8 @@ import HouseholdClient
             catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
             do { try await historyStore.purge() }
             catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
+            do { try await placementStore.purge() }
+            catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
         case .service(let status, _, _, _) where status == 409:
             notice = ht("This request needs review against the current household state. It has not been applied again.")
         case .service(let status, _, _, _) where status == 429:
@@ -492,4 +511,51 @@ extension HouseholdModel {
     }
     /// Also used by the account deletion coordinator before dismissing native access.
     func purgeHistoryLocalState() async throws { try await historyStore.purge() }
+}
+
+// Saved reporter evidence is distinct from current household/shopper authority.
+extension HouseholdModel {
+    var canUnlockPlacementEvidence: Bool {
+        guard let identity, let saved = placementEvidenceIdentity else { return false }
+        return identity.subject == saved.subject && locked
+    }
+    func unlockPlacementEvidence() async {
+        guard !busy, canUnlockPlacementEvidence else { return }
+        busy = true; placementEvidenceNotice = nil; defer { busy = false }; let start = generation
+        let context = LAContext(); var error: NSError?
+        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
+            placementEvidenceNotice = PlacementCopy.text("Set an iPhone passcode to reopen your protected placement evidence.")
+            return
+        }
+        do {
+            let confirmed = try await context.evaluatePolicy(.deviceOwnerAuthentication,
+                localizedReason: PlacementCopy.text("Open only your saved placement evidence on this iPhone"))
+            guard confirmed, start == generation, canUnlockPlacementEvidence else { return }
+            placementEvidenceUnlocked = true
+        } catch {
+            guard start == generation else { return }
+            placementEvidenceUnlocked = false
+            placementEvidenceNotice = PlacementCopy.text("Your saved placement evidence is still locked. You can try again.")
+        }
+    }
+    func makePlacementModel() -> PlacementFeatureModel? {
+        guard let service else { return nil }
+        return PlacementFeatureModel(service: service, store: placementStore, runtime: { [weak self] in
+            guard let self, let identity = self.identity else { return nil }
+            if !self.locked, let scope = self.projection, scope.enrolled, scope.grantId == nil,
+               ["organizer", "shopper", "contributor"].contains(scope.role) {
+                return PlacementRuntimeScope(generation: self.generation, subject: identity.subject,
+                    householdID: scope.household.id, memberID: scope.memberId, currentShopID: scope.shopId,
+                    authorityStamp: scope.role + "|" + scope.capabilities.sorted().joined(separator: ","),
+                    canManage: scope.role == "shopper" && scope.capabilities.contains("shopper_commands") && scope.shopId != nil)
+            }
+            guard self.placementEvidenceUnlocked, let saved = self.placementEvidenceIdentity,
+                  saved.subject == identity.subject else { return nil }
+            return PlacementRuntimeScope(generation: self.generation, subject: saved.subject,
+                householdID: saved.householdID, memberID: saved.memberID, currentShopID: nil,
+                authorityStamp: "local_reporter_evidence", canManage: false)
+        }, onAccessEnded: { [weak self] in
+            guard let self else { return }; await self.show(ClientError.accessEnded, start: self.generation)
+        })
+    }
 }

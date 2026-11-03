@@ -21,7 +21,7 @@ import CoreDomain
 }
 @MainActor final class DinnerFeatureModelTests: XCTestCase {
     let now = Date(timeIntervalSince1970: 1_800_000_000)
-    private func fixture(paid: Bool = false) -> (MemoryDinnerStore, DinnerFeatureModel) {
+    private func fixture(paid: Bool = false, catalog: [MealTemplate] = []) -> (MemoryDinnerStore, DinnerFeatureModel) {
         let store = MemoryDinnerStore()
         let shop = ShoppingLedger(title: "Actual pickup", basis: ShopBasis(timeZoneIdentifier: "America/Los_Angeles"))
         store.workspace.shops = [shop]; store.workspace.selectedShopID = shop.id
@@ -29,8 +29,36 @@ import CoreDomain
             DinnerAccessContext(scope: .local(workspaceID: store.sourceWorkspaceID!), actorID: "local", shopID: id,
                 assignedShopperID: "local", canPlan: true, canReadBudget: true, hasPaidTools: paid,
                 roleRevision: 0, verifiedAt: self.now, validUntil: self.now.addingTimeInterval(3600))
-        }, phase: { _ in .draft }, clock: { self.now })
+        }, phase: { _ in .draft }, ideaCatalog: catalog, clock: { self.now })
         return (store, model)
+    }
+    func testBundledFreeIdeasAreEditableAndApprovalKeepsShoppingListUntouched() async throws {
+        let patterns = DinnerPatternCatalog.patterns
+        let (store, model) = fixture(catalog: patterns)
+        let before = store.workspace
+        XCTAssertEqual(Set(patterns.map(\.id)).count, 3)
+        for (index, pattern) in patterns.enumerated() {
+            try pattern.validate()
+            XCTAssertGreaterThan(pattern.ingredients.count, 1)
+            XCTAssertNotNil(pattern.leadTimeMinutes)
+            XCTAssertFalse(pattern.notes.isEmpty)
+            let draft = try model.newIdea(seed: UInt64(index), exclusions: [])
+            XCTAssertEqual(draft.template, pattern)
+            XCTAssertFalse(draft.availabilityConfirmed)
+            XCTAssertFalse(draft.yieldConfirmed)
+            XCTAssertFalse(DinnerIdeaEngine.review(draft).canClaimCoverage)
+        }
+        XCTAssertEqual(store.workspace, before)
+        let excluded = try XCTUnwrap(patterns.first?.ingredients.first?.name)
+        var proposal = try model.newIdea(seed: 0, exclusions: [excluded])
+        proposal.yieldConfirmed = true
+        proposal.availabilityConfirmed = true
+        XCTAssertFalse(DinnerIdeaEngine.review(proposal).canAccept)
+        proposal.template.ingredients.removeAll { $0.name == excluded }
+        let approved = await model.acceptIdea(proposal, acceptedID: UUID())
+        XCTAssertTrue(approved)
+        XCTAssertEqual(store.workspace.dinnerPlanning.acceptedDinners.count, 1)
+        XCTAssertEqual(store.workspace.shops, before.shops)
     }
     private func recipe() throws -> MealTemplate {
         MealTemplate(title: "Wraps", servings: try Rational(2), ingredients: [MealIngredient(name: "Wraps",

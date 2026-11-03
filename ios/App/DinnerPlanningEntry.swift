@@ -12,7 +12,7 @@ struct DinnerPlanningEntry: View {
     @EnvironmentObject private var membership: MembershipCoordinator
 
     var body: some View {
-        DinnerPlanningHome(ledger: ledger, access: localAccess, phase: phase,
+        DinnerPlanningHome(ledger: ledger, access: localAccess, phase: phase, ideaCatalog: DinnerPatternCatalog.patterns,
             runtimeChanges: Publishers.Merge4(access.objectWillChange, pickup.objectWillChange,
                 household.objectWillChange, membership.objectWillChange).eraseToAnyPublisher())
             .task { await pickup.load() }

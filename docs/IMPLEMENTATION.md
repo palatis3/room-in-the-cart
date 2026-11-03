@@ -16,6 +16,20 @@ Read [APP-BASELINE](product/APP-BASELINE.md), [feature contracts](product/founda
 
 All requirement and route rows inherit the checkpoint date above. Ownership follows the milestone dashboard below: Dot owns the ledger and dinner work, the lead owns app composition and integration, and delegated implementation lanes own their new service/web/auth/records/billing/pickup files. A final named acceptance tester and immutable build must be added before closure. This tracker itself executed count/link validation, not the product suites.
 
+## November 3 integration update
+
+The earlier register below is a dated inventory. The following simulator and database runs cover later changes.
+
+| Area | Verified locally | Remaining acceptance |
+| --- | --- | --- |
+| B02, B09 shopping list | On iPhone 17e, entered two items, moved the second item first, relaunched and opened large print. PDFKit checked actual multipage output from the system print formatter. Store-specific order, original order and scoped recovery have model coverage. | Physical printing and human accessibility review |
+| B06, B07, B10 shared planning | PostgreSQL suite passed 79 cases, including selected-shop isolation, transfer, paid planner grant and stale meal revisions. Web suite passed 51. | Cross-device, deployed migration and provider sessions |
+| E09 history and period budget | Native entry, saved observations, shop and period views integrated. [History integration evidence](../ios/Features/History/INTEGRATION.md) | Production entitlement and on-device staging journey |
+| D15 account and household exit | Native recent-authentication and receipt screens, leaving a household, and guardian withdrawal tested. [Local evidence](evidence/native/account-deletion-local.json) | Provider erasure remains disabled in staging |
+| D16 optional pickup feedback | Defaults off in Settings. Closed, placed pickups support six coded outcomes, baseline and comparison. A reported tie yields zero incremental benefit. The native test covers consent, scope, revision, restart and removal. | Representative shopper walkthrough and language review |
+
+The list-layout simulator build passed 283 app tests and the interactive list walkthrough. A subsequent snapshot with scoped backup and pickup feedback passed 284 app tests. The 284-test snapshot also compiled in Release for arm64 and passed the compiled metadata check. Its Debug build was installed and launched on the iPhone 17 simulator. The later integrated local service suite passed 85 tests, including four placement regressions and both Free and paid native HTTPS workflows. The unfiltered accessibility audit still has open findings.
+
 ## Milestone dashboard
 
 | Milestone | Owner / inspected state | Available evidence | Exit still required |

@@ -1,0 +1,2630 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "A current status and the original action receipt are different evidence. A handled report is not sent again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A current status and the original action receipt are different evidence. A handled report is not sent again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El estado actual y el comprobante de la acción original son registros distintos. Un reporte ya atendido no se vuelve a enviar."
+          }
+        }
+      }
+    },
+    "A resolution is recorded, but this status does not identify your original action as its cause.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A resolution is recorded, but this status does not identify your original action as its cause."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hay una resolución registrada, pero este estado no identifica tu acción original como su causa."
+          }
+        }
+      }
+    },
+    "After checking with the retailer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After checking with the retailer"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Después de verificar con la tienda"
+          }
+        }
+      }
+    },
+    "Apply the reviewed report to this app shop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apply the reviewed report to this app shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aplicar el reporte revisado a esta compra en la app"
+          }
+        }
+      }
+    },
+    "Cap scope": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cap scope"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alcance del límite"
+          }
+        }
+      }
+    },
+    "Capture the reviewed shop before leaving for checkout. Your saved snapshot can be reviewed without loading the current shopper's private basket.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture the reviewed shop before leaving for checkout. Your saved snapshot can be reviewed without loading the current shopper's private basket."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guarda la compra revisada antes de salir para pagar. Puedes revisar la copia guardada sin cargar la canasta privada del responsable actual."
+          }
+        }
+      }
+    },
+    "Captured amount over cap": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captured amount over cap"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importe guardado por encima del límite"
+          }
+        }
+      }
+    },
+    "Captured lower bound": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captured lower bound"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Límite inferior guardado"
+          }
+        }
+      }
+    },
+    "Captured on this iPhone": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captured on this iPhone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardada en este iPhone"
+          }
+        }
+      }
+    },
+    "Captured room under cap": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captured room under cap"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Margen guardado por debajo del límite"
+          }
+        }
+      }
+    },
+    "Captured shop snapshot": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captured shop snapshot"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copia guardada de la compra"
+          }
+        }
+      }
+    },
+    "Captured total": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captured total"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total guardado"
+          }
+        }
+      }
+    },
+    "Captured upper bound": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captured upper bound"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Límite superior guardado"
+          }
+        }
+      }
+    },
+    "Captured whole checkout was within the entered cap": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captured whole checkout was within the entered cap"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El total completo guardado estaba dentro del límite ingresado"
+          }
+        }
+      }
+    },
+    "Check my original report status": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check my original report status"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verificar el estado de mi reporte original"
+          }
+        }
+      }
+    },
+    "Check reconciliation status": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check reconciliation status"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verificar el estado de conciliación"
+          }
+        }
+      }
+    },
+    "Check status and retire local attempt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check status and retire local attempt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verificar estado y retirar el intento local"
+          }
+        }
+      }
+    },
+    "Checking placement records…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking placement records…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verificando registros de pedidos…"
+          }
+        }
+      }
+    },
+    "Closed in the app": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Closed in the app"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrada en la app"
+          }
+        }
+      }
+    },
+    "Confirm reviewed action": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm reviewed action"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar la acción revisada"
+          }
+        }
+      }
+    },
+    "Connect your household to report an external placement or review a pending report.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect your household to report an external placement or review a pending report."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conecta tu hogar para reportar un pedido realizado fuera de la app o revisar un reporte pendiente."
+          }
+        }
+      }
+    },
+    "Counts toward the fee threshold": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Counts toward the fee threshold"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuenta para el umbral de la tarifa"
+          }
+        }
+      }
+    },
+    "Current app state": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current app state"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estado actual en la app"
+          }
+        }
+      }
+    },
+    "Current frozen revision": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current frozen revision"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisión fijada actual"
+          }
+        }
+      }
+    },
+    "Current report status": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current report status"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estado actual del reporte"
+          }
+        }
+      }
+    },
+    "Current shop revision": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current shop revision"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisión actual de la compra"
+          }
+        }
+      }
+    },
+    "Current shopper access is unavailable. Your own original placement evidence remains separate and unchanged.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current shopper access is unavailable. Your own original placement evidence remains separate and unchanged."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El acceso del responsable actual no está disponible. Tus registros originales de pedidos se conservan por separado y sin cambios."
+          }
+        }
+      }
+    },
+    "Current shopper assignment version": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current shopper assignment version"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versión actual de la asignación del responsable"
+          }
+        }
+      }
+    },
+    "Current shopper's checkout snapshot": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current shopper's checkout snapshot"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copia de pago del responsable actual"
+          }
+        }
+      }
+    },
+    "Current status of my report": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current status of my report"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estado actual de mi reporte"
+          }
+        }
+      }
+    },
+    "Dinner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cena"
+          }
+        }
+      }
+    },
+    "Dinner only": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dinner only"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo cena"
+          }
+        }
+      }
+    },
+    "Discard this unused local snapshot?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard this unused local snapshot?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Descartar esta copia local sin reportar?"
+          }
+        }
+      }
+    },
+    "Discard unused local snapshot": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard unused local snapshot"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descartar copia local sin reportar"
+          }
+        }
+      }
+    },
+    "Does not count toward the fee threshold": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Does not count toward the fee threshold"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No cuenta para el umbral de la tarifa"
+          }
+        }
+      }
+    },
+    "Draft": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Draft"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrador"
+          }
+        }
+      }
+    },
+    "Enter when you placed this reviewed snapshot, after it was saved and no later than five minutes from now.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter when you placed this reviewed snapshot, after it was saved and no later than five minutes from now."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresa cuándo realizaste el pedido de esta copia revisada, después de guardarla y no más de cinco minutos en el futuro."
+          }
+        }
+      }
+    },
+    "Entered deposits": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entered deposits"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Depósitos ingresados"
+          }
+        }
+      }
+    },
+    "Entered discounts": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entered discounts"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descuentos ingresados"
+          }
+        }
+      }
+    },
+    "Entered fee": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entered fee"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tarifa ingresada"
+          }
+        }
+      }
+    },
+    "Entered price per pack": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entered price per pack"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio ingresado por paquete"
+          }
+        }
+      }
+    },
+    "Entered quote incomplete": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entered quote incomplete"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cotización ingresada incompleta"
+          }
+        }
+      }
+    },
+    "Entered quote marked complete": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entered quote marked complete"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cotización ingresada marcada como completa"
+          }
+        }
+      }
+    },
+    "Entered spending cap": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entered spending cap"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Límite de gasto ingresado"
+          }
+        }
+      }
+    },
+    "Entered taxes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entered taxes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impuestos ingresados"
+          }
+        }
+      }
+    },
+    "Fee at or above threshold": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fee at or above threshold"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tarifa al alcanzar o superar el umbral"
+          }
+        }
+      }
+    },
+    "Fee below threshold": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fee below threshold"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tarifa por debajo del umbral"
+          }
+        }
+      }
+    },
+    "Fee threshold": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fee threshold"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Umbral de la tarifa"
+          }
+        }
+      }
+    },
+    "Flexible meal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flexible meal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comida flexible"
+          }
+        }
+      }
+    },
+    "Frozen for checkout": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frozen for checkout"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fijada para pagar"
+          }
+        }
+      }
+    },
+    "Frozen revision originally reviewed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frozen revision originally reviewed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisión fijada revisada originalmente"
+          }
+        }
+      }
+    },
+    "I reviewed this snapshot, time and action": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed this snapshot, time and action"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé esta copia, la hora y la acción"
+          }
+        }
+      }
+    },
+    "If the retry window expires, a missing receipt is not proof that placement failed. Check the original report status before deciding what happened.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If the retry window expires, a missing receipt is not proof that placement failed. Check the original report status before deciding what happened."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si vence el plazo de reintento, la falta de un comprobante no demuestra que el pedido falló. Verifica el estado del reporte original antes de decidir qué ocurrió."
+          }
+        }
+      }
+    },
+    "If the shop or shopper changed, the report remains separately attributed for the current shopper to reconcile.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If the shop or shopper changed, the report remains separately attributed for the current shopper to reconcile."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si la compra o el responsable cambiaron, el reporte conserva su atribución por separado para que el responsable actual lo concilie."
+          }
+        }
+      }
+    },
+    "Item only": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item only"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo artículo"
+          }
+        }
+      }
+    },
+    "Load more placement reports": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load more placement reports"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargar más reportes de pedidos"
+          }
+        }
+      }
+    },
+    "Lunch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lunch"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Almuerzo"
+          }
+        }
+      }
+    },
+    "Meal day as entered": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal day as entered"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Día de la comida según lo ingresado"
+          }
+        }
+      }
+    },
+    "Meal kind": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal kind"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tipo de comida"
+          }
+        }
+      }
+    },
+    "Meal kind as entered": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal kind as entered"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tipo de comida según lo ingresado"
+          }
+        }
+      }
+    },
+    "Meal portions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal portions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porciones de la comida"
+          }
+        }
+      }
+    },
+    "My captured snapshots": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My captured snapshots"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mis copias guardadas"
+          }
+        }
+      }
+    },
+    "No frozen revision": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No frozen revision"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin revisión fijada"
+          }
+        }
+      }
+    },
+    "No recorded result was found for this exact report. Its original evidence remains saved. If its sending window expired, review that evidence with the current shopper.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No recorded result was found for this exact report. Its original evidence remains saved. If its sending window expired, review that evidence with the current shopper."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se encontró un resultado registrado para este reporte exacto. Sus registros originales siguen guardados. Si venció el plazo de envío, revísalos con el responsable actual."
+          }
+        }
+      }
+    },
+    "Only this unreported local snapshot will be removed. A sealed placement report cannot be discarded or given a new action identity. This does not cancel a retailer order.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only this unreported local snapshot will be removed. A sealed placement report cannot be discarded or given a new action identity. This does not cancel a retailer order."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo se eliminará esta copia local sin reportar. Un reporte de pedido sellado no puede descartarse ni recibir una identidad de acción nueva. Esto no cancela un pedido de la tienda."
+          }
+        }
+      }
+    },
+    "Open household": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open household"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir el hogar"
+          }
+        }
+      }
+    },
+    "Open my saved placement records": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open my saved placement records"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir mis registros de pedidos guardados"
+          }
+        }
+      }
+    },
+    "Open only your saved placement evidence on this iPhone": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open only your saved placement evidence on this iPhone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir solo tus registros de pedidos guardados en este iPhone"
+          }
+        }
+      }
+    },
+    "Open your enrolled adult household account to view your saved placement records.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open your enrolled adult household account to view your saved placement records."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre tu cuenta de adulto inscrita en el hogar para ver tus registros de pedidos guardados."
+          }
+        }
+      }
+    },
+    "Open your original saved evidence without fetching the current shopper's private records. This does not restore household authority.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open your original saved evidence without fetching the current shopper's private records. This does not restore household authority."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre tus registros originales guardados sin consultar los registros privados del responsable actual. Esto no restablece los permisos del hogar."
+          }
+        }
+      }
+    },
+    "Original captured shop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original captured shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compra original guardada"
+          }
+        }
+      }
+    },
+    "Original meal reference": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original meal reference"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referencia de la comida original"
+          }
+        }
+      }
+    },
+    "Original meal revision": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original meal revision"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisión de la comida original"
+          }
+        }
+      }
+    },
+    "Original reconciliation action": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original reconciliation action"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acción original de conciliación"
+          }
+        }
+      }
+    },
+    "Original report awaiting confirmation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original report awaiting confirmation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reporte original pendiente de confirmación"
+          }
+        }
+      }
+    },
+    "Original retry window ends": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original retry window ends"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fin del plazo original de reintento"
+          }
+        }
+      }
+    },
+    "Original shop revision": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original shop revision"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisión original de la compra"
+          }
+        }
+      }
+    },
+    "Original shopper assignment version": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original shopper assignment version"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versión original de la asignación del responsable"
+          }
+        }
+      }
+    },
+    "Original snapshot saved": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original snapshot saved"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copia original guardada"
+          }
+        }
+      }
+    },
+    "Original submitted report": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original submitted report"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reporte original enviado"
+          }
+        }
+      }
+    },
+    "Packs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Packs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquetes"
+          }
+        }
+      }
+    },
+    "Pending placement report": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pending placement report"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reporte de pedido pendiente"
+          }
+        }
+      }
+    },
+    "Pending shopper reconciliation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pending shopper reconciliation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pendiente de conciliación del responsable"
+          }
+        }
+      }
+    },
+    "Placement reports are not configured on this iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Placement reports are not configured on this iPhone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los reportes de pedidos no están configurados en este iPhone."
+          }
+        }
+      }
+    },
+    "Protected meal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protected meal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comida protegida"
+          }
+        }
+      }
+    },
+    "Quote expires": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quote expires"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vencimiento de la cotización"
+          }
+        }
+      }
+    },
+    "Quote observed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quote observed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha de la cotización"
+          }
+        }
+      }
+    },
+    "Quote scope": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quote scope"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alcance de la cotización"
+          }
+        }
+      }
+    },
+    "Received by this app": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Received by this app"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recibido por esta app"
+          }
+        }
+      }
+    },
+    "Refresh current shopper facts": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh current shopper facts"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar datos del responsable actual"
+          }
+        }
+      }
+    },
+    "Refresh pending placement reports": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh pending placement reports"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar reportes de pedidos pendientes"
+          }
+        }
+      }
+    },
+    "Reject applying this report to this app shop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reject applying this report to this app shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rechazar la aplicación de este reporte a esta compra en la app"
+          }
+        }
+      }
+    },
+    "Reload my saved snapshots": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reload my saved snapshots"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a cargar mis copias guardadas"
+          }
+        }
+      }
+    },
+    "Report awaiting confirmation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report awaiting confirmation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reporte pendiente de confirmación"
+          }
+        }
+      }
+    },
+    "Report external placement": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report external placement"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reportar un pedido realizado fuera de la app"
+          }
+        }
+      }
+    },
+    "Report not applied to the app shop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report not applied to the app shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reporte no aplicado a la compra en la app"
+          }
+        }
+      }
+    },
+    "Report reference": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report reference"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referencia del reporte"
+          }
+        }
+      }
+    },
+    "Report what happened outside this app": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report what happened outside this app"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reporta lo que ocurrió fuera de esta app"
+          }
+        }
+      }
+    },
+    "Reported occurrence time": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reported occurrence time"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hora reportada de lo ocurrido"
+          }
+        }
+      }
+    },
+    "Reported placed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reported placed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reportado como realizado"
+          }
+        }
+      }
+    },
+    "Reports for the current shopper": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reports for the current shopper"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reportes para el responsable actual"
+          }
+        }
+      }
+    },
+    "Result needs review": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Result needs review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El resultado necesita revisión"
+          }
+        }
+      }
+    },
+    "Retire this local reconciliation attempt?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retire this local reconciliation attempt?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Retirar este intento local de conciliación?"
+          }
+        }
+      }
+    },
+    "Retry preserves the same snapshot, assignment version, occurrence time and action identity. No current shop revision is substituted.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry preserves the same snapshot, assignment version, occurrence time and action identity. No current shop revision is substituted."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El reintento conserva la misma copia, versión de asignación, hora de lo ocurrido e identidad de la acción. No se sustituye por la revisión actual de la compra."
+          }
+        }
+      }
+    },
+    "Retry this exact placement report": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry this exact placement report"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar este reporte exacto de pedido"
+          }
+        }
+      }
+    },
+    "Retry this exact reconciliation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry this exact reconciliation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar esta conciliación exacta"
+          }
+        }
+      }
+    },
+    "Return without applying": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Return without applying"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver sin aplicar"
+          }
+        }
+      }
+    },
+    "Review applying this report": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review applying this report"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la aplicación de este reporte"
+          }
+        }
+      }
+    },
+    "Review my placement report": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review my placement report"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar mi reporte de pedido"
+          }
+        }
+      }
+    },
+    "Review rejecting this report": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review rejecting this report"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar el rechazo de este reporte"
+          }
+        }
+      }
+    },
+    "Review retiring this local attempt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review retiring this local attempt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar el retiro de este intento local"
+          }
+        }
+      }
+    },
+    "Review the complete reported snapshot against the current frozen shop before applying it. A different snapshot cannot silently place the current basket.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the complete reported snapshot against the current frozen shop before applying it. A different snapshot cannot silently place the current basket."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compara la copia completa reportada con la compra fijada actual antes de aplicarla. Una copia diferente no puede marcar la canasta actual como realizada sin revisión."
+          }
+        }
+      }
+    },
+    "Review this exact action": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review this exact action"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar esta acción exacta"
+          }
+        }
+      }
+    },
+    "Review this snapshot for offline reporting": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review this snapshot for offline reporting"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar esta copia para reportar sin conexión"
+          }
+        }
+      }
+    },
+    "Save a local checkout snapshot": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save a local checkout snapshot"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar una copia local para pagar"
+          }
+        }
+      }
+    },
+    "Saved locally · not reported placed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved locally · not reported placed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardada localmente · no reportada como realizada"
+          }
+        }
+      }
+    },
+    "Saving a snapshot, sharing a list, or opening a retailer does not place an order. Only report placement after you have checked what happened with the retailer.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving a snapshot, sharing a list, or opening a retailer does not place an order. Only report placement after you have checked what happened with the retailer."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar una copia, compartir una lista o abrir una tienda no realiza un pedido. Reporta el pedido solo después de verificar lo que ocurrió con la tienda."
+          }
+        }
+      }
+    },
+    "Set an iPhone passcode to reopen your protected placement evidence.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set an iPhone passcode to reopen your protected placement evidence."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configura un código en el iPhone para volver a abrir tus registros protegidos de pedidos."
+          }
+        }
+      }
+    },
+    "Shared placement reports": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared placement reports"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reportes de pedidos compartidos"
+          }
+        }
+      }
+    },
+    "Shop reference": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shop reference"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referencia de la compra"
+          }
+        }
+      }
+    },
+    "Shop revision originally reviewed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shop revision originally reviewed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisión de la compra revisada originalmente"
+          }
+        }
+      }
+    },
+    "Shopper assignment originally reviewed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shopper assignment originally reviewed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asignación del responsable revisada originalmente"
+          }
+        }
+      }
+    },
+    "Side dish": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Side dish"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acompañamiento"
+          }
+        }
+      }
+    },
+    "Status checks use the original report identity. An expired retry is not replaced with a new action.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status checks use the original report identity. An expired retry is not replaced with a new action."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las verificaciones de estado usan la identidad del reporte original. Un reintento vencido no se reemplaza por una acción nueva."
+          }
+        }
+      }
+    },
+    "The app confirmed this reviewed decision. This is not retailer verification.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The app confirmed this reviewed decision. This is not retailer verification."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La app confirmó esta decisión revisada. Esto no es una verificación de la tienda."
+          }
+        }
+      }
+    },
+    "The captured estimate has missing cost facts. Unknown amounts remain unknown.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The captured estimate has missing cost facts. Unknown amounts remain unknown."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Faltan datos de costos en la estimación guardada. Los importes desconocidos siguen siendo desconocidos."
+          }
+        }
+      }
+    },
+    "The captured facts do not establish that the whole checkout was within the cap": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The captured facts do not establish that the whole checkout was within the cap"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los datos guardados no demuestran que el total completo estuviera dentro del límite"
+          }
+        }
+      }
+    },
+    "The current report status is shown. A matching resolution action identifies your original reconciliation; no new command was sent.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The current report status is shown. A matching resolution action identifies your original reconciliation; no new command was sent."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se muestra el estado actual del reporte. Una acción de resolución coincidente identifica tu conciliación original; no se envió una acción nueva."
+          }
+        }
+      }
+    },
+    "The current report status will be checked first. Retiring this local attempt does not undo a received decision or prove which action resolved the report.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The current report status will be checked first. Retiring this local attempt does not undo a received decision or prove which action resolved the report."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Primero se verificará el estado actual del reporte. Retirar este intento local no deshace una decisión recibida ni demuestra qué acción resolvió el reporte."
+          }
+        }
+      }
+    },
+    "The local reconciliation retry was retired after checking current status. Its original evidence remains saved. This does not undo a shared action; refresh and review before starting another.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The local reconciliation retry was retired after checking current status. Its original evidence remains saved. This does not undo a shared action; refresh and review before starting another."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El reintento local de conciliación se retiró después de verificar el estado actual. Sus registros originales siguen guardados. Esto no deshace una acción compartida; actualiza y revisa antes de iniciar otra."
+          }
+        }
+      }
+    },
+    "The original reconciliation window has expired. Check status before explicitly reviewing any new action.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The original reconciliation window has expired. Check status before explicitly reviewing any new action."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El plazo original de conciliación venció. Verifica el estado antes de revisar explícitamente una acción nueva."
+          }
+        }
+      }
+    },
+    "The original report window has expired. Check its recorded status; no new report identity will be created.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The original report window has expired. Check its recorded status; no new report identity will be created."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El plazo del reporte original venció. Verifica su estado registrado; no se creará una identidad nueva para el reporte."
+          }
+        }
+      }
+    },
+    "The original report's recorded status was checked without creating another placement report.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The original report's recorded status was checked without creating another placement report."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se verificó el estado registrado del reporte original sin crear otro reporte de pedido."
+          }
+        }
+      }
+    },
+    "The original reported basket and time are preserved separately from the current shop.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The original reported basket and time are preserved separately from the current shop."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La canasta y la hora reportadas originalmente se conservan por separado de la compra actual."
+          }
+        }
+      }
+    },
+    "The original sending window expired. Check this report's recorded status. Its original evidence remains saved; no new report or sending window was created.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The original sending window expired. Check this report's recorded status. Its original evidence remains saved; no new report or sending window was created."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Venció el plazo original de envío. Verifica el estado registrado de este reporte. Sus registros originales siguen guardados; no se creó otro reporte ni otro plazo de envío."
+          }
+        }
+      }
+    },
+    "The original sending window is unavailable. Check recorded status and keep the original evidence; this app will not create another report silently.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The original sending window is unavailable. Check recorded status and keep the original evidence; this app will not create another report silently."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El plazo original de envío no está disponible. Verifica el estado registrado y conserva los registros originales; esta app no creará otro reporte sin avisarte."
+          }
+        }
+      }
+    },
+    "The recorded resolution identifies this original reconciliation action.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The recorded resolution identifies this original reconciliation action."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La resolución registrada identifica esta acción original de conciliación."
+          }
+        }
+      }
+    },
+    "The result is not confirmed. Your original evidence and exact retry remain on this iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The result is not confirmed. Your original evidence and exact retry remain on this iPhone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El resultado no está confirmado. Tus registros originales y el reintento exacto permanecen en este iPhone."
+          }
+        }
+      }
+    },
+    "The reviewed reconciliation was recorded. Refresh the current shop before making another decision.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The reviewed reconciliation was recorded. Refresh the current shop before making another decision."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La conciliación revisada se registró. Actualiza la compra actual antes de tomar otra decisión."
+          }
+        }
+      }
+    },
+    "The reviewed snapshot and its original action identity are saved on this iPhone. Saving is not an order or a placement report.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The reviewed snapshot and its original action identity are saved on this iPhone. Saving is not an order or a placement report."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La copia revisada y su identidad original de acción se guardaron en este iPhone. Guardarla no realiza un pedido ni crea un reporte de pedido."
+          }
+        }
+      }
+    },
+    "The service confirmed your placement report, but its receipt could not be saved on this iPhone. Retry to save that same receipt without sending another report.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The service confirmed your placement report, but its receipt could not be saved on this iPhone. Retry to save that same receipt without sending another report."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servicio confirmó tu reporte de pedido, pero no se pudo guardar su comprobante en este iPhone. Reintenta para guardar ese mismo comprobante sin enviar otro reporte."
+          }
+        }
+      }
+    },
+    "The service confirmed your reconciliation, but its receipt could not be saved on this iPhone. Retry to save that same receipt without sending another command.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The service confirmed your reconciliation, but its receipt could not be saved on this iPhone. Retry to save that same receipt without sending another command."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servicio confirmó tu conciliación, pero no se pudo guardar su comprobante en este iPhone. Reintenta para guardar ese mismo comprobante sin enviar otra acción."
+          }
+        }
+      }
+    },
+    "The service recorded your manual placement report. This is not retailer or payment confirmation.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The service recorded your manual placement report. This is not retailer or payment confirmation."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servicio registró tu reporte manual de pedido. Esto no es una confirmación de la tienda ni del pago."
+          }
+        }
+      }
+    },
+    "The shared facts changed. Keep the existing retry, check current status, and explicitly review any new reconciliation.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The shared facts changed. Keep the existing retry, check current status, and explicitly review any new reconciliation."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los datos compartidos cambiaron. Conserva el reintento existente, verifica el estado actual y revisa explícitamente cualquier conciliación nueva."
+          }
+        }
+      }
+    },
+    "The unused local snapshot was removed. No placement report was removed or sent. Refresh and review the current shop before saving another snapshot.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The unused local snapshot was removed. No placement report was removed or sent. Refresh and review the current shop before saving another snapshot."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se eliminó la copia local sin reportar. No se eliminó ni se envió ningún reporte de pedido. Actualiza y revisa la compra actual antes de guardar otra copia."
+          }
+        }
+      }
+    },
+    "These are the captured household-entered terms. They do not verify a retailer order, final charge or payment.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These are the captured household-entered terms. They do not verify a retailer order, final charge or payment."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estas son las condiciones guardadas que ingresó el hogar. No verifican un pedido de la tienda, un cargo final ni un pago."
+          }
+        }
+      }
+    },
+    "This app records a person's report. It does not verify an order, charge, payment or cancellation with the retailer.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This app records a person's report. It does not verify an order, charge, payment or cancellation with the retailer."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta app registra el reporte de una persona. No verifica con la tienda un pedido, un cargo, un pago ni una cancelación."
+          }
+        }
+      }
+    },
+    "This decision affects the app's placement record. It does not place, cancel or amend a retailer order.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This decision affects the app's placement record. It does not place, cancel or amend a retailer order."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta decisión afecta el registro del pedido en la app. No realiza, cancela ni modifica un pedido de la tienda."
+          }
+        }
+      }
+    },
+    "This local reconciliation attempt was retired after status review.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This local reconciliation attempt was retired after status review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este intento local de conciliación se retiró después de revisar el estado."
+          }
+        }
+      }
+    },
+    "This receipt confirms how the app handled your report. It does not confirm retailer placement or a charge.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This receipt confirms how the app handled your report. It does not confirm retailer placement or a charge."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este comprobante confirma cómo la app procesó tu reporte. No confirma un pedido en la tienda ni un cargo."
+          }
+        }
+      }
+    },
+    "This reconciliation's original sending window expired. Check the current report status before reviewing another action.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This reconciliation's original sending window expired. Check the current report status before reviewing another action."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Venció el plazo original de envío de esta conciliación. Verifica el estado actual del reporte antes de revisar otra acción."
+          }
+        }
+      }
+    },
+    "This report does not match the current frozen basket. Preserve both records and review the difference; it cannot be applied here.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This report does not match the current frozen basket. Preserve both records and review the difference; it cannot be applied here."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este reporte no coincide con la canasta fijada actual. Conserva ambos registros y revisa la diferencia; no se puede aplicar aquí."
+          }
+        }
+      }
+    },
+    "This report does not match the current frozen revision. It cannot be applied to the current basket.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This report does not match the current frozen revision. It cannot be applied to the current basket."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este reporte no coincide con la revisión fijada actual. No se puede aplicar a la canasta actual."
+          }
+        }
+      }
+    },
+    "This saves a dated snapshot on this iPhone. It does not report an order as placed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This saves a dated snapshot on this iPhone. It does not report an order as placed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esto guarda una copia con fecha en este iPhone. No reporta un pedido como realizado."
+          }
+        }
+      }
+    },
+    "This separate online check requires current shopper access. A saved report never grants that access.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This separate online check requires current shopper access. A saved report never grants that access."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta verificación en línea por separado requiere acceso vigente como responsable de compras. Un reporte guardado nunca otorga ese acceso."
+          }
+        }
+      }
+    },
+    "This status contains your report's disposition, not another shopper's current budget or basket.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This status contains your report's disposition, not another shopper's current budget or basket."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este estado contiene el resultado de tu reporte, no el presupuesto ni la canasta actual de otro responsable."
+          }
+        }
+      }
+    },
+    "Unknown": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desconocido"
+          }
+        }
+      }
+    },
+    "Unknown scope": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown scope"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alcance desconocido"
+          }
+        }
+      }
+    },
+    "Unlock saved placement evidence": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock saved placement evidence"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desbloquear registros de pedidos guardados"
+          }
+        }
+      }
+    },
+    "Use the actual occurrence time. If reporting later or after a shopper transfer, the original captured snapshot and assignment remain attached.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use the actual occurrence time. If reporting later or after a shopper transfer, the original captured snapshot and assignment remain attached."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usa la hora real de lo ocurrido. Si reportas después o tras un cambio de responsable, la copia y la asignación originales siguen adjuntas."
+          }
+        }
+      }
+    },
+    "When I placed this order": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When I placed this order"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuándo realicé este pedido"
+          }
+        }
+      }
+    },
+    "Whole checkout": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whole checkout"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total completo de la compra"
+          }
+        }
+      }
+    },
+    "Your report receipt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your report receipt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comprobante de tu reporte"
+          }
+        }
+      }
+    },
+    "Your saved placement evidence is still locked. You can try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your saved placement evidence is still locked. You can try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus registros guardados de pedidos siguen bloqueados. Puedes volver a intentarlo."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

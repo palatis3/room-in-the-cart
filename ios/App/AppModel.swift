@@ -29,6 +29,7 @@ import CoreDomain
                 attributes: [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication])
             #if DEBUG
             if ProcessInfo.processInfo.arguments.contains("--reset-test-workspace"), directory.lastPathComponent == "UITestWorkspace" {
+                UserDefaults.standard.removeObject(forKey: PickupFeedbackSection.consentKey)
                 for suffix in ["", "-wal", "-shm"] {
                     let file = URL(fileURLWithPath: databaseURL.path + suffix)
                     if FileManager.default.fileExists(atPath: file.path) { try FileManager.default.removeItem(at: file) }

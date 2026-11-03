@@ -12,7 +12,7 @@ func pCook(_ key: String, language: String) -> String {
 func pMoney(_ money: Money) -> String { Decimal(money.minorUnits).dividing(by: 100).formatted(.currency(code: "USD")) }
 private extension Decimal { func dividing(by value: Decimal) -> Decimal { self / value } }
 func pQuantity(_ quantity: Quantity, language: String? = nil) -> String {
-    let amount = quantity.amount.denominator == 1 ? "\(quantity.amount.numerator)" : "\(quantity.amount.numerator)/\(quantity.amount.denominator)"
+    let amount = quantity.amount.description
     let unit = language.map { pCook(quantity.unit.rawValue, language: $0) } ?? pTr(quantity.unit.rawValue)
     return "\(amount) \(unit)"
 }
@@ -543,7 +543,7 @@ struct PickupPersistenceLocation {
                 var need = original
                 if let coverage = allocation?.demands.first(where: { $0.id == original.id }), let shortfall = coverage.shortfall {
                     if shortfall == .zero { return nil }
-                    need.required = Quantity(amount: shortfall, unit: coverage.unit, originalLiteral: "\(shortfall.numerator)/\(shortfall.denominator)")
+                    need.required = Quantity(amount: shortfall, unit: coverage.unit, originalLiteral: shortfall.description)
                 }
                 need.carriedFromID = previous.id
                 return need
@@ -557,7 +557,7 @@ struct PickupPersistenceLocation {
             if let coverage = allocation {
                 for unmet in coverage.demands where unmet.shortfall != .zero {
                     if let original = previous.needs.first(where: { $0.id == unmet.id }) {
-                        let remaining = unmet.shortfall.map { Quantity(amount: $0, unit: unmet.unit, originalLiteral: "\($0.numerator)/\($0.denominator)") } ?? original.amount
+                        let remaining = unmet.shortfall.map { Quantity(amount: $0, unit: unmet.unit, originalLiteral: $0.description) } ?? original.amount
                         next.carriedMeals.append(AllocationNeed(id: original.id, orderLineID: original.orderLineID, name: original.name, amount: remaining, priority: original.priority))
                     }
                 }

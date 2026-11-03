@@ -22,7 +22,9 @@ public struct OwnRequest: Codable, Equatable, Identifiable, Sendable {
     public let authorAlias: String?
 }
 public struct OwnRequestsPage: Codable, Equatable, Sendable { public let requests: [OwnRequest]; public let nextCursor: String? }
-public struct ReplayWindow: Codable, Equatable, Sendable { public let id: String; public let expiresAt: String }
+public struct ReplayWindow: Codable, Equatable, Sendable { public let id: String; public let expiresAt: String
+    public init(id: String, expiresAt: String) { self.id = id; self.expiresAt = expiresAt }
+}
 public struct DeviceEnrollment: Codable, Sendable { public let deviceId: String; public let deviceToken: String }
 public struct CommandBase: Codable, Equatable, Sendable {
     public let shopRevision: Int; public let authorityEpoch: Int; public let requestRevision: Int?

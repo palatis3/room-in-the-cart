@@ -1,0 +1,156 @@
+{
+  "device": "iPhone SE (2nd generation), iOS Simulator 17.0 (21A328)",
+  "baseline": {
+    "bundle": ".build/ShopAXSEBaselineTest.xcresult",
+    "auditReports": 32,
+    "counts": {
+      "contrast": 5,
+      "partiallyUnsupportedDynamicType": 4,
+      "unsupportedDynamicType": 15,
+      "possibleClipping": 8
+    },
+    "initialShopScreenshot": "shop-se-before-shortcuts.png"
+  },
+  "validatedCandidate": {
+    "bundle": ".build/ShopAXSELazyTrial.xcresult",
+    "auditReports": 7,
+    "auditTimeouts": 0,
+    "viewportReports": {
+      "initialShop": 0,
+      "completeRepairShortcut": 0,
+      "initialResults": 7,
+      "scrolledResults": 0,
+      "completeSave": 0
+    },
+    "findings": [
+      {
+        "viewport": "Initial-result-before-audit",
+        "type": "Contrast failed for element",
+        "label": "Pack B",
+        "frame": "{{32.0, 647.0}, {54.0, 20.5}}"
+      },
+      {
+        "viewport": "Initial-result-before-audit",
+        "type": "Dynamic Type: element",
+        "label": "Whole packs to buy: 2",
+        "frame": "{{32.0, 426.5}, {169.5, 20.5}}"
+      },
+      {
+        "viewport": "Initial-result-before-audit",
+        "type": "Dynamic Type: element",
+        "label": "Room within the item limit: $24.00",
+        "frame": "{{32.0, 524.0}, {272.5, 20.5}}"
+      },
+      {
+        "viewport": "Initial-result-before-audit",
+        "type": "Dynamic Type: element",
+        "label": "Usable amount to buy: 16 items",
+        "frame": "{{32.0, 459.0}, {240.0, 20.5}}"
+      },
+      {
+        "viewport": "Initial-result-before-audit",
+        "type": "Dynamic Type: element",
+        "label": "Pack A",
+        "frame": "{{32.0, 341.0}, {54.5, 20.5}}"
+      },
+      {
+        "viewport": "Initial-result-before-audit",
+        "type": "Dynamic Type: element",
+        "label": "Left after the total need: 4 items",
+        "frame": "{{32.0, 491.5}, {244.5, 20.5}}"
+      },
+      {
+        "viewport": "Initial-result-before-audit",
+        "type": "Dynamic Type: element",
+        "label": "Maximum per pack for this item limit: $15.00",
+        "frame": "{{32.0, 556.5}, {284.5, 42.5}}"
+      }
+    ],
+    "functionalPasses": [
+      "Largest text, visible source and saved detail/date with actual Back navigation",
+      "Full 44-point Device shortcuts link opens the destination and returns to Shop"
+    ],
+    "measurementsPoints": {
+      "shopScrollBottom": 610,
+      "tabBarTop": 618,
+      "initialRepairShortcut": [
+        40,
+        554.5,
+        295,
+        44
+      ],
+      "initialPackAHeadingHeight": 20.5,
+      "largestPackAHeadingHeight": 63.5,
+      "defaultSaveHeight": 52,
+      "largestSaveHeight": 141.5
+    },
+    "initialShopScreenshot": "shop-se-phone-shortcuts.png",
+    "largestSavedDetailsScreenshot": "comparison-se-accessible-saved-details.png",
+    "packBContrastCrop": "comparison-se-pack-b-contrast-crop.png",
+    "contrastCropDescription": "For Pack B, XCTest reports y 647 in the initial results. The results viewport ends at y 610 and the attached element crop contains the Shop tab.",
+    "limits": "The six Dynamic Type reports remain open. The Pack A heading grows on the largest-size launch. The unfiltered result remains failed.",
+    "counts": {
+      "contrast": 1,
+      "partiallyUnsupportedDynamicType": 6,
+      "unsupportedDynamicType": 0,
+      "possibleClipping": 0
+    }
+  },
+  "testIntegrity": "The original five performAccessibilityAudit calls, categories, exception handling and viewport assertions are unchanged. The results viewport locator now identifies the shipping scroll view. No issue is filtered.",
+  "sourceHashes": {
+    "ios/App/RoomInTheCartApp.swift": "236ebf58afc0c4a26009ee07abecf16245ab7de6371eb553982cb52a2b1775ec",
+    "ios/Features/Shop/ComparisonView.swift": "7e4a4414f2fb0a6d6c2c1004c50c45a42091705916db41c5fe0b824c0c53945a",
+    "ios/UITests/RoomInTheCartUITests.swift": "35d1649433a56ba6f27eb0440da1b02aa58ab30eaf12dd8acc1e4ed93721c7d1"
+  },
+  "sourceHashScope": "Combined-tree files at handoff. The validatedCandidate used an isolated dependency snapshot with the same Shop and comparison implementation.",
+  "otherRuntime": "The supplied iPhone 17e iOS 27.0 run predates these changes. This lane used only the iOS 17 SE.",
+  "unfilteredAuditCallbackSHA256": "c0cd0629c1cf5c9c25ba08377da10febeb4080efc19ea4228702e48204fa1d90",
+  "integratedVerification": {
+    "bundle": ".build/ShopAXSEIntegrated.xcresult",
+    "testPasses": 4,
+    "testFailures": 1,
+    "testSkips": 0,
+    "passedCases": [
+      "testComparisonSaveStaysInsideViewportAboveTabBar",
+      "testKnownComparisonSavesAndReopensWithItemOnlyLimit",
+      "testLargestTextSourceAndSavedDetailsAreFullyReadableAboveTabs",
+      "testShopPhoneShortcutsHaveACompleteTouchTargetAndReturnToShop"
+    ],
+    "unfilteredAuditFindings": [
+      {
+        "viewport": "Initial-result-before-audit",
+        "diagnostic": "Contrast failed"
+      },
+      {
+        "viewport": "Initial-result-before-audit",
+        "diagnostic": "Dynamic Type font sizes are partially unsupported"
+      },
+      {
+        "viewport": "Initial-result-before-audit",
+        "diagnostic": "Dynamic Type font sizes are partially unsupported"
+      },
+      {
+        "viewport": "Initial-result-before-audit",
+        "diagnostic": "Dynamic Type font sizes are partially unsupported"
+      },
+      {
+        "viewport": "Initial-result-before-audit",
+        "diagnostic": "Dynamic Type font sizes are partially unsupported"
+      },
+      {
+        "viewport": "Initial-result-before-audit",
+        "diagnostic": "Dynamic Type font sizes are partially unsupported"
+      },
+      {
+        "viewport": "Initial-result-before-audit",
+        "diagnostic": "Dynamic Type font sizes are partially unsupported"
+      }
+    ],
+    "auditTimeoutViewports": [
+      "Scrolled-result-before-audit"
+    ],
+    "runtimeWarnings": [],
+    "attachments": ".build/shop-ax-se-integrated-attachments/manifest.json",
+    "scope": "Integrated app and tests built from the shared workspace. The audit remains failed. The separate fully completed five-viewport candidate run above had no timeout."
+  }
+}

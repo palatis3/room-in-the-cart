@@ -567,12 +567,12 @@ public actor HouseholdService {
         let start = generation
         let permitted = try await budgetHistory(shopIDs: intent.period.shopIds)
         guard generation == start else { throw ClientError.cancelled }
-        guard permitted.shops.count == intent.period.shopIds.count else { throw ClientError.accessEnded }
+        guard permitted.shops.count == intent.period.shopIds.count else { throw ClientError.service(status: 404, code: "unavailable", correlationID: nil, retryAfter: nil) }
         if intent.baseRevision > 0 {
             let current = try await budgetPeriod(periodID: intent.period.id)
             guard generation == start else { throw ClientError.cancelled }
             // A cached pending envelope must not restore details hidden by current source access.
-            guard case .complete = current else { throw ClientError.accessEnded }
+            guard case .complete = current else { throw ClientError.service(status: 404, code: "unavailable", correlationID: nil, retryAfter: nil) }
         }
         try matchesHistory(subject: intent.subject, household: intent.householdID, member: intent.memberID, device: intent.deviceID)
     }
@@ -581,7 +581,7 @@ public actor HouseholdService {
         let start = generation
         let permitted = try await budgetHistory(shopIDs: period.shopIds)
         guard generation == start else { throw ClientError.cancelled }
-        guard permitted.shops.count == period.shopIds.count else { throw ClientError.accessEnded }
+        guard permitted.shops.count == period.shopIds.count else { throw ClientError.service(status: 404, code: "unavailable", correlationID: nil, retryAfter: nil) }
         if baseRevision > 0 {
             let current = try await savedBudgetPeriod(periodID: period.id)
             guard generation == start else { throw ClientError.cancelled }
@@ -601,12 +601,86 @@ public actor HouseholdService {
         return receipt
     }
 
+    public func placementShop(shopID: String) async throws -> ShopperShop {
+        guard HistoryValidation.ids([shopID]) else { throw ClientError.configuration }
+        let current: ShopperShop = try await perform("shops/\(shopID)/placement-reports/current-shop", method: "GET")
+        guard HistoryValidation.sameID(current.shopId, shopID), current.shopRevision > 0, current.authorityEpoch > 0 else { throw ClientError.invalidResponse }
+        return current
+    }
+    public func preparePlacementSnapshot(reviewed: ShopperShop) async throws -> PlacementPreparedSnapshot {
+        let start = generation
+        let current = try await placementShop(shopID: reviewed.shopId)
+        guard generation == start else { throw ClientError.cancelled }
+        guard current == reviewed else { throw ClientError.service(status: 409, code: "stale_base", correlationID: nil, retryAfter: nil) }
+        let window = try await replayWindow()
+        guard generation == start else { throw ClientError.cancelled }
+        guard selectedGrantID == nil, let subject, let householdID, let memberID, let enrollment else { throw ClientError.accessEnded }
+        return try .init(subject: subject, householdID: householdID, memberID: memberID, deviceID: enrollment.deviceId,
+                         snapshot: reviewed, replayWindow: window, capturedAt: ISO8601DateFormatter().string(from: Date()))
+    }
+    private func matchPlacementScope(subject: String, household: String, member: String, device: String) throws {
+        guard selectedGrantID == nil, self.subject == subject, householdID == household, memberID == member, enrollment?.deviceId == device else { throw ClientError.accessEnded }
+    }
+    public func executePlacementReport(_ intent: PlacementReportIntent) async throws -> PlacementReporterReceipt {
+        try intent.validate()
+        try matchPlacementScope(subject: intent.subject, household: intent.householdID, member: intent.memberID, device: intent.deviceID)
+        // Historical reporting is intentionally independent of current shopper authority and current selection.
+        // The service still checks the live actor/device, original replay window and recorded authority epoch.
+        let receipt: PlacementReporterReceipt = try await perform("commands", method: "POST", body: intent.bytes, reportingShopID: intent.shopID)
+        try receipt.validate(); return receipt
+    }
+    public func placementReportStatus(_ intent: PlacementReportIntent) async throws -> PlacementReporterStatus? {
+        try intent.validate()
+        try matchPlacementScope(subject: intent.subject, household: intent.householdID, member: intent.memberID, device: intent.deviceID)
+        struct Response: Decodable, Sendable { let status: PlacementReporterStatus? }
+        let response: Response = try await perform("shops/\(intent.shopID)/placement-reports/mine/\(intent.id)", method: "GET",
+            query: [.init(name: "commandDigest", value: intent.commandDigest)], reportingShopID: intent.shopID)
+        try response.status?.validate(intent); return response.status
+    }
+    public func pendingPlacementReports(shopID: String, cursor: String? = nil) async throws -> PlacementReportPage {
+        if let cursor, !HistoryValidation.ids([cursor]) { throw ClientError.configuration }
+        guard HistoryValidation.ids([shopID]) else { throw ClientError.configuration }
+        let page: PlacementReportPage = try await perform("shops/\(shopID)/placement-reports", method: "GET", query: cursor.map { [.init(name: "cursor", value: $0)] } ?? [])
+        guard HistoryValidation.sameID(page.shopId, shopID), page.shopRevision > 0, page.authorityEpoch > 0,
+              ["draft", "frozen", "placed", "closed"].contains(page.phase), page.reports.count <= 5,
+              HistoryValidation.uniqueIDs(page.reports.map(\.reportId)), page.reports.allSatisfy({ $0.state == "pending_reconciliation" && $0.reportId != cursor }),
+              page.nextCursor == nil || (page.reports.count == 5 && page.nextCursor == page.reports.last?.reportId && page.nextCursor != cursor) else { throw ClientError.invalidResponse }
+        for report in page.reports { try report.validate(shopID: shopID) }
+        return page
+    }
+    public func placementReport(shopID: String, reportID: String) async throws -> PlacementReportDetail {
+        guard HistoryValidation.ids([reportID]) else { throw ClientError.configuration }
+        guard HistoryValidation.ids([shopID]) else { throw ClientError.configuration }
+        let detail: PlacementReportDetail = try await perform("shops/\(shopID)/placement-reports/\(reportID)", method: "GET")
+        guard HistoryValidation.sameID(detail.shopId, shopID), detail.report.reportId == reportID, detail.shopRevision > 0, detail.authorityEpoch > 0,
+              ["draft", "frozen", "placed", "closed"].contains(detail.phase) else { throw ClientError.invalidResponse }
+        try detail.report.validate(shopID: shopID); return detail
+    }
+    public func preparePlacementReview(page: PlacementReportPage, report: PlacementPendingReport, choice: PlacementReviewChoice) async throws -> PlacementReviewIntent {
+        let start = generation
+        let current = try await placementReport(shopID: page.shopId, reportID: report.reportId)
+        guard generation == start else { throw ClientError.cancelled }
+        guard current.shopRevision == page.shopRevision, current.authorityEpoch == page.authorityEpoch, current.phase == page.phase,
+              current.frozenRevision == page.frozenRevision, current.report == report else { throw ClientError.service(status: 409, code: "stale_base", correlationID: nil, retryAfter: nil) }
+        let window = try await replayWindow()
+        guard generation == start else { throw ClientError.cancelled }
+        guard let subject, let householdID, let memberID, let enrollment else { throw ClientError.accessEnded }
+        return try .init(subject: subject, householdID: householdID, memberID: memberID, deviceID: enrollment.deviceId,
+                         page: page, report: report, choice: choice, replayWindow: window)
+    }
+    public func executePlacementReview(_ intent: PlacementReviewIntent) async throws -> PlacementReviewReceipt {
+        try intent.validate()
+        try matchPlacementScope(subject: intent.subject, household: intent.householdID, member: intent.memberID, device: intent.deviceID)
+        let receipt: PlacementReviewReceipt = try await perform("commands", method: "POST", body: intent.bytes)
+        try receipt.validate(intent); return receipt
+    }
+
     public func clearScope() async {
         generation = UUID(); enrollment = nil; householdID = nil; subject = nil; memberID = nil; selectedGrantID = nil; selectedShopID = nil
         try? deviceVault.clear()
     }
     private func perform<T: Decodable & Sendable>(_ path: String, method: String, body: Data? = nil,
-                                                 query: [URLQueryItem] = [], absolutePath: Bool = false, creatingShop: Bool = false) async throws -> T {
+                                                 query: [URLQueryItem] = [], absolutePath: Bool = false, creatingShop: Bool = false, reportingShopID: String? = nil) async throws -> T {
         let start = generation
         guard let householdID, let enrollment else { throw ClientError.sessionNeeded }
         if let selectedGrantID, path != "bootstrap",
@@ -620,7 +694,8 @@ public actor HouseholdService {
         req.setValue(enrollment.deviceToken, forHTTPHeaderField: "X-Device-Token")
         req.setValue(householdID, forHTTPHeaderField: "X-Household-ID")
         if let selectedGrantID { req.setValue(selectedGrantID, forHTTPHeaderField: "X-View-Grant-ID") }
-        if let selectedShopID, !creatingShop { req.setValue(selectedShopID.uuidString.lowercased(), forHTTPHeaderField: "X-Shop-ID") }
+        if let reportingShopID { req.setValue(reportingShopID, forHTTPHeaderField: "X-Shop-ID") }
+        else if let selectedShopID, !creatingShop { req.setValue(selectedShopID.uuidString.lowercased(), forHTTPHeaderField: "X-Shop-ID") }
         if !query.isEmpty {
             var components = URLComponents(url: req.url!, resolvingAgainstBaseURL: false)!
             components.queryItems = query; req.url = components.url

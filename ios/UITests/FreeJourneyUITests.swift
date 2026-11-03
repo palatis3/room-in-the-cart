@@ -15,6 +15,11 @@ import XCTest
 
     func testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop() throws {
         launch(reset: true)
+        tap(element("settings"))
+        let consent = app.switches["Offer optional feedback after a pickup"]
+        XCTAssertEqual(consent.value as? String, "0")
+        enableSwitch("Offer optional feedback after a pickup")
+        tap(app.buttons["Done"])
         tap(element("openPickupList"))
         tap(element("ledgerStartShop"))
         fill("Tuesday family pickup", into: "ledgerShopName")
@@ -130,7 +135,17 @@ import XCTest
         fill("net-receipt-2", into: "Unique receipt or transaction evidence ID")
         tap(app.buttons["Save financial evidence"])
         assertText("2.00")
+        XCTAssertFalse(app.buttons["Record how this pickup turned out"].exists)
         tap(app.buttons["Close this pickup"])
+        tap(app.buttons["Record how this pickup turned out"])
+        choose("What happened?", value: "I kept my plan")
+        choose("Usual workflow", value: "My usual list or notes")
+        choose("Compared with your usual workflow", value: "Same result")
+        tap(app.buttons["Save my response"])
+        assertText("I kept my plan")
+        tap(app.buttons["Remove this response"])
+        tap(app.buttons["Stop offering feedback"])
+        XCTAssertFalse(app.buttons["Record how this pickup turned out"].exists)
         capture("Free-settlement-keeps-food-separate")
         tap(app.buttons["Review next shop"])
         tap(app.buttons["Create fresh next-shop draft"])
@@ -256,6 +271,23 @@ import XCTest
         assertText("Milk"); assertText("Apples")
         capture("Large-print-shopping-list")
         tap(app.buttons["Done"]); XCTAssertTrue(element("ledgerListOptions").exists)
+    }
+
+    func testFirstPickupCanStartFromDinnersAndReviewAnEditablePattern() {
+        launch(reset: true)
+        tap(app.tabBars.buttons["Dinners"])
+        tap(element("dinnerStartPickup"))
+        fill("First dinner pickup", into: "ledgerShopName")
+        tap(element("ledgerCreateShop"))
+        tap(app.buttons["Review a dinner idea"])
+        choose("Starting meal", value: "Bean and cabbage wraps")
+        tap(app.buttons["Prepare editable idea"])
+        tap(app.buttons["Review prepared idea"])
+        tap(element("ledgerReviewDinner"))
+        assertText("Bean and cabbage wraps")
+        assertText("Shredded cabbage")
+        assertText("Usable yield is unconfirmed")
+        capture("First-pickup-editable-dinner-pattern")
     }
 
     private func launch(reset: Bool) {

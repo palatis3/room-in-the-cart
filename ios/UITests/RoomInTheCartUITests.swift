@@ -246,6 +246,19 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(element("newComparison").waitForExistence(timeout: 5))
     }
 
+    func testShopPhoneShortcutsHaveACompleteTouchTargetAndReturnToShop() {
+        launch()
+        let shortcuts = app.buttons["deviceShortcuts"]
+        XCTAssertTrue(shortcuts.waitForExistence(timeout: 5))
+        XCTAssertGreaterThanOrEqual(shortcuts.frame.height, 44)
+        XCTAssertTrue(shopViewport.contains(shortcuts.frame))
+        shortcuts.tap()
+        let destination = app.navigationBars["Device shortcuts"]
+        XCTAssertTrue(destination.waitForExistence(timeout: 5))
+        destination.buttons.firstMatch.tap()
+        XCTAssertTrue(app.buttons["newComparison"].waitForExistence(timeout: 5))
+    }
+
     func testShopRepairShortcutRemainsInsideViewportAndOpens() throws {
         verifyShopRepairShortcut(largeDark: false)
     }
@@ -278,7 +291,7 @@ final class RoomInTheCartUITests: XCTestCase {
         openEmptyComparison()
         enterComparison(item: "Viewport wraps", firstQuantity: "8", cap: "30")
         compare()
-        let list = app.collectionViews.firstMatch
+        let list = app.scrollViews["comparisonResultsScroll"]
         let tabs = app.tabBars.firstMatch
         XCTAssertTrue(list.exists)
         XCTAssertTrue(tabs.exists)
@@ -380,7 +393,7 @@ final class RoomInTheCartUITests: XCTestCase {
     }
 
     private var comparisonViewport: CGRect {
-        let list = app.collectionViews.firstMatch.frame
+        let list = app.scrollViews["comparisonResultsScroll"].frame
         let window = app.windows.firstMatch.frame
         let navigation = app.navigationBars.firstMatch
         let tabs = app.tabBars.firstMatch
@@ -391,7 +404,7 @@ final class RoomInTheCartUITests: XCTestCase {
     }
 
     private func revealFullyInComparison(_ target: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
-        let list = app.collectionViews.firstMatch
+        let list = app.scrollViews["comparisonResultsScroll"]
         XCTAssertTrue(list.exists, file: file, line: line)
         // First use native scrolling to bring the lazy row into the hierarchy.
         reveal(target, file: file, line: line)
@@ -419,7 +432,7 @@ final class RoomInTheCartUITests: XCTestCase {
     }
 
     private func captureComparisonFrames(_ name: String) {
-        var rows = ["Window: \(app.windows.firstMatch.frame)", "List: \(app.collectionViews.firstMatch.frame)",
+        var rows = ["Window: \(app.windows.firstMatch.frame)", "List: \(app.scrollViews["comparisonResultsScroll"].frame)",
                     "Navigation: \(app.navigationBars.firstMatch.frame)", "Tabs: \(app.tabBars.firstMatch.frame)",
                     "Visible results: \(comparisonViewport)"]
         for id in ["editComparison", "aHeader", "bHeader", "comparisonSourceNote", "saveComparison", "savedStatus", "comparisonSavedDetails"] {

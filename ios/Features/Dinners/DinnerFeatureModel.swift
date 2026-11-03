@@ -182,8 +182,10 @@ import CoreDomain
             return DinnerIdeaDraft(requestID: UUID(), catalogVersion: "manual-v1", template: manual,
                 hardExclusions: exclusions, createdAt: clock())
         }
-        return try DinnerIdeaEngine.draft(requestID: UUID(), draftID: UUID(), catalogVersion: "reviewed-catalog-v1",
+        var draft = try DinnerIdeaEngine.draft(requestID: UUID(), draftID: UUID(), catalogVersion: "reviewed-catalog-v1",
             catalog: ideaCatalog, seed: seed, householdExclusions: exclusions, at: clock())
+        draft.assumptions = [dinnerText("Check which ingredients are available and how much usable food the recipe makes.")]
+        return draft
     }
     @discardableResult func saveIdea(_ draft: DinnerIdeaDraft) async -> Bool {
         guard let shop else { return false }

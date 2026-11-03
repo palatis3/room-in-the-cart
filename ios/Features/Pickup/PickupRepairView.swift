@@ -62,6 +62,8 @@ struct UrgentRepairView: View {
 
 struct PickupRepairView: View {
     @ObservedObject var model: PickupModel
+    private enum Field { case purpose, amount, stockName, stockAmount, instruction, minutes }
+    @FocusState private var field: Field?
     @State private var lineID: UUID?
     @State private var purpose = ""
     @State private var amount = ""
@@ -90,8 +92,8 @@ struct PickupRepairView: View {
                         Text(pTr("Choose a line")).tag(UUID?.none)
                         ForEach(pickup.orderLines) { Text($0.name).tag(Optional($0.id)) }
                     }
-                    TextField(pTr("Meal or protected purpose"), text: $purpose)
-                    TextField(pTr("Amount in original line units"), text: $amount).keyboardType(.decimalPad)
+                    TextField(pTr("Meal or protected purpose"), text: $purpose).focused($field, equals: .purpose)
+                    TextField(pTr("Amount in original line units"), text: $amount).keyboardType(.decimalPad).focused($field, equals: .amount)
                     Picker(pTr("Priority"), selection: $priority) {
                         Text(pTr("Protected")) .tag(AllocationPriority.protected)
                         Text(pTr("Required")).tag(AllocationPriority.required)
@@ -140,8 +142,8 @@ struct PickupRepairView: View {
                     ForEach(model.journey?.stockNeeds ?? []) { Text($0.name).tag(Optional($0.foodID)) }
                     ForEach(model.journey?.pickup?.orderLines ?? []) { Text($0.name).tag(Optional($0.id)) }
                 }
-                TextField(pTr("Actual food or freezer batch"), text: $stockName)
-                TextField(pTr("Confirmed usable amount"), text: $stockAmount).keyboardType(.decimalPad)
+                TextField(pTr("Actual food or freezer batch"), text: $stockName).focused($field, equals: .stockName)
+                TextField(pTr("Confirmed usable amount"), text: $stockAmount).keyboardType(.decimalPad).focused($field, equals: .stockAmount)
                 Picker(pTr("Unit"), selection: $stockUnit) { ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pTr($0.rawValue)).tag($0) } }
                 Picker(pTr("Stock source"), selection: $stockSource) {
                     Text(pTr("Freezer")).tag(ConfirmedStockSource.freezer)
@@ -157,10 +159,10 @@ struct PickupRepairView: View {
                     ForEach(model.journey?.needs ?? []) { Text($0.name).tag(Optional($0.id)) }
                     ForEach(model.journey?.urgent ?? []) { Text($0.meal).tag(Optional($0.id)) }
                 }
-                TextField(pTr("Exact food, portions, exclusions and instructions"), text: $instruction, axis: .vertical)
+                TextField(pTr("Exact food, portions, exclusions and instructions"), text: $instruction, axis: .vertical).focused($field, equals: .instruction)
                 Toggle(pTr("I agree to an extra top-up trip for this repair"), isOn: $extraTrip)
                 Toggle(pTr("I agree to repeat a meal for this repair"), isOn: $repeatMeal)
-                TextField(pTr("Remaining elapsed preparation minutes (optional)"), text: $minutes).keyboardType(.numberPad)
+                TextField(pTr("Remaining elapsed preparation minutes (optional)"), text: $minutes).keyboardType(.numberPad).focused($field, equals: .minutes)
                 Toggle(pTr("Meal deadline is known"), isOn: $knownDue)
                 if knownDue { DatePicker(pTr("Meal deadline"), selection: $due) }
                 Text(pTr("Include thawing, soaking and marinating time unless those steps are already complete. A note does not confirm new stock or settle a shortage."))
@@ -175,8 +177,15 @@ struct PickupRepairView: View {
             }
             NavigationLink(pTr("Preview a dated cook instruction")) { PickupCookView(model: model) }
         }.navigationTitle(pTr("Repair the meal"))
+            .scrollDismissesKeyboard(.interactively)
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button(tr("Done")) { field = nil }
+                }
+            }
     }
-    private func rationalText(_ value: Rational?) -> String { value.map { "\($0.numerator)/\($0.denominator)" } ?? pTr("Unresolved") }
+    private func rationalText(_ value: Rational?) -> String { value?.description ?? pTr("Unresolved") }
     private func addStock() {
         do {
             guard let foodID = stockFoodID, !stockName.isEmpty, let quantity = try ComparisonModel.quantity(stockAmount, stockUnit) else { throw CocoaError(.validationMissingMandatoryProperty) }

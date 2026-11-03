@@ -337,6 +337,38 @@
         }
       }
     },
+    "Choose shared shop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose shared shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir una compra compartida"
+          }
+        }
+      }
+    },
+    "Choose shared shop scope": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose shared shop scope"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir el alcance de las compras compartidas"
+          }
+        }
+      }
+    },
     "Clear only the local retry record?": {
       "localizations": {
         "en": {
@@ -941,6 +973,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Onza líquida"
+          }
+        }
+      }
+    },
+    "For a budget covering several shops, choose Use household overview. Each shop still requires your current access.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For a budget covering several shops, choose Use household overview. Each shop still requires your current access."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para un presupuesto que incluya varias compras, elige «Ver el resumen del hogar». Debes tener acceso a cada compra."
           }
         }
       }
@@ -2957,6 +3006,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tus registros de períodos guardados"
+          }
+        }
+      }
+    },
+    "Your shared-shop selection also limits these records. Use the household overview before planning across several shops.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your shared-shop selection also limits these records. Use the household overview before planning across several shops."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La compra compartida que seleccionaste también limita estos registros. Usa la vista general del hogar antes de planificar varias compras."
           }
         }
       }

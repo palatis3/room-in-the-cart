@@ -126,6 +126,12 @@ struct HouseholdSettingsView: View {
                     }
                 }.accessibilityIdentifier("household.accountDeletion")
             }
+            if model.identity != nil {
+                Section {
+                    NavigationLink(PlacementCopy.text("Shared placement reports")) { PlacementRecordsEntryView(household: model) }
+                        .accessibilityIdentifier("household.placementReports")
+                }
+            }
             if let notice = model.notice { Section { Text(notice).accessibilityIdentifier("household.notice") } }
             if model.busy { ProgressView(ht("Checking service…")) }
         }

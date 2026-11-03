@@ -156,9 +156,9 @@ struct ComparisonView: View {
     }
 
     private func resultList(_ result: CoreDomain.ComparisonResult) -> some View {
-        List {
-            if dynamicTypeSize.isAccessibilitySize { Section { accessibleEditRow } }
-            Section {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 16) {
+                if dynamicTypeSize.isAccessibilitySize { accessibleEditRow }
                 VStack(alignment: .leading, spacing: 12) {
                     Text(model.draft.item.isEmpty ? tr("One item") : model.draft.item).font(.title.bold())
                     Text(tr("Item-only comparison")).font(.headline)
@@ -171,45 +171,61 @@ struct ComparisonView: View {
                         Text(message("Protected within that total: %@ %@", model.draft.protected, model.draft.unit.displayName))
                     }
                 }.accessibilityElement(children: .combine).accessibilityFocused($resultFocused, equals: .summary)
-            }
-            resultSection(result.offerA, name: model.draft.aLabel.isEmpty ? tr("Pack A") : model.draft.aLabel, preferred: result.preferredOfferID == "a")
-            resultSection(result.offerB, name: model.draft.bLabel.isEmpty ? tr("Pack B") : model.draft.bLabel, preferred: result.preferredOfferID == "b")
-            if result.offerA.isResolved && result.offerB.isResolved && result.preferredOfferID == nil {
-                Section { Text(tr("Both options cost the same for this need.")) }
-            }
-            Section {
-                Text(tr("Source: prices and usable amounts you entered. Estimates for this item only."))
-                    .font(.body).fixedSize(horizontal: false, vertical: true).foregroundStyle(Theme.ink)
-                    .accessibilityIdentifier("comparisonSourceNote")
-                if let date = model.savedAt {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Label(tr("Saved on this iPhone"), systemImage: "checkmark.circle")
-                            .font(.headline).accessibilityIdentifier("savedStatus")
-                        Text(date.formatted(date: .complete, time: .shortened))
-                            .font(.footnote)
-                    }.accessibilityElement(children: .combine).accessibilityIdentifier("comparisonSavedDetails")
-                        .accessibilityFocused($resultFocused, equals: .saved)
-                } else {
-                    Button {
-                        Task {
-                            await model.save(in: app.store)
-                            await app.refresh()
-                            if model.savedAt != nil { resultFocused = .saved }
-                            else { resultFocused = .error }
-                        }
-                    } label: { Text(tr(model.saving ? "Saving…" : "Save comparison")) }
-                        .buttonStyle(PrimaryAction()).disabled(model.saving)
-                        .accessibilityIdentifier("saveComparison")
+                    .comparisonPanel()
+                resultSection(result.offerA, name: model.draft.aLabel.isEmpty ? tr("Pack A") : model.draft.aLabel, preferred: result.preferredOfferID == "a")
+                resultSection(result.offerB, name: model.draft.bLabel.isEmpty ? tr("Pack B") : model.draft.bLabel, preferred: result.preferredOfferID == "b")
+                if result.offerA.isResolved && result.offerB.isResolved && result.preferredOfferID == nil {
+                    Text(tr("Both options cost the same for this need.")).comparisonPanel()
                 }
-            }
-            if let error = model.error { errorRow(error) }
-        }
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(tr("Source: prices and usable amounts you entered. Estimates for this item only."))
+                        .font(.body).fixedSize(horizontal: false, vertical: true).foregroundStyle(Theme.ink)
+                        .accessibilityIdentifier("comparisonSourceNote")
+                    if let date = model.savedAt {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Label(tr("Saved on this iPhone"), systemImage: "checkmark.circle")
+                                .font(.headline).accessibilityIdentifier("savedStatus")
+                            Text(date.formatted(date: .complete, time: .shortened))
+                                .font(.footnote)
+                        }.accessibilityElement(children: .combine).accessibilityIdentifier("comparisonSavedDetails")
+                            .accessibilityFocused($resultFocused, equals: .saved)
+                    } else {
+                        Button {
+                            Task {
+                                await model.save(in: app.store)
+                                await app.refresh()
+                                if model.savedAt != nil { resultFocused = .saved }
+                                else { resultFocused = .error }
+                            }
+                        } label: {
+                            Text(tr(model.saving ? "Saving…" : "Save comparison"))
+                                .font(.headline).foregroundStyle(Theme.onAction)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .padding(.horizontal, 12).padding(.vertical, 8)
+                                .frame(maxWidth: .infinity, minHeight: 52)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain).disabled(model.saving)
+                        .background(Theme.action, in: RoundedRectangle(cornerRadius: 14))
+                        .accessibilityIdentifier("saveComparison")
+                    }
+                }.comparisonPanel()
+                if let error = model.error {
+                    Label(error, systemImage: "exclamationmark.triangle")
+                        .foregroundStyle(Color("error")).accessibilityFocused($resultFocused, equals: .error)
+                }
+            }.padding(16)
+        }.accessibilityIdentifier("comparisonResultsScroll")
     }
 
     private func resultSection(_ result: OfferResult, name: String, preferred: Bool) -> some View {
-        Section {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(name).font(.headline).foregroundStyle(Theme.ink)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader).accessibilityIdentifier(result.offerID + "Header")
             if let cost = result.totalCost {
                 Text(moneyText(cost)).font(.largeTitle.bold()).monospacedDigit()
+                    .fixedSize(horizontal: false, vertical: true)
                     .accessibilityLabel(message("Item cost to buy enough: %@", moneyText(cost)))
                     .accessibilityIdentifier(result.offerID + "Total")
             } else { Label(tr("Cost unresolved"), systemImage: "questionmark.circle").font(.title2.bold()) }
@@ -240,11 +256,7 @@ struct ComparisonView: View {
                     .foregroundStyle(Theme.warning)
                     .accessibilityIdentifier(result.offerID + "Issue_" + issue.rawValue)
             }
-        } header: {
-            Text(name).font(.headline).textCase(nil).foregroundStyle(Theme.ink)
-                .fixedSize(horizontal: false, vertical: true)
-                .accessibilityAddTraits(.isHeader).accessibilityIdentifier(result.offerID + "Header")
-        }
+        }.comparisonPanel()
     }
 
     private func errorRow(_ text: String) -> some View {
@@ -263,5 +275,13 @@ extension ComparisonIssue {
         case .noUsableYield: return tr("This pack has no usable food for the need. Choose another pack or correct its usable amount.")
         case .priceUnknown: return tr("What is the price for one pack? The cost stays unknown until you enter it.")
         }
+    }
+}
+
+private extension View {
+    func comparisonPanel() -> some View {
+        frame(maxWidth: .infinity, alignment: .leading)
+            .padding(16)
+            .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
     }
 }

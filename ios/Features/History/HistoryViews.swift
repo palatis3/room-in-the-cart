@@ -4,6 +4,7 @@ import HouseholdClient
 /// Manual, reviewed service records. No local ledger or imported archive is uploaded here.
 struct HistoryEntryView: View {
     @ObservedObject var model: HistoryFeatureModel
+    var chooseShop: (() -> Void)? = nil
     @Environment(\.scenePhase) private var scenePhase
     @State private var section = "prices"
     @State private var editingObservation = false
@@ -23,6 +24,9 @@ struct HistoryEntryView: View {
                     .font(.footnote)
             }
             if model.authorized {
+                if let chooseShop, !editingObservation, model.periodDraft == nil, model.reviewed == nil, !model.hasUnresolvedWrite {
+                    Button(HistoryCopy.text("Choose shared shop"), action: chooseShop).disabled(model.busy)
+                }
                 Picker(HistoryCopy.text("Records view"), selection: $section) {
                     Text(HistoryCopy.text("Price records")).tag("prices")
                     Text(HistoryCopy.text("Period budgets")).tag("periods")
@@ -208,6 +212,8 @@ struct HistoryEntryView: View {
 
     @ViewBuilder private var periodRecords: some View {
         Section(HistoryCopy.text("Your saved period records")) {
+            Text(HistoryCopy.text("Your shared-shop selection also limits these records. Use the household overview before planning across several shops."))
+                .font(.footnote)
             Button(HistoryCopy.text("Refresh saved periods")) { Task { await model.loadPeriods() } }
                 .disabled(model.busy).frame(minHeight: 44).accessibilityIdentifier("history.loadPeriods")
             Button(HistoryCopy.text("Plan a new period")) { model.beginPeriod() }

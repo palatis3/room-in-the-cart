@@ -164,7 +164,7 @@ extension HouseholdClientTests {
         do { _ = try await service.executeBudgetPeriod(intent); XCTFail("Lost response") } catch { XCTAssertEqual(error as? ClientError, .transport) }
         let receipt = try await service.executeBudgetPeriod(intent); XCTAssertEqual(receipt.revision, 2); XCTAssertEqual(bodies, [intent.bytes, intent.bytes])
         partial = true
-        do { try await service.authorizeBudgetPeriod(intent); XCTFail("Partial current scope restored cached envelope") } catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
+        do { try await service.authorizeBudgetPeriod(intent); XCTFail("Partial current scope restored cached envelope") } catch { XCTAssertEqual(error as? ClientError, .service(status: 404, code: "unavailable", correlationID: nil, retryAfter: nil)) }
         XCTAssertEqual(bodies.count, 2)
         partial = false; denied = true
         do { _ = try await service.executeBudgetPeriod(intent); XCTFail("Paid lapse sent") } catch {}

@@ -6239,6 +6239,23 @@
           }
         }
       }
+    },
+    "You reported the same result. This pickup counts as zero additional benefit.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You reported the same result. This pickup counts as zero additional benefit."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indicaste que obtuviste el mismo resultado. Esta recogida cuenta como cero beneficio adicional."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

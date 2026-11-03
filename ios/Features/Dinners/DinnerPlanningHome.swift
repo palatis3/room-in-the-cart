@@ -7,6 +7,7 @@ import CoreDomain
 struct DinnerPlanningHome: View {
     @ObservedObject private var ledger: LedgerModel
     @StateObject private var model: DinnerFeatureModel
+    @State private var startingPickup = false
     init(ledger: LedgerModel, access: @escaping DinnerFeatureModel.AccessProvider,
          phase: @escaping (UUID) -> BasketPhase, ideaCatalog: [MealTemplate] = [], runtimeChanges: AnyPublisher<Void, Never>? = nil) {
         self.ledger = ledger
@@ -16,7 +17,8 @@ struct DinnerPlanningHome: View {
         _model = StateObject(wrappedValue: model)
     }
     var body: some View {
-        DinnerWorkspaceView(model: model) { LedgerSaveStatus(model: ledger) }
+        DinnerWorkspaceView(model: model, startPickup: { startingPickup = true }) { LedgerSaveStatus(model: ledger) }
+            .sheet(isPresented: $startingPickup) { NavigationStack { LedgerNewShopView(model: ledger) } }
             .environment(\.timeZone, TimeZone(identifier: model.shop?.basis.timeZoneIdentifier ?? "") ?? .current)
             .task { await ledger.open() }
     }
@@ -25,6 +27,7 @@ extension LedgerModel: DinnerWorkspaceStore {}
 
 struct DinnerWorkspaceView<SaveStatus: View>: View {
     @ObservedObject var model: DinnerFeatureModel
+    let startPickup: () -> Void
     @ViewBuilder let saveStatus: () -> SaveStatus
     @State private var weekStart = Date()
     var body: some View {
@@ -35,7 +38,11 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                 Text(dinnerText("Manual dinners and calendar changes stay available on Free. A preview changes nothing until you apply it."))
             }
             if model.shop == nil {
-                Section { Text(dinnerText("Start a pickup from the shopping list, then return to plan dinners.")) }
+                Section {
+                    Text(dinnerText("Name your pickup to save dinner ideas and choose what to make."))
+                    Button(ledgerText("Start pickup"), action: startPickup)
+                        .accessibilityIdentifier("dinnerStartPickup")
+                }
             } else if !model.accessAvailable {
                 Section { Text(dinnerText("Planning access changed or expired. Reconnect and review again.")) }
             } else {

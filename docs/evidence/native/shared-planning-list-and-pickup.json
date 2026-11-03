@@ -1,0 +1,46 @@
+{
+  "date": "2026-11-03",
+  "nativeSource": "83504a0",
+  "serviceSource": "a58ef74",
+  "simulator": "iPhone 17e, iOS 27.0",
+  "appAndListWalkthrough": {
+    "result": "Passed",
+    "passedTests": 284,
+    "failedTests": 0,
+    "skippedTests": 0
+  },
+  "pickupFeedbackAndScopedRecovery": {
+    "result": "Passed",
+    "passedTests": 284,
+    "failedTests": 0,
+    "skippedTests": 0
+  },
+  "database": {
+    "passed": 85,
+    "failed": 0,
+    "skipped": 0,
+    "suite": "service integration against local PostgreSQL",
+    "log": ".build/household-wire-full-final.log",
+    "nativeWire": "The production Swift client used an ephemeral HTTPS certificate, a fixture identity provider and the actual service. Free and paid scenarios covered replay, selection, narrow access, period planning and restored enrollment."
+  },
+  "releaseBuild": "Unsigned arm64 Release for device SDK passed compiled metadata checks. Debug installed and launched on the iPhone 17 simulator.",
+  "airPrint": "System print formatter generated multipage PDF. No physical print was performed.",
+  "integratedPickupJourney": {
+    "result": "Passed",
+    "passedTests": 304,
+    "failedTests": 0,
+    "skippedTests": 0
+  },
+  "catalogAllNative": {
+    "result": "Passed",
+    "passedTests": 304,
+    "failedTests": 0,
+    "skippedTests": 0
+  },
+  "firstPickupFromDinners": {
+    "result": "Passed",
+    "passedTests": 25,
+    "failedTests": 0,
+    "skippedTests": 0
+  }
+}

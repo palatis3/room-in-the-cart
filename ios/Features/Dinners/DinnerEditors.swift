@@ -94,6 +94,9 @@ struct DinnerTemplateEditor: View {
                 }
                 if purpose == .idea {
                     Section(dinnerText("Review assumptions")) {
+                        if originalIdea?.catalogVersion == "reviewed-catalog-v1" {
+                            Text(dinnerText("Suggested by Room in the Cart"))
+                        }
                         TextField(dinnerText("Assumptions, one per line"), text: $assumptions, axis: .vertical)
                         Toggle(dinnerText("Usable yield reviewed"), isOn: $yieldConfirmed)
                         Toggle(dinnerText("Availability reviewed"), isOn: $availabilityConfirmed)
@@ -218,7 +221,7 @@ struct DinnerLibraryView: View {
 }
 struct DinnerIdeasView: View {
     @ObservedObject var model: DinnerFeatureModel
-    @State private var seed = "0"
+    @State private var patternIndex = 0
     @State private var exclusions = ""
     @State private var generated: DinnerIdeaDraft?
     var body: some View {
@@ -228,16 +231,21 @@ struct DinnerIdeasView: View {
                 NavigationLink(dinnerText("Write a dinner idea")) { DinnerTemplateEditor(model: model, purpose: .idea) }
             }
             if !model.ideaCatalog.isEmpty {
-                Section(dinnerText("Deterministic idea pattern")) {
-                    TextField(dinnerText("Pattern number"), text: $seed)
+                Section(dinnerText("Room in the Cart meal patterns")) {
+                    let patterns = model.ideaCatalog.sorted { $0.id.uuidString < $1.id.uuidString }
+                    Picker(dinnerText("Starting meal"), selection: $patternIndex) {
+                        ForEach(Array(patterns.enumerated()), id: \.element.id) { index, pattern in
+                            Text(pattern.title).tag(index)
+                        }
+                    }
                     TextField(dinnerText("Hard exclusions, one per line"), text: $exclusions, axis: .vertical)
                     Button(dinnerText("Prepare editable idea")) {
                         do {
-                            guard let value = UInt64(seed) else { throw DomainError.invalidNumber }
-                            generated = try model.newIdea(seed: value, exclusions: DinnerEntry.list(exclusions))
+                            generated = try model.newIdea(seed: UInt64(patternIndex), exclusions: DinnerEntry.list(exclusions))
                         } catch { model.report(error) }
                     }
                     if let generated {
+                        Text(generated.template.title)
                         NavigationLink(dinnerText("Review prepared idea")) { DinnerTemplateEditor(model: model, purpose: .idea, idea: generated) }
                     }
                 }
@@ -249,6 +257,9 @@ struct DinnerIdeasView: View {
                 }
             }
             DinnerFeedback(model: model)
-        }.navigationTitle(dinnerText("Dinner ideas")).dinnerAccess(model).disabled(!model.editable)
+        }.navigationTitle(dinnerText("Dinner ideas"))
+            .onChange(of: patternIndex) { _,_ in generated = nil }
+            .onChange(of: exclusions) { _,_ in generated = nil }
+            .dinnerAccess(model).disabled(!model.editable)
     }
 }

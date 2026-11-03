@@ -11,3 +11,5 @@ Swift packages have no third-party dependencies. SQLite comes from the operating
 Local build tooling: official Node 22.14.0 macOS arm64 archive, checksum checked against nodejs.org's published SHASUMS256.txt, kept under ignored `.tools/`. User-local uv 0.13.7 provisioned CPython 3.13.18 to run the supplied reference verification. System Python was not replaced.
 
 No Figma asset, stock photography, generated image, retailer credentials, signing secrets or production service credentials are required by this milestone. Spanish UI copy is structurally validated but still needs a human language review.
+
+The three original dinner patterns in `ios/Features/Dinners/DinnerPatternCatalog.swift` were written for this app. Their quantities and time estimates are editable starting points. No external recipe or retailer feed is involved.

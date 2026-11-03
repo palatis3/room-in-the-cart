@@ -5872,6 +5872,310 @@
           }
         }
       }
+    },
+    "Rice bowls with beans and corn": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rice bowls with beans and corn"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tazones de arroz con frijoles y maíz"
+          }
+        }
+      }
+    },
+    "Cooked rice": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cooked rice"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arroz cocido"
+          }
+        }
+      }
+    },
+    "Cooked beans": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cooked beans"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frijoles cocidos"
+          }
+        }
+      }
+    },
+    "Corn kernels": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corn kernels"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Granos de maíz"
+          }
+        }
+      }
+    },
+    "Warm the rice, beans and corn, then divide between two bowls. The estimate assumes cooked rice and beans. Add any toppings to the list yourself.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warm the rice, beans and corn, then divide between two bowls. The estimate assumes cooked rice and beans. Add any toppings to the list yourself."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calienta el arroz, los frijoles y el maíz. Repártelos entre dos tazones. El tiempo estimado supone que el arroz y los frijoles ya están cocidos. Añade a la lista los ingredientes extra que quieras."
+          }
+        }
+      }
+    },
+    "Tomato pasta with peas": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tomato pasta with peas"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pasta con tomate y chícharos"
+          }
+        }
+      }
+    },
+    "Dry short pasta": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dry short pasta"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pasta corta seca"
+          }
+        }
+      }
+    },
+    "Tomato sauce": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tomato sauce"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salsa de tomate"
+          }
+        }
+      }
+    },
+    "Peas": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Peas"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chícharos"
+          }
+        }
+      }
+    },
+    "Cook the pasta according to its package. Warm the sauce and peas, then combine. The estimate assumes water and a stovetop are available.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cook the pasta according to its package. Warm the sauce and peas, then combine. The estimate assumes water and a stovetop are available."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuece la pasta siguiendo las indicaciones del paquete. Calienta la salsa y los chícharos y mezcla todo. El tiempo estimado supone que tienes agua y una estufa."
+          }
+        }
+      }
+    },
+    "Bean and cabbage wraps": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bean and cabbage wraps"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tortillas rellenas de frijoles y repollo"
+          }
+        }
+      }
+    },
+    "Tortillas": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tortillas"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tortillas"
+          }
+        }
+      }
+    },
+    "Shredded cabbage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shredded cabbage"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repollo rallado"
+          }
+        }
+      }
+    },
+    "Divide the beans and cabbage between four tortillas. The estimate assumes cooked beans and shredded cabbage. List any sauce separately.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Divide the beans and cabbage between four tortillas. The estimate assumes cooked beans and shredded cabbage. List any sauce separately."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reparte los frijoles y el repollo entre cuatro tortillas. El tiempo estimado supone que los frijoles ya están cocidos y el repollo está rallado. Agrega las salsas a la lista por separado."
+          }
+        }
+      }
+    },
+    "Room in the Cart meal patterns": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Room in the Cart meal patterns"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ideas de Room in the Cart"
+          }
+        }
+      }
+    },
+    "Starting meal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starting meal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comida que usarás como base"
+          }
+        }
+      }
+    },
+    "Suggested by Room in the Cart": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggested by Room in the Cart"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sugerencia de Room in the Cart"
+          }
+        }
+      }
+    },
+    "Check which ingredients are available and how much usable food the recipe makes.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check which ingredients are available and how much usable food the recipe makes."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa qué ingredientes tienes y qué cantidad aprovechable rinde la receta."
+          }
+        }
+      }
+    },
+    "Name your pickup to save dinner ideas and choose what to make.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name your pickup to save dinner ideas and choose what to make."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ponle un nombre a tu recogida para guardar ideas y elegir qué preparar."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

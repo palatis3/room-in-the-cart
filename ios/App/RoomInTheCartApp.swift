@@ -102,16 +102,28 @@ struct ShopView: View {
                     .accessibilityHidden(true)
             }
             .frame(width: viewport.size.width, height: viewport.size.height)
-        }.workingSurface().navigationTitle(tr("Shop")).settingsButton()
+        }.workingSurface().navigationTitle(tr("Shop")).navigationBarTitleDisplayMode(.inline).settingsButton()
             .task { await model.refresh() }
     }
     private var shopContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                Label(tr("On this iPhone"), systemImage: "iphone")
-                    .font(.subheadline).foregroundStyle(Theme.secondary)
+                NavigationLink {
+                    DeviceSurfacesEntry(composition: surfaces)
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "iphone").foregroundStyle(Theme.secondary)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(tr("On this iPhone")).font(.caption).foregroundStyle(Theme.secondary)
+                            Text(SurfaceCopy.text("Device shortcuts")).font(.subheadline.weight(.semibold))
+                        }.fixedSize(horizontal: false, vertical: true)
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.forward").font(.footnote)
+                    }
+                    .frame(minHeight: 44).contentShape(Rectangle())
+                }.buttonStyle(.plain).foregroundStyle(Theme.action)
+                    .accessibilityIdentifier("deviceShortcuts")
                 VStack(alignment: .leading, spacing: 16) {
-                    Image(systemName: "basket").font(.largeTitle).foregroundStyle(Theme.action).accessibilityHidden(true)
                     Text(tr("Make room for what matters.")).font(.largeTitle.bold())
                     Text(tr("Start with one item. Compare two packs and see what it costs to bring home enough."))
                         .foregroundStyle(Theme.secondary)
@@ -145,9 +157,6 @@ struct ShopView: View {
                             .frame(minHeight: 44)
                     }
                 }.padding(20).background(Theme.surface, in: RoundedRectangle(cornerRadius: 20))
-                NavigationLink(SurfaceCopy.text("Device shortcuts")) {
-                    DeviceSurfacesEntry(composition: surfaces)
-                }.frame(minHeight: 44).accessibilityIdentifier("deviceShortcuts")
                 if let error = model.error {
                     Label(error, systemImage: "exclamationmark.triangle").foregroundStyle(Color("error"))
                     Button(tr("Try again")) { Task { await model.open(); await model.refresh() } }.frame(minHeight: 44)

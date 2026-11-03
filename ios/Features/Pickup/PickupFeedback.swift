@@ -62,7 +62,12 @@ extension PickupModel {
 }
 
 struct PickupFeedbackSection: View {
-    static let consentKey = "pickup.optionalFeedback.enabled"
+    static let consentKey: String = {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("--ui-testing") { return "uiTest.pickup.optionalFeedback.enabled" }
+        #endif
+        return "pickup.optionalFeedback.enabled"
+    }()
     @AppStorage(Self.consentKey) private var enabled = false
     @ObservedObject var model: PickupModel
     let journey: PickupJourney
@@ -74,6 +79,10 @@ struct PickupFeedbackSection: View {
                     Text(answer.decision.label)
                     LabeledContent(pTr("Usual workflow"), value: answer.baseline.label)
                     LabeledContent(pTr("Compared with your usual workflow"), value: answer.comparison.label)
+                    if answer.incrementalBenefit == 0 {
+                        Text(pTr("You reported the same result. This pickup counts as zero additional benefit."))
+                            .font(.footnote)
+                    }
                     Button(pTr("Remove this response"), role: .destructive) {
                         Task { _ = await model.recordFeedback(nil, shopID: journey.id, revision: journey.revision, consent: enabled) }
                     }
@@ -94,8 +103,14 @@ private struct PickupFeedbackEditor: View {
     @Environment(\.dismiss) private var dismiss
     @AppStorage(PickupFeedbackSection.consentKey) private var enabled = false
     @ObservedObject var model: PickupModel
-    let shopID: UUID
-    let revision: Int64
+    @State private var shopID: UUID
+    @State private var revision: Int64
+    init(model: PickupModel, shopID: UUID, revision: Int64) {
+        self.model = model
+        _shopID = State(initialValue: shopID)
+        _revision = State(initialValue: revision)
+    }
+    private var current: Bool { model.journey?.id == shopID && model.journey?.revision == revision }
     @State private var decision: PickupDecision?
     @State private var baseline: PickupBaseline?
     @State private var comparison: PickupComparison?
@@ -116,7 +131,7 @@ private struct PickupFeedbackEditor: View {
                 Text(pTr("Choose a response")).tag(nil as PickupComparison?)
                 ForEach(PickupComparison.allCases, id: \.self) { Text($0.label).tag(Optional($0)) }
             }
-            if failed { Text(pTr("Reopen this pickup to review its current version.")) }
+            if failed || !current { Text(pTr("Reopen this pickup to review its current version.")) }
             Button(pTr("Save my response")) {
                 guard let decision, let baseline, let comparison else { return }
                 Task {
@@ -124,7 +139,7 @@ private struct PickupFeedbackEditor: View {
                     if await model.recordFeedback(answer, shopID: shopID, revision: revision, consent: enabled) { dismiss() }
                     else { failed = true }
                 }
-            }.disabled(!enabled || decision == nil || baseline == nil || comparison == nil || model.saving)
+            }.disabled(!current || !enabled || decision == nil || baseline == nil || comparison == nil || model.saving)
             Button(pTr("Stop offering feedback")) { enabled = false; dismiss() }
         }.navigationTitle(pTr("Optional pickup feedback"))
     }

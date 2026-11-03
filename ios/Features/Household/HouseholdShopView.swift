@@ -21,6 +21,8 @@ private struct SharedShopContent: View {
                     Text(model.scope.household.label).font(.headline)
                     Text(ht("This is the household service's shared shop. Private lists, meals and records on this phone are not uploaded."))
                     Button(ht("Refresh shared shop")) { Task { await model.load() } }
+                    NavigationLink(PlacementCopy.text("Shared placement reports")) { PlacementRecordsEntryView(household: household) }
+                        .accessibilityIdentifier("sharedShop.placementReports")
                 }
                 delivery
                 if model.pending == nil {

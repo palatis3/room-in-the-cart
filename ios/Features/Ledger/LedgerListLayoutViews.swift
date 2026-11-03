@@ -12,12 +12,18 @@ struct LedgerLayoutEditor: View {
     @State private var lineIDs: [UUID]
     @State private var aisles: [String]
     @State private var scope: AisleScope
-    private let baseRevision: Int64
+    @State private var baseRevision: Int64
+    @State private var reviewedShopID: UUID
+    private var current: Bool {
+        model.revision == baseRevision && model.workspace.selectedShopID == reviewedShopID && shop.id == reviewedShopID
+    }
     private let branch: String
     private let lineNames: [UUID:String]
 
     init(model: LedgerModel, shop: ShoppingLedger) {
-        self.model = model; self.shop = shop; baseRevision = model.revision
+        self.model = model; self.shop = shop
+        _baseRevision = State(initialValue: model.revision)
+        _reviewedShopID = State(initialValue: shop.id)
         branch = shop.basis.branch.trimmingCharacters(in: .whitespacesAndNewlines)
         let layout = model.workspace.listLayout.layout(for: shop)
         _mode = State(initialValue: layout.mode)
@@ -60,9 +66,10 @@ struct LedgerLayoutEditor: View {
                     ForEach(lineIDs, id: \.self) { id in moveRow(lineNames[id] ?? "", id: id, values: $lineIDs) }
                 }
             }
+            if !current { Text(ledgerText("The list changed. Reopen list options to review its current order.")) }
             LedgerSaveStatus(model: model, onRetried: { dismiss() })
             Button(ledgerText("Save list order")) { Task { await save() } }
-                .disabled(model.saving || model.hasPendingSave).accessibilityIdentifier("saveListOrder")
+                .disabled(!current || model.saving || model.hasPendingSave).accessibilityIdentifier("saveListOrder")
         }.navigationTitle(ledgerText("List order and aisles"))
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() } } }
         .onChange(of: scope) { _, next in
@@ -94,7 +101,7 @@ struct LedgerLayoutEditor: View {
 
     @MainActor private func save() async {
         let ok = await model.change(key: "list-layout-\(shop.id)") { workspace in
-            guard model.revision == baseRevision, workspace.selectedShopID == shop.id else { throw LedgerError.stalePreview }
+            guard current, workspace.selectedShopID == reviewedShopID else { throw LedgerError.stalePreview }
             let id = shop.id.uuidString.lowercased()
             var layout = workspace.listLayout.layout(for: shop)
             layout.mode = mode
