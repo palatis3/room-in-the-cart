@@ -1,0 +1,20 @@
+{
+  "feature": "E06 confirmed pantry and freezer batches",
+  "date": "2026-11-03",
+  "device": "iPhone 17e, iOS 27.0 simulator",
+  "bundle": ".build/StockAfterReview.xcresult",
+  "passedTests": 322,
+  "failedTests": 0,
+  "skippedTests": 0,
+  "scope": "321 native application tests and one Free UI journey. The UI recorded an actual batch for a meal need, corrected its usable amount, relaunched and read its reservations and shortage. Focused models include unscheduled pantry entry, explicit matching, reserving a draft list ingredient, protected lunch allocation, stale correction, retry and reconfirming a prior batch.",
+  "screenshot": "pantry-reservations-after-restart.png",
+  "snapshotSHA256": {
+    "ios/Features/Pickup/PickupSavedStockSection.swift": "08d9b6691004e7e0c688ed875b826ccadbb76f60553d236feec92da7413a751a",
+    "ios/Features/Pickup/PickupModel.swift": "b8c4486d6e68913861e7e82230530a7fa8226980981fa68c5176a2c762867846",
+    "ios/Features/Ledger/LedgerIngredientView.swift": "6530ef28d1b59fb8ef7672c1b3b4405d228effd2e9af9d26c9d3baca20ef11f3",
+    "ios/Packages/CoreDomain/Sources/CoreDomain/Pickup.swift": "f8d634a966253586611a5d434b0b57da4aaadb1fd05af54b9738cc5641dd6392",
+    "ios/Tests/PickupStockBatchTests.swift": "4babb3bab71807eafcf17b4868f3ec78fbb08d28dc7ec7b4d04577844cb3055f",
+    "ios/UITests/FreeJourneyUITests.swift": "8110a73d7e7ba1f7d05ae1eaf56062bf72f159c2054901a7893a1f60971ca58a"
+  },
+  "limitations": "Local simulator and on-device SQLite. No external account, signed device or human language review in this run."
+}

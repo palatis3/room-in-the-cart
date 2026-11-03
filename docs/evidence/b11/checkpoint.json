@@ -1,0 +1,85 @@
+{
+  "created_at": "2026-11-03T14:50:44.302511+00:00",
+  "status": "B11 audit complete; narrow S07 and browser retry followups locally verified, release not accepted",
+  "inventory": {
+    "launch_requirements": 52,
+    "routes": 27,
+    "exact_contract_ids_checked": true
+  },
+  "native": {
+    "passed": 26,
+    "failed": 0,
+    "skipped": 0,
+    "suites": {
+      "PickupOfferReviewTests": 6,
+      "PickupModelTests": 9,
+      "PickupCookProjectionTests": 10,
+      "PickupOfferUITests": 1
+    },
+    "device": "RITC Scan Diagnostic / iPhone 17e",
+    "device_id": "E03D2CFA-6E83-4783-840C-8E50981F527B",
+    "runtime": "iOS 27.0 (24A434)",
+    "result_bundle": "/tmp/ritc-b11-integration/OfferFinal.xcresult",
+    "signing": "ad-hoc, normal CODE_SIGNING_ALLOWED",
+    "device_state": "Shutdown confirmed (shutdown request returned already Shutdown)",
+    "runtime_warnings": []
+  },
+  "host_offer_tests": 6,
+  "web": {
+    "unit_and_build_passed": 61,
+    "actual_local_api_postgresql_passed": 10,
+    "client_runtime": "compiled production WebApp/API in JSDOM with loopback HTTP transport",
+    "wire_assertions": [
+      "drop successful response after actual server commit",
+      "refresh projection1 to2; exact original key/body/base replay",
+      "one persisted original proposal",
+      "own-status recovery, original whitespace normalization, revocation clear",
+      "new WebApp has no persisted protected draft or automatic resend"
+    ],
+    "fixture_database_and_role": "removed, confirmed absent"
+  },
+  "compiled_binary_sha256": {
+    "/tmp/ritc-history-integration/app-build/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart": "a0dabfe36d60e0e14d9ab6c3ecec492a82d63f3646f3881bae68bcf2f371ae98",
+    "/tmp/ritc-history-integration/app-build/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart.debug.dylib": "e928147d6f4f9def3f99ca8107cc43b405e1fbfefe299482ad17bcf87f6c7d4f",
+    "/tmp/ritc-history-integration/app-build/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/RoomInTheCartTests": "9beefe41a7216426dd3c150cba11f782a6415a9f8e6f66a99e148455a73550fb",
+    "/tmp/ritc-history-integration/app-build/Build/Products/Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/PlugIns/RoomInTheCartUITests.xctest/RoomInTheCartUITests": "79aff2b52001759d1747aabfd0113815b386ae10d7439ec26148963319be7ea5"
+  },
+  "source_manifest": "/Users/palatis/Documents/Codex/2026-11-03/task-2/b11-evidence/source-manifest.json",
+  "native_before_manifest": "/Users/palatis/Documents/Codex/2026-11-03/task-2/b11-evidence/native-final-source-before.json",
+  "source_identity_limit": "Own S07 source/resources unchanged throughout final run. Concurrent parent files below and new files are not certified by this native run; no entire latest-tree claim. Debug Swift implementation dylib hashed separately from launch executable.",
+  "concurrent_source_changes": [
+    "ios/App/RoomInTheCartApp.swift",
+    "ios/Features/Pickup/PickupSettlementView.swift",
+    "ios/Features/History/HistoryPendingStore.swift",
+    "ios/Features/History/History.xcstrings",
+    "ios/Features/Household/HouseholdModel.swift",
+    "ios/Features/Dinners/DinnerPlanningHome.swift",
+    "ios/Packages/HouseholdClient/Tests/HouseholdClientTests/NativeServiceWireTests.swift",
+    "ios/Packages/HouseholdClient/Sources/HouseholdClient/DecisionContracts.swift",
+    "ios/Packages/HouseholdClient/Sources/HouseholdClient/HouseholdService.swift",
+    "ios/RoomInTheCart.xcodeproj/project.pbxproj"
+  ],
+  "new_native_files_after_snapshot": [
+    "ios/Features/History/FamilyDecisionsView.swift",
+    "ios/Features/History/FamilyDecisionStore.swift",
+    "ios/Features/History/PickupDecisionEvidence.swift",
+    "ios/Features/History/FamilyDecisionModel.swift"
+  ],
+  "own_source_changes_during_native_run": [],
+  "checks": {
+    "compiled_metadata": "passed",
+    "latest_source_localization": "13 catalogs,2650 en/es entries,2541 literal keys passed; includes later parent source, distinct from compiled test snapshot",
+    "git_diff_check": "passed",
+    "screenshots_inspected": [
+      "Offer-saved-with-price-warning",
+      "Offer-cancel-keeps-saved-response"
+    ]
+  },
+  "remaining": [
+    "S07 combined checkout, offered yield, per-dish acceptance/uncovered portions remain incomplete",
+    "Browser helper intents remain memory-only under current policy; full reload recovery unsupported and explicitly warned",
+    "Supported browser/physical device/human Spanish/accessibility/provider acceptance remains separate",
+    "Lead active P07/A02/B01/D16/E09 changes require their own native integration evidence"
+  ],
+  "evidence_directory": "/Users/palatis/Documents/Codex/2026-11-03/task-2/b11-evidence"
+}

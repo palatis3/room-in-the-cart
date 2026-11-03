@@ -1,0 +1,31 @@
+{
+  "feature": "P02 accepted-library pairing and P04 pickup meal recovery",
+  "verified": "2026-11-03",
+  "device": "iPhone SE (2nd generation), iOS Simulator 17.0",
+  "nativeResult": {
+    "path": ".build/P02P04Final.xcresult",
+    "passed": 20,
+    "failed": 0,
+    "suites": {"AcceptedDinnerOptionsTests": 6, "DinnerScenarioDraftTests": 10, "PickupStockBatchTests": 4}
+  },
+  "uiResult": {
+    "path": ".build/P02P04Snapshot2.xcresult",
+    "suite": "FreeJourneyUITests",
+    "passed": [
+      "testFreePickupRepairKeepsTheNeedOpenWhenAcceptedFallbackToolsAreUnavailable",
+      "testPairingEnumerationUsesTheChosenScheduleAndDoesNotOfferItAgain"
+    ],
+    "scope": "These two UI tests passed on the preceding snapshot. The same bundle records one failed adjacent stock-only test. The corrected stock-only case passed in the final native bundle."
+  },
+  "checked": [
+    "Enumerate accepted recipes outside the existing schedule and preserve other meals and protected lunch in both calculations. Three-pepper packs cross a checkout fee threshold.",
+    "Eligible full-occurrence replacements remove one dinner and choose one accepted version. Reapplying has no second effect. Stale planning state and protected serving groups block replacement.",
+    "Explicit food matches and the latest confirmed usable amount determine available stock. Protect other needs and rank feasible no-trip meals ahead of whole-pack top-ups.",
+    "Revoked, expired or Free access cannot use paid recovery suggestions. Selecting an option transfers evidence to the manual repair draft. Free manual review leaves the shortfall open."
+  ],
+  "limits": [
+    "Paid positive paths were exercised with simulated access in native tests. The two UI journeys used English and isolated local planning or Free access.",
+    "Complex partial-serving or already allocated occurrences remain review-only. Automated replacement currently requires a matching whole occurrence.",
+    "Localization structure and placeholders passed the repository checker. Spanish was not exercised through these two UI journeys."
+  ]
+}

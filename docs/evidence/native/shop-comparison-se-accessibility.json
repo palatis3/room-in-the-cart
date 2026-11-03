@@ -152,5 +152,14 @@
     "runtimeWarnings": [],
     "attachments": ".build/shop-ax-se-integrated-attachments/manifest.json",
     "scope": "Integrated app and tests built from the shared workspace. The audit remains failed. The separate fully completed five-viewport candidate run above had no timeout."
+  },
+  "platformTextFollowup": {
+    "result": "Passed",
+    "passedTests": 2,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "bundle": ".build/PlatformTextAuditSE.xcresult",
+    "sourceSHA256": "301850f0d32aabb3c1451002fb16651778d8fa04f43317d10d0c519694b0289f",
+    "scope": "Isolated iPhone SE (2nd generation), iOS 17.0. Unfiltered XCTest accessibility audit at five Shop and comparison viewports and a separate largest-text visible source, Save and saved-details walkthrough. Quantity labels use dynamic UIFont text styles with multiline measurement. This replaces the seven reported issues for this tested build and runtime. Human VoiceOver and other devices remain separate gates."
   }
 }

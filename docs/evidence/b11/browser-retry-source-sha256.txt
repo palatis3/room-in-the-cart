@@ -1,0 +1,5 @@
+6f3fb756847631c358188781fd84c13fe78d24b1829b8347ca6fc85e0b6410bb  web/src/app.ts
+ff8ab6969ed080aaf3920685cb4b9f5238b4f9967123419d08460fadee708b8f  web/src/api.ts
+f0559fa0398162b3d00d0285386513671e73cbb1cb7a5c593eda6d70835707e5  web/src/i18n.ts
+a8d655618f4078a8ea88036f6cd310c093ae17b9fcd877b57f0ab00b44aacde8  web/tests/client.test.mjs
+e530630c9d4972fe5801e13d206cf6ae6b6e1d7ddd3fcb61a7c7b7af46f2eb56  service/tests/helper-review.integration.mjs

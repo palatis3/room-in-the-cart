@@ -42,5 +42,78 @@
     "passedTests": 25,
     "failedTests": 0,
     "skippedTests": 0
+  },
+  "decisionHistoryNative": {
+    "result": "Passed",
+    "passedTests": 312,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "bundle": ".build/FamilyDecisionsIntegrated.xcresult"
+  },
+  "dinnersToDecisionHistory": {
+    "result": "Passed",
+    "passedTests": 320,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "bundle": ".build/FreeJourneyBatches2.xcresult",
+    "scope": "iPhone 17e iOS 27, 319 app tests and one Free UI journey on a frozen source tree. The UI started a dinner, protected lunch portions, reconciled actual fill, prepared a dated cook instruction, recorded optional zero incremental benefit, created a fresh next shop and reopened the local repair in Records. Local simulator data only. The later standalone pantry entry and ingredient-stock route are outside this snapshot.",
+    "earlierAttempt": ".build/StaplesDecisionsFullJourney.xcresult passed 316 app tests but crashed opening the cook form in the UI test during concurrent source/build changes. The clean build completed the same journey. No deterministic cause was established."
+  },
+  "recipientCorrection": {
+    "result": "Passed",
+    "passedTests": 31,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "bundle": ".build/P06LocalFinal.xcresult"
+  },
+  "decisionWire": {
+    "passed": 93,
+    "failed": 0,
+    "skipped": 0,
+    "log": ".build/family-native-browser-wire-full.log",
+    "scope": "Actual local PostgreSQL, HTTP service, Swift client over local HTTPS, and compiled browser client running in JSDOM. Real Apple purchases and a deployed provider were outside this run."
+  },
+  "integratedStagedCode": {
+    "nativeCommit": "f186414",
+    "serviceCommit": "193dd4e",
+    "native": {
+      "bundle": ".build/B11IntegratedModels.xcresult",
+      "passed": 345,
+      "failed": 0,
+      "skipped": 0
+    },
+    "browser": {
+      "log": ".build/b11-web-test.log",
+      "passed": 66,
+      "failed": 0,
+      "skipped": 0
+    },
+    "servicePostgres": {
+      "log": ".build/b11-service-integration.log",
+      "passed": 95,
+      "failed": 0,
+      "skipped": 0
+    },
+    "scope": "Frozen repository source including configured staging metadata. PostgreSQL integration used isolated local identities and actual Swift and browser clients. Only public boundary checks used the hosted staging environment."
+  },
+  "requestPackWire": {
+    "verified": "2026-11-03",
+    "environment": "Isolated local PostgreSQL database and compiled service, native HTTPS client and browser client",
+    "testCounts": {
+      "realWire": 96,
+      "wireFailures": 0,
+      "wireSkipped": 0,
+      "browser": 66,
+      "fastServicePassed": 36,
+      "fastServiceSkipped": 1
+    },
+    "assertion": "Reviewed sufficient pack, usable yield, confirmed availability and quote source are retained with the private exact preview and atomic apply. Contributor status omits this evidence.",
+    "logs": [
+      ".build/request-pack-wire.log",
+      ".build/request-pack-fast.log",
+      ".build/request-pack-web.log"
+    ],
+    "serviceEvidenceSHA256": "19893278a549a3fda6a816bdc8be4e685f2294218d52a9bb4ccd2ad5f020e967",
+    "deployment": "Local only."
   }
 }

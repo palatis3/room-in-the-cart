@@ -1,0 +1,61 @@
+{
+  "status": "B03 installed and locally verified; E09 final scope followup verified",
+  "created_at": "2026-11-03T14:30:00.593242+00:00",
+  "repo": "/Users/palatis/Room in the Cart",
+  "source_manifest": "/Users/palatis/Documents/Codex/2026-11-03/task-2/placement-evidence/source-manifest.json",
+  "source_snapshot": "/Users/palatis/Documents/Codex/2026-11-03/task-2/placement-evidence/source",
+  "source_drift_since_snapshot": [],
+  "source_files_modified_after_native_finish": [
+    "docs/PRIVACY-DATA-INVENTORY.md",
+    "ios/Features/History/INTEGRATION.md"
+  ],
+  "compiled_binary_sha256": {
+    "/tmp/ritc-history-integration/app-build/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart": "a7c5febfff0310c7309f50ccbd83eea80d07bbac9021aae22b57f4c96f158ebb",
+    "/tmp/ritc-history-integration/app-build/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/RoomInTheCartTests": "e9b625a2165a9616ed6fbd2d4c0a54e81a0e0015a1961a0ec6e6701c8eba9086"
+  },
+  "native": {
+    "passed": 36,
+    "failed": 0,
+    "skipped": 0,
+    "suites": {
+      "PlacementFlowTests": 19,
+      "HistoryFlowTests": 17
+    },
+    "device": "RITC Scan Diagnostic / iPhone 17e",
+    "device_id": "E03D2CFA-6E83-4783-840C-8E50981F527B",
+    "runtime": "iOS 27.0 (24A434)",
+    "result_bundle": "/tmp/ritc-placement-integration/FinalFeatureTests.xcresult",
+    "signing": "ad-hoc signing with App Groups",
+    "device_released": "shutdown confirmed after run"
+  },
+  "host": {
+    "placement_model": 19,
+    "client_passed": 49,
+    "ordinary_opt_in_wire_skipped": 1,
+    "separate_actual_wire_free": 1,
+    "separate_actual_wire_paid": 1,
+    "core_postgresql": 34,
+    "focused_placement_postgresql": 4,
+    "parent_reported_full_postgresql": 85
+  },
+  "checks": {
+    "compiled_metadata": "passed",
+    "localization": "13 catalogs, 2535 en/es entries, 2430 literal keys passed",
+    "project_generation_check": "passed",
+    "git_diff_check": "passed"
+  },
+  "routes": [
+    "Household settings \u2192 Placement reports, including explicitly unlocked local reporter evidence",
+    "Current shared shop \u2192 Placement reports"
+  ],
+  "privacy": "Original reviewed snapshot, occurrence time, key and exact command persisted before send; explicit current-shopper reconciliation; scoped protected local files and purge on sign-out/deletion/household exit; same-process OS-auth offline evidence without authority restoration. No inferred identity from disk after app restart.",
+  "e09_followup": "Period source-scope404 preserves enrollment; existing explicit global shop selector linked; Free and paid local wire + History17 native passed.",
+  "scope": "Local repo, pinned loopback TLS and isolated PostgreSQL fixture only. Fixture database/role removed. No remote deployment or provider actions.",
+  "remaining_acceptance": [
+    "Hands-on rendered placement/OS authentication/offline restart journey on physical device",
+    "VoiceOver/Dynamic Type and human Spanish review",
+    "Production identity/provider/mixed-device acceptance remains separate"
+  ],
+  "evidence_directory": "/Users/palatis/Documents/Codex/2026-11-03/task-2/placement-evidence",
+  "source_identity_scope": "The36-file source manifest covers this lane. Only two documentation files were written after focused native finish; concurrent unrelated parent files are not certified by this focused run."
+}

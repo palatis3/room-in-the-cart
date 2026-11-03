@@ -1,0 +1,29 @@
+{
+  "feature": "P06 recipient-specific local handoff corrections",
+  "verified": "2026-11-03",
+  "device": "iPhone SE (2nd generation), iOS Simulator 17.0",
+  "resultBundle": ".build/P06LocalFinal.xcresult",
+  "tests": {
+    "totalTestCount": 31,
+    "passedTests": 31,
+    "failedTests": 0,
+    "skippedTests": 0
+  },
+  "suites": {
+    "PickupRecipientHandoffTests": 5,
+    "PickupCookProjectionTests": 10,
+    "PickupModelTests": 9,
+    "FreeJourneyAcceptanceTests": 6,
+    "FreeJourneyUITests/testFreeCookCorrectionAndExplicitRecipientAcknowledgment": 1
+  },
+  "screenshot": ".build/P06LocalFinalAttachments/68199382-C02F-4745-BF89-6B58B12D545F.png",
+  "scope": [
+    "Separate explicitly reported sends and acknowledgments by pickup, handoff channel, saved version and recipient. Share activity supplies no recipient baseline.",
+    "Typed cook and frozen retailer changes, unresolved items, stale review, named-seat validity and expiry, Free full-copy fallback, local erasure, and retry across restart.",
+    "A full, reviewed current copy is used for uncertain destinations, language changes, and custom/private instructions. Older dated records are readable; a fresh source review enables structured comparison."
+  ],
+  "limits": [
+    "The Free cook journey was exercised through the simulator UI. Paid comparisons used native real-clock entitlement semantics with fictional membership data.",
+    "Recipient labels and acknowledgments are entered manually. No message provider delivery, App Store sandbox, shared-service deployment, physical device, or human Spanish review was exercised."
+  ]
+}
