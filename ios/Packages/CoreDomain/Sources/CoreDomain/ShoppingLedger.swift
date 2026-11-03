@@ -238,6 +238,7 @@ public struct ShoppingLine: Codable, Equatable, Sendable, Identifiable {
     public var handledBy: String?
     public var handledAt: Date?
     public var trashedAt: Date?
+    public var stapleApproval: StapleApproval?
     public var isChecked: Bool { checkedAt != nil }
     public var isHandled: Bool { handledAt != nil }
     public var isTrashed: Bool { trashedAt != nil }
@@ -381,6 +382,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     public var title: String
     public private(set) var basis: ShopBasis
     public private(set) var basisRevision: Int
+    public private(set) var stapleReviews: [StapleRecallReceipt]?
     public private(set) var revision: Int
     public private(set) var revisionID: UUID
     public private(set) var revisions: [LedgerRevision]
@@ -466,6 +468,39 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         }
     }
 
+    public mutating func approveStaple(lineID: UUID, purpose: String?, at date: Date = Date()) throws {
+        try mutate("reviewStaple", at: date) { next in
+            let index = try next.lineIndex(lineID)
+            if let purpose {
+                let branch = next.basis.branch.trimmingCharacters(in: .whitespacesAndNewlines)
+                let label = purpose.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !branch.isEmpty, !next.lines[index].isTrashed else { throw LedgerError.invalid("stapleStore") }
+                try ledgerText(label, nonempty: true, maximum: 512)
+                next.lines[index].stapleApproval = StapleApproval(purpose: label, branch: branch, approvedAt: date)
+            } else { next.lines[index].stapleApproval = nil }
+        }
+    }
+
+    public func matchingStapleLine(named name: String) -> ShoppingLine? {
+        lines.first { normalizedProduct($0.name) == normalizedProduct(name) }
+    }
+
+    mutating func recordStaple(_ review: ReviewedStaple, choice: StapleChoice, quantity: Quantity?, exclusions: [String], at date: Date) throws {
+        var next = self
+        let newID: UUID?
+        if choice == .needed {
+            guard matchingStapleLine(named: review.line.name) == nil else { throw LedgerError.invalid("stapleAlreadyListed") }
+            newID = try next.addManualLine(name: review.line.name, quantity: quantity, notes: review.approval.purpose, exclusions: exclusions, at: date)
+        } else {
+            try next.mutate("reviewPriorStaple", at: date) { _ in }
+            newID = nil
+        }
+        var receipts = next.stapleReviews ?? []
+        receipts.append(.init(source: review.source, choice: choice, newLineID: newID, quantity: quantity))
+        next.stapleReviews = receipts
+        try next.validate()
+        self = next
+    }
     /// External capture/inbox callers persist the returned preview before Apply.
     /// Reuse its full bytes for retries; re-staging a new preview with this ID is
     /// deliberately not equivalent to replaying an already committed preview.
@@ -751,7 +786,22 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         let mealSources = Dictionary(uniqueKeysWithValues: mealOccurrences.map { ($0.id, Set($0.ingredientContributionIDs)) })
         let batchSources = Dictionary(uniqueKeysWithValues: importBatches.map { ($0.id, Set($0.contributionIDs)) })
         let sources = Dictionary(uniqueKeysWithValues: contributions.map { ($0.id, $0) })
+        let receipts = stapleReviews ?? []
+        guard receipts.count <= 10_000, Set(receipts.map(\.source)).count == receipts.count,
+              receipts.allSatisfy({ $0.source.shopID != id && ($0.newLineID != nil) == ($0.choice == .needed) &&
+                  ($0.newLineID.map(lineIDs.contains) ?? true) }) else { throw LedgerError.invalid("stapleReviews") }
+        for receipt in receipts {
+            if let quantity = receipt.quantity {
+                guard receipt.choice == .needed, quantity.amount > .zero else { throw LedgerError.invalid("stapleQuantity") }
+                try quantity.validate()
+            }
+        }
         for line in lines {
+            if let approval = line.stapleApproval {
+                try ledgerText(approval.purpose, nonempty: true, maximum: 512)
+                try ledgerText(approval.branch, nonempty: true, maximum: 512)
+                try ledgerDate(approval.approvedAt)
+            }
             try ledgerText(line.name, nonempty: true, maximum: 512); try ledgerText(line.notes); try ledgerText(line.aisle, maximum: 512)
             guard line.originalOrder >= 0, (line.handledAt == nil) == (line.handledBy == nil) else { throw LedgerError.invalid("lineState") }
             if let by = line.handledBy { try ledgerText(by, nonempty: true, maximum: 512) }
