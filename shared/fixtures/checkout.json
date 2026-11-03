@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "currency": "USD",
+  "source": "Foundation 2.1 06-domain.md and grocery30/inbox-scenarios.json; fictional acceptance examples",
+  "cases": [
+    {
+      "id": "cereal-over-cap", "scope": "wholeCheckout", "capScope": "wholeCheckout", "capCents": 3800,
+      "before": {"lines": [{"id": "basket", "cents": 3720, "eligible": true}], "complete": true, "fee": {"kind": "fixed", "cents": 0}, "discountCents": 0, "taxCents": 0, "depositCents": 0},
+      "after": {"lines": [{"id": "basket", "cents": 3720, "eligible": true}, {"id": "cereal", "cents": 349, "eligible": true}], "complete": true, "fee": {"kind": "fixed", "cents": 0}, "discountCents": 0, "taxCents": 0, "depositCents": 0},
+      "expected": {"beforeCents": 3720, "afterCents": 4069, "changeCents": 349, "afterLowerCents": 4069, "afterUpperCents": 4069, "capStatus": "over", "overCents": 269, "wholeCheckoutWithinCap": false}
+    },
+    {
+      "id": "existing-box-linked-once", "scope": "wholeCheckout", "capScope": "wholeCheckout", "capCents": 3800,
+      "before": {"lines": [{"id": "basket", "cents": 3720, "eligible": true}], "complete": true, "fee": {"kind": "fixed", "cents": 0}, "discountCents": 0, "taxCents": 0, "depositCents": 0},
+      "after": {"lines": [{"id": "basket", "cents": 3720, "eligible": true}], "complete": true, "fee": {"kind": "fixed", "cents": 0}, "discountCents": 0, "taxCents": 0, "depositCents": 0},
+      "expected": {"beforeCents": 3720, "afterCents": 3720, "changeCents": 0, "afterLowerCents": 3720, "afterUpperCents": 3720, "capStatus": "within", "overCents": 0, "wholeCheckoutWithinCap": true}
+    },
+    {
+      "id": "fee-reversal-still-29-cents-over", "scope": "wholeCheckout", "capScope": "wholeCheckout", "capCents": 3800,
+      "before": {"lines": [{"id": "basket", "cents": 3480, "eligible": true}], "complete": true, "fee": {"kind": "threshold", "thresholdCents": 3500, "belowThresholdCents": 495}, "discountCents": 0, "taxCents": 0, "depositCents": 0},
+      "after": {"lines": [{"id": "basket", "cents": 3480, "eligible": true}, {"id": "cereal", "cents": 349, "eligible": true}], "complete": true, "fee": {"kind": "threshold", "thresholdCents": 3500, "belowThresholdCents": 495}, "discountCents": 0, "taxCents": 0, "depositCents": 0},
+      "expected": {"beforeCents": 3975, "afterCents": 3829, "changeCents": -146, "afterLowerCents": 3829, "afterUpperCents": 3829, "capStatus": "over", "overCents": 29, "wholeCheckoutWithinCap": false}
+    },
+    {
+      "id": "price-and-fee-unknown", "scope": "wholeCheckout", "capScope": "wholeCheckout", "capCents": 3800,
+      "before": {"lines": [{"id": "basket", "cents": 3720, "eligible": true}], "complete": true, "fee": {"kind": "fixed", "cents": 0}, "discountCents": 0, "taxCents": 0, "depositCents": 0},
+      "after": {"lines": [{"id": "basket", "cents": null, "eligible": true}], "complete": true, "fee": {"kind": "fixed", "cents": null}, "discountCents": 0, "taxCents": 0, "depositCents": 0},
+      "expected": {"beforeCents": 3720, "afterCents": null, "changeCents": null, "afterLowerCents": 0, "afterUpperCents": null, "capStatus": "unresolved", "overCents": null, "wholeCheckoutWithinCap": false}
+    },
+    {
+      "id": "fee-unknown-never-under", "scope": "wholeCheckout", "capScope": "wholeCheckout", "capCents": 3800,
+      "before": {"lines": [{"id": "basket", "cents": 3720, "eligible": true}], "complete": true, "fee": {"kind": "fixed", "cents": 0}, "discountCents": 0, "taxCents": 0, "depositCents": 0},
+      "after": {"lines": [{"id": "basket", "cents": 3720, "eligible": true}], "complete": true, "fee": {"kind": "fixed", "cents": null}, "discountCents": 0, "taxCents": 0, "depositCents": 0},
+      "expected": {"beforeCents": 3720, "afterCents": null, "changeCents": null, "afterLowerCents": 3720, "afterUpperCents": null, "capStatus": "unresolved", "overCents": null, "wholeCheckoutWithinCap": false}
+    },
+    {
+      "id": "item-cap-cannot-certify-whole-pickup", "scope": "item", "capScope": "item", "capCents": 3000,
+      "before": {"lines": [{"id": "one-item", "cents": 500, "eligible": true}], "complete": true, "fee": {"kind": "fixed", "cents": 0}, "discountCents": 0, "taxCents": 0, "depositCents": 0},
+      "after": {"lines": [{"id": "one-item", "cents": 400, "eligible": true}], "complete": true, "fee": {"kind": "fixed", "cents": 0}, "discountCents": 0, "taxCents": 0, "depositCents": 0},
+      "expected": {"beforeCents": 500, "afterCents": 400, "changeCents": -100, "afterLowerCents": 400, "afterUpperCents": 400, "capStatus": "within", "overCents": 0, "wholeCheckoutWithinCap": false}
+    },
+    {
+      "id": "dinner-cap-not-whole-checkout-cap", "scope": "wholeCheckout", "capScope": "dinner", "capCents": 3800,
+      "before": {"lines": [{"id": "basket", "cents": 3720, "eligible": true}], "complete": true, "fee": {"kind": "fixed", "cents": 0}, "discountCents": 0, "taxCents": 0, "depositCents": 0},
+      "after": {"lines": [{"id": "basket", "cents": 3720, "eligible": true}], "complete": true, "fee": {"kind": "fixed", "cents": 0}, "discountCents": 0, "taxCents": 0, "depositCents": 0},
+      "expected": {"beforeCents": 3720, "afterCents": 3720, "changeCents": 0, "afterLowerCents": 3720, "afterUpperCents": 3720, "capStatus": "scopeMismatch", "overCents": null, "wholeCheckoutWithinCap": false}
+    },
+    {
+      "id": "unpriced-original-lines-remain-unknown", "scope": "wholeCheckout", "capScope": "wholeCheckout", "capCents": 3800,
+      "before": {"lines": [{"id": "known", "cents": 1000, "eligible": true}], "complete": false, "fee": {"kind": "fixed", "cents": 0}, "discountCents": 0, "taxCents": 0, "depositCents": 0},
+      "after": {"lines": [{"id": "known", "cents": 900, "eligible": true}], "complete": false, "fee": {"kind": "fixed", "cents": 0}, "discountCents": 0, "taxCents": 0, "depositCents": 0},
+      "expected": {"beforeCents": null, "afterCents": null, "changeCents": null, "afterLowerCents": 900, "afterUpperCents": null, "capStatus": "unresolved", "overCents": null, "wholeCheckoutWithinCap": false}
+    },
+    {
+      "id": "threshold-uses-only-eligible-goods", "scope": "wholeCheckout", "capScope": "wholeCheckout", "capCents": 3800,
+      "before": {"lines": [{"id": "eligible", "cents": 3400, "eligible": true}, {"id": "excluded", "cents": 600, "eligible": false}], "complete": true, "fee": {"kind": "threshold", "thresholdCents": 3500, "belowThresholdCents": 495}, "discountCents": 0, "taxCents": 0, "depositCents": 0},
+      "after": {"lines": [{"id": "eligible", "cents": 3500, "eligible": true}, {"id": "excluded", "cents": 600, "eligible": false}], "complete": true, "fee": {"kind": "threshold", "thresholdCents": 3500, "belowThresholdCents": 495}, "discountCents": 0, "taxCents": 0, "depositCents": 0},
+      "expected": {"beforeCents": 4495, "afterCents": 4100, "changeCents": -395, "afterLowerCents": 4100, "afterUpperCents": 4100, "capStatus": "over", "overCents": 300, "wholeCheckoutWithinCap": false}
+    },
+    {
+      "id": "tax-deposit-discount-all-included", "scope": "wholeCheckout", "capScope": "wholeCheckout", "capCents": 3800,
+      "before": {"lines": [{"id": "goods", "cents": 3600, "eligible": true}], "complete": true, "fee": {"kind": "fixed", "cents": 200}, "discountCents": 100, "taxCents": 150, "depositCents": 50},
+      "after": {"lines": [{"id": "goods", "cents": 3400, "eligible": true}], "complete": true, "fee": {"kind": "fixed", "cents": 200}, "discountCents": 100, "taxCents": 150, "depositCents": 50},
+      "expected": {"beforeCents": 3900, "afterCents": 3700, "changeCents": -200, "afterLowerCents": 3700, "afterUpperCents": 3700, "capStatus": "within", "overCents": 0, "wholeCheckoutWithinCap": true}
+    }
+  ]
+}

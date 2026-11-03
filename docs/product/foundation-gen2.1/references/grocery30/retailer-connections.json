@@ -1,0 +1,307 @@
+{
+  "asOf": "2026-11-02",
+  "scope": "US consumer iPhone grocery planner. Documentation and public intake review only. No accounts created, keys requested, production service called, orders placed or iPhone handoffs tested.",
+  "decision": "Separate feasibility study. Kroger single-store lookup and shopper-authorized cart add merit a potential later trial against manual handoff. Evaluate Walmart partner fit and the value of a single-store handoff separately. These are not Gen 15 release requirements.",
+  "routes": [
+    {
+      "id": "walmart_affiliate_opd",
+      "access": "Walmart evaluates affiliate applications. Grocery Online Pickup & Delivery (OPD) requires an Impact affiliate account and a separate access request subject to private partnership review. I/O labels the Add To Cart service public while classifying OPD and recipe bundles as subscription services. Obtain explicit entitlement for the proposed mobile use and individual APIs before estimating coverage.",
+      "capability": "Catalog snapshot illustrates application client-credentials OAuth and an affiliateAddToCartUrl per offer. Approved OPD partners can match grocery items to the user's selected store, obtain local price/availability, and hand selected items to Walmart's shoppable cart. Neither a catalog feed credential nor an affiliate link authenticates the shopper to this planner.",
+      "boundary": "Walmart handles checkout and fulfillment. Local availability is a time-specific observation. A handoff gives no documented return of household cart contents, exact checkout total, booked slot, picked quantities, substitution decisions, order status or receipt. Checkout API is a separate business-case approval. I/O terms limit use to approved affiliate advertising unless expressly authorized otherwise and list 5,000 calls/day. Confirm contracted service terms and quota.",
+      "fallback": "Before access, export household-authored lines for Walmart shopping. After approval, preview matches and make the Walmart handoff explicit. Measure accuracy and active minutes saved against the shopper's current route.",
+      "evidence": [
+        "w_opd",
+        "w_services",
+        "w_catalog",
+        "w_terms",
+        "w_affiliate"
+      ]
+    },
+    {
+      "id": "walmart_marketplace_golocal",
+      "access": "Marketplace API uses seller-authorized access. GoLocal is an integration for business clients.",
+      "capability": "Marketplace lets authorized solution providers operate on a seller's inventory and orders. GoLocal dispatches delivery after a customer places an order on the business's own channel, with pickup from that business.",
+      "boundary": "Neither is a route to a shopper's existing Walmart grocery account, receipts or store substitutions. A merchant could assess its own delivery operation separately.",
+      "evidence": [
+        "w_marketplace",
+        "w_golocal"
+      ]
+    },
+    {
+      "id": "kroger_catalog",
+      "access": "Register a developer app for the appropriate environment and use service-to-service OAuth client credentials for catalog reads. The Kroger exercise specifies product.compact. Production and certification credentials are environment-specific.",
+      "capability": "Locations identifies stores. GET /v1/products supports search and filters by store and modality (csp for curbside). Store-specific regular/promo price needs filter.locationId. Seasonal prices can be absent. Optional item inventory.stockLevel reports HIGH, LOW or TEMPORARILY_OUT_OF_STOCK. Products shares 10,000 calls/day at the endpoint, and each of three Locations endpoints has 1,600/day.",
+      "boundary": "Location matches and instore flags indicate a store has sold the item. Kroger says checkout confirms inventory. No guarantee of a particular pack, price paid, reserved slot or eventual fulfillment. Display returned fields faithfully. Public acceptable-use rules prohibit cross-retailer product/price comparison, tracking or storing search-derived data, systematic catalog gathering and tracking customer location.",
+      "fallback": "Offer an on-demand single-store lookup only if the household values it. If stock level or price is absent, show unknown. Keep durable dinner planning based on household inputs.",
+      "evidence": [
+        "k_env",
+        "k_knowledge",
+        "k_products",
+        "k_search",
+        "k_locations",
+        "k_use",
+        "k_index"
+      ]
+    },
+    {
+      "id": "kroger_cart",
+      "access": "Registered app plus shopper OAuth authorization-code grant. Certification has no shopper accounts so Cart tests require the production environment. Confirm actual scope and production access with a consenting test shopper before a pilot.",
+      "capability": "PUT /v1/cart/add takes an array with UPC and quantity, with modality illustrated. The public collection shows 204 on success and Cart's public overview lists this single operation with a 5,000-call/day limit.",
+      "boundary": "No documented public cart reader, bidirectional household list sync, checkout, slot reservation, order tracker, substitutions or receipts. GET /carts/:id belongs to a separate partner collection requiring security review and contract. Public acceptable-use rules require explicitly requested adds, permit only temporary display caching through session end, bar tracking or storing add-derived data, and prohibit mapping customer data by profile ID.",
+      "fallback": "Review requested items, quantities and packs before a user-confirmed send. A repeat add may increase quantities. After an ambiguous response, open Kroger for the shopper to check before resending. Use plain text when authorization fails.",
+      "evidence": [
+        "k_cart",
+        "k_public",
+        "k_env",
+        "k_use",
+        "k_partner",
+        "k_cart_read",
+        "k_index"
+      ]
+    },
+    {
+      "id": "instacart_idp_links",
+      "access": "Current US application page says intake is closed without a waitlist. When available, onboarding requires key access and a demo review for production. The onboarding page's 30–40 days is a historical average, not a current access date. Public endpoint access can vary by key.",
+      "capability": "A bearer API key enables an authorized app to POST names and optional measurements/UPCs to /idp/v1/products/products_link or /idp/v1/products/recipe. Response is a hosted URL. The shopper reviews store, products and quantities, adds items, signs in and checks out on Instacart. iOS may open app or Safari. The recipe tutorial documents a preferred retailer_key parameter and a new key for nearby-retailer lookup. Treat it as a selectable preference despite the FAQ's broader statement about merchant selection.",
+      "boundary": "Public hosted-link endpoints do not return a per-store item-price/stock feed, cart snapshot, checkout, subsequent status, substitutions or receipt. The intake FAQ explicitly distinguishes hosted matching from providing public developers the underlying data. Matching can miss quantity or pack. Affiliate conversion reporting does not establish item-level fulfillment. IDP terms restrict showing priced items from multiple retailers on a screen and moving/comparing baskets across retailers.",
+      "fallback": "Keep IDP out of launch commitments for a new applicant. An existing approved partner can evaluate a hosted handoff with shopper review. Do not count a generated or opened link as a placed order.",
+      "evidence": [
+        "i_intake",
+        "i_start",
+        "i_list",
+        "i_recipe",
+        "i_preferred",
+        "i_faq",
+        "i_terms"
+      ]
+    },
+    {
+      "id": "instacart_connect_mcp",
+      "access": "Connect is for retailer partners integrating a branded commerce site. Separately, Instacart's MCP shopping interface requires a compatible OAuth client and representative-provisioned endpoint/access and limits.",
+      "capability": "Contracted Connect fulfillment can schedule shopping/delivery/pickup for a retailer's own orders and supply order reads and authenticated events such as item replacements. MCP documentation describes store discovery, product lookup, and adding/swapping/removing items while tracking current order state.",
+      "boundary": "Neither capability follows automatically from receiving a standard IDP link key. No household-wide shopping-history or itemized-receipt entitlement is established for an independent planner. MCP documentation reviewed does not establish access for this product or access to post-fulfillment records.",
+      "fallback": "Treat each as a negotiated future route. Require written use-case entitlement, actual scopes, and a successful end-to-end test for the specific data before using it in product promises.",
+      "evidence": [
+        "i_connect",
+        "i_order",
+        "i_event",
+        "i_mcp",
+        "i_mcp_access"
+      ]
+    },
+    {
+      "id": "uber_consumer_delivery",
+      "access": "Uber Consumer Delivery APIs are early access; detailed specifications and test credentials are granted case by case. A shopper links their Uber account for order placement.",
+      "capability": "Uber describes merchant discovery, item details, pricing, cart creation and changes, order submission and tracking, and past orders. ChatGPT’s documented Uber Eats flow can hand off to the Uber app for checkout.",
+      "boundary": "The public overview does not establish an entitlement to grocery UPC matching, pickup slots, stable all-in price, final itemized adjustments or a hosted checkout URL for this planner. The existing ChatGPT deal does not grant an independent developer a production integration.",
+      "fallback": "Offer to copy selected household lines and open Uber Eats. Evaluate an adult-owned handoff for a needed top-up only when supported for the chosen store, region and fulfillment mode. No in-planner purchase.",
+      "evidence": [
+        "u_consumer",
+        "u_chatgpt"
+      ]
+    },
+    {
+      "id": "uber_merchant_direct",
+      "access": "Merchant integration authorization for Marketplace; a business relationship for Direct.",
+      "capability": "Marketplace handles stores, menus and merchant orders. Retail fulfillment helps a merchant manage out-of-stock items on its orders. Direct delivers an order supplied by a merchant.",
+      "boundary": "Courier status and a merchant’s replacement capability are not permission to read a household’s existing Uber Eats order.",
+      "fallback": "Use the consumer’s independently shared information or a dated manual entry.",
+      "evidence": [
+        "u_merchant",
+        "u_retail",
+        "u_direct"
+      ]
+    },
+    {
+      "id": "doordash_consumer",
+      "access": "MCP private beta requires approval and is currently ineligible for consumer-facing integrations. CLI is for personal terminal/coding-agent use. The published grocery integration in ChatGPT is specific to that surface.",
+      "capability": "The corporate MCP tool reference includes grocery discovery, cart edits, previews, checkout, status and receipts. DoorDash demonstrates a grocery-to-cart handoff inside ChatGPT.",
+      "boundary": "None of these public materials grants the proposed consumer planner permission to embed those tools, import a household cart or retrieve a receipt. A corporate account or personal CLI is not a consumer distribution route.",
+      "fallback": "Copy a grocery list or dining fallback and open a verified DoorDash destination. Reassess only if DoorDash offers a consumer product agreement for this use case.",
+      "evidence": [
+        "d_mcp",
+        "d_tools",
+        "d_welcome",
+        "d_chatgpt"
+      ]
+    },
+    {
+      "id": "doordash_merchant_drive",
+      "access": "Marketplace developer access is limited and requires an application. Drive production access is limited; routine use is scoped to the merchant’s delivery business.",
+      "capability": "Marketplace supports merchant integration. Drive requests a delivery fulfilled by a Dasher on behalf of a business.",
+      "boundary": "Neither provides general consumer shopping-history access. A delivery quote is not the total for a store basket.",
+      "fallback": "Keep this independent planner outside merchant dispatch and payment. The shopper reviews a separate merchant checkout.",
+      "evidence": [
+        "d_market",
+        "d_drive",
+        "d_welcome"
+      ]
+    }
+  ],
+  "evidence": {
+    "w_opd": {
+      "type": "Walmart partner onboarding and grocery capability guide",
+      "url": "https://www.walmart.io/docs/opd/stores-recipe/grocery-introduction"
+    },
+    "w_services": {
+      "type": "Walmart service catalog and access tiers",
+      "url": "https://walmart.io/docs/dv-volt-api/v1/introduction/"
+    },
+    "w_catalog": {
+      "type": "Walmart I/O catalog response schema and token exchange",
+      "url": "https://www.walmart.io/docs/opd/recipe-register/catalog-product-snapshot"
+    },
+    "w_terms": {
+      "type": "Walmart I/O use terms and stated rate",
+      "url": "https://walmart.io/termsandcondition"
+    },
+    "w_affiliate": {
+      "type": "Walmart affiliate operating agreement, June 2026",
+      "url": "https://affiliates.walmart.com/terms"
+    },
+    "w_marketplace": {
+      "type": "Walmart Marketplace authorization reference",
+      "url": "https://developer.walmart.com/us-marketplace/docs/authentication-authorization"
+    },
+    "w_golocal": {
+      "type": "Walmart GoLocal business workflow",
+      "url": "https://www.walmartgolocal.com/content/go-local/go-local-home/who-we-are/how-it-works.html"
+    },
+    "k_env": {
+      "type": "Kroger public environment and auth guide",
+      "url": "https://developer.kroger.com/documentation/public/getting-started/apis"
+    },
+    "k_knowledge": {
+      "type": "Kroger public catalog credential exercise",
+      "url": "https://developer.kroger.com/documentation/public/getting-started/knowledge-check-answers"
+    },
+    "k_index": {
+      "type": "Kroger portal's first-party search index, retrieved to verify page bodies and quotas",
+      "url": "https://developer.kroger.com/api/v1/developer/content/search.json"
+    },
+    "k_locations": {
+      "type": "Kroger Locations overview and limits",
+      "url": "https://developer.kroger.com/documentation/api-products/public/locations/overview"
+    },
+    "k_products": {
+      "type": "Kroger Products overview and stock-level enum",
+      "url": "https://developer.kroger.com/documentation/api-products/public/products/overview"
+    },
+    "k_search": {
+      "type": "Kroger Products search and stock caveat",
+      "url": "https://developer.kroger.com/documentation/api-products/public/products/product-search"
+    },
+    "k_cart": {
+      "type": "Kroger public Cart overview and limit",
+      "url": "https://developer.kroger.com/documentation/api-products/public/cart/overview"
+    },
+    "k_use": {
+      "type": "Kroger public acceptable-use rules",
+      "url": "https://developer.kroger.com/documentation/public/getting-started/acceptable-use"
+    },
+    "k_public": {
+      "type": "Kroger-maintained public request/response collection",
+      "url": "https://www.postman.com/kroger/the-kroger-co-s-public-workspace/documentation/ki6utqb/kroger-public-apis"
+    },
+    "k_partner": {
+      "type": "Kroger-maintained partner onboarding and contract notice",
+      "url": "https://www.postman.com/kroger/the-kroger-co-s-public-workspace/collection/nryx3kn/kroger-partner-apis"
+    },
+    "k_cart_read": {
+      "type": "Kroger-maintained partner request schema",
+      "url": "https://www.postman.com/kroger/the-kroger-co-s-public-workspace/request/kus2nhy/cart-by-id"
+    },
+    "i_intake": {
+      "type": "Instacart US program intake status and public data FAQ",
+      "url": "https://company.instacart.com/business/developers"
+    },
+    "i_start": {
+      "type": "Instacart production onboarding guide",
+      "url": "https://docs.instacart.com/developer_platform_api/get_started/overview"
+    },
+    "i_list": {
+      "type": "Instacart shopping-list endpoint contract",
+      "url": "https://docs.instacart.com/developer_platform_api/api/products/create_shopping_list_page"
+    },
+    "i_recipe": {
+      "type": "Instacart recipe endpoint contract",
+      "url": "https://docs.instacart.com/developer_platform_api/api/products/create_recipe_page"
+    },
+    "i_preferred": {
+      "type": "Instacart tutorial showing preferred-retailer key and shopper checkout",
+      "url": "https://docs.instacart.com/developer_platform_api/get_started/recipe"
+    },
+    "i_faq": {
+      "type": "Instacart FAQ on merchant choice, iOS deep links, matching and key restrictions",
+      "url": "https://docs.instacart.com/developer_platform_api/faq"
+    },
+    "i_terms": {
+      "type": "Instacart IDP Developer Terms, restrictions on use",
+      "url": "https://docs.instacart.com/developer_platform_api/guide/terms_and_policies/developer_terms/"
+    },
+    "i_connect": {
+      "type": "Instacart Connect retailer platform overview",
+      "url": "https://docs.instacart.com/connect/"
+    },
+    "i_order": {
+      "type": "Instacart Connect detail schema for retailer's fulfillment order",
+      "url": "https://docs.instacart.com/connect/api/fulfillment/delivery/get_order"
+    },
+    "i_event": {
+      "type": "Instacart Connect callback schema",
+      "url": "https://docs.instacart.com/connect/api/fulfillment/communications/event_callbacks"
+    },
+    "i_mcp": {
+      "type": "Instacart MCP shopping workflow overview",
+      "url": "https://docs.instacart.com/mcp_servers"
+    },
+    "i_mcp_access": {
+      "type": "Instacart MCP access and OAuth guide",
+      "url": "https://docs.instacart.com/mcp_servers/get-started/use-instacarts-mcp-server"
+    },
+    "u_consumer": {
+      "type": "Consumer API scope, account linking and access",
+      "url": "https://developer.uber.com/docs/consumer-delivery/introduction"
+    },
+    "u_chatgpt": {
+      "type": "Documented experience in a named partner product",
+      "url": "https://help.uber.com/en/ubereats/restaurants/article/chatgpt-integration-for-eaters?nodeId=7e56650b-9482-4a55-a560-1902ba2dd70e"
+    },
+    "u_merchant": {
+      "type": "Merchant Marketplace product",
+      "url": "https://developer.uber.com/docs/eats/introduction"
+    },
+    "u_retail": {
+      "type": "Merchant fulfillment and customer replacement review",
+      "url": "https://developer.uber.com/docs/eats/guides/retail-order-fulfillment"
+    },
+    "u_direct": {
+      "type": "Business delivery logistics",
+      "url": "https://developer.uber.com/docs/deliveries/overview"
+    },
+    "d_mcp": {
+      "type": "Consumer-facing integration explicitly unavailable",
+      "url": "https://developer.doordash.com/en-US/docs/mcp/overview/about_mcp/"
+    },
+    "d_tools": {
+      "type": "Corporate-ordering tool capabilities",
+      "url": "https://developer.doordash.com/en-US/docs/mcp/reference/available_tools/"
+    },
+    "d_welcome": {
+      "type": "Personal CLI and merchant products",
+      "url": "https://developer.doordash.com/en-US/docs/welcome/"
+    },
+    "d_chatgpt": {
+      "type": "Named consumer partnership with ChatGPT",
+      "url": "https://about.doordash.com/en-us/news/openai"
+    },
+    "d_market": {
+      "type": "Marketplace access requirements",
+      "url": "https://developer.doordash.com/en-US/docs/marketplace/overview/getting_started/requesting_access/"
+    },
+    "d_drive": {
+      "type": "Drive business integration and production status",
+      "url": "https://developer.doordash.com/en-US/docs/drive/tutorials/get_started_postman/"
+    }
+  }
+}

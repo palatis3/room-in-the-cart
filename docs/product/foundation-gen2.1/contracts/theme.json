@@ -1,0 +1,53 @@
+{
+  "contract_version": 1,
+  "default": "system",
+  "light": {
+    "surface": "#FFFFFF",
+    "ink": "#172925",
+    "secondary": "#475D55",
+    "accent": "#195848",
+    "on_accent": "#FFFFFF",
+    "canvas": "#F7F5EF",
+    "selection": "#E3EEE6",
+    "warning": "#835009",
+    "warning_surface": "#FFF1D3",
+    "error": "#9C382D",
+    "error_surface": "#FBE9E5",
+    "focus": "#245F9C",
+    "control_edge": "#66796E",
+    "divider": "#D9E1DA"
+  },
+  "dark": {
+    "surface": "#1C2923",
+    "ink": "#F4F5EC",
+    "secondary": "#B4C4B9",
+    "accent": "#91DBBB",
+    "on_accent": "#112A21",
+    "canvas": "#121A17",
+    "selection": "#263C32",
+    "warning": "#F4C375",
+    "warning_surface": "#372B19",
+    "error": "#F6A899",
+    "error_surface": "#402624",
+    "focus": "#9ACBF5",
+    "control_edge": "#90A797",
+    "divider": "#3B5145"
+  },
+  "space_pt": [
+    4,
+    8,
+    12,
+    16,
+    20,
+    24,
+    32
+  ],
+  "min_hit_pt": 44,
+  "motion_ms": {
+    "press": 100,
+    "selection": 160,
+    "explanation_max": 180,
+    "local_commit": 120,
+    "reduce_motion": 0
+  }
+}

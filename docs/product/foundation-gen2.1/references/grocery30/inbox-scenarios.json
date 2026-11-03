@@ -1,0 +1,224 @@
+{
+  "purpose": "Fictional US pickup planning examples. The reference service serializes events in one household and one shop. Results are command acknowledgments, including exact replay of a committed acknowledgment. The states map is the current authoritative view. Membership and consent are assumed for enrolled fixture members. No production implementation, receipt or order was tested.",
+  "units": "USD cents. Fees shown as supplied inputs for the same store, slot and other commitments. Unknown is null.",
+  "checkout": [
+    {"label":"Cereal raises the whole bill above cap","cap":3800,"before_goods":3720,"before_fee":0,"after_goods":4069,"after_fee":0,"before":3720,"after":4069,"change":349,"over_cap":269},
+    {"label":"Identical existing box meets the request","cap":3800,"before_goods":3720,"before_fee":0,"after_goods":3720,"after_fee":0,"before":3720,"after":3720,"change":0,"over_cap":0},
+    {"label":"A fee reversal lowers the bill but leaves an overage","cap":3800,"before_goods":3480,"before_fee":495,"after_goods":3829,"after_fee":0,"before":3975,"after":3829,"change":-146,"over_cap":29},
+    {"label":"The price or full-fee basis is missing","cap":3800,"before_goods":3720,"before_fee":0,"after_goods":null,"after_fee":null,"before":3720,"after":null,"change":null,"over_cap":null}
+  ],
+  "routing": [
+    {
+      "label": "Lost reply retries the same request and decision",
+      "events": [
+        {"op":"send","actor":"Sam","key":"s1","id":"r1","text":"one box"},
+        {"op":"send","actor":"Sam","key":"s1","id":"r1","text":"one box"},
+        {"op":"apply","actor":"Mia","key":"a1","owner":"Sam","id":"r1","request_revision":1,"revision":1,"epoch":1},
+        {"op":"apply","actor":"Mia","key":"a1","owner":"Sam","id":"r1","request_revision":1,"revision":1,"epoch":1}
+      ],
+      "expected": {"states":{"Sam/r1":"added"},"basket":["Sam/r1"],"shopper":"Mia","epoch":1,"revision":2,"phase":"open","separate_reports":[],"results":["pending","pending","added","added"]}
+    },
+    {
+      "label": "Old shopper and second adult cannot both approve",
+      "events": [
+        {"op":"send","actor":"Jo","key":"s1","id":"r1","text":"one box"},
+        {"op":"transfer","actor":"Mia","key":"t1","target":"Alex","epoch":1,"revision":1},
+        {"op":"apply","actor":"Mia","key":"a1","owner":"Jo","id":"r1","request_revision":1,"revision":1,"epoch":1},
+        {"op":"apply","actor":"Alex","key":"a2","owner":"Jo","id":"r1","request_revision":1,"revision":1,"epoch":2},
+        {"op":"apply","actor":"Alex","key":"a3","owner":"Jo","id":"r1","request_revision":1,"revision":2,"epoch":2}
+      ],
+      "expected": {"states":{"Jo/r1":"added"},"basket":["Jo/r1"],"shopper":"Alex","epoch":2,"revision":2,"phase":"open","separate_reports":[],"results":["pending","transferred","shopper required","added","already handled"]}
+    },
+    {
+      "label": "Offline request reaches server after placement",
+      "events": [
+        {"op":"place","actor":"Mia","key":"place","epoch":1,"revision":1},
+        {"op":"send","actor":"Sam","key":"s1","id":"r1","text":"one box"},
+        {"op":"apply","actor":"Mia","key":"a1","owner":"Sam","id":"r1","request_revision":1,"revision":1,"epoch":1}
+      ],
+      "expected": {"states":{"Sam/r1":"next"},"basket":[],"shopper":"Mia","epoch":1,"revision":2,"phase":"placed","separate_reports":[],"results":["placed","next","checkout closed to edits"]}
+    },
+    {
+      "label": "Pending request crosses cutoff while preview is open",
+      "events": [
+        {"op":"send","actor":"Sam","key":"s1","id":"r1","text":"one box"},
+        {"op":"place","actor":"Mia","key":"place","epoch":1,"revision":1},
+        {"op":"apply","actor":"Mia","key":"a1","owner":"Sam","id":"r1","request_revision":1,"revision":1,"epoch":1}
+      ],
+      "expected": {"states":{"Sam/r1":"next"},"basket":[],"shopper":"Mia","epoch":1,"revision":2,"phase":"placed","separate_reports":[],"results":["pending","placed","checkout closed to edits"]}
+    },
+    {
+      "label": "Revoked device tries to deliver its outbox",
+      "events": [
+        {"op":"revoke","actor":"Mia","key":"v","target":"Sam"},
+        {"op":"send","actor":"Sam","key":"s1","id":"r1","text":"one box"}
+      ],
+      "expected": {"states":{},"basket":[],"shopper":"Mia","epoch":1,"revision":1,"phase":"open","separate_reports":[],"results":["revoked","access ended"]}
+    },
+    {
+      "label": "Revised quantity invalidates approval preview",
+      "events": [
+        {"op":"send","actor":"Sam","key":"s1","id":"r1","text":"one box"},
+        {"op":"edit","actor":"Sam","key":"e1","id":"r1","owner":"Sam","request_revision":1,"text":"two boxes"},
+        {"op":"apply","actor":"Mia","key":"a1","owner":"Sam","id":"r1","request_revision":1,"revision":1,"epoch":1},
+        {"op":"apply","actor":"Mia","key":"a2","owner":"Sam","id":"r1","request_revision":2,"revision":1,"epoch":1}
+      ],
+      "expected": {"states":{"Sam/r1":"added"},"basket":["Sam/r1"],"shopper":"Mia","epoch":1,"revision":2,"phase":"open","separate_reports":[],"results":["pending","updated","refresh preview","added"]}
+    },
+    {
+      "label": "A child cannot edit another request or approve a purchase",
+      "events": [
+        {"op":"send","actor":"Jo","key":"s1","id":"r1","text":"one box"},
+        {"op":"edit","actor":"Sam","key":"e1","id":"r1","owner":"Jo","request_revision":1,"text":"two boxes"},
+        {"op":"edit","actor":"Sam","key":"e1","id":"r1","owner":"Sam","request_revision":1,"text":"two boxes"},
+        {"op":"apply","actor":"Sam","key":"a1","owner":"Jo","id":"r1","request_revision":1,"revision":1,"epoch":1}
+      ],
+      "expected": {"states":{"Jo/r1":"pending"},"basket":[],"shopper":"Mia","epoch":1,"revision":1,"phase":"open","separate_reports":[],"results":["pending","request unavailable","request unavailable","shopper required"]}
+    },
+    {
+      "label": "A checkout in progress protects the prepared basket",
+      "events": [
+        {"op":"freeze","actor":"Mia","key":"freeze","epoch":1,"revision":1},
+        {"op":"send","actor":"Jo","key":"s1","id":"r1","text":"one box"},
+        {"op":"place","actor":"Mia","key":"place","epoch":1,"revision":2}
+      ],
+      "expected": {"states":{"Jo/r1":"next"},"basket":[],"shopper":"Mia","epoch":1,"revision":3,"phase":"placed","separate_reports":[],"results":["frozen","next","placed"]}
+    },
+    {
+      "label": "Same operation key with a changed payload is rejected",
+      "events": [
+        {"op":"send","actor":"Sam","key":"s1","id":"r1","text":"one box"},
+        {"op":"send","actor":"Sam","key":"s1","id":"r1","text":"two boxes"},
+        {"op":"send","actor":"Jo","key":"s1","id":"r1","text":"one box"},
+        {"op":"apply","actor":"Mia","key":"a1","owner":"Sam","id":"r1","request_revision":1,"revision":1,"epoch":1},
+        {"op":"apply","actor":"Mia","key":"a1","owner":"Jo","id":"r1","request_revision":1,"revision":2,"epoch":1},
+        {"op":"apply","actor":"Mia","key":"a1","owner":"Sam","id":"r1","request_revision":1,"revision":1,"epoch":1}
+      ],
+      "expected": {"states":{"Sam/r1":"added","Jo/r1":"pending"},"basket":["Sam/r1"],"shopper":"Mia","epoch":1,"revision":2,"phase":"open","separate_reports":[],"results":["pending","operation conflict","pending","added","operation conflict","added"]}
+    },
+    {
+      "label": "Two contributors may use the same local request ID and operation key",
+      "events": [
+        {"op":"send","actor":"Jo","key":"s1","id":"r1","text":"one box"},
+        {"op":"send","actor":"Sam","key":"s1","id":"r1","text":"one box"},
+        {"op":"edit","actor":"Sam","key":"e1","id":"r1","owner":"Jo","request_revision":1,"text":"two boxes"},
+        {"op":"edit","actor":"Sam","key":"e1","id":"r1","owner":"Alex","request_revision":1,"text":"two boxes"},
+        {"op":"apply","actor":"Mia","key":"a1","owner":"Sam","id":"r1","request_revision":1,"revision":1,"epoch":1}
+      ],
+      "expected": {"states":{"Jo/r1":"pending","Sam/r1":"added"},"basket":["Sam/r1"],"shopper":"Mia","epoch":1,"revision":2,"phase":"open","separate_reports":[],"results":["pending","pending","request unavailable","request unavailable","added"]}
+    },
+    {
+      "label": "Cap or fee changed under an otherwise unchanged request",
+      "events": [
+        {"op":"send","actor":"Sam","key":"s1","id":"r1","text":"one box"},
+        {"op":"change_basis","actor":"Mia","key":"change_basis","epoch":1,"revision":1},
+        {"op":"apply","actor":"Mia","key":"a1","owner":"Sam","id":"r1","request_revision":1,"revision":1,"epoch":1},
+        {"op":"apply","actor":"Mia","key":"a2","owner":"Sam","id":"r1","request_revision":1,"revision":2,"epoch":1}
+      ],
+      "expected": {"states":{"Sam/r1":"added"},"basket":["Sam/r1"],"shopper":"Mia","epoch":1,"revision":3,"phase":"open","separate_reports":[],"results":["pending","basis changed","refresh preview","added"]}
+    },
+    {
+      "label": "Another approved request invalidates the basket preview",
+      "events": [
+        {"op":"send","actor":"Sam","key":"s1","id":"r1","text":"one box"},
+        {"op":"send","actor":"Jo","key":"s1","id":"r1","text":"one box"},
+        {"op":"apply","actor":"Mia","key":"a1","owner":"Jo","id":"r1","request_revision":1,"revision":1,"epoch":1},
+        {"op":"apply","actor":"Mia","key":"a2","owner":"Sam","id":"r1","request_revision":1,"revision":1,"epoch":1},
+        {"op":"apply","actor":"Mia","key":"a3","owner":"Sam","id":"r1","request_revision":1,"revision":2,"epoch":1}
+      ],
+      "expected": {"states":{"Sam/r1":"added","Jo/r1":"added"},"basket":["Jo/r1","Sam/r1"],"shopper":"Mia","epoch":1,"revision":3,"phase":"open","separate_reports":[],"results":["pending","pending","added","refresh preview","added"]}
+    },
+    {
+      "label": "Child and unassigned adult cannot freeze or place; transfer only to eligible adult",
+      "events": [
+        {"op":"freeze","actor":"Sam","key":"freeze","epoch":1,"revision":1},
+        {"op":"place","actor":"Alex","key":"place","epoch":1,"revision":1},
+        {"op":"transfer","actor":"Mia","key":"t1","target":"Sam","epoch":1,"revision":1},
+        {"op":"transfer","actor":"Sam","key":"t1","target":"Alex","epoch":1,"revision":1},
+        {"op":"report_order","actor":"Sam","key":"report_order","epoch":1,"revision":1}
+      ],
+      "expected": {"states":{},"basket":[],"shopper":"Mia","epoch":1,"revision":1,"phase":"open","separate_reports":[],"results":["shopper required","shopper required","eligible adult required","organizer required","shopper required"]}
+    },
+    {
+      "label": "Frozen checkout survives handover and a stale offline purchase report",
+      "events": [
+        {"op":"send","actor":"Sam","key":"s1","id":"r1","text":"one box"},
+        {"op":"freeze","actor":"Mia","key":"freeze","epoch":1,"revision":1},
+        {"op":"transfer","actor":"Mia","key":"t1","target":"Alex","epoch":1,"revision":2},
+        {"op":"send","actor":"Jo","key":"s1","id":"r1","text":"one box"},
+        {"op":"place","actor":"Mia","key":"place","epoch":1,"revision":2},
+        {"op":"report_order","actor":"Mia","key":"report_order","epoch":1,"revision":2},
+        {"op":"report_order","actor":"Mia","key":"report_order","epoch":1,"revision":2},
+        {"op":"place","actor":"Alex","key":"place","epoch":2,"revision":2}
+      ],
+      "expected": {"states":{"Sam/r1":"next","Jo/r1":"next"},"basket":[],"shopper":"Alex","epoch":2,"revision":3,"phase":"placed","separate_reports":[["Mia",1,2]],"results":["pending","frozen","transferred","next","shopper required","separate report","separate report","placed"]}
+    },
+    {
+      "label": "Stale external report cannot close a revised open basket",
+      "events": [
+        {"op":"send","actor":"Sam","key":"s1","id":"r1","text":"one box"},
+        {"op":"change_basis","actor":"Mia","key":"change_basis","epoch":1,"revision":1},
+        {"op":"report_order","actor":"Mia","key":"report_order","epoch":1,"revision":1},
+        {"op":"send","actor":"Jo","key":"s1","id":"r1","text":"one box"}
+      ],
+      "expected": {"states":{"Sam/r1":"pending","Jo/r1":"pending"},"basket":[],"shopper":"Mia","epoch":1,"revision":2,"phase":"open","separate_reports":[["Mia",1,1]],"results":["pending","basis changed","separate report","pending"]}
+    },
+    {
+      "label": "Current verified external report closes intake once",
+      "events": [
+        {"op":"send","actor":"Sam","key":"s1","id":"r1","text":"one box"},
+        {"op":"report_order","actor":"Mia","key":"report_order","epoch":1,"revision":1},
+        {"op":"report_order","actor":"Mia","key":"report_order","epoch":1,"revision":1},
+        {"op":"send","actor":"Jo","key":"s1","id":"r1","text":"one box"}
+      ],
+      "expected": {"states":{"Sam/r1":"next","Jo/r1":"next"},"basket":[],"shopper":"Mia","epoch":1,"revision":2,"phase":"placed","separate_reports":[],"results":["pending","placed","placed","next"]}
+    },
+    {
+      "label": "Returning to the same shopper cannot revive an old approval",
+      "events": [
+        {"op":"send","actor":"Sam","key":"s1","id":"r1","text":"one box"},
+        {"op":"transfer","actor":"Mia","key":"t1","target":"Alex","epoch":1,"revision":1},
+        {"op":"transfer","actor":"Mia","key":"t2","target":"Mia","epoch":2,"revision":1},
+        {"op":"apply","actor":"Mia","key":"a1","owner":"Sam","id":"r1","request_revision":1,"revision":1,"epoch":1},
+        {"op":"apply","actor":"Mia","key":"a2","owner":"Sam","id":"r1","request_revision":1,"revision":1,"epoch":3}
+      ],
+      "expected": {"states":{"Sam/r1":"added"},"basket":["Sam/r1"],"shopper":"Mia","epoch":3,"revision":2,"phase":"open","separate_reports":[],"results":["pending","transferred","transferred","shopper required","added"]}
+    },
+    {
+      "label": "A contributor withdraws a pending line and the shopper saves another for next shop",
+      "events": [
+        {"op":"send","actor":"Sam","key":"s1","id":"r1","text":"one box"},
+        {"op":"withdraw","actor":"Sam","key":"w1","id":"r1","request_revision":1},
+        {"op":"withdraw","actor":"Sam","key":"w1","id":"r1","request_revision":1},
+        {"op":"apply","actor":"Mia","key":"a1","owner":"Sam","id":"r1","request_revision":1,"revision":1,"epoch":1},
+        {"op":"send","actor":"Jo","key":"s1","id":"r1","text":"one box"},
+        {"op":"defer","actor":"Mia","key":"d1","owner":"Jo","id":"r1","request_revision":1,"revision":1,"epoch":1},
+        {"op":"defer","actor":"Mia","key":"d1","owner":"Jo","id":"r1","request_revision":1,"revision":1,"epoch":1},
+        {"op":"place","actor":"Mia","key":"place","epoch":1,"revision":1}
+      ],
+      "expected": {"states":{"Sam/r1":"withdrawn","Jo/r1":"next"},"basket":[],"shopper":"Mia","epoch":1,"revision":2,"phase":"placed","separate_reports":[],"results":["pending","withdrawn","withdrawn","already handled","pending","next","next","placed"]}
+    },
+    {
+      "label": "Replay or late contributor changes leave an approved line intact",
+      "events": [
+        {"op":"send","actor":"Sam","key":"s1","id":"r1","text":"one box"},
+        {"op":"apply","actor":"Mia","key":"a1","owner":"Sam","id":"r1","request_revision":1,"revision":1,"epoch":1},
+        {"op":"withdraw","actor":"Sam","key":"w1","id":"r1","request_revision":1},
+        {"op":"edit","actor":"Sam","key":"e1","id":"r1","owner":"Sam","request_revision":1,"text":"two boxes"},
+        {"op":"place","actor":"Mia","key":"place","epoch":1,"revision":2},
+        {"op":"apply","actor":"Mia","key":"a1","owner":"Sam","id":"r1","request_revision":1,"revision":1,"epoch":1},
+        {"op":"send","actor":"Sam","key":"s1","id":"r1","text":"one box"}
+      ],
+      "expected": {"states":{"Sam/r1":"added"},"basket":["Sam/r1"],"shopper":"Mia","epoch":1,"revision":3,"phase":"placed","separate_reports":[],"results":["pending","added","follow-up required","follow-up required","placed","added","pending"]}
+    },
+    {
+      "label": "Revocation prevents replaying an already accepted submission",
+      "events": [
+        {"op":"send","actor":"Sam","key":"s1","id":"r1","text":"one box"},
+        {"op":"revoke","actor":"Mia","key":"v","target":"Sam"},
+        {"op":"send","actor":"Sam","key":"s1","id":"r1","text":"one box"}
+      ],
+      "expected": {"states":{"Sam/r1":"pending"},"basket":[],"shopper":"Mia","epoch":1,"revision":1,"phase":"open","separate_reports":[],"results":["pending","revoked","access ended"]}
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "npm --prefix service ci --ignore-scripts && npm --prefix web ci --ignore-scripts",
+  "buildCommand": "npm --prefix service run build && npm --prefix web run build",
+  "outputDirectory": "web/public-build",
+  "regions": ["pdx1"],
+  "functions": { "api/index.js": { "maxDuration": 30 } },
+  "rewrites": [
+    { "source": "/v1/:path*", "destination": "/api" },
+    { "source": "/health", "destination": "/api" }
+  ],
+  "headers": [{ "source": "/(.*)", "headers": [
+    { "key": "X-Content-Type-Options", "value": "nosniff" },
+    { "key": "Referrer-Policy", "value": "no-referrer" },
+    { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" }
+  ] }]
+}

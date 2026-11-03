@@ -1,0 +1,267 @@
+{
+ "method": "US Apple most recent feed pages. Pages without returned records contribute zero. Term matches are selected leads not prevalence estimates.",
+ "queried": [
+  [
+   "Forks in Common",
+   6752518389,
+   1
+  ],
+  [
+   "Snackd",
+   6756082783,
+   1
+  ],
+  [
+   "A Better Meal",
+   6443470543,
+   1
+  ],
+  [
+   "Kids Meals",
+   1613090960,
+   1
+  ],
+  [
+   "My Fussy Eater",
+   1340469417,
+   1
+  ],
+  [
+   "Mise",
+   6777471316,
+   1
+  ],
+  [
+   "Mise",
+   6777471316,
+   2
+  ],
+  [
+   "Mise",
+   6777471316,
+   3
+  ],
+  [
+   "Mise",
+   6777471316,
+   4
+  ],
+  [
+   "Mise",
+   6777471316,
+   5
+  ],
+  [
+   "eMeals",
+   575756462,
+   1
+  ],
+  [
+   "eMeals",
+   575756462,
+   2
+  ],
+  [
+   "eMeals",
+   575756462,
+   3
+  ],
+  [
+   "eMeals",
+   575756462,
+   4
+  ],
+  [
+   "eMeals",
+   575756462,
+   5
+  ],
+  [
+   "Mealime",
+   1079999103,
+   1
+  ],
+  [
+   "Mealime",
+   1079999103,
+   2
+  ],
+  [
+   "Mealime",
+   1079999103,
+   3
+  ],
+  [
+   "Mealime",
+   1079999103,
+   4
+  ],
+  [
+   "Mealime",
+   1079999103,
+   5
+  ],
+  [
+   "Sidekick",
+   1472765520,
+   1
+  ],
+  [
+   "PlanToEat",
+   1215348056,
+   1
+  ],
+  [
+   "PlanToEat",
+   1215348056,
+   2
+  ],
+  [
+   "PlanToEat",
+   1215348056,
+   3
+  ],
+  [
+   "PlanToEat",
+   1215348056,
+   4
+  ],
+  [
+   "PlanToEat",
+   1215348056,
+   5
+  ]
+ ],
+ "returned": 726,
+ "candidates": [
+  {
+   "app": "Snackd",
+   "id": "13704840041",
+   "date": "2026-02-02",
+   "stars": "5",
+   "title": "Makes my life a lot easier",
+   "body": "I have a family with VERY different diets and this has taken the mental load of coming up with grocery lists/meals/cooking",
+   "url": "https://itunes.apple.com/us/rss/customerreviews/page=1/id=6756082783/sortby=mostrecent/json"
+  },
+  {
+   "app": "A Better Meal",
+   "id": "14445123023",
+   "date": "2026-08-18",
+   "stars": "5",
+   "title": "So easy!",
+   "body": "I absolutely love this app! Makes my life easier with picky toddlers!",
+   "url": "https://itunes.apple.com/us/rss/customerreviews/page=1/id=6443470543/sortby=mostrecent/json"
+  },
+  {
+   "app": "Kids Meals",
+   "id": "10050309187",
+   "date": "2023-06-19",
+   "stars": "5",
+   "title": "Jessica M",
+   "body": "This app along with the Instagram account has been such a lovely addition to me figuring out how to feed a tiny human! The recipes are simple and always come in handy when I’m struggling to figure out yet another meal. I love how they also share tips on difficult feeding habits such as picky eating, throwing food, and just kiddos not eating well in general. They also show real time examples of the good, the bad, and the frustrating which is so nice to see in a world where everyone only shows the best of the best. Plus the kiddos are absolutely adorable and it’s amazing to see their progress alongside my own childs",
+   "url": "https://itunes.apple.com/us/rss/customerreviews/page=1/id=1613090960/sortby=mostrecent/json"
+  },
+  {
+   "app": "Kids Meals",
+   "id": "9565776755",
+   "date": "2023-01-30",
+   "stars": "5",
+   "title": "Fantastic app!",
+   "body": "I had the BLW Meals app when my baby was younger and now I have this since she’s become a toddler. I downloaded it because I noticed that she started to be picky again so I needed fresh ideas and wow this app did not disappoint. Thank you for making my life easy by providing wonderful guides, tips, and healthy recipes. Toddler is already approving!",
+   "url": "https://itunes.apple.com/us/rss/customerreviews/page=1/id=1613090960/sortby=mostrecent/json"
+  },
+  {
+   "app": "Mise",
+   "id": "14710690559",
+   "date": "2026-10-25",
+   "stars": "1",
+   "title": "Not family friendly",
+   "body": "Not child friendly and I don't have picky eaters",
+   "url": "https://itunes.apple.com/us/rss/customerreviews/page=1/id=6777471316/sortby=mostrecent/json"
+  },
+  {
+   "app": "Mise",
+   "id": "14466139431",
+   "date": "2026-08-24",
+   "stars": "3",
+   "title": "Dietary Restrictions/Requirements.",
+   "body": "1.  It only lets you select one dietary restriction. What if you need gluten free and vegetarian?    Said select all that apply but only allowed me to select one.  \n2. What if you only have one person with a dietary restriction?  If you select vegetarian, gluten free, ect it assumes all meals must be 100% that dietary requirement. In my house we have 1 vegetarian and 3 carnivores so this app isn’t much help. I have to plan 2 meal plans. What I would like is something that plans a meal plan for the entire family.  If 1 of 4 is vegetarian have a meal plan with a meat entree, a vegetarian entree that could double as a side, a 2nd vegetable side and a whatever else is in the plan for that meal. To do this though the app needs to ask how many of the family members have the dietary restrictions, then plans meals that can fit. \nIt seems the app would be pretty good for those with households that don’t need more than 1 dietary restriction or mixed dietary requirements.",
+   "url": "https://itunes.apple.com/us/rss/customerreviews/page=2/id=6777471316/sortby=mostrecent/json"
+  },
+  {
+   "app": "eMeals",
+   "id": "14222363461",
+   "date": "2026-06-24",
+   "stars": "3",
+   "title": "Limited and Tasteless",
+   "body": "Their options are limited and most of the recipes we’ve tried lack taste/ seasoning as is. If you have picky eaters pass on this one. Kids friendly was not tested with kids lol  the connection to the Walmart app is nice but I won’t renew my subscription.",
+   "url": "https://itunes.apple.com/us/rss/customerreviews/page=2/id=575756462/sortby=mostrecent/json"
+  },
+  {
+   "app": "eMeals",
+   "id": "14202487332",
+   "date": "2026-06-19",
+   "stars": "5",
+   "title": "Can’t live without!",
+   "body": "Busy working mom with a husband and two picky eater daughters. EMeals helps me plan and shop fast, easy and healthy. Going on 7+ years. Still love EMeals.",
+   "url": "https://itunes.apple.com/us/rss/customerreviews/page=2/id=575756462/sortby=mostrecent/json"
+  },
+  {
+   "app": "Sidekick",
+   "id": "12675713433",
+   "date": "2025-05-19",
+   "stars": "1",
+   "title": "Completely ignores basics",
+   "body": "App asked me what my preferences were.  I said pescatarian, and did not select any meat for ingredients I have on hand.  App suggests a chicken pasta bake.  I could have sworn chickens are not fish.",
+   "url": "https://itunes.apple.com/us/rss/customerreviews/page=1/id=1472765520/sortby=mostrecent/json"
+  },
+  {
+   "app": "Sidekick",
+   "id": "10954871846",
+   "date": "2024-02-18",
+   "stars": "5",
+   "title": "Love the latest home screen update!!!",
+   "body": "i love this app so much!! i’ve probably been using it for over a year now and it truly has changed my relationship to cooking! i get so overwhelmed with meal planning and grocery shopping and this app makes it so easy, and i have cooked so many amazing meals with it. i am vegetarian and love how the new update makes it so easy to see so many new and interesting vegetarian/vegan packs! i used to have to flick through meat options to find the veggie options, and it’s so exciting to see recommendations based on my preferences!\n\nalso, i see a lot of people from America criticising the app for not working well for American audiences. i used the app for at least 6 months while living in Australia and have now been using the app for around 6 months since moving to the US (Tennessee). Sometimes there are certain ingredients I could find in Aus that I struggle to find here, but it’s truly not that many at all. I can usually find pretty much all of the ingredients I need at my local, reasonably cheap grocery store. my experience with the app is just as good here as back in Aus!",
+   "url": "https://itunes.apple.com/us/rss/customerreviews/page=1/id=1472765520/sortby=mostrecent/json"
+  },
+  {
+   "app": "Sidekick",
+   "id": "10886724259",
+   "date": "2024-01-31",
+   "stars": "5",
+   "title": "Better than meal kits or delivery",
+   "body": "We love Sorted Sidekick! This app makes it simple to plan meals once a week, get a grocery list, and have everything on hand for easy, delicious home cooked meals on busy weeknights. When there is a recipe we all love, we often add its ingredients to our pantry staples for a fast weekend lunch or dinner when plans change. The recipes for 2 are very generous, easily feeding 3 if you don’t have the appetite of a 20-something athlete. Tons of options for vegetarian, vegan, gluten-free, and other dietary needs, making it easy to plan a meal for friends who have restricted foods. Cannot say enough good things about this app, or how it has improved my stress level and my wallet.",
+   "url": "https://itunes.apple.com/us/rss/customerreviews/page=1/id=1472765520/sortby=mostrecent/json"
+  }
+ ],
+ "selected_ids": [
+  "14466139431",
+  "13704840041",
+  "14222363461",
+  "14202487332",
+  "14445123023",
+  "14710690559"
+ ],
+ "direct_competitors": [
+  {
+   "name": "Snack'd",
+   "usd": "79.99/year or 7.99/month",
+   "source": "https://apps.apple.com/us/app/snackd-family-meal-planner/id6756082783",
+   "scope": "US iPhone. One base meal with multiple variations, texture and no-touch preferences, pantry and consolidated aisle shopping. Three ratings on listing."
+  },
+  {
+   "name": "Forks in Common",
+   "usd": "9.99 download; 9.99 monthly IAP also listed, entitlements unverified",
+   "source": "https://apps.apple.com/us/app/forks-in-common-family-meals/id6752518389",
+   "scope": "US iPhone. Per-family-member diets, automatic bean/beef substitution, shared aisle list, pantry. No ratings overview displayed."
+  },
+  {
+   "name": "Checked Out",
+   "usd": "99/year or 9.99/month",
+   "source": "https://www.checkedoutapp.com/",
+   "scope": "Vendor web/Google Play offer. Per-plate dinners, recurring alternates, variable servings and combined exact-quantity list. Used as accessible alternative; native iPhone availability unverified."
+  }
+ ],
+ "inference": "Case-specific need and existing solutions. No increment to gap or revenue scores. Test only whether branch-aware local pack pricing, protected portions and handling actual fulfillment add paid repeat value above modular planners plus the retailer.",
+ "pilot": "Preference-only. Record which family member accepts which branch before prices/shortage are revealed. Count the vegetarian main also served as a side in meat-eaters’ locked servings; distinguish ingredient demand from packs bought. Compare outcomes at table, extra cook time, true outlay, top-up buys, actual $49.99 purchases and repeats. Reject incremental mixed-plate feature if weekly verified success or net workload is unchanged versus modular comparator plus native cart. Allergy/cross-contact suitability outside pilot: never recommend a shared base as medically safe."
+}

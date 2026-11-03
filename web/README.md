@@ -1,0 +1,31 @@
+# Invited contributor and cook web client
+
+This is the narrow mobile web client, not the adult shopping app. It uses native HTML controls, generated spruce/linen tokens, English and US Spanish copy, and only same-origin session-cookie API calls. User food names, amounts and instructions remain as entered. Spanish copy requires human review before release.
+
+## Run
+
+Use Node 22.14.0 and `npm ci`, then `npm run dev` in `web/`. The development server binds to loopback and proxies `/v1` to the actual backend at `http://127.0.0.1:8787`. Set `RITC_SERVICE_ORIGIN` to change that server-side development proxy target. The browser never receives that variable or a service credential.
+
+`npm run build` type-checks modules into `dist/` and builds deployable static content into `public-build/`. `npm test` runs that build and Node/jsdom/IndexedDB tests. `npm run preview` previews the static bundle; use the actual reverse proxy for session API integration.
+
+## Public routes and service contract
+
+- `/` and `/requests`: authenticated contributor's own requests, editable pending entries, received outcomes and follow-ups.
+- `/invite#token=…`: invitation token is immediately removed with `history.replaceState`; it exists only in memory during explicit redemption. Authentication and consent are enforced by the server. No local alias can enroll someone.
+- `/view#token=…`: same secret exchange; a helper session opens its single granted shop and dated instructions. Editor grants may submit a correction for shopper review; they cannot apply a basket change.
+
+The SPA serves these routes through the same static entry point. Production hosting must rewrite non-API routes to `index.html`, reverse-proxy `/v1` to the service, and use HTTPS. Set `Referrer-Policy: no-referrer`, `Cache-Control: no-store` on authenticated/API responses, `X-Content-Type-Options: nosniff`, and a production CSP limiting resources and connections to self (`default-src 'self'; connect-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'`). There is no service worker, analytics or cross-site asset dependency.
+
+Implemented service alignment uses `GET /v1/session`, `DELETE /v1/session`, own `GET /v1/households/{h}/requests/mine`, and `POST /v1/households/{h}/commands`. Command envelopes import `shared/contracts/service-v1.d.ts`. Requests are sent once with stable client IDs and operation keys; uncertain responses retry the original operation.
+
+Invitation redemption sends `POST /v1/invites/redeem {token,intent:'join',adultAttestation:true,alias?}` only after an explicit adult checkbox. The response must identify the joined household/member and contributor or helper role. The client then activates that household using `POST /v1/session {householdId,grantId?}` and verifies the resulting authenticated identity. A successful redemption is retained in memory if session activation needs retry, so activation retry does not consume the invite again.
+
+Helper adapters use `GET /v1/views/{grant}/current` and `POST /v1/views/{grant}/proposals {clientKey,baseRevision,correction}`. The selected helper grant is bound into session activation; another most-recent grant is rejected. The view must identify the session's grant/shop, positive revision, valid `asOf`/`expiresAt`, read/edit mode, language, and narrow `items[{label,amount,unit,action}]`. A proposal succeeds only with `{proposalId,grantId,baseRevision,status:'pending'}` matching the viewed grant and revision. It never applies the basket change.
+
+These browser adapters match the service owner's agreed wire contract. They are covered by transport/DOM tests, not a live managed-identity end-to-end acceptance. Initial sign-in still needs the deployment's managed-login/BFF flow. Existing same-origin cookie sessions can redeem with CSRF protection; an unauthenticated browser cannot manufacture a verified identity. Child enrollment displays the service's `consent_unavailable` failure until verified guardian setup exists. No UI simulates enrollment, saved requests or proposals.
+
+## Offline and privacy behavior
+
+Network errors preserve editable typed text and explicitly say it is not saved. Durable IndexedDB outbox use requires an enrolled session, server `queueConsent:true`, and an explicit per-session user checkbox. Storage denial/quota failure never yields a saved label. Queue completion waits for the IndexedDB transaction, and queued state means not received. Every send, in-memory retry, queued retry, withdrawal and proposal reauthenticates and checks the same household/member (plus grant for a helper). Queued retries also require continuing queue permission and the original live replay window; expired commands are never silently rewrapped. Persisted operations are validated as own-request-only envelopes, and opening an authorized queue purges other identities' records. Logout, access revocation and household changes clear scoped data. A failed sign-out hides private content immediately, blocks background reload, and offers a retry without claiming the server session ended. A failed storage cleanup is reported separately from a confirmed receipt or logout. The server still enforces authorization and absence of private fields; browser projection allowlists are defense in depth.
+
+Tests also verify the Spanish label catalog, unsupported-route isolation, malformed response rejection, pagination-loop rejection, account changes between review and send, and the invite/session handshake. Tests cover English/Spanish review and original wording, save failure, stable retry, optional queue permissions, request edit/withdraw, revocation, scoped helper rendering and inert untrusted text, plus proposal review semantics. DOM tests do not establish Safari/Android browser or accessibility device sign-off. Real managed identities, configured child consent, two clients, storage eviction, VoiceOver/TalkBack and physical browser checks remain integration/release gates.

@@ -1,0 +1,14 @@
+{
+  "contract": "room-in-the-cart/owner-additions/1",
+  "purpose": "Fictional vectors to run through the product. Expected observations describe behavior, not production test results.",
+  "cases": [
+    {"id":"A01-move","feature":"A01","given":"A Thursday dinner is copied from a weekly rotation; Friday has two protected lunches. Active shopper Mia and a second planning adult Alex.","when":"Alex proposes moving dinner to Sunday. Mia reviews the effect.","expect":["Rotation unchanged","Friday lunches remain Friday unless deliberately moved","Proposal alone does not change shared basket","Shopper applies one reviewed revision"]},
+    {"id":"A01-after-purchase","feature":"A01","given":"One eight-pack has already been paid for. Two diners are away.","when":"An adult records the away night.","expect":["Calendar changes","Cash refund is zero unless separate settlement evidence arrives","Potential leftovers require actual confirmation"]},
+    {"id":"A01-role","feature":"A01","given":"An invited contributor and a one-shop cook link each know the week identifier.","when":"They request the adult week endpoint.","expect":["Access denied","No calendar, names, private notes or budget returned"]},
+    {"id":"A02-review","feature":"A02","given":"A candidate soup uses an excluded ingredient and the yield of a pantry lot is unknown.","when":"Adult opens the idea, changes the ingredient and reviews quantities.","expect":["Initial candidate cannot establish coverage","No cart mutation while editing","Approval creates at most one accepted dinner","Scheduling and applying to shop are separate"]},
+    {"id":"A02-cancel","feature":"A02","given":"A household idea draft is open; a separate shop has a newer quote.","when":"User cancels or retries a prior idea request.","expect":["No quantity added","No newer quote overwritten","Confirmed repeat of same intent never creates a second candidate"]},
+    {"id":"A03-cash","feature":"A03","given":{"currency":"USD","same_commitments":true,"available":true,"a":{"goods_minor":3600,"fee_minor":200,"trip_minor":0,"extra_minutes":0},"b":{"goods_minor":3400,"fee_minor":100,"trip_minor":400,"extra_minutes":18}},"when":"Compare complete alternatives.","expect":{"checkout_a":3800,"checkout_b":3500,"trip_inclusive_a":3800,"trip_inclusive_b":3900,"checkout_b_minus_a":-300,"trip_inclusive_b_minus_a":100,"extra_minutes_b_minus_a":18}},
+    {"id":"A03-unknown","feature":"A03","given":"Same as cash example except fee B is unknown or B lacks an essential pack.","when":"Compare.","expect":["Keep per-option known facts","Confirmed overall winner unavailable","Shopper can enter the missing quote or leave unresolved"]},
+    {"id":"A03-stale","feature":"A03","given":"Option B was previewed before the active shopper froze a different basket.","when":"An old device tries to adopt B.","expect":["Conflict with current head or locked phase","Frozen revision unchanged","No order placed or store route created"]}
+  ]
+}

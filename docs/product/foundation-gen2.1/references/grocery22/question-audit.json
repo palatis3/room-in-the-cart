@@ -1,0 +1,378 @@
+{
+  "input": "../grocery18/verified-cases.json",
+  "setup": "Historical known basket $37.29, reductions $2.49/$1/$1 from three source-allowed removable packs; active cap for dinners after fixed $45 reserve. One yes means this exact unreserved amount is available and acceptable. A no means unavailable or declined. An unknown is not a no: do not guarantee exact impossibility or confirmed savings. Quantities, other meals and prices fixed. Each of eight configurations weighted equally by design, not measured.",
+  "objective": "Return the Gen 3 oracle choice with the fewest acceptable changes that meets cap, or report no allowed combination can meet cap. Not cheapest basket. Exhaustively branch only on facts that can distinguish remaining oracle outputs; minimize mean then worst question count. Compare to asking all and the best fixed order that may stop early. Check all 32 cases and concrete yes answers. Input/acquisition/reading/decision time excluded.",
+  "rows": [
+    {
+      "cap_cents": 3729,
+      "reachable_states": 8,
+      "mean_questions": 0,
+      "worst_questions": 0,
+      "best_fixed_order_with_early_stop": 0,
+      "fixed_ask_all": 3,
+      "tree": {
+        "decision": []
+      },
+      "trials": [
+        {
+          "state": [],
+          "questions": [],
+          "decision": []
+        },
+        {
+          "state": [
+            "garlic powder"
+          ],
+          "questions": [],
+          "decision": []
+        },
+        {
+          "state": [
+            "frozen corn"
+          ],
+          "questions": [],
+          "decision": []
+        },
+        {
+          "state": [
+            "black beans"
+          ],
+          "questions": [],
+          "decision": []
+        },
+        {
+          "state": [
+            "garlic powder",
+            "frozen corn"
+          ],
+          "questions": [],
+          "decision": []
+        },
+        {
+          "state": [
+            "garlic powder",
+            "black beans"
+          ],
+          "questions": [],
+          "decision": []
+        },
+        {
+          "state": [
+            "frozen corn",
+            "black beans"
+          ],
+          "questions": [],
+          "decision": []
+        },
+        {
+          "state": [
+            "garlic powder",
+            "frozen corn",
+            "black beans"
+          ],
+          "questions": [],
+          "decision": []
+        }
+      ]
+    },
+    {
+      "cap_cents": 3500,
+      "reachable_states": 4,
+      "mean_questions": 1.0,
+      "worst_questions": 1,
+      "best_fixed_order_with_early_stop": 1.0,
+      "fixed_ask_all": 3,
+      "tree": {
+        "ask": "garlic powder",
+        "no": {
+          "decision": null
+        },
+        "yes": {
+          "decision": [
+            "garlic powder"
+          ]
+        }
+      },
+      "trials": [
+        {
+          "state": [],
+          "questions": [
+            "garlic powder"
+          ],
+          "decision": null
+        },
+        {
+          "state": [
+            "garlic powder"
+          ],
+          "questions": [
+            "garlic powder"
+          ],
+          "decision": [
+            "garlic powder"
+          ]
+        },
+        {
+          "state": [
+            "frozen corn"
+          ],
+          "questions": [
+            "garlic powder"
+          ],
+          "decision": null
+        },
+        {
+          "state": [
+            "black beans"
+          ],
+          "questions": [
+            "garlic powder"
+          ],
+          "decision": null
+        },
+        {
+          "state": [
+            "garlic powder",
+            "frozen corn"
+          ],
+          "questions": [
+            "garlic powder"
+          ],
+          "decision": [
+            "garlic powder"
+          ]
+        },
+        {
+          "state": [
+            "garlic powder",
+            "black beans"
+          ],
+          "questions": [
+            "garlic powder"
+          ],
+          "decision": [
+            "garlic powder"
+          ]
+        },
+        {
+          "state": [
+            "frozen corn",
+            "black beans"
+          ],
+          "questions": [
+            "garlic powder"
+          ],
+          "decision": null
+        },
+        {
+          "state": [
+            "garlic powder",
+            "frozen corn",
+            "black beans"
+          ],
+          "questions": [
+            "garlic powder"
+          ],
+          "decision": [
+            "garlic powder"
+          ]
+        }
+      ]
+    },
+    {
+      "cap_cents": 3300,
+      "reachable_states": 1,
+      "mean_questions": 1.75,
+      "worst_questions": 3,
+      "best_fixed_order_with_early_stop": 1.75,
+      "fixed_ask_all": 3,
+      "tree": {
+        "ask": "garlic powder",
+        "no": {
+          "decision": null
+        },
+        "yes": {
+          "ask": "frozen corn",
+          "no": {
+            "decision": null
+          },
+          "yes": {
+            "ask": "black beans",
+            "no": {
+              "decision": null
+            },
+            "yes": {
+              "decision": [
+                "garlic powder",
+                "frozen corn",
+                "black beans"
+              ]
+            }
+          }
+        }
+      },
+      "trials": [
+        {
+          "state": [],
+          "questions": [
+            "garlic powder"
+          ],
+          "decision": null
+        },
+        {
+          "state": [
+            "garlic powder"
+          ],
+          "questions": [
+            "garlic powder",
+            "frozen corn"
+          ],
+          "decision": null
+        },
+        {
+          "state": [
+            "frozen corn"
+          ],
+          "questions": [
+            "garlic powder"
+          ],
+          "decision": null
+        },
+        {
+          "state": [
+            "black beans"
+          ],
+          "questions": [
+            "garlic powder"
+          ],
+          "decision": null
+        },
+        {
+          "state": [
+            "garlic powder",
+            "frozen corn"
+          ],
+          "questions": [
+            "garlic powder",
+            "frozen corn",
+            "black beans"
+          ],
+          "decision": null
+        },
+        {
+          "state": [
+            "garlic powder",
+            "black beans"
+          ],
+          "questions": [
+            "garlic powder",
+            "frozen corn"
+          ],
+          "decision": null
+        },
+        {
+          "state": [
+            "frozen corn",
+            "black beans"
+          ],
+          "questions": [
+            "garlic powder"
+          ],
+          "decision": null
+        },
+        {
+          "state": [
+            "garlic powder",
+            "frozen corn",
+            "black beans"
+          ],
+          "questions": [
+            "garlic powder",
+            "frozen corn",
+            "black beans"
+          ],
+          "decision": [
+            "garlic powder",
+            "frozen corn",
+            "black beans"
+          ]
+        }
+      ]
+    },
+    {
+      "cap_cents": 3200,
+      "reachable_states": 0,
+      "mean_questions": 0,
+      "worst_questions": 0,
+      "best_fixed_order_with_early_stop": 0,
+      "fixed_ask_all": 3,
+      "tree": {
+        "decision": null
+      },
+      "trials": [
+        {
+          "state": [],
+          "questions": [],
+          "decision": null
+        },
+        {
+          "state": [
+            "garlic powder"
+          ],
+          "questions": [],
+          "decision": null
+        },
+        {
+          "state": [
+            "frozen corn"
+          ],
+          "questions": [],
+          "decision": null
+        },
+        {
+          "state": [
+            "black beans"
+          ],
+          "questions": [],
+          "decision": null
+        },
+        {
+          "state": [
+            "garlic powder",
+            "frozen corn"
+          ],
+          "questions": [],
+          "decision": null
+        },
+        {
+          "state": [
+            "garlic powder",
+            "black beans"
+          ],
+          "questions": [],
+          "decision": null
+        },
+        {
+          "state": [
+            "frozen corn",
+            "black beans"
+          ],
+          "questions": [],
+          "decision": null
+        },
+        {
+          "state": [
+            "garlic powder",
+            "frozen corn",
+            "black beans"
+          ],
+          "questions": [],
+          "decision": null
+        }
+      ]
+    }
+  ],
+  "camouflage": "The best fixed script ties the optimal adaptive tree in this small menu. No AI or service required.",
+  "cheapest_basket_means_questions": 3.0,
+  "cheapest_basket_worst_questions": 3
+}

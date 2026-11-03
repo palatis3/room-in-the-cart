@@ -1,0 +1,54 @@
+[
+  {
+    "label": "Over maximum",
+    "observed": "Above the saved $1.20 maximum"
+  },
+  {
+    "label": "Unresolved offer survives reopen",
+    "observed": "Unresolved replacement"
+  },
+  {
+    "label": "Only one substitute can",
+    "observed": "The alternative is short by 1 can"
+  },
+  {
+    "label": "Soup is protected",
+    "observed": "Other dinners still need 1 can pinto beans"
+  },
+  {
+    "label": "Exact limit and sufficient stock",
+    "observed": "2 cans black beans at $1.20 per can"
+  },
+  {
+    "label": "Accepted choice survives reopen",
+    "observed": "2 cans black beans at $1.20 per can"
+  },
+  {
+    "label": "New shop restores original list",
+    "observed": "3 cans"
+  },
+  {
+    "label": "Prior offer price cleared on new shop",
+    "observed": "empty input"
+  },
+  {
+    "label": "Partial repeat for one shop",
+    "observed": "- strong: pinto beans\n    - generic: 2 cans\n    - text: Bean tacos\n    - strong: tortillas\n    - generic: \"8\"\n    - text: Bean tacos\n  -"
+  },
+  {
+    "label": "Partial repeat does not alter usual menu",
+    "observed": "Bean tacos · Bean soup · Pasta night"
+  },
+  {
+    "label": "Undo still flags known two-can shortage",
+    "observed": "Confirmed stock is short by 2 cans"
+  },
+  {
+    "label": "Staged multi-dinner repair flags remaining need",
+    "observed": "Confirmed stock is short by 1 can"
+  },
+  {
+    "label": "Both dinner-specific substitutions fit three available cans",
+    "observed": "- strong: black beans\n    - generic: 3 cans\n    - text: Bean tacos · Bean soup\n    - strong: pasta\n    - generic: 1 box\n    - text: Pasta night\n    - strong: tomato sauce\n    - generic: 1 jar\n    - text: Pasta night\n    - strong: tomatoes\n    - generic: 1 can\n    - text: Bean soup\n    - strong: tortillas\n    - generic: \"8\"\n    - text: Bean tacos\n  -"
+  }
+]

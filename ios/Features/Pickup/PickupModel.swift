@@ -1,0 +1,518 @@
+import Foundation
+import Combine
+import CoreDomain
+import LocalStore
+
+func pTr(_ key: String) -> String { String(localized: String.LocalizationValue(key), table: "Pickup") }
+func pCook(_ key: String, language: String) -> String {
+    let code = language.hasPrefix("es") ? "es" : "en"
+    let bundle = Bundle.main.path(forResource: code, ofType: "lproj").flatMap(Bundle.init(path:)) ?? .main
+    return bundle.localizedString(forKey: key, value: key, table: "Pickup")
+}
+func pMoney(_ money: Money) -> String { Decimal(money.minorUnits).dividing(by: 100).formatted(.currency(code: "USD")) }
+private extension Decimal { func dividing(by value: Decimal) -> Decimal { self / value } }
+func pQuantity(_ quantity: Quantity, language: String? = nil) -> String {
+    let amount = quantity.amount.denominator == 1 ? "\(quantity.amount.numerator)" : "\(quantity.amount.numerator)/\(quantity.amount.denominator)"
+    let unit = language.map { pCook(quantity.unit.rawValue, language: $0) } ?? pTr(quantity.unit.rawValue)
+    return "\(amount) \(unit)"
+}
+
+struct DeferredPickupNeed: Codable, Equatable, Identifiable {
+    let id: UUID
+    let sourceShopID: UUID
+    let line: BasketLine
+    var status: String = "review"
+}
+struct UrgentMealNeed: Codable, Equatable, Identifiable {
+    let id: UUID
+    let food: String
+    let meal: String
+    var required: Quantity
+    let available: Quantity
+    let due: Date?
+    let confirmedAt: Date
+    var repair: String = ""
+    var resolved: Bool = false
+    var carriedFromID: UUID? = nil
+}
+struct PickupRepair: Codable, Equatable, Identifiable {
+    let id: UUID
+    let needID: UUID
+    let instruction: String
+    let createdAt: Date
+    let extraTripAgreed: Bool
+    let repeatMealAgreed: Bool
+    let elapsedMinutes: Int?
+    let due: Date?
+    var timingConfirmed: Bool {
+        guard let elapsedMinutes, let due else { return false }
+        return createdAt.addingTimeInterval(TimeInterval(elapsedMinutes * 60)) <= due
+    }
+}
+struct PickupCookShareEvent: Codable, Equatable, Identifiable {
+    let id: UUID
+    let noteID: UUID
+    let occurredAt: Date
+    let action: HandoffActionKind
+    let destination: String?
+}
+struct PickupCookNote: Codable, Equatable, Identifiable {
+    let id: UUID
+    let text: String
+    let language: String
+    let createdAt: Date
+    let revision: Int64
+    var sentTo: String?
+    var sentAt: Date?
+}
+struct PickupOfferAction: Codable, Equatable, Identifiable {
+    let id: UUID
+    let offerID: UUID
+    let kind: HandoffActionKind
+    let occurredAt: Date
+}
+struct PickupOffer: Codable, Equatable, Identifiable {
+    let id: UUID
+    let lineID: UUID
+    let replacement: String
+    let required: Quantity
+    let remainingOriginal: Quantity
+    let price: CostEvidence
+    let ceiling: Money?
+    let deadline: RetailerDeadline
+    let fallback: String
+    var householdPreference: String
+    var retailerResponse: String
+}
+struct PickupNeedDetail: Codable, Equatable, Identifiable {
+    let id: UUID
+    let mealName: String
+    let exclusions: [String]
+    let scheduledDay: MealDay?
+    let leadTimeMinutes: Int?
+    let completedSteps: [String]
+}
+struct PickupJourney: Codable, Equatable, Identifiable {
+    let id: UUID
+    var version = 1
+    var revision: Int64 = 0
+    var basket: BasketPlan?
+    var context: CheckoutContext?
+    var cap: CheckoutCap?
+    var quote: CheckoutQuote?
+    var quotedRevisionID: UUID?
+    var frozenQuotes: [UUID: CheckoutQuote] = [:]
+    var pickup: PickupLedger?
+    var needs: [AllocationNeed] = []
+    var plannedNeeds: [AllocationNeed] = []
+    var needDetails: [PickupNeedDetail] = []
+    var ledgerBasis: ShopBasis?
+    var ledgerSourceRevisionID: UUID?
+    var originShopID: UUID?
+    var carriedMeals: [AllocationNeed] = []
+    var urgent: [UrgentMealNeed] = []
+    var stockLots: [ConfirmedStockLot] = []
+    var stockNeeds: [StockNeed] = []
+    var repairs: [PickupRepair] = []
+    var deferred: [DeferredPickupNeed] = []
+    var flexible: Set<UUID> = []
+    var proposals: [BasketProposal] = []
+    var undoneProposals: Set<UUID> = []
+    var offers: [PickupOffer] = []
+    var offerActions: [PickupOfferAction] = []
+    var notes: [PickupCookNote] = []
+    var cookShareEvents: [PickupCookShareEvent] = []
+    var settlement = SettlementLedger()
+    var closedAt: Date?
+    var savedAt: Date
+}
+
+// New optional local projections can be absent in an earlier version-one document.
+// Required identity/version/date still fail closed, and validate checks all links.
+extension PickupJourney {
+    private enum CodingKeys: String, CodingKey {
+        case id, savedAt, version, revision, basket, context, cap, quote, quotedRevisionID, frozenQuotes, pickup, needs, plannedNeeds, needDetails, ledgerBasis, ledgerSourceRevisionID, originShopID, carriedMeals, urgent, stockLots, stockNeeds, repairs, deferred, flexible, proposals, undoneProposals, offers, offerActions, notes, cookShareEvents, settlement, closedAt
+    }
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(id: try container.decode(UUID.self, forKey: .id), savedAt: try container.decode(Date.self, forKey: .savedAt))
+        version = try container.decode(Int.self, forKey: .version)
+        revision = try container.decode(Int64.self, forKey: .revision)
+        basket = try container.decodeIfPresent(BasketPlan.self, forKey: .basket)
+        context = try container.decodeIfPresent(CheckoutContext.self, forKey: .context)
+        cap = try container.decodeIfPresent(CheckoutCap.self, forKey: .cap)
+        quote = try container.decodeIfPresent(CheckoutQuote.self, forKey: .quote)
+        quotedRevisionID = try container.decodeIfPresent(UUID.self, forKey: .quotedRevisionID)
+        if let decoded = try container.decodeIfPresent([UUID: CheckoutQuote].self, forKey: .frozenQuotes) { frozenQuotes = decoded }
+        pickup = try container.decodeIfPresent(PickupLedger.self, forKey: .pickup)
+        if let decoded = try container.decodeIfPresent([AllocationNeed].self, forKey: .needs) { needs = decoded }
+        if let decoded = try container.decodeIfPresent([AllocationNeed].self, forKey: .plannedNeeds) { plannedNeeds = decoded }
+        if let decoded = try container.decodeIfPresent([PickupNeedDetail].self, forKey: .needDetails) { needDetails = decoded }
+        ledgerBasis = try container.decodeIfPresent(ShopBasis.self, forKey: .ledgerBasis)
+        ledgerSourceRevisionID = try container.decodeIfPresent(UUID.self, forKey: .ledgerSourceRevisionID)
+        originShopID = try container.decodeIfPresent(UUID.self, forKey: .originShopID)
+        if let decoded = try container.decodeIfPresent([AllocationNeed].self, forKey: .carriedMeals) { carriedMeals = decoded }
+        if let decoded = try container.decodeIfPresent([UrgentMealNeed].self, forKey: .urgent) { urgent = decoded }
+        if let decoded = try container.decodeIfPresent([ConfirmedStockLot].self, forKey: .stockLots) { stockLots = decoded }
+        if let decoded = try container.decodeIfPresent([StockNeed].self, forKey: .stockNeeds) { stockNeeds = decoded }
+        if let decoded = try container.decodeIfPresent([PickupRepair].self, forKey: .repairs) { repairs = decoded }
+        if let decoded = try container.decodeIfPresent([DeferredPickupNeed].self, forKey: .deferred) { deferred = decoded }
+        if let decoded = try container.decodeIfPresent(Set<UUID>.self, forKey: .flexible) { flexible = decoded }
+        if let decoded = try container.decodeIfPresent([BasketProposal].self, forKey: .proposals) { proposals = decoded }
+        if let decoded = try container.decodeIfPresent(Set<UUID>.self, forKey: .undoneProposals) { undoneProposals = decoded }
+        if let decoded = try container.decodeIfPresent([PickupOffer].self, forKey: .offers) { offers = decoded }
+        if let decoded = try container.decodeIfPresent([PickupOfferAction].self, forKey: .offerActions) { offerActions = decoded }
+        if let decoded = try container.decodeIfPresent([PickupCookNote].self, forKey: .notes) { notes = decoded }
+        if let decoded = try container.decodeIfPresent([PickupCookShareEvent].self, forKey: .cookShareEvents) { cookShareEvents = decoded }
+        if let decoded = try container.decodeIfPresent(SettlementLedger.self, forKey: .settlement) { settlement = decoded }
+        closedAt = try container.decodeIfPresent(Date.self, forKey: .closedAt)
+    }
+}
+
+private enum PickupModelError: Error { case missing, invalid, pending, unsupported }
+
+/// One durable document per journey. Candidate data is published only after SQLite
+/// commits; retry writes the identical encoded candidate and original event IDs.
+@MainActor final class PickupModel: ObservableObject {
+    @Published private(set) var journeys: [PickupJourney] = []
+    @Published var selectedID: UUID?
+    @Published private(set) var ready = false
+    @Published private(set) var saving = false
+    @Published private(set) var hasPendingSave = false
+    @Published var error: String?
+    private var store: ComparisonStore?
+    private let databaseURL: URL?
+    private let clock: () -> Date
+    private var opening = false
+    private struct Pending { let value: PickupJourney; let payload: Data }
+    private var pending: Pending?
+    init(store: ComparisonStore? = nil, databaseURL: URL? = nil, clock: @escaping () -> Date = Date.init) {
+        self.store = store; self.databaseURL = databaseURL; self.clock = clock
+    }
+    var journey: PickupJourney? { journeys.first { $0.id == selectedID } }
+    var result: CheckoutResult? {
+        guard let value = journey, let quote = value.quote, value.quotedRevisionID == value.basket?.current.id else { return nil }
+        return try? CheckoutEngine.evaluate(quote, cap: value.cap)
+    }
+    var allocation: StockAllocationResult? {
+        guard let value = journey else { return nil }
+        var lots = value.stockLots
+        if let pickup = value.pickup {
+            for receipt in pickup.receipts {
+                if let observation = pickup.usableObservations.last(where: { $0.receipt == receipt.key }), observation.confirmedMatchToOrderLine {
+                    lots.append(ConfirmedStockLot(id: observation.id, foodID: receipt.key.orderLineID, name: receipt.itemName, usable: observation.usable, confirmedAt: observation.confirmedAt))
+                }
+            }
+        }
+        let orderedNeeds = value.needs.map { StockNeed(id: $0.id, foodID: $0.orderLineID, name: $0.name, amount: $0.amount, priority: $0.priority) }
+        return try? ConfirmedStockAllocator.allocate(lots: lots, needs: orderedNeeds + value.stockNeeds)
+    }
+    var stockAllocation: StockAllocationResult? { allocation }
+    func load() async {
+        guard !ready, !opening else { return }
+        opening = true; defer { opening = false }
+        do {
+            if store == nil {
+                let directory = try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true).appendingPathComponent("RoomInTheCart", isDirectory: true)
+                try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+                #if os(iOS)
+                try FileManager.default.setAttributes([.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication], ofItemAtPath: directory.path)
+                #endif
+                store = try ComparisonStore(url: databaseURL ?? directory.appendingPathComponent("pickup.sqlite"))
+            }
+            guard let store else { throw PickupModelError.missing }
+            let records = try await store.list()
+            let decoded = try records.map { record -> PickupJourney in
+                let value = try JSONDecoder().decode(PickupJourney.self, from: record.payload)
+                guard value.version == 1, value.id == record.id else { throw PickupModelError.unsupported }
+                try Self.validate(value)
+                return value
+            }
+            journeys = decoded
+            if selectedID == nil { selectedID = decoded.first?.id }
+            ready = true; error = nil
+        } catch { self.error = pTr("Could not open saved pickups. Retry; existing records have not been replaced.") }
+    }
+    func archiveSnapshot() async throws -> (workspaceID: UUID, records: [SavedComparison]) {
+        if !ready { await load() }
+        guard ready, let store else { throw PickupModelError.missing }
+        return (store.workspaceID, try await store.list())
+    }
+    func archiveTombstones() async throws -> [ComparisonTombstone] {
+        if !ready { await load() }
+        guard ready, let store else { throw PickupModelError.missing }
+        return try await store.tombstones()
+    }
+    func deleteArchived(id: UUID, expectedRevision: Int64, operationID: UUID) async throws {
+        if !ready { await load() }
+        guard ready, !saving, pending == nil, let store else { throw PickupModelError.pending }
+        saving = true; defer { saving = false }
+        _ = try await store.erase(id: id, expectedRevision: expectedRevision, operationID: operationID, at: clock())
+        // Once erasure commits, never leave its content visible even if refreshing
+        // another record fails. An exact operation retry returns the same tombstone.
+        journeys.removeAll { $0.id == id }
+        if selectedID == id { selectedID = journeys.first?.id }
+        do {
+            let records = try await store.list()
+            let refreshed = try records.map { record -> PickupJourney in
+                let value = try JSONDecoder().decode(PickupJourney.self, from: record.payload)
+                guard value.id == record.id else { throw PickupModelError.invalid }
+                try Self.validate(value)
+                return value
+            }
+            journeys = refreshed
+            if selectedID == nil { selectedID = refreshed.first?.id }
+            error = nil
+        } catch {
+            self.error = pTr("The record was deleted, but remaining records could not be refreshed. Retry opening.")
+            ready = false
+            throw error
+        }
+    }
+    @discardableResult func start(from lines: [BasketLine], shopID: UUID, context: CheckoutContext, cap: CheckoutCap? = nil, plannedNeeds: [AllocationNeed] = [], ledgerBasis: ShopBasis? = nil,
+                                  ledgerSourceRevisionID: UUID? = nil, needDetails: [PickupNeedDetail] = []) async -> Bool {
+        if !ready { await load() }
+        guard ready, !saving, pending == nil else { return false }
+        if journeys.contains(where: { $0.id == shopID }) { selectedID = shopID; return true }
+        do {
+            let basket = try BasketPlan(id: shopID, revisionID: UUID(), lines: lines, createdAt: clock())
+            var value = PickupJourney(id: shopID, savedAt: clock())
+            value.basket = basket; value.context = context; value.cap = cap; value.plannedNeeds = plannedNeeds
+            value.ledgerBasis = ledgerBasis; value.ledgerSourceRevisionID = ledgerSourceRevisionID; value.needDetails = needDetails
+            return await save(value)
+        } catch { self.error = pTr("Check the amounts and units. Your saved pickup has not changed."); return false }
+    }
+    @discardableResult private func save(_ value: PickupJourney) async -> Bool {
+        guard ready, !saving, pending == nil else { return false }
+        do {
+            var candidate = value; candidate.savedAt = clock()
+            let increment = candidate.revision.addingReportingOverflow(1)
+            guard !increment.overflow else { throw PickupModelError.invalid }
+            candidate.revision = increment.partialValue
+            try Self.validate(candidate)
+            let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+            pending = Pending(value: candidate, payload: try encoder.encode(candidate)); hasPendingSave = true
+            return await retrySave()
+        } catch { self.error = pTr("Could not prepare this change. Your saved pickup has not changed."); return false }
+    }
+    @discardableResult func retrySave() async -> Bool {
+        guard !saving, let pending, let store else { return false }
+        saving = true; defer { saving = false }
+        do {
+            try await store.save(id: pending.value.id, title: "Pickup", payload: pending.payload, savedAt: pending.value.savedAt)
+            journeys.removeAll { $0.id == pending.value.id }; journeys.insert(pending.value, at: 0)
+            selectedID = pending.value.id; self.pending = nil; hasPendingSave = false; error = nil; return true
+        } catch { self.error = pTr("Not saved. Retry this change before continuing; your last saved pickup is intact."); return false }
+    }
+    func discardPending() { guard !saving else { return }; pending = nil; hasPendingSave = false; error = nil }
+    @discardableResult func change(_ edit: (inout PickupJourney) throws -> Void) async -> Bool {
+        guard var value = journey, !saving, pending == nil else { return false }
+        do { try edit(&value); return await save(value) }
+        catch { self.error = pTr("Check the amounts and units. Your saved pickup has not changed."); return false }
+    }
+    @discardableResult func setQuote(_ quote: CheckoutQuote, cap: CheckoutCap?) async -> Bool {
+        await change { value in
+            guard let basket = value.basket, basket.phase != .reportedPlaced else { throw PickupModelError.invalid }
+            _ = try CheckoutEngine.evaluate(quote, cap: cap)
+            value.quote = quote; value.context = quote.context; value.cap = cap; value.quotedRevisionID = basket.current.id
+        }
+    }
+    func deferralPreview(_ ids: Set<UUID>) throws -> (BasketProposal, CheckoutComparison) {
+        guard let value = journey, let basket = value.basket, let quote = value.quote,
+              value.quotedRevisionID == basket.current.id, ids.isSubset(of: value.flexible), !ids.isEmpty else { throw PickupModelError.invalid }
+        let proposal = BasketProposal(id: UUID(), baseRevisionID: basket.current.id, revisionID: UUID(), changes: ids.map { .remove($0) })
+        let changed = try repriced(quote, removing: ids)
+        return (proposal, try CheckoutEngine.compare(before: quote, after: changed, cap: value.cap))
+    }
+    private func repriced(_ quote: CheckoutQuote, removing ids: Set<UUID>) throws -> CheckoutQuote {
+        guard case let .components(lines, complete, fees, discounts, tax, deposits) = quote.pricing else { throw PickupModelError.invalid }
+        return CheckoutQuote(scope: quote.scope, context: quote.context, pricing: .components(lines: lines.filter { !ids.contains($0.id) }, lineSetComplete: complete, fees: fees, discounts: discounts, tax: tax, deposits: deposits))
+    }
+    @discardableResult func applyDeferral(_ proposal: BasketProposal) async -> Bool {
+        await change { value in
+            guard var basket = value.basket, let quote = value.quote else { throw PickupModelError.missing }
+            if value.proposals.contains(where: { $0.id == proposal.id }) { return }
+            let ids = Set(proposal.changes.compactMap { change -> UUID? in if case let .remove(id) = change { return id }; return nil })
+            guard ids.isSubset(of: value.flexible), !value.plannedNeeds.contains(where: { ids.contains($0.orderLineID) && $0.priority == .protected }) else { throw PickupModelError.invalid }
+            value.carriedMeals += value.plannedNeeds.filter { ids.contains($0.orderLineID) }
+            value.plannedNeeds.removeAll { ids.contains($0.orderLineID) }
+            let removed = basket.current.lines.filter { ids.contains($0.id) }
+            try basket.apply(proposal, at: clock()); value.basket = basket
+            value.quote = try repriced(quote, removing: ids); value.quotedRevisionID = basket.current.id
+            value.proposals.append(proposal)
+            value.deferred += removed.map { DeferredPickupNeed(id: UUID(), sourceShopID: value.id, line: $0) }
+        }
+    }
+    @discardableResult func undoDeferral(_ proposal: BasketProposal) async -> Bool {
+        await change { value in
+            guard var basket = value.basket else { throw PickupModelError.missing }
+            try basket.undo(operationID: UUID(), proposalID: proposal.id, expectedRevision: basket.current.id, revisionID: UUID(), at: clock())
+            value.basket = basket; value.quote = nil; value.quotedRevisionID = nil; value.undoneProposals.insert(proposal.id)
+            let restored = Set(basket.current.lines.map(\.id)); value.deferred.removeAll { restored.contains($0.line.id) }
+            value.plannedNeeds += value.carriedMeals.filter { restored.contains($0.orderLineID) }
+            value.carriedMeals.removeAll { restored.contains($0.orderLineID) }
+        }
+    }
+    @discardableResult func freeze() async -> Bool {
+        await change { value in
+            guard var basket = value.basket, let quote = value.quote, value.quotedRevisionID == basket.current.id else { throw PickupModelError.missing }
+            if basket.snapshots.contains(where: { $0.revision.id == basket.current.id }) { return }
+            let snapshot = try basket.freeze(snapshotID: UUID(), expectedRevision: basket.current.id, at: clock())
+            value.frozenQuotes[snapshot.id] = quote; value.basket = basket
+        }
+    }
+    @discardableResult func reopenDraft() async -> Bool {
+        await change { value in
+            guard var basket = value.basket, basket.phase != .reportedPlaced,
+                  !basket.current.lines.isEmpty else { throw PickupModelError.invalid }
+            let revision = BasketProposal(id: UUID(), baseRevisionID: basket.current.id, revisionID: UUID(), changes: basket.current.lines.map { .upsert($0) })
+            try basket.apply(revision, at: clock())
+            value.basket = basket; value.quote = nil; value.quotedRevisionID = nil
+        }
+    }
+    var frozenSnapshot: HandoffSnapshot? {
+        guard let basket = journey?.basket else { return nil }
+        return basket.snapshots.last { $0.revision.id == basket.current.id }
+    }
+    func frozenText() -> String? {
+        guard let snapshot = frozenSnapshot else { return nil }
+        return "\(pTr("Reviewed pickup")) · \(snapshot.createdAt.formatted())\n\(pTr("Revision")) \(snapshot.revision.number)\n" + snapshot.revision.lines.map { "\($0.name) — \(pQuantity($0.quantity))" }.joined(separator: "\n")
+    }
+    @discardableResult func recordHandoff(_ kind: HandoffActionKind, destination: String? = nil) async -> Bool {
+        guard let snapshot = frozenSnapshot else { return false }
+        return await change { value in
+            guard var basket = value.basket else { throw PickupModelError.missing }
+            try basket.recordHandoff(HandoffAction(id: UUID(), snapshotID: snapshot.id, kind: kind, occurredAt: clock(), destination: destination)); value.basket = basket
+        }
+    }
+    @discardableResult func reportPlaced() async -> Bool {
+        guard let snapshot = frozenSnapshot else { return false }
+        return await change { value in
+            guard var basket = value.basket, let context = value.context else { throw PickupModelError.missing }
+            if !basket.placements.isEmpty { return }
+            let placement = ReportedPlacement(id: UUID(), intentID: UUID(), snapshotID: snapshot.id, reportedAt: clock())
+            try basket.reportPlaced(placement); value.basket = basket
+            value.needs = value.plannedNeeds
+            value.pickup = try PickupLedger(orderID: placement.id, orderLines: snapshot.revision.lines.map { PickupOrderLine(id: $0.id, branchID: context.branchID, name: $0.name, ordered: $0.quantity) })
+        }
+    }
+    @discardableResult func receive(_ fragment: ReceiptFragment, usable: UsableObservation?) async -> Bool {
+        await change { value in
+            guard var pickup = value.pickup else { throw PickupModelError.missing }
+            try pickup.receive(fragment)
+            if let usable { try pickup.confirmUsable(usable) }
+            value.pickup = pickup
+        }
+    }
+    @discardableResult func confirmUsable(_ observation: UsableObservation) async -> Bool {
+        await change { value in
+            guard var pickup = value.pickup else { throw PickupModelError.missing }
+            try pickup.confirmUsable(observation); value.pickup = pickup
+        }
+    }
+    @discardableResult func addUrgent(_ need: UrgentMealNeed) async -> Bool {
+        if !ready { await load() }
+        guard ready, !saving, pending == nil else { return false }
+        var value = journey
+        if value?.basket != nil || value == nil { value = PickupJourney(id: UUID(), savedAt: clock()) }
+        guard var value else { return false }
+        if let existing = value.urgent.first(where: { $0.id == need.id }) {
+            guard existing == need else { error = pTr("This saved operation already has different content. Review it before trying again."); return false }
+            return true
+        } else {
+            value.urgent.append(need)
+            value.stockLots.append(ConfirmedStockLot(id: need.id, foodID: need.id, name: need.food, usable: need.available, confirmedAt: need.confirmedAt))
+            value.stockNeeds.append(StockNeed(id: need.id, foodID: need.id, name: need.meal, amount: need.required, priority: .required))
+        }
+        do { _ = try ConfirmedStockAllocator.allocate(lots: value.stockLots, needs: value.stockNeeds) }
+        catch { self.error = pTr("Check the confirmed food amounts and matching units."); return false }
+        return await save(value)
+    }
+    @discardableResult func settle(_ entry: SettlementEntry) async -> Bool {
+        await change { value in
+            guard value.pickup != nil else { throw PickupModelError.invalid }
+            try value.settlement.append(entry)
+        }
+    }
+    static func validate(_ value: PickupJourney) throws {
+        guard value.version == 1, value.revision >= 0, value.savedAt.timeIntervalSinceReferenceDate.isFinite,
+              value.basket != nil || !value.urgent.isEmpty,
+              value.basket == nil || value.basket?.id == value.id,
+              Set(value.urgent.map(\.id)).count == value.urgent.count,
+              Set(value.notes.map(\.id)).count == value.notes.count,
+              Set(value.repairs.map(\.id)).count == value.repairs.count,
+              Set(value.deferred.map(\.id)).count == value.deferred.count else { throw PickupModelError.invalid }
+        try value.ledgerBasis?.validate()
+        guard value.originShopID != value.id, Set(value.needDetails.map(\.id)).count == value.needDetails.count else { throw PickupModelError.invalid }
+        for detail in value.needDetails {
+            try detail.scheduledDay?.validate()
+            guard detail.leadTimeMinutes.map({ $0 >= 0 && $0 <= 525_600 }) ?? true else { throw PickupModelError.invalid }
+        }
+        let plannedLineIDs = Set(value.basket?.current.lines.map(\.id) ?? [])
+        guard Set(value.plannedNeeds.map(\.id)).count == value.plannedNeeds.count,
+              value.plannedNeeds.allSatisfy({ plannedLineIDs.contains($0.orderLineID) }) else { throw PickupModelError.invalid }
+        _ = try ConfirmedStockAllocator.allocate(lots: [], needs: value.plannedNeeds.map { StockNeed(id: $0.id, foodID: $0.orderLineID, name: $0.name, amount: $0.amount, priority: $0.priority) })
+        if let pickup = value.pickup {
+            guard let basket = value.basket, let placement = basket.placements.first,
+                  pickup.orderID == placement.id, let lines = basket.reportedOrderLines,
+                  Set(pickup.orderLines.map(\.id)) == Set(lines.map(\.id)),
+                  pickup.orderLines.allSatisfy({ $0.branchID == value.context?.branchID }) else { throw PickupModelError.invalid }
+            _ = try pickup.allocate(value.needs)
+        } else {
+            guard value.needs.isEmpty, value.settlement.entries.isEmpty, value.basket?.placements.isEmpty != false else { throw PickupModelError.invalid }
+        }
+        if let quote = value.quote {
+            guard let revisionID = value.quotedRevisionID,
+                  value.basket?.revisions.contains(where: { $0.id == revisionID }) == true else { throw PickupModelError.invalid }
+            _ = try CheckoutEngine.evaluate(quote, cap: value.cap)
+        } else if value.quotedRevisionID != nil { throw PickupModelError.invalid }
+        for need in value.urgent {
+            guard !need.food.isEmpty, !need.meal.isEmpty, need.confirmedAt.timeIntervalSinceReferenceDate.isFinite,
+                  need.due?.timeIntervalSinceReferenceDate.isFinite != false else { throw PickupModelError.invalid }
+            _ = try ConfirmedStockAllocator.allocate(lots: [ConfirmedStockLot(id: need.id, foodID: need.id, name: need.food, usable: need.available, confirmedAt: need.confirmedAt)], needs: [StockNeed(id: need.id, foodID: need.id, name: need.meal, amount: need.required, priority: .required)])
+        }
+        _ = try ConfirmedStockAllocator.allocate(lots: value.stockLots, needs: value.stockNeeds)
+        guard value.cookShareEvents.allSatisfy({ event in value.notes.contains { $0.id == event.noteID } }),
+              value.offerActions.allSatisfy({ event in value.offers.contains { $0.id == event.offerID } }) else { throw PickupModelError.invalid }
+        _ = try value.settlement.summary()
+    }
+    @discardableResult func startNextShop(accept ids: Set<UUID>) async -> Bool {
+        guard let previous = journey else { return false }
+        if let existing = journeys.first(where: { $0.originShopID == previous.id }) {
+            selectedID = existing.id
+            return true
+        }
+        let accepted = previous.deferred.filter { ids.contains($0.id) && $0.status == "review" }
+        do {
+            let newID = UUID()
+            let lines = accepted.map { BasketLine(id: UUID(), name: $0.line.name, quantity: $0.line.quantity, expectedCost: .unknown(reason: pTr("Recheck the price for this shop"))) }
+            var next = PickupJourney(id: newID, savedAt: clock())
+            next.originShopID = previous.id
+            next.basket = try BasketPlan(id: newID, revisionID: UUID(), lines: lines, createdAt: clock())
+            next.deferred = previous.deferred.filter { !ids.contains($0.id) && $0.status == "review" }
+            next.urgent = previous.urgent.filter { !$0.resolved }.compactMap { original in
+                var need = original
+                if let coverage = allocation?.demands.first(where: { $0.id == original.id }), let shortfall = coverage.shortfall {
+                    if shortfall == .zero { return nil }
+                    need.required = Quantity(amount: shortfall, unit: coverage.unit, originalLiteral: "\(shortfall.numerator)/\(shortfall.denominator)")
+                }
+                need.carriedFromID = previous.id
+                return need
+            }
+            // Carry unresolved demands for review; old stock remains dated evidence in the prior journey.
+            next.stockNeeds = next.urgent.map { need in
+                StockNeed(id: need.id, foodID: need.id, name: need.meal, amount: need.required, priority: .required)
+            }
+            next.carriedMeals = previous.carriedMeals
+            if let coverage = allocation {
+                for unmet in coverage.demands where unmet.shortfall != .zero {
+                    if let original = previous.needs.first(where: { $0.id == unmet.id }) {
+                        let remaining = unmet.shortfall.map { Quantity(amount: $0, unit: unmet.unit, originalLiteral: "\($0.numerator)/\($0.denominator)") } ?? original.amount
+                        next.carriedMeals.append(AllocationNeed(id: original.id, orderLineID: original.orderLineID, name: original.name, amount: remaining, priority: original.priority))
+                    }
+                }
+            }
+            return await save(next)
+        } catch { self.error = pTr("Could not prepare this change. Your saved pickup has not changed."); return false }
+    }
+}

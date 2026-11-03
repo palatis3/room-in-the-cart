@@ -1,0 +1,110 @@
+name: Build and test
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  typescript:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        package: [web, service]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: ${{ matrix.package }}/package-lock.json
+      - run: npm ci --ignore-scripts
+        working-directory: ${{ matrix.package }}
+      - run: npm test
+        working-directory: ${{ matrix.package }}
+  service-postgres:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:17.11
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: fixture-only
+          POSTGRES_DB: ritc_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d ritc_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      TEST_ADMIN_DATABASE_URL: postgresql://postgres:fixture-only@127.0.0.1:5432/ritc_test
+      MIGRATION_DATABASE_URL: postgresql://postgres:fixture-only@127.0.0.1:5432/ritc_test
+      TEST_DATABASE_URL: postgresql://ritc_runtime:fixture-only@127.0.0.1:5432/ritc_test
+      BILLING_TEST_ADMIN_DATABASE_URL: postgresql://postgres:fixture-only@127.0.0.1:5432/ritc_test
+      BILLING_TEST_DATABASE_URL: postgresql://ritc_runtime:fixture-only@127.0.0.1:5432/ritc_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: service/package-lock.json
+      - run: npm ci --ignore-scripts
+        working-directory: service
+      - run: npm run migrate
+        working-directory: service
+      - name: Create a separate non-owner runtime role
+        run: >-
+          psql "$TEST_ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 -c
+          "CREATE ROLE ritc_runtime LOGIN PASSWORD 'fixture-only' NOSUPERUSER NOBYPASSRLS; GRANT ritc_app TO ritc_runtime;"
+      - run: npm test && npm run test:integration
+        working-directory: service
+  ios:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Record toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+          python3 --version
+      - name: Check generated sources
+        run: |
+          python3 scripts/generate_theme.py --check
+          python3 scripts/check_localization.py
+          python3 scripts/test_check_localization.py
+          python3 scripts/generate_xcode_project.py --check
+      - name: Swift package tests
+        run: |
+          for manifest in ios/Packages/*/Package.swift; do
+            swift test --package-path "$(dirname "$manifest")"
+          done
+      - name: Select available iPhone simulator
+        run: |
+          xcrun simctl list devices available -j > /tmp/simulators.json
+          python3 - <<'PY'
+          import json, os
+          data = json.load(open('/tmp/simulators.json'))
+          devices = [d for runtime, items in data['devices'].items() if 'iOS' in runtime for d in items if d['name'].startswith('iPhone') and d.get('isAvailable')]
+          if not devices:
+              raise SystemExit('No available iPhone simulator')
+          with open(os.environ['GITHUB_ENV'], 'a') as output:
+              output.write('SIMULATOR_ID=' + devices[0]['udid'] + '\n')
+          PY
+      - name: Build and test iPhone app
+        run: >-
+          xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart
+          -configuration Debug -destination "platform=iOS Simulator,id=$SIMULATOR_ID"
+          -derivedDataPath .build/DerivedData -resultBundlePath .build/UITests.xcresult
+          CODE_SIGNING_ALLOWED=NO test
+      - name: Compile unsigned Release for iPhone
+        run: >-
+          xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart-Release
+          -configuration Release -sdk iphoneos -destination 'generic/platform=iOS'
+          -derivedDataPath .build/ReleaseDerivedData CODE_SIGNING_ALLOWED=NO build
+      - name: Upload test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: iphone-test-results
+          path: .build/UITests.xcresult
+          if-no-files-found: ignore

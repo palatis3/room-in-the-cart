@@ -1,0 +1,53 @@
+{
+  "locale": "en-US",
+  "storefront": "US",
+  "platform": "iPhone",
+  "evidence_date": "2026-11-02",
+  "status": "Draft A; verify against shipping screens, name rights and submission fields.",
+  "name": "Room in the Cart: Grocery List",
+  "subtitle": "Family Meal Planner & Budget",
+  "keywords": "shared,shopping,dinner,weekly,pantry,pickup,menu,voice,household,cost,freezer,organizer,portion",
+  "priority": [
+    {
+      "phrase": "meal planner grocery list",
+      "volume_score": 48,
+      "difficulty_score": 4,
+      "proof": "D04/P01 · S04/S14"
+    },
+    {
+      "phrase": "shared grocery list",
+      "volume_score": 31,
+      "difficulty_score": 0,
+      "proof": "N01 · S22–S24"
+    },
+    {
+      "phrase": "grocery budget",
+      "volume_score": 41,
+      "difficulty_score": 0,
+      "proof": "D03/D06 · S03/S05"
+    },
+    {
+      "phrase": "budget meals",
+      "volume_score": 38,
+      "difficulty_score": 13,
+      "proof": "D05/P02 · S04/S15"
+    },
+    {
+      "phrase": "grocery list organizer",
+      "volume_score": 27,
+      "difficulty_score": 0,
+      "proof": "D02/E07 · S02"
+    },
+    {
+      "phrase": "dinner planner",
+      "volume_score": 36,
+      "difficulty_score": 2,
+      "proof": "A01 · S25"
+    }
+  ],
+  "spanish_candidates": [
+    "lista de compras",
+    "menú semanal",
+    "planificador de comidas"
+  ]
+}

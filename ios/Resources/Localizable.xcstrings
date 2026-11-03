@@ -1,0 +1,2216 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "$6.00 USD": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "$6.00 USD"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "$6.00 USD"
+          }
+        }
+      }
+    },
+    "A membership belongs to an authenticated household. Your Free records and manual tools remain available.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A membership belongs to an authenticated household. Your Free records and manual tools remain available."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La membresía pertenece a un hogar autenticado. Tus registros y herramientas manuales del plan Gratis siguen disponibles."
+          }
+        }
+      }
+    },
+    "A place for your familiar dinners": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A place for your familiar dinners"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un lugar para tus cenas habituales"
+          }
+        }
+      }
+    },
+    "Add or update: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add or update: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agregar o actualizar: %@"
+          }
+        }
+      }
+    },
+    "Already accounted for": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already accounted for"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidades ya consideradas"
+          }
+        }
+      }
+    },
+    "An earlier checkout copy exists. Review list changes before updating it. Placed orders keep their original lines.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An earlier checkout copy exists. Review list changes before updating it. Placed orders keep their original lines."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya existe una copia anterior para revisar la compra. Revisa los cambios en la lista antes de actualizarla. Los pedidos realizados conservan sus artículos originales."
+          }
+        }
+      }
+    },
+    "Appearance": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appearance"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apariencia"
+          }
+        }
+      }
+    },
+    "Apply reviewed list changes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apply reviewed list changes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aplicar los cambios revisados de la lista"
+          }
+        }
+      }
+    },
+    "Both options cost the same for this need.": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Both options cost the same for this need."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ambas opciones cuestan lo mismo para cubrir esta necesidad."
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar"
+          }
+        }
+      }
+    },
+    "Check your amounts. Use nonnegative numbers, up to six decimal places for quantities and two for prices. Protected portions cannot exceed the total need.": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check your amounts. Use nonnegative numbers, up to six decimal places for quantities and two for prices. Protected portions cannot exceed the total need."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa las cantidades. Usa números no negativos, con un máximo de seis decimales para las cantidades y dos para los precios. Las porciones reservadas no pueden superar la cantidad total necesaria."
+          }
+        }
+      }
+    },
+    "Choose your household first": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose your household first"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige primero tu hogar"
+          }
+        }
+      }
+    },
+    "Compare enough food": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare enough food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparar la cantidad necesaria"
+          }
+        }
+      }
+    },
+    "Compare packs": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare packs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparar paquetes"
+          }
+        }
+      }
+    },
+    "Compare the cost of enough usable food for one item. No account or connection needed.": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare the cost of enough usable food for one item. No account or connection needed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compara cuánto cuesta comprar la cantidad aprovechable que necesitas de un artículo. No necesitas una cuenta ni conexión."
+          }
+        }
+      }
+    },
+    "Comparisons are saved only on this iPhone. This build has no account, household sync or analytics.": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparisons are saved only on this iPhone. This build has no account, household sync or analytics."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las comparaciones se guardan solo en este iPhone. Esta versión no incluye cuentas, sincronización familiar ni análisis de uso."
+          }
+        }
+      }
+    },
+    "Component gallery": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Component gallery"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Galería de componentes"
+          }
+        }
+      }
+    },
+    "Confirm how the available stock converts to the needed unit.": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm how the available stock converts to the needed unit."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirma cómo convertir las existencias disponibles a la unidad de la cantidad necesaria."
+          }
+        }
+      }
+    },
+    "Confirm the unit for protected portions.": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm the unit for protected portions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirma la unidad de las porciones reservadas."
+          }
+        }
+      }
+    },
+    "Confirmed usable amount at home": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed usable amount at home"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad aprovechable confirmada en casa"
+          }
+        }
+      }
+    },
+    "Continue to checkout review": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue to checkout review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuar a la revisión de la compra"
+          }
+        }
+      }
+    },
+    "Cost unresolved": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cost unresolved"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Costo por determinar"
+          }
+        }
+      }
+    },
+    "Could not open saved comparisons. Your records have not been removed. Try again.": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not open saved comparisons. Your records have not been removed. Try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron abrir las comparaciones guardadas. Tus registros no se han eliminado. Inténtalo de nuevo."
+          }
+        }
+      }
+    },
+    "Could not save on this iPhone. Your entries are still here. Try again.": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not save on this iPhone. Your entries are still here. Try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo guardar en este iPhone. Los datos que ingresaste siguen aquí. Inténtalo de nuevo."
+          }
+        }
+      }
+    },
+    "Dark": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dark"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oscuro"
+          }
+        }
+      }
+    },
+    "Decision": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Decision"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Decisión"
+          }
+        }
+      }
+    },
+    "Development": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Development"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desarrollo"
+          }
+        }
+      }
+    },
+    "Dinner planning is not available in this build. You can compare packs from Shop.": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dinner planning is not available in this build. You can compare packs from Shop."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La planificación de cenas no está disponible en esta versión. Puedes comparar paquetes desde Compras."
+          }
+        }
+      }
+    },
+    "Dinners": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dinners"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cenas"
+          }
+        }
+      }
+    },
+    "Done": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listo"
+          }
+        }
+      }
+    },
+    "Edit": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar"
+          }
+        }
+      }
+    },
+    "English and Spanish follow your iPhone’s app language setting. Food names and USD stay as entered.": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "English and Spanish follow your iPhone’s app language setting. Food names and USD stay as entered."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El inglés y el español siguen la configuración de idioma de la app en tu iPhone. Los nombres de los alimentos y la moneda USD se mantienen como los ingresaste."
+          }
+        }
+      }
+    },
+    "Enough food. The right pack.": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enough food. The right pack."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cantidad que necesitas. El paquete adecuado."
+          }
+        }
+      }
+    },
+    "Enter the amount and unit before freezing this item.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the amount and unit before freezing this item."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresa la cantidad y la unidad antes de fijar este artículo."
+          }
+        }
+      }
+    },
+    "Enter the usable amount, not just the printed pack size. Leave an unknown weight, yield or price blank.": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the usable amount, not just the printed pack size. Leave an unknown weight, yield or price blank."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresa la cantidad aprovechable, no solo el tamaño impreso en el paquete. Deja en blanco cualquier peso, rendimiento o precio que no conozcas."
+          }
+        }
+      }
+    },
+    "Household": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hogar"
+          }
+        }
+      }
+    },
+    "Household membership": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household membership"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Membresía del hogar"
+          }
+        }
+      }
+    },
+    "Household requests": {
+      "comment": "Spanish translation requires human review before release.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household requests"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicitudes del hogar"
+          }
+        }
+      }
+    },
+    "How much do you need? Enter the total amount to compare enough food.": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How much do you need? Enter the total amount to compare enough food."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Qué cantidad necesitas? Ingresa la cantidad total para comparar opciones que alcancen."
+          }
+        }
+      }
+    },
+    "How much usable food is in one pack? Leave this unresolved until you know.": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How much usable food is in one pack? Leave this unresolved until you know."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Qué cantidad aprovechable de alimento contiene un paquete? Deja este dato sin confirmar hasta saberlo."
+          }
+        }
+      }
+    },
+    "Item cost to buy enough: %@": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item cost to buy enough: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Costo de comprar la cantidad necesaria de este artículo: %@"
+          }
+        }
+      }
+    },
+    "Item name": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item name"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre del artículo"
+          }
+        }
+      }
+    },
+    "Item spending limit (USD, optional)": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item spending limit (USD, optional)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Límite de gasto para este artículo (USD, opcional)"
+          }
+        }
+      }
+    },
+    "Item-only comparison": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item-only comparison"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparación de un solo artículo"
+          }
+        }
+      }
+    },
+    "Language": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Language"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idioma"
+          }
+        }
+      }
+    },
+    "Largest Dynamic Type": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Largest Dynamic Type"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tamaño máximo de texto dinámico"
+          }
+        }
+      }
+    },
+    "Left after the total need: %@ %@": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Left after the total need: %@ %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad restante tras cubrir la necesidad total: %@ %@"
+          }
+        }
+      }
+    },
+    "Light": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Light"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claro"
+          }
+        }
+      }
+    },
+    "Lower cost to buy enough for this item": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lower cost to buy enough for this item"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menor costo para comprar la cantidad necesaria de este artículo"
+          }
+        }
+      }
+    },
+    "Make room for what matters.": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make room for what matters."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haz espacio para lo que importa."
+          }
+        }
+      }
+    },
+    "Maximum per pack for this item limit: %@": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maximum per pack for this item limit: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio máximo por paquete según el límite de este artículo: %@"
+          }
+        }
+      }
+    },
+    "Membership could not be verified. Your Free work is still available.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Membership could not be verified. Your Free work is still available."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo verificar la membresía. Tu trabajo del plan Gratis sigue disponible."
+          }
+        }
+      }
+    },
+    "Needed unit": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needed unit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unidad de la cantidad necesaria"
+          }
+        }
+      }
+    },
+    "On this iPhone": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On this iPhone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En este iPhone"
+          }
+        }
+      }
+    },
+    "One item": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One item"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un artículo"
+          }
+        }
+      }
+    },
+    "Open iPhone settings": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open iPhone settings"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir la configuración del iPhone"
+          }
+        }
+      }
+    },
+    "Open saved checkout": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open saved checkout"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir la revisión guardada de la compra"
+          }
+        }
+      }
+    },
+    "Open your private shopping workspace": {
+      "comment": "Spanish translation requires human review before release.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open your private shopping workspace"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir tu espacio privado de compras"
+          }
+        }
+      }
+    },
+    "Other groceries, fees and taxes are not included. This does not establish whether the whole pickup fits your budget.": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other groceries, fees and taxes are not included. This does not establish whether the whole pickup fits your budget."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se incluyen otros artículos de la compra, cargos ni impuestos. Esto no determina si el pedido completo para recoger se ajusta a tu presupuesto."
+          }
+        }
+      }
+    },
+    "Over the item limit: %@": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Over the item limit: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exceso sobre el límite de este artículo: %@"
+          }
+        }
+      }
+    },
+    "Pack A": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pack A"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquete A"
+          }
+        }
+      }
+    },
+    "Pack B": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pack B"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquete B"
+          }
+        }
+      }
+    },
+    "Pack name (optional)": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pack name (optional)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre del paquete (opcional)"
+          }
+        }
+      }
+    },
+    "Pack unit": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pack unit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unidad del paquete"
+          }
+        }
+      }
+    },
+    "Pick up where you left off": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick up where you left off"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continúa donde lo dejaste"
+          }
+        }
+      }
+    },
+    "Pickup, repairs and handoffs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pickup, repairs and handoffs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recogida, ajustes y entregas"
+          }
+        }
+      }
+    },
+    "Price for one pack (USD)": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price for one pack (USD)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio de un paquete (USD)"
+          }
+        }
+      }
+    },
+    "Private comparisons and planning stay on this iPhone. Joining a household does not upload existing work.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private comparisons and planning stay on this iPhone. Joining a household does not upload existing work."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las comparaciones y los planes privados se quedan en este iPhone. Unirte a un hogar no sube tu trabajo existente."
+          }
+        }
+      }
+    },
+    "Private workspace": {
+      "comment": "Spanish translation requires human review before release.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private workspace"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Espacio privado"
+          }
+        }
+      }
+    },
+    "Proposed list changes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proposed list changes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambios propuestos en la lista"
+          }
+        }
+      }
+    },
+    "Protected portions within the total": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protected portions within the total"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porciones reservadas dentro del total"
+          }
+        }
+      }
+    },
+    "Protected within that total: %@ %@": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protected within that total: %@ %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad reservada dentro de ese total: %@ %@"
+          }
+        }
+      }
+    },
+    "RTL layout stress": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RTL layout stress"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prueba de diseño de derecha a izquierda"
+          }
+        }
+      }
+    },
+    "Records": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Records"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Historial"
+          }
+        }
+      }
+    },
+    "Recovery, exports and saved records": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recovery, exports and saved records"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recuperación, exportaciones y registros guardados"
+          }
+        }
+      }
+    },
+    "Remove: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar: %@"
+          }
+        }
+      }
+    },
+    "Review checkout": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review checkout"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la compra"
+          }
+        }
+      }
+    },
+    "Review each item's amount and unit. Unknown quantities have not been replaced with zero.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review each item's amount and unit. Unknown quantities have not been replaced with zero."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa la cantidad y la unidad de cada artículo. Las cantidades desconocidas no se han reemplazado por cero."
+          }
+        }
+      }
+    },
+    "Review the list for checkout": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the list for checkout"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa la lista antes de comprar"
+          }
+        }
+      }
+    },
+    "Room within the item limit: %@": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Room within the item limit: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Margen disponible dentro del límite de este artículo: %@"
+          }
+        }
+      }
+    },
+    "Save a pack comparison to return to the same amounts and prices, even offline.": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save a pack comparison to return to the same amounts and prices, even offline."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guarda una comparación de paquetes para volver a consultar las mismas cantidades y precios, incluso sin conexión."
+          }
+        }
+      }
+    },
+    "Save comparison": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save comparison"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar comparación"
+          }
+        }
+      }
+    },
+    "Saved on this iPhone": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved on this iPhone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardado en este iPhone"
+          }
+        }
+      }
+    },
+    "Saving…": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardando…"
+          }
+        }
+      }
+    },
+    "Set an iPhone passcode to protect and reopen your private workspace.": {
+      "comment": "Spanish translation requires human review before release.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set an iPhone passcode to protect and reopen your private workspace."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configura un código en tu iPhone para proteger y volver a abrir tu espacio privado."
+          }
+        }
+      }
+    },
+    "Settings": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configuración"
+          }
+        }
+      }
+    },
+    "Shop": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compras"
+          }
+        }
+      }
+    },
+    "Shopper-entered list": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shopper-entered list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lista ingresada por quien compra"
+          }
+        }
+      }
+    },
+    "Something is missing": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Something is missing"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falta algo"
+          }
+        }
+      }
+    },
+    "Source: prices and usable amounts you entered. Estimates for this item only.": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source: prices and usable amounts you entered. Estimates for this item only."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuente: los precios y las cantidades aprovechables que ingresaste. Estimaciones solo para este artículo."
+          }
+        }
+      }
+    },
+    "Start with one item. Compare two packs and see what it costs to bring home enough.": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start with one item. Compare two packs and see what it costs to bring home enough."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empieza con un artículo. Compara dos paquetes y averigua cuánto cuesta llevar a casa la cantidad que necesitas."
+          }
+        }
+      }
+    },
+    "Still needed: %@ %@": {
+      "comment": "Spanish translation requires human review before release.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Still needed: %@ %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todavía se necesita: %@ %@"
+          }
+        }
+      }
+    },
+    "System": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sistema"
+          }
+        }
+      }
+    },
+    "The previous price preview will be cleared. Review the checkout again after applying.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The previous price preview will be cleared. Review the checkout again after applying."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se borrará la vista previa de precios anterior. Vuelve a revisar la compra después de aplicar los cambios."
+          }
+        }
+      }
+    },
+    "The saved record is still on this iPhone. A newer app version may be needed.": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The saved record is still on this iPhone. A newer app version may be needed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El registro guardado sigue en este iPhone. Es posible que necesites una versión más reciente de la app."
+          }
+        }
+      }
+    },
+    "These units need a confirmed conversion for this food. Enter a known usable amount in the needed unit, or leave unresolved.": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These units need a confirmed conversion for this food. Enter a known usable amount in the needed unit, or leave unresolved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estas unidades requieren una conversión confirmada para este alimento. Ingresa una cantidad aprovechable conocida en la unidad necesaria o deja el dato sin confirmar."
+          }
+        }
+      }
+    },
+    "This comparison could not be opened": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This comparison could not be opened"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo abrir esta comparación"
+          }
+        }
+      }
+    },
+    "This limit covers this item only. Other groceries, fees and taxes are not included.": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This limit covers this item only. Other groceries, fees and taxes are not included."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este límite cubre solo este artículo. No incluye otros artículos de la compra, cargos ni impuestos."
+          }
+        }
+      }
+    },
+    "This order was reported placed. Open its saved checkout to review an amendment; the original order stays unchanged.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This order was reported placed. Open its saved checkout to review an amendment; the original order stays unchanged."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este pedido se marcó como realizado. Abre su revisión guardada para revisar una modificación; el pedido original se conserva sin cambios."
+          }
+        }
+      }
+    },
+    "This pack has no usable food for the need. Choose another pack or correct its usable amount.": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This pack has no usable food for the need. Choose another pack or correct its usable amount."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este paquete no contiene alimento aprovechable para esta necesidad. Elige otro paquete o corrige su cantidad aprovechable."
+          }
+        }
+      }
+    },
+    "This takes a dated copy of the current list. Prices and fees will be reviewed next.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This takes a dated copy of the current list. Prices and fees will be reviewed next."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esto crea una copia con fecha de la lista actual. A continuación revisarás los precios y cargos."
+          }
+        }
+      }
+    },
+    "Total amount needed": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total amount needed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad total necesaria"
+          }
+        }
+      }
+    },
+    "Total need: %@ %@": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total need: %@ %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad total necesaria: %@ %@"
+          }
+        }
+      }
+    },
+    "Try again": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try again"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Intentar de nuevo"
+          }
+        }
+      }
+    },
+    "US cups": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "US cups"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tazas estadounidenses"
+          }
+        }
+      }
+    },
+    "US fluid ounces": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "US fluid ounces"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "onzas líquidas estadounidenses"
+          }
+        }
+      }
+    },
+    "Unknown if blank": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown if blank"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin confirmar si se deja en blanco"
+          }
+        }
+      }
+    },
+    "Unlock private workspace": {
+      "comment": "Spanish translation requires human review before release.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock private workspace"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desbloquear espacio privado"
+          }
+        }
+      }
+    },
+    "Unlock to return to your saved groceries, meals and costs.": {
+      "comment": "Spanish translation requires human review before release.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock to return to your saved groceries, meals and costs."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desbloquea para volver a tus compras, comidas y costos guardados."
+          }
+        }
+      }
+    },
+    "Usable amount in one pack": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usable amount in one pack"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad aprovechable en un paquete"
+          }
+        }
+      }
+    },
+    "Usable amount to buy: %@ %@": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usable amount to buy: %@ %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad aprovechable que comprar: %@ %@"
+          }
+        }
+      }
+    },
+    "Use the needed unit. Count only stock matched to this item and available for this need. Protected lunch portions are already inside the total, not extra. Leave unconfirmed stock blank.": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use the needed unit. Count only stock matched to this item and available for this need. Protected lunch portions are already inside the total, not extra. Leave unconfirmed stock blank."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usa la unidad de la cantidad necesaria. Cuenta solo las existencias que correspondan a este artículo y estén disponibles para esta necesidad. Las porciones reservadas para el almuerzo ya están incluidas en el total; no son adicionales. Deja en blanco las existencias sin confirmar."
+          }
+        }
+      }
+    },
+    "What is the price for one pack? The cost stays unknown until you enter it.": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What is the price for one pack? The cost stays unknown until you enter it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Cuál es el precio de un paquete? El costo seguirá sin determinarse hasta que lo ingreses."
+          }
+        }
+      }
+    },
+    "What you need": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What you need"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lo que necesitas"
+          }
+        }
+      }
+    },
+    "Whole packs to buy: %@": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whole packs to buy: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquetes enteros que comprar: %@"
+          }
+        }
+      }
+    },
+    "Works offline. No account needed.": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Works offline. No account needed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Funciona sin conexión. No necesitas una cuenta."
+          }
+        }
+      }
+    },
+    "Your comparisons live here": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your comparisons live here"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aquí encontrarás tus comparaciones"
+          }
+        }
+      }
+    },
+    "Your data": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your data"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus datos"
+          }
+        }
+      }
+    },
+    "Your private workspace is still locked. You can try again.": {
+      "comment": "Spanish translation requires human review before release.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your private workspace is still locked. You can try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu espacio privado sigue bloqueado. Puedes volver a intentarlo."
+          }
+        }
+      }
+    },
+    "grams": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "grams"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "gramos"
+          }
+        }
+      }
+    },
+    "items": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "items"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "unidades"
+          }
+        }
+      }
+    },
+    "kilograms": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kilograms"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kilogramos"
+          }
+        }
+      }
+    },
+    "liters": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "liters"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "litros"
+          }
+        }
+      }
+    },
+    "milliliters": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "milliliters"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mililitros"
+          }
+        }
+      }
+    },
+    "ounces (weight)": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ounces (weight)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "onzas (peso)"
+          }
+        }
+      }
+    },
+    "pounds": {
+      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pounds"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "libras"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

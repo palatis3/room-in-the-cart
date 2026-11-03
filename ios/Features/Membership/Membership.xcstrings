@@ -1,0 +1,906 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "%@ every %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ every %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ cada %@"
+          }
+        }
+      }
+    },
+    "A seat does not give access to a shop, its budget or the shopper’s approval role.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A seat does not give access to a shop, its budget or the shopper’s approval role."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una plaza no da acceso a una compra, su presupuesto ni la función de aprobación de quien compra."
+          }
+        }
+      }
+    },
+    "Access through": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Access through"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acceso hasta"
+          }
+        }
+      }
+    },
+    "Account": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuenta"
+          }
+        }
+      }
+    },
+    "An adult account and a selected household are needed before subscribing. You can continue using Free.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An adult account and a selected household are needed before subscribing. You can continue using Free."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para suscribirte necesitas una cuenta de adulto y un hogar seleccionado. Puedes seguir usando el plan gratuito."
+          }
+        }
+      }
+    },
+    "Apple has allowed a billing grace period. Check your payment method in Manage Subscription.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple has allowed a billing grace period. Check your payment method in Manage Subscription."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple ha concedido un período de gracia de facturación. Revisa tu método de pago en Administrar suscripción."
+          }
+        }
+      }
+    },
+    "Apple is retrying payment. Free access remains available.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple is retrying payment. Free access remains available."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple está reintentando el pago. El acceso gratuito sigue disponible."
+          }
+        }
+      }
+    },
+    "Apple’s transaction was saved by your household service. Your membership status is shown above.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple’s transaction was saved by your household service. Your membership status is shown above."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servicio de tu hogar guardó la transacción de Apple. El estado de tu membresía aparece arriba."
+          }
+        }
+      }
+    },
+    "Checking with Apple and your household…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking with Apple and your household…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consultando con Apple y tu hogar…"
+          }
+        }
+      }
+    },
+    "Continue with Free": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue with Free"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuar gratis"
+          }
+        }
+      }
+    },
+    "Free access": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free access"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acceso gratuito"
+          }
+        }
+      }
+    },
+    "Groceries are purchased from your retailer. Household pays for planning tools.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Groceries are purchased from your retailer. Household pays for planning tools."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los alimentos se compran en tu tienda. Household paga las herramientas de planificación."
+          }
+        }
+      }
+    },
+    "Household": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hogar"
+          }
+        }
+      }
+    },
+    "Household access is active": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household access is active"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El acceso a Household está activo"
+          }
+        }
+      }
+    },
+    "Household subscription": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household subscription"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suscripción Household"
+          }
+        }
+      }
+    },
+    "Manage Subscription": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage Subscription"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Administrar suscripción"
+          }
+        }
+      }
+    },
+    "Membership": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Membership"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Membresía"
+          }
+        }
+      }
+    },
+    "Named adult seats": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Named adult seats"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plazas de adultos identificados"
+          }
+        }
+      }
+    },
+    "No active membership was found, or Apple’s offer is unavailable. Try again. Free access remains available.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No active membership was found, or Apple’s offer is unavailable. Try again. Free access remains available."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se encontró una membresía activa o la oferta de Apple no está disponible. Inténtalo de nuevo. El acceso gratuito sigue disponible."
+          }
+        }
+      }
+    },
+    "No verified Household subscription": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No verified Household subscription"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay una suscripción Household verificada"
+          }
+        }
+      }
+    },
+    "Paid access ended after a refund or revocation. Your Free work is preserved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paid access ended after a refund or revocation. Your Free work is preserved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El acceso de pago terminó tras un reembolso o una revocación. Se conserva tu trabajo gratuito."
+          }
+        }
+      }
+    },
+    "Payment is charged to your Apple Account. The subscription renews automatically unless canceled at least 24 hours before the current period ends. Manage or cancel in your Apple subscriptions.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Payment is charged to your Apple Account. The subscription renews automatically unless canceled at least 24 hours before the current period ends. Manage or cancel in your Apple subscriptions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El pago se carga a tu cuenta de Apple. La suscripción se renueva automáticamente a menos que se cancele al menos 24 horas antes del fin del período actual. Adminístrala o cancélala en tus suscripciones de Apple."
+          }
+        }
+      }
+    },
+    "Planning for your household": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planning for your household"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planificación para tu hogar"
+          }
+        }
+      }
+    },
+    "Privacy Policy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacy Policy"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Política de privacidad"
+          }
+        }
+      }
+    },
+    "Purchase canceled. No paid access was added.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purchase canceled. No paid access was added."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compra cancelada. No se añadió acceso de pago."
+          }
+        }
+      }
+    },
+    "Purchase for": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purchase for"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compra para"
+          }
+        }
+      }
+    },
+    "Purchase pending Apple approval. Paid access has not been added.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purchase pending Apple approval. Paid access has not been added."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compra pendiente de aprobación de Apple. No se ha añadido acceso de pago."
+          }
+        }
+      }
+    },
+    "Purchases are not available in this build.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purchases are not available in this build."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las compras no están disponibles en esta versión."
+          }
+        }
+      }
+    },
+    "Restore Purchases": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore Purchases"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restaurar compras"
+          }
+        }
+      }
+    },
+    "Retry offer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry offer"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar oferta"
+          }
+        }
+      }
+    },
+    "Rotations, pack pairings, guest scenarios and planning history for up to two named adults.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rotations, pack pairings, guest scenarios and planning history for up to two named adults."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rotaciones, combinaciones de paquetes, escenarios con invitados e historial de planificación para hasta dos adultos identificados."
+          }
+        }
+      }
+    },
+    "Seat changes require an authorized household account. Subscription restoration never adds an extra seat.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seat changes require an authorized household account. Subscription restoration never adds an extra seat."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los cambios de plazas requieren una cuenta autorizada del hogar. Restaurar la suscripción nunca añade una plaza adicional."
+          }
+        }
+      }
+    },
+    "Sign in to an adult account and select its household to restore or subscribe.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in to an adult account and select its household to restore or subscribe."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicia sesión en una cuenta de adulto y selecciona su hogar para restaurar o suscribirte."
+          }
+        }
+      }
+    },
+    "Subscribe to Household": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subscribe to Household"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suscribirse a Household"
+          }
+        }
+      }
+    },
+    "Subscription expired. Your Free work is preserved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subscription expired. Your Free work is preserved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La suscripción venció. Se conserva tu trabajo gratuito."
+          }
+        }
+      }
+    },
+    "Subscription verified": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subscription verified"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suscripción verificada"
+          }
+        }
+      }
+    },
+    "Terms of Use": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terms of Use"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Términos de uso"
+          }
+        }
+      }
+    },
+    "The purchase could not be verified. Paid access has not been added. Try Restore Purchases or contact support.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The purchase could not be verified. Paid access has not been added. Try Restore Purchases or contact support."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo verificar la compra. No se añadió acceso de pago. Intenta Restaurar compras o contacta con soporte."
+          }
+        }
+      }
+    },
+    "The subscription offer is unavailable. Your Free access is ready to use.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The subscription offer is unavailable. Your Free access is ready to use."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La oferta de suscripción no está disponible. Puedes usar el acceso gratuito."
+          }
+        }
+      }
+    },
+    "This purchase belongs to another account or household. Use the original purchasing account to restore it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This purchase belongs to another account or household. Use the original purchasing account to restore it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta compra pertenece a otra cuenta u hogar. Usa la cuenta que hizo la compra para restaurarla."
+          }
+        }
+      }
+    },
+    "This purchase is linked to this account and household. Restoring does not transfer it to another household.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This purchase is linked to this account and household. Restoring does not transfer it to another household."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta compra está vinculada a esta cuenta y hogar. Restaurarla no la transfiere a otro hogar."
+          }
+        }
+      }
+    },
+    "We could not confirm delivery to your household. Try again when connected; do not purchase again. Your Free work is preserved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We could not confirm delivery to your household. Try again when connected; do not purchase again. Your Free work is preserved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No pudimos confirmar la entrega a tu hogar. Inténtalo al conectarte; no vuelvas a comprar. Se conserva tu trabajo gratuito."
+          }
+        }
+      }
+    },
+    "Your membership": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your membership"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu membresía"
+          }
+        }
+      }
+    },
+    "Your saved records, exports, manual planning and one reusable dinner remain available on Free.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your saved records, exports, manual planning and one reusable dinner remain available on Free."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus registros guardados, exportaciones, planificación manual y una cena reutilizable siguen disponibles en el plan gratuito."
+          }
+        }
+      }
+    },
+    "Your verified Household membership was restored.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your verified Household membership was restored."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se restauró tu membresía Household verificada."
+          }
+        }
+      }
+    },
+    "Manage seat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage seat"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Administrar plaza"
+          }
+        }
+      }
+    },
+    "Revoke seat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revoke seat"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revocar plaza"
+          }
+        }
+      }
+    },
+    "Transfer to %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer to %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transferir a %@"
+          }
+        }
+      }
+    },
+    "Assign seat to %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assign seat to %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asignar plaza a %@"
+          }
+        }
+      }
+    },
+    "Membership changed. Refresh its status and review the seat change again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Membership changed. Refresh its status and review the seat change again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La membresía cambió. Actualiza su estado y vuelve a revisar el cambio de plaza."
+          }
+        }
+      }
+    },
+    "Household account": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household account"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuenta del hogar"
+          }
+        }
+      }
+    },
+    "Your named seat uses this household’s membership. Only its purchaser can subscribe or change seats.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your named seat uses this household’s membership. Only its purchaser can subscribe or change seats."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu plaza usa la membresía de este hogar. Solo quien la compró puede suscribirse o cambiar las plazas."
+          }
+        }
+      }
+    },
+    "Household access is inactive. Your Free work remains available.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household access is inactive. Your Free work remains available."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El acceso Household está inactivo. Tu trabajo gratuito sigue disponible."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

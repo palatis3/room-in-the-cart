@@ -1,0 +1,6 @@
+{
+  "name": "room-in-the-cart",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22.14.0 <23" }
+}

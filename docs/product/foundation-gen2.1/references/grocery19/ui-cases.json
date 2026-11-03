@@ -1,0 +1,94 @@
+[
+  {
+    "label": "30 dollar basket",
+    "matched": "Up to $1.01"
+  },
+  {
+    "label": "reported checkout revisited",
+    "matched": "$0.26 over budget"
+  },
+  {
+    "label": "Hannaford before invoice",
+    "matched": "Ask for the total pack weight"
+  },
+  {
+    "label": "Unobserved preference clearly labeled",
+    "matched": "Illustrative preference only"
+  },
+  {
+    "label": "Hannaford after invoice",
+    "matched": "$12.15 above the line limit"
+  },
+  {
+    "label": "Whole pack threshold",
+    "matched": "Maximum at this unit price: 1.30 lb"
+  },
+  {
+    "label": "stew estimated shortfall",
+    "matched": "Short by 0.84 lb"
+  },
+  {
+    "label": "no invented cash budget",
+    "matched": "No household spending ceiling was supplied"
+  },
+  {
+    "label": "Final original ceiling",
+    "matched": "Up to $1.01"
+  },
+  {
+    "label": "Partial fill reduces available cash",
+    "matched": "Up to $0.61"
+  },
+  {
+    "label": "Public apple line with illustrative ceiling",
+    "matched": "Up to $16.49"
+  },
+  {
+    "label": "Shared cap after apple is accepted",
+    "matched": "Up to $19.99"
+  },
+  {
+    "label": "Invoice-derived shared weight cap",
+    "matched": "3.08 lb"
+  },
+  {
+    "label": "Both swaps under one shared allowance",
+    "matched": "$0.65 over budget"
+  },
+  {
+    "label": "Undo restores pooled headroom",
+    "matched": "Up to $20.99"
+  },
+  {
+    "label": "Cents rounding edge $8.5125",
+    "matched": "Fits the entered limits"
+  },
+  {
+    "label": "Final before invoice",
+    "matched": "Ask for the total pack weight"
+  },
+  {
+    "label": "Final after invoice",
+    "matched": "$12.15 above the line limit"
+  },
+  {
+    "label": "Final partial weight",
+    "matched": "Short by 0.84 lb"
+  },
+  {
+    "label": "Final default",
+    "matched": "Up to $1.01"
+  },
+  {
+    "label": "Final delivered basket",
+    "matched": "Up to $1.01"
+  },
+  {
+    "label": "Note includes calculated upper weight",
+    "matched": "that permits up to 1.30 lb"
+  },
+  {
+    "label": "Note includes shortage",
+    "matched": "estimated quantity is 0.84 lb short"
+  }
+]

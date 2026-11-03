@@ -1,0 +1,708 @@
+{
+  "schemaVersion": 1,
+  "provenance": "Fictional app-owned acceptance vectors derived from Foundation 2.1 D01, D05, F01; no third-party data.",
+  "quantitySemantics": "Protected amount is inside total needed. Stock is confirmed usable and uncommitted to other needs. Scope is item only. Unit conversions use us-customary-metric-v1.",
+  "fixtures": [
+    {
+      "name": "twelve wraps includes two protected lunches",
+      "request": {
+        "itemName": "Fictional grocery item",
+        "needed": {
+          "amount": {
+            "numerator": 12,
+            "denominator": 1
+          },
+          "unit": "count",
+          "originalLiteral": "12"
+        },
+        "confirmedAtHome": null,
+        "protectedAmount": {
+          "amount": {
+            "numerator": 2,
+            "denominator": 1
+          },
+          "unit": "count",
+          "originalLiteral": "2"
+        },
+        "offerA": {
+          "id": "a",
+          "label": "Fictional pack A",
+          "usableQuantity": {
+            "amount": {
+              "numerator": 8,
+              "denominator": 1
+            },
+            "unit": "count",
+            "originalLiteral": "8"
+          },
+          "price": {
+            "minorUnits": 349,
+            "currency": "USD"
+          }
+        },
+        "offerB": {
+          "id": "b",
+          "label": "Fictional pack B",
+          "usableQuantity": {
+            "amount": {
+              "numerator": 6,
+              "denominator": 1
+            },
+            "unit": "count",
+            "originalLiteral": "6"
+          },
+          "price": {
+            "minorUnits": 299,
+            "currency": "USD"
+          }
+        },
+        "itemCap": {
+          "minorUnits": 600,
+          "currency": "USD"
+        }
+      },
+      "expectedA": {
+        "packsToBuy": 2,
+        "totalMinorUnits": 698,
+        "leftover": {
+          "numerator": 4,
+          "denominator": 1
+        },
+        "issues": []
+      },
+      "expectedB": {
+        "packsToBuy": 2,
+        "totalMinorUnits": 598,
+        "leftover": {
+          "numerator": 0,
+          "denominator": 1
+        },
+        "issues": []
+      }
+    },
+    {
+      "name": "confirmed stock deducted exactly once",
+      "request": {
+        "itemName": "Fictional grocery item",
+        "needed": {
+          "amount": {
+            "numerator": 12,
+            "denominator": 1
+          },
+          "unit": "count",
+          "originalLiteral": "12"
+        },
+        "confirmedAtHome": {
+          "amount": {
+            "numerator": 6,
+            "denominator": 1
+          },
+          "unit": "count",
+          "originalLiteral": "6"
+        },
+        "protectedAmount": {
+          "amount": {
+            "numerator": 2,
+            "denominator": 1
+          },
+          "unit": "count",
+          "originalLiteral": "2"
+        },
+        "offerA": {
+          "id": "a",
+          "label": "Fictional pack A",
+          "usableQuantity": {
+            "amount": {
+              "numerator": 8,
+              "denominator": 1
+            },
+            "unit": "count",
+            "originalLiteral": "8"
+          },
+          "price": {
+            "minorUnits": 349,
+            "currency": "USD"
+          }
+        },
+        "offerB": {
+          "id": "b",
+          "label": "Fictional pack B",
+          "usableQuantity": {
+            "amount": {
+              "numerator": 6,
+              "denominator": 1
+            },
+            "unit": "count",
+            "originalLiteral": "6"
+          },
+          "price": {
+            "minorUnits": 299,
+            "currency": "USD"
+          }
+        },
+        "itemCap": null
+      },
+      "expectedA": {
+        "packsToBuy": 1,
+        "totalMinorUnits": 349,
+        "leftover": {
+          "numerator": 2,
+          "denominator": 1
+        },
+        "issues": []
+      },
+      "expectedB": {
+        "packsToBuy": 1,
+        "totalMinorUnits": 299,
+        "leftover": {
+          "numerator": 0,
+          "denominator": 1
+        },
+        "issues": []
+      }
+    },
+    {
+      "name": "unknown pack yield",
+      "request": {
+        "itemName": "Fictional grocery item",
+        "needed": {
+          "amount": {
+            "numerator": 12,
+            "denominator": 1
+          },
+          "unit": "count",
+          "originalLiteral": "12"
+        },
+        "confirmedAtHome": null,
+        "protectedAmount": null,
+        "offerA": {
+          "id": "a",
+          "label": "Fictional pack A",
+          "usableQuantity": null,
+          "price": {
+            "minorUnits": 349,
+            "currency": "USD"
+          }
+        },
+        "offerB": {
+          "id": "b",
+          "label": "Fictional pack B",
+          "usableQuantity": {
+            "amount": {
+              "numerator": 6,
+              "denominator": 1
+            },
+            "unit": "count",
+            "originalLiteral": "6"
+          },
+          "price": {
+            "minorUnits": 299,
+            "currency": "USD"
+          }
+        },
+        "itemCap": null
+      },
+      "expectedA": {
+        "packsToBuy": null,
+        "totalMinorUnits": null,
+        "leftover": null,
+        "issues": [
+          "usableQuantityUnknown"
+        ]
+      },
+      "expectedB": {
+        "packsToBuy": 2,
+        "totalMinorUnits": 598,
+        "leftover": {
+          "numerator": 0,
+          "denominator": 1
+        },
+        "issues": []
+      }
+    },
+    {
+      "name": "unknown price is never zero",
+      "request": {
+        "itemName": "Fictional grocery item",
+        "needed": {
+          "amount": {
+            "numerator": 12,
+            "denominator": 1
+          },
+          "unit": "count",
+          "originalLiteral": "12"
+        },
+        "confirmedAtHome": null,
+        "protectedAmount": null,
+        "offerA": {
+          "id": "a",
+          "label": "Fictional pack A",
+          "usableQuantity": {
+            "amount": {
+              "numerator": 8,
+              "denominator": 1
+            },
+            "unit": "count",
+            "originalLiteral": "8"
+          },
+          "price": null
+        },
+        "offerB": {
+          "id": "b",
+          "label": "Fictional pack B",
+          "usableQuantity": {
+            "amount": {
+              "numerator": 6,
+              "denominator": 1
+            },
+            "unit": "count",
+            "originalLiteral": "6"
+          },
+          "price": {
+            "minorUnits": 299,
+            "currency": "USD"
+          }
+        },
+        "itemCap": null
+      },
+      "expectedA": {
+        "packsToBuy": 2,
+        "totalMinorUnits": null,
+        "leftover": {
+          "numerator": 4,
+          "denominator": 1
+        },
+        "issues": [
+          "priceUnknown"
+        ]
+      },
+      "expectedB": {
+        "packsToBuy": 2,
+        "totalMinorUnits": 598,
+        "leftover": {
+          "numerator": 0,
+          "denominator": 1
+        },
+        "issues": []
+      }
+    },
+    {
+      "name": "mass volume conversion unknown",
+      "request": {
+        "itemName": "Fictional grocery item",
+        "needed": {
+          "amount": {
+            "numerator": 240,
+            "denominator": 1
+          },
+          "unit": "gram",
+          "originalLiteral": "240"
+        },
+        "confirmedAtHome": null,
+        "protectedAmount": null,
+        "offerA": {
+          "id": "a",
+          "label": "Fictional pack A",
+          "usableQuantity": {
+            "amount": {
+              "numerator": 1,
+              "denominator": 1
+            },
+            "unit": "cup",
+            "originalLiteral": "1"
+          },
+          "price": {
+            "minorUnits": 250,
+            "currency": "USD"
+          }
+        },
+        "offerB": {
+          "id": "b",
+          "label": "Fictional pack B",
+          "usableQuantity": {
+            "amount": {
+              "numerator": 120,
+              "denominator": 1
+            },
+            "unit": "gram",
+            "originalLiteral": "120"
+          },
+          "price": {
+            "minorUnits": 200,
+            "currency": "USD"
+          }
+        },
+        "itemCap": null
+      },
+      "expectedA": {
+        "packsToBuy": null,
+        "totalMinorUnits": null,
+        "leftover": null,
+        "issues": [
+          "usableConversionUnknown"
+        ]
+      },
+      "expectedB": {
+        "packsToBuy": 2,
+        "totalMinorUnits": 400,
+        "leftover": {
+          "numerator": 0,
+          "denominator": 1
+        },
+        "issues": []
+      }
+    },
+    {
+      "name": "two fifteen ounce packages remain two packs",
+      "request": {
+        "itemName": "Fictional grocery item",
+        "needed": {
+          "amount": {
+            "numerator": 30,
+            "denominator": 1
+          },
+          "unit": "ounce",
+          "originalLiteral": "30"
+        },
+        "confirmedAtHome": null,
+        "protectedAmount": null,
+        "offerA": {
+          "id": "a",
+          "label": "Fictional pack A",
+          "usableQuantity": {
+            "amount": {
+              "numerator": 15,
+              "denominator": 1
+            },
+            "unit": "ounce",
+            "originalLiteral": "15"
+          },
+          "price": {
+            "minorUnits": 125,
+            "currency": "USD"
+          }
+        },
+        "offerB": {
+          "id": "b",
+          "label": "Fictional pack B",
+          "usableQuantity": {
+            "amount": {
+              "numerator": 1,
+              "denominator": 1
+            },
+            "unit": "pound",
+            "originalLiteral": "1"
+          },
+          "price": {
+            "minorUnits": 150,
+            "currency": "USD"
+          }
+        },
+        "itemCap": null
+      },
+      "expectedA": {
+        "packsToBuy": 2,
+        "totalMinorUnits": 250,
+        "leftover": {
+          "numerator": 0,
+          "denominator": 1
+        },
+        "issues": []
+      },
+      "expectedB": {
+        "packsToBuy": 2,
+        "totalMinorUnits": 300,
+        "leftover": {
+          "numerator": 2,
+          "denominator": 1
+        },
+        "issues": []
+      }
+    },
+    {
+      "name": "empty draft need unknown",
+      "request": {
+        "itemName": "Fictional grocery item",
+        "needed": null,
+        "confirmedAtHome": null,
+        "protectedAmount": null,
+        "offerA": {
+          "id": "a",
+          "label": "Fictional pack A",
+          "usableQuantity": {
+            "amount": {
+              "numerator": 8,
+              "denominator": 1
+            },
+            "unit": "count",
+            "originalLiteral": "8"
+          },
+          "price": {
+            "minorUnits": 349,
+            "currency": "USD"
+          }
+        },
+        "offerB": {
+          "id": "b",
+          "label": "Fictional pack B",
+          "usableQuantity": null,
+          "price": {
+            "minorUnits": 299,
+            "currency": "USD"
+          }
+        },
+        "itemCap": null
+      },
+      "expectedA": {
+        "packsToBuy": null,
+        "totalMinorUnits": null,
+        "leftover": null,
+        "issues": [
+          "neededQuantityUnknown"
+        ]
+      },
+      "expectedB": {
+        "packsToBuy": null,
+        "totalMinorUnits": null,
+        "leftover": null,
+        "issues": [
+          "neededQuantityUnknown"
+        ]
+      }
+    },
+    {
+      "name": "zero need means no purchase despite unknown offers",
+      "request": {
+        "itemName": "Fictional grocery item",
+        "needed": {
+          "amount": {
+            "numerator": 0,
+            "denominator": 1
+          },
+          "unit": "count",
+          "originalLiteral": "0"
+        },
+        "confirmedAtHome": null,
+        "protectedAmount": null,
+        "offerA": {
+          "id": "a",
+          "label": "Fictional pack A",
+          "usableQuantity": null,
+          "price": null
+        },
+        "offerB": {
+          "id": "b",
+          "label": "Fictional pack B",
+          "usableQuantity": null,
+          "price": null
+        },
+        "itemCap": null
+      },
+      "expectedA": {
+        "packsToBuy": 0,
+        "totalMinorUnits": 0,
+        "leftover": {
+          "numerator": 0,
+          "denominator": 1
+        },
+        "issues": []
+      },
+      "expectedB": {
+        "packsToBuy": 0,
+        "totalMinorUnits": 0,
+        "leftover": {
+          "numerator": 0,
+          "denominator": 1
+        },
+        "issues": []
+      }
+    },
+    {
+      "name": "enough confirmed stock",
+      "request": {
+        "itemName": "Fictional grocery item",
+        "needed": {
+          "amount": {
+            "numerator": 2,
+            "denominator": 1
+          },
+          "unit": "count",
+          "originalLiteral": "2"
+        },
+        "confirmedAtHome": {
+          "amount": {
+            "numerator": 5,
+            "denominator": 1
+          },
+          "unit": "count",
+          "originalLiteral": "5"
+        },
+        "protectedAmount": null,
+        "offerA": {
+          "id": "a",
+          "label": "Fictional pack A",
+          "usableQuantity": null,
+          "price": null
+        },
+        "offerB": {
+          "id": "b",
+          "label": "Fictional pack B",
+          "usableQuantity": null,
+          "price": null
+        },
+        "itemCap": null
+      },
+      "expectedA": {
+        "packsToBuy": 0,
+        "totalMinorUnits": 0,
+        "leftover": {
+          "numerator": 3,
+          "denominator": 1
+        },
+        "issues": []
+      },
+      "expectedB": {
+        "packsToBuy": 0,
+        "totalMinorUnits": 0,
+        "leftover": {
+          "numerator": 3,
+          "denominator": 1
+        },
+        "issues": []
+      }
+    },
+    {
+      "name": "zero usable yield keeps need open",
+      "request": {
+        "itemName": "Fictional grocery item",
+        "needed": {
+          "amount": {
+            "numerator": 5,
+            "denominator": 1
+          },
+          "unit": "count",
+          "originalLiteral": "5"
+        },
+        "confirmedAtHome": null,
+        "protectedAmount": null,
+        "offerA": {
+          "id": "a",
+          "label": "Fictional pack A",
+          "usableQuantity": {
+            "amount": {
+              "numerator": 0,
+              "denominator": 1
+            },
+            "unit": "count",
+            "originalLiteral": "0"
+          },
+          "price": {
+            "minorUnits": 100,
+            "currency": "USD"
+          }
+        },
+        "offerB": {
+          "id": "b",
+          "label": "Fictional pack B",
+          "usableQuantity": {
+            "amount": {
+              "numerator": 5,
+              "denominator": 1
+            },
+            "unit": "count",
+            "originalLiteral": "5"
+          },
+          "price": {
+            "minorUnits": 100,
+            "currency": "USD"
+          }
+        },
+        "itemCap": null
+      },
+      "expectedA": {
+        "packsToBuy": null,
+        "totalMinorUnits": null,
+        "leftover": null,
+        "issues": [
+          "noUsableYield"
+        ]
+      },
+      "expectedB": {
+        "packsToBuy": 1,
+        "totalMinorUnits": 100,
+        "leftover": {
+          "numerator": 0,
+          "denominator": 1
+        },
+        "issues": []
+      }
+    },
+    {
+      "name": "exact decimal quantities",
+      "request": {
+        "itemName": "Fictional grocery item",
+        "needed": {
+          "amount": {
+            "numerator": 3,
+            "denominator": 10
+          },
+          "unit": "count",
+          "originalLiteral": "3/10"
+        },
+        "confirmedAtHome": null,
+        "protectedAmount": null,
+        "offerA": {
+          "id": "a",
+          "label": "Fictional pack A",
+          "usableQuantity": {
+            "amount": {
+              "numerator": 1,
+              "denominator": 10
+            },
+            "unit": "count",
+            "originalLiteral": "1/10"
+          },
+          "price": {
+            "minorUnits": 10,
+            "currency": "USD"
+          }
+        },
+        "offerB": {
+          "id": "b",
+          "label": "Fictional pack B",
+          "usableQuantity": {
+            "amount": {
+              "numerator": 3,
+              "denominator": 10
+            },
+            "unit": "count",
+            "originalLiteral": "3/10"
+          },
+          "price": {
+            "minorUnits": 30,
+            "currency": "USD"
+          }
+        },
+        "itemCap": null
+      },
+      "expectedA": {
+        "packsToBuy": 3,
+        "totalMinorUnits": 30,
+        "leftover": {
+          "numerator": 0,
+          "denominator": 1
+        },
+        "issues": []
+      },
+      "expectedB": {
+        "packsToBuy": 1,
+        "totalMinorUnits": 30,
+        "leftover": {
+          "numerator": 0,
+          "denominator": 1
+        },
+        "issues": []
+      }
+    }
+  ]
+}

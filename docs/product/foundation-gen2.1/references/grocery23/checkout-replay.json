@@ -1,0 +1,5868 @@
+{
+  "as_of": "2026-11-02",
+  "source_inputs": [
+    "../grocery18/verified-cases.json",
+    "https://centsperserving.com/blog/planning/week-of-dinners-under-50",
+    "https://www.kroger.com/hc/help/faqs/ways-to-shop/pickup"
+  ],
+  "purpose": "Stress test a change from a dinner-only cap to a whole-order pickup cap. Historical shelf prices plus a published conditional fee; not an order, actual customer saving, empirical distribution or blanket fee rule.",
+  "assumptions": "Before submission; selected items available and accepted, all subtotal dollars eligible, no other charges/promotions/taxes, no changed weight. No fee at $35+. Extra lines are already needed, not filler. No application of a pre-checkout fee rule to an order that a retailer shorted after submission.",
+  "grid": "8 pantry states x 2 fee settings x 4 amounts of other eligible items x 3 whole-order caps. Both modeled policies may stop without removing a package. Cap first, fewest accepted edits next, then lower total; if impossible show cheapest attainable from modeled changes.",
+  "at_full_availability_no_other_items": [
+    {
+      "used": [],
+      "dinner_cents": 3729,
+      "qualifying_cart_cents": 3729,
+      "fee_cents": 0,
+      "due_cents": 3729,
+      "within_cap": false
+    },
+    {
+      "used": [
+        "garlic powder"
+      ],
+      "dinner_cents": 3480,
+      "qualifying_cart_cents": 3480,
+      "fee_cents": 495,
+      "due_cents": 3975,
+      "within_cap": false
+    },
+    {
+      "used": [
+        "frozen corn"
+      ],
+      "dinner_cents": 3629,
+      "qualifying_cart_cents": 3629,
+      "fee_cents": 0,
+      "due_cents": 3629,
+      "within_cap": false
+    },
+    {
+      "used": [
+        "black beans"
+      ],
+      "dinner_cents": 3629,
+      "qualifying_cart_cents": 3629,
+      "fee_cents": 0,
+      "due_cents": 3629,
+      "within_cap": false
+    },
+    {
+      "used": [
+        "garlic powder",
+        "frozen corn"
+      ],
+      "dinner_cents": 3380,
+      "qualifying_cart_cents": 3380,
+      "fee_cents": 495,
+      "due_cents": 3875,
+      "within_cap": false
+    },
+    {
+      "used": [
+        "garlic powder",
+        "black beans"
+      ],
+      "dinner_cents": 3380,
+      "qualifying_cart_cents": 3380,
+      "fee_cents": 495,
+      "due_cents": 3875,
+      "within_cap": false
+    },
+    {
+      "used": [
+        "frozen corn",
+        "black beans"
+      ],
+      "dinner_cents": 3529,
+      "qualifying_cart_cents": 3529,
+      "fee_cents": 0,
+      "due_cents": 3529,
+      "within_cap": false
+    },
+    {
+      "used": [
+        "garlic powder",
+        "frozen corn",
+        "black beans"
+      ],
+      "dinner_cents": 3280,
+      "qualifying_cart_cents": 3280,
+      "fee_cents": 495,
+      "due_cents": 3775,
+      "within_cap": false
+    }
+  ],
+  "summaries": [
+    {
+      "fee_cents": 0,
+      "extras_cents": 0,
+      "cap_cents": 3500,
+      "n": 8,
+      "true_feasible": 4,
+      "subtotal_false_passes": 0
+    },
+    {
+      "fee_cents": 0,
+      "extras_cents": 0,
+      "cap_cents": 3729,
+      "n": 8,
+      "true_feasible": 8,
+      "subtotal_false_passes": 0
+    },
+    {
+      "fee_cents": 0,
+      "extras_cents": 0,
+      "cap_cents": 4000,
+      "n": 8,
+      "true_feasible": 8,
+      "subtotal_false_passes": 0
+    },
+    {
+      "fee_cents": 0,
+      "extras_cents": 20,
+      "cap_cents": 3500,
+      "n": 8,
+      "true_feasible": 4,
+      "subtotal_false_passes": 0
+    },
+    {
+      "fee_cents": 0,
+      "extras_cents": 20,
+      "cap_cents": 3729,
+      "n": 8,
+      "true_feasible": 7,
+      "subtotal_false_passes": 0
+    },
+    {
+      "fee_cents": 0,
+      "extras_cents": 20,
+      "cap_cents": 4000,
+      "n": 8,
+      "true_feasible": 8,
+      "subtotal_false_passes": 0
+    },
+    {
+      "fee_cents": 0,
+      "extras_cents": 100,
+      "cap_cents": 3500,
+      "n": 8,
+      "true_feasible": 3,
+      "subtotal_false_passes": 0
+    },
+    {
+      "fee_cents": 0,
+      "extras_cents": 100,
+      "cap_cents": 3729,
+      "n": 8,
+      "true_feasible": 7,
+      "subtotal_false_passes": 0
+    },
+    {
+      "fee_cents": 0,
+      "extras_cents": 100,
+      "cap_cents": 4000,
+      "n": 8,
+      "true_feasible": 8,
+      "subtotal_false_passes": 0
+    },
+    {
+      "fee_cents": 0,
+      "extras_cents": 500,
+      "cap_cents": 3500,
+      "n": 8,
+      "true_feasible": 0,
+      "subtotal_false_passes": 0
+    },
+    {
+      "fee_cents": 0,
+      "extras_cents": 500,
+      "cap_cents": 3729,
+      "n": 8,
+      "true_feasible": 0,
+      "subtotal_false_passes": 0
+    },
+    {
+      "fee_cents": 0,
+      "extras_cents": 500,
+      "cap_cents": 4000,
+      "n": 8,
+      "true_feasible": 4,
+      "subtotal_false_passes": 0
+    },
+    {
+      "fee_cents": 495,
+      "extras_cents": 0,
+      "cap_cents": 3500,
+      "n": 8,
+      "true_feasible": 0,
+      "subtotal_false_passes": 4
+    },
+    {
+      "fee_cents": 495,
+      "extras_cents": 0,
+      "cap_cents": 3729,
+      "n": 8,
+      "true_feasible": 8,
+      "subtotal_false_passes": 0
+    },
+    {
+      "fee_cents": 495,
+      "extras_cents": 0,
+      "cap_cents": 4000,
+      "n": 8,
+      "true_feasible": 8,
+      "subtotal_false_passes": 0
+    },
+    {
+      "fee_cents": 495,
+      "extras_cents": 20,
+      "cap_cents": 3500,
+      "n": 8,
+      "true_feasible": 4,
+      "subtotal_false_passes": 0
+    },
+    {
+      "fee_cents": 495,
+      "extras_cents": 20,
+      "cap_cents": 3729,
+      "n": 8,
+      "true_feasible": 7,
+      "subtotal_false_passes": 0
+    },
+    {
+      "fee_cents": 495,
+      "extras_cents": 20,
+      "cap_cents": 4000,
+      "n": 8,
+      "true_feasible": 8,
+      "subtotal_false_passes": 0
+    },
+    {
+      "fee_cents": 495,
+      "extras_cents": 100,
+      "cap_cents": 3500,
+      "n": 8,
+      "true_feasible": 0,
+      "subtotal_false_passes": 3
+    },
+    {
+      "fee_cents": 495,
+      "extras_cents": 100,
+      "cap_cents": 3729,
+      "n": 8,
+      "true_feasible": 7,
+      "subtotal_false_passes": 0
+    },
+    {
+      "fee_cents": 495,
+      "extras_cents": 100,
+      "cap_cents": 4000,
+      "n": 8,
+      "true_feasible": 8,
+      "subtotal_false_passes": 0
+    },
+    {
+      "fee_cents": 495,
+      "extras_cents": 500,
+      "cap_cents": 3500,
+      "n": 8,
+      "true_feasible": 0,
+      "subtotal_false_passes": 0
+    },
+    {
+      "fee_cents": 495,
+      "extras_cents": 500,
+      "cap_cents": 3729,
+      "n": 8,
+      "true_feasible": 0,
+      "subtotal_false_passes": 0
+    },
+    {
+      "fee_cents": 495,
+      "extras_cents": 500,
+      "cap_cents": 4000,
+      "n": 8,
+      "true_feasible": 4,
+      "subtotal_false_passes": 0
+    }
+  ],
+  "rows": [
+    {
+      "available": [],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 1
+    },
+    {
+      "available": [],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 1
+    },
+    {
+      "available": [],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 1
+    },
+    {
+      "available": [],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 1
+    },
+    {
+      "available": [],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 1
+    },
+    {
+      "available": [],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 1
+    },
+    {
+      "available": [],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 1
+    },
+    {
+      "available": [],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 1
+    },
+    {
+      "available": [],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 1
+    },
+    {
+      "available": [],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 4229,
+        "fee_cents": 0,
+        "due_cents": 4229,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 4229,
+        "fee_cents": 0,
+        "due_cents": 4229,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 1
+    },
+    {
+      "available": [],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 4229,
+        "fee_cents": 0,
+        "due_cents": 4229,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 4229,
+        "fee_cents": 0,
+        "due_cents": 4229,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 1
+    },
+    {
+      "available": [],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 4229,
+        "fee_cents": 0,
+        "due_cents": 4229,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 4229,
+        "fee_cents": 0,
+        "due_cents": 4229,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 1
+    },
+    {
+      "available": [],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 1
+    },
+    {
+      "available": [],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 1
+    },
+    {
+      "available": [],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 1
+    },
+    {
+      "available": [],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 1
+    },
+    {
+      "available": [],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 1
+    },
+    {
+      "available": [],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 1
+    },
+    {
+      "available": [],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 1
+    },
+    {
+      "available": [],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 1
+    },
+    {
+      "available": [],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 1
+    },
+    {
+      "available": [],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 4229,
+        "fee_cents": 0,
+        "due_cents": 4229,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 4229,
+        "fee_cents": 0,
+        "due_cents": 4229,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 1
+    },
+    {
+      "available": [],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 4229,
+        "fee_cents": 0,
+        "due_cents": 4229,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 4229,
+        "fee_cents": 0,
+        "due_cents": 4229,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 1
+    },
+    {
+      "available": [],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 4229,
+        "fee_cents": 0,
+        "due_cents": 4229,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 4229,
+        "fee_cents": 0,
+        "due_cents": 4229,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 1
+    },
+    {
+      "available": [
+        "garlic powder"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3480,
+        "fee_cents": 0,
+        "due_cents": 3480,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3480,
+        "fee_cents": 0,
+        "due_cents": 3480,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "garlic powder"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "garlic powder"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "garlic powder"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3500,
+        "fee_cents": 0,
+        "due_cents": 3500,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3500,
+        "fee_cents": 0,
+        "due_cents": 3500,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "garlic powder"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3500,
+        "fee_cents": 0,
+        "due_cents": 3500,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3500,
+        "fee_cents": 0,
+        "due_cents": 3500,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "garlic powder"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "garlic powder"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3580,
+        "fee_cents": 0,
+        "due_cents": 3580,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3580,
+        "fee_cents": 0,
+        "due_cents": 3580,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "garlic powder"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3580,
+        "fee_cents": 0,
+        "due_cents": 3580,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3580,
+        "fee_cents": 0,
+        "due_cents": 3580,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "garlic powder"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "garlic powder"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3980,
+        "fee_cents": 0,
+        "due_cents": 3980,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3980,
+        "fee_cents": 0,
+        "due_cents": 3980,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "garlic powder"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3980,
+        "fee_cents": 0,
+        "due_cents": 3980,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3980,
+        "fee_cents": 0,
+        "due_cents": 3980,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "garlic powder"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3980,
+        "fee_cents": 0,
+        "due_cents": 3980,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3980,
+        "fee_cents": 0,
+        "due_cents": 3980,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "garlic powder"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3480,
+        "fee_cents": 495,
+        "due_cents": 3975,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": true,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "garlic powder"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "garlic powder"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "garlic powder"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3500,
+        "fee_cents": 0,
+        "due_cents": 3500,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3500,
+        "fee_cents": 0,
+        "due_cents": 3500,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "garlic powder"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3500,
+        "fee_cents": 0,
+        "due_cents": 3500,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3500,
+        "fee_cents": 0,
+        "due_cents": 3500,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "garlic powder"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "garlic powder"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3580,
+        "fee_cents": 0,
+        "due_cents": 3580,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3580,
+        "fee_cents": 0,
+        "due_cents": 3580,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "garlic powder"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3580,
+        "fee_cents": 0,
+        "due_cents": 3580,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3580,
+        "fee_cents": 0,
+        "due_cents": 3580,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "garlic powder"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "garlic powder"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3980,
+        "fee_cents": 0,
+        "due_cents": 3980,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3980,
+        "fee_cents": 0,
+        "due_cents": 3980,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "garlic powder"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3980,
+        "fee_cents": 0,
+        "due_cents": 3980,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3980,
+        "fee_cents": 0,
+        "due_cents": 3980,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "garlic powder"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3980,
+        "fee_cents": 0,
+        "due_cents": 3980,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3980,
+        "fee_cents": 0,
+        "due_cents": 3980,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "frozen corn"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3629,
+        "fee_cents": 0,
+        "due_cents": 3629,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "frozen corn"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3629,
+        "fee_cents": 0,
+        "due_cents": 3629,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "frozen corn"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3649,
+        "fee_cents": 0,
+        "due_cents": 3649,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "frozen corn"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3649,
+        "fee_cents": 0,
+        "due_cents": 3649,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "frozen corn"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3649,
+        "fee_cents": 0,
+        "due_cents": 3649,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "frozen corn"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3649,
+        "fee_cents": 0,
+        "due_cents": 3649,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "frozen corn"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "frozen corn"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "frozen corn"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "frozen corn"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "frozen corn"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 4129,
+        "fee_cents": 0,
+        "due_cents": 4129,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "frozen corn"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 4129,
+        "fee_cents": 0,
+        "due_cents": 4129,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "frozen corn"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 4129,
+        "fee_cents": 0,
+        "due_cents": 4129,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "frozen corn"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 4129,
+        "fee_cents": 0,
+        "due_cents": 4129,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [
+          "frozen corn"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 4129,
+        "fee_cents": 0,
+        "due_cents": 4129,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "frozen corn"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 4129,
+        "fee_cents": 0,
+        "due_cents": 4129,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "frozen corn"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3629,
+        "fee_cents": 0,
+        "due_cents": 3629,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "frozen corn"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3629,
+        "fee_cents": 0,
+        "due_cents": 3629,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "frozen corn"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3649,
+        "fee_cents": 0,
+        "due_cents": 3649,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "frozen corn"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3649,
+        "fee_cents": 0,
+        "due_cents": 3649,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "frozen corn"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3649,
+        "fee_cents": 0,
+        "due_cents": 3649,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "frozen corn"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3649,
+        "fee_cents": 0,
+        "due_cents": 3649,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "frozen corn"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "frozen corn"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "frozen corn"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "frozen corn"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "frozen corn"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 4129,
+        "fee_cents": 0,
+        "due_cents": 4129,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "frozen corn"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 4129,
+        "fee_cents": 0,
+        "due_cents": 4129,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "frozen corn"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 4129,
+        "fee_cents": 0,
+        "due_cents": 4129,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "frozen corn"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 4129,
+        "fee_cents": 0,
+        "due_cents": 4129,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [
+          "frozen corn"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 4129,
+        "fee_cents": 0,
+        "due_cents": 4129,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "frozen corn"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 4129,
+        "fee_cents": 0,
+        "due_cents": 4129,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3629,
+        "fee_cents": 0,
+        "due_cents": 3629,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3629,
+        "fee_cents": 0,
+        "due_cents": 3629,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3649,
+        "fee_cents": 0,
+        "due_cents": 3649,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3649,
+        "fee_cents": 0,
+        "due_cents": 3649,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3649,
+        "fee_cents": 0,
+        "due_cents": 3649,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3649,
+        "fee_cents": 0,
+        "due_cents": 3649,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 4129,
+        "fee_cents": 0,
+        "due_cents": 4129,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 4129,
+        "fee_cents": 0,
+        "due_cents": 4129,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 4129,
+        "fee_cents": 0,
+        "due_cents": 4129,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 4129,
+        "fee_cents": 0,
+        "due_cents": 4129,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 4129,
+        "fee_cents": 0,
+        "due_cents": 4129,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 4129,
+        "fee_cents": 0,
+        "due_cents": 4129,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3629,
+        "fee_cents": 0,
+        "due_cents": 3629,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3629,
+        "fee_cents": 0,
+        "due_cents": 3629,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3649,
+        "fee_cents": 0,
+        "due_cents": 3649,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3649,
+        "fee_cents": 0,
+        "due_cents": 3649,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3649,
+        "fee_cents": 0,
+        "due_cents": 3649,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3649,
+        "fee_cents": 0,
+        "due_cents": 3649,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 4129,
+        "fee_cents": 0,
+        "due_cents": 4129,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 4129,
+        "fee_cents": 0,
+        "due_cents": 4129,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 4129,
+        "fee_cents": 0,
+        "due_cents": 4129,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 4129,
+        "fee_cents": 0,
+        "due_cents": 4129,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 4129,
+        "fee_cents": 0,
+        "due_cents": 4129,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 4129,
+        "fee_cents": 0,
+        "due_cents": 4129,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 2
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3480,
+        "fee_cents": 0,
+        "due_cents": 3480,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3480,
+        "fee_cents": 0,
+        "due_cents": 3480,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3500,
+        "fee_cents": 0,
+        "due_cents": 3500,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3500,
+        "fee_cents": 0,
+        "due_cents": 3500,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3500,
+        "fee_cents": 0,
+        "due_cents": 3500,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3500,
+        "fee_cents": 0,
+        "due_cents": 3500,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "garlic powder",
+          "frozen corn"
+        ],
+        "dinner_cents": 3380,
+        "qualifying_cart_cents": 3480,
+        "fee_cents": 0,
+        "due_cents": 3480,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder",
+          "frozen corn"
+        ],
+        "dinner_cents": 3380,
+        "qualifying_cart_cents": 3480,
+        "fee_cents": 0,
+        "due_cents": 3480,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3580,
+        "fee_cents": 0,
+        "due_cents": 3580,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3580,
+        "fee_cents": 0,
+        "due_cents": 3580,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "garlic powder",
+          "frozen corn"
+        ],
+        "dinner_cents": 3380,
+        "qualifying_cart_cents": 3880,
+        "fee_cents": 0,
+        "due_cents": 3880,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder",
+          "frozen corn"
+        ],
+        "dinner_cents": 3380,
+        "qualifying_cart_cents": 3880,
+        "fee_cents": 0,
+        "due_cents": 3880,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "garlic powder",
+          "frozen corn"
+        ],
+        "dinner_cents": 3380,
+        "qualifying_cart_cents": 3880,
+        "fee_cents": 0,
+        "due_cents": 3880,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder",
+          "frozen corn"
+        ],
+        "dinner_cents": 3380,
+        "qualifying_cart_cents": 3880,
+        "fee_cents": 0,
+        "due_cents": 3880,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3980,
+        "fee_cents": 0,
+        "due_cents": 3980,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3980,
+        "fee_cents": 0,
+        "due_cents": 3980,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3480,
+        "fee_cents": 495,
+        "due_cents": 3975,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "frozen corn"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3629,
+        "fee_cents": 0,
+        "due_cents": 3629,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": true,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3500,
+        "fee_cents": 0,
+        "due_cents": 3500,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3500,
+        "fee_cents": 0,
+        "due_cents": 3500,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3500,
+        "fee_cents": 0,
+        "due_cents": 3500,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3500,
+        "fee_cents": 0,
+        "due_cents": 3500,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "garlic powder",
+          "frozen corn"
+        ],
+        "dinner_cents": 3380,
+        "qualifying_cart_cents": 3480,
+        "fee_cents": 495,
+        "due_cents": 3975,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3580,
+        "fee_cents": 0,
+        "due_cents": 3580,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": true,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3580,
+        "fee_cents": 0,
+        "due_cents": 3580,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3580,
+        "fee_cents": 0,
+        "due_cents": 3580,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "garlic powder",
+          "frozen corn"
+        ],
+        "dinner_cents": 3380,
+        "qualifying_cart_cents": 3880,
+        "fee_cents": 0,
+        "due_cents": 3880,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder",
+          "frozen corn"
+        ],
+        "dinner_cents": 3380,
+        "qualifying_cart_cents": 3880,
+        "fee_cents": 0,
+        "due_cents": 3880,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "garlic powder",
+          "frozen corn"
+        ],
+        "dinner_cents": 3380,
+        "qualifying_cart_cents": 3880,
+        "fee_cents": 0,
+        "due_cents": 3880,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder",
+          "frozen corn"
+        ],
+        "dinner_cents": 3380,
+        "qualifying_cart_cents": 3880,
+        "fee_cents": 0,
+        "due_cents": 3880,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3980,
+        "fee_cents": 0,
+        "due_cents": 3980,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3980,
+        "fee_cents": 0,
+        "due_cents": 3980,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3480,
+        "fee_cents": 0,
+        "due_cents": 3480,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3480,
+        "fee_cents": 0,
+        "due_cents": 3480,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3500,
+        "fee_cents": 0,
+        "due_cents": 3500,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3500,
+        "fee_cents": 0,
+        "due_cents": 3500,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3500,
+        "fee_cents": 0,
+        "due_cents": 3500,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3500,
+        "fee_cents": 0,
+        "due_cents": 3500,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "garlic powder",
+          "black beans"
+        ],
+        "dinner_cents": 3380,
+        "qualifying_cart_cents": 3480,
+        "fee_cents": 0,
+        "due_cents": 3480,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder",
+          "black beans"
+        ],
+        "dinner_cents": 3380,
+        "qualifying_cart_cents": 3480,
+        "fee_cents": 0,
+        "due_cents": 3480,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3580,
+        "fee_cents": 0,
+        "due_cents": 3580,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3580,
+        "fee_cents": 0,
+        "due_cents": 3580,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "garlic powder",
+          "black beans"
+        ],
+        "dinner_cents": 3380,
+        "qualifying_cart_cents": 3880,
+        "fee_cents": 0,
+        "due_cents": 3880,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder",
+          "black beans"
+        ],
+        "dinner_cents": 3380,
+        "qualifying_cart_cents": 3880,
+        "fee_cents": 0,
+        "due_cents": 3880,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "garlic powder",
+          "black beans"
+        ],
+        "dinner_cents": 3380,
+        "qualifying_cart_cents": 3880,
+        "fee_cents": 0,
+        "due_cents": 3880,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder",
+          "black beans"
+        ],
+        "dinner_cents": 3380,
+        "qualifying_cart_cents": 3880,
+        "fee_cents": 0,
+        "due_cents": 3880,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3980,
+        "fee_cents": 0,
+        "due_cents": 3980,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3980,
+        "fee_cents": 0,
+        "due_cents": 3980,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3480,
+        "fee_cents": 495,
+        "due_cents": 3975,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3629,
+        "fee_cents": 0,
+        "due_cents": 3629,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": true,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3500,
+        "fee_cents": 0,
+        "due_cents": 3500,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3500,
+        "fee_cents": 0,
+        "due_cents": 3500,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3500,
+        "fee_cents": 0,
+        "due_cents": 3500,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3500,
+        "fee_cents": 0,
+        "due_cents": 3500,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "garlic powder",
+          "black beans"
+        ],
+        "dinner_cents": 3380,
+        "qualifying_cart_cents": 3480,
+        "fee_cents": 495,
+        "due_cents": 3975,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3580,
+        "fee_cents": 0,
+        "due_cents": 3580,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": true,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3580,
+        "fee_cents": 0,
+        "due_cents": 3580,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3580,
+        "fee_cents": 0,
+        "due_cents": 3580,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "garlic powder",
+          "black beans"
+        ],
+        "dinner_cents": 3380,
+        "qualifying_cart_cents": 3880,
+        "fee_cents": 0,
+        "due_cents": 3880,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder",
+          "black beans"
+        ],
+        "dinner_cents": 3380,
+        "qualifying_cart_cents": 3880,
+        "fee_cents": 0,
+        "due_cents": 3880,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "garlic powder",
+          "black beans"
+        ],
+        "dinner_cents": 3380,
+        "qualifying_cart_cents": 3880,
+        "fee_cents": 0,
+        "due_cents": 3880,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder",
+          "black beans"
+        ],
+        "dinner_cents": 3380,
+        "qualifying_cart_cents": 3880,
+        "fee_cents": 0,
+        "due_cents": 3880,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3980,
+        "fee_cents": 0,
+        "due_cents": 3980,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3980,
+        "fee_cents": 0,
+        "due_cents": 3980,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "frozen corn",
+          "black beans"
+        ],
+        "dinner_cents": 3529,
+        "qualifying_cart_cents": 3529,
+        "fee_cents": 0,
+        "due_cents": 3529,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "frozen corn",
+          "black beans"
+        ],
+        "dinner_cents": 3529,
+        "qualifying_cart_cents": 3529,
+        "fee_cents": 0,
+        "due_cents": 3529,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "frozen corn",
+          "black beans"
+        ],
+        "dinner_cents": 3529,
+        "qualifying_cart_cents": 3549,
+        "fee_cents": 0,
+        "due_cents": 3549,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "frozen corn",
+          "black beans"
+        ],
+        "dinner_cents": 3529,
+        "qualifying_cart_cents": 3549,
+        "fee_cents": 0,
+        "due_cents": 3549,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3649,
+        "fee_cents": 0,
+        "due_cents": 3649,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3649,
+        "fee_cents": 0,
+        "due_cents": 3649,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "frozen corn",
+          "black beans"
+        ],
+        "dinner_cents": 3529,
+        "qualifying_cart_cents": 3629,
+        "fee_cents": 0,
+        "due_cents": 3629,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "frozen corn",
+          "black beans"
+        ],
+        "dinner_cents": 3529,
+        "qualifying_cart_cents": 3629,
+        "fee_cents": 0,
+        "due_cents": 3629,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "frozen corn",
+          "black beans"
+        ],
+        "dinner_cents": 3529,
+        "qualifying_cart_cents": 4029,
+        "fee_cents": 0,
+        "due_cents": 4029,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "frozen corn",
+          "black beans"
+        ],
+        "dinner_cents": 3529,
+        "qualifying_cart_cents": 4029,
+        "fee_cents": 0,
+        "due_cents": 4029,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "frozen corn",
+          "black beans"
+        ],
+        "dinner_cents": 3529,
+        "qualifying_cart_cents": 4029,
+        "fee_cents": 0,
+        "due_cents": 4029,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "frozen corn",
+          "black beans"
+        ],
+        "dinner_cents": 3529,
+        "qualifying_cart_cents": 4029,
+        "fee_cents": 0,
+        "due_cents": 4029,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [
+          "frozen corn",
+          "black beans"
+        ],
+        "dinner_cents": 3529,
+        "qualifying_cart_cents": 4029,
+        "fee_cents": 0,
+        "due_cents": 4029,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "frozen corn",
+          "black beans"
+        ],
+        "dinner_cents": 3529,
+        "qualifying_cart_cents": 4029,
+        "fee_cents": 0,
+        "due_cents": 4029,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "frozen corn",
+          "black beans"
+        ],
+        "dinner_cents": 3529,
+        "qualifying_cart_cents": 3529,
+        "fee_cents": 0,
+        "due_cents": 3529,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "frozen corn",
+          "black beans"
+        ],
+        "dinner_cents": 3529,
+        "qualifying_cart_cents": 3529,
+        "fee_cents": 0,
+        "due_cents": 3529,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "frozen corn",
+          "black beans"
+        ],
+        "dinner_cents": 3529,
+        "qualifying_cart_cents": 3549,
+        "fee_cents": 0,
+        "due_cents": 3549,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "frozen corn",
+          "black beans"
+        ],
+        "dinner_cents": 3529,
+        "qualifying_cart_cents": 3549,
+        "fee_cents": 0,
+        "due_cents": 3549,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3649,
+        "fee_cents": 0,
+        "due_cents": 3649,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3649,
+        "fee_cents": 0,
+        "due_cents": 3649,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "frozen corn",
+          "black beans"
+        ],
+        "dinner_cents": 3529,
+        "qualifying_cart_cents": 3629,
+        "fee_cents": 0,
+        "due_cents": 3629,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "frozen corn",
+          "black beans"
+        ],
+        "dinner_cents": 3529,
+        "qualifying_cart_cents": 3629,
+        "fee_cents": 0,
+        "due_cents": 3629,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "black beans"
+        ],
+        "dinner_cents": 3629,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "frozen corn",
+          "black beans"
+        ],
+        "dinner_cents": 3529,
+        "qualifying_cart_cents": 4029,
+        "fee_cents": 0,
+        "due_cents": 4029,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "frozen corn",
+          "black beans"
+        ],
+        "dinner_cents": 3529,
+        "qualifying_cart_cents": 4029,
+        "fee_cents": 0,
+        "due_cents": 4029,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "frozen corn",
+          "black beans"
+        ],
+        "dinner_cents": 3529,
+        "qualifying_cart_cents": 4029,
+        "fee_cents": 0,
+        "due_cents": 4029,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "frozen corn",
+          "black beans"
+        ],
+        "dinner_cents": 3529,
+        "qualifying_cart_cents": 4029,
+        "fee_cents": 0,
+        "due_cents": 4029,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [
+          "frozen corn",
+          "black beans"
+        ],
+        "dinner_cents": 3529,
+        "qualifying_cart_cents": 4029,
+        "fee_cents": 0,
+        "due_cents": 4029,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "frozen corn",
+          "black beans"
+        ],
+        "dinner_cents": 3529,
+        "qualifying_cart_cents": 4029,
+        "fee_cents": 0,
+        "due_cents": 4029,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 4
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3480,
+        "fee_cents": 0,
+        "due_cents": 3480,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3480,
+        "fee_cents": 0,
+        "due_cents": 3480,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 8
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 8
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 8
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3500,
+        "fee_cents": 0,
+        "due_cents": 3500,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3500,
+        "fee_cents": 0,
+        "due_cents": 3500,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 8
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3500,
+        "fee_cents": 0,
+        "due_cents": 3500,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3500,
+        "fee_cents": 0,
+        "due_cents": 3500,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 8
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 8
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "garlic powder",
+          "black beans"
+        ],
+        "dinner_cents": 3380,
+        "qualifying_cart_cents": 3480,
+        "fee_cents": 0,
+        "due_cents": 3480,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder",
+          "black beans"
+        ],
+        "dinner_cents": 3380,
+        "qualifying_cart_cents": 3480,
+        "fee_cents": 0,
+        "due_cents": 3480,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 8
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3580,
+        "fee_cents": 0,
+        "due_cents": 3580,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3580,
+        "fee_cents": 0,
+        "due_cents": 3580,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 8
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 8
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "garlic powder",
+          "frozen corn",
+          "black beans"
+        ],
+        "dinner_cents": 3280,
+        "qualifying_cart_cents": 3780,
+        "fee_cents": 0,
+        "due_cents": 3780,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder",
+          "frozen corn",
+          "black beans"
+        ],
+        "dinner_cents": 3280,
+        "qualifying_cart_cents": 3780,
+        "fee_cents": 0,
+        "due_cents": 3780,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 8
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "garlic powder",
+          "frozen corn",
+          "black beans"
+        ],
+        "dinner_cents": 3280,
+        "qualifying_cart_cents": 3780,
+        "fee_cents": 0,
+        "due_cents": 3780,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder",
+          "frozen corn",
+          "black beans"
+        ],
+        "dinner_cents": 3280,
+        "qualifying_cart_cents": 3780,
+        "fee_cents": 0,
+        "due_cents": 3780,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 8
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 0,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3980,
+        "fee_cents": 0,
+        "due_cents": 3980,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3980,
+        "fee_cents": 0,
+        "due_cents": 3980,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 8
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3480,
+        "fee_cents": 495,
+        "due_cents": 3975,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "frozen corn",
+          "black beans"
+        ],
+        "dinner_cents": 3529,
+        "qualifying_cart_cents": 3529,
+        "fee_cents": 0,
+        "due_cents": 3529,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": true,
+      "all_options_count": 8
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 8
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 0,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3729,
+        "fee_cents": 0,
+        "due_cents": 3729,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 8
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3500,
+        "fee_cents": 0,
+        "due_cents": 3500,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3500,
+        "fee_cents": 0,
+        "due_cents": 3500,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 8
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3500,
+        "fee_cents": 0,
+        "due_cents": 3500,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3500,
+        "fee_cents": 0,
+        "due_cents": 3500,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 8
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 20,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3749,
+        "fee_cents": 0,
+        "due_cents": 3749,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 8
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "garlic powder",
+          "black beans"
+        ],
+        "dinner_cents": 3380,
+        "qualifying_cart_cents": 3480,
+        "fee_cents": 495,
+        "due_cents": 3975,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3580,
+        "fee_cents": 0,
+        "due_cents": 3580,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": true,
+      "all_options_count": 8
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3580,
+        "fee_cents": 0,
+        "due_cents": 3580,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3580,
+        "fee_cents": 0,
+        "due_cents": 3580,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 8
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 100,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [],
+        "dinner_cents": 3729,
+        "qualifying_cart_cents": 3829,
+        "fee_cents": 0,
+        "due_cents": 3829,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 8
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3500,
+      "subtotal_method": {
+        "used": [
+          "garlic powder",
+          "frozen corn",
+          "black beans"
+        ],
+        "dinner_cents": 3280,
+        "qualifying_cart_cents": 3780,
+        "fee_cents": 0,
+        "due_cents": 3780,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder",
+          "frozen corn",
+          "black beans"
+        ],
+        "dinner_cents": 3280,
+        "qualifying_cart_cents": 3780,
+        "fee_cents": 0,
+        "due_cents": 3780,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 8
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 3729,
+      "subtotal_method": {
+        "used": [
+          "garlic powder",
+          "frozen corn",
+          "black beans"
+        ],
+        "dinner_cents": 3280,
+        "qualifying_cart_cents": 3780,
+        "fee_cents": 0,
+        "due_cents": 3780,
+        "within_cap": false
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder",
+          "frozen corn",
+          "black beans"
+        ],
+        "dinner_cents": 3280,
+        "qualifying_cart_cents": 3780,
+        "fee_cents": 0,
+        "due_cents": 3780,
+        "within_cap": false
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 8
+    },
+    {
+      "available": [
+        "garlic powder",
+        "frozen corn",
+        "black beans"
+      ],
+      "other_already_needed_eligible_cents": 500,
+      "below_minimum_fee_cents": 495,
+      "cap_cents": 4000,
+      "subtotal_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3980,
+        "fee_cents": 0,
+        "due_cents": 3980,
+        "within_cap": true
+      },
+      "checkout_method": {
+        "used": [
+          "garlic powder"
+        ],
+        "dinner_cents": 3480,
+        "qualifying_cart_cents": 3980,
+        "fee_cents": 0,
+        "due_cents": 3980,
+        "within_cap": true
+      },
+      "subtotal_method_false_pass": false,
+      "all_options_count": 8
+    }
+  ]
+}

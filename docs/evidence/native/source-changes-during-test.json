@@ -1,0 +1,16 @@
+{
+  "checkedUTC": "2026-11-03T06:03:59.951720+00:00",
+  "changedSinceBuildStart": [
+    "ios/App/MembershipCoordinator.swift",
+    "ios/App/MembershipEntryView.swift",
+    "ios/Features/Household/Household.xcstrings",
+    "ios/Features/Household/HouseholdInboxModel.swift",
+    "ios/Features/Membership/MembershipModel.swift",
+    "ios/Features/Records/RecordsToolsModel.swift",
+    "ios/Packages/RecordArchive/Sources/RecordArchive/Archive.swift",
+    "ios/Packages/RecordArchive/Tests/RecordArchiveTests/RecordArchiveTests.swift",
+    "ios/Tests/MembershipTests.swift",
+    "ios/Tests/RecordsAdapterTests.swift"
+  ],
+  "addedSinceBuildStart": []
+}

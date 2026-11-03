@@ -1,0 +1,170 @@
+{
+  "source": "https://centsperserving.com/blog/planning/week-of-dinners-under-50",
+  "as_of": "2026-11-02",
+  "price_period": "July 2026",
+  "conditions": "Accepted forms and usable amounts confirmed, other products and yields fixed, pre-order removal possible, no top-up purchases. Marginal cash today only.",
+  "alternatives": {
+    "garlic powder": [
+      "usda-baked-tofu",
+      "1/4 teaspoon garlic powder",
+      249
+    ],
+    "frozen corn": [
+      "usda-3-can-chili",
+      "10-oz package of frozen corn",
+      100
+    ],
+    "black beans": [
+      "usda-3-can-chili",
+      "pinto, kidney, red, or black",
+      100
+    ]
+  },
+  "normal_weeks": [
+    {
+      "confirmed_and_accepted": [],
+      "cash_cents": 3729,
+      "minimum_changes_by_dinner_cap": {
+        "3729": [],
+        "3500": null,
+        "3300": null,
+        "3200": null
+      }
+    },
+    {
+      "confirmed_and_accepted": [
+        "garlic powder"
+      ],
+      "cash_cents": 3480,
+      "minimum_changes_by_dinner_cap": {
+        "3729": [],
+        "3500": [
+          "garlic powder"
+        ],
+        "3300": null,
+        "3200": null
+      }
+    },
+    {
+      "confirmed_and_accepted": [
+        "frozen corn"
+      ],
+      "cash_cents": 3629,
+      "minimum_changes_by_dinner_cap": {
+        "3729": [],
+        "3500": null,
+        "3300": null,
+        "3200": null
+      }
+    },
+    {
+      "confirmed_and_accepted": [
+        "black beans"
+      ],
+      "cash_cents": 3629,
+      "minimum_changes_by_dinner_cap": {
+        "3729": [],
+        "3500": null,
+        "3300": null,
+        "3200": null
+      }
+    },
+    {
+      "confirmed_and_accepted": [
+        "garlic powder",
+        "frozen corn"
+      ],
+      "cash_cents": 3380,
+      "minimum_changes_by_dinner_cap": {
+        "3729": [],
+        "3500": [
+          "garlic powder"
+        ],
+        "3300": null,
+        "3200": null
+      }
+    },
+    {
+      "confirmed_and_accepted": [
+        "garlic powder",
+        "black beans"
+      ],
+      "cash_cents": 3380,
+      "minimum_changes_by_dinner_cap": {
+        "3729": [],
+        "3500": [
+          "garlic powder"
+        ],
+        "3300": null,
+        "3200": null
+      }
+    },
+    {
+      "confirmed_and_accepted": [
+        "frozen corn",
+        "black beans"
+      ],
+      "cash_cents": 3529,
+      "minimum_changes_by_dinner_cap": {
+        "3729": [],
+        "3500": null,
+        "3300": null,
+        "3200": null
+      }
+    },
+    {
+      "confirmed_and_accepted": [
+        "garlic powder",
+        "frozen corn",
+        "black beans"
+      ],
+      "cash_cents": 3280,
+      "minimum_changes_by_dinner_cap": {
+        "3729": [],
+        "3500": [
+          "garlic powder"
+        ],
+        "3300": [
+          "garlic powder",
+          "frozen corn",
+          "black beans"
+        ],
+        "3200": null
+      }
+    }
+  ],
+  "illustrative_mixed_table": [
+    {
+      "approved_alternate_side_for_three": false,
+      "lunch_reserved": false,
+      "quarter_cups_per_can": 6,
+      "quarter_cups_needed": 6,
+      "packs": 1,
+      "basket_cents": 7975
+    },
+    {
+      "approved_alternate_side_for_three": false,
+      "lunch_reserved": true,
+      "quarter_cups_per_can": 6,
+      "quarter_cups_needed": 9,
+      "packs": 2,
+      "basket_cents": 8075
+    },
+    {
+      "approved_alternate_side_for_three": true,
+      "lunch_reserved": true,
+      "quarter_cups_per_can": 6,
+      "quarter_cups_needed": 6,
+      "packs": 1,
+      "basket_cents": 7975
+    },
+    {
+      "approved_alternate_side_for_three": true,
+      "lunch_reserved": true,
+      "quarter_cups_per_can": 4,
+      "quarter_cups_needed": 6,
+      "packs": 2,
+      "basket_cents": 8075
+    }
+  ]
+}

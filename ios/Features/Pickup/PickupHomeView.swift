@@ -1,0 +1,306 @@
+import SwiftUI
+import UIKit
+import CoreDomain
+
+struct PickupHomeView: View {
+    @ObservedObject var model: PickupModel
+    @Environment(\.pickupLedger) private var ledger
+    var body: some View {
+        List {
+            PickupSaveStatus(model: model)
+            if let value = model.journey {
+                Section(pTr("This pickup")) {
+                    Text(value.savedAt, format: .dateTime.month().day().year().hour().minute())
+                    if value.originShopID != nil, value.context == nil, let ledger {
+                        NavigationLink(pTr("Open next shopping list")) { PickupListBridgeView(model: model, ledger: ledger, journeyID: value.id) }
+                    }
+                    if let basket = value.basket {
+                        Text(pTr(basket.phase == .reportedPlaced ? "Placement reported · original order locked" : basket.phase == .frozen ? "Frozen · placement unconfirmed" : "Draft · no order placed"))
+                        if basket.phase != .reportedPlaced {
+                            NavigationLink(pTr("Review whole checkout")) { PickupCheckoutView(model: model) }
+                            NavigationLink(pTr("Prepare retailer handoff")) { PickupHandoffView(model: model) }
+                        }
+                    }
+                    if value.pickup != nil {
+                        NavigationLink(pTr("Review a store offer")) { PickupOfferView(model: model) }
+                        NavigationLink(pTr("Record what came home")) { PickupArrivalView(model: model) }
+                        NavigationLink(pTr("Close the pickup")) { PickupSettlementView(model: model) }
+                    }
+                    NavigationLink(pTr("Repair a meal")) { PickupRepairView(model: model) }
+                    NavigationLink(pTr("Tell the cook")) { PickupCookView(model: model) }
+                    NavigationLink(pTr("Start the next shop")) { PickupNextShopView(model: model) }
+                }
+            } else {
+                Text(pTr("Review your shopping list to begin checkout. You can also repair a meal without an order."))
+            }
+            Section {
+                NavigationLink(pTr("Something is missing")) { UrgentRepairView(model: model) }
+            }
+            if model.journeys.count > 1 {
+                Section(pTr("Saved pickups and meal needs")) {
+                    ForEach(model.journeys) { value in
+                        Button { model.selectedID = value.id } label: {
+                            VStack(alignment: .leading) {
+                                Text(value.basket?.current.lines.first?.name ?? value.urgent.first?.meal ?? pTr("Pickup"))
+                                Text(value.savedAt.formatted()).font(.caption).foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .navigationTitle(pTr("Pickup"))
+        .task { await model.load() }
+        .disabled(model.saving)
+    }
+}
+
+struct PickupSaveStatus: View {
+    @ObservedObject var model: PickupModel
+    var body: some View {
+        if let error = model.error {
+            Section {
+                Text(error).foregroundStyle(.red).accessibilityIdentifier("pickup-save-error")
+                if model.hasPendingSave {
+                    Button(pTr("Retry save")) { Task { await model.retrySave() } }
+                    Button(pTr("Discard unsaved change"), role: .destructive) { model.discardPending() }
+                } else if !model.ready { Button(pTr("Retry opening")) { Task { await model.load() } } }
+            }
+        }
+        if model.saving { ProgressView(pTr("Saving on this device")) }
+    }
+}
+
+struct PickupEvidenceField: View {
+    let title: String
+    @Binding var amount: String
+    var body: some View {
+        TextField(pTr(title), text: $amount).keyboardType(.decimalPad)
+            .accessibilityHint(pTr("US dollars. Leave blank when unknown; enter zero only if confirmed."))
+    }
+}
+@MainActor func pickupEvidence(_ text: String) throws -> CostEvidence {
+    if let money = try ComparisonModel.money(text) { return .exact(money) }
+    return .unknown(reason: pTr("Not confirmed"))
+}
+func pickupResultText(_ result: CheckoutResult) -> String {
+    if let exact = result.total.exact { return pMoney(exact) }
+    if let upper = result.total.upperBound { return "\(pMoney(result.total.lowerBound)) – \(pMoney(upper))" }
+    return "\(pTr("At least")) \(pMoney(result.total.lowerBound)) · \(pTr("total unresolved"))"
+}
+private func pickupComponentName(_ component: String) -> String {
+    if component.hasPrefix("line:") { return pTr("Item price") }
+    if component.hasPrefix("fee:") { return pTr("Retailer fee") }
+    if component.hasPrefix("discount:") { return pTr("Discount") }
+    switch component {
+    case "inclusiveTotal": return pTr("Inclusive total")
+    case "lineSet": return pTr("Remaining original items")
+    case "tax": return pTr("Tax")
+    case "deposits": return pTr("Deposits and other charges")
+    default: return pTr("Unresolved")
+    }
+}
+struct PickupResultView: View {
+    let result: CheckoutResult
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(pickupResultText(result)).font(.title2.bold())
+            switch result.cap {
+            case .notProvided: Text(pTr("No spending cap supplied"))
+            case .scopeMismatch: Text(pTr("Cap and checkout cover different commitments"))
+            case .unresolved: Text(pTr("Whether this fits the cap is unresolved"))
+            case let .within(_, headroom): Text("\(pTr("Within this scope’s cap · room remaining")) \(pMoney(headroom))")
+            case let .over(_, overage): Text("\(pTr("Over this scope’s cap by")) \(pMoney(overage))")
+            }
+            ForEach(Array(result.uncertainties.enumerated()), id: \.offset) { _, issue in
+                Text("\(pickupComponentName(issue.component)): \(pTr(issue.reason))").font(.caption)
+            }
+        }
+    }
+}
+
+struct PickupCheckoutView: View {
+    @ObservedObject var model: PickupModel
+    @State private var store = ""
+    @State private var branch = ""
+    @State private var slot = ""
+    @State private var source = ""
+    @State private var observed = Date()
+    @State private var mode: ShoppingMode = .pickup
+    @State private var scope: CheckoutScope = .wholeCheckout
+    @State private var inclusive = false
+    @State private var total = ""
+    @State private var prices: [UUID: String] = [:]
+    @State private var fee = ""
+    @State private var threshold = ""
+    @State private var discount = ""
+    @State private var tax = ""
+    @State private var deposits = ""
+    @State private var cap = ""
+    @State private var complete = true
+    @State private var selected: Set<UUID> = []
+    @State private var preview: (BasketProposal, CheckoutComparison)?
+    @State private var formError: String?
+    @State private var hold = ""
+    @State private var availableFunds = ""
+    var body: some View {
+        Form {
+            PickupSaveStatus(model: model)
+            Section(pTr("Retailer preview · source and time")) {
+                TextField(pTr("Store"), text: $store)
+                TextField(pTr("Branch"), text: $branch)
+                TextField(pTr("Pickup or delivery slot"), text: $slot)
+                TextField(pTr("Source of these prices"), text: $source)
+                DatePicker(pTr("Observed"), selection: $observed)
+                Picker(pTr("Shopping mode"), selection: $mode) {
+                    Text(pTr("Pickup")).tag(ShoppingMode.pickup)
+                    Text(pTr("Delivery")).tag(ShoppingMode.delivery)
+                    Text(pTr("In store")).tag(ShoppingMode.inStore)
+                }
+                Picker(pTr("Scope"), selection: $scope) {
+                    Text(pTr("Whole checkout")).tag(CheckoutScope.wholeCheckout)
+                    Text(pTr("Dinners only")).tag(CheckoutScope.dinner)
+                    Text(pTr("Selected items only")).tag(CheckoutScope.item)
+                }
+                PickupEvidenceField(title: "Spending cap", amount: $cap)
+            }
+            Section(pTr("Expected charges · USD")) {
+                Toggle(pTr("Retailer total already includes all charges"), isOn: $inclusive)
+                Text(pTr("Blank means unknown. Enter 0 only for a confirmed zero charge."))
+                if inclusive { PickupEvidenceField(title: "Inclusive total", amount: $total) }
+                else {
+                    ForEach(model.journey?.basket?.current.lines ?? []) { line in
+                        PickupEvidenceField(title: line.name, amount: Binding(get: { prices[line.id] ?? "" }, set: { prices[line.id] = $0 }))
+                    }
+                    Toggle(pTr("All original items are represented"), isOn: $complete)
+                    PickupEvidenceField(title: "Fee below threshold or fixed fee", amount: $fee)
+                    PickupEvidenceField(title: "Fee waived at subtotal (optional)", amount: $threshold)
+                    PickupEvidenceField(title: "Eligible discount", amount: $discount)
+                    PickupEvidenceField(title: "Tax", amount: $tax)
+                    PickupEvidenceField(title: "Deposits and other charges", amount: $deposits)
+                }
+                Button(pTr("Save and evaluate checkout")) { saveQuote() }.buttonStyle(.borderedProminent)
+                if let formError { Text(formError).foregroundStyle(.red) }
+                if let result = model.result { PickupResultView(result: result) }
+            }
+            Section(pTr("Payment hold · separate from spending")) {
+                PickupEvidenceField(title: "Retailer-displayed hold", amount: $hold)
+                PickupEvidenceField(title: "Available funds (private, this screen only)", amount: $availableFunds)
+                if let held = try? ComparisonModel.money(hold), let funds = try? ComparisonModel.money(availableFunds), let gap = try? held.subtracting(funds) {
+                    Text("\(pTr("Hold less available funds")): \(pMoney(gap))")
+                } else { Text(pTr("Hold comparison unresolved")) }
+            }
+            if !inclusive, model.result != nil {
+                Section(pTr("Protect or defer · preview before applying")) {
+                    Text(pTr("Only lines you explicitly mark flexible can be deferred. Protected meal needs stay recorded."))
+                    ForEach(model.journey?.basket?.current.lines ?? []) { line in
+                        Toggle(line.name, isOn: Binding(get: { model.journey?.flexible.contains(line.id) == true }, set: { enabled in
+                            Task { await model.change { value in if enabled { value.flexible.insert(line.id) } else { value.flexible.remove(line.id) } } }
+                        }))
+                        .disabled(model.journey?.plannedNeeds.contains(where: { $0.orderLineID == line.id && $0.priority == .protected }) == true)
+                        ForEach(model.journey?.plannedNeeds.filter { $0.orderLineID == line.id } ?? []) { need in
+                            Text("\(need.name): \(pQuantity(need.amount)) · \(pTr(need.priority == .protected ? "Protected" : "Required"))").font(.caption)
+                        }
+                        if model.journey?.flexible.contains(line.id) == true {
+                            Toggle(pTr("Include in deferral preview"), isOn: Binding(get: { selected.contains(line.id) }, set: { if $0 { selected.insert(line.id) } else { selected.remove(line.id) } }))
+                        }
+                    }
+                    Button(pTr("Preview deferrals together")) {
+                        do { preview = try model.deferralPreview(selected); formError = nil }
+                        catch { formError = pTr("Select flexible lines and save a complete component quote first.") }
+                    }
+                    if let preview {
+                        Text(pTr("Current checkout")); PickupResultView(result: preview.1.before)
+                        Text(pTr("After all selected deferrals")); PickupResultView(result: preview.1.after)
+                        Button(pTr("Apply reviewed deferral")) { Task { if await model.applyDeferral(preview.0) { self.preview = nil; selected = [] } } }
+                        Button(pTr("Cancel preview")) { self.preview = nil }
+                    }
+                    ForEach(model.journey?.proposals.filter { !(model.journey?.undoneProposals.contains($0.id) ?? false) } ?? []) { proposal in
+                        Button(pTr("Undo deferral and review prices")) { Task { await model.undoDeferral(proposal) } }
+                    }
+                }
+            }
+        }.navigationTitle(pTr("Whole checkout"))
+        .disabled(model.saving)
+        .onAppear { populate() }
+    }
+    private func populate() {
+        guard let value = model.journey else { return }
+        store = value.context?.storeID ?? ""; branch = value.context?.branchID ?? ""; slot = value.context?.slot ?? ""; source = value.context?.source ?? ""
+        mode = value.context?.mode ?? .pickup; observed = value.context?.observedAt ?? Date()
+        if let saved = value.cap { cap = Decimal(saved.amount.minorUnits).descriptionFromCents; scope = saved.scope }
+        for line in value.basket?.current.lines ?? [] { if case let .exact(amount) = line.expectedCost { prices[line.id] = Decimal(amount.minorUnits).descriptionFromCents } }
+    }
+    private func saveQuote() {
+        do {
+            guard let value = model.journey, !store.isEmpty, !branch.isEmpty, !slot.isEmpty, !source.isEmpty else { throw CocoaError(.validationMissingMandatoryProperty) }
+            let context = CheckoutContext(storeID: store, branchID: branch, mode: mode, slot: slot, commitmentsID: value.context?.commitmentsID ?? value.id, observedAt: observed, source: source)
+            let pricing: CheckoutPricing
+            if inclusive { pricing = .inclusiveTotal(try pickupEvidence(total)) }
+            else {
+                let lines = try (value.basket?.current.lines ?? []).map { CheckoutLine(id: $0.id, name: $0.name, cost: try pickupEvidence(prices[$0.id] ?? "")) }
+                let feeRule: CheckoutFeeRule
+                if let threshold = try ComparisonModel.money(threshold) { feeRule = .waivedAt(threshold: threshold, belowThreshold: try pickupEvidence(fee), basis: .eligibleItemsAfterEligibleDiscounts) }
+                else { feeRule = .fixed(try pickupEvidence(fee)) }
+                pricing = .components(lines: lines, lineSetComplete: complete, fees: [CheckoutFee(id: "retailer-fee", rule: feeRule)], discounts: [CheckoutDiscount(id: "eligible-discount", amount: try pickupEvidence(discount), reducesEligibleSubtotal: true)], tax: try pickupEvidence(tax), deposits: try pickupEvidence(deposits))
+            }
+            let cap = try ComparisonModel.money(cap).map { CheckoutCap(scope: scope, commitmentsID: context.commitmentsID, amount: $0) }
+            let quote = CheckoutQuote(scope: scope, context: context, pricing: pricing)
+            Task { await model.setQuote(quote, cap: cap) }; formError = nil; preview = nil
+        } catch { formError = pTr("Enter source, store, branch and slot, and valid dollar amounts with at most two decimal places.") }
+    }
+}
+private extension Decimal { var descriptionFromCents: String { (self / 100).description } }
+
+struct PickupActivitySheet: UIViewControllerRepresentable {
+    let text: String
+    let completion: (Bool, String?) -> Void
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        let controller = UIActivityViewController(activityItems: [text], applicationActivities: nil)
+        controller.completionWithItemsHandler = { activity, completed, _, _ in completion(completed, activity?.rawValue) }
+        return controller
+    }
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
+}
+struct PickupHandoffView: View {
+    @ObservedObject var model: PickupModel
+    @State private var sharing = false
+    @State private var retailerURL = ""
+    var body: some View {
+        Form {
+            PickupSaveStatus(model: model)
+            Text(pTr("Freeze the reviewed revision before leaving the app. Copying or sharing does not place an order."))
+            Button(pTr("Freeze reviewed basket")) { Task { await model.freeze() } }.disabled(model.result == nil || model.frozenSnapshot != nil)
+            if let text = model.frozenText() {
+                Section(pTr("Dated snapshot")) { Text(text).textSelection(.enabled) }
+                Button(pTr("Copy dated list")) { Task {
+                    guard await model.recordHandoff(.copyAttempted) else { return }
+                    UIPasteboard.general.string = text
+                    await model.recordHandoff(.copied)
+                } }
+                Button(pTr("Share dated list")) { Task { if await model.recordHandoff(.shareOpened) { sharing = true } } }
+                TextField(pTr("Retailer website (https://…)"), text: $retailerURL).keyboardType(.URL).textInputAutocapitalization(.never)
+                Button(pTr("Open retailer website")) { Task {
+                    guard let url = URL(string: retailerURL), url.scheme == "https", url.host != nil else { model.error = pTr("Enter a valid https retailer address."); return }
+                    if await UIApplication.shared.open(url) { await model.recordHandoff(.retailerOpened, destination: url.host) }
+                    else { model.error = pTr("Could not open the retailer. Placement remains unconfirmed.") }
+                } }
+                Button(pTr("I placed this order")) { Task { await model.reportPlaced() } }.buttonStyle(.borderedProminent)
+                    .disabled(model.journey?.basket?.phase == .reportedPlaced)
+                if model.journey?.basket?.phase != .reportedPlaced {
+                    Button(pTr("Reopen draft and recheck prices")) { Task { await model.reopenDraft() } }
+                }
+                Text(pTr("Still checking out? Your saved snapshot stays here. Placement requires your explicit report."))
+                Section(pTr("Handoff history")) {
+                    ForEach(model.journey?.basket?.handoffActions ?? []) { event in Text("\(pTr(event.kind.rawValue)) · \(event.occurredAt.formatted())") }
+                }
+            }
+        }.navigationTitle(pTr("Retailer handoff"))
+        .disabled(model.saving)
+        .sheet(isPresented: $sharing) {
+            PickupActivitySheet(text: model.frozenText() ?? "") { completed, destination in
+                Task { await model.recordHandoff(completed ? .intentionallySent : .shareCancelled, destination: destination) }
+            }
+        }
+    }
+}

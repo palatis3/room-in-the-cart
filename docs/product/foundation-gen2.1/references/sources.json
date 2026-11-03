@@ -1,0 +1,202 @@
+[
+  {
+    "workspace_path": "research/grocery15/Five dinners that survive pickup.html",
+    "sha256": "2e11715b111733236b81af0d0dc8e61e304498a3fe44779651f30fe79de3f413"
+  },
+  {
+    "workspace_path": "research/grocery16/Grocery pickup planner product brief.docx",
+    "sha256": "d58d14de3e8dcec2d0fe1c27524dbff63476f8d84180ae252137bba3cb6fb881"
+  },
+  {
+    "workspace_path": "research/grocery17/Grocery pickup planner Gen 2.docx",
+    "sha256": "7441720fcec75d6726df365807b56287fb5c63c7949996e7b8ed67854c66b470"
+  },
+  {
+    "workspace_path": "research/grocery18/Grocery pickup planner Gen 3.docx",
+    "sha256": "e403eedec4690f9a8d172146ef307db075200138b2d09b4830d6ddf3f9532a81"
+  },
+  {
+    "workspace_path": "research/grocery19/Grocery pickup planner Gen 4.docx",
+    "sha256": "495a5a1a48ddd271cec6a93a09326b219ad65e6f04e0345a680ac2310973a169"
+  },
+  {
+    "workspace_path": "research/grocery20/Grocery pickup planner Gen 5.docx",
+    "sha256": "ec8889eedbed9925f7a4a41bbf7cc0cf507038c2e466e32fcc5ec4522bfc1b21"
+  },
+  {
+    "workspace_path": "research/grocery21/Grocery pickup planner Gen 6.docx",
+    "sha256": "f19269d377bff2cab95d50e8eeee8f90ac86b75cd6864621ed3e343345e34eab"
+  },
+  {
+    "workspace_path": "research/grocery22/Gen 7 product research.md",
+    "sha256": "6eb41980883fb19870b2d2568b1db0195a514d75b5b5521f25df66932e05f340"
+  },
+  {
+    "workspace_path": "research/grocery23/Gen 8 product research.md",
+    "sha256": "72e48cd7b5c01ff2a99bc641e82037249b3c6d9678b66ebfb06e13931bbd131d"
+  },
+  {
+    "workspace_path": "research/grocery24/Gen 9 product review.md",
+    "sha256": "53663f7a7b35791f4cbbf1d4a19f90e37d73e8aa15e5f62d4679e5e15b88baa8"
+  },
+  {
+    "workspace_path": "research/grocery25/Gen 10 product plan.md",
+    "sha256": "5b71abc69382a36ccd8296ca28c274428a09999facc07cbf2d87b3b486ea1c5a"
+  },
+  {
+    "workspace_path": "research/grocery26/Gen 11 screen walkthrough.md",
+    "sha256": "7b7f16dd0792384ec9124705377e8006d5531c50f093cb122f88c40116c489c6"
+  },
+  {
+    "workspace_path": "research/grocery27/Gen 12 product plan.md",
+    "sha256": "cb20b79f5f4b0fc8dfc97f118a69ecf367a65bdec84fa36cb163a0f5825fbb42"
+  },
+  {
+    "workspace_path": "research/grocery28/Gen 13 design guide.md",
+    "sha256": "9dd8bbdfbfbbc6f39331ef5e114cc2a4f6ec72e9244525d29c40e9b8e36e9e49"
+  },
+  {
+    "workspace_path": "research/grocery29/Gen 14 master plan.md",
+    "sha256": "ff801decd67115329937335e4e6a50b70d7c051eadbdc5528b3b456875f6a28c"
+  },
+  {
+    "workspace_path": "research/grocery30/Gen 15 first release plan.md",
+    "sha256": "353b8f07aaa04bfa8ed3f7d56b5dc0235e7c464ec9cec1208dba9b61fa0bc855"
+  },
+  {
+    "workspace_path": "research/grocery16/decision.txt",
+    "sha256": "52f6ba10230a5d9c85c61b44e20bef457876444c3fec7fddd71c0e788bbca1a3"
+  },
+  {
+    "workspace_path": "research/grocery18/mixed-household.json",
+    "sha256": "955f96ee4c09def74e5784b17a28d7e0cc95480915b7a39bb71d4e2820b8a891",
+    "pack_copy": "references/grocery18/mixed-household.json"
+  },
+  {
+    "workspace_path": "research/grocery18/verified-cases.json",
+    "sha256": "738e7fe2e23590a46347b37936e66473775aa9547adc3b3bc2b5152ed6cde66d",
+    "pack_copy": "references/grocery18/verified-cases.json"
+  },
+  {
+    "workspace_path": "research/grocery19/ui-cases.json",
+    "sha256": "dcc2893d53baac44c639020d5711fa1f4ca0c81bc34638c48c7bf858fb81bd82",
+    "pack_copy": "references/grocery19/ui-cases.json"
+  },
+  {
+    "workspace_path": "research/grocery20/qa-cases.json",
+    "sha256": "685335f6955dbd2261494afc53761f666b370d4e0fd44708a01820343a65828a",
+    "pack_copy": "references/grocery20/qa-cases.json"
+  },
+  {
+    "workspace_path": "research/grocery22/question-audit.json",
+    "sha256": "96f5f52ad897162f5c52edf34c673b21f1e971add37850e097dc2edb922328a6",
+    "pack_copy": "references/grocery22/question-audit.json"
+  },
+  {
+    "workspace_path": "research/grocery23/checkout-replay.json",
+    "sha256": "9c9d7426e2c7b2ca2f3665dcf689fb36ad467ef643b18888039384a92524255b",
+    "pack_copy": "references/grocery23/checkout-replay.json"
+  },
+  {
+    "workspace_path": "research/grocery23/pilot-protocol.md",
+    "sha256": "cc3b9ec0bba887b749bf59d05ed908fd77afcc07a801d09c669db31db8a0224f",
+    "pack_copy": "references/grocery23/pilot-protocol.md"
+  },
+  {
+    "workspace_path": "research/grocery24/defer-example.json",
+    "sha256": "9cfc223e958a9a629b95c54b0df1b411d452db0179c016045c5aa44e964cc6b2",
+    "pack_copy": "references/grocery24/defer-example.json"
+  },
+  {
+    "workspace_path": "research/grocery25/Feature register.md",
+    "sha256": "ea7698daeb2cbcc4e7aba91df01a0d463011f1e3d1669cfc8008fbaa2e5f3bd3"
+  },
+  {
+    "workspace_path": "research/grocery26/Gen 11 feature map.md",
+    "sha256": "c3b89dcf22296588ecafafc91e0dd5e4dfcff5bc658a7ea9b3571dc96740afa7"
+  },
+  {
+    "workspace_path": "research/grocery27/Gen 12 screen walkthrough.md",
+    "sha256": "41a39964468ccb0bfd168255c33ae74c74169d69ee005539d939eb2206d2feaf"
+  },
+  {
+    "workspace_path": "research/grocery28/schema-contract.json",
+    "sha256": "7c107287a7470ff8e0d29cf8f09d5b529cc3ba04704dd4479aa07a26ad8c3aab",
+    "pack_copy": "references/grocery28/schema-contract.json"
+  },
+  {
+    "workspace_path": "research/grocery28/design-tokens.json",
+    "sha256": "ba84485a7f182e8a7adb839eec4308692e4289e7f96b5c5f7549b90cebe2200c"
+  },
+  {
+    "workspace_path": "research/grocery28/Gen 13 screen and feature map.md",
+    "sha256": "44dea7e82c8ee1f8a70a248c41f3ec0af385329e49236a546a59b063fe1b694b"
+  },
+  {
+    "workspace_path": "research/grocery29/Gen 14 screen and feature map.md",
+    "sha256": "bd144df7fb7ff9b60883a363d42aea695f068261305f2d7dfe1fc50ccd653478"
+  },
+  {
+    "workspace_path": "research/grocery30/Gen 15 release register.md",
+    "sha256": "b55a95b872ae33f8cc293197305b3057957eb3354a4121dd37ff1e0eedc980ea"
+  },
+  {
+    "workspace_path": "research/grocery30/Gen 15 screen walkthrough.md",
+    "sha256": "025e1ccde86f46b9f44059dc43df4a309419a5ef28f0d563d96d0935358bc682"
+  },
+  {
+    "workspace_path": "research/grocery30/inbox-scenarios.json",
+    "sha256": "a0663e09cd17048b519e96190e7e1a42bdf6970d7616cae65cd79648c2e43685",
+    "pack_copy": "references/grocery30/inbox-scenarios.json"
+  },
+  {
+    "workspace_path": "research/grocery30/Retailer connection findings.md",
+    "sha256": "07f81a702297e140165b442354cd7328912fde7194e7cb7a65a9f6e6cb6bdb2e",
+    "pack_copy": "references/grocery30/Retailer connection findings.md"
+  },
+  {
+    "workspace_path": "research/grocery30/retailer-connections.json",
+    "sha256": "adada654d72694823bc856e61a2504a1d947476875589b095ea052e8b98f203f",
+    "pack_copy": "references/grocery30/retailer-connections.json"
+  },
+  {
+    "workspace_path": "research/grocery30/extra-grocers.json",
+    "sha256": "25cdc383ae820a9b0d12ae75328182601eae5f9df2f26e0834ec57c3d2e4893a",
+    "pack_copy": "references/grocery30/extra-grocers.json"
+  },
+  {
+    "workspace_path": "research/grocery28/qa/check-contract.py",
+    "sha256": "2291b6ffcd830fd88885a09799f7ec28992998540250971cb0651e7dfa965a30",
+    "pack_copy": "references/grocery28/qa/check-contract.py"
+  },
+  {
+    "workspace_path": "research/grocery30/qa/check_scenarios.py",
+    "sha256": "0d2a7316f008c613775c5881e744523ac8c63cbd06f3171d2a25b35e77363d91",
+    "pack_copy": "references/grocery30/qa/check_scenarios.py"
+  },
+  {
+    "workspace_path": "research/grocery28/Recommended appearance.png",
+    "sha256": "c46c86c329e3c6954fdac8d8213b4473ba21af69bc9118995a054eee19803ed6",
+    "pack_copy": "references/grocery28/Recommended appearance.png"
+  },
+  {
+    "workspace_path": "research/grocery28/Working screens.png",
+    "sha256": "f0386545cbbb9dd9fbece11f7712a938ede6f1f67ba1e6efb4ea58cb173762d5",
+    "pack_copy": "references/grocery28/Working screens.png"
+  },
+  {
+    "workspace_path": "research/grocery28/motion-study.gif",
+    "sha256": "e2a4ca2de1ed14aac0dcc0b51b650867e3fc23936a8f42fdc60632fd767fd1af",
+    "pack_copy": "references/grocery28/motion-study.gif"
+  },
+  {
+    "workspace_path": "research/grocery29/Typography study.png",
+    "sha256": "a86b09da398d059d0508e854e593907b7fa00c8abf5c612401e9e0651f370d6d",
+    "pack_copy": "references/grocery29/Typography study.png"
+  },
+  {
+    "workspace_path": "research/grocery30/Family inbox study.png",
+    "sha256": "2275198c8e11b0d54ea07dcbe3f225612e4a86b8642bca7571e1623137982545",
+    "pack_copy": "references/grocery30/Family inbox study.png"
+  }
+]

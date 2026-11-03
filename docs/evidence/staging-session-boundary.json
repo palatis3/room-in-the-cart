@@ -1,0 +1,11 @@
+{
+  "date": "2026-11-03T06:04:38.341Z",
+  "project": "uwjxrotnocxxomqdetzk",
+  "tlsVerified": true,
+  "verification": {
+    "nonexistent_session_live": false,
+    "anon_can_introspect": false,
+    "authenticated_can_introspect": false,
+    "direct_auth_read_denied": true
+  }
+}

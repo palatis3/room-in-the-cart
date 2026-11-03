@@ -1,0 +1,317 @@
+import Foundation
+import SwiftUI
+import LocalAuthentication
+import HouseholdClient
+
+@MainActor final class HouseholdModel: ObservableObject {
+    @Published private(set) var identity: VerifiedAdultIdentity?
+    @Published private(set) var workspaces: [WorkspaceList.Workspace] = []
+    @Published private(set) var projection: HouseholdBootstrap?
+    @Published private(set) var shopperInbox: HouseholdInboxModel?
+    @Published private(set) var requests: [OwnRequest] = []
+    @Published private(set) var nextRequestCursor: String?
+    @Published private(set) var delivery: DeliveryState = .localDraft
+    @Published private(set) var busy = false
+    @Published private(set) var locked = false
+    @Published private(set) var codeSent = false
+    @Published private(set) var notice: String?
+    @Published var email = ""
+    @Published var code = ""
+    @Published var item = ""
+    @Published var quantity = ""
+    @Published private(set) var editing: OwnRequest?
+    @Published private(set) var followingUp: OwnRequest?
+    @Published var forNextShop = false
+    @Published var keepLocalPrivate = false
+    let configured: Bool
+    private(set) var serviceURL: URL?
+    var onScopeChange: (() -> Void)?
+    private let auth: AdultAuth?
+    private let service: HouseholdService?
+    private let outbox: OperationOutbox
+    private let shopperOutbox: OperationOutbox
+    private var pending: PendingOperation?
+    private var attempts = 0
+    private var retryAfter = Date.distantPast
+    private var generation = UUID()
+
+    init(bundle: Bundle = .main, auth: AdultAuth? = nil, service: HouseholdService? = nil, outboxURL: URL? = nil) {
+        let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        let queueURL = outboxURL ?? base.appendingPathComponent("RoomInTheCart/household-outbox.json")
+        outbox = OperationOutbox(url: queueURL)
+        shopperOutbox = OperationOutbox(url: queueURL.deletingPathExtension().appendingPathExtension("shopper.json"))
+        if let auth, let service { self.auth = auth; self.service = service; configured = true; return }
+        guard let serviceString = bundle.object(forInfoDictionaryKey: "HouseholdServiceURL") as? String,
+              let authString = bundle.object(forInfoDictionaryKey: "SupabaseProjectURL") as? String,
+              let key = bundle.object(forInfoDictionaryKey: "SupabasePublishableKey") as? String,
+              let serviceURL = URL(string: serviceString), let projectURL = URL(string: authString),
+              let serviceConfig = try? ServiceConfiguration(baseURL: serviceURL),
+              let authConfig = try? AdultAuthConfiguration(projectURL: projectURL, publishableKey: key) else {
+            self.auth = nil; self.service = nil; configured = false; return
+        }
+        let namespace = (bundle.bundleIdentifier ?? "RoomInTheCart") + "." + (projectURL.host ?? "auth")
+        let managedAuth = AdultAuth(configuration: authConfig, vault: KeychainRefreshTokenVault(service: namespace))
+        self.serviceURL = serviceURL
+        self.auth = managedAuth
+        self.service = HouseholdService(configuration: serviceConfig, auth: managedAuth,
+            deviceVault: KeychainRefreshTokenVault(service: namespace, account: "household-device"))
+        configured = true
+    }
+    func sendCode() async {
+        guard let auth, !busy else { return }
+        busy = true; notice = nil; defer { busy = false }
+        let start = generation
+        do { try await auth.requestEmailCode(email: email.trimmingCharacters(in: .whitespacesAndNewlines))
+            guard start == generation else { return }; codeSent = true
+            notice = ht("Check your email for a sign-in code.") }
+        catch { await show(error, start: start) }
+    }
+    func verifyCode() async {
+        guard let auth, let service, !busy else { return }
+        busy = true; notice = nil; defer { busy = false }
+        let start = generation
+        do {
+            let access = try await auth.verifyEmailCode(email: email.trimmingCharacters(in: .whitespacesAndNewlines), code: code)
+            guard start == generation else { return }
+            identity = access.identity; code = ""; locked = false
+            let result = try await service.workspaces()
+            guard start == generation else { return }
+            workspaces = result.workspaces
+            if workspaces.isEmpty { notice = ht("This account has no active household access. Your private work stays on this phone.") }
+        } catch { await show(error, start: start) }
+    }
+    /// Explicit consent keeps local data private. There is deliberately no automatic local import.
+    func join(_ workspace: WorkspaceList.Workspace) async {
+        guard keepLocalPrivate, let service, !busy, !locked else { return }
+        onScopeChange?()
+        clearProjection()
+        busy = true; notice = nil; defer { busy = false }
+        let start = generation
+        do {
+            let value = try await service.enroll(householdID: workspace.householdId)
+            guard start == generation else { return }
+            projection = value
+            let page = try await service.ownRequests()
+            guard start == generation else { return }
+            requests = page.requests; nextRequestCursor = page.nextCursor
+            // Old device-bound operations require review; never attach them to this new enrollment.
+            let old = try await outbox.operations()
+            guard start == generation else { return }
+            if let operation = old.first(where: { $0.householdID == value.household.id && $0.memberID == value.memberId }) {
+                pending = operation
+                let matches = await service.matches(operation, memberID: value.memberId)
+                guard start == generation else { return }
+                if matches {
+                    delivery = .waiting(operationID: operation.id)
+                } else {
+                    delivery = .needsReview(operationID: operation.id, code: "device_changed")
+                }
+                notice = ht("An earlier request needs review. Check received requests before sending it again.")
+            }
+            configureShopperInbox(value)
+        } catch { await show(error, start: start) }
+    }
+    func refresh() async {
+        guard let service, projection != nil, !busy, !locked else { return }
+        busy = true; defer { busy = false }; let start = generation
+        do {
+            let fresh = try await service.bootstrap()
+            let page = try await service.ownRequests()
+            guard start == generation else { return }
+            projection = fresh; requests = page.requests; nextRequestCursor = page.nextCursor; notice = nil
+            configureShopperInbox(fresh)
+        } catch { await show(error, start: start) }
+    }
+    func loadMoreRequests() async {
+        guard let service, let cursor = nextRequestCursor, projection != nil, !busy, !locked else { return }
+        busy = true; defer { busy = false }; let start = generation
+        do {
+            let page = try await service.ownRequests(cursor: cursor)
+            guard start == generation else { return }
+            for request in page.requests { requests.removeAll { $0.id == request.id }; requests.append(request) }
+            nextRequestCursor = page.nextCursor
+        } catch { await show(error, start: start) }
+    }
+    func sendRequest() async {
+        guard let service, let projection, let shop = editing?.shopId ?? followingUp?.shopId ?? projection.shopId,
+              !busy, !locked, pending == nil else { return }
+        let text = item.trimmingCharacters(in: .whitespacesAndNewlines)
+        let amount = quantity.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty, text.count <= 240, amount.count <= 80 else { notice = ht("Enter an item up to 240 characters and a quantity up to 80 characters."); return }
+        busy = true; notice = nil; defer { busy = false }; let start = generation
+        do {
+            let window = try await service.replayWindow()
+            guard start == generation else { return }
+            var body: [String: JSONValue] = ["originalItem": .string(text), "ownQuantity": amount.isEmpty ? .null : .string(amount)]
+            let kind: String
+            if let editing {
+                kind = "request.edit"; body["requestId"] = .string(editing.requestId)
+            } else {
+                kind = "request.send"; body["clientRequestId"] = .string(UUID().uuidString.lowercased())
+                body["authoredAt"] = .string(ISO8601DateFormatter().string(from: Date()))
+                body["route"] = .string(forNextShop ? "next" : "current")
+                if let followingUp { body["followupTo"] = .string(followingUp.requestId) }
+            }
+            let envelope = CommandEnvelope(replayWindow: window.id, shopId: editing?.shopId ?? followingUp?.shopId ?? shop, kind: kind,
+                base: .init(shopRevision: 0, authorityEpoch: 0, requestRevision: editing?.revision), body: body)
+            let operation = try await service.prepare(envelope: envelope, bootstrap: projection)
+            guard start == generation else { return }
+            try await outbox.append(operation)
+            guard start == generation else { return }
+            pending = operation; attempts = 0; delivery = .waiting(operationID: operation.id)
+            await deliver(operation, start: start)
+        } catch { await show(error, start: start) }
+    }
+    func edit(_ request: OwnRequest) {
+        guard request.ownActionAllowed, pending == nil, !busy, !locked else { return }
+        followingUp = nil; editing = request; item = request.originalItem; quantity = request.ownQuantity ?? ""; delivery = .localDraft
+    }
+    func followUp(_ request: OwnRequest) {
+        guard !request.ownActionAllowed, pending == nil, !busy, !locked else { return }
+        editing = nil; followingUp = request; item = request.originalItem; quantity = request.ownQuantity ?? ""; delivery = .localDraft
+    }
+    func cancelEdit() { editing = nil; followingUp = nil; item = ""; quantity = ""; forNextShop = false }
+    func withdraw(_ request: OwnRequest) async {
+        guard request.ownActionAllowed, let service, let projection,
+              pending == nil, !busy, !locked else { return }
+        busy = true; notice = nil; defer { busy = false }; let start = generation
+        do {
+            let window = try await service.replayWindow()
+            guard start == generation else { return }
+            let envelope = CommandEnvelope(replayWindow: window.id, shopId: request.shopId, kind: "request.withdraw",
+                base: .init(shopRevision: 0, authorityEpoch: 0, requestRevision: request.revision), body: ["requestId": .string(request.requestId)])
+            let operation = try await service.prepare(envelope: envelope, bootstrap: projection)
+            guard start == generation else { return }
+            try await outbox.append(operation)
+            guard start == generation else { return }
+            pending = operation; attempts = 0; delivery = .waiting(operationID: operation.id)
+            await deliver(operation, start: start)
+        } catch { await show(error, start: start) }
+    }
+    func retry() async {
+        guard let pending, !busy, !locked, case .waiting = delivery else { return }
+        guard Date() >= retryAfter, attempts < 5 else { notice = ht("Wait before retrying, or review this request after several failed attempts."); return }
+        busy = true; defer { busy = false }; await deliver(pending, start: generation)
+    }
+    private func deliver(_ operation: PendingOperation, start: UUID) async {
+        guard let service else { return }
+        attempts += 1
+        do {
+            let receipt = try await service.execute(operation)
+            guard start == generation else { return }
+            delivery = .received(receipt); pending = nil; cancelEdit()
+            requests.removeAll { $0.id == receipt.request.id }; requests.insert(receipt.request, at: 0)
+            do { try await outbox.remove(operation.id) }
+            catch { if start == generation { notice = ht("Received by the household. Local retry cleanup needs another attempt.") } }
+        } catch {
+            guard start == generation else { return }
+            if let failure = error as? ClientError {
+                if let delay = RetryPolicy().delay(attempt: attempts, error: failure) { retryAfter = Date().addingTimeInterval(delay) }
+                else if failure != .accessEnded && failure != .sessionNeeded && failure != .cancelled {
+                    let reason: String
+                    if case .service(_, let code, _, _) = failure { reason = code } else { reason = "retry_limit" }
+                    delivery = .needsReview(operationID: operation.id, code: reason)
+                }
+            }
+            await show(error, start: start)
+        }
+    }
+    func discardPendingAfterReview() async {
+        guard !busy, !locked, let pending else { return }
+        busy = true; defer { busy = false }; let start = generation
+        do { try await outbox.remove(pending.id)
+            guard start == generation else { return }
+            self.pending = nil; delivery = .localDraft; attempts = 0; notice = nil }
+        catch { if start == generation { notice = ht("Could not clear the local retry. Try again.") } }
+    }
+    /// Scene transitions hide protected projections; returning requires OS owner authentication and fresh authorization.
+    func lock() {
+        onScopeChange?(); generation = UUID(); locked = identity != nil
+        clearProjection(); workspaces = []; code = ""; notice = nil
+    }
+    func unlock() async {
+        guard let auth, let service, !busy else { return }
+        busy = true; defer { busy = false }; let start = generation
+        let context = LAContext(); var error: NSError?
+        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
+            notice = ht("Sign in again to reopen household access on this device."); return
+        }
+        do {
+            guard try await context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: ht("Reopen your protected household account")) else { return }
+            guard start == generation else { return }
+            let access = try await auth.access(); let list = try await service.workspaces()
+            guard start == generation else { return }
+            identity = access.identity; workspaces = list.workspaces; locked = false; keepLocalPrivate = false
+        } catch { await show(error, start: start) }
+    }
+    func signOut(allDevices: Bool = false) async {
+        guard !busy else { return }
+        busy = true; defer { busy = false }
+        onScopeChange?()
+        generation = UUID(); identity = nil; workspaces = []; clearProjection()
+        delivery = .localDraft; code = ""; email = ""; item = ""; quantity = ""; codeSent = false; locked = false
+        keepLocalPrivate = false; editing = nil
+        var failed = false
+        do { try await service?.revokeCurrentDevice() } catch { failed = true }
+        await service?.clearScope()
+        do { try await outbox.purge() } catch { failed = true }
+        do { try await shopperOutbox.purge() } catch { failed = true }
+        do { try await auth?.signOut(allDevices: allDevices) } catch { failed = true }
+        notice = failed ? ht("Signed out on this phone. Remote sign-out or local cleanup could not be confirmed.") : nil
+    }
+    func adultAccessToken() async throws -> String {
+        guard let auth, identity != nil, projection != nil, !locked else { throw ClientError.sessionNeeded }
+        let start = generation
+        let access = try await auth.access()
+        guard start == generation, !locked else { throw ClientError.cancelled }
+        guard access.identity == identity else { throw ClientError.accessEnded }
+        return access.accessToken
+    }
+    func deviceAccessToken() async throws -> String {
+        guard let service, let projection, identity != nil, !locked else { throw ClientError.sessionNeeded }
+        let start = generation
+        let token = try await service.currentDeviceToken(householdID: projection.household.id, memberID: projection.memberId)
+        guard start == generation, !locked else { throw ClientError.cancelled }
+        return token
+    }
+    private func clearProjection() {
+        shopperInbox?.clear(); shopperInbox = nil
+        projection = nil; requests = []; nextRequestCursor = nil; pending = nil
+        delivery = .localDraft; attempts = 0; retryAfter = .distantPast; cancelEdit()
+    }
+    var canReviewHouseholdRequests: Bool {
+        guard let projection, !locked, projection.role == "shopper", projection.shopId != nil else { return false }
+        return ["shopper_inbox", "request_preview", "shopper_commands"].allSatisfy(projection.capabilities.contains)
+    }
+    private func configureShopperInbox(_ projection: HouseholdBootstrap) {
+        guard canReviewHouseholdRequests, let service else { shopperInbox?.clear(); shopperInbox = nil; return }
+        if let shopperInbox, shopperInbox.authorized, shopperInbox.householdID == projection.household.id,
+           shopperInbox.memberID == projection.memberId, shopperInbox.shopID == projection.shopId { return }
+        shopperInbox?.clear()
+        let start = generation
+        shopperInbox = HouseholdInboxModel(bootstrap: projection, service: service, outbox: shopperOutbox) { [weak self] in
+            await self?.show(ClientError.accessEnded, start: start)
+        }
+    }
+    private func show(_ error: Error, start: UUID) async {
+        guard start == generation else { return }
+        switch error as? ClientError {
+        case .accessEnded, .sessionNeeded:
+            onScopeChange?()
+            generation = UUID(); clearProjection(); workspaces = []; delivery = .accessEnded; locked = identity != nil
+            notice = ht("Access needs to be checked again. Your private work stays on this phone.")
+            await service?.clearScope()
+            do { try await outbox.purge() }
+            catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
+            do { try await shopperOutbox.purge() }
+            catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
+        case .service(let status, _, _, _) where status == 409:
+            notice = ht("This request needs review against the current household state. It has not been applied again.")
+        case .service(let status, _, _, _) where status == 429:
+            notice = ht("Too many attempts. Wait before trying again.")
+        case .cancelled: break
+        default: notice = ht("The service could not confirm this action. Keep your draft and try again.")
+        }
+    }
+}
+func ht(_ key: String) -> String { String(localized: String.LocalizationValue(key), table: "Household") }

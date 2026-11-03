@@ -1,0 +1,69 @@
+{
+  "contract": "family-pickup-planning/1.0",
+  "status": "Conceptual contract and fictional redacted fixtures for design validation. IDs are opaque in production. These short aliases identify examples only.",
+  "conventions": {
+    "money": "Integer cents and ISO currency per monetary record; examples USD. Estimate, retailer preview and posted amount carry separate source, timestamp and basis. Unreported is null; a shopper-confirmed zero is 0.",
+    "quantities": "Retain source text, source locale, original unit and amount alongside normalized unit, rational numerator/denominator and conversion basis. Unconfirmed conversion stays null. Count edible units only after the pack conversion is known.",
+    "time": "Persist instant with offset and named zone for each cutoff, pickup and event. Display absolute local date as well as time when a change crosses midnight. Examples use America/New_York."
+  },
+  "records": {
+    "shop": "source_household_id, shop_id, store_ref, currency, zone, pickup_window, current_local_revision_id, last_local_save_at. Revisions are per shop, independent of order state.",
+    "revision": "revision_id, shop_id, parent_revision_id, display_number, committed_at, author_alias, content_digest, immutable snapshot. Draft edits reference their base. Reverse a committed edit with a new revision.",
+    "line_and_need": "line_id, original_text, source_locale, source_amount, source_unit, normalized_quantity, conversion_basis, store_pack_size; need_id, line_id, purpose, needed_quantity and priority. Stable IDs survive a renamed item. Keep exclusions and free text private by default.",
+    "handoff": "handoff_id, revision_id, intended_destination_ref, actually_observed_destination_ref nullable, attempted_action, timestamp, evidence_kind, evidence_revision_id. History is per recipient and revision. A manual sender report and a recipient acknowledgement are different evidence.",
+    "order_and_amendment": "order_id, shop_id, confirmed_revision_id, confirmed_lines, confirmation_source and instant. Amendment has amendment_id, order_id, proposed_revision_id, affected_lines, submitted_at, deadline_at, response and optional retailer_confirmation_ref. Offer cutoff and pickup window are different events.",
+    "receipt_and_allocation": "delivery_line_id, order_line_id, received_packs, pack_conversion, observed_at; usable_count_event_id, delivery_line_id, supersedes_event_id, usable_units; allocation_id, need_id, delivery_line_id, units. Preserve shortage and unallocated units explicitly.",
+    "ledger": "entry_id, shop_id, source_record_key, kind (charge, credit, top_up), status (pending, posted, included), signed_cents, currency, linked_charge_id, basis, observed_at. Link an included credit to its already-net charge; never count it as a separate movement.",
+    "settings": "Device scope: display locale, quantity display units, appearance, text-size/system defaults, motion, accessible checking behavior and prompt preferences. Store scope: aisle order or manual sort. Household scope: reusable meal preferences and staple defaults. Shop scope: overrides and reservation priorities. One handoff scope: explicitly chosen disclosure fields reset each export. Device accessibility and locale remain under the receiving person's control.",
+    "file": "format_version, export_id, exported_at, kind, source_household_id or opaque sharing namespace, shop_id, source_revision_id, parent_revision_id, payload_digest, projection_id. Distinct export envelopes can carry identical content. A durable origin revision identity must survive the helper round trip; do not derive identity from a display number.",
+    "entitlement": "Separate billing record keyed to verified purchase/account, platform, product and verification state; a shop file cannot grant paid access. Lapse preserves access to existing records for reading and exporting."
+  },
+  "export_policy": {
+    "personal_backup": "Explicit recovery action exports chosen owned shops, immutable revision histories, order/amendment evidence, received and usable records, purpose reservations, monetary ledger, household/store preferences, local handoff evidence and retained original source fields. Show scope, exported_at and last_local_save_at separately. Restore previews branches and never overwrites later local work. Device accessibility/locale preferences stay local; verified purchase state is restored separately.",
+    "helper_default_allowlist": ["format_version","kind","export_id","exported_at","origin_namespace","shop_id","source_revision_id","parent_revision_id","display_number","projection_id","payload_digest","shop_label","instructions[].item_label","instructions[].source_amount","instructions[].source_unit","instructions[].source_locale","instructions[].purpose_label","instructions[].action","instructions[].basis_label","instructions[].state_label"],
+    "helper_rules": "Construct a projection for one shop from this explicit allowlist. Item/purpose labels and action text are curated for this handoff and visible in preview; do not serialize raw user-entered notes into labels. Explicitly preview and add optional budget_cents plus currency or a selected note for this export only. Unrelated shops, receipt records, private exclusions, identifiers for other helpers, device preferences and entitlements are excluded. Revisions imported from helpers carry a partial projection; omitted fields are unknown, never clear local private values.",
+    "import": "Validate supported version and integrity before writing. For the same origin, shop, source revision, projection and payload digest, reopen the prior imported copy, regardless of export timestamp. Different revision IDs with the same parent are branches even at the same display number. Different projections of one revision can be held separately for review. A digest mismatch for a purportedly identical source revision and projection is quarantined; the user can inspect before any merge."
+  },
+  "invariants": [
+    "I1. Historical revisions are immutable. A revision's shop and ancestors survive export and import.",
+    "I2. Confirm handoff evidence for that destination and revision only. An unknown recipient or dismissed sheet establishes no baseline for a delta-only message.",
+    "I3. A confirmed order changes only after an identified retailer confirmation; offer expiry alone leaves fill, charge and usable count unknown.",
+    "I4. Received and usable are different facts. Reservations and dinner allocations sum to no more than usable units, and each need is capped at its demand.",
+    "I5. Superseding a usable-count observation recalculates allocations without increasing delivered packs or posted cents.",
+    "I6. Sum each posted movement once per source, excluding pending and already-included credits. Unknown charge or top-ups are not assumed zero. Open adjustments preclude a final label.",
+    "I7. Every helper export starts with the one-shop allowlist. A prior handoff's consent or a billing entitlement never broadens disclosure.",
+    "I8. Import retry is idempotent; siblings remain distinct. Restoring an older archive preserves newer local records and unrelated shops.",
+    "I9. Preserve individual sources, units, locale and conversion/price basis. Keep device preferences and verified purchase state out of helper round trips."
+  ],
+  "fixtures": {
+    "common": {"zone":"America/New_York","currency":"USD","line_id":"wrap","original_text":"1 pack (8 wraps)","source_locale":"en-US","source_amount":1,"source_unit":"pack","conversion_basis":"shopper-read package label","wraps_per_pack":8},
+    "shop_B_revision_and_order": {
+      "shop_id":"B","store_label":"Oak Street","pickup_end":"2026-11-05T18:00:00-05:00","guest_meal_date":"2026-11-11","order_id":"OB","budget_cents":3800,
+      "events":[
+        {"at":"2026-11-04T15:00:00-05:00","type":"commit","revision":"R1","parent":null,"display":1,"wrap_packs":1,"fajita_wraps":6,"reserved_lunch":2,"expected_cents":3580,"basis":"matched inclusive retailer preview"},
+        {"at":"2026-11-04T15:02:00-05:00","type":"copy","revision":"R1","intended":"helper-A","actual":null,"acknowledged":false},
+        {"at":"2026-11-04T15:10:00-05:00","type":"retailer_confirmed_order","revision":"R1","confirmed_packs":1,"source":"shopper-recorded order confirmation"},
+        {"at":"2026-11-04T16:30:00-05:00","type":"commit","revision":"R2M","parent":"R1","display":2,"wrap_packs":2,"fajita_wraps":8,"reserved_lunch":2,"extra_pack_cents":240,"deferred_water_cents":100,"expected_cents":3720,"basis":"new inclusive retailer preview, same store/slot"},
+        {"at":"2026-11-04T16:35:00-05:00","type":"amendment_requested","amendment_id":"AM1","proposed":"R2M","proposed_packs":2,"confirmed_packs":1,"deadline":"2026-11-04T17:00:00-05:00"},
+        {"at":"2026-11-04T17:00:00-05:00","type":"window_closed_unconfirmed","amendment_id":"AM1","confirmed_packs":1,"fill":null,"posted_cents":null,"pickup":"2026-11-05T17:00:00-05:00"},
+        {"at":"2026-11-04T17:03:00-05:00","type":"amendment_rejected","amendment_id":"AM1","confirmed_packs":1,"source":"shopper-recorded retailer rejection"},
+        {"at":"2026-11-04T17:05:00-05:00","type":"sender_reports_sent","revision":"R2M","intended":"helper-A","actual":null,"acknowledged":false,"sender_reported_baseline_for_helper_A":"R2M","recipient_acknowledged_baseline_for_helper_A":null,"full_instruction":"One pack is ordered. Reserve two for lunches. Eight are needed for fajitas. Check the bag before planning the top-up."},
+        {"at":"2026-11-04T17:07:00-05:00","type":"recipient_acknowledges","revision":"R2M","recipient":"helper-A","source":"shopper-recorded direct reply referencing R2M","recipient_acknowledged_baseline_for_helper_A":"R2M","recipient_acknowledged_baseline_for_helper_B":null}
+      ]
+    },
+    "shop_A_fill": {"shop_id":"A","delivery_line_id":"DA","pickup_at":"2026-11-03T11:00:00-05:00","received_packs":1,"posted_charge_cents":3480,"needs":[{"purpose":"lunch","units":2},{"purpose":"Tuesday tacos","units":6},{"purpose":"Wednesday wraps","units":4}],"observations":[{"id":"U1","at":"2026-11-03T11:04:00-05:00","supersedes":null,"usable":6,"allocated":[2,4,0],"short":[0,2,4]},{"id":"U2","at":"2026-11-03T11:08:00-05:00","supersedes":"U1","usable":7,"allocated":[2,5,0],"short":[0,1,4]}]},
+    "posting_alternatives": {
+      "explanation":"Three independent histories for one illustrative pickup on Nov 3. Each assumes a known posted base charge and confirmed zero top-ups. Entries are signed cents. Repeated reference means a retry of the same source movement.",
+      "net_charge":[["C1","posted",3480],["F1-within-C1","included",-240]],
+      "charge_and_credit":[["C2","posted",3720],["F2","posted",-240],["F2","posted",-240]],
+      "pending_credit":[["C3","posted",3720],["F3","pending",-240]],
+      "expected_paid_to_date":[3480,3480,3720],"expected_final_known":[true,true,false]
+    },
+    "import": {
+      "local_revisions":[["B","R1",null,1],["B","R2M","R1",2],["unrelated","X1",null,1]],
+      "helper_file":{"format_version":"1.0","kind":"helper","export_id":"E1","exported_at":"2026-11-04T17:20:00-05:00","origin_namespace":"origin-B","shop_id":"B","source_revision_id":"R2A","parent_revision_id":"R1","display_number":2,"projection_id":"helper-basic","payload_digest":"digest-alias-a","shop_label":"This pickup","instructions":[{"item_label":"Wraps","source_amount":2,"source_unit":"wraps","source_locale":"en-US","purpose_label":"Lunches","action":"Reserve first","basis_label":"Household instruction","state_label":"Planned"}]},
+      "old_backup":{"exported_at":"2026-11-04T15:05:00-05:00","last_local_save_at":"2026-11-04T15:00:00-05:00","revisions":[["B","R1",null,1]]},
+      "expected_after_import_retry_and_recovery":["R1","R2M","R2A","X1"],"current_local_revision":"R2M"
+    }
+  }
+}

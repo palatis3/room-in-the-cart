@@ -1,0 +1,94 @@
+{
+  "asOf": "2026-11-02",
+  "scope": "US grocery. Primary retailer, platform and vendor documentation only. No sign-up, outreach, consumer transaction, API call, scraping or live device test. Published partner capabilities do not establish current entitlement for this planner.",
+  "routes": [
+    {
+      "id": "albertsons_safeway",
+      "documentedToday": "The Albertsons recipe book lets the shopper import a web recipe, review it and add ingredients. Safeway's signed-in web assistant matches a typed or uploaded list and handles recipe import. The Safeway guide distinguishes that web flow from product search in the native app and a separate signed-in Safeway experience in ChatGPT.",
+      "intermediary": "Chicory announced a direct integration with Albertsons and 15 banners in 2023. Its publisher offering places recipe-shopping buttons in eligible content. The announcement does not enumerate each banner or grant a native planner a direct API. Separately, Destini explicitly lists Safeway and Albertsons via Instacart in its commercial recipe widget. Direct banner and Instacart carts are distinct destinations.",
+      "releaseDecision": "Free targetable flow: copy the reviewed household lines, open the signed-in Safeway web assistant where available, review matched product, pack and amount, then check out at Safeway. For a public recipe URL the shopper can use Albertsons' own recipe import. Mark only the handoff. Evaluate Chicory if it supports private, dynamic household baskets, exact banners and geography, and grants production mobile use. Those terms and post-order access remain unverified.",
+      "sources": [
+        "a_recipe",
+        "s_guide",
+        "c_direct",
+        "c_publisher",
+        "d_coverage"
+      ]
+    },
+    {
+      "id": "publix",
+      "documentedToday": "Publix's basic in-store list supports add/remove and print without a Club Publix account. Multiple saved lists and certain sharing features need an account. Store aisle labels and selected-store promotions are available. Publix separately offers delivery and curbside pickup powered by Instacart, where a shopper chooses the local store, reviews the cart, prices and fulfillment. Public Publix.com catalog prices are generally restricted to sale items and products available for In-Store Pickup. The Instacart service may price groceries differently.",
+      "intermediary": "Destini explicitly lists Publix as an Instacart sub-banner for configured shoppable recipes. Instacart matches items into its hosted list for the shopper to review/add. A qualified regular IDP publisher can likewise create hosted recipe/list links, while the US application page currently says intake is closed. The recipe tutorial supports a preferred nearby retailer when its key is available. No assurance of market availability, branded storefront transfer, cart sync, order status or receipt for this planner follows.",
+      "releaseDecision": "Offer a scoped list and open Publix's own delivery/pickup site or the consumer's in-store shopping list. Reconcile and confirm pack/quantity in that destination. Display which channel the shopper chose, preserve unmatched items, and ask for manual fill exceptions if needed. Never turn a Club Publix list, retailer open or receipt line into a verified bag.",
+      "sources": [
+        "p_list",
+        "p_catalog",
+        "p_instacart",
+        "p_checkout",
+        "d_coverage",
+        "i_intake",
+        "i_preferred"
+      ]
+    },
+    {
+      "id": "target_recipe_intermediary_destini",
+      "documentedToday": "Destini's vendor-authored widget guide explicitly names Target, Walmart, Kroger, Amazon Fresh and Whole Foods, plus Instacart sub-banners including Costco, Publix, Albertsons and Safeway. Its installation guide specifies a Recipe Book dashboard and a per-recipe install script on the publisher's site. Target can accept passed products without sign-in, but groceries unavailable for standard shipping may be parked in Saved for later. The shopper must manually add those lines and choose pickup or same-day delivery. This is consequential for a supposedly complete pickup basket.",
+      "requirements": "Retailer must be enabled in the vendor's automated online buying feed. Destini says display depends on a configured branded product, product matches and observed availability; some ingredient links may be missing. Its guides describe configured recipes, not arbitrary private household lists. Current contract, eligibility for unbranded meal lists, exact stores and modes, pricing, reuse rights and native iPhone access remain unverified. Treat the 2022/2023 deployment and behavior guides as documented patterns requiring present-day validation.",
+      "releaseDecision": "Worth a commercial feasibility check for publisher-owned recipes. Before offering Target cart handoff, demonstrate a private basket without sponsored substitutions, chilled and shelf-stable lines, correct variant/quantity and a real eligible store. Check which lines went to Saved for later versus the active pickup cart. Keep plain-text handoff available. No implied payment, household cart read, order placement, substitutions, receipt access or delivery. Do not reproduce a vendor's data-collection techniques.",
+      "sources": [
+        "d_coverage",
+        "d_install"
+      ]
+    }
+  ],
+  "sources": {
+    "a_recipe": {
+      "type": "Retailer shopper instructions",
+      "url": "https://www.albertsons.com/personal-digital-shoppable-recipe-book.html"
+    },
+    "s_guide": {
+      "type": "Retailer feature-by-surface instructions, updated January 2026",
+      "url": "https://www.safeway.com/shopping-guides/services-and-information/safeway/ai-shopping-assistant-now-available-in-safeway-app-mt2fp3"
+    },
+    "c_direct": {
+      "type": "Integration operator announcement including retailer executive description, November 2023",
+      "url": "https://chicory.co/blog-feed/chicory-builds-direct-integration-with-albertsons-to-enhance-online-shopping-experience-for-the-retailer"
+    },
+    "c_publisher": {
+      "type": "Vendor publisher program and product description",
+      "url": "https://chicory.co/publishers"
+    },
+    "p_list": {
+      "type": "Retailer consumer shopping-list FAQ",
+      "url": "https://www.publix.com/faq/shopping-list"
+    },
+    "p_catalog": {
+      "type": "Retailer pricing and store coverage FAQ",
+      "url": "https://www.publix.com/faq/product-catalog"
+    },
+    "p_instacart": {
+      "type": "Retailer service, price and support FAQ",
+      "url": "https://www.publix.com/faq/instacart"
+    },
+    "p_checkout": {
+      "type": "Publix-hosted Instacart shopper help",
+      "url": "https://delivery.publix.com/help/section/4179348463/2981702134"
+    },
+    "d_coverage": {
+      "type": "Vendor implementation support and explicit retailer/mode matrix, August 2023",
+      "url": "https://support.destini.co/hc/en-us/articles/16989446995351-Shoppable-Recipes-Add-to-Cart-Functionality-FAQs"
+    },
+    "d_install": {
+      "type": "Vendor recipe-widget deployment guide, November 2022",
+      "url": "https://support.destini.co/hc/en-us/articles/10550286436247-Going-live-with-Shoppable-Recipe-Widgets"
+    },
+    "i_intake": {
+      "type": "Instacart developer intake and data-access FAQ",
+      "url": "https://company.instacart.com/business/developers"
+    },
+    "i_preferred": {
+      "type": "Instacart official recipe tutorial, preferred retailer flow",
+      "url": "https://docs.instacart.com/developer_platform_api/get_started/recipe"
+    }
+  }
+}

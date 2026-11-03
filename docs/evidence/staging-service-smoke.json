@@ -1,0 +1,33 @@
+{
+  "date": "2026-11-03T06:00:27.770Z",
+  "project": "uwjxrotnocxxomqdetzk",
+  "transport": "local HTTP service to live staging PostgreSQL through verified TLS",
+  "publicDeployment": false,
+  "checks": [
+    {
+      "path": "/health",
+      "status": 200,
+      "code": null
+    },
+    {
+      "path": "/v1/session",
+      "status": 200,
+      "code": null
+    },
+    {
+      "path": "/v1/me/workspaces",
+      "status": 401,
+      "code": "session_needed"
+    },
+    {
+      "path": "/v1/me/workspaces",
+      "status": 401,
+      "code": "session_needed"
+    },
+    {
+      "path": "/v1/session",
+      "status": 403,
+      "code": "origin_denied"
+    }
+  ]
+}

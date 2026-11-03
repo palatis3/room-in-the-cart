@@ -1,0 +1,40 @@
+{
+  "evidence_type": "Illustrative decision table, not a participant result or a store quote.",
+  "input": "US household cap $38, mandatory planned basket $34.80, optional coffee $4.60 and optional salsa $1.50, both confirmed deferrable. All subtotal dollars eligible. No additional charges/discounts or changes of store/slot/tender. Uses Kroger's posted $35/$4.95 example only when applicable before submission. Retailer preview supersedes calculation.",
+  "source": "https://www.kroger.com/hc/help/faqs/ways-to-shop/pickup",
+  "calculation": "subtotal = 3480 + 460*buy_coffee + 150*buy_salsa; fee = subtotal < 3500 ? 495 : 0; expected_checkout = subtotal + fee",
+  "rows": [
+    {
+      "buy_coffee": false,
+      "buy_salsa": false,
+      "qualifying_merchandise_cents": 3480,
+      "pickup_fee_cents": 495,
+      "expected_checkout_cents": 3975,
+      "margin_to_3800_cents": -175
+    },
+    {
+      "buy_coffee": false,
+      "buy_salsa": true,
+      "qualifying_merchandise_cents": 3630,
+      "pickup_fee_cents": 0,
+      "expected_checkout_cents": 3630,
+      "margin_to_3800_cents": 170
+    },
+    {
+      "buy_coffee": true,
+      "buy_salsa": false,
+      "qualifying_merchandise_cents": 3940,
+      "pickup_fee_cents": 0,
+      "expected_checkout_cents": 3940,
+      "margin_to_3800_cents": -140
+    },
+    {
+      "buy_coffee": true,
+      "buy_salsa": true,
+      "qualifying_merchandise_cents": 4090,
+      "pickup_fee_cents": 0,
+      "expected_checkout_cents": 4090,
+      "margin_to_3800_cents": -290
+    }
+  ]
+}

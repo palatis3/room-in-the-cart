@@ -1,0 +1,120 @@
+import Foundation
+import StoreKit
+
+struct MembershipOffer: Equatable, Sendable {
+    let productID: String
+    let displayName: String
+    let displayPrice: String
+    let periodValue: Int
+    let periodUnit: PeriodUnit
+    enum PeriodUnit: String, Sendable { case day, week, month, year }
+
+    var localizedPeriod: String {
+        var components = DateComponents()
+        switch periodUnit {
+        case .day: components.day = periodValue
+        case .week: components.weekOfMonth = periodValue
+        case .month: components.month = periodValue
+        case .year: components.year = periodValue
+        }
+        let formatter = DateComponentsFormatter()
+        formatter.unitsStyle = .full
+        formatter.maximumUnitCount = 1
+        return formatter.string(from: components) ?? String(periodValue)
+    }
+}
+
+enum MembershipPurchaseOutcome: Sendable {
+    case verified(SignedMembershipTransaction), pending, cancelled, unverified
+}
+
+@MainActor protocol MembershipStorefront {
+    func load(productID: String) async throws -> MembershipOffer
+    func purchase(appAccountToken: UUID) async throws -> MembershipPurchaseOutcome
+    func currentTransactions() async -> [MembershipPurchaseOutcome]
+    func unfinishedTransactions() async -> [MembershipPurchaseOutcome]
+    func updates() -> AsyncStream<MembershipPurchaseOutcome>
+    func finish(transactionID: String) async
+    func sync() async throws
+}
+
+/// StoreKit verifies on-device first. Shared access is still only granted by the server.
+@MainActor final class StoreKitMembershipStorefront: MembershipStorefront {
+    private var product: Product?
+    private var transactions: [String: StoreKit.Transaction] = [:]
+    private var productID: String?
+
+    func load(productID: String) async throws -> MembershipOffer {
+        self.productID = productID
+        product = nil
+        guard let loaded = try await Product.products(for: [productID]).first(where: { $0.id == productID }),
+              loaded.type == .autoRenewable, let subscription = loaded.subscription,
+              subscription.subscriptionPeriod.unit == .year, subscription.subscriptionPeriod.value == 1 else {
+            throw MembershipFailure.unavailable
+        }
+        product = loaded
+        return MembershipOffer(productID: loaded.id, displayName: loaded.displayName,
+                               displayPrice: loaded.displayPrice, periodValue: subscription.subscriptionPeriod.value,
+                               periodUnit: .year)
+    }
+
+    func purchase(appAccountToken: UUID) async throws -> MembershipPurchaseOutcome {
+        guard let product else { throw MembershipFailure.unavailable }
+        switch try await product.purchase(options: [.appAccountToken(appAccountToken)]) {
+        case .success(let result): return convert(result) ?? .unverified
+        case .pending: return .pending
+        case .userCancelled: return .cancelled
+        @unknown default: return .unverified
+        }
+    }
+
+    func currentTransactions() async -> [MembershipPurchaseOutcome] {
+        var outcomes: [MembershipPurchaseOutcome] = []
+        for await result in StoreKit.Transaction.currentEntitlements {
+            if let value = convert(result) { outcomes.append(value) }
+        }
+        return outcomes
+    }
+
+    func unfinishedTransactions() async -> [MembershipPurchaseOutcome] {
+        var outcomes: [MembershipPurchaseOutcome] = []
+        for await result in StoreKit.Transaction.unfinished {
+            if let value = convert(result) { outcomes.append(value) }
+        }
+        return outcomes
+    }
+
+    func updates() -> AsyncStream<MembershipPurchaseOutcome> {
+        AsyncStream { continuation in
+            let task = Task { @MainActor [weak self] in
+                for await result in StoreKit.Transaction.updates {
+                    guard !Task.isCancelled else { break }
+                    if let value = self?.convert(result) { continuation.yield(value) }
+                }
+                continuation.finish()
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
+
+    func finish(transactionID: String) async {
+        guard let transaction = transactions[transactionID] else { return }
+        await transaction.finish()
+        transactions.removeValue(forKey: transactionID)
+    }
+
+    func sync() async throws { try await AppStore.sync() }
+
+    private func convert(_ result: VerificationResult<StoreKit.Transaction>) -> MembershipPurchaseOutcome? {
+        switch result {
+        case .verified(let transaction):
+            guard transaction.productID == productID else { return nil }
+            transactions[String(transaction.id)] = transaction
+            return .verified(SignedMembershipTransaction(transactionID: String(transaction.id),
+                originalTransactionID: String(transaction.originalID), productID: transaction.productID,
+                signedTransactionInfo: result.jwsRepresentation, appAccountToken: transaction.appAccountToken))
+        case .unverified(let transaction, _):
+            return transaction.productID == productID ? .unverified : nil
+        }
+    }
+}

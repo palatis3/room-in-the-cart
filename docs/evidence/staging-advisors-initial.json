@@ -1,0 +1,1027 @@
+{
+  "security": {
+    "lints": [
+      {
+        "name": "rls_enabled_no_policy",
+        "title": "RLS Enabled No Policy",
+        "level": "INFO",
+        "facing": "EXTERNAL",
+        "categories": [
+          "SECURITY"
+        ],
+        "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+        "count": 1,
+        "findings": [
+          {
+            "detail": "Table \\`public.ritc_schema_migration\\` has RLS enabled, but no policies exist",
+            "metadata": {
+              "name": "ritc_schema_migration",
+              "type": "table",
+              "schema": "public"
+            },
+            "observed_at": "2026-11-03T05:50:15.911Z"
+          }
+        ]
+      },
+      {
+        "name": "function_search_path_mutable",
+        "title": "Function Search Path Mutable",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "SECURITY"
+        ],
+        "description": "Detects functions where the search_path parameter is not set.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable",
+        "count": 4,
+        "findings": [
+          {
+            "detail": "Function \\`ritc.consent_revoke_once\\` has a role mutable search_path",
+            "metadata": {
+              "name": "consent_revoke_once",
+              "type": "function",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.911Z"
+          },
+          {
+            "detail": "Function \\`ritc.billing_adult_seat\\` has a role mutable search_path",
+            "metadata": {
+              "name": "billing_adult_seat",
+              "type": "function",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.911Z"
+          },
+          {
+            "detail": "Function \\`ritc.immutable_row\\` has a role mutable search_path",
+            "metadata": {
+              "name": "immutable_row",
+              "type": "function",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.911Z"
+          },
+          {
+            "detail": "Function \\`ritc.lock_household_access\\` has a role mutable search_path",
+            "metadata": {
+              "name": "lock_household_access",
+              "type": "function",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.911Z"
+          }
+        ]
+      },
+      {
+        "name": "anon_security_definer_function_executable",
+        "title": "Public Can Execute SECURITY DEFINER Function",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "SECURITY"
+        ],
+        "description": "Detects `SECURITY DEFINER` functions that are callable without signing in. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if it is not meant to be public.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable",
+        "count": 1,
+        "findings": [
+          {
+            "detail": "Function `public.rls_auto_enable()` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/rls_auto_enable`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+            "metadata": {
+              "name": "rls_auto_enable",
+              "schema": "public",
+              "language": "plpgsql",
+              "arguments": "",
+              "security_definer": true
+            },
+            "observed_at": "2026-11-03T05:50:15.911Z"
+          }
+        ]
+      },
+      {
+        "name": "authenticated_security_definer_function_executable",
+        "title": "Signed-In Users Can Execute SECURITY DEFINER Function",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "SECURITY"
+        ],
+        "description": "Detects `SECURITY DEFINER` functions that are callable by signed-in users. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if signed-in users should not call it.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable",
+        "count": 1,
+        "findings": [
+          {
+            "detail": "Function `public.rls_auto_enable()` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/rls_auto_enable`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+            "metadata": {
+              "name": "rls_auto_enable",
+              "schema": "public",
+              "language": "plpgsql",
+              "arguments": "",
+              "security_definer": true
+            },
+            "observed_at": "2026-11-03T05:50:15.911Z"
+          }
+        ]
+      }
+    ]
+  },
+  "performance": {
+    "lints": [
+      {
+        "name": "unindexed_foreign_keys",
+        "title": "Unindexed foreign keys",
+        "level": "INFO",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Identifies foreign key constraints without a covering index, which can impact database performance.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0001_unindexed_foreign_keys",
+        "count": 27,
+        "findings": [
+          {
+            "detail": "Table \\`ritc.billing_binding\\` has a foreign key \\`billing_binding_household_id_purchaser_id_app_account_toke_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+            "metadata": {
+              "name": "billing_binding",
+              "type": "table",
+              "schema": "ritc",
+              "fkey_name": "billing_binding_household_id_purchaser_id_app_account_toke_fkey",
+              "fkey_columns": [
+                3,
+                4,
+                5
+              ]
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.billing_delivery\\` has a foreign key \\`billing_delivery_environment_original_transaction_id_house_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+            "metadata": {
+              "name": "billing_delivery",
+              "type": "table",
+              "schema": "ritc",
+              "fkey_name": "billing_delivery_environment_original_transaction_id_house_fkey",
+              "fkey_columns": [
+                1,
+                5,
+                3,
+                4
+              ]
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.billing_delivery\\` has a foreign key \\`billing_delivery_household_id_purchaser_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+            "metadata": {
+              "name": "billing_delivery",
+              "type": "table",
+              "schema": "ritc",
+              "fkey_name": "billing_delivery_household_id_purchaser_id_fkey",
+              "fkey_columns": [
+                3,
+                4
+              ]
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.billing_state\\` has a foreign key \\`billing_state_household_id_purchaser_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+            "metadata": {
+              "name": "billing_state",
+              "type": "table",
+              "schema": "ritc",
+              "fkey_name": "billing_state_household_id_purchaser_id_fkey",
+              "fkey_columns": [
+                1,
+                2
+              ]
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.consent\\` has a foreign key \\`consent_household_id_child_id_guardian_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+            "metadata": {
+              "name": "consent",
+              "type": "table",
+              "schema": "ritc",
+              "fkey_name": "consent_household_id_child_id_guardian_id_fkey",
+              "fkey_columns": [
+                1,
+                3,
+                4
+              ]
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.event\\` has a foreign key \\`event_household_id_operation_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+            "metadata": {
+              "name": "event",
+              "type": "table",
+              "schema": "ritc",
+              "fkey_name": "event_household_id_operation_id_fkey",
+              "fkey_columns": [
+                2,
+                3
+              ]
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.event\\` has a foreign key \\`event_household_id_shop_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+            "metadata": {
+              "name": "event",
+              "type": "table",
+              "schema": "ritc",
+              "fkey_name": "event_household_id_shop_id_fkey",
+              "fkey_columns": [
+                2,
+                4
+              ]
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.guardian_relationship\\` has a foreign key \\`guardian_relationship_household_id_guardian_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+            "metadata": {
+              "name": "guardian_relationship",
+              "type": "table",
+              "schema": "ritc",
+              "fkey_name": "guardian_relationship_household_id_guardian_id_fkey",
+              "fkey_columns": [
+                1,
+                3
+              ]
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.operation\\` has a foreign key \\`operation_household_id_actor_id_device_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+            "metadata": {
+              "name": "operation",
+              "type": "table",
+              "schema": "ritc",
+              "fkey_name": "operation_household_id_actor_id_device_id_fkey",
+              "fkey_columns": [
+                1,
+                3,
+                4
+              ]
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.operation\\` has a foreign key \\`operation_household_id_shop_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+            "metadata": {
+              "name": "operation",
+              "type": "table",
+              "schema": "ritc",
+              "fkey_name": "operation_household_id_shop_id_fkey",
+              "fkey_columns": [
+                1,
+                8
+              ]
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.operation\\` has a foreign key \\`operation_household_id_window_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+            "metadata": {
+              "name": "operation",
+              "type": "table",
+              "schema": "ritc",
+              "fkey_name": "operation_household_id_window_id_fkey",
+              "fkey_columns": [
+                1,
+                6
+              ]
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.placement_report\\` has a foreign key \\`placement_report_household_id_actor_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+            "metadata": {
+              "name": "placement_report",
+              "type": "table",
+              "schema": "ritc",
+              "fkey_name": "placement_report_household_id_actor_id_fkey",
+              "fkey_columns": [
+                1,
+                4
+              ]
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.placement_report\\` has a foreign key \\`placement_report_household_id_operation_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+            "metadata": {
+              "name": "placement_report",
+              "type": "table",
+              "schema": "ritc",
+              "fkey_name": "placement_report_household_id_operation_id_fkey",
+              "fkey_columns": [
+                1,
+                11
+              ]
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.placement_report\\` has a foreign key \\`placement_report_household_id_resolution_operation_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+            "metadata": {
+              "name": "placement_report",
+              "type": "table",
+              "schema": "ritc",
+              "fkey_name": "placement_report_household_id_resolution_operation_id_fkey",
+              "fkey_columns": [
+                1,
+                12
+              ]
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.placement_report\\` has a foreign key \\`placement_report_household_id_shop_id_reported_epoch_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+            "metadata": {
+              "name": "placement_report",
+              "type": "table",
+              "schema": "ritc",
+              "fkey_name": "placement_report_household_id_shop_id_reported_epoch_fkey",
+              "fkey_columns": [
+                1,
+                3,
+                5
+              ]
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.placement_report\\` has a foreign key \\`placement_report_household_id_shop_id_reported_revision_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+            "metadata": {
+              "name": "placement_report",
+              "type": "table",
+              "schema": "ritc",
+              "fkey_name": "placement_report_household_id_shop_id_reported_revision_fkey",
+              "fkey_columns": [
+                1,
+                3,
+                6
+              ]
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.preview\\` has a foreign key \\`preview_household_id_actor_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+            "metadata": {
+              "name": "preview",
+              "type": "table",
+              "schema": "ritc",
+              "fkey_name": "preview_household_id_actor_id_fkey",
+              "fkey_columns": [
+                1,
+                4
+              ]
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.preview\\` has a foreign key \\`preview_household_id_request_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+            "metadata": {
+              "name": "preview",
+              "type": "table",
+              "schema": "ritc",
+              "fkey_name": "preview_household_id_request_id_fkey",
+              "fkey_columns": [
+                1,
+                5
+              ]
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.preview\\` has a foreign key \\`preview_household_id_shop_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+            "metadata": {
+              "name": "preview",
+              "type": "table",
+              "schema": "ritc",
+              "fkey_name": "preview_household_id_shop_id_fkey",
+              "fkey_columns": [
+                1,
+                3
+              ]
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.replay_window\\` has a foreign key \\`replay_window_household_id_member_id_device_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+            "metadata": {
+              "name": "replay_window",
+              "type": "table",
+              "schema": "ritc",
+              "fkey_name": "replay_window_household_id_member_id_device_id_fkey",
+              "fkey_columns": [
+                1,
+                3,
+                4
+              ]
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.request\\` has a foreign key \\`request_household_id_followup_to_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+            "metadata": {
+              "name": "request",
+              "type": "table",
+              "schema": "ritc",
+              "fkey_name": "request_household_id_followup_to_fkey",
+              "fkey_columns": [
+                1,
+                14
+              ]
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.request_link\\` has a foreign key \\`request_link_household_id_operation_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+            "metadata": {
+              "name": "request_link",
+              "type": "table",
+              "schema": "ritc",
+              "fkey_name": "request_link_household_id_operation_id_fkey",
+              "fkey_columns": [
+                1,
+                6
+              ]
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.request_link\\` has a foreign key \\`request_link_household_id_shop_id_line_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+            "metadata": {
+              "name": "request_link",
+              "type": "table",
+              "schema": "ritc",
+              "fkey_name": "request_link_household_id_shop_id_line_id_fkey",
+              "fkey_columns": [
+                1,
+                3,
+                4
+              ]
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.shop\\` has a foreign key \\`shop_household_id_shopper_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+            "metadata": {
+              "name": "shop",
+              "type": "table",
+              "schema": "ritc",
+              "fkey_name": "shop_household_id_shopper_id_fkey",
+              "fkey_columns": [
+                1,
+                3
+              ]
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.shop_authority\\` has a foreign key \\`shop_authority_household_id_member_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+            "metadata": {
+              "name": "shop_authority",
+              "type": "table",
+              "schema": "ritc",
+              "fkey_name": "shop_authority_household_id_member_id_fkey",
+              "fkey_columns": [
+                1,
+                4
+              ]
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.shop_snapshot\\` has a foreign key \\`shop_snapshot_household_id_operation_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+            "metadata": {
+              "name": "shop_snapshot",
+              "type": "table",
+              "schema": "ritc",
+              "fkey_name": "shop_snapshot_household_id_operation_id_fkey",
+              "fkey_columns": [
+                1,
+                7
+              ]
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.web_session\\` has a foreign key \\`web_session_household_id_member_id_device_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+            "metadata": {
+              "name": "web_session",
+              "type": "table",
+              "schema": "ritc",
+              "fkey_name": "web_session_household_id_member_id_device_id_fkey",
+              "fkey_columns": [
+                1,
+                3,
+                4
+              ]
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          }
+        ]
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to \\`current_setting()\\` and \\`auth.<function>()\\` in RLS policies are being unnecessarily re-evaluated for each row",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "count": 27,
+        "findings": [
+          {
+            "detail": "Table \\`ritc.household\\` has a row level security policy \\`own_household_lookup\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "metadata": {
+              "name": "household",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.household\\` has a row level security policy \\`tenant_scope\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "metadata": {
+              "name": "household",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.member\\` has a row level security policy \\`own_membership_lookup\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "metadata": {
+              "name": "member",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.member\\` has a row level security policy \\`tenant_scope\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "metadata": {
+              "name": "member",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.guardian_relationship\\` has a row level security policy \\`tenant_scope\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "metadata": {
+              "name": "guardian_relationship",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.consent\\` has a row level security policy \\`tenant_scope\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "metadata": {
+              "name": "consent",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.shop_authority\\` has a row level security policy \\`tenant_scope\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "metadata": {
+              "name": "shop_authority",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.operation\\` has a row level security policy \\`tenant_scope\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "metadata": {
+              "name": "operation",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.operation_response\\` has a row level security policy \\`tenant_scope\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "metadata": {
+              "name": "operation_response",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.request_link\\` has a row level security policy \\`tenant_scope\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "metadata": {
+              "name": "request_link",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.preview\\` has a row level security policy \\`tenant_scope\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "metadata": {
+              "name": "preview",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.shop_snapshot\\` has a row level security policy \\`tenant_scope\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "metadata": {
+              "name": "shop_snapshot",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.event\\` has a row level security policy \\`tenant_scope\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "metadata": {
+              "name": "event",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.device\\` has a row level security policy \\`tenant_scope\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "metadata": {
+              "name": "device",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.replay_window\\` has a row level security policy \\`tenant_scope\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "metadata": {
+              "name": "replay_window",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.shop\\` has a row level security policy \\`tenant_scope\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "metadata": {
+              "name": "shop",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.request\\` has a row level security policy \\`tenant_scope\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "metadata": {
+              "name": "request",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.placement_report\\` has a row level security policy \\`tenant_scope\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "metadata": {
+              "name": "placement_report",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.basket_line\\` has a row level security policy \\`tenant_scope\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "metadata": {
+              "name": "basket_line",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.billing_account\\` has a row level security policy \\`tenant_scope\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "metadata": {
+              "name": "billing_account",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.billing_account\\` has a row level security policy \\`verified_apple_notification_route\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "metadata": {
+              "name": "billing_account",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.billing_binding\\` has a row level security policy \\`tenant_scope\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "metadata": {
+              "name": "billing_binding",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.billing_delivery\\` has a row level security policy \\`tenant_scope\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "metadata": {
+              "name": "billing_delivery",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.billing_event\\` has a row level security policy \\`tenant_scope\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "metadata": {
+              "name": "billing_event",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.billing_state\\` has a row level security policy \\`tenant_scope\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "metadata": {
+              "name": "billing_state",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.billing_seat\\` has a row level security policy \\`tenant_scope\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "metadata": {
+              "name": "billing_seat",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.web_session\\` has a row level security policy \\`tenant_scope\\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \\`auth.<function>()\\` with \\`(select auth.<function>())\\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "metadata": {
+              "name": "web_session",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          }
+        ]
+      },
+      {
+        "name": "unused_index",
+        "title": "Unused Index",
+        "level": "INFO",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if an index has never been used and may be a candidate for removal.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0005_unused_index",
+        "count": 5,
+        "findings": [
+          {
+            "detail": "Index \\`event_tenant_cursor\\` on table \\`ritc.event\\` has not been used",
+            "metadata": {
+              "name": "event",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Index \\`consent_live_child\\` on table \\`ritc.consent\\` has not been used",
+            "metadata": {
+              "name": "consent",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Index \\`replay_device\\` on table \\`ritc.replay_window\\` has not been used",
+            "metadata": {
+              "name": "replay_window",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Index \\`request_own_page\\` on table \\`ritc.request\\` has not been used",
+            "metadata": {
+              "name": "request",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Index \\`request_shop_page\\` on table \\`ritc.request\\` has not been used",
+            "metadata": {
+              "name": "request",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          }
+        ]
+      },
+      {
+        "name": "multiple_permissive_policies",
+        "title": "Multiple Permissive Policies",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if multiple permissive row level security policies are present on a table for the same \\`role\\` and \\`action\\` (e.g. insert). Multiple permissive policies are suboptimal for performance as each policy must be executed for every relevant query.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies",
+        "count": 18,
+        "findings": [
+          {
+            "detail": "Table \\`ritc.billing_account\\` has multiple permissive policies for role \\`anon\\` for action \\`SELECT\\`. Policies include \\`{tenant_scope,verified_apple_notification_route}\\`",
+            "metadata": {
+              "name": "billing_account",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.billing_account\\` has multiple permissive policies for role \\`authenticated\\` for action \\`SELECT\\`. Policies include \\`{tenant_scope,verified_apple_notification_route}\\`",
+            "metadata": {
+              "name": "billing_account",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.billing_account\\` has multiple permissive policies for role \\`authenticator\\` for action \\`SELECT\\`. Policies include \\`{tenant_scope,verified_apple_notification_route}\\`",
+            "metadata": {
+              "name": "billing_account",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.billing_account\\` has multiple permissive policies for role \\`dashboard_user\\` for action \\`SELECT\\`. Policies include \\`{tenant_scope,verified_apple_notification_route}\\`",
+            "metadata": {
+              "name": "billing_account",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.billing_account\\` has multiple permissive policies for role \\`ritc_app\\` for action \\`SELECT\\`. Policies include \\`{tenant_scope,verified_apple_notification_route}\\`",
+            "metadata": {
+              "name": "billing_account",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.billing_account\\` has multiple permissive policies for role \\`supabase_privileged_role\\` for action \\`SELECT\\`. Policies include \\`{tenant_scope,verified_apple_notification_route}\\`",
+            "metadata": {
+              "name": "billing_account",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.household\\` has multiple permissive policies for role \\`anon\\` for action \\`SELECT\\`. Policies include \\`{own_household_lookup,tenant_scope}\\`",
+            "metadata": {
+              "name": "household",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.household\\` has multiple permissive policies for role \\`authenticated\\` for action \\`SELECT\\`. Policies include \\`{own_household_lookup,tenant_scope}\\`",
+            "metadata": {
+              "name": "household",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.household\\` has multiple permissive policies for role \\`authenticator\\` for action \\`SELECT\\`. Policies include \\`{own_household_lookup,tenant_scope}\\`",
+            "metadata": {
+              "name": "household",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.household\\` has multiple permissive policies for role \\`dashboard_user\\` for action \\`SELECT\\`. Policies include \\`{own_household_lookup,tenant_scope}\\`",
+            "metadata": {
+              "name": "household",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.household\\` has multiple permissive policies for role \\`ritc_app\\` for action \\`SELECT\\`. Policies include \\`{own_household_lookup,tenant_scope}\\`",
+            "metadata": {
+              "name": "household",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.household\\` has multiple permissive policies for role \\`supabase_privileged_role\\` for action \\`SELECT\\`. Policies include \\`{own_household_lookup,tenant_scope}\\`",
+            "metadata": {
+              "name": "household",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.member\\` has multiple permissive policies for role \\`anon\\` for action \\`SELECT\\`. Policies include \\`{own_membership_lookup,tenant_scope}\\`",
+            "metadata": {
+              "name": "member",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.member\\` has multiple permissive policies for role \\`authenticated\\` for action \\`SELECT\\`. Policies include \\`{own_membership_lookup,tenant_scope}\\`",
+            "metadata": {
+              "name": "member",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.member\\` has multiple permissive policies for role \\`authenticator\\` for action \\`SELECT\\`. Policies include \\`{own_membership_lookup,tenant_scope}\\`",
+            "metadata": {
+              "name": "member",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.member\\` has multiple permissive policies for role \\`dashboard_user\\` for action \\`SELECT\\`. Policies include \\`{own_membership_lookup,tenant_scope}\\`",
+            "metadata": {
+              "name": "member",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.member\\` has multiple permissive policies for role \\`ritc_app\\` for action \\`SELECT\\`. Policies include \\`{own_membership_lookup,tenant_scope}\\`",
+            "metadata": {
+              "name": "member",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          },
+          {
+            "detail": "Table \\`ritc.member\\` has multiple permissive policies for role \\`supabase_privileged_role\\` for action \\`SELECT\\`. Policies include \\`{own_membership_lookup,tenant_scope}\\`",
+            "metadata": {
+              "name": "member",
+              "type": "table",
+              "schema": "ritc"
+            },
+            "observed_at": "2026-11-03T05:50:15.947Z"
+          }
+        ]
+      }
+    ]
+  }
+}
