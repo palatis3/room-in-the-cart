@@ -1,0 +1,178 @@
+Optional(Attributes: Application, 0x110cb2580, pid: 25273, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x110cb2580, pid: 25273, label: 'Room in the Cart'
+    Window (Main), 0x110cb26c0, {{0.0, 0.0}, {390.0, 844.0}}
+      Other, 0x110cb2800, {{0.0, 0.0}, {390.0, 844.0}}
+      Other, 0x110cb0000, {{0.0, 0.0}, {390.0, 844.0}}
+        Other, 0x110cb0140, {{0.0, 0.0}, {390.0, 844.0}}
+          Other, 0x110cb0280, {{0.0, 0.0}, {390.0, 844.0}}
+            Other, 0x110cb03c0, {{0.0, 0.0}, {390.0, 844.0}}
+              StaticText, 0x110cb0640, {{117.5, 47.0}, {155.0, 20.3}}, identifier: 'fixture.s26.ideas', label: 'Fixture idea writes: 1'
+              StaticText, 0x110cb1680, {{99.5, 71.3}, {191.0, 20.3}}, identifier: 'fixture.s26.proposals', label: 'Fixture meal proposals: 0'
+              StaticText, 0x110cb2300, {{106.7, 95.7}, {176.7, 20.3}}, identifier: 'fixture.s26.basket', label: 'Fixture basket writes: 0'
+              Button, 0x110cb2440, {{89.7, 120.0}, {210.7, 20.3}}, identifier: 'fixture.s26.switch', label: 'Switch to assigned shopper'
+              Other, 0x110cb2080, {{0.0, 144.3}, {390.0, 699.7}}
+                NavigationBar, 0x110cb21c0, {{0.0, 154.3}, {390.0, 54.0}}, identifier: 'Household dinner ideas'
+                  Button, 0x110cb1e00, {{16.0, 154.3}, {44.0, 44.0}}, identifier: 'BackButton', label: 'Household idea fixture'
+                  StaticText, 0x110cb1f40, {{101.3, 166.0}, {187.3, 20.7}}, label: 'Household dinner ideas'
+                Other, 0x110cb1b80, {{0.0, 144.3}, {390.0, 699.7}}
+                  Other, 0x110cb1cc0, {{0.0, 144.3}, {390.0, 699.7}}
+                    Other, 0x110cb17c0, {{0.0, 144.3}, {390.0, 699.7}}
+                      Other, 0x110cb1900, {{0.0, 144.3}, {390.0, 699.7}}
+                        CollectionView, 0x110cb1a40, {{0.0, 144.3}, {390.0, 699.7}}
+                          Other, 0x110cb0780, {{-16.0, 16.0}, {422.0, 464.3}}
+                          Cell, 0x110cb1400, {{16.0, 56.3}, {358.0, 52.0}}
+                            Other, 0x110cb1540, {{16.0, 56.3}, {358.0, 52.0}}
+                              Other, 0x110cb1180, {{16.0, 56.3}, {358.0, 52.0}}
+                            Other, 0x110cb12c0, {{16.0, 56.3}, {358.0, 52.0}}
+                              Other, 0x110cb0f00, {{16.0, 56.3}, {358.0, 52.0}}
+                                Other, 0x110cb1040, {{16.0, 56.3}, {358.0, 52.0}}
+                                  StaticText, 0x110cb0c80, {{16.0, 56.3}, {358.0, 52.0}}, label: 'Beans'
+                          Cell, 0x110cb0dc0, {{16.0, 108.3}, {358.0, 52.0}}
+                            Other, 0x110cb08c0, {{16.0, 108.3}, {358.0, 52.0}}
+                              Other, 0x110cb0b40, {{16.0, 108.3}, {358.0, 52.0}}
+                            Other, 0x110cb0a00, {{16.0, 108.3}, {358.0, 52.0}}
+                              Other, 0x110cb0500, {{16.0, 108.3}, {358.0, 52.0}}
+                                Other, 0x110cb2bc0, {{16.0, 108.3}, {358.0, 52.0}}
+                                  StaticText, 0x110cb2d00, {{16.0, 108.3}, {358.0, 52.0}}, label: 'Grams'
+                          Other, 0x110cb2e40, {{0.0, 144.3}, {390.0, 699.7}}
+                            Other, 0x110cb2f80, {{0.0, 144.3}, {390.0, 104.0}}
+                          Other, 0x110cb30c0, {{0.0, 144.3}, {390.0, 699.7}}
+                            Other, 0x110cb3200, {{0.0, 144.3}, {390.0, 104.0}}
+                          Cell, 0x110cb3340, {{16.0, 160.3}, {358.0, 52.0}}
+                            Other, 0x110cb3480, {{16.0, 160.3}, {358.0, 52.0}}
+                              Other, 0x110cb35c0, {{16.0, 160.3}, {358.0, 52.0}}
+                            Other, 0x110cb3700, {{16.0, 160.3}, {358.0, 52.0}}
+                              Other, 0x110cb3840, {{16.0, 160.3}, {358.0, 52.0}}
+                                Other, 0x110cb3980, {{16.0, 160.3}, {358.0, 52.0}}
+                                  StaticText, 0x110cb3ac0, {{16.0, 160.3}, {358.0, 52.0}}, label: 'Named reserved quantity, 0'
+                                  StaticText, 0x110cb3c00, {{32.0, 176.2}, {192.3, 20.3}}, label: 'Named reserved quantity'
+                          Other, 0x110cb3d40, {{32.0, 159.3}, {326.0, 1.0}}
+                          Cell, 0x110cb3e80, {{16.0, 212.3}, {358.0, 52.0}}
+                            Other, 0x10ff57d40, {{16.0, 212.3}, {358.0, 52.0}}
+                              Other, 0x1100e70c0, {{16.0, 212.3}, {358.0, 52.0}}
+                            Other, 0x110427d40, {{16.0, 212.3}, {358.0, 52.0}}
+                              Other, 0x1104275c0, {{16.0, 212.3}, {358.0, 52.0}}
+                                Other, 0x110427c00, {{16.0, 212.3}, {358.0, 52.0}}
+                                  StaticText, 0x110286e40, {{16.0, 212.3}, {358.0, 52.0}}, label: 'Remaining household stock, 250'
+                                  StaticText, 0x1109657c0, {{32.0, 228.2}, {209.3, 20.3}}, label: 'Remaining household stock'
+                          Other, 0x110964a00, {{32.0, 211.3}, {326.0, 1.0}}
+                          Cell, 0x110964c80, {{16.0, 264.3}, {358.0, 52.0}}
+                            Other, 0x110965400, {{16.0, 264.3}, {358.0, 52.0}}
+                              Other, 0x110965540, {{16.0, 264.3}, {358.0, 52.0}}
+                            Other, 0x110965680, {{16.0, 264.3}, {358.0, 52.0}}
+                              Other, 0x110964b40, {{16.0, 264.3}, {358.0, 52.0}}
+                                Other, 0x1109648c0, {{16.0, 264.3}, {358.0, 52.0}}
+                                  StaticText, 0x110ad1cc0, {{16.0, 264.3}, {358.0, 52.0}}, label: 'Uncovered quantity, 0'
+                                  StaticText, 0x110ad1900, {{32.0, 280.2}, {149.3, 20.3}}, label: 'Uncovered quantity'
+                          Other, 0x110ad3ac0, {{32.0, 263.3}, {326.0, 1.0}}
+                          Cell, 0x110ad3c00, {{16.0, 316.3}, {358.0, 52.0}}
+                            Other, 0x110ad3d40, {{16.0, 316.3}, {358.0, 52.0}}
+                              Other, 0x110ad3e80, {{16.0, 316.3}, {358.0, 52.0}}
+                            Other, 0x110ad0280, {{16.0, 316.3}, {358.0, 52.0}}
+                              Other, 0x110ad0780, {{16.0, 316.3}, {358.0, 52.0}}
+                                Other, 0x110ad08c0, {{16.0, 316.3}, {358.0, 52.0}}
+                                  StaticText, 0x110ad1400, {{16.0, 316.3}, {358.0, 52.0}}, label: 'Whole packs needed, 0'
+                                  StaticText, 0x110ad0500, {{32.0, 332.2}, {159.3, 20.3}}, label: 'Whole packs needed'
+                          Other, 0x110ad0640, {{32.0, 315.3}, {326.0, 1.0}}
+                          Cell, 0x110ad0140, {{16.0, 368.3}, {358.0, 94.3}}
+                            Other, 0x110ad1e00, {{16.0, 368.3}, {358.0, 94.3}}
+                              Other, 0x110ad17c0, {{16.0, 368.3}, {358.0, 94.3}}
+                            Other, 0x110ad1680, {{16.0, 368.3}, {358.0, 94.3}}
+                              Other, 0x110ad1b80, {{16.0, 368.3}, {358.0, 94.3}}
+                                Other, 0x110ad1a40, {{16.0, 368.3}, {358.0, 94.3}}
+                                  StaticText, 0x110ad03c0, {{16.0, 368.3}, {358.0, 94.3}}, label: 'Price unresolved. The shopper must separately review shared packs and budget.'
+                          Other, 0x110ad0a00, {{32.0, 367.3}, {326.0, 1.0}}
+                          Other, 0x110ad30c0, {{-16.0, 480.0}, {422.0, 1729.3}}
+                          Cell, 0x110c9c000, {{16.0, 497.7}, {358.0, 94.3}}
+                            Other, 0x110c9c140, {{16.0, 497.7}, {358.0, 94.3}}
+                              Other, 0x110c9c280, {{16.0, 497.7}, {358.0, 94.3}}
+                            Other, 0x110c9c3c0, {{16.0, 497.7}, {358.0, 94.3}}
+                              Other, 0x110c9c500, {{16.0, 497.7}, {358.0, 94.3}}
+                                Other, 0x110c9c640, {{16.0, 497.7}, {358.0, 94.3}}
+                                  Switch, 0x110c9c780, {{16.0, 497.7}, {358.0, 94.3}}, label: 'I reviewed these household quantities, exclusions, reservations, and usable packs', value: 1
+                                    StaticText, 0x110c9c8c0, {{32.0, 512.7}, {234.7, 64.3}}, label: 'I reviewed these household quantities, exclusions, reservations, and usable packs'
+                                    Switch, 0x110c9ca00, {{297.0, 530.7}, {63.0, 28.0}}, value: 1
+                          Cell, 0x110c9cb40, {{16.0, 592.0}, {358.0, 52.0}}
+                            Other, 0x110c9cc80, {{16.0, 592.0}, {358.0, 52.0}}
+                              Other, 0x110c9cdc0, {{16.0, 592.0}, {358.0, 52.0}}
+                            Other, 0x110c9cf00, {{16.0, 592.0}, {358.0, 52.0}}
+                              Other, 0x110c9d040, {{16.0, 592.0}, {358.0, 52.0}}
+                                Other, 0x110c9d180, {{16.0, 592.0}, {358.0, 52.0}}
+                                  Button, 0x110c9d2c0, {{16.0, 592.0}, {358.0, 52.0}}, identifier: 'household-idea-approve', label: 'Review adult approval'
+                          Other, 0x110c9d400, {{32.0, 591.0}, {326.0, 1.0}}
+                          Cell, 0x110c9d540, {{16.0, 644.0}, {358.0, 94.3}}
+                            Other, 0x110c9d680, {{16.0, 644.0}, {358.0, 94.3}}
+                              Other, 0x110c9d7c0, {{16.0, 644.0}, {358.0, 94.3}}
+                            Other, 0x110c9d900, {{16.0, 644.0}, {358.0, 94.3}}
+                              Other, 0x110c9da40, {{16.0, 644.0}, {358.0, 94.3}}
+                                Other, 0x110c9db80, {{16.0, 644.0}, {358.0, 94.3}}
+                                  StaticText, 0x110c9dcc0, {{16.0, 644.0}, {358.0, 94.3}}, label: 'Idea saved in this household. Approval and a proposal are separate; no meal or pack was changed.'
+                          Other, 0x110c9de00, {{32.0, 643.0}, {326.0, 1.0}}
+                          Cell, 0x110c9df40, {{16.0, 738.0}, {358.0, 52.0}}
+                            Other, 0x110c9e080, {{16.0, 738.0}, {358.0, 52.0}}
+                              Other, 0x110c9e1c0, {{16.0, 738.0}, {358.0, 52.0}}
+                            Other, 0x110c9e300, {{16.0, 738.0}, {358.0, 52.0}}
+                              Other, 0x110c9e440, {{16.0, 738.0}, {358.0, 52.0}}
+                                Other, 0x110c9e580, {{16.0, 738.0}, {358.0, 52.0}}
+                                  Button, 0x110c9e6c0, {{16.0, 738.0}, {358.0, 52.0}}, label: 'Refresh household ideas'
+                          Other, 0x110c9e800, {{32.0, 737.3}, {326.0, 1.0}}
+                          Other, 0x110c9e940, {{357.0, 208.3}, {30.0, 588.3}}, label: 'Vertical scroll bar, 5 pages', value: 100%
+                            Other, 0x110c9ea80, {{384.0, 634.7}, {3.0, 159.0}}
+                          Other, 0x110c9ebc0, {{357.0, 208.3}, {30.0, 588.3}}, label: 'Vertical scroll bar, 5 pages', value: 100%
+                            Other, 0x110c9ed00, {{384.0, 634.7}, {3.0, 159.0}}
+                Toolbar, 0x110c9ee40, {{0.0, 144.3}, {390.0, 699.7}}, identifier: 'Toolbar', label: 'Toolbar'
+                  Other, 0x110c9ef80, {{0.0, 144.3}, {390.0, 699.7}}
+      Other, 0x110c9f0c0, {{0.0, 0.0}, {390.0, 844.0}}
+        Other, 0x110c9f200, {{0.0, 0.0}, {390.0, 844.0}}, identifier: 'PopoverDismissRegion', label: 'dismiss popup'
+        Popover, 0x110c9f340, {{18.0, 47.0}, {354.0, 205.3}}
+          Other, 0x110c9f480, {{18.0, 47.0}, {354.0, 205.3}}
+            Other, 0x110c9f5c0, {{18.0, 47.0}, {354.0, 205.3}}
+              Other, 0x110c9f700, {{18.0, 47.0}, {354.0, 205.3}}
+                Other, 0x110c9f840, {{18.0, 47.0}, {354.0, 192.3}}
+                  Other, 0x110c9f980, {{18.0, 47.0}, {354.0, 192.3}}
+                    Other, 0x110c9fac0, {{18.0, 47.0}, {0.0, 0.0}}
+                      Other, 0x110c9fc00, {{18.0, 47.0}, {354.0, 192.3}}
+                        Other, 0x110c9fd40, {{18.0, 47.0}, {354.0, 192.3}}
+                          Other, 0x110c9fe80, {{18.0, 47.0}, {354.0, 192.3}}
+                            Other, 0x110ca4000, {{18.0, 47.0}, {354.0, 192.3}}
+                              Sheet, 0x110ca4140, {{18.0, 47.0}, {354.0, 192.3}}, label: 'Approve this household idea?'
+                                Other, 0x110ca4280, {{18.0, 47.0}, {354.0, 192.3}}
+                                  Other, 0x110ca43c0, {{18.0, 47.0}, {354.0, 192.3}}
+                                    Other, 0x110ca4500, {{18.0, 47.0}, {354.0, 192.3}}
+                                    Other, 0x110ca4640, {{18.0, 47.0}, {354.0, 192.3}}
+                                      ScrollView, 0x110ca4780, {{18.0, 47.0}, {354.0, 112.3}}
+                                        Other, 0x110ca48c0, {{18.0, 47.0}, {354.0, 112.3}}
+                                          StaticText, 0x110ca4a00, {{48.0, 69.0}, {294.0, 20.3}}, label: 'Approve this household idea?'
+                                          StaticText, 0x110ca4b40, {{48.0, 97.0}, {294.0, 58.0}}, label: 'This saves adult approval only. Linking a meal and changing shared packs require separate reviews.'
+                                        Other, 0x110ca4c80, {{339.0, 81.0}, {30.0, 78.3}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                          Other, 0x110ca4dc0, {{366.0, 8.0}, {3.0, 36.0}}
+                                        Other, 0x110ca4f00, {{18.0, 126.3}, {354.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                          Other, 0x110ca5040, {{-21.0, 153.3}, {36.0, 3.0}}
+                                        Other, 0x110ca5180, {{339.0, 81.0}, {30.0, 78.3}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                          Other, 0x110ca52c0, {{366.0, 8.0}, {3.0, 36.0}}
+                                        Other, 0x110ca5400, {{18.0, 126.3}, {354.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                          Other, 0x110ca5540, {{-21.0, 153.3}, {36.0, 3.0}}
+                                      ScrollView, 0x110ca5680, {{18.0, 159.3}, {354.0, 80.0}}
+                                        Other, 0x110ca57c0, {{18.0, 159.3}, {354.0, 80.0}}
+                                          Other, 0x110ca5900, {{34.0, 175.3}, {322.0, 48.0}}
+                                            Button, 0x110ca5a40, {{34.0, 175.3}, {322.0, 48.0}}, label: 'Approve meal and quantities'
+                                        Other, 0x110ca5b80, {{339.0, 159.3}, {30.0, 46.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                          Other, 0x110ca5cc0, {{366.0, 249.3}, {3.0, 7.0}}
+                                        Other, 0x110ca5e00, {{52.0, 206.3}, {286.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                          Other, 0x110ca5f40, {{108.0, 233.3}, {7.0, 3.0}}
+                                        Other, 0x110ca6080, {{339.0, 159.3}, {30.0, 46.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                          Other, 0x110ca61c0, {{366.0, 249.3}, {3.0, 7.0}}
+                                        Other, 0x110ca6300, {{52.0, 206.3}, {286.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                          Other, 0x110ca6440, {{108.0, 233.3}, {7.0, 3.0}}
+    Window, 0x110ca6580, {{0.0, 0.0}, {390.0, 844.0}}
+      Other, 0x110ca66c0, {{0.0, 0.0}, {390.0, 844.0}}
+        Other, 0x110ca6800, {{0.0, 0.0}, {390.0, 844.0}}
+Path to element:
+ →Application, 0x110cb2580, pid: 25273, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x110ca6940, pid: 25273, label: 'Room in the Cart'
+  }
+)

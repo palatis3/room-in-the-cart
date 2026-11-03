@@ -1,0 +1,40 @@
+{
+  "stage": "restart-safe committed-source freeze only; operational extension NOT executed",
+  "commit": "ae00e3bb8322a684f43526c9e360f082ed0c0c68",
+  "included": [
+    "tracked service",
+    "tracked shared",
+    "api/maintenance.js",
+    "vercel.json"
+  ],
+  "excluded": [
+    "021 in-progress",
+    "untracked/dirty working source",
+    "live service/dist"
+  ],
+  "source_files": 110,
+  "dependency_files_and_symlinks": 2368,
+  "source_archive_sha256": "16b83013d071a655121109e40d21e067313b437d453f30c925bfcce4568355bf",
+  "source_manifest_sha256": "39e6f970c597fac5d069ac2dc394efcc2b2e0e7896d8e538aeb367d363d81a7a",
+  "dependency_manifest_sha256": "8c7c4b7bef1a2c82f41dfaaa371378352229a55cbbc80bdf7e1ae8c919297d07",
+  "compiled_files": 0,
+  "build_executed": false,
+  "tests_executed": false,
+  "dump_created": false,
+  "restore_executed": false,
+  "new_databases_created": [],
+  "new_roles_created": [],
+  "proposed_databases": [
+    "ritc_b11_ops020_20261103",
+    "ritc_b11_ops020_restore_20261103"
+  ],
+  "proposed_roles": [
+    "ritc_b11_ops020_app_20261103",
+    "ritc_b11_ops020_worker_20261103"
+  ],
+  "active_own_services": [],
+  "active_own_tool_process_sessions": [],
+  "shared_postgresql": "left running; not stopped",
+  "journal": "proposal only, unapproved/unimplemented, no022 reservation",
+  "timestamp": "2026-11-03T20:25:24.999227+00:00"
+}

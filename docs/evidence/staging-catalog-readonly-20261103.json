@@ -1,0 +1,11 @@
+{
+  "checkedAt": "2026-11-03T20:07:02.938Z",
+  "scope": "Read-only catalog existence check; no customer rows",
+  "tls": "Verified CA and hostname",
+  "project": "uwjxrotnocxxomqdetzk",
+  "role": "ritc_runtime",
+  "app_tables": 30,
+  "shared_meals": false,
+  "store_quote_grants": false,
+  "measurement_consent": false
+}

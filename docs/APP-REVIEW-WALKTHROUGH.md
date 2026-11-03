@@ -7,7 +7,8 @@ Prepared from native source on 2026-11-03. This is a reviewer script and release
 | Field | Required value |
 | --- | --- |
 | Submitted build/version and bundle | Record from the actual signed candidate |
-| Operating support owner and public destination | Supply a monitored owner-controlled destination; do not use an invented email address |
+| Operator business | Venture House Group LLC, explicitly supplied by the user. This does not establish policy/terms approval, jurisdiction, address or retention. |
+| Operating support owner and public destination | User-supplied contact: hello@roominthecart.com. Verify delivery/monitoring with the operating owner before release; no test email has been sent |
 | Privacy and terms pages | Supply operator-reviewed HTTPS URLs and both launch languages |
 | Demo environment | State the exact isolated service environment; use fictional records only |
 | Demo adult accounts | Provide two verified adults through App Store Connect's private review fields, outside this repository |
@@ -29,7 +30,7 @@ Use a fresh isolated test installation. Do not erase a person's existing workspa
 4. From the shopping list, **Review checkout → Prepare retailer handoff**. Inspect the dated basket copy. Copy or share it to a controlled local destination; this does not place a retailer order. Report the fictional placement separately. Record actual usable quantities, then review a shortage and protect lunch reservations before selecting a repair. Keep any credit pending until an explicit posted event.
 5. Open the saved pickup's **Tell the cook** route. Choose the recipient language, review the complete dated instruction and what remains unresolved, and share to a controlled destination. Report the recipient/version sent separately. A reported acknowledgment is a separate action. Never infer a retailer order, delivery or recipient read from share-sheet completion.
 6. Open **Records → Recovery, exports and saved records**. Preview a narrow helper copy and a private owner export separately. Review an encrypted recovery file; include evidence photos only through the explicit selection/review path. Reopen a recovery file beside existing work and inspect conflicts before importing. Cancel deletion and verify persistence, then delete only the named fictional scope. Confirm that prior exported copies remain separate.
-7. Open the **Settings** gear on a tab root. Read **Help**, **Privacy and data**, and **Support** offline. Verify the missing-policy/support states if metadata is blank. Inspect **Review support summary** before opening its system share sheet. The summary must contain only version/build/iOS/language/environment/configuration booleans; verify that it includes none of the demo food, prices, names, photos, identifiers, codes or links.
+7. Open the **Settings** gear on a tab root. Read **Help**, **Privacy and data**, and **Support** offline. Verify the missing-policy/page states if metadata is blank. The supplied support email opens a composer without sending; cancel it during this local walkthrough. Inspect **Review support summary** before opening its system share sheet. The summary must contain only version/build/iOS/language/environment/configuration booleans; verify that it includes none of the demo food, prices, names, photos, identifiers, codes or links.
 8. Open **Settings → Device shortcuts** with optional permissions denied and use typed paths. Review capture output before it becomes saved data. Exercise the actual signed share/widget/notification surfaces separately on a device; source compilation or a simulator run does not establish their distribution behavior.
 
 ## Connected review, after the real environment is configured

@@ -1,0 +1,33 @@
+{
+  "host": {
+    "shared-host": {
+      "Package.swift": "0efd522875f61acdb1cdca9efd1b31eec66eadb54f4e5e6a06664a524b42d381",
+      "Tests/RoomInTheCartTests/SharedMealIdeaTests.swift": "a20d2890f80011ca0c02a20e698ed17a60af39fd34818fa798e3886b81519266",
+      "Tests/RoomInTheCartTests/SharedMealChangeTests.swift": "644f4906a11fdf56f16b36c96da50734b6dbf3ad1ea2f3f724177a7bfb3fedbb",
+      "Sources/RoomInTheCart/HistoryPendingStore.swift": "d09110b689905806fdf4e3c0b6961f6f0ae650293f4775daa0917badc2726fed",
+      "Sources/RoomInTheCart/FamilyDecisionStore.swift": "0df21e98ba61434d8f1454de85689dfcfc639a6d8d1200fceb8d5941ecafd35a",
+      "Sources/RoomInTheCart/SharedMealChangeModel.swift": "baeb207a0a4a5a78cd1c9e079512714ed2a0cdd45cea95b71fbbf877a5d60f6a",
+      "Sources/RoomInTheCart/SharedMealIdeaModel.swift": "5e8bf82c7da7f4505ca1b9ce9ca524df4607007006ef640567785f7c24dff69b",
+      "Sources/RoomInTheCart/Support.swift": "705440ed78ad4301cd430541f77ad614e2ae2240245e6c171a3ff7be336b6330",
+      "Sources/RoomInTheCart/SharedMealChangeSeed.swift": "752d59a1d988f35c0656c222b8366b160e39c326b15efffb9be66dcde93f7c60"
+    },
+    "carryover-host": {
+      "Package.swift": "c69e27cc7d17af703c4d57b48272d711888407bfefa51360bba2857f7a2b30da",
+      "Tests/RoomInTheCartTests/DinnerAwayCarryoverTests.swift": "4e347a3aa0cb3fd90a3908cb955fb8c76d44be04ca29b5ac689e87701b7bc7ac",
+      "Sources/RoomInTheCart/PickupAwayCarryover.swift": "ec24d990552c7d0b72df3736cbd8a5a807d9b78fdd121522dc3dcc0441c40977",
+      "Sources/RoomInTheCart/DinnerLocalization.swift": "c1530888af5e4e3be69118781b7c9534d8f22de1c623e7da9c0987275c91b5fe",
+      "Sources/RoomInTheCart/PickupOfferEvaluation.swift": "e58f43f2477624df8c1967cabae925202d2f5b8f69e5ccb12f7775f15e3a90c6",
+      "Sources/RoomInTheCart/LedgerModel.swift": "77df98d6a518bed6b1abf46aff9dcd6c5ff838655707daf76d15c19db1fb65f5",
+      "Sources/RoomInTheCart/LedgerCheckoutAdapter.swift": "85de1f10f5979db23ca87d8a4297f8e880d2e9853301f6af1b86132160bfd651",
+      "Sources/RoomInTheCart/PickupModel.swift": "d3c52d694f74c95e4d176af0e7fa0fc557b8c32d7b5b05e6de7f373513606b2a",
+      "Sources/RoomInTheCart/LedgerLocalization.swift": "3b0a655c5eb5c6906d98c150a25bba0f5faf16971b06be11975dba3b63a6fdba",
+      "Sources/RoomInTheCart/RecipientContracts.swift": "bfddb7567182c7207a84583ecbb0b5d6c16b7e5b20c73690a7e88f0c0565677e",
+      "Sources/RoomInTheCart/PickupCookProjection.swift": "6bc2137b1206d1d270ce4b6175f74c97d51b0fbd1157e0a7e8c227abc6773719",
+      "Sources/RoomInTheCart/DinnerIdeaSupplyReview.swift": "7689674c5a9b82ecd59774235d529bb1a0f4320db7ed5633866c45518c350a04",
+      "Sources/RoomInTheCart/PickupOfferReview.swift": "cf59c11fae653321ea27107e56cc447a33c0d0463fa57288c5b70ed009848dc7",
+      "Sources/RoomInTheCart/PickupFeedback.swift": "0700b53f05bc8034d3561f9b71d78cc7ef27309fbda55b85a6b6f7c492dfe9e8",
+      "Sources/RoomInTheCart/PickupFallbackLots.swift": "4f902e5a3eb1099726597d8920aa9e52080efa35eff0ae60619c49948b8f89a7",
+      "Sources/RoomInTheCart/DinnerFeatureModel.swift": "d1cd61617225d60eebee437f32f228011866cd9fb5204f4e1b49dc62ffc184bd"
+    }
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "requirement": "F09 / D16",
+  "status": "passed",
+  "testBundle": ".build/F09-MeasurementUI-Final.xcresult",
+  "testLog": ".build/f09-measurement-ui-final.log",
+  "buildLog": ".build/f09-measurement-final-build.log",
+  "immutableProducts": ".build/F09-Products-Final",
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "65B8A2FE-51FE-44A5-A9C7-F2524E33179B",
+    "deviceName": "Room in the Cart iOS 17 Small",
+    "modelName": "iPhone SE",
+    "osBuildNumber": "21A328",
+    "osVersion": "17.0",
+    "platform": "iOS Simulator"
+  },
+  "tests": [
+    {
+      "name": "testAuthenticatedNoticeConsentExplicitClosedShopSendDeleteAndWithdrawal",
+      "durationSeconds": 62.095,
+      "verified": [
+        "Actual current notice and separate explicit household consent",
+        "No local response upload or send before explicit action",
+        "Live service consent read after process recreation",
+        "Six-outcome coded form; actual late/different response reports zero benefit",
+        "Explicit response send and removal",
+        "Successful consent, send, deletion and withdrawal result anchors become visible without test-driven scrolling",
+        "Withdrawal suppresses send controls and remains withdrawn after process recreation"
+      ]
+    },
+    {
+      "name": "testLocalSettingsConsentIgnoresLegacyBooleanPersistsRestartAndStaysWorkspaceScoped",
+      "durationSeconds": 37.837,
+      "verified": [
+        "Real Settings toggle ignores an old unversioned true boolean",
+        "Explicit local opt-in and opt-out persist ordinary relaunch",
+        "Two real SQLite workspace identities retain independent choices",
+        "Local choices create zero household consent or feedback writes"
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "path": "docs/evidence/native/optional-measurement/screenshots/F09-withdrawal-removes-send-authority.png",
+      "sourceAttachment": "721777CF-C15C-4881-B534-E01D8579EF1D.png",
+      "SHA256": "e462bd0027d44f8697feeb63071f1371a551fda8d1df1b9f0f78ed6d461d1830"
+    },
+    {
+      "path": "docs/evidence/native/optional-measurement/screenshots/F09-late-result-zero-benefit-recorded.png",
+      "sourceAttachment": "519C75E4-C975-4C4B-8DD8-E3915DD805F5.png",
+      "SHA256": "5c783c4f44d3c76caa9fd6d3ed9a89594b8a2d514bb61b0291e57a3b109c9c35"
+    },
+    {
+      "path": "docs/evidence/native/optional-measurement/screenshots/F09-three-codes-reviewed-before-explicit-send.png",
+      "sourceAttachment": "56706896-051A-4BA0-BC7D-4B0D7623FD05.png",
+      "SHA256": "8f3ab70a75d8c646daf67576f96f4d41a3788fe4189555f298dabf4161123a14"
+    },
+    {
+      "path": "docs/evidence/native/optional-measurement/screenshots/F09-actual-notice-and-explicit-household-consent.png",
+      "sourceAttachment": "863556E3-F67A-4210-A36E-51BB25E4C6EB.png",
+      "SHA256": "d7e9cfe53d33069fbdafb4c0377af61ab357b034b3c361b77fbce7c234b7916d"
+    },
+    {
+      "path": "docs/evidence/native/optional-measurement/screenshots/F09-current-optional-notice-before-consent.png",
+      "sourceAttachment": "25F05B63-899B-44FA-9768-63E4D6640423.png",
+      "SHA256": "9b42cc78d7bc6c6daeb7f4bea2d6e182f04ae09de9c445f10915ec1309daf2ec"
+    },
+    {
+      "path": "docs/evidence/native/optional-measurement/screenshots/F09-local-scopes-reopened-independently.png",
+      "sourceAttachment": "9DAD4D38-D1E1-4286-A098-7A42FFED9577.png",
+      "SHA256": "48ea3a96de16bfd497c0f0e95df359d69dc9950081c31ac014c5679ff1506773"
+    },
+    {
+      "path": "docs/evidence/native/optional-measurement/screenshots/F09-local-explicit-choice-no-household-send.png",
+      "sourceAttachment": "CC29FAB3-C4E5-4384-8452-BD6DE8C5A067.png",
+      "SHA256": "158083031c55e9e084521d506be72372a5a57816fcd6121bfa0a3c7ef62ce279"
+    }
+  ],
+  "boundary": [
+    "UI uses ordinary production views and real HouseholdModel/HouseholdService with a strictly guarded test-build-only .invalid transport. No production authentication or business-authority bypass.",
+    "Canonical household/week uniqueness, tenant isolation, current consent and verified Apple billing/refund behavior are separately covered by the real PostgreSQL/HTTP measurement acceptance tests.",
+    "AccessibilityFocusState and scope/token guarded focus routing are implemented. UI tests verify the resulting visible anchor; a manual VoiceOver session is not claimed.",
+    "The tested source is the successful shared acceptance base plus the four recorded F09 overlays, not an assertion that unrelated later source changes were included."
+  ]
+}

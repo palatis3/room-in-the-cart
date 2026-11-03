@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { JSDOM } from 'jsdom';
-import { mountPublicPage, operatorSupportURL, publicPageKey } from '../dist/public-pages.js';
+import { readFileSync } from 'node:fs';
+import { mountPublicPage, operatorSupportURL, operatorDisplayName, publicPageKey } from '../dist/public-pages.js';
 import { publicPages } from '../dist/public-pages-content.js';
+import { publicSiteConfiguration } from '../dist/public-site-configuration.js';
 
 const setup = (path, language = 'en-US', configuration) => {
   const dom = new JSDOM('<div id="app"></div>', { url: 'https://review.grocery-app.com' + path });
@@ -69,15 +71,18 @@ test('language selection updates public links, text and address without losing f
   assert.equal(dom.window.localStorage.length, 0);
 });
 
-test('privacy, terms and support disclose remaining operator gates instead of invented policies or contacts', () => {
+test('privacy and terms disclose remaining operator gates and support uses the supplied address', () => {
   assert.match(setup('/privacy').root.textContent, /not a complete operator-approved release privacy policy/);
   assert.match(setup('/privacy').root.textContent, /Existing local feedback, grocery text, prices and member names are not sent/);
   assert.match(setup('/privacy').root.textContent, /select and review them/);
   assert.match(setup('/terms').root.textContent, /Operator-approved release terms.*pending/);
   const support = setup('/support').root;
-  assert.match(support.textContent, /support destination has not been configured/);
-  assert.equal(support.querySelector('.public-contact'), null);
-  assert.doesNotMatch(support.textContent, /@|guaranteed savings|successful purchase/);
+  assert.equal(support.querySelector('.public-contact').href, 'mailto:hello@roominthecart.com');
+  assert.match(support.textContent, /hello@roominthecart.com/);
+  assert.doesNotMatch(support.textContent, /support destination has not been configured|guaranteed savings|successful purchase/);
+  const unconfigured = setup('/support', 'en-US', { operatorSupportURL: null }).root;
+  assert.match(unconfigured.textContent, /support destination has not been configured/);
+  assert.equal(unconfigured.querySelector('.public-contact'), null);
 });
 
 test('only a configured public HTTPS contact appears and unsafe configuration is never made clickable', () => {
@@ -89,4 +94,30 @@ test('only a configured public HTTPS contact appears and unsafe configuration is
   assert.equal(root.querySelector('.public-contact').href, 'https://support.grocery-app.com/contact');
   assert.match(root.textContent, /destino configurado del operador/);
   assert.doesNotMatch(root.textContent, /No se ha configurado un destino/);
+});
+
+test('support mailto accepts only a bare address with no headers, query or encoded payload', () => {
+  const url = operatorSupportURL('mailto:hello@roominthecart.com');
+  assert.equal(url.href, 'mailto:hello@roominthecart.com');
+  assert.equal(url.search, ''); assert.equal(url.hash, '');
+  for (const raw of ['mailto:hello@roominthecart.com?', 'mailto:hello@roominthecart.com#', 'mailto:hello@roominthecart.com?subject=hello', 'mailto:hello@roominthecart.com?bcc=another@roominthecart.com', 'mailto:hello@roominthecart.com\r\nBcc:another@roominthecart.com', 'mailto:hello%0d%0a@roominthecart.com', 'mailto:hello@roominthecart.com#body', 'mailto:hello..another@roominthecart.com', 'mailto:hello@-roominthecart.com', 'mailto:hello@roominthecart..com', 'mailto:hello@roominthecart.com,another@roominthecart.com']) {
+    assert.equal(operatorSupportURL(raw), null, raw);
+    assert.equal(setup('/support', 'en-US', { operatorSupportURL: raw }).root.querySelector('.public-contact'), null);
+  }
+});
+
+test('supplied operator identity appears on both policy pages in both languages and matches native public defaults', () => {
+  const canonical = JSON.parse(readFileSync(new URL('../../config/public-contact.json', import.meta.url), 'utf8'));
+  assert.equal(publicSiteConfiguration.operatorName, canonical.operatorName);
+  assert.equal(publicSiteConfiguration.operatorSupportURL, 'mailto:' + canonical.supportEmail);
+  assert.equal(operatorDisplayName('Venture House Group LLC'), 'Venture House Group LLC');
+  for (const route of ['privacy', 'terms']) for (const language of ['en', 'es']) {
+    const { root } = setup('/' + route + '?lang=' + language);
+    assert.match(root.querySelector('.public-operator').textContent, /Venture House Group LLC/);
+    assert.doesNotMatch(root.textContent, /operating legal identity.*pending|operator identity.*pending|identidad legal del operador.*pendiente/);
+  }
+  for (const raw of [null, '', ' Venture House Group LLC', 'Venture House Group LLC ', 'Venture\nHouse Group LLC', 'Venture\tHouse Group LLC', 'Venture\0House Group LLC', 'Venture\u202eHouse Group LLC', 'Venture\u2028House Group LLC', '$(OPERATOR_NAME)', 'a'.repeat(301)]) {
+    assert.equal(operatorDisplayName(raw), null);
+    assert.equal(setup('/privacy', 'en-US', { operatorSupportURL: null, operatorName: raw }).root.querySelector('.public-operator'), null);
+  }
 });

@@ -1,0 +1,25 @@
+{
+  "rawDifferences": [
+    {
+      "before": {
+        "nspname": "public",
+        "relname": "ritc_schema_migration",
+        "relkind": "r",
+        "relrowsecurity": true,
+        "relforcerowsecurity": false,
+        "relacl": "{palatis=arwdDxtm/palatis}",
+        "owner": "palatis"
+      },
+      "after": {
+        "nspname": "public",
+        "relname": "ritc_schema_migration",
+        "relkind": "r",
+        "relrowsecurity": true,
+        "relforcerowsecurity": false,
+        "relacl": null,
+        "owner": "palatis"
+      }
+    }
+  ],
+  "resolution": "Canonicalize a NULL relation ACL with acldefault for its owner and relation kind, then sort ACL entries. Effective ACL equality passes. No service change."
+}

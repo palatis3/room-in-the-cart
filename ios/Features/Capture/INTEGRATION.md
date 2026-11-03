@@ -16,6 +16,12 @@
 
 `CaptureCorrectionStore.shared` is local only. Users explicitly opt in, remember, use a suggestion, forget, or opt out. Opt-out deletes the current profile/locale entries. Exact product-spelling suggestions never apply automatically or rewrite old records. Numeric, negated or allergy/free-from fragments cannot be saved as spelling rules. Limits: 100 entries, 160 characters per fragment, 128 KB file. Files use complete protection and are excluded from backup; no audio or complete transcript is stored. Scope changes discard in-memory suggestions and late responses.
 
+`CorrectionSettingsLink()` exposes that same model/store directly from Settings. `CorrectionSettingsView` requires the current device-owner-gated private identity, active scene and live ledger workspace, with no pending ledger deletion. It lists or forgets remembered spellings for an explicitly selected English/Spanish scope; it does not add new rules outside reviewed capture. Turning memory off confirms deletion of that workspace/language only. Cached text is hidden as soon as the live scope differs, and cancelled loads cannot clear a newer scope. Failed reads or writes require reload before controls or a saved-spellings list return. This is local spelling management, not shared-account correction memory or an export.
+
+Forget buttons have a target-specific accessible name containing the original and replacement. Actions produce a visible scoped result row from the model's reloaded snapshot; unconfirmed writes never receive success copy. The result remains after the removed button disappears. `ScrollViewReader` and `AccessibilityFocusState` scroll/focus that stable row after layout yields, with cancellation and live-context checks. Scope/access changes and leaving the screen clear private result text. `CorrectionSettingsOutcomeTests` verifies distinct target labels, post-operation absence for forget, empty/disabled state for opt-out and uncertainty handling. Device/VoiceOver focus execution remains part of the integrated UI review.
+
+`RecordsRecoveryLink(accessibilityID:)` is shared by Records and Settings. It composes the same `RecordsToolsEntryView` with device-surface and capture-profile erasure callbacks, so the Settings entry cannot bypass retirement cleanup.
+
 Root’s required Records cleanup must call:
 
 ```swift

@@ -1,0 +1,11 @@
+{
+  "source": {
+    "database": "ritc_b11_ops019_20261103",
+    "registry_relacl": "{palatis=arwdDxtm/palatis}"
+  },
+  "restore": {
+    "database": "ritc_b11_ops019_restore_20261103",
+    "registry_relacl": null
+  },
+  "explanation": "PostgreSQL restores explicit owner-only registry ACL as NULL default owner ACL. Effective relation and database ACLs, column privileges and runtime permission probes match; no product defect."
+}

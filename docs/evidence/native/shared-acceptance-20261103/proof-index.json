@@ -1,0 +1,176 @@
+{
+  "scope": "Independent frozen native acceptance; not current full integration",
+  "baseHEAD": "b0cbcd7973bf2a2fa5766e48da87be941aa1fcfd",
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "E03D2CFA-6E83-4783-840C-8E50981F527B",
+    "deviceName": "RITC Scan Diagnostic",
+    "modelName": "iPhone 17e",
+    "osBuildNumber": "24A434",
+    "osVersion": "27.0",
+    "platform": "iOS Simulator"
+  },
+  "nativeModels": {
+    "passed": 35,
+    "failed": 0,
+    "S17": 14,
+    "S26": 9,
+    "S25": 12,
+    "result": "SharedNativeAcceptance.xcresult",
+    "overallResultContains4EarlierUIFailures": true,
+    "sourceManifest": "source-manifest-attempt1.json",
+    "compiledManifest": "compiled-identity-attempt1.json"
+  },
+  "functionalUIJourneys": [
+    {
+      "title": "S17 direct shopper seed",
+      "test": "SharedMealChangeUITests/testAssignedShopperMapsLocalSeedWithoutPlannerPostAndCanCancel",
+      "result": "SharedUIAttempt2.xcresult",
+      "seconds": 129.187,
+      "sourceManifest": "source-manifest-attempt2.json",
+      "compiledManifest": "compiled-identity-attempt2.json"
+    },
+    {
+      "title": "S17 planner and shopper",
+      "test": "SharedMealChangeUITests/testPlannerCancelThenSendAndSeparateShopperCancelThenApplyExactlyOnce",
+      "result": "SharedUIAttempt2.xcresult",
+      "seconds": 144.301,
+      "sourceManifest": "source-manifest-attempt2.json",
+      "compiledManifest": "compiled-identity-attempt2.json"
+    },
+    {
+      "title": "S25 carryover and restart",
+      "test": "DinnerAwayCarryoverUITests/testPhysicalCarryoverCancelApplyAndRestartKeepOriginalPurchase",
+      "result": "CarryoverAndAX.xcresult",
+      "seconds": 110.729,
+      "sourceManifest": "source-manifest-attempt3.json",
+      "compiledManifest": "compiled-identity-attempt3.json"
+    },
+    {
+      "title": "S26 approved idea and separate shopper Apply",
+      "test": "SharedMealIdeaUITests/testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview",
+      "result": "SharedIdeaAcceptanceComplete.xcresult",
+      "seconds": 191.249,
+      "sourceManifest": "source-manifest-final-s26.json",
+      "compiledManifest": "compiled-identity-final-s26.json"
+    }
+  ],
+  "additionalPermanentUIRegression": {
+    "title": "S26 permanent lifecycle regression",
+    "test": "SharedMealIdeaUITests/testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn",
+    "result": "ObservedProposalLifecycle.xcresult",
+    "seconds": 152.02,
+    "sourceManifest": "source-manifest-final-s26.json",
+    "compiledManifest": "compiled-identity-final-s26.json"
+  },
+  "screenshots": [
+    {
+      "test": "SharedMealChangeUITests/testAssignedShopperMapsLocalSeedWithoutPlannerPostAndCanCancel()",
+      "file": "screenshots/S17-direct-actual-shared-apply-confirmed-once.png",
+      "sha256": "b1e17f03b5620f9ef5523a2a2f95edcf9ff8f7cbe31748967ab2da8bb68f633b"
+    },
+    {
+      "test": "SharedMealChangeUITests/testAssignedShopperMapsLocalSeedWithoutPlannerPostAndCanCancel()",
+      "file": "screenshots/S17-direct-actual-shared-pack-and-checkout-review.png",
+      "sha256": "bb1358c13e121baf89f16be77e092a2c32f9ba1cef2b179135b217863e662a96"
+    },
+    {
+      "test": "SharedMealChangeUITests/testPlannerCancelThenSendAndSeparateShopperCancelThenApplyExactlyOnce()",
+      "file": "screenshots/S17-planner-actual-shared-apply-confirmed-once.png",
+      "sha256": "1c1e575fa8d66bafdeb37e21b1fdd203cc939d216b01bd0503ba1dc18bdaff0d"
+    },
+    {
+      "test": "SharedMealChangeUITests/testPlannerCancelThenSendAndSeparateShopperCancelThenApplyExactlyOnce()",
+      "file": "screenshots/S17-planner-actual-shared-pack-and-checkout-review.png",
+      "sha256": "5184b11f2aeb66dc7d45a863fc5c0f2186c13060f2dc26606dc7f27ac9734c6a"
+    },
+    {
+      "test": "SharedMealChangeUITests/testPlannerCancelThenSendAndSeparateShopperCancelThenApplyExactlyOnce()",
+      "file": "screenshots/S17-planner-proposal-received-without-basket-write.png",
+      "sha256": "81f1360fe35d250fa78eee7d25b7abeff985067b5576acffe7c5b6e0801337c8"
+    },
+    {
+      "test": "SharedMealChangeUITests/testPlannerCancelThenSendAndSeparateShopperCancelThenApplyExactlyOnce()",
+      "file": "screenshots/S17-planner-planner-original-and-proposed-review.png",
+      "sha256": "5be573f0aa59e4fb78d9487ca8e41fbb5572aa958ac0dcfcf95b2fa6f2b104a6"
+    },
+    {
+      "test": "DinnerAwayCarryoverUITests/testPhysicalCarryoverCancelApplyAndRestartKeepOriginalPurchase()",
+      "file": "screenshots/S25-real-dated-carryover-reopened-after-restart.png",
+      "sha256": "6c0b04a6744dccd471c371e3a45ee3cc918f72f422e40e5bdc8287e78dc55434"
+    },
+    {
+      "test": "DinnerAwayCarryoverUITests/testPhysicalCarryoverCancelApplyAndRestartKeepOriginalPurchase()",
+      "file": "screenshots/S25-dated-target-and-original-purchase-retained.png",
+      "sha256": "e44d8ee2b9bbc5eee1acfab5ed664eab9bb36336c65b219b9a9e19835b6c1add"
+    },
+    {
+      "test": "DinnerAwayCarryoverUITests/testPhysicalCarryoverCancelApplyAndRestartKeepOriginalPurchase()",
+      "file": "screenshots/S25-physical-reservation-reviewed-before-save.png",
+      "sha256": "047674c9c1aad7b34374b95255745e10a3688804e204bdffddaec4480034e52b"
+    },
+    {
+      "test": "SharedMealIdeaUITests/testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview()",
+      "file": "screenshots/S26-shopper-applied-once-original-and-half-cup-meals-retained.png",
+      "sha256": "879dc5e23fe3ac684e57504653b3e922d96b9c1ef773614ecfd42bd85aeafb56"
+    },
+    {
+      "test": "SharedMealIdeaUITests/testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview()",
+      "file": "screenshots/S26-separate-shopper-review-requires-explicit-approval.png",
+      "sha256": "a4792e9c420c5cbe6f1bf55e4428826634656dc317bf07154eee6cf18b61d2cd"
+    },
+    {
+      "test": "SharedMealIdeaUITests/testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview()",
+      "file": "screenshots/S26-shopper-visible-approved-fractional-proposal.png",
+      "sha256": "1a2eb17b3de50be07129a0b878536b0d3081fbd74c85f7ea842e0323f8a9e01b"
+    },
+    {
+      "test": "SharedMealIdeaUITests/testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview()",
+      "file": "screenshots/S26-separate-proposal-received-without-basket-write.png",
+      "sha256": "f0627fd54c994124644265349d9ce0cd487d8b663896f7404e912cff8aec42aa"
+    },
+    {
+      "test": "SharedMealIdeaUITests/testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview()",
+      "file": "screenshots/S26-adult-approved-without-proposal-or-basket-write.png",
+      "sha256": "c2ee70f03eeba8fd42087b06135296f52fde6a4c803b9d69ab16a97298317807"
+    },
+    {
+      "test": "SharedMealIdeaUITests/testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview()",
+      "file": "screenshots/S26-exact-fraction-household-supply-preview.png",
+      "sha256": "a7433699627b6775892ca8b80436ebce4d003640007a0c25d1a0e2003093c963"
+    },
+    {
+      "test": "SharedMealIdeaUITests/testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn()",
+      "file": "screenshots/S26-lifecycle-approved-proposal-reopens-after-authorized-parent-refresh.png",
+      "sha256": "0c275771ecda01e5540013ceedf8211441fadf08f89be4ab8321d156dd884ae2"
+    },
+    {
+      "test": "SharedMealIdeaUITests/testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn()",
+      "file": "screenshots/S26-lifecycle-approved-proposal-enabled-after-parent-disappearance.png",
+      "sha256": "7ce217b2787fa02381da8f365fdda1f6db49d2756f3e8cf191aae934308b0a1a"
+    }
+  ],
+  "diagnosticsExcludedFromAcceptance": [
+    "testDiagnosticTemplateEvidenceAccessibility",
+    "testDiagnosticNamedEvidenceEditing",
+    "testDiagnosticEvidenceReturnSubmission",
+    "testDiagnosticDoneAndApprovalCancel"
+  ],
+  "durableRoot": "/Users/palatis/Documents/Codex/2026-11-03/task-2/native-resume-evidence/ritc-native-resume-20261103",
+  "knownOpenGap": {
+    "status": "open; integration-owned common formatter",
+    "component": "ios/Features/Household/SharedMealViews.swift: SharedMealFacts",
+    "simulatorTimeZone": "America/New_York",
+    "runtime": "iOS27.0 (24A434)",
+    "wireOriginalDay": "2026-11-05",
+    "visibleOriginalDay": "November 4, 2026",
+    "wireNewDay": "2026-11-03",
+    "visibleNewDay": "November 2, 2026",
+    "newWireDayEvidence": "sharedMealDay(day) uses UTC civil components; day starts Date(), the test did not change its DatePicker, and the run clock is November3UTC. POST body was not separately archived.",
+    "screenshot": "screenshots/S26-shopper-applied-once-original-and-half-cup-meals-retained.png",
+    "screenshotSHA256": "879dc5e23fe3ac684e57504653b3e922d96b9c1ef773614ecfd42bd85aeafb56",
+    "scope": "Quantity/proposal/shopper-Apply assertions passed; displayed civil dates were not asserted and are not accepted. Wire/model day handling was not changed by this lane.",
+    "parentNotified": true,
+    "commonSourceEditedByThisLane": false
+  }
+}

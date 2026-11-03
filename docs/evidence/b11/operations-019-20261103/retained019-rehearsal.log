@@ -1,0 +1,46 @@
+TAP version 13
+# Subtest: controlled retained 018/019 dataset, real service HTTP boundaries and real erasure worker
+    # Subtest: retains explicit budget grant, exact pair/proposal/adoption and denies ungranted mutation/read
+    ok 1 - retains explicit budget grant, exact pair/proposal/adoption and denies ungranted mutation/read
+      ---
+      duration_ms: 25.442083
+      ...
+    # Subtest: retains code-only consent and canonical response pinned to actual placed pickup closure
+    ok 2 - retains code-only consent and canonical response pinned to actual placed pickup closure
+      ---
+      duration_ms: 31.785375
+      ...
+    # Subtest: retains one synthetic verified-boundary Production household through retries, renewal and two seats
+    ok 3 - retains one synthetic verified-boundary Production household through retries, renewal and two seats
+      ---
+      duration_ms: 18.9995
+      ...
+    # Subtest: Sandbox, missing consent, refund and expiry never become willing households; live grace does
+    ok 4 - Sandbox, missing consent, refund and expiry never become willing households; live grace does
+      ---
+      duration_ms: 71.001458
+      ...
+    # Subtest: withdrawal retains a withdrawn identity and rejects consent resurrection without a new explicit grant
+    ok 5 - withdrawal retains a withdrawn identity and rejects consent resurrection without a new explicit grant
+      ---
+      duration_ms: 27.093792
+      ...
+    # Subtest: actual privacy acceptance and worker erase 018 proof/grant and 019 consent/response while preserving retained household
+    ok 6 - actual privacy acceptance and worker erase 018 proof/grant and 019 consent/response while preserving retained household
+      ---
+      duration_ms: 67.383916
+      ...
+    1..6
+ok 1 - controlled retained 018/019 dataset, real service HTTP boundaries and real erasure worker
+  ---
+  duration_ms: 328.836
+  ...
+1..1
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 438.546917

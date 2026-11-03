@@ -1104,6 +1104,54 @@
           }
         }
       }
+    },
+    "Original reviewed quotes and commitments": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original reviewed quotes and commitments"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cotizaciones y compromisos originales revisados"
+          }
+        }
+      }
+    },
+    "Review revoking budget access from %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review revoking budget access from %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar revocación del acceso al presupuesto de %@"
+          }
+        }
+      }
+    },
+    "Review granting budget access to %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review granting budget access to %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar concesión del acceso al presupuesto a %@"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

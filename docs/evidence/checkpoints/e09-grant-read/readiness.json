@@ -1,0 +1,74 @@
+{
+  "checkpoint": "E09 grant-only Free saved-reference/history native screen acceptance",
+  "recordedAt": "2026-11-03T20:24:49.666308+00:00",
+  "status": "Sources saved at safe edit boundary. Only Swift syntax parse has run. No heavy build or UI acceptance has run for E09.",
+  "userRestartContext": "Root is checkpointing for a Codex restart to refresh browser permissions. E09 scope remains active; resume rather than cancel.",
+  "sourceFiles": [
+    "ios/Features/History/HistoryFeatureModel.swift",
+    "ios/Features/History/HistoryViews.swift",
+    "ios/Tests/HistoryFlowTests.swift",
+    "ios/UITestSupport/HistoryGrantReadUIFixture.swift",
+    "ios/UITests/HistoryGrantReadUITests.swift"
+  ],
+  "sourceSHA256": {
+    "ios/Features/History/HistoryFeatureModel.swift": "1c1f563f353d2d72d3eaf1bcd2c93b00c8d1fa94b0bfa2b41765de5557592e5e",
+    "ios/Features/History/HistoryViews.swift": "db42ce9c3c3f61caca139ccc4ba36bd25b031c211ed1558464b38ff33505c39d",
+    "ios/Tests/HistoryFlowTests.swift": "2f373978f83aaf1ec86beee7cc9ccd9e04381a44a63ab888768ebce26dc69f4e",
+    "ios/UITestSupport/HistoryGrantReadUIFixture.swift": "6a7908496b149ee83df99b7c4a48e3d96b8c1f26ea08c0921733ed6c75fe6726",
+    "ios/UITests/HistoryGrantReadUITests.swift": "6ee5dfb9dc9720aa1183b19cc56206443ebec891b05c2a926664ca201eae1cd6"
+  },
+  "productionChange": {
+    "finding": "Generic canEdit permitted a grant-only non-shopper to begin/review observed-price drafts despite no writable shop. Service still denied mutation.",
+    "authorizedNarrowFix": "Observation-only canBeginObservation requires actual ownedShops; canReviewObservation requires explicit owned draft target. Default current shop only when actually owned, otherwise leave selection blank. Period creation/canEdit, paid access, prepared service authorization remain unchanged.",
+    "regressionsAdded": [
+      "testBudgetGrantAloneCannotBeginOrReviewPriceObservationAndDoesNotGateFuturePeriodDraft",
+      "testSelectedGrantedShopIsNeverDefaultedIntoObservationWhenAnotherShopIsOwned"
+    ]
+  },
+  "fixture": {
+    "rootType": "H09HistoryGrantFixtureRoot",
+    "launchArgument": "--history-grant-read-fixture",
+    "guard": "DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE and --ui-testing",
+    "dispatcherFile": "ios/UITestSupport/ContributorRequestUIFixture.swift",
+    "dispatcherHook": "else if ProcessInfo.processInfo.arguments.contains(\"--history-grant-read-fixture\") { H09HistoryGrantFixtureRoot() }",
+    "dispatcherInstalled": false,
+    "transport": "Isolated .invalid URLProtocol. Real HouseholdModel / HouseholdService / HistoryRecordsEntryView / HistoryEntryView. This is screen/model evidence only; existing PostgreSQL history grant tests supply service authority evidence.",
+    "actor": "Free adult contributor; no owned shops, no organizer, no paid seat, one explicit current shop budget-read grant; overview first, normal shared-shop chooser discovers only target.",
+    "historicalData": "Remembered allowed observation and foreign opaque reference. Own previously saved single-source period is readable only while target grant remains valid. No imported local grocery data."
+  },
+  "plannedAssertions": [
+    "Normal production history entry and shared-shop selector discover allowed target independently of owned shops; foreign shop absent.",
+    "New observed-price control disabled with no owned shops; local remembered foreign reference not listed.",
+    "Authorized saved raw observation exposes entered price/pack/store/source; own raw saved period opens Free without computed balance.",
+    "Paid history/period analysis and reviewed period write preparation are denied with membership_inactive; no mutation occurs and Free raw reads remain available.",
+    "Knowing a foreign observation UUID does not disclose it; invalid read clears previous protected disclosure.",
+    "Grant revocation followed by a fresh open/refresh clears raw period, remembered source and money rather than retaining prior disclosure.",
+    "No physical VoiceOver claim."
+  ],
+  "uiTests": [
+    "testFreeGrantDiscoversReadOnlyShopOpensRawRecordsAndRejectsPaidAndForeignAccess",
+    "testRevokedBudgetGrantClearsPreviouslyOpenedRawPeriodAndRememberedSource"
+  ],
+  "alreadyRun": {
+    "swiftSyntaxParse": "Passed: xcrun swiftc -frontend -parse -D DEBUG -D CONTRIBUTOR_CAPTURE_UI_FIXTURE for all five changed/new Swift files.",
+    "modelRegressions": "Not run.",
+    "swiftTypecheckAndBuild": "Not run.",
+    "nativeUI": "Not run.",
+    "simulator": "No E09 device boot/reservation/use. S27 previously released17e. Root scheduling E01/N04 next, LumpyE03 and archive-media build lanes active."
+  },
+  "resumeSteps": [
+    "Verify checkpoint source hashes and inspect five-file diff; root should add guarded dispatcher hook above, then regenerate Xcode project in integration/frozen snapshot.",
+    "Run HistoryFlowTests including both new observation-only authorization regressions using root coordinated native test lane. Do not infer paid access or broadly gate future period drafts on owned shops.",
+    "After root explicitly allocates simulator/build resources, copy final integration source to a frozen temp snapshot and build fixture with -jobs2 ARCHS=arm64 ONLY_ACTIVE_ARCH=YES SWIFT_ACTIVE_COMPILATION_CONDITIONS=\"DEBUG CONTRIBUTOR_CAPTURE_UI_FIXTURE\". Both production reused views/models and guarded fixture must typecheck.",
+    "Run only HistoryGrantReadUITests on the allocated device with -parallel-testing-enabled NO; attach result bundle and screenshot exports under docs/evidence/native/e09-grant-read.",
+    "Fix actual fixture/selector issues without production authority bypass. Report any new production bug to root before changing service or production scope beyond this authorized narrow fix.",
+    "Record exact source/test provenance, failures, current grant source boundaries; do not claim UI acceptance or physical VoiceOver until observed."
+  ],
+  "knownReviewNotes": [
+    "UI uses production HistoryRecordsEntryView wrapper; changing selected shop invalidates existing runtime, so test explicitly taps Check access again if shown after normal chooser dismissal.",
+    "Transport raw period models a period owned by this actor from earlier authorized planning; budget grant alone does not create ownership of somebody else's period.",
+    "Fixture chrome is normal Dynamic Type only; production content is unmodified.",
+    "UI paid-period mutation attempt exercises reviewed record controls and expects prepareBudgetPeriod to fail at paid budget-history read before a record mutation.",
+    "UI helpers use actual strict IDs/labels/hittability and bounded scrolling. Cold typecheck may reveal fixture DTO/selector details; no build is claimed."
+  ]
+}

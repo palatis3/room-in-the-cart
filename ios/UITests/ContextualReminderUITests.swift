@@ -110,10 +110,12 @@ import XCTest
         let next = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] %@ OR identifier CONTAINS[c] %@", "Next Month", "NextMonth")).firstMatch
         XCTAssertTrue(next.waitForExistence(timeout: 5), app.debugDescription)
         next.tap()
-        let firstDay = app.buttons.matching(NSPredicate(format: "label == %@ OR label BEGINSWITH %@", "1", "1, ")).firstMatch
+        // iOS 17 day controls use the complete spoken date, for example
+        // "Tuesday, December 1", rather than the child text's numeral.
+        let firstDay = app.datePickers.collectionViews.buttons.matching(NSPredicate(format: "label ENDSWITH %@", " 1")).firstMatch
         XCTAssertTrue(firstDay.exists, app.debugDescription)
         firstDay.tap()
-        if app.buttons["Done"].exists && app.buttons["Done"].isHittable { app.buttons["Done"].tap() }
+        app.navigationBars["New store offer"].tap()
     }
 
     private func launch(reset: Bool) {
@@ -146,10 +148,10 @@ import XCTest
         let done = app.buttons.matching(NSPredicate(format: "label == %@", "Done")).firstMatch
         if done.exists && done.isHittable { done.tap() }
     }
-    private func reveal(_ target: XCUIElement) {
+    private func reveal(_ target: XCUIElement, requiresHitTarget: Bool = true) {
         for attempt in 0..<64 {
             let area = scrollableArea()
-            if target.exists && target.isHittable {
+            if target.exists && (!requiresHitTarget || target.isHittable) {
                 let center = CGPoint(x: target.frame.midX, y: target.frame.midY)
                 // Native Form rows can be partially tappable while their center
                 // lies underneath the tab bar. Scroll the actual touch point into
@@ -164,15 +166,17 @@ import XCTest
             scrollContent(upward: upward)
         }
         let area = touchableArea()
-        XCTAssertTrue(target.exists && target.isHittable && area.contains(CGPoint(x: target.frame.midX, y: target.frame.midY)),
-            "Missing a visible touch point for UI element: \(target.debugDescription)")
+        XCTAssertTrue(target.exists && (!requiresHitTarget || target.isHittable) && area.contains(CGPoint(x: target.frame.midX, y: target.frame.midY)),
+            "Missing a visible touch point in \(area) for UI element: \(target.debugDescription)")
     }
     private func touchableArea() -> CGRect {
         let bounds = app.frame
         let keyboard = app.keyboards.firstMatch
         let keyboardTop = keyboard.exists ? keyboard.frame.minY : bounds.maxY
         let tabs = app.tabBars.firstMatch
-        let tabTop = tabs.exists ? tabs.frame.minY : bounds.maxY
+        // The next-shop review is a sheet; its covered parent tab bar may still
+        // exist with an empty/offscreen frame and must not bound sheet content.
+        let tabTop = tabs.exists && tabs.isHittable && !tabs.frame.isEmpty ? tabs.frame.minY : bounds.maxY
         let navigationBar = app.navigationBars.firstMatch
         let top = navigationBar.exists && navigationBar.isHittable ? navigationBar.frame.maxY : bounds.minY + 88
         return CGRect(x: bounds.minX, y: top, width: bounds.width, height: max(0, min(keyboardTop, tabTop) - 4 - top))
@@ -202,10 +206,12 @@ import XCTest
     }
     private func assertText(_ text: String) {
         let target = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
-        reveal(target); XCTAssertTrue(target.exists && target.isHittable, "Missing visible text: \(text)")
+        // Passive labels need to be rendered inside the visible viewport. They
+        // do not need to receive a tap; all action helpers still require hittability.
+        reveal(target, requiresHitTarget: false); XCTAssertTrue(target.exists, "Missing visible text: \(text)")
     }
     private func assertElementContains(_ id: String, _ text: String) {
-        let target = element(id); reveal(target); XCTAssertTrue(target.label.contains(text), target.label)
+        let target = element(id); reveal(target, requiresHitTarget: false); XCTAssertTrue(target.label.contains(text), target.label)
     }
     private func choose(_ label: String, value: String) {
         tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", label)).firstMatch)

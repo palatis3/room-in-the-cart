@@ -1,0 +1,13 @@
+{
+  "frozenFilesVerified": 357,
+  "frozenMismatches": [],
+  "compiledBinariesVerified": 4,
+  "binaryMismatches": [],
+  "noScratchProbeOrSeedInLiveOrFinal": true,
+  "liveHEAD": "dbf9b41ecf1914df78a536825c01da2f90a220fc",
+  "modifiedSinceHEAD": [
+    "ios/Features/Household/SharedMealIdeasView.swift",
+    "ios/Features/Household/SharedMealIdeaProposalView.swift",
+    "ios/UITests/SharedMealIdeaUITests.swift"
+  ]
+}

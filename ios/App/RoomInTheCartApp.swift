@@ -259,17 +259,7 @@ struct RecordsView: View {
         List {
             ManagedViewsContextLink()
             NavigationLink(HistoryCopy.text("Family decision history")) { FamilyDecisionsEntry() }
-            NavigationLink(tr("Recovery, exports and saved records")) {
-                RecordsToolsEntryView(app: model, ledger: ledger, pickup: pickup,
-                    erasureCleanup: RecordsErasureCleanup(eraseLedgerWorkspace: { id in
-                        try await surfaces.eraseLedgerWorkspace(id)
-                        try await CaptureCorrectionStore.shared.eraseProfile(
-                            CaptureCorrectionScope(profileID: "local:" + id.uuidString,
-                                                   localeIdentifier: Locale.current.language.languageCode?.identifier == "es" ? "es-US" : "en-US"))
-                    }, erasePickupRecord: { workspaceID, recordID in
-                        try await surfaces.erasePickupRecord(workspaceID: workspaceID, recordID: recordID)
-                    }))
-            }
+            RecordsRecoveryLink()
             NavigationLink(HistoryCopy.text("Prices and period budgets")) {
                 HistoryRecordsEntryView(household: household)
             }.accessibilityIdentifier("records.priceBudgetHistory")
@@ -343,6 +333,10 @@ struct SettingsView: View {
             }
             HelpSettingsSection()
             Section(tr("Your data")) {
+                if surfaces.privateAuthorized {
+                    RecordsRecoveryLink(accessibilityID: "settings.recovery")
+                    CorrectionSettingsLink()
+                }
                 Toggle(pTr("Offer optional feedback after a pickup"), isOn: Binding(get: { feedbackConsent.enabled(for: pickup.sourceWorkspaceID) }, set: { feedbackConsent.setEnabled($0, for: pickup.sourceWorkspaceID) }))
                 Text(pTr("Local feedback stays on this iPhone. Your choice applies only to this local workspace and notice version. Nothing is sent."))
                 if household.identity != nil, household.projection?.grantId == nil, !household.locked {

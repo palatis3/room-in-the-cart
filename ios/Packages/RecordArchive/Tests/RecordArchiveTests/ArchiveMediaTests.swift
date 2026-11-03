@@ -40,6 +40,43 @@ final class ArchiveMediaTests: XCTestCase {
         XCTAssertEqual(fixture.payload.records.first?.media?.count, 1)
         XCTAssertEqual(try ArchiveCodec.decode(ArchiveCodec.encode(fixture)), fixture)
     }
+    func testMappedCaptureNamespaceUsesVersionTwelveAndPreservesLegacyBytesAndSubsetIdentity() throws {
+        var source = record(media: [media()])
+        source.origin = "legacy-owner-namespace"
+        let legacy = try envelope([source])
+        let attachment = try XCTUnwrap(source.media?.first)
+        let declaration = ArchiveCaptureNamespace(archiveOrigin: source.origin, storeKind: .ledger, physicalWorkspaceID: UUID())
+        source.media = [ArchiveMediaAttachment(id: attachment.id, kind: attachment.kind, data: attachment.data, captureNamespace: declaration)]
+        let mapped = try envelope([source])
+        XCTAssertEqual(legacy.formatMinor, 1); XCTAssertEqual(mapped.formatMinor, 2)
+        XCTAssertEqual(mapped.mediaManifest?.entries.first?.captureNamespace, declaration)
+        XCTAssertEqual(mapped.payload.records[0].media?[0].data, attachment.data)
+        XCTAssertFalse(String(decoding: try ArchiveCodec.encode(legacy), as: UTF8.self).contains("captureNamespace"))
+        let key = EncryptedArchive.generateKey()
+        XCTAssertEqual(try EncryptedArchive.open(EncryptedArchive.seal(mapped, key: key), key: key), mapped)
+        let before = try ArchiveCodec.receipt(legacy.payload.records[0], projection: legacy.projectionID, localCopyID: "same-copy")
+        let after = try ArchiveCodec.receipt(mapped.payload.records[0], projection: mapped.projectionID, localCopyID: "same-copy")
+        XCTAssertEqual(before.identity, after.identity, "Namespace content cannot silently alter the selected-media projection identity")
+        XCTAssertNotEqual(before.digest, after.digest)
+        let helper = try envelope([source], kind: .helperShop)
+        XCTAssertEqual(helper.formatMinor, 0); XCTAssertNil(helper.payload.records[0].media)
+    }
+    func testMappedCaptureNamespaceRejectsWrongOwnerKindFutureVersionAndUnknownFields() throws {
+        var source = record(media: [media()])
+        let attachment = try XCTUnwrap(source.media?.first)
+        source.media = [.init(id: attachment.id, kind: attachment.kind, data: attachment.data,
+            captureNamespace: .init(archiveOrigin: source.origin, storeKind: .ledger, physicalWorkspaceID: UUID()))]
+        let bytes = try ArchiveCodec.encode(envelope([source]))
+        let original = try JSONSerialization.jsonObject(with: bytes) as! [String: Any]
+        for (field, value) in [("archiveOrigin", "another-owner" as Any), ("storeKind", "pickup"), ("formatMajor", 99), ("credentials", "forbidden")] {
+            var object = original, payload = original["payload"] as! [String: Any]
+            var records = payload["records"] as! [[String: Any]], attachments = records[0]["media"] as! [[String: Any]]
+            var namespace = attachments[0]["captureNamespace"] as! [String: Any]
+            namespace[field] = value; attachments[0]["captureNamespace"] = namespace
+            records[0]["media"] = attachments; payload["records"] = records; object["payload"] = payload
+            XCTAssertThrowsError(try ArchiveCodec.decode(JSONSerialization.data(withJSONObject: object)))
+        }
+    }
     func testExactSelectedSubsetRetryDedupsAfterRestartAndOtherSubsetIsSibling() async throws {
         let location = try url(), registry = try RecoveryRegistry(url: location)
         let value = try envelope([record(media: [media()])])

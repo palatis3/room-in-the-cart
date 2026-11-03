@@ -33,6 +33,8 @@ import XCTest
         fill("Fractional chickpea supper", into: "Meal name", replacing: true)
         // Start with the real editable template, then retain and correct one ingredient.
         tap(app.buttons.matching(identifier: "Remove ingredient").firstMatch)
+        // The retained ingredient is above the removed row's scroll position.
+        for _ in 0..<3 { scrollContent(upward: false) }
         fill("Chickpeas", into: "Ingredient name", replacing: true)
         tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Ingredient unit")).firstMatch)
         tap(app.buttons["Cups"])
@@ -53,11 +55,11 @@ import XCTest
         assertText("Price unresolved")
         capture("S26-exact-fraction-household-supply-preview")
         enableSwitch("I reviewed these household quantities, exclusions, reservations, and usable packs")
-        tap(element("household-idea-approve"))
-        tap(app.buttons["Cancel"])
+        openAdultApproval()
+        tap(element("household-idea-cancel-approval"))
         waitCounter("ideas", "Fixture idea writes: 1")
         waitCounter("proposals", "Fixture meal proposals: 0")
-        tap(element("household-idea-approve"))
+        openAdultApproval()
         tap(app.buttons["Approve meal and quantities"])
         waitCounter("ideas", "Fixture idea writes: 2")
         waitCounter("proposals", "Fixture meal proposals: 0")
@@ -66,6 +68,7 @@ import XCTest
         capture("S26-adult-approved-without-proposal-or-basket-write")
 
         tap(element("household-idea-propose"))
+        assertProposalReady()
         tap(element("household-idea-prepare-proposal"))
         assertText("1/2")
         tap(app.buttons["Cancel proposal review"])
@@ -101,6 +104,50 @@ import XCTest
         waitCounter("basket", "Fixture basket writes: 1")
         capture("S26-shopper-applied-once-original-and-half-cup-meals-retained")
     }
+    func testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn() {
+        app.launchArguments = ["--ui-testing", "--shared-idea-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch(); XCTAssertTrue(element("fixture.s26.open").waitForExistence(timeout: 25))
+        tap(element("fixture.s26.open")); tap(app.buttons["Use editable household idea template"])
+        fill("Route lifecycle beans", into: "Meal name", replacing: true)
+        tap(app.buttons.matching(identifier: "Remove ingredient").firstMatch)
+        for _ in 0..<3 { scrollContent(upward: false) }
+        fill("250", into: "Household stock in this unit", replacing: true)
+        fill("1", into: "Whole package quantity", replacing: true)
+        fill("1", into: "Usable yield numerator", replacing: true)
+        fill("1", into: "Usable yield denominator", replacing: true)
+        fill("Household measured beans and package", into: "household-idea-evidence", replacing: true)
+        tap(element("household-idea-save")); waitCounter("ideas", "Fixture idea writes: 1")
+        enableSwitch("I reviewed these household quantities, exclusions, reservations, and usable packs")
+        openAdultApproval(); tap(app.buttons["Approve meal and quantities"])
+        waitCounter("ideas", "Fixture idea writes: 2")
+        tap(element("household-idea-propose"))
+        assertProposalReady()
+        tap(element("household-idea-prepare-proposal"))
+        XCTAssertTrue(element("household-idea-send-proposal").waitForExistence(timeout: 10))
+        tap(app.buttons["Cancel proposal review"])
+        waitCounter("proposals", "Fixture meal proposals: 0"); waitCounter("basket", "Fixture basket writes: 0")
+        capture("S26-approved-proposal-enabled-after-parent-disappearance")
+        tap(app.navigationBars.buttons.element(boundBy: 0))
+        tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Route lifecycle beans")).firstMatch)
+        tap(element("household-idea-propose")); assertProposalReady()
+        waitCounter("ideas", "Fixture idea writes: 2")
+        waitCounter("proposals", "Fixture meal proposals: 0"); waitCounter("basket", "Fixture basket writes: 0")
+        capture("S26-approved-proposal-reopens-after-authorized-parent-refresh")
+    }
+    private func assertProposalReady() {
+        let prepare = element("household-idea-prepare-proposal")
+        reveal(prepare, fullyVisible: true)
+        XCTAssertTrue(prepare.exists)
+        XCTAssertTrue(prepare.isEnabled, "The scoped approved proposal must remain actionable after navigation")
+    }
+    private func openAdultApproval() {
+        let review = element("household-idea-approve")
+        reveal(review, fullyVisible: true)
+        XCTAssertTrue(review.isEnabled, "The reviewed complete draft must enable adult approval")
+        review.tap()
+        XCTAssertTrue(app.buttons["Approve meal and quantities"].waitForExistence(timeout: 5))
+        XCTAssertTrue(element("household-idea-cancel-approval").waitForExistence(timeout: 5))
+    }
     private func waitCounter(_ id: String, _ label: String) {
         let reached = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND label == %@", label), object: element("fixture.s26." + id))
         XCTAssertEqual(XCTWaiter.wait(for: [reached], timeout: 12), .completed)
@@ -119,10 +166,23 @@ import XCTest
     private func fill(_ text: String, into id: String, replacing: Bool = false) {
         let field = app.textFields.matching(identifier: id).firstMatch
         tap(field)
-        if replacing, let old = field.value as? String, old != field.placeholderValue { app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
+        if replacing, let old = field.value as? String, old != field.placeholderValue {
+            if id == "household-idea-evidence", !old.isEmpty {
+                // This multiline TextField initially places the caret at the
+                // start. Use the observed native edit menu to replace all text.
+                field.press(forDuration: 1.2)
+                tap(app.menuItems["Select All"])
+                app.typeText(XCUIKeyboardKey.delete.rawValue)
+            } else { app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
+        }
         app.typeText(text)
-        let done = app.buttons.matching(NSPredicate(format: "label == %@", "Done")).firstMatch
-        if done.exists && done.isHittable { done.tap() }
+        if app.keyboards.firstMatch.exists {
+            let done = element("household-idea-keyboard-done")
+            XCTAssertTrue(done.waitForExistence(timeout: 5))
+            tap(done)
+            let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.keyboards.firstMatch)
+            XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
+        }
     }
     private func reveal(_ target: XCUIElement, fullyVisible: Bool = false) {
         for attempt in 0..<24 {
@@ -137,7 +197,10 @@ import XCTest
             } else { upward = attempt < 16 }
             scrollContent(upward: upward)
         }
-        XCTAssertTrue(target.exists && target.isHittable, "Missing actionable UI element: \(target.debugDescription)")
+        let area = scrollableArea()
+        XCTAssertTrue(target.exists && target.isHittable &&
+                      (!fullyVisible || (target.frame.minY >= area.minY && target.frame.maxY <= area.maxY)),
+                      "Missing fully actionable UI element: \(target.debugDescription)")
     }
     private func scrollableArea() -> CGRect {
         let bounds = app.frame

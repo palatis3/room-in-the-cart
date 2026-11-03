@@ -1,0 +1,22 @@
+{
+  "configuration": "DEBUG CONTRIBUTOR_CAPTURE_UI_FIXTURE AWAY_CARRYOVER_UI_FIXTURE",
+  "sourceManifestSHA256": "67bb59ff30dfb53d7cdffe64c7c80af0c0dce348cb39e5dbb3d804cf613d9ded",
+  "files": {
+    "/tmp/ritc-native-resume-20261103/build/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart": {
+      "sha256": "92522ca8b7dffea824bb24bcccd8a5673ba509e4bf6fd1afb6cb00e7aa605852",
+      "bytes": 40496
+    },
+    "/tmp/ritc-native-resume-20261103/build/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart.debug.dylib": {
+      "sha256": "09536ea92a73078412cd41f55556742adc98d26c197372688dc68b432f9ebdf9",
+      "bytes": 43616080
+    },
+    "/tmp/ritc-native-resume-20261103/build/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/RoomInTheCartTests": {
+      "sha256": "2593a1aa64ee9945a6c92e3ddf139dbaa883d46cd2ba0257ad7a2bef642d8291",
+      "bytes": 9055424
+    },
+    "/tmp/ritc-native-resume-20261103/build/Build/Products/Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/PlugIns/RoomInTheCartUITests.xctest/RoomInTheCartUITests": {
+      "sha256": "173840c065bbd6d29557d65ef73c2320ed61d28861c83949bc577eef3fbcf78a",
+      "bytes": 775328
+    }
+  }
+}

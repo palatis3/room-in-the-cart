@@ -12,6 +12,12 @@ struct RecordsToolsView: View {
     @State private var savedKey = false
     @State private var acknowledgedMedia = false
     @State private var deletion: Deletion?
+    @AccessibilityFocusState private var actionResultFocused: Bool
+    @State private var recoveryExpanded = false
+    @State private var recoveredExpandedIDs: Set<String> = []
+    #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
+    @Environment(\.recordsMediaUITestFiles) private var uiTestFiles
+    #endif
     private struct Deletion: Identifiable {
         let id = UUID()
         let title: String
@@ -19,6 +25,7 @@ struct RecordsToolsView: View {
         let recovered: RecoveryDeleteScope?
     }
     var body: some View {
+        ScrollViewReader { proxy in
         Form {
             Section {
                 Text(recordsText("Keep your records"))
@@ -40,8 +47,15 @@ struct RecordsToolsView: View {
                     }
                 }
             }
-            if let error = model.error { Section { Label(errorMessage(error), systemImage: "exclamationmark.triangle").foregroundStyle(.red) } }
-            if let status = model.status { Section { Text(status).accessibilityAddTraits(.updatesFrequently) } }
+            if let error = model.error { Section { Label(errorMessage(error), systemImage: "exclamationmark.triangle").foregroundStyle(.red).accessibilityIdentifier("records.error") } }
+            if let status = model.status {
+                Section {
+                    Text(status).accessibilityAddTraits(.updatesFrequently)
+                        .accessibilityIdentifier("records.status")
+                        .accessibilityFocused($actionResultFocused)
+                        .id("records.actionResult")
+                }
+            }
             currentSources
             exportSection
             importSection
@@ -64,7 +78,19 @@ struct RecordsToolsView: View {
                     .font(.footnote).foregroundStyle(.secondary)
             }
         }
+        .task(id: model.actionOutcomeID) {
+            guard let outcomeID = model.actionOutcomeID else { return }
+            actionResultFocused = false
+            await Task.yield()
+            guard !Task.isCancelled, model.actionOutcomeID == outcomeID else { return }
+            proxy.scrollTo("records.actionResult", anchor: .top)
+            await Task.yield()
+            guard !Task.isCancelled, model.actionOutcomeID == outcomeID else { return }
+            actionResultFocused = true
+        }
+        }
         .navigationTitle(recordsText("Data and recovery"))
+        .accessibilityIdentifier("records.tools")
         .task { await model.refresh() }
         .disabled(model.busy)
         .onChange(of: model.selectedIDs) { _, _ in acknowledgedPrivate = false; acknowledgedMedia = false; savedKey = false; model.dismissPreparedFile() }
@@ -109,6 +135,7 @@ struct RecordsToolsView: View {
                             let key = RecordsToolsModel.selectionID(record)
                             if selected { model.selectedIDs.insert(key) } else { model.selectedIDs.remove(key) }
                         })) { Text(record.title.isEmpty ? recordsText("Untitled record") : record.title) }
+                            .accessibilityIdentifier("records.source." + record.id)
                         Text(recordKindLabel(record.kind)).font(.caption).foregroundStyle(.secondary)
                         if model.canDeleteSource(record) {
                             Button(recordsText("Delete this source"), role: .destructive) {
@@ -131,27 +158,31 @@ struct RecordsToolsView: View {
             Text(recordsText("A shop backup includes its linked dinner evidence and quote history. Reusable dinners, rotations and saved ideas are a separate library selection. Imported planning never restores paid access or permissions.")).font(.footnote)
             Toggle(recordsText("I understand a readable owner export includes private record data."), isOn: $acknowledgedPrivate)
             Button(recordsText("Prepare readable owner export")) { Task { await model.prepareExport(.ownerText) } }.disabled(model.selectedCount == 0 || !acknowledgedPrivate)
-            DisclosureGroup(recordsText("Encrypted personal recovery")) {
+            DisclosureGroup(recordsText("Encrypted personal recovery"), isExpanded: $recoveryExpanded) {
                 Text(recordsText("A recovery file restores selected private records, saved history and the source references you choose below as separate copies. It excludes raw voice, credentials, membership, consent and live permissions."))
                 selectedMedia
-                Button(recordsText("Generate recovery key")) { model.generateRecoveryKey(); savedKey = false }
+                Button(recordsText("Generate recovery key")) { model.generateRecoveryKey(); savedKey = false }.accessibilityIdentifier("records.generateKey")
                 TextField(recordsText("Recovery key"), text: $model.recoveryKey, axis: .vertical)
                     .font(.caption.monospaced()).textInputAutocapitalization(.never).autocorrectionDisabled()
+                    .accessibilityIdentifier("records.recoveryKey")
                 Text(recordsText("Save this key somewhere safe, separately from the file. If the key is lost, this app cannot recover the encrypted file."))
                     .font(.footnote)
-                Toggle(recordsText("I have saved my recovery key separately."), isOn: $savedKey)
+                Toggle(recordsText("I have saved my recovery key separately."), isOn: $savedKey).accessibilityIdentifier("records.savedKey")
                 Button(recordsText("Prepare encrypted recovery file")) { Task { await model.prepareExport(.encryptedRecovery) } }
                     .disabled(!savedKey || model.recoveryKey.isEmpty || model.selectedCount == 0 || (model.selectedMediaCount > 0 && !acknowledgedMedia))
+                    .accessibilityIdentifier("records.prepareRecovery")
             }
+            .disclosureGroupStyle(RecordsDisclosureGroupStyle(label: recordsText("Encrypted personal recovery"), identifier: "records.encryptedRecovery"))
             if let document = model.preparedDocument {
                 Label(model.preparedIsPrivate ? recordsText("Private owner file ready") : recordsText("Redacted copy ready"), systemImage: model.preparedIsPrivate ? "lock.doc" : "doc.text")
                 Text(ByteCountFormatter.string(fromByteCount: Int64(document.data.count), countStyle: .file)).font(.caption)
-                Button(recordsText("Save file…")) { exporting = true }
+                Button(recordsText("Save file…")) { savePreparedFile() }.accessibilityIdentifier("records.saveFile")
                 if document.kind != .text {
                     ShareLink(item: RecordsShareFile(data: document.data, kind: document.kind), preview: SharePreview(model.preparedName)) { Label(recordsText("Share prepared file…"), systemImage: "square.and.arrow.up") }
                 } else if let text = String(data: document.data, encoding: .utf8) {
                     ShareLink(item: text) { Label(recordsText("Share prepared text…"), systemImage: "square.and.arrow.up") }
                     DisclosureGroup(recordsText("Preview readable copy")) { Text(text).textSelection(.enabled) }
+                        .disclosureGroupStyle(RecordsDisclosureGroupStyle(label: recordsText("Preview readable copy"), identifier: "records.readablePreview"))
                 }
                 Button(recordsText("Discard prepared file")) { model.dismissPreparedFile() }
             }
@@ -166,11 +197,12 @@ struct RecordsToolsView: View {
                 if let media = record.media, !media.isEmpty {
                     Text(record.title).font(.subheadline.bold())
                     ForEach(media) { attachment in
-                        VStack(alignment: .leading, spacing: 6) {
+                        Group {
                             Toggle(isOn: Binding(get: { model.selectedMediaIDs.contains(RecordsToolsModel.mediaSelectionID(attachment, record: record)) }, set: { selected in
                                 let key = RecordsToolsModel.mediaSelectionID(attachment, record: record)
                                 if selected { model.selectedMediaIDs.insert(key) } else { model.selectedMediaIDs.remove(key) }
                             })) { Text((try? RecordsMediaCodec.decode(attachment).reviewedLabel) ?? recordsText("Source reference")) }
+                                .accessibilityIdentifier("records.mediaSelection." + attachment.id)
                             RecordsMediaPreview(attachment: attachment)
                         }
                     }
@@ -178,9 +210,11 @@ struct RecordsToolsView: View {
             }
             Text(String(format: recordsText("%lld selected references · %@"), Int64(model.selectedMediaCount), ByteCountFormatter.string(fromByteCount: Int64(model.selectedMediaBytes), countStyle: .file)))
                 .font(.footnote)
+                .accessibilityIdentifier("records.mediaSummary")
             Text(recordsText("Up to twelve references and 4.2 MB of source evidence per recovery file; the encrypted file must be under 8 MB. Choose fewer references if the file is too large.")).font(.footnote)
             if model.selectedMediaCount > 0 {
                 Toggle(recordsText("I reviewed the selected references and understand they include private source details."), isOn: $acknowledgedMedia)
+                    .accessibilityIdentifier("records.mediaDisclosure")
             }
         }
     }
@@ -188,8 +222,8 @@ struct RecordsToolsView: View {
         Section(recordsText("Bring records or recipes")) {
             TextField(recordsText("Key for an encrypted recovery file"), text: $model.recoveryKey)
                 .textInputAutocapitalization(.never).autocorrectionDisabled()
-            Button(recordsText("Choose recovery or helper file…")) { importingRecipes = false; importing = true }
-            Button(recordsText("Choose Recipe JSON-LD file…")) { importingRecipes = true; importing = true }
+            Button(recordsText("Choose recovery or helper file…")) { chooseImportFile(recipes: false) }.accessibilityIdentifier("records.chooseFile")
+            Button(recordsText("Choose Recipe JSON-LD file…")) { chooseImportFile(recipes: true) }
             Button(recordsText("Add recipe and source manually")) { showManualRecipe = true }
             Text(recordsText("Recipe files may contain a Recipe, an array, or a graph. Original ingredient and yield text are preserved. Source links are attribution only; this app does not fetch the website."))
                 .font(.footnote).foregroundStyle(.secondary)
@@ -208,9 +242,9 @@ struct RecordsToolsView: View {
                 if !report.unsupportedFields.isEmpty { Text(recordsText("Unsupported fields: ") + report.unsupportedFields.joined(separator: ", ")).font(.caption) }
             }
             ForEach(review.rows) { row in
-                VStack(alignment: .leading, spacing: 6) {
+                Group {
                     Text(row.record.title).font(.headline)
-                    Text(dispositionLabel(row.disposition))
+                    Text(dispositionLabel(row.disposition)).accessibilityIdentifier("records.importDisposition." + row.record.id)
                     Text(recordsText("Revision: ") + row.record.revision).font(.caption).textSelection(.enabled)
                     if let parent = row.record.parentRevision { Text(recordsText("Parent: ") + parent).font(.caption).textSelection(.enabled) }
                     ForEach(row.record.media ?? []) { RecordsMediaPreview(attachment: $0) }
@@ -222,15 +256,18 @@ struct RecordsToolsView: View {
             }
             Text(recordsText("Current and newer work stays in place. Different revisions become separate copies; identical imports reopen the saved copy. A conflicting digest or erased identity blocks this batch."))
                 .font(.footnote)
-            Button(recordsText("Import reviewed copies")) { Task { await model.applyReviewedImport() } }.disabled(!review.canApply)
-            Button(recordsText("Cancel import"), role: .cancel) { model.cancelReview() }
+            Button(recordsText("Import reviewed copies")) { Task { await model.applyReviewedImport() } }.disabled(!review.canApply).accessibilityIdentifier("records.applyImport")
+            Button(recordsText("Cancel import"), role: .cancel) { model.cancelReview() }.accessibilityIdentifier("records.cancelImport")
         }
     }
     private var recoveredSection: some View {
         Section(recordsText("Recovered copies and saved recipes")) {
             if model.recoveredRecords.isEmpty { Text(recordsText("No recovered copies yet.")) }
             ForEach(model.recoveredRecords) { saved in
-                DisclosureGroup(saved.record.title.isEmpty ? recordsText("Untitled record") : saved.record.title) {
+                DisclosureGroup(saved.record.title.isEmpty ? recordsText("Untitled record") : saved.record.title,
+                    isExpanded: Binding(get: { recoveredExpandedIDs.contains(saved.id) }, set: { expanded in
+                        if expanded { recoveredExpandedIDs.insert(saved.id) } else { recoveredExpandedIDs.remove(saved.id) }
+                    })) {
                     Text(saved.record.origin).font(.caption).textSelection(.enabled)
                     Text(recordsText("Revision: ") + saved.record.revision).font(.caption).textSelection(.enabled)
                     if let recipe = recipe(saved.record) {
@@ -250,9 +287,31 @@ struct RecordsToolsView: View {
                     Button(recordsText("Delete this recovered copy"), role: .destructive) { deletion = Deletion(title: saved.record.title, source: nil, recovered: .copy(saved.id)) }
                     Button(recordsText("Delete recovered copies from this source"), role: .destructive) { deletion = Deletion(title: saved.record.origin, source: nil, recovered: .origin(saved.record.origin)) }
                 }
+                .disclosureGroupStyle(RecordsDisclosureGroupStyle(
+                    label: recordsText("Recovered copy") + ": " + (saved.record.title.isEmpty ? recordsText("Untitled record") : saved.record.title),
+                    identifier: "records.recovered." + saved.record.title))
             }
             if model.deleteUndo != nil { Button(recordsText("Undo recovered-copy deletion")) { Task { await model.undoRecoveredDeletion() } } }
         }
+    }
+    private func savePreparedFile() {
+        #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
+        if let uiTestFiles, let document = model.preparedDocument {
+            do { try uiTestFiles.save(document) } catch { model.reportFileError(error) }
+            return
+        }
+        #endif
+        exporting = true
+    }
+    private func chooseImportFile(recipes: Bool) {
+        importingRecipes = recipes
+        #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
+        if let uiTestFiles {
+            if let url = uiTestFiles.selectedURL() { Task { await model.importFile(url, recipes: recipes) } }
+            return
+        }
+        #endif
+        importing = true
     }
     private func recordKindLabel(_ kind: ArchiveRecordKind) -> String {
         switch kind {
@@ -300,18 +359,21 @@ struct RecordsToolsView: View {
 /// It never follows recovered namespace references into a live media store.
 @MainActor private struct RecordsMediaPreview: View {
     let attachment: ArchiveMediaAttachment
+    @State private var expanded = false
     var body: some View {
         if let source = try? RecordsMediaCodec.decode(attachment) {
-            DisclosureGroup(recordsText("Preview source reference")) {
+            DisclosureGroup(recordsText("Preview source reference"), isExpanded: $expanded) {
                 Text(source.reviewedLabel).font(.headline)
                 Text(kindLabel).font(.caption)
+                if attachment.captureNamespace != nil { Text(recordsText("Captured in a separate recovered workspace.")).font(.caption) }
                 Text(ByteCountFormatter.string(fromByteCount: Int64(attachment.data.count), countStyle: .file)).font(.caption)
                 Text(source.capturedAt, format: .dateTime.year().month().day().hour().minute()).font(.caption)
                 if let data = source.imageJPEG, let image = UIImage(data: data) {
                     Image(uiImage: image).resizable().scaledToFit().frame(maxHeight: 260)
                         .accessibilityLabel(recordsText("Selected reduced source photo"))
+                        .accessibilityIdentifier("records.mediaImage." + attachment.id)
                 }
-                Text(source.originalText).textSelection(.enabled)
+                Text(source.originalText).textSelection(.enabled).accessibilityIdentifier("records.mediaWording." + attachment.id)
                 if let barcode = source.barcode { Text(barcode.value).textSelection(.enabled) }
                 ForEach(source.receiptLines) { row in
                     VStack(alignment: .leading) {
@@ -322,6 +384,8 @@ struct RecordsToolsView: View {
                     }
                 }
             }
+            .disclosureGroupStyle(RecordsDisclosureGroupStyle(label: recordsText("Preview source reference") + ": " + source.reviewedLabel,
+                identifier: "records.mediaPreview." + attachment.id))
         }
     }
     private var kindLabel: String {
@@ -330,6 +394,31 @@ struct RecordsToolsView: View {
         case .recipeSource: return recordsText("Recipe source")
         case .receiptEvidence: return recordsText("Receipt evidence")
         }
+    }
+}
+
+/// Keep expanded controls as separate Form rows. The native Chevron-only action
+/// lacked a useful label/hit area on iOS 17, so the disclosure header is one
+/// explicit, full-row semantic button using the normal expansion binding.
+@MainActor private struct RecordsDisclosureGroupStyle: DisclosureGroupStyle {
+    let label: String
+    let identifier: String
+    @ViewBuilder func makeBody(configuration: Configuration) -> some View {
+        Button { configuration.isExpanded.toggle() } label: {
+            HStack {
+                configuration.label
+                Spacer(minLength: 12)
+                Image(systemName: configuration.isExpanded ? "chevron.down" : "chevron.forward")
+                    .font(.body.weight(.semibold)).foregroundStyle(.tint).accessibilityHidden(true)
+            }
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier(identifier)
+        .accessibilityLabel(label)
+        .accessibilityValue(recordsText(configuration.isExpanded ? "Expanded" : "Collapsed"))
+        if configuration.isExpanded { configuration.content }
     }
 }
 

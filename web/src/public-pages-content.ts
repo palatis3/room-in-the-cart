@@ -217,8 +217,8 @@ export const publicPages = {
       "es": "Información de la implementación · actualizada el 3 de noviembre de 2026."
     },
     "notice": {
-      "en": "Operator policy review, production retention details and a monitored privacy/support contact are not configured yet. This implementation guide is not a complete operator-approved release privacy policy.",
-      "es": "Aún no se han configurado la revisión de la política por el operador, los detalles de retención en producción ni un contacto supervisado de privacidad y soporte. Esta guía de la implementación no es una política de privacidad de lanzamiento completa y aprobada por el operador."
+      "en": "Operator policy review and production retention details are still pending. This implementation guide is not a complete operator-approved release privacy policy. The Support page has the supplied support email address.",
+      "es": "La revisión de la política por el operador y los detalles de retención en producción siguen pendientes. Esta guía de la implementación no es una política de privacidad de lanzamiento completa y aprobada por el operador. La página de Soporte tiene la dirección de correo de soporte proporcionada."
     },
     "sections": [
       {
@@ -345,8 +345,8 @@ export const publicPages = {
       "es": "Información del producto y las compras para la implementación actual."
     },
     "notice": {
-      "en": "Operator-approved release terms, the operating legal identity and a support contact are pending. The information below describes supported behavior and does not replace those final terms.",
-      "es": "Los términos de lanzamiento aprobados por el operador, la identidad legal del operador y un contacto de soporte están pendientes. La información siguiente describe el comportamiento compatible y no reemplaza los términos finales."
+      "en": "Operator-approved release terms are pending. The information below describes supported behavior and does not replace those final terms.",
+      "es": "Los términos de lanzamiento aprobados por el operador siguen pendientes. La información siguiente describe el comportamiento compatible y no reemplaza los términos finales."
     },
     "sections": [
       {

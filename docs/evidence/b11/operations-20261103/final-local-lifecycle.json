@@ -1,0 +1,41 @@
+{
+    "checked_at": "2026-11-03T13:38:11.539805-05:00",
+    "connections": null,
+    "fixture_roles": [
+        {
+            "rolname": "ritc_b11_ops_app_20261103",
+            "rolsuper": false,
+            "app_member": true,
+            "rolcanlogin": true,
+            "rolcreatedb": false,
+            "rolbypassrls": false,
+            "rolcreaterole": false,
+            "worker_member": false
+        },
+        {
+            "rolname": "ritc_b11_ops_worker_20261103",
+            "rolsuper": false,
+            "app_member": false,
+            "rolcanlogin": true,
+            "rolcreatedb": false,
+            "rolbypassrls": false,
+            "rolcreaterole": false,
+            "worker_member": true
+        }
+    ],
+    "connection_count": 0,
+    "fixture_databases": [
+        {
+            "owner": "palatis",
+            "datname": "ritc_b11_ops_20261103",
+            "datallowconn": true,
+            "datconnlimit": -1
+        },
+        {
+            "owner": "palatis",
+            "datname": "ritc_b11_ops_restore_20261103",
+            "datallowconn": true,
+            "datconnlimit": -1
+        }
+    ]
+}

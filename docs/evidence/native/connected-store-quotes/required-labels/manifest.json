@@ -1,0 +1,35 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+        "deviceName" : "iPhone 17e",
+        "exportedFileName" : "4AF322A1-C928-45BF-806A-4005ACF4C5E2.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S27-named-adult-budget-grant-accessibility-label_0_CA4E8262-A276-4806-8094-710ECD621792.png",
+        "timestamp" : 1793734268.135
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+        "deviceName" : "iPhone 17e",
+        "exportedFileName" : "4D36F86E-EEAE-4E1D-B252-C2851D43300F.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S27-filled-trip-time-cap-persistent-labels_0_B5363430-5F38-4B18-BD89-7FDCF449E7EB.png",
+        "timestamp" : 1793734258.625
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+        "deviceName" : "iPhone 17e",
+        "exportedFileName" : "926C4096-5653-4288-9753-40F720B6068C.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S27-filled-subtotal-checkout-persistent-labels_0_EEE7A394-F598-4DC3-B80F-62BBF1DB428F.png",
+        "timestamp" : 1793734244.172
+      }
+    ],
+    "testIdentifier" : "SharedStoreQuoteUITests/testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/SharedStoreQuoteUITests/testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult"
+  }
+]

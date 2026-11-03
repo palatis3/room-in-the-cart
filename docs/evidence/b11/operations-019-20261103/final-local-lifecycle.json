@@ -1,0 +1,42 @@
+{
+    "roles": [
+        {
+            "rolname": "ritc_b11_ops019_app_20261103",
+            "rolsuper": false,
+            "app_member": true,
+            "rolcanlogin": true,
+            "rolcreatedb": false,
+            "rolbypassrls": false,
+            "rolcreaterole": false,
+            "worker_member": false
+        },
+        {
+            "rolname": "ritc_b11_ops019_worker_20261103",
+            "rolsuper": false,
+            "app_member": false,
+            "rolcanlogin": true,
+            "rolcreatedb": false,
+            "rolbypassrls": false,
+            "rolcreaterole": false,
+            "worker_member": true
+        }
+    ],
+    "databases": [
+        {
+            "owner": "palatis",
+            "datacl": "{=T/palatis,palatis=CTc/palatis,ritc_b11_ops019_app_20261103=c/palatis,ritc_b11_ops019_worker_20261103=c/palatis,ritc_test_worker=c/palatis}",
+            "datname": "ritc_b11_ops019_20261103",
+            "datallowconn": true,
+            "datconnlimit": -1
+        },
+        {
+            "owner": "palatis",
+            "datacl": "{=T/palatis,palatis=CTc/palatis,ritc_b11_ops019_app_20261103=c/palatis,ritc_b11_ops019_worker_20261103=c/palatis,ritc_test_worker=c/palatis}",
+            "datname": "ritc_b11_ops019_restore_20261103",
+            "datallowconn": true,
+            "datconnlimit": -1
+        }
+    ],
+    "checked_at": "2026-11-03T14:18:39.747576-05:00",
+    "active_connections": 0
+}

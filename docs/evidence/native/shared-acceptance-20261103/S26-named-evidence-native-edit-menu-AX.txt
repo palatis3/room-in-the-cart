@@ -1,0 +1,249 @@
+Optional(Attributes: Application, 0x10ea44780, pid: 19617, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x10ea44780, pid: 19617, label: 'Room in the Cart'
+    Window (Main), 0x10ea448c0, {{0.0, 0.0}, {390.0, 844.0}}
+      Other, 0x10ea44a00, {{0.0, 0.0}, {390.0, 844.0}}
+      Other, 0x10ea44b40, {{0.0, 0.0}, {390.0, 844.0}}
+        Other, 0x10ea44c80, {{0.0, 0.0}, {390.0, 844.0}}
+          Other, 0x10ea44dc0, {{0.0, 0.0}, {390.0, 844.0}}
+            Other, 0x10ea46940, {{0.0, 0.0}, {390.0, 844.0}}
+              StaticText, 0x10ea452c0, {{116.0, 47.0}, {158.0, 20.3}}, identifier: 'fixture.s26.ideas', label: 'Fixture idea writes: 0'
+              StaticText, 0x10ea44000, {{99.5, 71.3}, {191.0, 20.3}}, identifier: 'fixture.s26.proposals', label: 'Fixture meal proposals: 0'
+              StaticText, 0x10ea44140, {{106.7, 95.7}, {176.7, 20.3}}, identifier: 'fixture.s26.basket', label: 'Fixture basket writes: 0'
+              Button, 0x10ea44280, {{89.7, 120.0}, {210.7, 20.3}}, identifier: 'fixture.s26.switch', label: 'Switch to assigned shopper'
+              Other, 0x10ea443c0, {{0.0, 144.3}, {390.0, 699.7}}
+                NavigationBar, 0x10ea44500, {{0.0, 154.3}, {390.0, 54.0}}, identifier: 'Household dinner ideas'
+                  Button, 0x10ea44f00, {{16.0, 154.3}, {44.0, 44.0}}, identifier: 'BackButton', label: 'Household idea fixture'
+                  StaticText, 0x10ea45040, {{101.3, 166.0}, {187.3, 20.7}}, label: 'Household dinner ideas'
+                Other, 0x10ea45180, {{0.0, 144.3}, {390.0, 699.7}}
+                  Other, 0x10ea46a80, {{0.0, 144.3}, {390.0, 699.7}}
+                    Other, 0x10ea46bc0, {{0.0, 144.3}, {390.0, 699.7}}
+                      Other, 0x10ea46d00, {{0.0, 144.3}, {390.0, 699.7}}
+                        CollectionView, 0x10ea46e40, {{0.0, 144.3}, {390.0, 699.7}}
+                          Other, 0x10ea46f80, {{-16.0, -53.3}, {422.0, 671.3}}
+                          Cell, 0x10ea470c0, {{16.0, 120.0}, {358.0, 52.0}}
+                            Other, 0x10ea47200, {{16.0, 120.0}, {358.0, 52.0}}
+                              Other, 0x10ea47340, {{16.0, 120.0}, {358.0, 52.0}}
+                            Other, 0x10ea47480, {{16.0, 120.0}, {358.0, 52.0}}
+                              Other, 0x10ea475c0, {{16.0, 120.0}, {358.0, 52.0}}
+                                Other, 0x10ea47700, {{16.0, 120.0}, {358.0, 52.0}}
+                                  TextField, 0x10ea47840, {{32.0, 135.0}, {326.0, 22.0}}, placeholderValue: 'Household stock in this unit'
+                          Other, 0x10ea47980, {{0.0, 144.3}, {390.0, 699.7}}
+                            Other, 0x10ea47ac0, {{0.0, 144.3}, {390.0, 104.0}}
+                          Other, 0x10ea47c00, {{0.0, 144.3}, {390.0, 699.7}}
+                            Other, 0x10ea47d40, {{0.0, 144.3}, {390.0, 104.0}}
+                          Cell, 0x10ea47e80, {{16.0, 172.0}, {358.0, 52.0}}
+                            Other, 0x102e99400, {{16.0, 172.0}, {358.0, 52.0}}
+                              Other, 0x10e8b7480, {{16.0, 172.0}, {358.0, 52.0}}
+                            Other, 0x10e8b6f80, {{16.0, 172.0}, {358.0, 52.0}}
+                              Other, 0x10e8b6580, {{16.0, 172.0}, {358.0, 52.0}}
+                                Other, 0x10e8b66c0, {{16.0, 172.0}, {358.0, 52.0}}
+                                  Button, 0x10e8b6940, {{16.0, 172.0}, {358.0, 52.0}}, label: 'Add named reservation'
+                          Other, 0x10e8b6a80, {{32.0, 171.0}, {326.0, 1.0}}
+                          Cell, 0x10e8b6bc0, {{16.0, 224.0}, {358.0, 52.0}}
+                            Other, 0x10e8b6d00, {{16.0, 224.0}, {358.0, 52.0}}
+                              Other, 0x10e8b6e40, {{16.0, 224.0}, {358.0, 52.0}}
+                            Other, 0x10e8b70c0, {{16.0, 224.0}, {358.0, 52.0}}
+                              Other, 0x10e8b7200, {{16.0, 224.0}, {358.0, 52.0}}
+                                Other, 0x106608c80, {{16.0, 224.0}, {358.0, 52.0}}
+                                  TextField, 0x105c8ebc0, {{32.0, 239.0}, {326.0, 22.0}}, placeholderValue: 'Whole package quantity'
+                          Other, 0x105c8f5c0, {{32.0, 223.0}, {326.0, 1.0}}
+                          Cell, 0x105c8f980, {{16.0, 276.0}, {358.0, 52.0}}
+                            Other, 0x105c8fac0, {{16.0, 276.0}, {358.0, 52.0}}
+                              Other, 0x105c8f840, {{16.0, 276.0}, {358.0, 52.0}}
+                            Other, 0x105c8fc00, {{16.0, 276.0}, {358.0, 52.0}}
+                              Other, 0x10eb3c000, {{16.0, 276.0}, {358.0, 52.0}}
+                                Other, 0x10eb3c140, {{16.0, 276.0}, {358.0, 52.0}}
+                                  TextField, 0x10eb3c280, {{32.0, 291.0}, {326.0, 22.0}}, placeholderValue: 'Usable yield numerator'
+                          Other, 0x10eb3c3c0, {{32.0, 275.0}, {326.0, 1.0}}
+                          Cell, 0x10eb3c500, {{16.0, 328.0}, {358.0, 52.0}}
+                            Other, 0x10eb3c640, {{16.0, 328.0}, {358.0, 52.0}}
+                              Other, 0x10eb3c780, {{16.0, 328.0}, {358.0, 52.0}}
+                            Other, 0x10eb3c8c0, {{16.0, 328.0}, {358.0, 52.0}}
+                              Other, 0x10eb3ca00, {{16.0, 328.0}, {358.0, 52.0}}
+                                Other, 0x10eb3cb40, {{16.0, 328.0}, {358.0, 52.0}}
+                                  TextField, 0x10eb3cc80, {{32.0, 343.0}, {326.0, 22.0}}, placeholderValue: 'Usable yield denominator'
+                          Other, 0x10eb3cdc0, {{32.0, 327.0}, {326.0, 1.0}}
+                          Cell, 0x10eb3cf00, {{16.0, 380.0}, {358.0, 94.3}}
+                            Other, 0x10eb3d040, {{16.0, 380.0}, {358.0, 94.3}}
+                              Other, 0x10eb3d180, {{16.0, 380.0}, {358.0, 94.3}}
+                            Other, 0x10eb3d2c0, {{16.0, 380.0}, {358.0, 94.3}}
+                              Other, 0x10eb3d400, {{16.0, 380.0}, {358.0, 94.3}}
+                                Other, 0x10eb3d540, {{16.0, 380.0}, {358.0, 94.3}}
+                                  StaticText, 0x10eb3d680, {{16.0, 380.0}, {358.0, 94.3}}, label: 'Use the same unit throughout. Enter 1 / 1 only when the whole pack is usable. Blank evidence remains unknown.'
+                          Other, 0x10eb3d7c0, {{32.0, 379.0}, {326.0, 1.0}}
+                          Cell, 0x10eb3d900, {{16.0, 474.3}, {358.0, 74.0}}
+                            Other, 0x10eb3da40, {{16.0, 474.3}, {358.0, 74.0}}
+                              Other, 0x10eb3db80, {{16.0, 474.3}, {358.0, 74.0}}
+                            Other, 0x10eb3dcc0, {{16.0, 474.3}, {358.0, 74.0}}
+                              Other, 0x10eb3de00, {{16.0, 474.3}, {358.0, 74.0}}
+                                Other, 0x10eb3df40, {{16.0, 474.3}, {358.0, 74.0}}
+                                  TextField, 0x10eb3e080, {{32.0, 489.3}, {326.0, 26.7}}, identifier: 'household-idea-evidence', label: 'Household stock and package evidence', value: Template quantity;..., Keyboard Focused
+                                    Other, 0x10eb3e1c0, {{32.0, 489.3}, {0.0, 0.0}}, identifier: '_UITextSelectionRangeAdjustmentContainerView'
+                                      Other, 0x10eb3e300, {{32.0, 489.3}, {0.0, 0.0}}, identifier: 'com.apple.text.grabber.leading'
+                                        Other, 0x10eb3e440, {{24.8, 475.8}, {16.5, 16.5}}
+                                        Other, 0x10eb3e580, {{32.0, 489.3}, {2.0, 0.0}}
+                                      Other, 0x10eb3e6c0, {{32.0, 489.3}, {0.0, 0.0}}, identifier: 'com.apple.text.grabber.leading'
+                                        Other, 0x10eb3e800, {{24.8, 475.8}, {16.5, 16.5}}
+                                        Other, 0x10eb3e940, {{32.0, 489.3}, {2.0, 0.0}}
+                                    Other, 0x10eb3ea80, {{32.0, 508.3}, {326.0, 22.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                      Other, 0x10eb3ebc0, {{35.0, 527.3}, {320.0, 3.0}}
+                          Other, 0x10eb3ed00, {{32.0, 473.3}, {326.0, 1.0}}
+                          Cell, 0x10eb3ee40, {{16.0, 548.3}, {358.0, 52.0}}
+                            Other, 0x10eb3ef80, {{16.0, 548.3}, {358.0, 52.0}}
+                              Other, 0x10eb3f0c0, {{16.0, 548.3}, {358.0, 52.0}}
+                            Other, 0x10eb3f200, {{16.0, 548.3}, {358.0, 52.0}}
+                              Other, 0x10eb3f340, {{16.0, 548.3}, {358.0, 52.0}}
+                                Other, 0x10eb3f480, {{16.0, 548.3}, {358.0, 52.0}}
+                                  Button, 0x10eb3f5c0, {{16.0, 548.3}, {358.0, 52.0}}, label: 'Remove ingredient', Disabled
+                          Other, 0x10eb3f700, {{32.0, 547.3}, {326.0, 1.0}}
+                          Other, 0x10eb3f840, {{-16.0, 618.0}, {422.0, 1687.3}}
+                          Cell, 0x10eb3f980, {{16.0, 635.3}, {358.0, 52.0}}
+                            Other, 0x10eb3fac0, {{16.0, 635.3}, {358.0, 52.0}}
+                              Other, 0x10eb3fc00, {{16.0, 635.3}, {358.0, 52.0}}
+                            Other, 0x10eb3fd40, {{16.0, 635.3}, {358.0, 52.0}}
+                              Other, 0x10eb3fe80, {{16.0, 635.3}, {358.0, 52.0}}
+                                Other, 0x10eb48000, {{16.0, 635.3}, {358.0, 52.0}}
+                                  Button, 0x10eb48140, {{16.0, 635.3}, {358.0, 52.0}}, label: 'Add ingredient'
+                          Cell, 0x10eb48280, {{16.0, 687.3}, {358.0, 52.0}}
+                            Other, 0x10eb483c0, {{16.0, 687.3}, {358.0, 52.0}}
+                              Other, 0x10eb48500, {{16.0, 687.3}, {358.0, 52.0}}
+                            Other, 0x10eb48640, {{16.0, 687.3}, {358.0, 52.0}}
+                              Other, 0x10eb48780, {{16.0, 687.3}, {358.0, 52.0}}
+                                Other, 0x10eb488c0, {{16.0, 687.3}, {358.0, 52.0}}
+                                  Button, 0x10eb48a00, {{16.0, 687.3}, {358.0, 52.0}}, identifier: 'household-idea-save', label: 'Save household draft for review'
+                          Other, 0x10eb48b40, {{32.0, 686.3}, {326.0, 1.0}}
+                          Cell, 0x10eb48c80, {{16.0, 739.3}, {358.0, 94.3}}
+                            Other, 0x10eb48dc0, {{16.0, 739.3}, {358.0, 94.3}}
+                              Other, 0x10eb48f00, {{16.0, 739.3}, {358.0, 94.3}}
+                            Other, 0x10eb49040, {{16.0, 739.3}, {358.0, 94.3}}
+                              Other, 0x10eb49180, {{16.0, 739.3}, {358.0, 94.3}}
+                                Other, 0x10eb492c0, {{16.0, 739.3}, {358.0, 94.3}}
+                                  StaticText, 0x10eb49400, {{16.0, 739.3}, {358.0, 94.3}}, label: 'Save corrections to receive a fresh household preview. Saving edits replaces any earlier approval of this draft.'
+                          Other, 0x10eb49540, {{32.0, 738.3}, {326.0, 1.0}}
+                          Cell, 0x10eb49680, {{16.0, 833.7}, {358.0, 52.0}}
+                            Other, 0x10eb497c0, {{16.0, 833.7}, {358.0, 52.0}}
+                              Other, 0x10eb49900, {{16.0, 833.7}, {358.0, 52.0}}
+                            Other, 0x10eb49a40, {{16.0, 833.7}, {358.0, 52.0}}
+                              Other, 0x10eb49b80, {{16.0, 833.7}, {358.0, 52.0}}
+                                Other, 0x10eb49cc0, {{16.0, 833.7}, {358.0, 52.0}}
+                                  Button, 0x10eb49e00, {{16.0, 833.7}, {358.0, 52.0}}, label: 'Refresh household ideas'
+                          Other, 0x10eb49f40, {{32.0, 832.7}, {326.0, 1.0}}
+                          Other, 0x10eb4a080, {{357.0, 208.3}, {30.0, 307.7}}, label: 'Vertical scroll bar, 6 pages', value: 74%
+                            Other, 0x10eb4a1c0, {{384.0, 362.3}, {3.0, 96.7}}
+                          Other, 0x10eb4a300, {{357.0, 208.3}, {30.0, 307.7}}, label: 'Vertical scroll bar, 6 pages', value: 74%
+                            Other, 0x10eb4a440, {{384.0, 362.3}, {3.0, 96.7}}
+                Toolbar, 0x10eb4a580, {{0.0, 144.3}, {390.0, 699.7}}, identifier: 'Toolbar', label: 'Toolbar'
+                  Other, 0x10eb4a6c0, {{0.0, 144.3}, {390.0, 699.7}}
+      Other, 0x10eb4a800, {{0.0, 0.0}, {390.0, 844.0}}
+    Window, 0x10eb4a940, {{0.0, 0.0}, {390.0, 844.0}}
+      Other, 0x10eb4aa80, {{0.0, 0.0}, {390.0, 844.0}}
+        Other, 0x10eb4abc0, {{0.0, 0.0}, {390.0, 844.0}}
+        Other, 0x10eb4ad00, {{0.0, 516.0}, {390.0, 328.0}}
+          Other, 0x10eb4ae40, {{0.0, 516.0}, {390.0, 328.0}}, identifier: 'inputView'
+      Other, 0x10eb4af80, {{0.0, 0.0}, {390.0, 844.0}}
+        Other, 0x10eb4b0c0, {{16.0, 430.3}, {254.7, 44.0}}
+          Other, 0x10eb4b200, {{16.0, 430.3}, {262.7, 44.0}}
+            Other, 0x10eb4b340, {{16.0, 430.3}, {254.7, 44.0}}
+              Other, 0x10eb4b480, {{20.0, 430.3}, {254.7, 44.0}}
+                CollectionView, 0x10eb4b5c0, {{16.0, 430.3}, {262.7, 44.0}}
+                  MenuItem, 0x10eb4b700, {{20.0, 430.3}, {75.3, 44.0}}, label: 'Select'
+                    Other, 0x10eb4b840, {{36.0, 443.3}, {43.3, 18.0}}
+                      StaticText, 0x10eb4b980, {{36.0, 443.3}, {43.3, 18.0}}, label: 'Select'
+                  Other, 0x10eb4bac0, {{95.3, 430.3}, {1.0, 44.0}}
+                    Other, 0x10eb4bc00, {{95.3, 443.3}, {1.0, 18.0}}
+                  MenuItem, 0x10eb4bd40, {{95.3, 430.3}, {96.3, 44.0}}, label: 'Select All'
+                    Other, 0x10eb4be80, {{111.3, 443.3}, {64.3, 18.0}}
+                      StaticText, 0x10eb68000, {{111.3, 443.3}, {64.3, 18.0}}, label: 'Select All'
+                  Other, 0x10eb68140, {{191.7, 430.3}, {1.0, 44.0}}
+                    Other, 0x10eb68280, {{191.7, 443.3}, {1.0, 18.0}}
+                  MenuItem, 0x10eb683c0, {{191.7, 430.3}, {83.0, 44.0}}, label: 'AutoFill'
+                    Other, 0x10eb68500, {{207.7, 443.3}, {51.0, 18.0}}
+                      StaticText, 0x10eb68640, {{207.7, 443.3}, {51.0, 18.0}}, label: 'AutoFill'
+              Button, 0x10eb68780, {{-15.0, 434.3}, {36.0, 36.0}}, label: 'Previous Page'
+              Button, 0x10eb688c0, {{274.7, 434.3}, {36.0, 36.0}}, label: 'Next Page'
+              Other, 0x10eb68a00, {{16.0, 430.3}, {0.0, 0.0}}
+                Other, 0x10eb68b40, {{16.0, 430.3}, {0.0, 0.0}}
+            Other, 0x10eb68c80, {{16.0, 430.3}, {262.7, 44.0}}
+              Other, 0x10eb68dc0, {{16.0, 430.3}, {262.7, 44.0}}
+                Other, 0x10eb68f00, {{16.0, 430.3}, {262.7, 44.0}}
+                  Other, 0x10eb69040, {{16.0, 430.3}, {262.7, 44.0}}
+                    Other, 0x10eb69180, {{16.0, 430.3}, {262.7, 44.0}}
+                      Other, 0x10eb692c0, {{16.0, 430.3}, {262.7, 44.0}}
+                  Other, 0x10eb69400, {{16.0, 430.3}, {262.7, 44.0}}
+                    Other, 0x10eb69540, {{16.0, 430.3}, {262.7, 44.0}}
+    Window, 0x10eb69680, {{0.0, 0.0}, {390.0, 844.0}}
+      Other, 0x10eb697c0, {{0.0, 0.0}, {390.0, 844.0}}
+        Other, 0x10eb69900, {{0.0, 516.0}, {390.0, 328.0}}
+          Other, 0x10eb69a40, {{0.0, 516.0}, {390.0, 44.0}}, identifier: 'SystemInputAssistantView'
+            Other, 0x10eb69b80, {{0.0, 516.0}, {390.0, 44.0}}
+              Other, 0x10eb69cc0, {{0.0, 516.0}, {390.0, 44.0}}, identifier: 'CenterPageView'
+                Other, 0x10eb69e00, {{0.0, -84.0}, {390.0, 1244.0}}
+                  ScrollView, 0x10eb69f40, {{0.0, 516.0}, {390.0, 44.0}}
+                Other, 0x10eb6a080, {{0.0, 516.0}, {390.0, 44.0}}
+                  Other, 0x10eb6a1c0, {{0.0, 516.0}, {390.0, 44.0}}
+                    Other, 0x10eb6a300, {{0.0, 516.0}, {390.0, 44.0}}, label: 'Typing Predictions'
+                      Other, 0x10eb6a440, {{0.0, 516.0}, {390.0, 44.0}}
+                        Other, 0x10eb6a580, {{0.0, 516.0}, {390.0, 44.0}}
+                          Button, 0x10eb6a6c0, {{0.0, 516.0}, {130.0, 44.0}}, label: 'I'
+                          Button, 0x10eb6a800, {{130.0, 516.0}, {130.0, 44.0}}, label: 'The'
+                          Button, 0x10eb6a940, {{260.0, 516.0}, {130.0, 44.0}}, label: 'I’m'
+          Other, 0x10eb6aa80, {{0.0, 516.0}, {390.0, 329.0}}
+            Other, 0x10eb6abc0, {{0.0, 516.0}, {390.0, 329.0}}
+              Other, 0x10eb6ad00, {{0.0, 516.0}, {390.0, 329.0}}
+          Other, 0x10eb6ae40, {{0.0, 560.0}, {390.0, 226.0}}
+            Keyboard, 0x10eb6af80, {{0.0, 560.0}, {390.0, 226.0}}
+              Other, 0x10eb6b0c0, {{0.0, 560.0}, {390.0, 226.0}}
+                Other, 0x10eb6b200, {{0.0, 560.0}, {390.0, 226.0}}, identifier: 'UIKeyboardLayoutStar Preview'
+                  Key, 0x10eb6b340, {{0.0, 560.0}, {0.0, 0.0}}, label: 'Padding-Left'
+                  Key, 0x10eb6b480, {{0.0, 560.0}, {0.0, 0.0}}, label: 'Padding-Right'
+                  Key, 0x10eb6b5c0, {{0.0, 560.0}, {0.0, 0.0}}, label: 'Padding-Left'
+                  Key, 0x10eb6b700, {{0.0, 560.0}, {0.0, 0.0}}, label: 'Padding-Right'
+                  Key, 0x10eb6b840, {{0.0, 560.0}, {0.0, 0.0}}, label: 'Padding-Left'
+                  Key, 0x10eb6b980, {{0.0, 560.0}, {0.0, 0.0}}, label: 'Padding-Right'
+                  Key, 0x10eb6bac0, {{4.7, 567.0}, {38.0, 54.0}}, label: 'Q'
+                  Key, 0x10eb6bc00, {{42.7, 567.0}, {38.3, 54.0}}, label: 'W'
+                  Key, 0x10eb6bd40, {{81.0, 567.0}, {38.3, 54.0}}, label: 'E'
+                  Key, 0x10eb6be80, {{119.3, 567.0}, {38.3, 54.0}}, label: 'R'
+                  Key, 0x10eb74000, {{157.7, 567.0}, {38.3, 54.0}}, label: 'T'
+                  Key, 0x10eb74140, {{196.0, 567.0}, {38.3, 54.0}}, label: 'Y'
+                  Key, 0x10eb74280, {{234.3, 567.0}, {38.3, 54.0}}, label: 'U'
+                  Key, 0x10eb743c0, {{272.7, 567.0}, {38.3, 54.0}}, label: 'I'
+                  Key, 0x10eb74500, {{311.0, 567.0}, {38.3, 54.0}}, label: 'O'
+                  Key, 0x10eb74640, {{349.3, 567.0}, {38.3, 54.0}}, label: 'P'
+                  Key, 0x10eb74780, {{23.7, 621.0}, {38.3, 54.0}}, label: 'A'
+                  Key, 0x10eb748c0, {{62.0, 621.0}, {38.3, 54.0}}, label: 'S'
+                  Key, 0x10eb74a00, {{100.3, 621.0}, {38.3, 54.0}}, label: 'D'
+                  Key, 0x10eb74b40, {{138.7, 621.0}, {38.3, 54.0}}, label: 'F'
+                  Key, 0x10eb74c80, {{177.0, 621.0}, {38.0, 54.0}}, label: 'G'
+                  Key, 0x10eb74dc0, {{215.0, 621.0}, {38.3, 54.0}}, label: 'H'
+                  Key, 0x10eb74f00, {{253.3, 621.0}, {38.3, 54.0}}, label: 'J'
+                  Key, 0x10eb75040, {{291.7, 621.0}, {38.3, 54.0}}, label: 'K'
+                  Key, 0x10eb75180, {{330.0, 621.0}, {38.3, 54.0}}, label: 'L'
+                  Button, 0x10eb752c0, {{4.7, 675.0}, {49.7, 54.0}}, identifier: 'shift', label: 'shift', Selected
+                  Key, 0x10eb75400, {{62.0, 675.0}, {38.3, 54.0}}, label: 'Z'
+                  Key, 0x10eb75540, {{100.3, 675.0}, {38.3, 54.0}}, label: 'X'
+                  Key, 0x10eb75680, {{138.7, 675.0}, {38.3, 54.0}}, label: 'C'
+                  Key, 0x10eb757c0, {{177.0, 675.0}, {38.0, 54.0}}, label: 'V'
+                  Key, 0x10eb75900, {{215.0, 675.0}, {38.3, 54.0}}, label: 'B'
+                  Key, 0x10eb75a40, {{253.3, 675.0}, {38.3, 54.0}}, label: 'N'
+                  Key, 0x10eb75b80, {{291.7, 675.0}, {38.3, 54.0}}, label: 'M'
+                  Key, 0x10eb75cc0, {{337.7, 675.0}, {50.0, 54.0}}, identifier: 'delete', label: 'delete'
+                  Key, 0x10eb75e00, {{4.7, 729.0}, {95.7, 54.0}}, identifier: 'more', label: 'numbers'
+                  Key, 0x10eb75f40, {{100.3, 729.0}, {191.3, 54.0}}, identifier: 'space', label: 'space'
+                  Button, 0x10eb76080, {{291.7, 729.0}, {96.0, 54.0}}, identifier: 'Return', label: 'return'
+          Other, 0x10eb761c0, {{0.0, 560.0}, {390.0, 284.0}}
+            Button, 0x10eb76300, {{8.5, 775.7}, {68.1, 68.7}}, label: 'Emoji'
+              StaticText, 0x10eb76440, {{8.5, 775.7}, {0.0, 0.0}}
+            Button, 0x10eb76580, {{313.4, 775.4}, {68.1, 68.7}}, identifier: 'dictation', label: 'Dictate'
+              StaticText, 0x10eb766c0, {{313.4, 775.4}, {0.0, 0.0}}
+            Button, 0x10eb76800, {{313.4, 775.4}, {68.1, 68.7}}, identifier: 'dictation', label: 'Dictate'
+              StaticText, 0x10eb76940, {{313.4, 775.4}, {0.0, 0.0}}
+Path to element:
+ →Application, 0x10ea44780, pid: 19617, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x10eb76a80, pid: 19617, label: 'Room in the Cart'
+  }
+)

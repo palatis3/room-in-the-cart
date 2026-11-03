@@ -1,0 +1,35 @@
+TAP version 13
+# Subtest: maintenance requires the separate worker role and does not grant raw access
+ok 1 - maintenance requires the separate worker role and does not grant raw access
+  ---
+  duration_ms: 22.282125
+  ...
+# Subtest: logout outage is durably retried without refreshing revoked credentials
+ok 2 - logout outage is durably retried without refreshing revoked credentials
+  ---
+  duration_ms: 11.48525
+  ...
+# Subtest: lease claim is exclusive, rejects wrong completion and recovers an abandoned lease
+ok 3 - lease claim is exclusive, rejects wrong completion and recovers an abandoned lease
+  ---
+  duration_ms: 5.303708
+  ...
+# Subtest: expired access is honestly unconfirmed while an absent exact provider session is complete
+ok 4 - expired access is honestly unconfirmed while an absent exact provider session is complete
+  ---
+  duration_ms: 4.0905
+  ...
+# Subtest: expired authentication and temporary email cleanup are bounded and missing provider remains pending
+ok 5 - expired authentication and temporary email cleanup are bounded and missing provider remains pending
+  ---
+  duration_ms: 6.3005
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 123.244417

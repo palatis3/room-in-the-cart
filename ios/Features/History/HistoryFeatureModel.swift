@@ -73,6 +73,12 @@ enum HistoryReviewedWrite: Equatable {
     var authorized: Bool { scope != nil && scope == runtime() }
     var currentShopID: String? { authorized ? scope?.currentShopID : nil }
     var canEdit: Bool { authorized && !busy && storeEpoch != nil && !hasUnresolvedWrite }
+    var canBeginObservation: Bool { canEdit && !ownedShops.isEmpty }
+    var canReviewObservation: Bool { canEdit && ownedShops.contains { $0.shopId.lowercased() == observationDraft.shopID.lowercased() } }
+    private func ownedCurrentShop(_ id: String?) -> String {
+        guard let id, ownedShops.contains(where: { $0.shopId.lowercased() == id.lowercased() }) else { return "" }
+        return id
+    }
     var canApply: Bool { canEdit && reviewed != nil && approved }
     var filteredObservations: [HistoryPriceObservation] { authorized ? observations.filter(filter.matches) : [] }
     func cancelReview() { reviewed = nil; approved = false }
@@ -101,7 +107,7 @@ enum HistoryReviewedWrite: Equatable {
             readableShopIDs = Set(readable.shopIds); readableShopCursor = readable.nextCursor
             periods = page.periods; periodCursor = page.nextCursor
             storeEpoch = epoch; references = saved.observations.filter { $0.matches(current) }
-            refreshReferences(); observationDraft.shopID = current.currentShopID ?? ""
+            refreshReferences(); observationDraft.shopID = ownedCurrentShop(current.currentShopID)
             if let candidate { try await authorize(candidate) }
             guard live(start) else { return }; pending = candidate
         } catch { if live(start) { await fail(error) } }
@@ -185,11 +191,11 @@ enum HistoryReviewedWrite: Equatable {
             notice = nil
         } catch { if live(start) { await fail(error) } }
     }
-    func beginObservation() { guard canEdit else { return }; observationDraft = .init(); observationDraft.shopID = currentShopID ?? ""; selectedObservation = nil; cancelReview() }
+    func beginObservation() { guard canBeginObservation else { return }; observationDraft = .init(); observationDraft.shopID = ownedCurrentShop(currentShopID); selectedObservation = nil; cancelReview() }
     func beginPeriod() { guard canEdit else { return }; periodDraft = .init(); if let id = currentShopID { periodDraft?.shopIDs = [id] }; selectedPeriod = nil; periodAnalysis = nil; cancelReview() }
     func editSelectedPeriod() { guard canEdit, let selectedPeriod else { return }; periodDraft = .init(selectedPeriod); cancelReview() }
     func reviewObservation() {
-        guard canEdit else { return }
+        guard canReviewObservation else { return }
         do { let value = try observationDraft.dto(); guard HistoryDate.date(value.observedAt)! <= Date().addingTimeInterval(300) else { throw HistoryDraftError.invalid }; reviewed = .observation(value); approved = false; notice = nil }
         catch { cancelReview(); notice = HistoryCopy.text("Check the item, pack, price evidence, store, branch, source and observed date before reviewing.") }
     }

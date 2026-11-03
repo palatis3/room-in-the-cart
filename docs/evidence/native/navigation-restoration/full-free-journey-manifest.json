@@ -1,0 +1,52 @@
+{
+  "source_root": "/tmp/ritc-resume-integrated.65SaGC",
+  "changed_files": [
+    {
+      "path": "ios/UITests/FreeJourneyUITests.swift",
+      "sha256": "9d46ea7ea1d7f5b362088c226e8a64e9329ff010a2ff267bf66d4151ca01e0e9"
+    }
+  ],
+  "production_source_changes": false,
+  "normal_build_flags": "DEBUG, arm64, CODE_SIGN_IDENTITY=-; no fixture compilation conditions",
+  "test": "FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop",
+  "destination": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+  "products": "/Users/palatis/Room in the Cart/.build/FreeJourneyRestorationFixedProducts",
+  "binaries": [
+    {
+      "path": "Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart",
+      "sha256": "c3314b28de7c3074370ea878e18b1844997d9766ecac5e197a259064e295b802"
+    },
+    {
+      "path": "Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/PlugIns/RoomInTheCartUITests.xctest/RoomInTheCartUITests",
+      "sha256": "7711b714ae61f364bacb0869e6a71759fdaed8a053cd6558bfa6b2df26bd795d"
+    },
+    {
+      "path": "Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart.debug.dylib",
+      "sha256": "76eeab13b715ee5010dc17dd32a60cd03826e7df25b7bd2bf707566d633ad981"
+    },
+    {
+      "path": "Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/RoomInTheCartUITests-Runner",
+      "sha256": "b8bbead36c42310f1cb1ca7029f0b67d7e314a94c486134ec01be40759b76807"
+    }
+  ],
+  "source_manifest_sha256": "2412b908e0803e3bee77863e6b91fd0afc7240c7baf9f59c860fe1d9e7f93085",
+  "source_manifest_file": "docs/evidence/native/navigation-restoration/full-free-journey-source-files.json",
+  "binary_comparison": [
+    {
+      "path": "Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart",
+      "unchanged_from_initial_products": true
+    },
+    {
+      "path": "Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/PlugIns/RoomInTheCartUITests.xctest/RoomInTheCartUITests",
+      "unchanged_from_initial_products": false
+    },
+    {
+      "path": "Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart.debug.dylib",
+      "unchanged_from_initial_products": true
+    },
+    {
+      "path": "Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/RoomInTheCartUITests-Runner",
+      "unchanged_from_initial_products": false
+    }
+  ]
+}

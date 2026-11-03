@@ -9,6 +9,8 @@ const labels = {
   contents: { en: 'On this page', es: 'En esta página' },
   invited: { en: 'Open the invited app', es: 'Abrir la app por invitación' },
   support: { en: 'Open the configured support destination', es: 'Abrir el destino de soporte configurado' },
+  emailSupport: { en: 'Email support', es: 'Enviar correo a soporte' },
+  operator: { en: 'Operator', es: 'Operador' },
   configuredSupport: {
     en: 'Use the operator’s configured destination to contact support. This page itself does not submit requests or upload files.',
     es: 'Usa el destino configurado del operador para contactar a soporte. Esta página no envía solicitudes ni sube archivos.'
@@ -24,10 +26,25 @@ export function publicPageKey(pathname: string): PublicPageKey | null {
   return match ? match[1] as PublicPageKey : null;
 }
 
+export function operatorDisplayName(raw: unknown): string | null {
+  if (typeof raw !== 'string' || !raw || raw.trim() !== raw || raw.includes('$(')
+    || new TextEncoder().encode(raw).length > 300 || /[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/u.test(raw)) return null;
+  return raw;
+}
+
 export function operatorSupportURL(raw: string | null): URL | null {
-  if (typeof raw !== 'string' || !raw || raw.trim() !== raw || raw.includes('$(')) return null;
+  if (typeof raw !== 'string' || !raw || raw.trim() !== raw || raw.includes('$(') || /[\r\n\t]/.test(raw)) return null;
   try {
     const url = new URL(raw);
+    if (url.protocol === 'mailto:') {
+      const address = url.pathname;
+      const parts = address.split('@');
+      if (/[?#%]/.test(raw) || url.search || url.hash || address.length > 254 || parts.length !== 2
+        || !/^[A-Za-z0-9][A-Za-z0-9._+-]*@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)+$/.test(address)
+        || parts[0]!.length > 64 || parts[0]!.endsWith('.') || parts[0]!.includes('..')
+        || parts[1]!.split('.').some(label => label.length > 63)) return null;
+      return url;
+    }
     const host = url.hostname.toLowerCase();
     if (url.protocol !== 'https:' || !host || url.username || url.password || host === 'localhost'
       || /\.(invalid|test)$/.test(host)
@@ -50,6 +67,7 @@ export function mountPublicPage(root: HTMLElement, configuration: PublicSiteConf
   let language: PublicLanguage = requestedLanguage === 'es' || requestedLanguage === 'en'
     ? requestedLanguage : window.navigator.language.toLowerCase().startsWith('es') ? 'es' : 'en';
   const supportURL = operatorSupportURL(configuration.operatorSupportURL);
+  const operatorName = operatorDisplayName(configuration.operatorName);
   const anchor = /^#public-section-\d+$/.test(window.location.hash) ? window.location.hash : '';
   // Unknown parameters/fragments are never echoed into links or retained as an
   // invitation secret. Language is the only public-page query parameter.
@@ -88,10 +106,15 @@ export function mountPublicPage(root: HTMLElement, configuration: PublicSiteConf
     root.append(navigation);
     const main = element('main'); main.id = 'public-main'; main.tabIndex = -1;
     main.append(element('h1', page.title[language]), element('p', page.lead[language]));
+    if (operatorName && (key === 'privacy' || key === 'terms')) {
+      const operator = element('p', labels.operator[language] + ': ' + operatorName);
+      operator.className = 'public-operator'; main.append(operator);
+    }
     const notice = element('aside', key === 'support' && supportURL ? labels.configuredSupport[language] : page.notice[language]);
     notice.className = 'notice'; notice.setAttribute('role', 'note'); main.append(notice);
     if (key === 'support' && supportURL) {
-      const contact = element('a', labels.support[language]); contact.href = supportURL.href; contact.rel = 'noreferrer';
+      const contact = element('a', supportURL.protocol === 'mailto:' ? labels.emailSupport[language] + ' · ' + supportURL.pathname : labels.support[language]);
+      contact.href = supportURL.href; contact.rel = 'noreferrer';
       contact.className = 'public-contact'; main.append(contact);
     }
     const contents = element('nav'); contents.className = 'public-contents'; contents.setAttribute('aria-label', labels.contents[language]);

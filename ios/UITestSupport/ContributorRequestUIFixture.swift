@@ -21,6 +21,11 @@ import HouseholdClient
     @ViewBuilder private var otherFixtureContent: some View {
         if ProcessInfo.processInfo.arguments.contains("--shared-meal-fixture") { S17SharedMealFixtureRoot() }
         else if ProcessInfo.processInfo.arguments.contains("--shared-store-quotes-fixture") { S27StoreQuotesFixtureRoot() }
+        else if ProcessInfo.processInfo.arguments.contains("--records-media-fixture") { RecordsMediaUIFixtureRoot() }
+        else if ProcessInfo.processInfo.arguments.contains("--measurement-fixture") { MeasurementUIFixtureRoot() }
+        else if ProcessInfo.processInfo.arguments.contains("--recipe-library-fixture") { RecipeLibraryUIFixtureRoot() }
+        else if ProcessInfo.processInfo.arguments.contains("--correction-privacy-fixture") { CorrectionPrivacyUIFixtureRoot() }
+        else if ProcessInfo.processInfo.arguments.contains("--history-grant-read-fixture") { H09HistoryGrantFixtureRoot() }
         else if ProcessInfo.processInfo.arguments.contains("--shared-idea-fixture") { S26SharedMealIdeaFixtureRoot() }
         else if ProcessInfo.processInfo.arguments.contains("--request-pack-fixture") { S24RequestPackFixtureRoot() }
         else { ContributorRequestUIFixtureRoot() }

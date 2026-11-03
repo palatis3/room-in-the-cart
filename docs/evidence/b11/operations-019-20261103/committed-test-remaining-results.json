@@ -1,0 +1,23 @@
+[
+  {
+    "name": "store-quotes-integration",
+    "startedAt": "2026-11-03T19:11:24.730Z",
+    "endedAt": "2026-11-03T19:11:25.395Z",
+    "code": 0,
+    "signal": null
+  },
+  {
+    "name": "measurement-integration",
+    "startedAt": "2026-11-03T19:11:25.396Z",
+    "endedAt": "2026-11-03T19:11:25.603Z",
+    "code": 0,
+    "signal": null
+  },
+  {
+    "name": "quote-measurement-pure",
+    "startedAt": "2026-11-03T19:11:25.603Z",
+    "endedAt": "2026-11-03T19:11:25.701Z",
+    "code": 0,
+    "signal": null
+  }
+]

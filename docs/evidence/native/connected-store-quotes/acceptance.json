@@ -1,0 +1,100 @@
+{
+  "feature": "S27 connected entered store quotes",
+  "recordedAt": "2026-11-03T19:34:51.172130+00:00",
+  "device": {
+    "name": "iPhone 17e",
+    "id": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+    "runtime": "iOS 27.0 Simulator (simctl runtime com.apple.CoreSimulator.SimRuntime.iOS-27-0; built with iOS Simulator SDK27.1)",
+    "arch": "arm64"
+  },
+  "productionPath": "HouseholdSettingsView / normal S05 entry \u2192 SharedStoreQuotesView \u2192 HouseholdService",
+  "authScope": "Current household adult with this shop budget grant; shopper authority remains distinct from planner, paid seat, organizer and helper scope.",
+  "uiFixture": "Guarded DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE HTTP-contract fixture. Native UI and normal HouseholdModel/HouseholdClient are real; service/PostgreSQL truth is independently exercised by the signed-session loopback wire test.",
+  "uniqueUICasesCovered": 5,
+  "uiRuns": [
+    {
+      "bundle": ".build/S27ScreenResultsFinal.xcresult",
+      "log": ".build/s27-screen-tests-final.log",
+      "passed": [
+        "testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+        "testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction"
+      ],
+      "failedThenCorrected": [
+        "testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave",
+        "testSpanishLargestTextKeepsRealQuoteEntryDiscoverable"
+      ],
+      "sourceVariant": "Focus-fixed production screen before compact pending summary. Final production delta: pending Retry moved ahead of original evidence disclosure; restored pending status scrolls into view. Comparison, proposal/adoption and stale lock logic unchanged.",
+      "screenshots": "diagnostic/manifest.json"
+    },
+    {
+      "bundle": ".build/S27FocusedAcceptance.xcresult",
+      "log": ".build/s27-focused-acceptance.log",
+      "passed": [
+        "testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave"
+      ],
+      "failedThenCorrected": [
+        "testSpanishLargestTextKeepsRealQuoteEntryDiscoverable"
+      ],
+      "sourceVariant": "Compact pending-summary production view before final visible-label-only correction. Original largest-text attempt enlarged fixture-only status chrome and exhausted bounded scrolling. Production Dynamic Type was not reduced.",
+      "screenshots": "retry-focused/manifest.json"
+    },
+    {
+      "bundle": ".build/S27SpanishAcceptance.xcresult",
+      "log": ".build/s27-spanish-acceptance.log",
+      "passed": [
+        "testSpanishLargestTextKeepsRealQuoteEntryDiscoverable"
+      ],
+      "failed": [],
+      "sourceVariant": "Compact pending-summary production view before final visible-label-only correction. Fixture-only status chrome uses normal text; production navigation and fields retain AX XXXL and Spanish.",
+      "screenshots": "spanish-focused/manifest.json"
+    },
+    {
+      "bundle": ".build/S27RequiredLabelsAcceptance.xcresult",
+      "log": ".build/s27-required-labels-acceptance.log",
+      "passed": [
+        "testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult"
+      ],
+      "failed": [],
+      "sourceVariant": "Final required-label correction: persistent visible subtotal, checkout, trip cash, minutes and cap titles preserve IDs and entered values; repeated grant action accessibility names its adult. Reused local/connected fields compiled together. No comparison or authorization logic changed after prior functional passes.",
+      "screenshots": "required-labels/manifest.json",
+      "result": "TEST EXECUTE SUCCEEDED; 1 test, 0 failures",
+      "diagnosticNote": "Completed test result was delayed by optional simctl diagnose collection; only that child log collector was stopped, allowing normal successful result assembly."
+    }
+  ],
+  "supportingValidation": {
+    "nativeModelTests": "SharedStoreQuoteTests: 9 passed; math/unknowns, immutable relaunch retry, revocation, account/enrollment scope, epoch change, frozen privacy revocation, purge race.",
+    "clientContractTransportTests": "4 passed; explicit nulls, exact body bytes, pinned shop header/default selection, stale revision exact retry, revocation and wrong shop.",
+    "coreDomainTests": "DinnerPlanningTests: 32 passed including pure evaluator parity and preserved authorization on compare/adoption entry points.",
+    "realServiceWire": "StoreQuoteNativeWireTests invoked for budget adult and shopper against signed-session loopback HTTPS/PostgreSQL. Save/propose/adopt, private unproposed save withheld, $38/$35+$4 and unknown $3 break-even, exact replay and cleared stale prices passed; see service lane evidence.",
+    "localization": "15 catalogs / 3449 en/es entries structural coverage passed after required labels. Spanish UI exercised at AX XXXL before visible-label-only correction; human linguistic review is separate."
+  },
+  "interruptedDiagnosticRuns": [
+    {
+      "log": ".build/s27-screen-tests1.log",
+      "reason": "Initial test waited for lazily offscreen refresh row; selector corrected. Interrupted result not valid."
+    },
+    {
+      "log": ".build/s27-screen-tests2.log",
+      "reason": "17e unexpectedly shut down during active run at 14:01:39; testmanagerd lost daemon connection. No full acceptance claimed."
+    }
+  ],
+  "finalSourceSHA256": {
+    "ios/Features/Household/SharedStoreQuotesView.swift": "6074210d310fe79fb1ef2bcd0c0e4a3178d9b7259118ee2731f91707c25afbe5",
+    "ios/Features/Household/SharedStoreQuotesModel.swift": "f18fc7ff14c1bf2d7fd9ae487672def5bee02d4d460b30e6b229cd27c88b3199",
+    "ios/Features/Household/StoreQuotesPendingStore.swift": "390f61a9656dd99a77f2d606bb2aef3e82350c2ac8564097e2584add801dfaa5",
+    "ios/Features/Household/StoreQuotes.xcstrings": "7509d4499b389216a7c7214351214c8cdd635c7e5961e9f2a4500c2181c4320b",
+    "ios/Packages/HouseholdClient/Sources/HouseholdClient/StoreQuoteContracts.swift": "cdc6f4391f32a3035e68a0ad7f4b27a6d36e656a91ebcbb85d48b2a809f8e8ac",
+    "ios/Packages/HouseholdClient/Sources/HouseholdClient/HouseholdStoreQuoteService.swift": "a236a17ecc5e03bddc19a0d8e7da06aaef5d866e953f7d0cf0c9589c01102a6a",
+    "ios/Packages/CoreDomain/Sources/CoreDomain/DinnerScenarios.swift": "69831638a5dafebdf2b69c545748b7ec721efac79d63a7c812fe60eeb07706b8",
+    "ios/Tests/SharedStoreQuoteTests.swift": "fbf9107aee9616087f03a9b131d7bc84ff8a2112418fe2854f9d71542e94805d",
+    "ios/UITestSupport/StoreQuotesUIFixture.swift": "f97997da875c2f79c294513b107acf346277e2590e6987bf5be59663fbbdf124",
+    "ios/UITests/SharedStoreQuoteUITests.swift": "069ae93c217b411440cbcf71b4df51ed9a2e783fac36e77f8da5694f7f643016",
+    "ios/Packages/HouseholdClient/Tests/HouseholdClientTests/StoreQuoteClientTests.swift": "989eec9594c6df95f6134be0a915880406b948f058f0fe82fa1be7b8e13e4f78",
+    "ios/Packages/HouseholdClient/Tests/HouseholdClientTests/StoreQuoteNativeWireTests.swift": "c889a19184d3d56575d1a8e63012b6c7b291428fb7db2910f6570ac26e7e2b51",
+    "service/tests/shared-store-quotes-native-wire.mjs": "965f25b4eb9b7f717c562581aee67cd176fe432403e4db06baea2bb319b0d3f5",
+    "ios/Features/Dinners/DinnerQuotesView.swift": "af95804cb70faecdcb05cd020507b908f93dbc2255c78f81994fad036ecc568e"
+  },
+  "finalSourceScope": "Prior main/stale, final-layout retry and Spanish passes are retained with their exact scope above. Only the final required-label case was rerun after the narrow financial/time/grant label change; no full final five-case suite claimed.",
+  "fullFinalSuiteClaimed": false,
+  "simulatorReleased": "iPhone17e shut down after all runner work completed; only this reserved device was changed."
+}

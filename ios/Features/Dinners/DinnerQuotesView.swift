@@ -151,9 +151,9 @@ struct DinnerStoreFields: View {
             DatePicker(dinnerText("Store slot"), selection: $draft.slot)
             TextField(dinnerText("Evidence source"), text: $draft.source).accessibilityIdentifier(prefix + "source")
             DatePicker(dinnerText("Observed at"), selection: $draft.observedAt)
-            TextField(dinnerText("Items before fees and discounts in USD, optional"), text: $draft.itemSubtotal).accessibilityIdentifier(prefix + "itemSubtotal")
+            EnteredQuoteValueField(title: dinnerText("Items before fees and discounts in USD, optional"), value: $draft.itemSubtotal, identifier: prefix + "itemSubtotal")
             TextField(dinnerText("Price conditions, such as a loyalty card"), text: $draft.eligibilityTerms).accessibilityIdentifier(prefix + "eligibilityTerms")
-            TextField(dinnerText("Whole checkout total in USD, optional"), text: $draft.total).accessibilityIdentifier(prefix + "total")
+            EnteredQuoteValueField(title: dinnerText("Whole checkout total in USD, optional"), value: $draft.total, identifier: prefix + "total")
             Toggle(dinnerText("Total includes every item, fee, discount, tax and deposit"), isOn: $draft.allChargesIncluded).accessibilityIdentifier(prefix + "allChargesIncluded")
             Toggle(dinnerText("All required quantities match the commitments"), isOn: $draft.quantitiesMatched).accessibilityIdentifier(prefix + "quantitiesMatched")
             Toggle(dinnerText("This is one complete store plan"), isOn: $draft.singleStore).accessibilityIdentifier(prefix + "singleStore")
@@ -162,10 +162,23 @@ struct DinnerStoreFields: View {
                 Text(dinnerText("Reviewed available")).tag(1)
                 Text(dinnerText("Unavailable")).tag(2)
             }.accessibilityIdentifier(prefix + "availability")
-            TextField(dinnerText("Incremental trip cash in USD, optional"), text: $draft.tripCash).accessibilityIdentifier(prefix + "tripCash")
-            TextField(dinnerText("Extra minutes, optional"), text: $draft.extraMinutes).accessibilityIdentifier(prefix + "extraMinutes")
+            EnteredQuoteValueField(title: dinnerText("Incremental trip cash in USD, optional"), value: $draft.tripCash, identifier: prefix + "tripCash")
+            EnteredQuoteValueField(title: dinnerText("Extra minutes, optional"), value: $draft.extraMinutes, identifier: prefix + "extraMinutes")
             Toggle(dinnerText("Trip already planned"), isOn: $draft.alreadyPlanned).accessibilityIdentifier(prefix + "alreadyPlanned")
             Text(dinnerText("Blank costs stay unresolved. Enter zero only when you have confirmed there is no charge."))
+        }
+    }
+}
+
+/// Financial and time meaning remains visible after the placeholder becomes an entered value.
+struct EnteredQuoteValueField: View {
+    let title: String
+    @Binding var value: String
+    let identifier: String
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title).font(.caption).foregroundStyle(.secondary)
+            TextField(title, text: $value).accessibilityIdentifier(identifier)
         }
     }
 }

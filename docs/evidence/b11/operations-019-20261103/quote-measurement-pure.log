@@ -1,0 +1,75 @@
+TAP version 13
+# Subtest: eligible week is the ISO UTC closure week, including year boundaries
+ok 1 - eligible week is the ISO UTC closure week, including year boundaries
+  ---
+  duration_ms: 0.321792
+  ...
+# Subtest: tie, late, known, wrong and unchanged outcomes never produce benefit
+ok 2 - tie, late, known, wrong and unchanged outcomes never produce benefit
+  ---
+  duration_ms: 0.066042
+  ...
+# Subtest: measurement allowlist rejects grocery data, client identity/week and billing claims
+ok 3 - measurement allowlist rejects grocery data, client identity/week and billing claims
+  ---
+  duration_ms: 1.274291
+  ...
+# Subtest: separates item, checkout, incremental trip and elapsed time
+ok 4 - separates item, checkout, incremental trip and elapsed time
+  ---
+  duration_ms: 0.430916
+  ...
+# Subtest: unknown travel keeps the winner open and yields a conditional break-even
+ok 5 - unknown travel keeps the winner open and yields a conditional break-even
+  ---
+  duration_ms: 0.055334
+  ...
+# Subtest: unreviewed charges leave checkout and winner unknown
+ok 6 - unreviewed charges leave checkout and winner unknown
+  ---
+  duration_ms: 0.076833
+  ...
+# Subtest: unavailable or unknown availability gives no winner
+ok 7 - unavailable or unknown availability gives no winner
+  ---
+  duration_ms: 0.051292
+  ...
+# Subtest: unmatched quantities and multistore packages are incomparable
+ok 8 - unmatched quantities and multistore packages are incomparable
+  ---
+  duration_ms: 0.092166
+  ...
+# Subtest: ties and missing minutes remain explicit
+ok 9 - ties and missing minutes remain explicit
+  ---
+  duration_ms: 0.038583
+  ...
+# Subtest: each cap uses its own scope and excludes incremental travel
+ok 10 - each cap uses its own scope and excludes incremental travel
+  ---
+  duration_ms: 0.294917
+  ...
+# Subtest: missing fee does not resolve a whole-checkout cap while a known item scope stays explicit
+ok 11 - missing fee does not resolve a whole-checkout cap while a known item scope stays explicit
+  ---
+  duration_ms: 0.041334
+  ...
+# Subtest: unknown eligibility preserves conditional deltas but withholds winner and break-even
+ok 12 - unknown eligibility preserves conditional deltas but withholds winner and break-even
+  ---
+  duration_ms: 0.178667
+  ...
+# Subtest: either option can have extra travel and cents stay exact at the accepted bound
+ok 13 - either option can have extra travel and cents stay exact at the accepted bound
+  ---
+  duration_ms: 0.2355
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 73.770167

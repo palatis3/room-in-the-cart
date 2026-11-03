@@ -1,0 +1,94 @@
+{
+  "recordedAt": "2026-11-03T19:16:40.718141+00:00",
+  "scope": "S20 Settings recovery/correction entry and explicitly supplied support address. Local source verification only; no simulator UI pass or release acceptance.",
+  "supersedes": "Support-contact availability and focused suite counts in help-release-entry-local.json; earlier source/HTTP checks retain their original snapshot scope.",
+  "implemented": [
+    "Settings and Records share RecordsRecoveryLink and its device-surface/capture-profile erasure callbacks.",
+    "CorrectionSettingsView reuses CaptureCorrectionsModel and CaptureCorrectionStore with active scene, live private identity, ledger workspace and pending-erasure guards. English and Spanish scopes are selectable, entries may be forgotten, and opt-out confirms deletion for that one scope. No new correction algorithm or store mutation method.",
+    "User-provided hello@roominthecart.com is the public source/native default. Native SupportEmail metadata is supplied from config/public-contact.json, independently from optional HTTPS SupportURL. Contact parsers allow a bare address with no query, headers, fragment, percent-encoded payload, whitespace or multiple recipients.",
+    "Public contact opens a mailto destination. Native contact opens a composer. No email is sent automatically or by this work."
+  ],
+  "verification": [
+    {
+      "kind": "iOS17-simulator-SDK-typecheck",
+      "result": "pass",
+      "scope": "Actual correction settings/recovery and help view source with minimal composition stubs. Existing private identity guard and correction store source included. No simulator boot."
+    },
+    {
+      "kind": "macOS-host-XCTest",
+      "passed": 11,
+      "failed": 0,
+      "suites": {
+        "CaptureCorrectionTests": 7,
+        "HelpConfigurationTests": 4
+      },
+      "scope": "Existing correction opt-in/forget/language-profile isolation/erasure/restart tests and updated Help URL/contact/summary tests, run against copied unchanged source in an isolated host package. No native UI journey."
+    },
+    {
+      "kind": "Python-unittest",
+      "suite": "test_app_configuration.py",
+      "passed": 8,
+      "failed": 0
+    },
+    {
+      "kind": "web-production-build",
+      "result": "pass",
+      "modules": 13,
+      "javascriptBytesApprox": 92410,
+      "javascriptGzipBytesApprox": 27830
+    },
+    {
+      "kind": "Node-jsdom",
+      "suite": "public-pages.test.mjs",
+      "passed": 7,
+      "failed": 0
+    },
+    {
+      "kind": "integrated-localization-structure",
+      "result": "pass",
+      "catalogs": 15,
+      "entries": 3435,
+      "literalKeys": 3292,
+      "humanReview": false
+    },
+    {
+      "kind": "xcstringstool-compile",
+      "result": "pass",
+      "catalogs": [
+        "Help",
+        "Capture"
+      ]
+    },
+    {
+      "kind": "git-diff-whitespace",
+      "result": "pass"
+    }
+  ],
+  "remainingGates": [
+    "Integrated native compiled-app metadata and UI/accessibility/device verification",
+    "Mailbox delivery and monitoring verification; none was attempted",
+    "Human US-Spanish review",
+    "Operating legal identity, approved release policy/terms, production retention and public-page publication",
+    "Actual Apple and connected-provider distribution acceptance"
+  ],
+  "externalMutations": [],
+  "sourceSHA256": {
+    "ios/Features/Capture/CorrectionSettingsView.swift": "fa27c1da2b77af3f2b9a7f4fbfd682ed50d916cb8e85548ee9a0d17d93d2cf42",
+    "ios/Features/Capture/CaptureCorrections.swift": "a039029357de73202188fd5c4df67b513d87d412df2d48a498b4e16fb79baf59",
+    "ios/Features/Capture/Capture.xcstrings": "7f03ea2ee35c942ec4e3ebedc82a30d3e5444fdbe5897e07c6a85036ef3504b0",
+    "ios/App/RecordsRecoveryLink.swift": "425582e0cff799322f70425294882581d140d63031df6079e4bed69718eba1e1",
+    "ios/App/RoomInTheCartApp.swift": "0ac5962fd6f02fa9cdc919af1e998bd34874204ceac87ab19100e4aaa347cb52",
+    "ios/App/Info.plist": "89c5c456bf48df099fd9d0dc7898ab5c8b26a080a40625b7adac8361efe20b5e",
+    "config/public-contact.json": "d92b302ca84b1f13844ebf45449f7fdb4f27118f755561caa903faddc989ce79",
+    "scripts/app_configuration.py": "c3ce7432be828db23d917181d2bddc1eff24c1b8a620ae758a11272d578a5c33",
+    "scripts/test_app_configuration.py": "5539c15eb7eb3014fd7de731488821cbf2228887f68f31a35b91f63e3c19a1b6",
+    "ios/Features/Help/HelpConfiguration.swift": "c138a199fddd01022688eb3f54d25fe6a53a1c606bfd47fced8fd85b0a84aa8f",
+    "ios/Features/Help/HelpView.swift": "3040fb3f38b33e919a8478c2a518d8c51b30b0bc0f24c1381cac04155d6517e4",
+    "ios/Features/Help/Help.xcstrings": "23f466d136d033c82d8cade4394d3a01a3843769db43a7d5dab3ce1e24528e01",
+    "ios/Tests/HelpConfigurationTests.swift": "f92f4f01ae5f285ac8c12086da9882b26bf1db3bfb9db3dab47b1ab218f4ab70",
+    "web/src/public-site-configuration.ts": "16a014856fbff31021becf64552d9c984f78930d7a50a2f9021cbe19205881dd",
+    "web/src/public-pages.ts": "565c30b94dc8aa85510499d3b3958d657117488ca5c851737b7a38bf41e4ddbf",
+    "web/src/public-pages-content.ts": "4bf97c09c40409fdeb0616487cd982cd240c6e4a1c21869344260923b54bb3ab",
+    "web/tests/public-pages.test.mjs": "d43d2fb2bdbffb807b8d16fb96c73843a44631186048d0513c2e1dd01d59508e"
+  }
+}

@@ -128,7 +128,7 @@ public enum ArchiveCodec {
             payloadBytes += count
         }
         let payload = ArchivePayload(records: projected)
-        let envelope = ArchiveEnvelope(formatMajor: 1, formatMinor: manifest == nil ? 0 : 1, documentKind: kind, originNamespace: origin, shopID: shopID, sourceRevisionID: revision, parentRevisionID: parent, projectionID: projection(for: kind), producerBuild: producerBuild, exportedAtMilliseconds: milliseconds(exportedAt), lastSavedAtMilliseconds: records.map(\.savedAtMilliseconds).max() ?? milliseconds(exportedAt), canonicalPayloadDigest: digest(try canonical(payload)), payload: payload, mediaManifest: manifest)
+        let envelope = ArchiveEnvelope(formatMajor: 1, formatMinor: manifest?.envelopeFormatMinor ?? 0, documentKind: kind, originNamespace: origin, shopID: shopID, sourceRevisionID: revision, parentRevisionID: parent, projectionID: projection(for: kind), producerBuild: producerBuild, exportedAtMilliseconds: milliseconds(exportedAt), lastSavedAtMilliseconds: records.map(\.savedAtMilliseconds).max() ?? milliseconds(exportedAt), canonicalPayloadDigest: digest(try canonical(payload)), payload: payload, mediaManifest: manifest)
         try validate(envelope)
         return envelope
     }
@@ -144,7 +144,8 @@ public enum ArchiveCodec {
         let value: ArchiveEnvelope
         do { value = try JSONDecoder().decode(ArchiveEnvelope.self, from: data) }
         catch { throw ArchiveError.malformed }
-        // v1.0 is the first public schema; v1.1 adds explicitly selected media.
+        // v1.0 is the first public schema; v1.1 adds explicitly selected media,
+        // and v1.2 declares recovered physical capture provenance.
         // Pre-release v0 and future minor versions
         // are explicitly unsupported, rather than guessed or silently downgraded.
         try validate(value)
@@ -163,7 +164,10 @@ public enum ArchiveCodec {
             try allowedKeys(record, ["id", "origin", "revision", "parentRevision", "kind", "title", "savedAtMilliseconds", "helperLines", "nativePayload", "media"])
             if let attachments = record["media"] {
                 guard let media = attachments as? [[String: Any]] else { throw ArchiveError.malformed }
-                for attachment in media { try allowedKeys(attachment, ["id", "kind", "contentType", "data"]) }
+                for attachment in media {
+                    try allowedKeys(attachment, ["id", "kind", "contentType", "data", "captureNamespace"])
+                    try checkCaptureNamespaceKeys(attachment["captureNamespace"])
+                }
             }
             guard let lines = record["helperLines"] as? [[String: Any]] else { throw ArchiveError.malformed }
             for line in lines { try allowedKeys(line, ["label", "originalAmount", "originalUnit", "originalLanguage", "purpose", "action", "foodStatus"]) }
@@ -171,14 +175,22 @@ public enum ArchiveCodec {
         if let value = root["mediaManifest"] {
             guard let manifest = value as? [String: Any], let entries = manifest["entries"] as? [[String: Any]] else { throw ArchiveError.malformed }
             try allowedKeys(manifest, ["formatMajor", "entries"])
-            for entry in entries { try allowedKeys(entry, ["origin", "recordID", "revision", "mediaID", "kind", "contentType", "byteCount", "digest"]) }
+            for entry in entries {
+                try allowedKeys(entry, ["origin", "recordID", "revision", "mediaID", "kind", "contentType", "byteCount", "digest", "captureNamespace"])
+                try checkCaptureNamespaceKeys(entry["captureNamespace"])
+            }
         }
+    }
+    private static func checkCaptureNamespaceKeys(_ value: Any?) throws {
+        guard let value else { return }
+        guard let object = value as? [String: Any] else { throw ArchiveError.malformed }
+        try allowedKeys(object, ["formatMajor", "archiveOrigin", "storeKind", "physicalWorkspaceID"])
     }
     static func allowedKeys(_ object: [String: Any], _ allowed: Set<String>) throws {
         guard Set(object.keys).isSubset(of: allowed) else { throw ArchiveError.unsupportedRecord }
     }
     public static func validate(_ value: ArchiveEnvelope) throws {
-        guard value.formatMajor == 1, (0...1).contains(value.formatMinor) else { throw ArchiveError.unsupportedVersion }
+        guard value.formatMajor == 1, (0...2).contains(value.formatMinor) else { throw ArchiveError.unsupportedVersion }
         guard value.projectionID == projection(for: value.documentKind) else { throw ArchiveError.unsupportedProjection }
         guard identifier(value.originNamespace), identifier(value.sourceRevisionID), value.parentRevisionID.map(identifier) ?? true,
               value.shopID.map(identifier) ?? true, value.producerBuild.utf8.count <= 128 else { throw ArchiveError.invalidIdentity }
@@ -197,7 +209,7 @@ public enum ArchiveCodec {
         if let manifest = value.mediaManifest, manifest.formatMajor != 1 { throw ArchiveError.unsupportedVersion }
         let expectedManifest = try ArchiveMediaManifest.make(records: value.payload.records)
         guard value.mediaManifest == expectedManifest,
-              value.formatMinor == (expectedManifest == nil ? 0 : 1) else { throw ArchiveError.integrity }
+              value.formatMinor == (expectedManifest?.envelopeFormatMinor ?? 0) else { throw ArchiveError.integrity }
         guard digest(try canonical(value.payload)) == value.canonicalPayloadDigest else { throw ArchiveError.integrity }
     }
     public static func identity(_ record: ArchiveRecord, projection: String) -> ArchiveIdentity {

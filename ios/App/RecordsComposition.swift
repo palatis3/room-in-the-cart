@@ -169,7 +169,7 @@ private struct RecordsPlanningProjection: Codable {
         record.parentRevision = unchanged ? original.parentRevision : original.revision
         record.savedAtMilliseconds = unchanged ? original.savedAtMilliseconds : ArchiveCodec.milliseconds(date)
         let ownedMedia = try (original.media ?? []).filter {
-            try RecordsMediaCodec.belongs(RecordsMediaCodec.decode($0), to: record)
+            try RecordsMediaCodec.belongs(RecordsMediaCodec.decode($0), to: record, captureNamespace: $0.captureNamespace)
         }
         record.media = ownedMedia.isEmpty ? nil : ownedMedia
         return record
@@ -266,7 +266,7 @@ struct RecordsToolsEntryView: View {
                             Text(recordsText("This is a separate recovered workspace. Your current pickup is unchanged."))
                             NavigationLink(recordsText("Open recovered shopping list")) { LedgerHomeView(model: model) }
                             NavigationLink(recordsText("Open recovered dinners")) { RecordsRecoveredDinnersView(ledger: model) }
-                        }.navigationTitle(recordsText("Recovered workspace"))
+                        }.navigationTitle(recordsText("Recovered workspace")).environmentObject(model)
                     case let .pickup(model): PickupHomeView(model: model).environment(\.pickupLedger, nil)
                     case let .recipe(recipe): RecordsRecipeAdoptionView(recipe: recipe, ledger: composition.ledger)
                     case let .ledgerDeletion(review):
@@ -435,8 +435,10 @@ private struct RecordsRecoveredDinnersView: View {
         let root = directory.appendingPathComponent("Recoveries", isDirectory: true)
         guard FileManager.default.fileExists(atPath: root.path) else { return }
         let retained = Set(try await registry.refreshList().map(\.id))
+        let protectedWorkspaceIDs = Set([ledger.sourceWorkspaceID, pickup.sourceWorkspaceID, app.store?.workspaceID].compactMap { $0 })
         for url in try FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: nil) {
             guard UUID(uuidString: url.lastPathComponent) != nil, !retained.contains(url.lastPathComponent) else { continue }
+            try await RecordsRecoveryCapture.erase(directory: url, protectedWorkspaceIDs: protectedWorkspaceIDs)
             try FileManager.default.removeItem(at: url)
         }
     }
@@ -498,7 +500,11 @@ private struct RecordsRecoveredDinnersView: View {
         if let registry {
             let pendingOrigin = ledger.pendingLedgerDeletionReview.map { "ledger/" + $0.workspaceID.uuidString }
             for saved in try await registry.refreshList() where saved.record.origin != pendingOrigin {
-                result += try await recoveredSnapshot(saved)
+                do { result += try await recoveredSnapshot(saved, authorize: authorize) }
+                catch {
+                    guard authorize() else { throw ArchiveError.unavailable }
+                    _ = omitRecovered(saved, reason: .unreadableStorage)
+                }
             }
         }
         guard authorize() else { throw ArchiveError.unavailable }
@@ -529,9 +535,13 @@ private struct RecordsRecoveredDinnersView: View {
         }
         return merged
     }
-    private func mediaListing(workspaceID: UUID, authorize: @escaping RecordsToolsModel.Authorization) async throws -> CaptureMediaArchiveListing {
+    private func mediaListing(workspaceID: UUID, authorize: @escaping RecordsToolsModel.Authorization, liveScope: RecordsRecoveryCapture.Scope? = nil) async throws -> CaptureMediaArchiveListing {
+        if let liveScope, liveScope.workspaceID != workspaceID { throw ArchiveError.invalidIdentity }
         let listing: CaptureMediaArchiveListing
-        do { listing = try await CaptureMediaStore.shared.archiveListing(workspaceID: workspaceID, authorize: authorize) }
+        do {
+            let readable = try await CaptureMediaStore.shared.archiveListing(workspaceID: workspaceID, authorize: authorize)
+            listing = liveScope?.filtering(readable) ?? readable
+        }
         catch {
             guard authorize() else { throw ArchiveError.unavailable }
             // Optional source-store failure does not hide healthy domain records.
@@ -544,7 +554,7 @@ private struct RecordsRecoveredDinnersView: View {
         }
         return listing
     }
-    private func recoveredSnapshot(_ saved: RecoveredRecord) async throws -> [ArchiveRecord] {
+    private func recoveredSnapshot(_ saved: RecoveredRecord, authorize: @escaping RecordsToolsModel.Authorization) async throws -> [ArchiveRecord] {
         guard let directory, UUID(uuidString: saved.id) != nil else { throw ArchiveError.invalidIdentity }
         let folder = directory.appendingPathComponent("Recoveries", isDirectory: true).appendingPathComponent(saved.id, isDirectory: true)
         let filename: String
@@ -562,9 +572,11 @@ private struct RecordsRecoveredDinnersView: View {
             catch { return omitRecovered(saved, reason: .invalidNative) }
         }
         if saved.record.kind == .ledger {
-            let store = try LedgerStore(url: url)
+            let opened = try await RecordsRecoveryCapture.openLedger(copy: saved, directory: folder, authorize: authorize)
+            let store = opened.store
             let current = try await store.load()
             try await store.close()
+            guard authorize() else { throw ArchiveError.unavailable }
             guard let current else { return omitRecovered(saved, reason: .unreadableStorage) }
             do {
             let workspace = try RecordsNativeCodec.ledger(current.payload)
@@ -580,12 +592,19 @@ private struct RecordsRecoveredDinnersView: View {
                 let bytes = try RecordsNativeCodec.canonical(RecordsLedgerDocument(formatVersion: 1, workspace: library))
                 result.append(try RecordsNativeCodec.revised(saved.record, nativePayload: bytes, id: "meal-library", title: "Reusable dinners", date: current.savedAt, lines: []))
             }
-            return result
+            let sources = try await mediaListing(workspaceID: opened.scope.workspaceID, authorize: authorize, liveScope: opened.scope).records
+            return try result.map { try RecordsMediaCodec.attaching(sources, to: $0, liveScope: opened.scope) }
             } catch { return omitRecovered(saved, reason: .invalidNative) }
         }
-        let store = try ComparisonStore(url: url)
+        let store: ComparisonStore
+        let liveScope: RecordsRecoveryCapture.Scope?
+        if saved.record.kind == .pickup {
+            let opened = try await RecordsRecoveryCapture.openPickup(copy: saved, directory: folder, authorize: authorize)
+            store = opened.store; liveScope = opened.scope
+        } else { store = try ComparisonStore(url: url); liveScope = nil }
         let listing = try await store.listing()
         try await store.close()
+        guard authorize() else { throw ArchiveError.unavailable }
         if listing.records.isEmpty && listing.unavailable.isEmpty { return omitRecovered(saved, reason: .unreadableStorage) }
         let batch = RecordsSnapshotProjection.project(listing, origin: saved.record.origin, localCopyID: saved.id) { current in
             if saved.record.kind == .comparison {
@@ -600,6 +619,10 @@ private struct RecordsRecoveredDinnersView: View {
             return try RecordsNativeCodec.revised(saved.record, nativePayload: bytes, id: current.id.uuidString, title: current.title, date: current.savedAt, lines: lines)
         }
         unavailableRecords += batch.unavailable
+        if let liveScope {
+            let sources = try await mediaListing(workspaceID: liveScope.workspaceID, authorize: authorize, liveScope: liveScope).records
+            return try batch.records.map { try RecordsMediaCodec.attaching(sources, to: $0, liveScope: liveScope) }
+        }
         return batch.records
     }
     private func omitRecovered(_ saved: RecoveredRecord, reason: RecordsUnavailableRecord.Reason) -> [ArchiveRecord] {
@@ -683,7 +706,8 @@ private struct RecordsRecoveredDinnersView: View {
             destination = Destination(id: saved.id, content: .comparison(isolated, try isolated.decode(record), record.savedAt))
         case .ledger:
             _ = try RecordsNativeCodec.ledger(bytes)
-            let url = folder.appendingPathComponent("ledger.sqlite"), store = try LedgerStore(url: folder.appendingPathComponent("ledger.sqlite"))
+            let url = folder.appendingPathComponent("ledger.sqlite")
+            let store = try await RecordsRecoveryCapture.openLedger(copy: saved, directory: folder, authorize: authorize).store
             if try await store.load() == nil { try await store.save(payload: bytes, expectedRevision: 0, operationID: UUID(), savedAt: Date(timeIntervalSince1970: Double(saved.record.savedAtMilliseconds) / 1000)) }
             try await store.close()
             let isolated = LedgerModel(databaseURL: url); await isolated.open()
@@ -691,7 +715,8 @@ private struct RecordsRecoveredDinnersView: View {
             destination = Destination(id: saved.id, content: .ledger(isolated))
         case .pickup:
             let value = try RecordsNativeCodec.pickup(bytes)
-            let url = folder.appendingPathComponent("pickup.sqlite"), store = try ComparisonStore(url: folder.appendingPathComponent("pickup.sqlite"))
+            let url = folder.appendingPathComponent("pickup.sqlite")
+            let store = try await RecordsRecoveryCapture.openPickup(copy: saved, directory: folder, authorize: authorize).store
             if try await store.load(id: value.id) == nil { try await store.save(id: value.id, title: saved.record.title, payload: bytes, savedAt: value.savedAt) }
             let isolated = PickupModel(store: store, databaseURL: url); await isolated.load()
             guard authorize(), isolated.ready else { throw ArchiveError.unavailable }

@@ -1,0 +1,450 @@
+{
+  "database": "ritc_b11_ops_20261103",
+  "verifiedAt": "2026-11-03T18:35:36.244Z",
+  "tableData": [
+    {
+      "schema": "auth",
+      "table": "sessions",
+      "rows": 14,
+      "sha256": "a62b287a10e9ddf90f02209bfcfe08abe2ddd160fe586411711cf8a97bd29fe1"
+    },
+    {
+      "schema": "public",
+      "table": "ritc_schema_migration",
+      "rows": 17,
+      "sha256": "24df0b01f3a42fa48c2415bf6ee1b2e0047a5d507a6f3c5f4050fca802a4ed01"
+    },
+    {
+      "schema": "ritc",
+      "table": "auth_rate_bucket",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "ritc",
+      "table": "basket_line",
+      "rows": 4,
+      "sha256": "e5a7bdbd3b9ed30435200f863bca65864b3e597e11dde27d720b9cf9b48c624f"
+    },
+    {
+      "schema": "ritc",
+      "table": "billing_account",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "ritc",
+      "table": "billing_binding",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "ritc",
+      "table": "billing_delivery",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "ritc",
+      "table": "billing_event",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "ritc",
+      "table": "billing_seat",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "ritc",
+      "table": "billing_state",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "ritc",
+      "table": "browser_auth",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "ritc",
+      "table": "budget_period",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "ritc",
+      "table": "budget_period_shop",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "ritc",
+      "table": "consent",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "ritc",
+      "table": "decision_receipt",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "ritc",
+      "table": "device",
+      "rows": 13,
+      "sha256": "966673033ceb7cf4c7e6970efa2d82e2c983dc80ecda3032a4bc2f51331cd6fa"
+    },
+    {
+      "schema": "ritc",
+      "table": "event",
+      "rows": 11,
+      "sha256": "213eb7c1f063fefbaf4e8b3ed4a74aaf2836841fbf96ee8810395b5c3bcf96f7"
+    },
+    {
+      "schema": "ritc",
+      "table": "family_decision",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "ritc",
+      "table": "financial_entry",
+      "rows": 1,
+      "sha256": "c8fc6ad97892e5ee79a01fd1d2d4bdc44acd2dd5bfc28166556372cc01de6de9"
+    },
+    {
+      "schema": "ritc",
+      "table": "financial_head",
+      "rows": 1,
+      "sha256": "412783b90e69f736282cde0234f49f4147d463a328b449146d12d17ae62aac43"
+    },
+    {
+      "schema": "ritc",
+      "table": "financial_review",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "ritc",
+      "table": "guardian_relationship",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "ritc",
+      "table": "helper_mutation",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "ritc",
+      "table": "helper_proposal",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "ritc",
+      "table": "history_mutation",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "ritc",
+      "table": "household",
+      "rows": 10,
+      "sha256": "2568dff21b9b18ee25b4e0978ae0f3912672a59658803051dfe320b383f14392"
+    },
+    {
+      "schema": "ritc",
+      "table": "household_creation",
+      "rows": 5,
+      "sha256": "88b554b633f45d37ed59f5a60cab376fbed8c6c391c6495653699c40c4ec17cd"
+    },
+    {
+      "schema": "ritc",
+      "table": "household_exit",
+      "rows": 1,
+      "sha256": "b0e4ba55697f30514792aae6c95021d604278b72ec95bf69c13b2ca3acb0db80"
+    },
+    {
+      "schema": "ritc",
+      "table": "identity_erasure",
+      "rows": 4,
+      "sha256": "ec9566b1c5bb5a018a824e3391ea37372d7bea01127922732f6f500f4a4ff5aa"
+    },
+    {
+      "schema": "ritc",
+      "table": "invite",
+      "rows": 1,
+      "sha256": "2ec29ec377a25c85e3052a08ba508cc64c862408711b158b4e713b0dc89a6f57"
+    },
+    {
+      "schema": "ritc",
+      "table": "meal_move",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "ritc",
+      "table": "meal_planner",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "ritc",
+      "table": "member",
+      "rows": 15,
+      "sha256": "7f8409a1f22ae245a39c011a627a3d24f87f59bcbd49508b27115780246298ae"
+    },
+    {
+      "schema": "ritc",
+      "table": "operation",
+      "rows": 11,
+      "sha256": "717375cecbd6c934a7f6c8dd9b85adb740e42cda5adf1a1533e2c419d2f25668"
+    },
+    {
+      "schema": "ritc",
+      "table": "operation_response",
+      "rows": 8,
+      "sha256": "baaf35cfdb0f3a49e403fd6891265436befa792575a03feb1d8f05b482d33426"
+    },
+    {
+      "schema": "ritc",
+      "table": "placement_report",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "ritc",
+      "table": "preview",
+      "rows": 2,
+      "sha256": "000419dde434a4fb6d48030ea44a01b77efe09aff0d1c99a477498922ce70c6c"
+    },
+    {
+      "schema": "ritc",
+      "table": "price_observation",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "ritc",
+      "table": "privacy_job",
+      "rows": 4,
+      "sha256": "9a9808fc01fb6dfd649c587722f33ea7456413e40a1a483f986cb1ffe7e931c8"
+    },
+    {
+      "schema": "ritc",
+      "table": "privacy_target",
+      "rows": 5,
+      "sha256": "1390afca7ec0d26b5b506d52d9e7b2b7dfef8a08ef9aa2615f0d3697d010d0ee"
+    },
+    {
+      "schema": "ritc",
+      "table": "replay_window",
+      "rows": 13,
+      "sha256": "89b6b9b5030b1ac119675af58173be038cd82ad545799c1d110c1785cb62ce71"
+    },
+    {
+      "schema": "ritc",
+      "table": "request",
+      "rows": 4,
+      "sha256": "f08d46222d2bd4dd4252910349cf86ea0907bb28adc88feff4f3351a8848cf35"
+    },
+    {
+      "schema": "ritc",
+      "table": "request_link",
+      "rows": 2,
+      "sha256": "4898efbfce246abed548f1ee2c072e2a85098fb714e1e49bca313950e01935f8"
+    },
+    {
+      "schema": "ritc",
+      "table": "retired_purchase",
+      "rows": 1,
+      "sha256": "b3f64769f6b00a744a810c8a17dc9d43f5dc8ef39089dbe2a4a17a32dab64f0b"
+    },
+    {
+      "schema": "ritc",
+      "table": "shared_idea_receipt",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "ritc",
+      "table": "shared_meal_change",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "ritc",
+      "table": "shared_meal_idea",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "ritc",
+      "table": "shared_meal_revision",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "ritc",
+      "table": "shop",
+      "rows": 3,
+      "sha256": "9afec366f1602d6fcf6bcbbc90ae2c31b3da5a6a070ee0f7f93d25137c91b2a2"
+    },
+    {
+      "schema": "ritc",
+      "table": "shop_authority",
+      "rows": 5,
+      "sha256": "261e3a743e2808b94252f39ab4df6af7d028a2b7608e1321f7d0f08d3f1dc6d4"
+    },
+    {
+      "schema": "ritc",
+      "table": "shop_snapshot",
+      "rows": 7,
+      "sha256": "a7538bfa5546b92562d80e4049cef51ab517818e20e99a56f812e8d8d4b92a3e"
+    },
+    {
+      "schema": "ritc",
+      "table": "view_grant",
+      "rows": 1,
+      "sha256": "0dd1a0c84ebd21794ac3d53c9eaa7152b90e1351c945a8e70cb309b8fc4964f4"
+    },
+    {
+      "schema": "ritc",
+      "table": "web_session",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "schema": {
+    "relations": {
+      "count": 54,
+      "sha256": "6f178d238db56f6c5beeba75c7334a4dadf9b680f6d0569288575e1611f5f6d3"
+    },
+    "columns": {
+      "count": 414,
+      "sha256": "1c90206384676e0809b6bbc7e838fb8edbc2b9b9022556cba0063b433987fc6c"
+    },
+    "constraints": {
+      "count": 243,
+      "sha256": "4fd79d193b9dcd98dcc503e71da3562e5217068a871debb35971291959b9c6e4"
+    },
+    "indexes": {
+      "count": 129,
+      "sha256": "6d9bf922b7970fa5d29fad59847e4c34b3f3525097559f8ecce4eb6c8b2a652a"
+    },
+    "functions": {
+      "count": 30,
+      "sha256": "f4a3f46ebd487ee7147c2f59ac3a9f67eb4e7bf8f3dced1d16d7ed618b70b1f1"
+    },
+    "policies": {
+      "count": 49,
+      "sha256": "e52e3065eea766a8d5d193c4d01fb3362bda864cf3bcf3cc5fb49501efe68ddd"
+    }
+  },
+  "semantic": {
+    "privacy": {
+      "complete_jobs": 4,
+      "identity_markers": 4,
+      "erased_targets": 5,
+      "erased_profiles": 6,
+      "retired_purchase_markers": 1
+    },
+    "retainedEvidence": {
+      "other_author_requests": 1,
+      "redacted_accounting_entries": 1,
+      "accounting_heads_at_revision_two": 1
+    },
+    "migrations": [
+      {
+        "version": "001_household_requests.sql",
+        "checksum": "e919302e353eae03f5cf63425ad82924c3c6315321b8b4b07e1253185e79ef5b"
+      },
+      {
+        "version": "002_apple_billing.sql",
+        "checksum": "2f819c06c49f47e32c0093c636bacdfd95ad299ed159337b39041d173385ca6e"
+      },
+      {
+        "version": "003_web_session.sql",
+        "checksum": "dd2b9967be0364bf313afba035e8a60fec948a94aa1cf182e9fea14e269888cb"
+      },
+      {
+        "version": "004_household_lock.sql",
+        "checksum": "65fef08a239f4ea122133c335d56918e9d2ef2c4455418f36e18b6442a473250"
+      },
+      {
+        "version": "005_session_and_policy_hardening.sql",
+        "checksum": "3504fec9398d40cad639aa50c931d7cbe6b585e7cf2dc5059f227b3e87727d45"
+      },
+      {
+        "version": "006_household_lifecycle.sql",
+        "checksum": "7f293a0b681627cccb2d5bdc943eb3ea5c6e1436b063857f4a33f981cced296c"
+      },
+      {
+        "version": "007_selected_helper_session.sql",
+        "checksum": "422f3b0cafc482adb3708689c11bbbab1d026aac69555a8dafcbd3a525f2fca5"
+      },
+      {
+        "version": "008_browser_email_auth.sql",
+        "checksum": "5ad8c46d4146e1ce980e4f8809afa00512b9ed6ae6e41fd76637e0d86a713e1e"
+      },
+      {
+        "version": "009_auth_maintenance.sql",
+        "checksum": "b4e33a77bc0a9576a763062e8f3dddf00c019ecbe5464ad300b1e5fa0e872b6e"
+      },
+      {
+        "version": "010_account_lifecycle.sql",
+        "checksum": "e35ebbc6a2d1fcc3f7d03420542eb4ce588c3708e8bb31fcfc3ec0cc283daa22"
+      },
+      {
+        "version": "011_helper_review_and_shop_selection.sql",
+        "checksum": "23457cac7c614eb8794ec0268641cd1130558ce8d8c576c4ce8bd994253d07b9"
+      },
+      {
+        "version": "012_price_budget_history.sql",
+        "checksum": "dad295084f43a58cd15f58524575e98df66a77bdb0a17bd0f9555b3eac05c5c2"
+      },
+      {
+        "version": "013_shared_meal_occurrences.sql",
+        "checksum": "f574ff8a6b73f0959c622053b9ebd3408d05629d653709a40d631cc58259e1d5"
+      },
+      {
+        "version": "014_shared_meal_moves.sql",
+        "checksum": "2673ea349e6a7cd4df823e4128e4059533049b46071b03a1a1dc90a0d6e90a95"
+      },
+      {
+        "version": "015_family_decisions.sql",
+        "checksum": "c9779d5c19bcbb2e2bc5b3f4ffe0793e459375892d9616d5c0db2ac82686def1"
+      },
+      {
+        "version": "016_shared_meal_changes.sql",
+        "checksum": "362138035995832cc6b1bbffb6e9c0528ee2576945a908a14db03104355da6b0"
+      },
+      {
+        "version": "017_shared_meal_ideas.sql",
+        "checksum": "fe61e6528a38cc9c6c4315587d12ee540ea624422a8e89f8933f05e75addab63"
+      }
+    ],
+    "authRowsAfterOperations": {
+      "browser_auth_rows": 0
+    }
+  },
+  "permissions": {
+    "app_raw_privacy_denied": true,
+    "app_worker_operation_denied": true,
+    "worker_raw_privacy_denied": true,
+    "worker_raw_browser_auth_denied": true,
+    "worker_raw_provider_session_denied": true,
+    "worker_role_verified": true,
+    "application_role_rejected_as_worker": true,
+    "worker_functions": {
+      "privacy_claim": true,
+      "auth_prepare": true
+    }
+  }
+}

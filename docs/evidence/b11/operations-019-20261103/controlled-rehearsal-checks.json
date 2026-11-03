@@ -1,0 +1,17 @@
+{
+  "checks": {
+    "explicitBudgetReadOnlyPermission": true,
+    "canonicalResponseAndServerClosure": true,
+    "codeOnlyAllowlist": true,
+    "oneCanonicalWillingHousehold": true,
+    "billingControls": true,
+    "withdrawnConsentCannotResurrect": true,
+    "actualErasureAcross018019": true,
+    "erasureDidNotRemoveOtherHousehold": true
+  },
+  "gatewayCalls": 34,
+  "provider": "synthetic in-process fixture only",
+  "transport": "real loopback HTTP",
+  "database": "real local PostgreSQL",
+  "schema": "001-019"
+}

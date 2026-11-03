@@ -1,0 +1,55 @@
+TAP version 13
+# Subtest: fresh self-serve household completes create, invite, review, freeze, late routing and promote with exact retries
+ok 1 - fresh self-serve household completes create, invite, review, freeze, late routing and promote with exact retries
+  ---
+  duration_ms: 276.07275
+  ...
+# Subtest: deletion requires recent signed authentication and configured provider before accepting a job
+ok 2 - deletion requires recent signed authentication and configured provider before accepting a job
+  ---
+  duration_ms: 13.235958
+  ...
+# Subtest: explicit responsibilities precede deletion; outage keeps pending and exact subject erasure preserves another member
+ok 3 - explicit responsibilities precede deletion; outage keeps pending and exact subject erasure preserves another member
+  ---
+  duration_ms: 183.603167
+  ...
+# Subtest: household exit revokes only that membership, preserves service identity and is recoverable by the same key
+ok 4 - household exit revokes only that membership, preserves service identity and is recoverable by the same key
+  ---
+  duration_ms: 26.226292
+  ...
+# Subtest: sole guardian cannot abandon a child through exit; deletion explicitly erases only the selected household child profile
+ok 5 - sole guardian cannot abandon a child through exit; deletion explicitly erases only the selected household child profile
+  ---
+  duration_ms: 46.626958
+  ...
+# Subtest: deleting a purchaser purges billing payloads and seats while retaining only a non-expiring rebinding marker
+ok 6 - deleting a purchaser purges billing payloads and seats while retaining only a non-expiring rebinding marker
+  ---
+  duration_ms: 56.914042
+  ...
+# Subtest: foreign household and child identifiers cannot broaden deletion scope
+ok 7 - foreign household and child identifiers cannot broaden deletion scope
+  ---
+  duration_ms: 24.813334
+  ...
+# Subtest: deletion waits for an authorized identity transaction then closes enrollment and requires an actual worker lease
+ok 8 - deletion waits for an authorized identity transaction then closes enrollment and requires an actual worker lease
+  ---
+  duration_ms: 60.905375
+  ...
+# Subtest: new helper/history data joins the bounded erasure path without deleting another current shopper accounting facts
+ok 9 - new helper/history data joins the bounded erasure path without deleting another current shopper accounting facts
+  ---
+  duration_ms: 75.415542
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 977.580542

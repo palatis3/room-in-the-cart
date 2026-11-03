@@ -1,0 +1,139 @@
+Optional(Attributes: Application, 0x105c6da40, pid: 17551, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x105c6da40, pid: 17551, label: 'Room in the Cart'
+    Window (Main), 0x105c6c500, {{0.0, 0.0}, {390.0, 844.0}}
+      Other, 0x10678d180, {{0.0, 0.0}, {390.0, 844.0}}
+        Other, 0x102e9f840, {{0.0, 0.0}, {390.0, 844.0}}
+          Other, 0x102e9d2c0, {{0.0, 0.0}, {390.0, 844.0}}
+            Other, 0x102e9f5c0, {{0.0, 0.0}, {390.0, 844.0}}
+              StaticText, 0x102e9f700, {{116.0, 47.0}, {158.0, 20.3}}, identifier: 'fixture.s26.ideas', label: 'Fixture idea writes: 0'
+              StaticText, 0x1065c0c80, {{99.5, 71.3}, {191.0, 20.3}}, identifier: 'fixture.s26.proposals', label: 'Fixture meal proposals: 0'
+              StaticText, 0x1065c3ac0, {{106.7, 95.7}, {176.7, 20.3}}, identifier: 'fixture.s26.basket', label: 'Fixture basket writes: 0'
+              Button, 0x1065c3c00, {{89.7, 120.0}, {210.7, 20.3}}, identifier: 'fixture.s26.switch', label: 'Switch to assigned shopper'
+              Other, 0x1065c0a00, {{0.0, 144.3}, {390.0, 699.7}}
+                NavigationBar, 0x1065c1400, {{0.0, 154.3}, {390.0, 54.0}}, identifier: 'Household dinner ideas'
+                  Button, 0x1065c1540, {{16.0, 154.3}, {44.0, 44.0}}, identifier: 'BackButton', label: 'Household idea fixture'
+                  StaticText, 0x1065c08c0, {{101.3, 166.0}, {187.3, 20.7}}, label: 'Household dinner ideas'
+                Other, 0x1065c1680, {{0.0, 144.3}, {390.0, 699.7}}
+                  Other, 0x1065c0780, {{0.0, 144.3}, {390.0, 699.7}}
+                    Other, 0x1065c3e80, {{0.0, 144.3}, {390.0, 699.7}}
+                      Other, 0x1065c2d00, {{0.0, 144.3}, {390.0, 699.7}}
+                        CollectionView, 0x1065c3700, {{0.0, 144.3}, {390.0, 699.7}}
+                          Other, 0x1065c3840, {{-16.0, -276.0}, {422.0, 464.3}}
+                          Cell, 0x1065c0b40, {{16.0, 98.3}, {358.0, 72.3}}
+                            Other, 0x1065c0280, {{16.0, 98.3}, {358.0, 72.3}}
+                              Other, 0x1065c03c0, {{16.0, 98.3}, {358.0, 72.3}}
+                            Other, 0x1065c0500, {{16.0, 98.3}, {358.0, 72.3}}
+                              Other, 0x1065c1cc0, {{16.0, 98.3}, {358.0, 72.3}}
+                                Other, 0x1065c3d40, {{16.0, 98.3}, {358.0, 72.3}}
+                                  StaticText, 0x1065c0640, {{16.0, 98.3}, {358.0, 72.3}}, label: 'Review exclusions with the household. This does not read private decision history.'
+                          Other, 0x1065c1a40, {{0.0, 144.3}, {390.0, 699.7}}
+                            Other, 0x1065c1b80, {{0.0, 144.3}, {390.0, 104.0}}
+                          Other, 0x1065c1e00, {{0.0, 144.3}, {390.0, 699.7}}
+                            Other, 0x1065c3340, {{0.0, 144.3}, {390.0, 104.0}}
+                          Other, 0x1065c3980, {{-16.0, 188.3}, {422.0, 671.3}}
+                          Cell, 0x1065c17c0, {{16.0, 205.7}, {358.0, 52.0}}
+                            Other, 0x10f884000, {{16.0, 205.7}, {358.0, 52.0}}
+                              Other, 0x10f884140, {{16.0, 205.7}, {358.0, 52.0}}
+                            Other, 0x10f884280, {{16.0, 205.7}, {358.0, 52.0}}
+                              Other, 0x10f8843c0, {{16.0, 205.7}, {358.0, 52.0}}
+                                Other, 0x10f884500, {{16.0, 205.7}, {358.0, 52.0}}
+                                  TextField, 0x10f884640, {{32.0, 220.7}, {326.0, 22.0}}, placeholderValue: 'Ingredient name', value: Rice
+                          Cell, 0x10f884780, {{16.0, 257.7}, {358.0, 52.0}}
+                            Other, 0x10f8848c0, {{16.0, 257.7}, {358.0, 52.0}}
+                              Other, 0x10f884a00, {{16.0, 257.7}, {358.0, 52.0}}
+                            Other, 0x10f884b40, {{16.0, 257.7}, {358.0, 52.0}}
+                              Other, 0x10f884c80, {{16.0, 257.7}, {358.0, 52.0}}
+                                Other, 0x10f884dc0, {{16.0, 257.7}, {358.0, 52.0}}
+                                  Button, 0x10f884f00, {{32.0, 266.7}, {326.0, 34.3}}, label: 'Ingredient unit, Grams'
+                                    StaticText, 0x10f885040, {{291.3, 273.7}, {50.3, 20.3}}, label: 'Grams'
+                                  StaticText, 0x10f885180, {{32.0, 273.5}, {110.0, 20.3}}, label: 'Ingredient unit'
+                          Other, 0x10f8852c0, {{32.0, 256.7}, {326.0, 1.0}}
+                          Cell, 0x10f885400, {{16.0, 309.7}, {358.0, 52.0}}
+                            Other, 0x10f885540, {{16.0, 309.7}, {358.0, 52.0}}
+                              Other, 0x10f885680, {{16.0, 309.7}, {358.0, 52.0}}
+                            Other, 0x10f8857c0, {{16.0, 309.7}, {358.0, 52.0}}
+                              Other, 0x10f885900, {{16.0, 309.7}, {358.0, 52.0}}
+                                Other, 0x10f885a40, {{16.0, 309.7}, {358.0, 52.0}}
+                                  TextField, 0x10f885b80, {{32.0, 324.7}, {326.0, 22.0}}, placeholderValue: 'Required quantity', value: 150
+                          Other, 0x10f885cc0, {{32.0, 308.7}, {326.0, 1.0}}
+                          Cell, 0x10f885e00, {{16.0, 361.7}, {358.0, 52.0}}
+                            Other, 0x10f885f40, {{16.0, 361.7}, {358.0, 52.0}}
+                              Other, 0x10f886080, {{16.0, 361.7}, {358.0, 52.0}}
+                            Other, 0x10f8861c0, {{16.0, 361.7}, {358.0, 52.0}}
+                              Other, 0x10f886300, {{16.0, 361.7}, {358.0, 52.0}}
+                                Other, 0x10f886440, {{16.0, 361.7}, {358.0, 52.0}}
+                                  TextField, 0x10f886580, {{32.0, 376.7}, {326.0, 22.0}}, placeholderValue: 'Household stock in this unit'
+                          Other, 0x10f8866c0, {{32.0, 360.7}, {326.0, 1.0}}
+                          Cell, 0x10f886800, {{16.0, 413.7}, {358.0, 52.0}}
+                            Other, 0x10f886940, {{16.0, 413.7}, {358.0, 52.0}}
+                              Other, 0x10f886a80, {{16.0, 413.7}, {358.0, 52.0}}
+                            Other, 0x10f886bc0, {{16.0, 413.7}, {358.0, 52.0}}
+                              Other, 0x10f886d00, {{16.0, 413.7}, {358.0, 52.0}}
+                                Other, 0x10f886e40, {{16.0, 413.7}, {358.0, 52.0}}
+                                  Button, 0x10f886f80, {{16.0, 413.7}, {358.0, 52.0}}, label: 'Add named reservation'
+                          Other, 0x10f8870c0, {{32.0, 412.7}, {326.0, 1.0}}
+                          Cell, 0x10f887200, {{16.0, 465.7}, {358.0, 52.0}}
+                            Other, 0x10f887340, {{16.0, 465.7}, {358.0, 52.0}}
+                              Other, 0x10f887480, {{16.0, 465.7}, {358.0, 52.0}}
+                            Other, 0x10f8875c0, {{16.0, 465.7}, {358.0, 52.0}}
+                              Other, 0x10f887700, {{16.0, 465.7}, {358.0, 52.0}}
+                                Other, 0x10f887840, {{16.0, 465.7}, {358.0, 52.0}}
+                                  TextField, 0x10f887980, {{32.0, 480.7}, {326.0, 22.0}}, placeholderValue: 'Whole package quantity'
+                          Other, 0x10f887ac0, {{32.0, 464.7}, {326.0, 1.0}}
+                          Cell, 0x10f887c00, {{16.0, 517.7}, {358.0, 52.0}}
+                            Other, 0x10f887d40, {{16.0, 517.7}, {358.0, 52.0}}
+                              Other, 0x10f887e80, {{16.0, 517.7}, {358.0, 52.0}}
+                            Other, 0x10f680000, {{16.0, 517.7}, {358.0, 52.0}}
+                              Other, 0x10f680140, {{16.0, 517.7}, {358.0, 52.0}}
+                                Other, 0x10f680280, {{16.0, 517.7}, {358.0, 52.0}}
+                                  TextField, 0x10f6803c0, {{32.0, 532.7}, {326.0, 22.0}}, placeholderValue: 'Usable yield numerator'
+                          Other, 0x10f680500, {{32.0, 516.7}, {326.0, 1.0}}
+                          Cell, 0x10f680640, {{16.0, 569.7}, {358.0, 52.0}}
+                            Other, 0x10f680780, {{16.0, 569.7}, {358.0, 52.0}}
+                              Other, 0x10f6808c0, {{16.0, 569.7}, {358.0, 52.0}}
+                            Other, 0x10f680a00, {{16.0, 569.7}, {358.0, 52.0}}
+                              Other, 0x10f680b40, {{16.0, 569.7}, {358.0, 52.0}}
+                                Other, 0x10f680c80, {{16.0, 569.7}, {358.0, 52.0}}
+                                  TextField, 0x10f680dc0, {{32.0, 584.7}, {326.0, 22.0}}, placeholderValue: 'Usable yield denominator'
+                          Other, 0x10f680f00, {{32.0, 568.7}, {326.0, 1.0}}
+                          Cell, 0x10f681040, {{16.0, 621.7}, {358.0, 94.3}}
+                            Other, 0x10f681180, {{16.0, 621.7}, {358.0, 94.3}}
+                              Other, 0x10f6812c0, {{16.0, 621.7}, {358.0, 94.3}}
+                            Other, 0x10f681400, {{16.0, 621.7}, {358.0, 94.3}}
+                              Other, 0x10f681540, {{16.0, 621.7}, {358.0, 94.3}}
+                                Other, 0x10f681680, {{16.0, 621.7}, {358.0, 94.3}}
+                                  StaticText, 0x10f6817c0, {{16.0, 621.7}, {358.0, 94.3}}, label: 'Use the same unit throughout. Enter 1 / 1 only when the whole pack is usable. Blank evidence remains unknown.'
+                          Other, 0x10f681900, {{32.0, 620.7}, {326.0, 1.0}}
+                          Cell, 0x10f681a40, {{16.0, 716.0}, {358.0, 74.0}}
+                            Other, 0x10f681b80, {{16.0, 716.0}, {358.0, 74.0}}
+                              Other, 0x10f681cc0, {{16.0, 716.0}, {358.0, 74.0}}
+                            Other, 0x10f681e00, {{16.0, 716.0}, {358.0, 74.0}}
+                              Other, 0x10f681f40, {{16.0, 716.0}, {358.0, 74.0}}
+                                Other, 0x10f682080, {{16.0, 716.0}, {358.0, 74.0}}
+                                  TextField, 0x10f6821c0, {{32.0, 731.0}, {326.0, 44.0}}, value: Template quantity;...
+                                    Other, 0x10f682300, {{32.0, 750.0}, {326.0, 22.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                      Other, 0x10f682440, {{35.0, 769.0}, {320.0, 3.0}}
+                          Other, 0x10f682580, {{32.0, 715.0}, {326.0, 1.0}}
+                          Cell, 0x10f6826c0, {{16.0, 790.0}, {358.0, 52.0}}
+                            Other, 0x10f682800, {{16.0, 790.0}, {358.0, 52.0}}
+                              Other, 0x10f682940, {{16.0, 790.0}, {358.0, 52.0}}
+                            Other, 0x10f682a80, {{16.0, 790.0}, {358.0, 52.0}}
+                              Other, 0x10f682bc0, {{16.0, 790.0}, {358.0, 52.0}}
+                                Other, 0x10f682d00, {{16.0, 790.0}, {358.0, 52.0}}
+                                  Button, 0x10f682e40, {{16.0, 790.0}, {358.0, 52.0}}, label: 'Remove ingredient'
+                          Other, 0x10f682f80, {{32.0, 789.0}, {326.0, 1.0}}
+                          Other, 0x10f6830c0, {{357.0, 208.3}, {30.0, 588.3}}, label: 'Vertical scroll bar, 4 pages', value: 47%
+                            Other, 0x10f683200, {{384.0, 410.0}, {3.0, 163.3}}
+                          Other, 0x10f683340, {{357.0, 208.3}, {30.0, 588.3}}, label: 'Vertical scroll bar, 4 pages', value: 47%
+                            Other, 0x10f683480, {{384.0, 410.0}, {3.0, 163.3}}
+                Toolbar, 0x10f6835c0, {{0.0, 144.3}, {390.0, 699.7}}, identifier: 'Toolbar', label: 'Toolbar'
+                  Other, 0x10f683700, {{0.0, 144.3}, {390.0, 699.7}}
+Path to element:
+ →Application, 0x105c6da40, pid: 17551, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x10f683840, pid: 17551, label: 'Room in the Cart'
+  }
+)

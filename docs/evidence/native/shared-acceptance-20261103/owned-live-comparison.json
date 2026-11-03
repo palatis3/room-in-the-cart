@@ -1,0 +1,71 @@
+{
+  "liveHEAD": "dbf9b41ecf1914df78a536825c01da2f90a220fc",
+  "ownedFiles": {
+    "ios/Features/Household/SharedMealIdeasView.swift": {
+      "liveSHA256": "001fa6043afe62d67da33a22aa99adbcda90788c73893a3b0be3601ebb7a0b76",
+      "frozenSHA256": "001fa6043afe62d67da33a22aa99adbcda90788c73893a3b0be3601ebb7a0b76",
+      "headSHA256": "7b806044125019656e0c22c4daeb07107f27c98c8d76914dc5ffeaf1a3844afe",
+      "equal": true,
+      "modifiedSinceHEAD": true,
+      "lastCommit": "dbf9b41ecf1914df78a536825c01da2f90a220fc Add selected photo recovery, restored navigation, contextual reminders and help"
+    },
+    "ios/Features/Household/SharedMealIdeaProposalView.swift": {
+      "liveSHA256": "de9c8dcc133aea46edf4d3c613dff443adff510f0f7bc407657b8984a7282881",
+      "frozenSHA256": "de9c8dcc133aea46edf4d3c613dff443adff510f0f7bc407657b8984a7282881",
+      "headSHA256": "efcd4238e20d9e4d1ec21c69e5a749e395d454d62bd7024d010904e78288d825",
+      "equal": true,
+      "modifiedSinceHEAD": true,
+      "lastCommit": "9f2ba93d1fb99e29d8d18d040c5be23d8aab81b9 Checkpoint household planning, dated carryover and native review flows"
+    },
+    "ios/Tests/SharedMealIdeaTests.swift": {
+      "liveSHA256": "a20d2890f80011ca0c02a20e698ed17a60af39fd34818fa798e3886b81519266",
+      "frozenSHA256": "a20d2890f80011ca0c02a20e698ed17a60af39fd34818fa798e3886b81519266",
+      "headSHA256": "a20d2890f80011ca0c02a20e698ed17a60af39fd34818fa798e3886b81519266",
+      "equal": true,
+      "modifiedSinceHEAD": false,
+      "lastCommit": "dbf9b41ecf1914df78a536825c01da2f90a220fc Add selected photo recovery, restored navigation, contextual reminders and help"
+    },
+    "ios/UITestSupport/SharedMealChangeUIFixture.swift": {
+      "liveSHA256": "26c77195a3f61faf112d6ed1e77c1276f3e3aa3aff637bc4135d3214db156a4c",
+      "frozenSHA256": "26c77195a3f61faf112d6ed1e77c1276f3e3aa3aff637bc4135d3214db156a4c",
+      "headSHA256": "26c77195a3f61faf112d6ed1e77c1276f3e3aa3aff637bc4135d3214db156a4c",
+      "equal": true,
+      "modifiedSinceHEAD": false,
+      "lastCommit": "dbf9b41ecf1914df78a536825c01da2f90a220fc Add selected photo recovery, restored navigation, contextual reminders and help"
+    },
+    "ios/UITestSupport/SharedMealIdeaUIFixture.swift": {
+      "liveSHA256": "b311a24424246b4c450c7c3bbcfd96951cd03f92d7a19db0a94a2d31c4a6a555",
+      "frozenSHA256": "b311a24424246b4c450c7c3bbcfd96951cd03f92d7a19db0a94a2d31c4a6a555",
+      "headSHA256": "b311a24424246b4c450c7c3bbcfd96951cd03f92d7a19db0a94a2d31c4a6a555",
+      "equal": true,
+      "modifiedSinceHEAD": false,
+      "lastCommit": "dbf9b41ecf1914df78a536825c01da2f90a220fc Add selected photo recovery, restored navigation, contextual reminders and help"
+    },
+    "ios/UITests/SharedMealChangeUITests.swift": {
+      "liveSHA256": "07024f5fb55ebe49e07ea88f95f8229be5f51b6119d531009581ff97d27dad78",
+      "frozenSHA256": "07024f5fb55ebe49e07ea88f95f8229be5f51b6119d531009581ff97d27dad78",
+      "headSHA256": "07024f5fb55ebe49e07ea88f95f8229be5f51b6119d531009581ff97d27dad78",
+      "equal": true,
+      "modifiedSinceHEAD": false,
+      "lastCommit": "dbf9b41ecf1914df78a536825c01da2f90a220fc Add selected photo recovery, restored navigation, contextual reminders and help"
+    },
+    "ios/UITests/DinnerAwayCarryoverUITests.swift": {
+      "liveSHA256": "5f137129937ee234cb4eda870fd6d9216905f9a67143fd7073ccf02c8f1bfca9",
+      "frozenSHA256": "5f137129937ee234cb4eda870fd6d9216905f9a67143fd7073ccf02c8f1bfca9",
+      "headSHA256": "5f137129937ee234cb4eda870fd6d9216905f9a67143fd7073ccf02c8f1bfca9",
+      "equal": true,
+      "modifiedSinceHEAD": false,
+      "lastCommit": "dbf9b41ecf1914df78a536825c01da2f90a220fc Add selected photo recovery, restored navigation, contextual reminders and help"
+    },
+    "ios/UITests/SharedMealIdeaUITests.swift": {
+      "liveSHA256": "b667e2cf9b9d88d25c01e1d5df6d514a0429c51159ce47cb14632aa8889b32b4",
+      "frozenSHA256": "b667e2cf9b9d88d25c01e1d5df6d514a0429c51159ce47cb14632aa8889b32b4",
+      "headSHA256": "0851dfd6b6afba690e7cc6bb7cf736b4c82e27bf1ba72642c46cb881f2740e1a",
+      "equal": true,
+      "modifiedSinceHEAD": true,
+      "lastCommit": "dbf9b41ecf1914df78a536825c01da2f90a220fc Add selected photo recovery, restored navigation, contextual reminders and help"
+    }
+  },
+  "dispatcherS26Preserved": true,
+  "dispatcherS27Preserved": true
+}

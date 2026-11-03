@@ -1,0 +1,125 @@
+{
+  "date": "2026-11-03",
+  "requirement": "Foundation 2.1 03-screens.md:5: independent native tab navigation and stable scoped restoration with access recheck",
+  "status": "implemented-and-locally-validated",
+  "implemented": [
+    "Versioned identity-only navigation checkpoint for selected Shop/Dinners/Records tab and independent explicit destination paths.",
+    "Restores private shopping list by installation actor, ledger workspace and selected shop; saved comparison by installation actor, comparison workspace and record ID.",
+    "Household inbox and shared-view management locator waits for explicit fresh verified enrollment matching subject, household, member and shop; present permissions are checked before rendering.",
+    "Household revocation/sign-out/scope change invalidates stored destination synchronously; contributor entry clears adult routes. Background lock retains only a locator pending fresh access.",
+    "Record deletion, retired ledger workspace, changed local actor or selected shop prevents restoration. Incoming device link clears prior navigation even before local stores open.",
+    "No form drafts, consent, grants, roles, capabilities, paid state, private financial projections or SwiftUI navigation internals are serialized."
+  ],
+  "regression_fix": "AppModel separately publishes hasLoadedRecords after successful source listing, preventing a ready-but-empty startup race from deleting a legitimate saved-record route.",
+  "native_model_validation": {
+    "result": "passed",
+    "navigation_tests": 10,
+    "full_suite_tests": 437,
+    "failures": 0,
+    "skipped": 0,
+    "result_bundle": ".build/ResumedFixedNative.xcresult",
+    "log": ".build/resumed-fixed-native-tests.log",
+    "coverage": [
+      "source-backed process relaunch",
+      "record erasure and ledger retirement",
+      "actor/selected shop mismatch",
+      "first draft stable shop identity",
+      "old/malformed state",
+      "incoming link precedence",
+      "fresh household enrollment",
+      "revocation without later resurrection",
+      "lock/resume without composer consent",
+      "different fresh subject/household/member/shop/role/capabilities"
+    ]
+  },
+  "normal_app_ui_validation": {
+    "device": {
+      "name": "Room in the Cart iOS 17 Small",
+      "model": "iPhone SE",
+      "os": "iOS 17.0 (21A328)",
+      "id": "65B8A2FE-51FE-44A5-A9C7-F2524E33179B"
+    },
+    "entry": "Ordinary shipping SwiftUI root with manually typed fictional groceries; --ui-testing only isolates local persistence.",
+    "tests": [
+      {
+        "name": "NavigationRestorationUITests/testKillRelaunchRestoresRecordsDetailAndIndependentShoppingList",
+        "result": "passed",
+        "seconds": 72.518,
+        "result_bundle": ".build/E08NavigationFocused.xcresult",
+        "log": ".build/e08-navigation-focused-ui.log",
+        "assertions": [
+          "Switching tabs retains the live shopping-list stack.",
+          "After process termination/relaunch the selected Records tab reopens the same saved comparison without choosing its row.",
+          "A second process termination/relaunch restores the selected shopping list and the independent Records comparison stack."
+        ]
+      },
+      {
+        "name": "NavigationRestorationUITests/testKillRelaunchRestoresSelectedDinnersTabWithoutRestoringUnsavedComparison",
+        "result": "passed",
+        "seconds": 22.3,
+        "result_bundle": ".build/E08NavigationReviewed.xcresult",
+        "log": ".build/e08-navigation-reviewed-ui.log",
+        "assertions": [
+          "Selected Dinners tab survives process death.",
+          "An unsaved comparison editor is discarded on restart."
+        ]
+      }
+    ],
+    "mixed_run_scope": "These UI result bundles also contain unrelated contextual reminder tests which failed in those runs; the two navigation cases passed as recorded individually. The initial navigation attempt exposed only an iOS 17 native Back-button selector difference, corrected in the final test source.",
+    "screenshots": [
+      "docs/evidence/native/navigation-restoration/records-before-termination.png",
+      "docs/evidence/native/navigation-restoration/records-after-relaunch.png",
+      "docs/evidence/native/navigation-restoration/independent-stacks-after-second-relaunch.png",
+      "docs/evidence/native/navigation-restoration/dinners-tab-after-relaunch.png"
+    ]
+  },
+  "verification_scope": [
+    "Household revocation and identity matrix use actual native HouseholdModel with intercepted .invalid service transport, not production accounts.",
+    "No household session, guardian consent, budget authority, paid seat or exported record is restored from the navigation file.",
+    "Transient detail routes and sheets resume at the nearest supported explicit source destination; stored UI state contains no unsaved edits."
+  ],
+  "test_helper_updates": "Existing FreeJourney/RoomInTheCart/ContextualNavigation tests recognize intentional restored destinations, and use native tab/back controls when a test explicitly requests a root or source list. Original persistence and record identity assertions remain.",
+  "integrated_free_journey_validation": {
+    "test": "FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop",
+    "result": "Passed",
+    "tests": 1,
+    "failures": 0,
+    "skipped": 0,
+    "seconds": 594.401,
+    "device": {
+      "architecture": "arm64",
+      "deviceId": "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+      "deviceName": "iPhone 17e",
+      "modelName": "iPhone 17e",
+      "osBuildNumber": "24A434",
+      "osVersion": "27.0",
+      "platform": "iOS Simulator"
+    },
+    "result_bundle": ".build/FreeJourneyRestorationFixed.xcresult",
+    "log": ".build/free-journey-restoration-fixed-ui.log",
+    "normal_shipping_root": true,
+    "fixture_macros": false,
+    "seeded_data": false,
+    "typed_entry": "--ui-testing and --reset-test-workspace isolate the local test databases; groceries, dinner, lunch reservation, packs, order, fill, stock, note, finances and feedback are entered through shipping controls.",
+    "assertions_preserved": [
+      "Dinner and protected Lunch survive restart.",
+      "Saved sufficient whole packs reach reviewed checkout.",
+      "Frozen dated basket stays placement-unconfirmed after restart.",
+      "Partial fill and separate confirmed freezer stock protect Lunch.",
+      "Complete cook note retains exact instructions and exclusions after restart.",
+      "Posted financial evidence remains separate from food outcome.",
+      "Local optional feedback can be saved, removed and disabled.",
+      "Closing old shop and creating next shop clears store/date and permits the accepted dinner to be chosen for the new shop.",
+      "Final restart retains next-shop dinner and Records history retains the original dated repair without inferring meal outcome."
+    ],
+    "observed_test_only_fix": "The optional feedback switch is now below the visible fold in Settings. The test reveals it before its original off-by-default assertion. No domain assertions or production code were changed.",
+    "app_binary_unchanged": true,
+    "source_binary_manifest": "docs/evidence/native/navigation-restoration/full-free-journey-manifest.json",
+    "source_manifest": "docs/evidence/native/navigation-restoration/full-free-journey-source-files.json",
+    "screenshots": [
+      "docs/evidence/native/navigation-restoration/full-free-journey-next-shop-dinner.png",
+      "docs/evidence/native/navigation-restoration/full-free-journey-saved-repair-history.png"
+    ],
+    "device_released": "iPhone 17e is Shutdown; no test process remains."
+  }
+}

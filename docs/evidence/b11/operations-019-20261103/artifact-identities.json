@@ -1,0 +1,27 @@
+[
+  {
+    "path": "/tmp/ritc-b11-operations019-20261103/evidence/frozen-tracked-source.tar",
+    "bytes": 942080,
+    "sha256": "c71db5bfc32ac2d275236a9d3aa42f37e7a2d174d5c379c37505239e3c288542"
+  },
+  {
+    "path": "/tmp/ritc-b11-operations019-20261103/evidence/synthetic019-post-erasure.dump",
+    "bytes": 817322,
+    "sha256": "73c6b493ba1aa6c8525fa90c712ed40e7d3e19d45ccc53c7db6b024a5c287e4c"
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/.tools/node-v22.14.0-darwin-arm64/bin/node",
+    "bytes": 108619024,
+    "sha256": "e2d4915d03eda6a2f00a09920e7eeb7a04ad123f9aaad61b1481179fe1bf50e0"
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/.tools/postgres/bin/pg_dump",
+    "bytes": 456792,
+    "sha256": "b396939f213685458281ee103aea49d057f9aa4b950ff885fb4bb3666183be4b"
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/.tools/postgres/bin/pg_restore",
+    "bytes": 250472,
+    "sha256": "f470d11ce64d5fea7dc1f4affd34454026935806361430be35275bbd5658bed4"
+  }
+]

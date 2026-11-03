@@ -11,6 +11,25 @@ public struct ArchiveMediaSourceIdentity: Codable, Hashable, Sendable {
     public init(origin: String, mediaID: String) { self.origin = origin; self.mediaID = mediaID }
 }
 
+/// Archived provenance only. A declaration never authorizes reading a native
+/// namespace; the app mints it from an actually opened independent local store.
+public struct ArchiveCaptureNamespace: Codable, Equatable, Sendable {
+    public enum StoreKind: String, Codable, Sendable { case ledger, pickup }
+    public let formatMajor: Int
+    public let archiveOrigin: String
+    public let storeKind: StoreKind
+    public let physicalWorkspaceID: UUID
+    public init(archiveOrigin: String, storeKind: StoreKind, physicalWorkspaceID: UUID) {
+        formatMajor = 1; self.archiveOrigin = archiveOrigin; self.storeKind = storeKind; self.physicalWorkspaceID = physicalWorkspaceID
+    }
+    public func validate(origin: String, recordKind: ArchiveRecordKind, mediaKind: ArchiveMediaKind) throws {
+        guard formatMajor == 1 else { throw ArchiveError.unsupportedVersion }
+        guard archiveOrigin == origin, ArchiveCodec.identifier(origin),
+              (storeKind == .ledger && recordKind == .ledger && mediaKind != .receiptEvidence) ||
+              (storeKind == .pickup && recordKind == .pickup && mediaKind == .receiptEvidence) else { throw ArchiveError.invalidIdentity }
+    }
+}
+
 /// The app must also decode/re-encode the versioned evidence allowlist and validate
 /// its reduced JPEG before review and apply. No paths, URLs or remote fetches occur.
 public struct ArchiveMediaAttachment: Codable, Equatable, Identifiable, Sendable {
@@ -18,8 +37,10 @@ public struct ArchiveMediaAttachment: Codable, Equatable, Identifiable, Sendable
     public let kind: ArchiveMediaKind
     public let contentType: ArchiveMediaContentType
     public let data: Data
-    public init(id: String, kind: ArchiveMediaKind, contentType: ArchiveMediaContentType = .captureEvidenceJSON, data: Data) {
+    public let captureNamespace: ArchiveCaptureNamespace?
+    public init(id: String, kind: ArchiveMediaKind, contentType: ArchiveMediaContentType = .captureEvidenceJSON, data: Data, captureNamespace: ArchiveCaptureNamespace? = nil) {
         self.id = id; self.kind = kind; self.contentType = contentType; self.data = data
+        self.captureNamespace = captureNamespace
     }
 }
 
@@ -33,10 +54,12 @@ public struct ArchiveMediaManifest: Codable, Equatable, Sendable {
         public let contentType: ArchiveMediaContentType
         public let byteCount: Int
         public let digest: String
+        public let captureNamespace: ArchiveCaptureNamespace?
     }
     public let formatMajor: Int
     public let entries: [Entry]
     public var totalBytes: Int { entries.reduce(0) { $0 + $1.byteCount } }
+    var envelopeFormatMinor: Int { entries.contains { $0.captureNamespace != nil } ? 2 : 1 }
 
     static func make(records: [ArchiveRecord]) throws -> Self? {
         var entries: [Entry] = [], total = 0
@@ -49,12 +72,13 @@ public struct ArchiveMediaManifest: Codable, Equatable, Sendable {
             for attachment in media {
                 guard ArchiveCodec.identifier(attachment.id), ids.insert(attachment.id).inserted else { throw ArchiveError.invalidIdentity }
                 guard !attachment.data.isEmpty else { throw ArchiveError.malformed }
+                try attachment.captureNamespace?.validate(origin: record.origin, recordKind: record.kind, mediaKind: attachment.kind)
                 guard attachment.data.count <= ArchiveCodec.maximumMediaBytes,
                       attachment.data.count <= ArchiveCodec.maximumTotalMediaBytes - total,
                       entries.count < ArchiveCodec.maximumMediaAttachments else { throw ArchiveError.tooLarge }
                 total += attachment.data.count
                 entries.append(Entry(origin: record.origin, recordID: record.id, revision: record.revision, mediaID: attachment.id,
-                    kind: attachment.kind, contentType: attachment.contentType, byteCount: attachment.data.count, digest: ArchiveCodec.digest(attachment.data)))
+                    kind: attachment.kind, contentType: attachment.contentType, byteCount: attachment.data.count, digest: ArchiveCodec.digest(attachment.data), captureNamespace: attachment.captureNamespace))
             }
         }
         return entries.isEmpty ? nil : Self(formatMajor: 1, entries: entries.sorted {

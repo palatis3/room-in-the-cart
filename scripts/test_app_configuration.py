@@ -4,7 +4,7 @@ import tempfile
 import unittest
 
 from app_configuration import (PUBLIC_SETTINGS, build_settings, compiled_metadata,
-                               load_configuration, require_release_metadata, valid_page_url)
+                               load_configuration, require_release_metadata, valid_page_url, valid_support_email, valid_operator_name)
 
 
 class AppConfigurationTests(unittest.TestCase):
@@ -42,12 +42,36 @@ class AppConfigurationTests(unittest.TestCase):
             with self.subTest(value=value):
                 self.assertFalse(valid_page_url(value))
 
+    def test_user_supplied_public_contact_reaches_all_environments_without_staging_fallback(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "config").mkdir()
+            (root / "config/public-contact.json").write_text(json.dumps({"supportEmail": "hello@roominthecart.com", "operatorName": "Venture House Group LLC", "secret": "not-exported"}))
+            for name in ("Debug", "Staging", "Release"):
+                config = load_configuration(root, name)
+                self.assertEqual(config, {"supportEmail": "hello@roominthecart.com", "operatorName": "Venture House Group LLC"})
+                self.assertEqual(compiled_metadata(config, name)["SupportEmail"], "hello@roominthecart.com")
+                self.assertEqual(compiled_metadata(config, name)["OperatorName"], "Venture House Group LLC")
+                self.assertEqual(compiled_metadata(config, name)["HouseholdServiceURL"], "")
+
+    def test_support_email_rejects_headers_queries_and_encoded_newlines(self):
+        self.assertTrue(valid_support_email("hello@roominthecart.com"))
+        for value in ("hello@roominthecart.com\nBcc:other@roominthecart.com", "hello@roominthecart.com?subject=hello", "hello%0d%0a@roominthecart.com", "mailto:hello@roominthecart.com", "hello@roominthecart.com#body", " hello@roominthecart.com", "hello..other@roominthecart.com", "hello@-roominthecart.com", "hello@roominthecart..com", "hello@roominthecart.com\r"):
+            with self.subTest(value=value):
+                self.assertFalse(valid_support_email(value))
+
+    def test_operator_name_preserves_supplied_literal_and_rejects_controls(self):
+        self.assertTrue(valid_operator_name("Venture House Group LLC"))
+        for value in (None, "", " Venture House Group LLC", "Venture House Group LLC ", "Venture\nHouse Group LLC", "Venture\tHouse Group LLC", "Venture\x00House Group LLC", "Venture\u202eHouse Group LLC", "Venture\u2028House Group LLC", "$(OPERATOR_NAME)", "a" * 301):
+            with self.subTest(value=value):
+                self.assertFalse(valid_operator_name(value))
+
     def test_wrong_environment_and_nonliteral_values_rejected(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
             (root / "config").mkdir()
             path = root / "config/release.json"
-            for config in ({"environment": "staging"}, {"supportURL": "https://support.invalid"}, {"privacyPolicyURL": "$(PRIVACY_URL)"}, {"emailOTPEnabled": "false"}, {"householdSubscriptionProductID": "product annual"}, {"termsOfUseURL": 42}):
+            for config in ({"environment": "staging"}, {"supportURL": "https://support.invalid"}, {"privacyPolicyURL": "$(PRIVACY_URL)"}, {"emailOTPEnabled": "false"}, {"householdSubscriptionProductID": "product annual"}, {"termsOfUseURL": 42}, {"operatorName": "Venture\nHouse Group LLC"}):
                 with self.subTest(config=config):
                     path.write_text(json.dumps(config))
                     with self.assertRaises(ValueError):

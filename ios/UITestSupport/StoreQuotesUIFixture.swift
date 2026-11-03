@@ -184,7 +184,7 @@ struct S27StoreQuotesFixtureRoot: View {
     @State private var shopperMode = false
     var body: some View {
         VStack(spacing: 2) {
-            HStack { Text("Saves: \(state.saves)").accessibilityIdentifier("fixture.s27.saves"); Text("Proposals: \(state.proposals)").accessibilityIdentifier("fixture.s27.proposals"); Text("Adoptions: \(state.adoptions)").accessibilityIdentifier("fixture.s27.adoptions"); Text("POSTs: \(state.posts)").accessibilityIdentifier("fixture.s27.posts") }.font(.caption)
+            HStack { Text("Saves: \(state.saves)").accessibilityIdentifier("fixture.s27.saves"); Text("Proposals: \(state.proposals)").accessibilityIdentifier("fixture.s27.proposals"); Text("Adoptions: \(state.adoptions)").accessibilityIdentifier("fixture.s27.adoptions"); Text("POSTs: \(state.posts)").accessibilityIdentifier("fixture.s27.posts") }.font(.caption).dynamicTypeSize(.large)
             HStack {
                 Button(shopperMode ? "Use budget adult":"Use shopper") { shopperMode.toggle() }.accessibilityIdentifier("fixture.s27.switch")
                 Menu("Fixture controls") {
@@ -193,7 +193,7 @@ struct S27StoreQuotesFixtureRoot: View {
                     Button("Freeze shared shop",action:state.freeze)
                     Button("Revoke adult budget access",action:state.revoke)
                 }.accessibilityIdentifier("fixture.s27.controls")
-            }
+            }.dynamicTypeSize(.large)
             if let adult = state.adult, let shopper = state.shopper {
                 NavigationStack { HouseholdSettingsView(model:shopperMode ? shopper:adult) }.id(shopperMode)
             } else if let failure = state.failure { Text(failure).accessibilityIdentifier("fixture.failure") }

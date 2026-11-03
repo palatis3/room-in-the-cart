@@ -1,0 +1,63 @@
+{
+  "recordedAt": "2026-11-03T19:32:18.100294+00:00",
+  "scope": "Correction Settings source accessibility follow-up: identify destructive targets and retain/focus the post-action result. No simulator or VoiceOver runtime acceptance.",
+  "changes": [
+    "Forget buttons expose original and replacement in localized accessible labels.",
+    "Persistent visible result uses the post-operation reloaded snapshot and failed flag; forget success requires target absence, opt-out requires disabled/empty state.",
+    "Stable result anchor is scrolled into view and targeted with AccessibilityFocusState after layout yields. Each await rechecks cancellation, current private context and authorization. Private status clears on scope/access change or screen departure.",
+    "Existing scene/workspace/identity/pending-erasure guards and correction model/store methods are preserved."
+  ],
+  "verification": [
+    {
+      "kind": "macOS-host-XCTest",
+      "passed": 14,
+      "failed": 0,
+      "suites": {
+        "CorrectionSettingsOutcomeTests": 3,
+        "CaptureCorrectionTests": 7,
+        "HelpConfigurationTests": 4
+      },
+      "scope": "Actual presentation helper, existing correction store/model and contact configuration source in isolated host package; only three presentation tests are new."
+    },
+    {
+      "kind": "iOS17-simulator-SDK-typecheck",
+      "result": "pass",
+      "scope": "Actual CorrectionSettingsView/Outcome, correction store and existing private identity source with composition stubs. No simulator boot."
+    },
+    {
+      "kind": "integrated-localization-structure",
+      "result": "pass",
+      "catalogs": 15,
+      "entries": 3449,
+      "literalKeys": 3307,
+      "humanReview": false
+    },
+    {
+      "kind": "xcstringstool-compile",
+      "catalog": "Capture",
+      "result": "pass"
+    },
+    {
+      "kind": "git-diff-whitespace",
+      "result": "pass"
+    },
+    {
+      "kind": "focused-host-XCTest-final-assertion",
+      "suite": "CorrectionSettingsOutcomeTests",
+      "passed": 3,
+      "failed": 0,
+      "scope": "Explicit last-saved-entry forget outcome added and checked; this does not establish runtime VoiceOver focus."
+    }
+  ],
+  "remainingGates": [
+    "Integrated fixture and physical VoiceOver execution of post-delete and opt-out focus; no runtime claim is made by SDK/source tests",
+    "Human English/US-Spanish accessibility-copy review"
+  ],
+  "sourceSHA256": {
+    "ios/Features/Capture/CorrectionSettingsView.swift": "5ecf08184c8bcb694a29bfc2b18682202131ec01981afe98a57cfccb8a17259a",
+    "ios/Features/Capture/CorrectionSettingsOutcome.swift": "57e7c1f6c50dd5fcab26f4c4ac006bf9dd3e83a51a04d92e2fa3b7c05f98b9c5",
+    "ios/Tests/CorrectionSettingsOutcomeTests.swift": "0f301c0c60ebf62eec29514813c52492acbda1d455e6a870dbd41b49fbee9555",
+    "ios/Features/Capture/Capture.xcstrings": "89ff65f55bf60f326d12a7149a7ee3850ad6e96f8ec566f30a24246ac722fcf6",
+    "ios/Features/Capture/CaptureCorrections.swift": "a039029357de73202188fd5c4df67b513d87d412df2d48a498b4e16fb79baf59"
+  }
+}

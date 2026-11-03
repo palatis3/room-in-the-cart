@@ -1,0 +1,79 @@
+{
+  "recordedAt": "2026-11-03T20:09:11.869263+00:00",
+  "scope": "Final source completeness audit against APP-BASELINE and Foundation2.1; excludes active archive_media/Lumpy/root integration work and stale tracker rows",
+  "fixedDuringAudit": {
+    "requirement": "D15/F05/S19/S20 actual runtime composition",
+    "summary": "Production runtime omitted PrivacyService, making household exit and deletion responsibility preview unavailable despite implementation; fixed with default nongateway service",
+    "evidence": "runtime-privacy-composition-local.json"
+  },
+  "remainingProviderDependentImplementation": [
+    {
+      "priority": 1,
+      "requirements": [
+        "F05",
+        "N01",
+        "S21"
+      ],
+      "summary": "Real guardian-managed child enrollment is still absent, beyond missing provider credentials",
+      "code": [
+        "service/src/runtime.ts:55 hardcodes child networkfalse",
+        "service/src/http.ts:188 unconditionally rejects guardian enrollment",
+        "service/src/lifecycle.ts:41 unconditionally rejects child invites; redeem rejects known child identity"
+      ],
+      "next": "Assign an integration owner after approving the verification method; implement provider-backed guardian/notice proof, secure child enrollment/invite redemption and revocation rather than enabling a Boolean flag",
+      "acceptance": "New guardian verification succeeds only with authenticated reviewed provider proof; valid child own-request journey, withdrawn consent/replay denied, no budget/private payload",
+      "owner": "/root: provider research/design decision; adapter/enrollment implementation still required after approval"
+    },
+    {
+      "priority": 2,
+      "requirements": [
+        "F08",
+        "D15",
+        "B11"
+      ],
+      "summary": "Deployed scheduled maintenance is not wired",
+      "code": [
+        "AuthMaintenance and PrivacyMaintenance are exported workers used only from test harnesses",
+        "service/src/runtime.ts, service/src/main.ts, api/index.js and vercel.json contain no authenticated scheduled worker adapter/runtime/schedule"
+      ],
+      "next": "Deployment owner supplies separate ritc_worker credentials, authenticated runner/schedule and content-free monitoring; configure deletion worker only with approved provider/policy",
+      "acceptance": "Hosted timed retry/expiry is observed for failed logout and auth ciphertext; when deletion is enabled, accepted erasure reaches provider completion with bounded retries and backups handled",
+      "owner": "/root/operations_runtime: assigned after this finding",
+      "status": "active implementation; do not treat test-only exported workers as deployed until its evidence exists"
+    }
+  ],
+  "evidenceOnlyNotNewImplementation": [
+    {
+      "requirements": [
+        "E01",
+        "N06"
+      ],
+      "summary": "Normal native library-import duplicate/skipped review and whole-batch undo/corrupt/cancel visible journey lacks dedicated UI execution evidence located in current UITests; model/store implementation exists."
+    },
+    {
+      "requirements": [
+        "N04",
+        "F06",
+        "E09"
+      ],
+      "summary": "New correction-settings post-action focus and grant-only Free saved-observation discovery have source/host/transport evidence; integrated real-screen and physical accessibility acceptance still needed."
+    }
+  ],
+  "activeWorkNotRelistedAsMissing": [
+    "F07 recovered-source attachment capture/reexport/cleanup: archive_media",
+    "S17/S25/S26 screen acceptance, migrations001\u2013019 operations restore and Android browser: Lumpy",
+    "Final current integration/native Release/hosted preparation: root",
+    "F09/UI2, normal Free journey, S27/UI5 and contextual reminders/UI2 already passed with scoped evidence",
+    "Scheduled maintenance runtime wiring: operations_runtime",
+    "Guardian method research and approval decision: root; enrollment adapter/code remains pending"
+  ],
+  "externalReleaseGates": [
+    "Apple paid membership/product/signing and real sandbox lifecycle",
+    "SMTP/email-code provider delivery",
+    "Actual guardian-method approval before provider integration",
+    "Operator-approved public policies/terms/retention and contact operation",
+    "Human US-Spanish review and physical device/assistive/camera/audio/widget/share/print/notification acceptance",
+    "Owner authorization for distribution and real review household configuration"
+  ],
+  "otherUnownedProductAlgorithmGapFound": false
+}

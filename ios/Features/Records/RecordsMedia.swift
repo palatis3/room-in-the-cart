@@ -33,13 +33,14 @@ import RecordArchive
         guard media.count <= ArchiveCodec.maximumMediaAttachments, record.nativePayload != nil else { throw ArchiveError.unsupportedRecord }
         for attachment in media {
             let source = try decode(attachment)
-            guard try belongs(source, to: record) else { throw ArchiveError.invalidIdentity }
+            guard try belongs(source, to: record, captureNamespace: attachment.captureNamespace) else { throw ArchiveError.invalidIdentity }
         }
     }
-    static func attaching(_ sources: [SourceMediaRecord], to original: ArchiveRecord) throws -> ArchiveRecord {
+    static func attaching(_ sources: [SourceMediaRecord], to original: ArchiveRecord, liveScope: RecordsRecoveryCapture.Scope? = nil) throws -> ArchiveRecord {
         var record = original, attachments = record.media ?? []
-        for source in sources where try belongs(source, to: record) {
-            let media = try attachment(source)
+        for source in sources {
+            let media = try liveScope?.attachment(source) ?? attachment(source)
+            guard try belongs(source, to: record, captureNamespace: media.captureNamespace) else { continue }
             if let existing = attachments.first(where: { $0.id == media.id }) {
                 guard existing == media else { throw ArchiveError.conflict }
             } else { attachments.append(media) }
@@ -47,12 +48,16 @@ import RecordArchive
         record.media = attachments.isEmpty ? nil : attachments.sorted { $0.id < $1.id }
         return record
     }
-    static func belongs(_ source: SourceMediaRecord, to record: ArchiveRecord) throws -> Bool {
+    static func belongs(_ source: SourceMediaRecord, to record: ArchiveRecord, captureNamespace: ArchiveCaptureNamespace? = nil) throws -> Bool {
         let target = source.target
         guard let bytes = record.nativePayload else { return false }
+        if let captureNamespace {
+            try captureNamespace.validate(origin: record.origin, recordKind: record.kind, mediaKind: kind(target.kind))
+            guard captureNamespace.physicalWorkspaceID == target.workspaceID else { return false }
+        }
         switch record.kind {
         case .ledger:
-            guard record.origin == "ledger/" + target.workspaceID.uuidString else { return false }
+            guard captureNamespace != nil || record.origin == "ledger/" + target.workspaceID.uuidString else { return false }
             let workspace = try RecordsNativeCodec.ledger(bytes)
             if target.kind == .packageReference {
                 return workspace.shops.contains { shop in
@@ -69,7 +74,7 @@ import RecordArchive
                 workspace.dinnerPlanning.acceptedDinners.contains { matches($0.template.id, $0.template.sourceEvidence) } ||
                 workspace.shops.contains { shop in shop.mealOccurrences.contains { matches($0.templateID, $0.sourceEvidence) } }
         case .pickup:
-            guard record.origin == "pickups/" + target.workspaceID.uuidString,
+            guard (captureNamespace != nil || record.origin == "pickups/" + target.workspaceID.uuidString),
                   target.kind == .receiptEvidence, record.id == target.containerID.uuidString,
                   target.objectID == target.containerID else { return false }
             return try RecordsNativeCodec.pickup(bytes).id == target.containerID

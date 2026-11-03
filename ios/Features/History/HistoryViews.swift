@@ -91,7 +91,7 @@ struct HistoryEntryView: View {
     @ViewBuilder private var priceRecords: some View {
         Section(HistoryCopy.text("Manual price evidence · Free")) {
             Button(HistoryCopy.text("Record an observed price")) { model.beginObservation(); editingObservation = true }
-                .frame(minHeight: 44).disabled(model.busy).accessibilityIdentifier("history.newObservation").disabled(!model.canEdit)
+                .frame(minHeight: 44).disabled(model.busy).accessibilityIdentifier("history.newObservation").disabled(!model.canBeginObservation)
             Text(HistoryCopy.text("Keep the pack, store branch, channel and fulfillment mode separate. Nothing is matched or converted automatically."))
                 .font(.footnote)
             TextField(HistoryCopy.text("Saved observation reference"), text: $observationReference)
@@ -208,7 +208,7 @@ struct HistoryEntryView: View {
         }.disabled(model.busy)
         Section {
             Button(HistoryCopy.text("Review this observation")) { model.reviewObservation() }
-                .disabled(model.busy).frame(minHeight: 44).accessibilityIdentifier("history.reviewObservation").disabled(!model.canEdit)
+                .disabled(model.busy).frame(minHeight: 44).accessibilityIdentifier("history.reviewObservation").disabled(!model.canReviewObservation)
             Button(HistoryCopy.text("Cancel editing"), role: .cancel) { model.cancelReview(); editingObservation = false }
                 .disabled(model.busy).frame(minHeight: 44)
         }

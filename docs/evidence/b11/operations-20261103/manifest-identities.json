@@ -1,0 +1,14 @@
+{
+  "source": {
+    "files": 89,
+    "manifestSHA256": "508253a33afba756953b2ce9880a25c8f1adc983e1ae17c0e01c605105d1dc85"
+  },
+  "dependencies": {
+    "files": 2368,
+    "manifestSHA256": "dce0824820684ddcb988e7e259982f2b1ab54b35288824dd01d8939645c08b70"
+  },
+  "compiled": {
+    "files": 54,
+    "manifestSHA256": "06bdaa95103ac063bc5ab700d7c7aaea7dacf035b2b4110bc0ca101f27fb2194"
+  }
+}

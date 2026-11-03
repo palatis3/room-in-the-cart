@@ -42,7 +42,10 @@ private struct SharedStoreQuotesContent: View {
     @State private var acknowledged = false
     @State private var clearing = false
     @State private var entryNotice: String?
+    @AccessibilityFocusState private var reviewFocused: Bool
+    @AccessibilityFocusState private var resultFocused: Bool
     var body: some View {
+        ScrollViewReader { proxy in
         Form {
             if let page = model.page {
                 Section {
@@ -71,14 +74,16 @@ private struct SharedStoreQuotesContent: View {
                     }
                 }
                 if let review = model.review {
-                    Section(StoreQuoteCopy.text("Review exact action")) {
+                    Section {
                         reviewFacts(review, page: page)
                         Toggle(StoreQuoteCopy.text("I reviewed these exact quotes, conditions, and shared commitments"), isOn: $acknowledged)
                             .accessibilityIdentifier("sharedQuotes.acknowledged")
                         Button(actionLabel(review.action)) { Task { await model.sendReviewed(); entering = false; acknowledged = false } }
                             .buttonStyle(PrimaryAction()).disabled(!acknowledged).accessibilityIdentifier("sharedQuotes.confirm")
                         Button(dinnerText("Cancel")) { model.cancelReview(); acknowledged = false }
-                    }
+                    } header: {
+                        Text(StoreQuoteCopy.text("Review exact action")).accessibilityFocused($reviewFocused)
+                    }.id("store-quote-review")
                 }
                 Section(StoreQuoteCopy.text("Saved comparisons and shopper proposals")) {
                     if model.pairs.isEmpty { Text(StoreQuoteCopy.text("No comparisons are available in your current scope.")) }
@@ -114,6 +119,7 @@ private struct SharedStoreQuotesContent: View {
                                 Button(adult.enabled ? StoreQuoteCopy.text("Review revoking access") : StoreQuoteCopy.text("Review granting access")) {
                                     Task { acknowledged = false; await model.prepareGrant(adult, enabled: !adult.enabled) }
                                 }.accessibilityIdentifier("sharedQuotes.grant." + adult.id.uuidString.lowercased())
+                                    .accessibilityLabel(String(format: StoreQuoteCopy.text(adult.enabled ? "Review revoking budget access from %@" : "Review granting budget access to %@"), adult.label))
                             }
                         }
                     }
@@ -125,14 +131,18 @@ private struct SharedStoreQuotesContent: View {
                     if let pending = model.pending {
                         Text(actionLabel(pending.action))
                         LabeledContent(StoreQuoteCopy.text("Originally reviewed revision"), value: pending.request.shopRevision.formatted())
-                        ForEach(pending.reviewedCommitments) { commitment in LabeledContent(commitment.label, value: String(format:StoreQuoteCopy.text("%d whole packs"),commitment.packs)) }
-                        if let options = pending.request.options, !pending.reviewedCommitments.isEmpty { SharedStoreQuoteFacts(options: options, commitments: pending.reviewedCommitments, shopID: pending.shopID) }
                         Button(StoreQuoteCopy.text("Retry exact saved action")) { Task { await model.retry() } }.accessibilityIdentifier("sharedQuotes.retry")
+                        DisclosureGroup(StoreQuoteCopy.text("Original reviewed quotes and commitments")) {
+                            ForEach(pending.reviewedCommitments) { commitment in LabeledContent(commitment.label, value: String(format:StoreQuoteCopy.text("%d whole packs"),commitment.packs)) }
+                            if let options = pending.request.options, !pending.reviewedCommitments.isEmpty { SharedStoreQuoteFacts(options: options, commitments: pending.reviewedCommitments, shopID: pending.shopID) }
+                        }.accessibilityIdentifier("sharedQuotes.originalRetryDetails")
                     }
                     Button(StoreQuoteCopy.text("Refresh and clear local retry"), role: .destructive) { clearing = true }
-                }
+                }.id("store-quote-pending")
             }
-            if let notice = model.notice ?? entryNotice { Text(notice).accessibilityIdentifier("sharedQuotes.notice") }
+            if let notice = model.notice ?? entryNotice {
+                Text(notice).accessibilityIdentifier("sharedQuotes.notice").accessibilityFocused($resultFocused).id("store-quote-result")
+            }
             if model.busy { ProgressView(ht("Checking service…")) }
             Button(StoreQuoteCopy.text("Refresh store quote access")) { Task { entering = false; first = .init(); second = .init(); await model.load() } }
                 .disabled(!model.live).accessibilityIdentifier("sharedQuotes.refresh")
@@ -140,12 +150,41 @@ private struct SharedStoreQuotesContent: View {
         .disabled(model.busy || !model.live)
         .workingSurface()
         .scrollDismissesKeyboard(.immediately)
+        .onChange(of: model.review?.id) { _, id in
+            reviewFocused = false
+            guard id != nil else { return }
+            Task { @MainActor in
+                await Task.yield()
+                guard model.review?.id == id, model.live else { return }
+                proxy.scrollTo("store-quote-review", anchor: .top)
+                reviewFocused = true
+            }
+        }
+        .onChange(of: model.pending?.id) { _, id in
+            guard id != nil else { return }
+            Task { @MainActor in
+                await Task.yield()
+                guard model.pending?.id == id, model.live else { return }
+                proxy.scrollTo("store-quote-pending", anchor: .top)
+            }
+        }
+        .onChange(of: model.notice ?? entryNotice) { _, notice in
+            resultFocused = false
+            guard notice != nil else { return }
+            Task { @MainActor in
+                await Task.yield()
+                guard (model.notice ?? entryNotice) == notice else { return }
+                proxy.scrollTo("store-quote-result", anchor: .center)
+                resultFocused = true
+            }
+        }
         .confirmationDialog(StoreQuoteCopy.text("Clear local retry?"), isPresented: $clearing, titleVisibility: .visible) {
             Button(StoreQuoteCopy.text("Refresh and clear local retry"), role: .destructive) { Task { await model.clearPendingAfterRefresh() } }
         } message: { Text(StoreQuoteCopy.text("Clearing cannot undo a comparison, proposal, grant, or store adoption already received. Review the refreshed household result.")) }
         .toolbar { ToolbarItemGroup(placement: .keyboard) {
             Spacer(); Button(ledgerText("Done")) { UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil) }
         } }
+        }
     }
     @ViewBuilder private func editor(_ page: StoreQuotePage) -> some View {
         DinnerStoreFields(title: dinnerText("First store"), prefix: "sharedQuotes.first.", draft: $first)
@@ -168,7 +207,8 @@ private struct SharedStoreQuotesContent: View {
         Section(isFirst ? StoreQuoteCopy.text("First store conditions and cap") : StoreQuoteCopy.text("Second store conditions and cap")) {
             Toggle(StoreQuoteCopy.text("Eligibility and price conditions reviewed"), isOn: isFirst ? $firstEligibility : $secondEligibility)
                 .accessibilityIdentifier(isFirst ? "sharedQuotes.first.eligibility" : "sharedQuotes.second.eligibility")
-            TextField(StoreQuoteCopy.text("Applicable cap in USD, optional"), text: isFirst ? $firstCap : $secondCap)
+            EnteredQuoteValueField(title: StoreQuoteCopy.text("Applicable cap in USD, optional"), value: isFirst ? $firstCap : $secondCap,
+                identifier: isFirst ? "sharedQuotes.first.cap" : "sharedQuotes.second.cap")
             Picker(StoreQuoteCopy.text("Cap scope"), selection: isFirst ? $firstCapScope : $secondCapScope) {
                 Text(dinnerText("Whole pickup")).tag("wholeCheckout")
                 Text(StoreQuoteCopy.text("Items before fees and discounts only")).tag("itemsOnly")

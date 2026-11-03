@@ -1,0 +1,19 @@
+{
+  "copyMethod": "APFS clone copy",
+  "sourceFilesVerified": 357,
+  "compiledBinariesVerified": 4,
+  "selectedScreenshotsVerified": 17,
+  "copiedResultReadersVerified": {
+    "SharedIdeaAcceptanceComplete.xcresult": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    "ObservedProposalLifecycle.xcresult": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "allEarlierFailuresDiagnosticsSourceOverridesRetained": true
+}

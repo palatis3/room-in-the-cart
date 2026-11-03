@@ -3509,6 +3509,380 @@
           }
         }
       }
+    },
+    "Spelling language": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spelling language"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idioma de las correcciones"
+          }
+        }
+      }
+    },
+    "English spellings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "English spellings"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correcciones en inglés"
+          }
+        }
+      }
+    },
+    "Spanish spellings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spanish spellings"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correcciones en español"
+          }
+        }
+      }
+    },
+    "These spellings belong to this private workspace and the selected language. They stay on this iPhone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These spellings belong to this private workspace and the selected language. They stay on this iPhone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estas correcciones pertenecen a este espacio privado y al idioma seleccionado. Permanecen en este iPhone."
+          }
+        }
+      }
+    },
+    "Manage saved spellings here. New spellings are remembered only when you explicitly choose that action during a capture review.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage saved spellings here. New spellings are remembered only when you explicitly choose that action during a capture review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Administra aquí las correcciones guardadas. Solo se recuerdan nuevas correcciones cuando eliges explícitamente esa acción durante una revisión de captura."
+          }
+        }
+      }
+    },
+    "Saved spellings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved spellings"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correcciones guardadas"
+          }
+        }
+      }
+    },
+    "No saved spellings for this language.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No saved spellings for this language."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay correcciones guardadas para este idioma."
+          }
+        }
+      }
+    },
+    "Spelling settings could not be updated. Reload them before trying again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spelling settings could not be updated. Reload them before trying again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo actualizar la configuración de correcciones. Vuelve a cargarla antes de reintentar."
+          }
+        }
+      }
+    },
+    "Reload spelling memory": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reload spelling memory"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a cargar las correcciones"
+          }
+        }
+      }
+    },
+    "Opening spelling memory…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opening spelling memory…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abriendo las correcciones…"
+          }
+        }
+      }
+    },
+    "Open your current private workspace to manage spelling memory. It is unavailable while access is locked or local deletion is pending.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open your current private workspace to manage spelling memory. It is unavailable while access is locked or local deletion is pending."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre tu espacio privado actual para administrar las correcciones. No están disponibles mientras el acceso esté bloqueado o haya una eliminación local pendiente."
+          }
+        }
+      }
+    },
+    "Spelling corrections": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spelling corrections"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correcciones de escritura"
+          }
+        }
+      }
+    },
+    "Turn off spelling memory?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn off spelling memory?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Desactivar las correcciones guardadas?"
+          }
+        }
+      }
+    },
+    "Turn off and delete these spellings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn off and delete these spellings"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desactivar y eliminar estas correcciones"
+          }
+        }
+      }
+    },
+    "This deletes remembered spellings for this private workspace and selected language. Other languages and previously saved records stay as they are.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This deletes remembered spellings for this private workspace and selected language. Other languages and previously saved records stay as they are."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esto elimina las correcciones recordadas para este espacio privado y el idioma seleccionado. Los otros idiomas y los registros guardados anteriormente permanecen como están."
+          }
+        }
+      }
+    },
+    "Spelling result": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spelling result"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resultado de correcciones"
+          }
+        }
+      }
+    },
+    "Forget spelling from %@ to %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forget spelling from %@ to %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Olvidar la corrección de %@ a %@"
+          }
+        }
+      }
+    },
+    "Spelling memory is on for this workspace and language.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spelling memory is on for this workspace and language."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las correcciones guardadas están activadas para este espacio y este idioma."
+          }
+        }
+      }
+    },
+    "Spelling memory is off. Saved spellings for this workspace and language were deleted.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spelling memory is off. Saved spellings for this workspace and language were deleted."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las correcciones guardadas están desactivadas. Se eliminaron las correcciones de este espacio y este idioma."
+          }
+        }
+      }
+    },
+    "Forgot the spelling from %@ to %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forgot the spelling from %@ to %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se olvidó la corrección de %@ a %@."
+          }
+        }
+      }
+    },
+    "Spelling memory reloaded. Review its current setting and saved spellings.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spelling memory reloaded. Review its current setting and saved spellings."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se volvieron a cargar las correcciones. Revisa la configuración actual y las correcciones guardadas."
+          }
+        }
+      }
+    },
+    "Spelling settings could not be confirmed. Reload them before trying again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spelling settings could not be confirmed. Reload them before trying again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo confirmar la configuración de correcciones. Vuelve a cargarla antes de reintentar."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

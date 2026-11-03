@@ -261,4 +261,23 @@ import UIKit
         let historical = await registry.load(id: sourceCopy.id)
         XCTAssertEqual(historical?.record, original)
     }
+    func testActionOutcomeAnchorChangesOnlyAfterCompletedDeletionAndClearsOnFailure() async throws {
+        let (record, _) = try package(), root = try location()
+        let registry = try RecoveryRegistry(url: root.appendingPathComponent("registry.json"))
+        let envelope = try ArchiveCodec.make(records: [record], kind: .personalRecovery, origin: "source", revision: "source")
+        let committed = try await registry.apply(registry.review(envelope))
+        let copyID = try XCTUnwrap(committed.records.first?.id)
+        let tools = model(record, registry: registry)
+        await tools.refresh(); XCTAssertNil(tools.actionOutcomeID)
+        await tools.deleteRecovered(.copy(copyID))
+        let deletedOutcome = try XCTUnwrap(tools.actionOutcomeID)
+        XCTAssertNil(tools.error); XCTAssertNotNil(tools.status)
+        await tools.deleteRecovered(.copy(copyID))
+        XCTAssertNotNil(tools.error); XCTAssertNil(tools.actionOutcomeID)
+        await tools.undoRecoveredDeletion()
+        XCTAssertNotNil(tools.actionOutcomeID); XCTAssertNotEqual(tools.actionOutcomeID, deletedOutcome)
+        XCTAssertNil(tools.error)
+        tools.invalidateForSourceErasure()
+        XCTAssertNil(tools.actionOutcomeID); XCTAssertNil(tools.status)
+    }
 }

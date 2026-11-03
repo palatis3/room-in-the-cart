@@ -1,0 +1,93 @@
+TAP version 13
+# Subtest: Free grants are per-adult and independent of contribution, paid seats, meal roles or administration
+ok 1 - Free grants are per-adult and independent of contribution, paid seats, meal roles or administration
+  ---
+  duration_ms: 275.693459
+  ...
+# Subtest: unselected budget discovery finds an oldest third shop despite a separate cook link
+ok 2 - unselected budget discovery finds an oldest third shop despite a separate cook link
+  ---
+  duration_ms: 127.295
+  ...
+# Subtest: private saves require explicit proposal; only current shopper adopts an exact submitted choice once
+ok 3 - private saves require explicit proposal; only current shopper adopts an exact submitted choice once
+  ---
+  duration_ms: 163.83525
+  ...
+# Subtest: store adoption invalidates request previews and freeze until an explicit review at the chosen basis
+ok 4 - store adoption invalidates request previews and freeze until an explicit review at the chosen basis
+  ---
+  duration_ms: 147.803542
+  ...
+# Subtest: matching store review saves unknown or expired draft costs while only a complete current reprice unlocks freeze
+ok 5 - matching store review saves unknown or expired draft costs while only a complete current reprice unlocks freeze
+  ---
+  duration_ms: 91.814625
+  ...
+# Subtest: unknown fees, unavailable packages, unmatched quantities and missing eligibility never produce a winner
+ok 6 - unknown fees, unavailable packages, unmatched quantities and missing eligibility never produce a winner
+  ---
+  duration_ms: 83.293917
+  ...
+# Subtest: revocation, regrant and shopper transfer reject old proposals and successful retries without resurrecting authority
+ok 7 - revocation, regrant and shopper transfer reject old proposals and successful retries without resurrecting authority
+  ---
+  duration_ms: 70.743333
+  ...
+# Subtest: frozen and placed shops preserve dated proof but refuse new save/proposal/adoption; revocation remains available
+ok 8 - frozen and placed shops preserve dated proof but refuse new save/proposal/adoption; revocation remains available
+  ---
+  duration_ms: 57.152042
+  ...
+# Subtest: tenant scope, helper grants, children and cross-shop cursors cannot reveal private quote content
+ok 9 - tenant scope, helper grants, children and cross-shop cursors cannot reveal private quote content
+  ---
+  duration_ms: 79.940209
+  ...
+# Subtest: proposal/adoption transaction rolls back if its durable receipt cannot be stored
+ok 10 - proposal/adoption transaction rolls back if its durable receipt cannot be stored
+  ---
+  duration_ms: 36.976792
+  ...
+# Subtest: real account deletion worker removes proposed/adopted private pair, copies, grant and retries without restoring old prices
+not ok 11 - real account deletion worker removes proposed/adopted private pair, copies, grant and retries without restoring old prices
+  ---
+  duration_ms: 62.998459
+  location: '/private/tmp/ritc-b11-operations019-20261103/service/tests/shared-store-quotes.integration.mjs:224:1'
+  failureType: 'testCodeFailure'
+  error: 'permission denied for database "ritc_b11_ops019_20261103"'
+  code: '42501'
+  name: 'error'
+  stack: |-
+    /private/tmp/ritc-b11-operations019-20261103/service/node_modules/pg-pool/index.js:45:11
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async assertWorkerRole (file:///private/tmp/ritc-b11-operations019-20261103/service/dist/maintenance.js:4:18)
+    async PrivacyMaintenance.run (file:///private/tmp/ritc-b11-operations019-20261103/service/dist/privacy.js:184:9)
+    async TestContext.<anonymous> (file:///private/tmp/ritc-b11-operations019-20261103/service/tests/shared-store-quotes.integration.mjs:229:16)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: validation bounds money and exactly two alternatives; runtime cannot rewrite or delete saved proof
+ok 12 - validation bounds money and exactly two alternatives; runtime cannot rewrite or delete saved proof
+  ---
+  duration_ms: 46.714083
+  ...
+# Subtest: dated proof paginates without overlap and revoked members disappear from the shopper proposal read
+ok 13 - dated proof paginates without overlap and revoked members disappear from the shopper proposal read
+  ---
+  duration_ms: 183.299084
+  ...
+# Subtest: simultaneous grant revocation and adoption serialize with no partial basket or resurrected proposal
+ok 14 - simultaneous grant revocation and adoption serialize with no partial basket or resurrected proposal
+  ---
+  duration_ms: 48.985875
+  ...
+1..14
+# tests 14
+# suites 0
+# pass 13
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1694.024083

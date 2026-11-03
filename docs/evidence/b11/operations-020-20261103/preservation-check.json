@@ -1,0 +1,33 @@
+{
+  "durable_root": "/Users/palatis/Documents/Codex/2026-11-03/task-2/operations020-resume-evidence",
+  "verified_files": [
+    {
+      "file": "evidence/frozen-tracked-source.tar",
+      "sha256": "16b83013d071a655121109e40d21e067313b437d453f30c925bfcce4568355bf",
+      "matches_scratch": true
+    },
+    {
+      "file": "evidence/source-manifest.json",
+      "sha256": "39e6f970c597fac5d069ac2dc394efcc2b2e0e7896d8e538aeb367d363d81a7a",
+      "matches_scratch": true
+    },
+    {
+      "file": "evidence/dependencies-manifest.json",
+      "sha256": "8c7c4b7bef1a2c82f41dfaaa371378352229a55cbbc80bdf7e1ae8c919297d07",
+      "matches_scratch": true
+    },
+    {
+      "file": "evidence/restart-stage.json",
+      "sha256": "c99bcccce9a7ef81713543e61bf02bb1cc145922c0716d81a0e04b8ac8fda93f",
+      "matches_scratch": true
+    },
+    {
+      "file": "evidence/README.md",
+      "sha256": "26ea749641dc67d2081a9ffbf8ba42a078d795e9e16d70394a311a6bdd5290f7",
+      "matches_scratch": true
+    }
+  ],
+  "full_source_blob_verification": "110 source files previously matched exact ae00e3b Git blobs",
+  "dependency_copy": "APFS clone; 2368 file/symlink manifest retained",
+  "active_process_sessions": []
+}

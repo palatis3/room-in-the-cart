@@ -7,12 +7,38 @@ struct HelpConfiguration: Equatable, Sendable {
     let privacyURL: URL?
     let termsURL: URL?
     let supportURL: URL?
+    let supportEmailURL: URL?
+    let operatorName: String?
+    var supportEmailAddress: String? { supportEmailURL.flatMap { URLComponents(url: $0, resolvingAgainstBaseURL: false)?.path } }
 
     static func fromBundle(_ bundle: Bundle = .main) -> Self {
         Self(helpURL: pageURL(bundle.object(forInfoDictionaryKey: "HelpURL") as? String),
              privacyURL: pageURL(bundle.object(forInfoDictionaryKey: "PrivacyPolicyURL") as? String),
              termsURL: pageURL(bundle.object(forInfoDictionaryKey: "TermsOfUseURL") as? String),
-             supportURL: pageURL(bundle.object(forInfoDictionaryKey: "SupportURL") as? String))
+             supportURL: pageURL(bundle.object(forInfoDictionaryKey: "SupportURL") as? String),
+             supportEmailURL: emailURL(bundle.object(forInfoDictionaryKey: "SupportEmail") as? String),
+             operatorName: displayOperatorName(bundle.object(forInfoDictionaryKey: "OperatorName") as? String))
+    }
+
+    static func displayOperatorName(_ raw: String?) -> String? {
+        guard let raw, !raw.isEmpty, raw == raw.trimmingCharacters(in: .whitespacesAndNewlines),
+              raw.utf8.count <= 300, !raw.contains("$("),
+              !raw.unicodeScalars.contains(where: {
+                  [.control, .format, .lineSeparator, .paragraphSeparator].contains($0.properties.generalCategory)
+              }) else { return nil }
+        return raw
+    }
+
+    /// A bare ASCII address only: no subject/body/headers, percent escapes or
+    /// newline characters can be added to the mail composer destination.
+    static func emailURL(_ raw: String?) -> URL? {
+        guard let raw, raw.utf8.count <= 254,
+              raw.range(of: "^[A-Za-z0-9][A-Za-z0-9._+-]*@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)+$", options: .regularExpression) != nil else { return nil }
+        let parts = raw.split(separator: "@", omittingEmptySubsequences: false)
+        guard parts.count == 2, parts[0].utf8.count <= 64, !parts[0].hasSuffix("."), !parts[0].contains(".."),
+              parts[1].split(separator: ".").allSatisfy({ $0.utf8.count <= 63 }),
+              !raw.contains(where: { $0.isWhitespace || $0.isNewline }) else { return nil }
+        return URL(string: "mailto:" + raw)
     }
 
     static func pageURL(_ raw: String?) -> URL? {

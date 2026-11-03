@@ -58,6 +58,32 @@ import HouseholdClient
         await model.openObservation(observation)
         XCTAssertNil(model.selectedObservation); XCTAssertTrue(model.savedObservationIDs.isEmpty)
     }
+    func testBudgetGrantAloneCannotBeginOrReviewPriceObservationAndDoesNotGateFuturePeriodDraft() async throws {
+        let (model, service, _, box) = try await setup()
+        let granted = "10000000-0000-4000-8000-000000000004", old = try XCTUnwrap(box.value)
+        service.ownedSources = []; service.readablePages[nilKey] = .init(shopIds:[granted],nextCursor:nil)
+        box.value = .init(generation:old.generation,subject:old.subject,householdID:old.householdID,memberID:old.memberID,currentShopID:granted,authorityStamp:"contributor|store_quotes")
+        await model.load(); XCTAssertTrue(model.authorized); XCTAssertTrue(model.canEdit)
+        XCTAssertFalse(model.canBeginObservation); XCTAssertFalse(model.canReviewObservation); XCTAssertEqual(model.observationDraft.shopID,"")
+        model.beginObservation(); XCTAssertEqual(model.observationDraft.shopID,"")
+        model.observationDraft.shopID = granted; model.observationDraft.itemName = "Read-only grant"
+        model.reviewObservation(); model.approved = true; await model.applyReviewed()
+        XCTAssertNil(model.reviewed); XCTAssertTrue(service.observationSends.isEmpty)
+        model.beginPeriod(); XCTAssertNotNil(model.periodDraft,"Future planning must not infer entitlement or require an assigned shop in this observation-only guard")
+    }
+    func testSelectedGrantedShopIsNeverDefaultedIntoObservationWhenAnotherShopIsOwned() async throws {
+        let (model, service, _, box) = try await setup()
+        let granted = "10000000-0000-4000-8000-000000000004", old = try XCTUnwrap(box.value)
+        box.value = .init(generation:old.generation,subject:old.subject,householdID:old.householdID,memberID:old.memberID,currentShopID:granted,authorityStamp:"contributor|store_quotes")
+        service.readablePages[nilKey] = .init(shopIds:[granted,shop],nextCursor:nil)
+        await model.load(); XCTAssertTrue(model.canBeginObservation)
+        enterObservation(model)
+        XCTAssertEqual(model.observationDraft.shopID,""); XCTAssertFalse(model.canReviewObservation); XCTAssertNil(model.reviewed)
+        model.observationDraft.shopID = granted; model.reviewObservation(); XCTAssertNil(model.reviewed)
+        model.observationDraft.shopID = shop; model.reviewObservation(); XCTAssertTrue(model.canReviewObservation)
+        guard case .observation(let record) = model.reviewed else { return XCTFail("Explicit owned-shop selection should permit review") }
+        XCTAssertEqual(record.shopId,shop)
+    }
     func testLostResponseRestoresExactIntentWithoutAutomaticSend() async throws {
         let (model, service, store, box) = try await setup(); enterObservation(model); model.approved = true
         service.loseObservationResponse = true; await model.applyReviewed()
@@ -232,6 +258,7 @@ private let nilKey = "initial"
     var saved: HistorySavedBudgetPeriod
     let subtotal: HistoryPermittedSubtotal
     var analysis: HistoryPeriodResponse
+    var ownedSources: [HistoryOwnedShop]?
     var pricePages: [String: HistoryPriceObservationPage] = [:]
     var readablePages: [String: HistoryReadableShopPage] = [:]
     var priceError: Error?, analysisError: Error?, authorizationError: Error?, observationReadError: Error?
@@ -249,7 +276,7 @@ private let nilKey = "initial"
     func observation(channel: HistoryPriceChannel = .storeShelf, mode: HistoryFulfillmentMode = .inStore, branch: String = "North") throws -> HistoryPriceObservation {
         try .init(shopId: shop, itemName: "Oats", packLabel: "12 oz", usablePack: nil, price: .exact(minor: 349), store: "Store", branch: branch, channel: channel, mode: mode, eligibility: "", observedAt: "2025-01-02T12:00:00Z", sourceText: "Shelf label", sourceLocale: "en-US")
     }
-    func historyOwnedShops(cursor: String?) async throws -> HistoryOwnedShopPage { .init(shops: [.init(shopId: shop, createdAt: "2025-01-01T00:00:00Z", phase: "closed", revision: 1, authorityEpoch: 1)], nextCursor: nil) }
+    func historyOwnedShops(cursor: String?) async throws -> HistoryOwnedShopPage { .init(shops: ownedSources ?? [.init(shopId: shop, createdAt: "2025-01-01T00:00:00Z", phase: "closed", revision: 1, authorityEpoch: 1)], nextCursor: nil) }
     func historyReadableShops(cursor: String?) async throws -> HistoryReadableShopPage { readablePages[cursor ?? nilKey] ?? .init(shopIds: [shop], nextCursor: nil) }
     func priceObservations(cursor: String?) async throws -> HistoryPriceObservationPage { if let priceError { throw priceError }; return pricePages[cursor ?? nilKey] ?? .init(observations: [], nextCursor: nil) }
     func priceObservation(observationID: String) async throws -> HistoryPriceObservation { if let observationReadError { throw observationReadError }; var value = try observation(); value.id = observationID; return value }

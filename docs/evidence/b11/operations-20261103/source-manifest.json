@@ -1,0 +1,625 @@
+[
+  {
+    "path": "service/.env.example",
+    "mode": "100644",
+    "gitBlob": "f0f307b12dba14125b43617e3eea9aa41657f1b9",
+    "sha256": "38e5ba5844cd94ca4b62fffc3448cdc6c2a3bddf21e271e32ba0cf1e6a5c8590",
+    "bytes": 1360
+  },
+  {
+    "path": "service/API-AUTH.md",
+    "mode": "100644",
+    "gitBlob": "f7ec52f65cf0ea07174983227723a648056e4a98",
+    "sha256": "794684073f7b7655b9c0efe3097dc69c791b73fac0fdef4efc495b3f9fa2edff",
+    "bytes": 6167
+  },
+  {
+    "path": "service/API-DECISIONS.md",
+    "mode": "100644",
+    "gitBlob": "25c4900a518a437df0b2f767c007455245b5cf44",
+    "sha256": "21fd605a300ad64b35b472efa09972079896ba086179132b21ee18b4797df2ae",
+    "bytes": 5484
+  },
+  {
+    "path": "service/API-HISTORY.md",
+    "mode": "100644",
+    "gitBlob": "22293d2d89d68a43c3771350fc2405e96137d6a1",
+    "sha256": "f1d06f041ac5b624578c065c14a432b458a3c17d63c61f4c217f4367144ef6aa",
+    "bytes": 9022
+  },
+  {
+    "path": "service/API-HOUSEHOLD-REVIEW.md",
+    "mode": "100644",
+    "gitBlob": "8c28120533086318f0400071568c174cd852c5f1",
+    "sha256": "7dcb4cedfe5225dfdfec72949d1ffe9418a7aa1f1dfaa5b0781047a2ccb4ecdd",
+    "bytes": 9149
+  },
+  {
+    "path": "service/API-LIFECYCLE.md",
+    "mode": "100644",
+    "gitBlob": "62655c13b8738a86943c8498e2a002d3cb218d42",
+    "sha256": "e05609465ec1b5bae838d17cc8824c1f0b475768e598fbe9d3167b7a213403e2",
+    "bytes": 8928
+  },
+  {
+    "path": "service/API-PLACEMENT.md",
+    "mode": "100644",
+    "gitBlob": "83a358caa5bc052dd3d21fed9d98ff3d32e71be9",
+    "sha256": "1e18ea8b2321b6c247c601c53fa360b3e5e0a16beb33c2460b98eac0a888bbac",
+    "bytes": 4974
+  },
+  {
+    "path": "service/API-PRIVACY.md",
+    "mode": "100644",
+    "gitBlob": "2469badcbc3232786f5f7927da5bb0761460d820",
+    "sha256": "3db8a27ba4a76cc43c43348d7c8bcadb5670fe90f174005b9dcd513b53f9c91c",
+    "bytes": 11754
+  },
+  {
+    "path": "service/API-REQUEST-PACKS.md",
+    "mode": "100644",
+    "gitBlob": "f5c84d2aa7ec3f5adfe2b09a5e8f8d91602f41e8",
+    "sha256": "d9c556a573b44d3477776023f44a2f280cd21a7ebd87b6618a92aacd128a2e54",
+    "bytes": 1899
+  },
+  {
+    "path": "service/API-SHARED-MEALS.md",
+    "mode": "100644",
+    "gitBlob": "729df8c7ac4b178b57e635ab92a7f6297ad237f0",
+    "sha256": "4b3a11519955138ae4ba18a3bcc025b06673f628f51e2aa6f31163fb407ac8a1",
+    "bytes": 5653
+  },
+  {
+    "path": "service/IMPLEMENTATION.md",
+    "mode": "100644",
+    "gitBlob": "f281b5731b7ec25b8fa2a98ec04feae5f1c1104b",
+    "sha256": "f66fd649791c3b54a39fb2737620584c2826e6808b594465c39c5c741f418c49",
+    "bytes": 15275
+  },
+  {
+    "path": "service/migrations/001_household_requests.sql",
+    "mode": "100644",
+    "gitBlob": "81e122c847f2fdf8322151fdea6211fff0ccfcb9",
+    "sha256": "e919302e353eae03f5cf63425ad82924c3c6315321b8b4b07e1253185e79ef5b",
+    "bytes": 13187
+  },
+  {
+    "path": "service/migrations/002_apple_billing.sql",
+    "mode": "100644",
+    "gitBlob": "0a0eee89ec54a8fe4400fb5cc2583295ff51bafd",
+    "sha256": "2f819c06c49f47e32c0093c636bacdfd95ad299ed159337b39041d173385ca6e",
+    "bytes": 4744
+  },
+  {
+    "path": "service/migrations/003_web_session.sql",
+    "mode": "100644",
+    "gitBlob": "0de39af8074a024f03d417d2bb12d005b55c9664",
+    "sha256": "dd2b9967be0364bf313afba035e8a60fec948a94aa1cf182e9fea14e269888cb",
+    "bytes": 754
+  },
+  {
+    "path": "service/migrations/004_household_lock.sql",
+    "mode": "100644",
+    "gitBlob": "3cd23243fcf4b8ad1107db10209ad74822c0977f",
+    "sha256": "65fef08a239f4ea122133c335d56918e9d2ef2c4455418f36e18b6442a473250",
+    "bytes": 224
+  },
+  {
+    "path": "service/migrations/005_session_and_policy_hardening.sql",
+    "mode": "100644",
+    "gitBlob": "cf3aa33003d943d3d4ed908ded40d9f3787ee0d5",
+    "sha256": "3504fec9398d40cad639aa50c931d7cbe6b585e7cf2dc5059f227b3e87727d45",
+    "bytes": 3808
+  },
+  {
+    "path": "service/migrations/006_household_lifecycle.sql",
+    "mode": "100644",
+    "gitBlob": "e6c64572af05fc77da1eca659f5c71f8f9b93c40",
+    "sha256": "7f293a0b681627cccb2d5bdc943eb3ea5c6e1436b063857f4a33f981cced296c",
+    "bytes": 5150
+  },
+  {
+    "path": "service/migrations/007_selected_helper_session.sql",
+    "mode": "100644",
+    "gitBlob": "44c4cf8bd8e6148bed3d2c130b3a7e76de739181",
+    "sha256": "422f3b0cafc482adb3708689c11bbbab1d026aac69555a8dafcbd3a525f2fca5",
+    "bytes": 336
+  },
+  {
+    "path": "service/migrations/008_browser_email_auth.sql",
+    "mode": "100644",
+    "gitBlob": "048cfdae76a1287912bfa22edd61286cac99d7d6",
+    "sha256": "5ad8c46d4146e1ce980e4f8809afa00512b9ed6ae6e41fd76637e0d86a713e1e",
+    "bytes": 1960
+  },
+  {
+    "path": "service/migrations/009_auth_maintenance.sql",
+    "mode": "100644",
+    "gitBlob": "b56ea70a08fa2e89260e91bad8779149d2b4ed07",
+    "sha256": "b4e33a77bc0a9576a763062e8f3dddf00c019ecbe5464ad300b1e5fa0e872b6e",
+    "bytes": 6847
+  },
+  {
+    "path": "service/migrations/010_account_lifecycle.sql",
+    "mode": "100644",
+    "gitBlob": "758dd4212036b9284725b6a734603776dc77ee98",
+    "sha256": "e35ebbc6a2d1fcc3f7d03420542eb4ce588c3708e8bb31fcfc3ec0cc283daa22",
+    "bytes": 30384
+  },
+  {
+    "path": "service/migrations/011_helper_review_and_shop_selection.sql",
+    "mode": "100644",
+    "gitBlob": "d3f0bea33e13da68248ca53111ec7e910156ec31",
+    "sha256": "23457cac7c614eb8794ec0268641cd1130558ce8d8c576c4ce8bd994253d07b9",
+    "bytes": 3971
+  },
+  {
+    "path": "service/migrations/012_price_budget_history.sql",
+    "mode": "100644",
+    "gitBlob": "cd06f799c50102b7ccfb8613c8ca37dfb6cf2401",
+    "sha256": "dad295084f43a58cd15f58524575e98df66a77bdb0a17bd0f9555b3eac05c5c2",
+    "bytes": 6137
+  },
+  {
+    "path": "service/migrations/013_shared_meal_occurrences.sql",
+    "mode": "100644",
+    "gitBlob": "424d31b38ce0c026f2058658bb3e830e9cd4370e",
+    "sha256": "f574ff8a6b73f0959c622053b9ebd3408d05629d653709a40d631cc58259e1d5",
+    "bytes": 1731
+  },
+  {
+    "path": "service/migrations/014_shared_meal_moves.sql",
+    "mode": "100644",
+    "gitBlob": "e79a58e8e80a6bd892f8ecb85f599e5d95a1d806",
+    "sha256": "2673ea349e6a7cd4df823e4128e4059533049b46071b03a1a1dc90a0d6e90a95",
+    "bytes": 2140
+  },
+  {
+    "path": "service/migrations/015_family_decisions.sql",
+    "mode": "100644",
+    "gitBlob": "886d03736eb2d0e2522f5f03374846a5539d94ef",
+    "sha256": "c9779d5c19bcbb2e2bc5b3f4ffe0793e459375892d9616d5c0db2ac82686def1",
+    "bytes": 3841
+  },
+  {
+    "path": "service/migrations/016_shared_meal_changes.sql",
+    "mode": "100644",
+    "gitBlob": "7288091a016a76a771fe1f3a338a201d9ba51475",
+    "sha256": "362138035995832cc6b1bbffb6e9c0528ee2576945a908a14db03104355da6b0",
+    "bytes": 2466
+  },
+  {
+    "path": "service/migrations/017_shared_meal_ideas.sql",
+    "mode": "100644",
+    "gitBlob": "12a321505e8979d55d1318bd8b8ac27c9d43ca06",
+    "sha256": "fe61e6528a38cc9c6c4315587d12ee540ea624422a8e89f8933f05e75addab63",
+    "bytes": 2451
+  },
+  {
+    "path": "service/package-lock.json",
+    "mode": "100644",
+    "gitBlob": "8069d5c1d1a01797009061ec32f99e8c5a16c505",
+    "sha256": "ca1179584c49cf291a45bf19ca3c30cd3ce08aece0e69bfd73db932da640542d",
+    "bytes": 27548
+  },
+  {
+    "path": "service/package.json",
+    "mode": "100644",
+    "gitBlob": "e621f38487a6160e7d0bc758824a5b482cfb79c1",
+    "sha256": "824d15de2926b4eae14e1d3c8100f62c356a76346b420b65fc57ec111732754d",
+    "bytes": 694
+  },
+  {
+    "path": "service/scripts/migrate.mjs",
+    "mode": "100644",
+    "gitBlob": "957e2d022f5cac2cb7ce182866b621a98f01f9c7",
+    "sha256": "b4fdd5bcbb40a4f6414be7190474e2d0fbfa15b1d2cb1daec78205f8c5d08766",
+    "bytes": 1808
+  },
+  {
+    "path": "service/scripts/test-database.mjs",
+    "mode": "100644",
+    "gitBlob": "77ea75bc6fe4b5103140c51c99e46debcae3f925",
+    "sha256": "35c0eecec7abec61fbce3b589b3b562ed428bdad24601817e6e45315a641c0c0",
+    "bytes": 1332
+  },
+  {
+    "path": "service/scripts/test-operations.mjs",
+    "mode": "100644",
+    "gitBlob": "1c4bb97160a24d84ebed2c2e03cbb0bf14e51f07",
+    "sha256": "8d7c7a816e10d1d47f5e9dfeda2af1569d7a516471fcd42a05ae19f6ee8878c5",
+    "bytes": 1195
+  },
+  {
+    "path": "service/src/auth.ts",
+    "mode": "100644",
+    "gitBlob": "f6803c54c00fc96e352660692b0ddb9535658d86",
+    "sha256": "cf310e5d03de0b2b0ba99c8c83357cde8b445b14e8c3788c383f85bb33ebdac0",
+    "bytes": 3756
+  },
+  {
+    "path": "service/src/billing/apple.ts",
+    "mode": "100644",
+    "gitBlob": "e04eae3f1997111ec7002c99d455457047dca2fe",
+    "sha256": "6a35a15b2fcced63285f5d1317190ee79ad124ea8f3491e49ddd98ad734c085b",
+    "bytes": 9484
+  },
+  {
+    "path": "service/src/billing/domain.ts",
+    "mode": "100644",
+    "gitBlob": "830a396a5732ebfcc6a5e65d853f007ff4552abd",
+    "sha256": "2a3b0304f1ed665d31ee997abf97d46dfc5d8e1dc950c643a1f4f5b5070c2413",
+    "bytes": 2760
+  },
+  {
+    "path": "service/src/billing/service.ts",
+    "mode": "100644",
+    "gitBlob": "d3b438f2c30f17e7cfd332878d72cd7c02dbac11",
+    "sha256": "7199f1e540aa4da3159a8d6d216af0063467ceb764faeb176e8774039b1e820f",
+    "bytes": 16134
+  },
+  {
+    "path": "service/src/billing/tests/domain.test.mjs",
+    "mode": "100644",
+    "gitBlob": "436fecc90692eba2a9893285145f1dd8a2ac8961",
+    "sha256": "0e4d4e60dda4244c753c4a95c53b54166e6bfce827d45d4bf75bfb027e6b935a",
+    "bytes": 3824
+  },
+  {
+    "path": "service/src/billing/tests/postgres.test.mjs",
+    "mode": "100644",
+    "gitBlob": "2ae08c4cceb18db15b588c8a8577b65fea541881",
+    "sha256": "8ba82f33b65d373a3975a87db17cb2cbfbc10d87e9131e395f3e0fab57a2958b",
+    "bytes": 10554
+  },
+  {
+    "path": "service/src/billing/tests/signatures.test.mjs",
+    "mode": "100644",
+    "gitBlob": "85c404f6a11e39fe87e61d40bba9cf1d8e7c8ca5",
+    "sha256": "23d746d5038a30b6cb3a30272b6394f212d684945d4fee5cd231ddecadbf3264",
+    "bytes": 1985
+  },
+  {
+    "path": "service/src/browser-auth.ts",
+    "mode": "100644",
+    "gitBlob": "b5d7e4ab30c5a42217deceafbe64205b6dd476f1",
+    "sha256": "fd22f73276922d05e9762b56f5f49fca9e42364582eff1f457394259b3225c70",
+    "bytes": 15831
+  },
+  {
+    "path": "service/src/checkout.ts",
+    "mode": "100644",
+    "gitBlob": "f976a052ba3b01c617fdeb14541004f99a7c51a6",
+    "sha256": "5ddaa0733d67cd78f30f6e51c1a8280a5881349d5146e9a4dd50fd5d5e41cec4",
+    "bytes": 2083
+  },
+  {
+    "path": "service/src/contracts.ts",
+    "mode": "100644",
+    "gitBlob": "9dcd4538fb586e327b192efd18d2cd5d8872d039",
+    "sha256": "b803205663e62dedbf088c28db3ef55f2130f4d240895d8ddac837f3abc7d935",
+    "bytes": 7304
+  },
+  {
+    "path": "service/src/database.ts",
+    "mode": "100644",
+    "gitBlob": "51c12d623cf6fed66dc04a919a63b669ee80b494",
+    "sha256": "b197cbf8fbfb03ae7e62dd9cf5d807dd4f31e566c47bb57266f6fceb50b6baaa",
+    "bytes": 1261
+  },
+  {
+    "path": "service/src/decision-history.ts",
+    "mode": "100644",
+    "gitBlob": "c835477363ab65a90588024d1179e129246e145b",
+    "sha256": "b6757241e26df5994dc31938538d1730fcfd42a55d2866c9a356e9d9d8bfc9b1",
+    "bytes": 8386
+  },
+  {
+    "path": "service/src/errors.ts",
+    "mode": "100644",
+    "gitBlob": "eb5d372cb3c2bdacf173fb40204a5f30a5b91eab",
+    "sha256": "67d27af1f5afd51dcd9107f67b8ab06c3f788e03985800ba94f1beedf8f2d01d",
+    "bytes": 607
+  },
+  {
+    "path": "service/src/helper-review.ts",
+    "mode": "100644",
+    "gitBlob": "ced5aa91aa54b54b4ef82560bdecb565fba96f62",
+    "sha256": "87dc99103daf19027f0940be4e3dfba90f825d00b38d8b1ceb5400f8879161ca",
+    "bytes": 6307
+  },
+  {
+    "path": "service/src/history-contracts.ts",
+    "mode": "100644",
+    "gitBlob": "b76bd22258e2a769513bea14b0a92711021a1688",
+    "sha256": "9d57eb3135afd7efc59e2d9fac4879a9e54816b2f461883d4304b87298f01b3d",
+    "bytes": 4088
+  },
+  {
+    "path": "service/src/history-math.ts",
+    "mode": "100644",
+    "gitBlob": "60e2441b93f94483ff9c533ab0a4847ca6a762d2",
+    "sha256": "30e8b460b0811d7f97673e504458748f01585a394ff775cec0557bfbaad7ca62",
+    "bytes": 5059
+  },
+  {
+    "path": "service/src/history.ts",
+    "mode": "100644",
+    "gitBlob": "9ebd93f17c7b19e61d2dc9590ea74726c73b094f",
+    "sha256": "77f4d7a5556232b2d89e6b21317823fa68de1c0222e7b567a73fe59775e2dd53",
+    "bytes": 15208
+  },
+  {
+    "path": "service/src/http.ts",
+    "mode": "100644",
+    "gitBlob": "06543acc663ef28cc8032d4209b802d00de0c548",
+    "sha256": "07b1596d4573144b65f2de8e7ea5407bf60417002eb49d7ed9ec0fa3cb0836c4",
+    "bytes": 26272
+  },
+  {
+    "path": "service/src/lifecycle.ts",
+    "mode": "100644",
+    "gitBlob": "152c2e6e5815924580120c240b01631b14a5e523",
+    "sha256": "8ee71526a7c2f16de8496b69c3c126a664839a8fae1202fbdb5a4a8f0d9165b0",
+    "bytes": 18058
+  },
+  {
+    "path": "service/src/main.ts",
+    "mode": "100644",
+    "gitBlob": "c73033092309ea2feb34a5a8fdb9f8fd9581b696",
+    "sha256": "acc36f5f15788dda99ddd8ecf0a116304dad6d03a2f1bbd38ec453d7acf21790",
+    "bytes": 303
+  },
+  {
+    "path": "service/src/maintenance.ts",
+    "mode": "100644",
+    "gitBlob": "a8ccefb2791504190a690a8a4e5325a709af434a",
+    "sha256": "c13c540d073a2ada2dc24dee6fd91b1534bbfc489645f637d1ebc8dfd26f680c",
+    "bytes": 4712
+  },
+  {
+    "path": "service/src/meal-moves.ts",
+    "mode": "100644",
+    "gitBlob": "9d945face181a2a23815591fbdede97980a23df3",
+    "sha256": "33bc4a1a9cf1d4b198489d7f2f65caf38ad6470d579d6fdc71610aa79a8b8a1c",
+    "bytes": 7343
+  },
+  {
+    "path": "service/src/placement-reports.ts",
+    "mode": "100644",
+    "gitBlob": "2156541a53f04c4730358083bc174974fcf65e29",
+    "sha256": "a516f6c7e8e8d2a9044a28cff69286e94c283d2979f677f6586b4cd3e1407a0d",
+    "bytes": 4159
+  },
+  {
+    "path": "service/src/privacy.ts",
+    "mode": "100644",
+    "gitBlob": "65a83a03b04b5d31bd8b9c6eaf068690170ee4cc",
+    "sha256": "b501cd16c016abac69a42f49d6495f812c708c1adafea81ab9f2ced33bbf5959",
+    "bytes": 11026
+  },
+  {
+    "path": "service/src/repository.ts",
+    "mode": "100644",
+    "gitBlob": "55faea090552cf24fdc83abadc7d47d897e3f4df",
+    "sha256": "9801234b435873d6380ff37202a0117bb7b6113b1f16eec4d9371bd8ec135898",
+    "bytes": 46416
+  },
+  {
+    "path": "service/src/request-pack-evidence.ts",
+    "mode": "100644",
+    "gitBlob": "556074febd5bef350203a1427c3aa79e4e637c0e",
+    "sha256": "131138e3a21b60de396cd546723bafdecb1ca9f4b4473a8db5b77f177b90659f",
+    "bytes": 3376
+  },
+  {
+    "path": "service/src/runtime.ts",
+    "mode": "100644",
+    "gitBlob": "dad8ed9ac21c95ebb86a070c10479e52c09d4c3a",
+    "sha256": "4084a7b3bb0c654bb8f625048df70c51d974c8a17b93103555c912b263595ede",
+    "bytes": 4416
+  },
+  {
+    "path": "service/src/shared-meal-changes.ts",
+    "mode": "100644",
+    "gitBlob": "ff8c2f2283ebcc8e825d30f4b6bf555e76f09c22",
+    "sha256": "81d72b00c731ecb7ed841f71caeabf2d2438b9fb3ac06674861c3cb69e28a467",
+    "bytes": 7788
+  },
+  {
+    "path": "service/src/shared-meal-ideas.ts",
+    "mode": "100644",
+    "gitBlob": "2114ab6756f5c994b0e159f2a3311b93be1da19f",
+    "sha256": "a436b8b3c8050d03490a954424b06cb060a678a838ad009044a51be31da8bf3c",
+    "bytes": 9752
+  },
+  {
+    "path": "service/src/shared-meal-planning.ts",
+    "mode": "100644",
+    "gitBlob": "2af0340f43e9072cb44c9c9abd89f9a5116932af",
+    "sha256": "c1da848a8db729e1287aeaf3bb8675c0ed27af6cc871bd75b3057fcc6ac0e49c",
+    "bytes": 5639
+  },
+  {
+    "path": "service/tests/auth-boundary.test.mjs",
+    "mode": "100644",
+    "gitBlob": "77304a4248fa335ce7ec9b195c6d26df4d5c4218",
+    "sha256": "beec88295e49941dda12f4d058b6451fda0a878d483020978410be06aca32938",
+    "bytes": 1137
+  },
+  {
+    "path": "service/tests/browser-auth.integration.mjs",
+    "mode": "100644",
+    "gitBlob": "2eb18a467848a6fe3fa8302668d80aab027969dc",
+    "sha256": "a16b23e82f09febc4ace54f81d8c16535e7c35b7db05a15ae775516eef4bd696",
+    "bytes": 18070
+  },
+  {
+    "path": "service/tests/browser-provider.test.mjs",
+    "mode": "100644",
+    "gitBlob": "573089091bbd8928358883cae2e1b71374a5c9ef",
+    "sha256": "b2dab511ed644f5b69070d84af69d62cd3299f66786bd0435902a010db51e11b",
+    "bytes": 2762
+  },
+  {
+    "path": "service/tests/checkout.test.mjs",
+    "mode": "100644",
+    "gitBlob": "3185b0f340d2d6e9e2883274670e9ce2f8c6808a",
+    "sha256": "c70f898a713fcb913370e9b9b07ce994d206a42612a78c39bb5377a71e254d6d",
+    "bytes": 2495
+  },
+  {
+    "path": "service/tests/decision-history.integration.mjs",
+    "mode": "100644",
+    "gitBlob": "f76f4c4bca1b64ed4b25ea7aaf06a14b3964802e",
+    "sha256": "833df23499e44c41329592fafbe863fe55a21f90886c44d6e5f024261c7b7a85",
+    "bytes": 17645
+  },
+  {
+    "path": "service/tests/helper-review.integration.mjs",
+    "mode": "100644",
+    "gitBlob": "095388ea174d0a5cef39badae18779101d820483",
+    "sha256": "54a03acbd1c802f2769f93e731749345d7db62d6a2410174490bc7656bb30f39",
+    "bytes": 29627
+  },
+  {
+    "path": "service/tests/history-math.test.mjs",
+    "mode": "100644",
+    "gitBlob": "6f4cf2742717b075326ce65ac64573658d5760c5",
+    "sha256": "8cc64aff750ef85a799dd261e4a1a767fe4406108261b503fcd5d4b783151478",
+    "bytes": 3610
+  },
+  {
+    "path": "service/tests/history.integration.mjs",
+    "mode": "100644",
+    "gitBlob": "02c899498f6a5d5e24bb952ba29fc3c60e64ac63",
+    "sha256": "73fcb21b12334579f65336da4b11ad68eebb959fb3c1554b455cd3ffde8bc167",
+    "bytes": 22656
+  },
+  {
+    "path": "service/tests/maintenance.operations.mjs",
+    "mode": "100644",
+    "gitBlob": "cdf7e354992bf38a9d9248e739c32fe68805d64a",
+    "sha256": "77a62703fdca6d0303955d5c6d26197accb3f69cee7e99bb828bf92a28179fd7",
+    "bytes": 7361
+  },
+  {
+    "path": "service/tests/native-wire.mjs",
+    "mode": "100644",
+    "gitBlob": "b12b8a61df40dd0e9c14d25146758fe41a1ff718",
+    "sha256": "8234d15eb6290f99943d73457619b3b8a4767aae6fa3ac91275826e7dd86c681",
+    "bytes": 3520
+  },
+  {
+    "path": "service/tests/privacy-provider.test.mjs",
+    "mode": "100644",
+    "gitBlob": "c538b45553f5ccd6fe13e9e88d942f649fcc76e7",
+    "sha256": "2d52a94179a74866fd558afeaef276e1e0c268ca8d18482755c79158541cc195",
+    "bytes": 3591
+  },
+  {
+    "path": "service/tests/privacy.integration.mjs",
+    "mode": "100644",
+    "gitBlob": "b9aa53970fbdd8bf28d9433557caebb17fe8f1ed",
+    "sha256": "da7570a786466699205f0ad40487f4d0085d392cde9d17239056f07c68a859b3",
+    "bytes": 21367
+  },
+  {
+    "path": "service/tests/request-pack-evidence.test.mjs",
+    "mode": "100644",
+    "gitBlob": "ab5ca846cfb2427cfae56e018583264f6b5b3734",
+    "sha256": "606481cafc9b7183ecac212301f249203cac4c658fb83d5c7392100c06b2a352",
+    "bytes": 2534
+  },
+  {
+    "path": "service/tests/runtime.test.mjs",
+    "mode": "100644",
+    "gitBlob": "8478351853877ea4a6d8225d77531cb147db1a60",
+    "sha256": "0d00f7197de5007bb9fe00b331843c01a326ffad5f69daf6179defd9c5c51483",
+    "bytes": 1898
+  },
+  {
+    "path": "service/tests/service.integration.mjs",
+    "mode": "100644",
+    "gitBlob": "f791e0cd0602bb71674d2f2d66b89076b1ba04b4",
+    "sha256": "f2649e310e32ba96419459eaaa445dcdf2b03c3f84760ab55082e0bc934d86da",
+    "bytes": 55165
+  },
+  {
+    "path": "service/tests/shared-meal-changes.integration.mjs",
+    "mode": "100644",
+    "gitBlob": "262406f885245a49a9eb89e1038abcaa86604de8",
+    "sha256": "c0f10f15d5a17b4f5dbbe75ec42b90ff9b570886d7999d4585f0c6d9b323fb84",
+    "bytes": 17498
+  },
+  {
+    "path": "service/tests/shared-meal-ideas.integration.mjs",
+    "mode": "100644",
+    "gitBlob": "e91269fe38a6bea0e200cf0d1e4791bcbe142b2b",
+    "sha256": "1f13a1e9e031fc4e78d10d5087fe8be205adeae65a9b8718c4d38038c3d5553b",
+    "bytes": 17574
+  },
+  {
+    "path": "service/tests/shared-meal-ideas.test.mjs",
+    "mode": "100644",
+    "gitBlob": "0735a5bd4942167429fbc0701bbc54b049f328a2",
+    "sha256": "1e69ab3e8beaba1c415ee48abfee264bec474cb22f88f314a3a6b3cdde29fbfe",
+    "bytes": 5020
+  },
+  {
+    "path": "service/tests/shared-meal-native-wire.mjs",
+    "mode": "100644",
+    "gitBlob": "24afed95ed53468e618c03d5c62ac6e845aa3a85",
+    "sha256": "c035663a5c38f17a9ab36fae3c361d4d1215431f8e152f9d56a4e81b9fb2050d",
+    "bytes": 3442
+  },
+  {
+    "path": "service/tsconfig.json",
+    "mode": "100644",
+    "gitBlob": "a36377d7fade4f641b3f860003a3fdde241c4827",
+    "sha256": "af93987394f772829050871e984e908a33ed31c875f2ac9d2d63186f3b0e8d96",
+    "bytes": 335
+  },
+  {
+    "path": "shared/contracts/history-v1.d.ts",
+    "mode": "100644",
+    "gitBlob": "d3ac734ad05ad9fd30b2e41573153d89b8bd10e6",
+    "sha256": "39bcb445e2b622ca54bc0d7b23a134eeecae6e91f2a5516546e86180f2fa0cda",
+    "bytes": 3602
+  },
+  {
+    "path": "shared/contracts/household-review-v1.d.ts",
+    "mode": "100644",
+    "gitBlob": "050dc9b18da20874ed9c65b2848e08a173b19c23",
+    "sha256": "8a955c80ebe72d42556e41daee288c5353a965448c945123637624bef980cbd1",
+    "bytes": 1715
+  },
+  {
+    "path": "shared/contracts/pack-comparisons.json",
+    "mode": "100644",
+    "gitBlob": "4f0f85c8a4faadbb553b6500640629310a66fb4d",
+    "sha256": "c660eed1e17cb72495b80c9624f1e447d8db8bf20ab20f4d6f40a51c4f109b3d",
+    "bytes": 16880
+  },
+  {
+    "path": "shared/contracts/service-v1.d.ts",
+    "mode": "100644",
+    "gitBlob": "d30019078da6ce1cc8309cecc15190745f273181",
+    "sha256": "1a2036eb3316f6c920126d2eefd06d12b5e2ff7eefdb1c9671e1ce8233b61e02",
+    "bytes": 5858
+  },
+  {
+    "path": "shared/contracts/theme.json",
+    "mode": "100644",
+    "gitBlob": "88ebc4d64a83b42a745914bb4028f9861a702259",
+    "sha256": "fc17b3a299808141abf5020b7c2098ee5631a2d542415d1051257339d12a6299",
+    "bytes": 1127
+  },
+  {
+    "path": "shared/fixtures/checkout.json",
+    "mode": "100644",
+    "gitBlob": "c059b18abe5f2b8d943ac59e61167f4574601efe",
+    "sha256": "2c782d483ae6dec155d167c1b0722d6a6664697c37983fde21495ca5a01a212a",
+    "bytes": 7688
+  }
+]

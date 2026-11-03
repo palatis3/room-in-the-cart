@@ -1,0 +1,51 @@
+TAP version 13
+# Subtest: optional measurement PostgreSQL identities, RLS, consent and verified billing
+    # Subtest: default off, helper/child denial, fresh notice only
+    ok 1 - default off, helper/child denial, fresh notice only
+      ---
+      duration_ms: 8.373417
+      ...
+    # Subtest: requires a placed closed shop and pins week to server closure
+    ok 2 - requires a placed closed shop and pins week to server closure
+      ---
+      duration_ms: 6.726709
+      ...
+    # Subtest: second device and retry have one household/shop/week response
+    ok 3 - second device and retry have one household/shop/week response
+      ---
+      duration_ms: 5.129458
+      ...
+    # Subtest: withdrawal removes response, stale consent cannot be replayed or resurrected
+    ok 4 - withdrawal removes response, stale consent cannot be replayed or resurrected
+      ---
+      duration_ms: 4.510666
+      ...
+    # Subtest: only server-verified production billing counts one canonical willing household; refund removes it
+    ok 5 - only server-verified production billing counts one canonical willing household; refund removes it
+      ---
+      duration_ms: 16.305209
+      ...
+    # Subtest: authenticated HTTP consent, code-only send, read, DELETE and withdrawal stay connected
+    ok 6 - authenticated HTTP consent, code-only send, read, DELETE and withdrawal stay connected
+      ---
+      duration_ms: 34.004708
+      ...
+    # Subtest: member erasure removes measurement without restoring consent
+    ok 7 - member erasure removes measurement without restoring consent
+      ---
+      duration_ms: 6.930375
+      ...
+    1..7
+ok 1 - optional measurement PostgreSQL identities, RLS, consent and verified billing
+  ---
+  duration_ms: 92.73975
+  ...
+1..1
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 182.605792

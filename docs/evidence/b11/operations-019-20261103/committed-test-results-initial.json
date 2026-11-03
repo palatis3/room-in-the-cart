@@ -1,0 +1,23 @@
+[
+  {
+    "name": "auth-operations",
+    "startedAt": "2026-11-03T19:10:09.015Z",
+    "endedAt": "2026-11-03T19:10:09.491Z",
+    "code": 0,
+    "signal": null
+  },
+  {
+    "name": "privacy-integration",
+    "startedAt": "2026-11-03T19:10:09.496Z",
+    "endedAt": "2026-11-03T19:10:10.514Z",
+    "code": 0,
+    "signal": null
+  },
+  {
+    "name": "store-quotes-integration",
+    "startedAt": "2026-11-03T19:10:10.516Z",
+    "endedAt": "2026-11-03T19:10:12.262Z",
+    "code": 1,
+    "signal": null
+  }
+]

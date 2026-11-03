@@ -1,0 +1,100 @@
+{
+  "recordedAt": "2026-11-03T19:59:23.349278+00:00",
+  "scope": "User-supplied operator business identity in native/public policy and terms source. No provider actions, publication, simulator or legal-approval claim.",
+  "operatorName": "Venture House Group LLC",
+  "supportEmail": "hello@roominthecart.com",
+  "changes": [
+    "Canonical public-contact configuration now supplies OperatorName/RITC_OPERATOR_NAME to Debug, Staging and Release without copying staging service configuration.",
+    "Native policy/terms controls and both public Privacy/Terms pages identify Venture House Group LLC without translating or changing the supplied name.",
+    "Operator names are bounded literal text; control/format characters, line separators, surrounding whitespace and unresolved variables are rejected. Rendering uses text, not HTML.",
+    "Native/public values are checked against the canonical public-contact configuration. Operator-identity-missing wording was removed from current source and reviewer/config documentation.",
+    "Policy/terms approval, production retention, jurisdiction/address and delivery/monitoring verification are not supplied or inferred."
+  ],
+  "verification": [
+    {
+      "kind": "Python-unittest",
+      "suite": "test_app_configuration.py",
+      "passed": 9,
+      "failed": 0
+    },
+    {
+      "kind": "actual-public-default-metadata",
+      "result": "pass",
+      "environments": [
+        "Debug",
+        "Staging",
+        "Release"
+      ],
+      "operatorName": "Venture House Group LLC",
+      "supportEmail": "hello@roominthecart.com"
+    },
+    {
+      "kind": "macOS-host-XCTest",
+      "suite": "HelpConfigurationTests",
+      "passed": 5,
+      "failed": 0,
+      "scope": "Actual HelpConfiguration/MembershipDomain source with bundle metadata, no-control operator name, safe mailto and fixed diagnostic allowlist."
+    },
+    {
+      "kind": "iOS17-simulator-SDK-typecheck",
+      "result": "pass",
+      "scope": "Actual native Help configuration/view with composition stubs; no simulator boot or UI execution."
+    },
+    {
+      "kind": "web-production-build",
+      "result": "pass",
+      "modules": 13,
+      "javascriptBytesApprox": 92660,
+      "javascriptGzipBytesApprox": 27940
+    },
+    {
+      "kind": "Node-jsdom",
+      "suite": "public-pages.test.mjs",
+      "passed": 8,
+      "failed": 0,
+      "scope": "Includes exact operator display on both policy pages in English/Spanish, control rejection and native/public configuration consistency."
+    },
+    {
+      "kind": "integrated-localization-structure",
+      "result": "pass",
+      "catalogs": 15,
+      "entries": 3450,
+      "literalKeys": 3308,
+      "humanReview": false
+    },
+    {
+      "kind": "xcstringstool-compile",
+      "result": "pass",
+      "catalog": "Help"
+    },
+    {
+      "kind": "git-diff-whitespace",
+      "result": "pass"
+    }
+  ],
+  "supersedes": "Only operator-identity-missing gates in prior help/support evidence. Earlier results retain their original source/runtime scope.",
+  "remainingGates": [
+    "Integrated compiled-app metadata and device/accessibility verification",
+    "Actual policy/terms approval and production retention review",
+    "Human US-Spanish review",
+    "Public-page publication and mailbox delivery/monitoring verification",
+    "Actual Apple/connected-provider distribution acceptance"
+  ],
+  "externalMutations": [],
+  "sourceSHA256": {
+    "config/public-contact.json": "6e55ef58c6ad5aafcbaca74f1c525f4306b55d587456d008db488b0a95043175",
+    "scripts/app_configuration.py": "183886b8d20d954de6b7ddb51f05a54a36420bb5da9f482a1d4fec93582a3e54",
+    "scripts/test_app_configuration.py": "ddb98103045a4ec2d2dcfb3aaaa56544d03010b6d0b26069ceaaed9ce02d53c7",
+    "ios/App/Info.plist": "9e1a99ecebbe5fcca0099fe652d6858740c858e4ab6cd9c601f9bde762168f2a",
+    "ios/Features/Help/HelpConfiguration.swift": "04788fa42896ec7b8c50637c41c067fd267d183e86366f1fadd17de9247da9b3",
+    "ios/Features/Help/HelpView.swift": "575f5ddaece8958b30a4e87a7c94ae5be034a2260db334c6794f0b72becf078b",
+    "ios/Features/Help/Help.xcstrings": "f0e19cdb69d27a2821c897a312f871adea00ac5ec4d2f1a0623cb3c9b6b9e94a",
+    "ios/Tests/HelpConfigurationTests.swift": "d6b3ae0c47bf59d42e4ca362237044ff7f3bfe7cbbdb68b53d95fb793a224da2",
+    "web/src/public-site-configuration.ts": "1b529d8692fd71a1ca64b4b4c4e0e6700327144fad3595b6e00f590b457d1518",
+    "web/src/public-pages.ts": "99b2f3b1ed7a1b198fac1abfde93614837a028b2867a1a0709407e8359c5fac5",
+    "web/src/public-pages-content.ts": "57661a3e73f3e36a1455bd6e8aceb6de12ed3fd696be5c7d0e9a072dc88a273a",
+    "web/tests/public-pages.test.mjs": "9386f4c1bb973107cd1abf9c8efc2b5f8538784769f2931a51a6eebb14d2f44d",
+    "docs/APP-REVIEW-WALKTHROUGH.md": "db939136e32a7bc84a2920c272df70066f4bb28e98ba58d0288311dc4d15c7f3",
+    "config/README.md": "3ee06412780c160bf8c154fce5a3ca4893903d470d508bade354ec406ca6b542"
+  }
+}

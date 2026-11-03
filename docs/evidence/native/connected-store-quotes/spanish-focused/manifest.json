@@ -1,0 +1,17 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "2BE8542F-00D9-48B7-BCDE-8AB169497969",
+        "deviceName" : "iPhone 17e",
+        "exportedFileName" : "1EDD863B-0D3A-47D2-B079-36FBBD00BF16.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S27-spanish-largest-text-native-fields_0_4F7E458A-4B76-40AE-A37C-E58B01155BF3.png",
+        "timestamp" : 1793733997.068
+      }
+    ],
+    "testIdentifier" : "SharedStoreQuoteUITests/testSpanishLargestTextKeepsRealQuoteEntryDiscoverable()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/SharedStoreQuoteUITests/testSpanishLargestTextKeepsRealQuoteEntryDiscoverable"
+  }
+]

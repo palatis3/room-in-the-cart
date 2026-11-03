@@ -1,0 +1,154 @@
+{
+  "recordedAt": "2026-11-03T20:24:37.469299+00:00",
+  "status": "prepared-not-built-or-run; safe restart checkpoint",
+  "objective": "Finish source-bound native screen evidence for E01/N06 recipe-library import and N04 correction privacy management. Work remains requested after restart.",
+  "ownedSourceFiles": [
+    "ios/UITestSupport/LibraryPrivacyUIFixture.swift",
+    "ios/UITests/LibraryPrivacyUITests.swift"
+  ],
+  "rootOwnedDispatcher": "ios/UITestSupport/ContributorRequestUIFixture.swift",
+  "dispatcherBranches": {
+    "--recipe-library-fixture": "RecipeLibraryUIFixtureRoot()",
+    "--correction-privacy-fixture": "CorrectionPrivacyUIFixtureRoot()"
+  },
+  "compilationConditions": [
+    "DEBUG",
+    "CONTRIBUTOR_CAPTURE_UI_FIXTURE"
+  ],
+  "fixtureInputBoundaries": [
+    "Production RecordsToolsEntryView/Composition/Model, real RecoveryRegistry and native SQLite stores. Only initial fictional data and selectedURL system-picker input are substituted; production preview/cancel/apply/whole-batch undo remain required.",
+    "Production SettingsView/CorrectionSettingsView and shared CaptureCorrectionStore, using the actual sourceWorkspaceID of a dedicated live LedgerModel. WorkspaceAccess is real local-only access, and device surfaces are bound through the actual composition with UI-test system effects disabled.",
+    "HouseholdModel is initialized from a deliberately disconnected bundle (no identity or service configuration); no live accounts, provider credentials, network session or guardian setup is manufactured.",
+    "Read-only fixture labels poll actual registry/correction state and canonical source-ledger bytes. No result is manufactured by a UI test action."
+  ],
+  "isolation": {
+    "localStores": "Application Support/UITestWorkspace/LibraryPrivacyFixture/{recipes|corrections}/{comparisons.sqlite,ledger.sqlite,pickup.sqlite}",
+    "recipeRegistry": "Application Support/UITestWorkspace/Records/recovery-v1.json, the production composition test path; reset only for explicit recipe fixture reset on the reserved test installation",
+    "correctionProfiles": "Application Support/UITestWorkspace/CaptureCorrections, scoped to local:<actual dedicated ledger sourceWorkspaceID> and en-US/es-US. Explicit reset retires only the prior scope recorded in that fixture mode folder.",
+    "preferencesSuites": [
+      "dev.roominthecart.library-privacy-ui-fixture.recipes",
+      "dev.roominthecart.library-privacy-ui-fixture.corrections"
+    ],
+    "resetGuard": [
+      "--ui-testing",
+      "matching --recipe-library-fixture or --correction-privacy-fixture",
+      "--reset-library-privacy-fixture"
+    ],
+    "seedLifetime": "Correction seeds are created once per dedicated workspace marker. A non-reset reopen must not repopulate a forgotten/opted-out scope."
+  },
+  "expectedRecipeJourney": [
+    "One pre-existing saved recipe. File contains two new recipes, one match to the saved recipe, one repeated new recipe, two skipped shapes and unsupported nutrition field.",
+    "Actual preview reports2 recipes ready /2 duplicates /2 rows skipped /nutrition; new rows show Absent here. Saved matches are reported as duplicateCount by current importer, not displayed as separate matched preview rows.",
+    "Cancel leaves saved recipe count1 and canonical local source unchanged. Corrupt picker input reports error, no apply preview, count1 and seed/source unchanged.",
+    "Explicit reviewed apply inserts2 copies (count3); recovered disclosure preserves original yield, ingredients, instruction and inert .invalid source URL.",
+    "Production Undo imported batch removes only those2 insertions (count1), preserving the pre-existing recovered recipe and live local source."
+  ],
+  "expectedCorrectionJourney": [
+    "English2 and Spanish1 remembered rules seeded for a real dedicated workspace; named Forget actions exercise target labels and last-entry removal with visible durable result.",
+    "A second explicit reset seed tests opt-out Cancel (no change), then destructive confirmation (English0/off), leaving Spanish1/on and source ledger unchanged.",
+    "Select Spanish to inspect its retained rule; open native Privacy/Support/Help from Settings in the disconnected fixture; verify supplied operator/contact and metadata-only summary. Do not open composer/send email.",
+    "Viewport result assertions intentionally do not claim real VoiceOver focus or spoken output."
+  ],
+  "exactUITests": [
+    "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo",
+    "RoomInTheCartUITests/CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp"
+  ],
+  "preparedLaunchArguments": {
+    "recipes": [
+      "--ui-testing",
+      "--recipe-library-fixture",
+      "--reset-library-privacy-fixture",
+      "-AppleLanguages",
+      "(en)",
+      "-AppleLocale",
+      "en_US"
+    ],
+    "corrections": [
+      "--ui-testing",
+      "--correction-privacy-fixture",
+      "--reset-library-privacy-fixture",
+      "-AppleLanguages",
+      "(en)",
+      "-AppleLocale",
+      "en_US"
+    ]
+  },
+  "resumePreconditions": [
+    "Root reserves17e and schedules fixture build after Lumpy E03/archive active lanes end. No simulator was booted or heavy native build started for this preparation.",
+    "Archive owner confirms final namespace/schema regression snapshot. Adapter save:selectedURL remains stable; root already inserted both dispatcher branches.",
+    "Regenerate project after this fixture/test source snapshot: python3 scripts/generate_xcode_project.py. Root owns this mutation and frozen-source/binary manifests.",
+    "Run normal native model checks first as root planned, then dedicated flagged fixture UI build against the same final source. Do not run these tests against the normal ResumeDD binary; it does not contain fixture roots."
+  ],
+  "suggestedFixtureCommandArgv": [
+    "xcodebuild",
+    "-project",
+    "ios/RoomInTheCart.xcodeproj",
+    "-scheme",
+    "RoomInTheCart",
+    "-configuration",
+    "Debug",
+    "-destination",
+    "platform=iOS Simulator,id=<root-reserved-17e-UUID>",
+    "-derivedDataPath",
+    "<root-dedicated-fixture-DerivedData>",
+    "-resultBundlePath",
+    "<new-result-bundle-path>",
+    "-collect-test-diagnostics",
+    "never",
+    "-only-testing:RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo",
+    "-only-testing:RoomInTheCartUITests/CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp",
+    "SWIFT_ACTIVE_COMPILATION_CONDITIONS=$(inherited) DEBUG CONTRIBUTOR_CAPTURE_UI_FIXTURE",
+    "CODE_SIGN_IDENTITY=-",
+    "test"
+  ],
+  "preparationChecks": [
+    {
+      "kind": "Swift-frontend-syntax-parse",
+      "result": "pass",
+      "arguments": [
+        "-frontend",
+        "-parse",
+        "-D",
+        "DEBUG",
+        "-D",
+        "CONTRIBUTOR_CAPTURE_UI_FIXTURE"
+      ]
+    },
+    {
+      "kind": "git-diff-whitespace",
+      "result": "pass"
+    },
+    {
+      "kind": "cached-normal-module-typecheck",
+      "result": "not-completed",
+      "reason": "Stopped before source validation because imported normal app module requires CDeviceSQLite module path. Log .build/LibraryPrivacyFixturePrep/typecheck-0.log. No heavy app build or simulator run occurred."
+    }
+  ],
+  "unfinished": [
+    "Actual flagged fixture compilation, correcting any type/link issues against final archive source if needed.",
+    "Both native UI methods are unexecuted. Picker/menu selectors, production result viewport routing, screenshots and readback counts must be checked on reserved17e.",
+    "Capture xcresult, logs, device/OS/build/locale and exact frozen source/binary identities; update a new execution evidence record without relabeling this preparation as a pass.",
+    "Physical accessibility/VoiceOver and human US-Spanish acceptance remain separate."
+  ],
+  "processesLeftRunning": [],
+  "ownSourceSHA256": {
+    "ios/UITestSupport/LibraryPrivacyUIFixture.swift": "e43d439fa77f5ce81cca4abc6396fd9c4b92bac6aae757c5d0c590eee35b019b",
+    "ios/UITests/LibraryPrivacyUITests.swift": "77cce6f55a1dd9e6df85d4fa4317ccdf78bc6d14685ce51ce945dc71f654a02c"
+  },
+  "dependencySnapshotSHA256": {
+    "ios/UITestSupport/ContributorRequestUIFixture.swift": "1a4f6ba73d0a026bb7acad52bc1c9edb277d1b61266432cc2a3fb86b2511cc26",
+    "ios/UITestSupport/RecordsMediaUIFixture.swift": "d6e0e39f7e7e6405df468ef6bf15c050989b6f1e0cae544e02a454792ba35b29",
+    "ios/Features/Records/RecordsToolsView.swift": "c25dd783d3064674f86b397c6f94658029511e2ae67b4d4b0f689fa03d614c2b",
+    "ios/Features/Records/RecordsToolsModel.swift": "2db1270942e63672c0e5fde38633db4d7b02c792dc5156b12a569439865a2f2d",
+    "ios/App/RecordsComposition.swift": "5db8b8ec28c8758156506600ebdcc4797ada66640fae7ea40b772a77b84bfc2a",
+    "ios/Packages/RecordArchive/Sources/RecordArchive/RecipeImport.swift": "b4fccbc545ce15e2490a5312c84fafa8f005fb7327963bc172da4b9d633e8233",
+    "ios/Packages/RecordArchive/Sources/RecordArchive/RecoveryRegistry.swift": "b418869a0a5161bcef987b1154853e86c218e440f438ac36b7c3d8819133bf70",
+    "ios/Features/Capture/CorrectionSettingsView.swift": "5ecf08184c8bcb694a29bfc2b18682202131ec01981afe98a57cfccb8a17259a",
+    "ios/Features/Capture/CorrectionSettingsOutcome.swift": "57e7c1f6c50dd5fcab26f4c4ac006bf9dd3e83a51a04d92e2fa3b7c05f98b9c5",
+    "ios/Features/Capture/CaptureCorrections.swift": "a039029357de73202188fd5c4df67b513d87d412df2d48a498b4e16fb79baf59",
+    "ios/App/RoomInTheCartApp.swift": "0ac5962fd6f02fa9cdc919af1e998bd34874204ceac87ab19100e4aaa347cb52",
+    "ios/Features/Help/HelpView.swift": "575f5ddaece8958b30a4e87a7c94ae5be034a2260db334c6794f0b72becf078b",
+    "config/public-contact.json": "6e55ef58c6ad5aafcbaca74f1c525f4306b55d587456d008db488b0a95043175"
+  },
+  "externalMutations": []
+}

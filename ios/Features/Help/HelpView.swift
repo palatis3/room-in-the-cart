@@ -121,6 +121,9 @@ struct HelpPrivacyView: View {
                 NavigationLink(helpText("Open household and account controls")) { HouseholdSettingsView(model: household) }
             }
             Section(helpText("Policy and terms")) {
+                if let name = configuration.operatorName {
+                    LabeledContent(helpText("Operator"), value: name).accessibilityIdentifier("help.policy.operator")
+                }
                 Text(helpText("This guide describes the app’s data controls. The operator’s privacy policy and terms are separate pages."))
                 if let url = configuration.privacyURL { Link(helpText("Privacy policy"), destination: url) }
                 else { Text(helpText("The privacy policy link is unavailable in this build.")) }
@@ -139,8 +142,17 @@ struct HelpSupportView: View {
         List {
             Section(helpText("Get help")) {
                 Text(helpText("Describe the steps, what you expected and what happened. Leave out grocery details, budgets, names, receipts, sign-in codes and invitation links."))
+                if let url = configuration.supportEmailURL, let address = configuration.supportEmailAddress {
+                    Link(destination: url) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(helpText("Email support"))
+                            Text(address)
+                        }.frame(minHeight: 44)
+                    }.accessibilityIdentifier("help.support.email")
+                    Text(helpText("Choose your email app and review the message before sending. No message is sent automatically."))
+                }
                 if let url = configuration.supportURL { Link(helpText("Open support"), destination: url).accessibilityIdentifier("help.support.open") }
-                else { Text(helpText("An online support destination is unavailable in this build. Offline help and the support summary are still available.")) }
+                else if configuration.supportEmailURL == nil { Text(helpText("An online support destination is unavailable in this build. Offline help and the support summary are still available.")) }
                 NavigationLink(helpText("Read offline help")) { HelpCenterView() }
             }
             Section(helpText("Review support summary")) {

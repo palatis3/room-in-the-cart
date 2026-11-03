@@ -1,0 +1,18 @@
+{
+  "executed_read_only": true,
+  "socket": "/tmp",
+  "port": 55432,
+  "proposed_databases_exist": false,
+  "proposed_owned_roles_exist": false,
+  "existing_shared_roles": {
+    "ritc_test_worker": {
+      "worker_member": true,
+      "app_member": false
+    },
+    "ritc_test_combined_worker": {
+      "worker_member": true,
+      "app_member": true
+    }
+  },
+  "scope": "names/memberships only; no password values or row data queried"
+}

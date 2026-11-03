@@ -17,6 +17,7 @@ import XCTest
         launch(reset: true)
         tap(element("settings"))
         let consent = app.switches["Offer optional feedback after a pickup"]
+        reveal(consent)
         XCTAssertEqual(consent.value as? String, "0")
         enableSwitch("Offer optional feedback after a pickup")
         tap(app.buttons["Done"])

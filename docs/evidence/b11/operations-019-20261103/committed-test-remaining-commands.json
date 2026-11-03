@@ -1,0 +1,45 @@
+[
+  {
+    "name": "store-quotes-integration",
+    "args": [
+      "--test",
+      "tests/shared-store-quotes.integration.mjs"
+    ],
+    "env": {
+      "PATH": "/Users/palatis/Room in the Cart/.tools/node-v22.14.0-darwin-arm64/bin:/usr/bin:/bin",
+      "HOME": "/Users/palatis",
+      "TMPDIR": "/tmp",
+      "TEST_DATABASE_URL": "postgresql://ritc_b11_ops019_app_20261103@localhost/ritc_b11_ops019_20261103?host=%2Ftmp&port=55432",
+      "TEST_ADMIN_DATABASE_URL": "postgresql://palatis@localhost/ritc_b11_ops019_20261103?host=%2Ftmp&port=55432",
+      "TEST_WORKER_DATABASE_URL": "postgresql://ritc_b11_ops019_worker_20261103@localhost/ritc_b11_ops019_20261103?host=%2Ftmp&port=55432"
+    }
+  },
+  {
+    "name": "measurement-integration",
+    "args": [
+      "--test",
+      "tests/measurement.integration.mjs"
+    ],
+    "env": {
+      "PATH": "/Users/palatis/Room in the Cart/.tools/node-v22.14.0-darwin-arm64/bin:/usr/bin:/bin",
+      "HOME": "/Users/palatis",
+      "TMPDIR": "/tmp",
+      "TEST_DATABASE_URL": "postgresql://ritc_b11_ops019_app_20261103@localhost/ritc_b11_ops019_20261103?host=%2Ftmp&port=55432",
+      "TEST_ADMIN_DATABASE_URL": "postgresql://palatis@localhost/ritc_b11_ops019_20261103?host=%2Ftmp&port=55432",
+      "TEST_WORKER_DATABASE_URL": "postgresql://ritc_b11_ops019_worker_20261103@localhost/ritc_b11_ops019_20261103?host=%2Ftmp&port=55432"
+    }
+  },
+  {
+    "name": "quote-measurement-pure",
+    "args": [
+      "--test",
+      "tests/shared-store-quotes-math.test.mjs",
+      "tests/measurement.test.mjs"
+    ],
+    "env": {
+      "PATH": "/Users/palatis/Room in the Cart/.tools/node-v22.14.0-darwin-arm64/bin:/usr/bin:/bin",
+      "HOME": "/Users/palatis",
+      "TMPDIR": "/tmp"
+    }
+  }
+]

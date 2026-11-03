@@ -1,0 +1,60 @@
+{
+  "devicesAndConfigurations" : [
+    {
+      "device" : {
+        "architecture" : "arm64",
+        "deviceId" : "E03D2CFA-6E83-4783-840C-8E50981F527B",
+        "deviceName" : "RITC Scan Diagnostic",
+        "modelName" : "iPhone 17e",
+        "osBuildNumber" : "24A434",
+        "osVersion" : "27.0",
+        "platform" : "iOS Simulator"
+      },
+      "expectedFailures" : 0,
+      "failedTests" : 2,
+      "passedTests" : 2,
+      "skippedTests" : 0,
+      "testPlanConfiguration" : {
+        "configurationId" : "1",
+        "configurationName" : "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription" : "RoomInTheCart · Built with macOS 27.2",
+  "expectedFailures" : 0,
+  "failedTests" : 2,
+  "finishTime" : 1793732047.561,
+  "passedTests" : 2,
+  "result" : "Failed",
+  "runtimeWarnings" : [
+
+  ],
+  "skippedTests" : 0,
+  "startTime" : 1793731332.666,
+  "statistics" : [
+
+  ],
+  "testFailures" : [
+    {
+      "failureText" : "XCTAssertTrue failed - Missing actionable UI element: Query chain:\n →Find: Target Application 'dev.roominthecart.app.debug'\n  ↪︎Find: Descendants matching type TextView\n    ↪︎Find: Elements matching predicate '\"Household stock and package evidence\" IN identifiers'\n      ↪︎Find: First Match\nNo matches found for first query match sequence: `Descendants matching type TextView` -> `Elements matching predicate '\"Household stock and package evidence\" IN identifiers'`, given input Application, pid: 13581, label: 'Room in the Cart'\n",
+      "targetName" : "RoomInTheCartUITests",
+      "testIdentifier" : 4,
+      "testIdentifierString" : "SharedMealIdeaUITests/testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview()",
+      "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/SharedMealIdeaUITests/testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview",
+      "testName" : "testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview()"
+    },
+    {
+      "failureText" : "XCTAssertEqual failed: (\"Optional(\"0\")\") is not equal to (\"Optional(\"1\")\") - The reviewed switch must be on: awayCarryover.checked",
+      "targetName" : "RoomInTheCartUITests",
+      "testIdentifier" : 1,
+      "testIdentifierString" : "DinnerAwayCarryoverUITests/testPhysicalCarryoverCancelApplyAndRestartKeepOriginalPurchase()",
+      "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/DinnerAwayCarryoverUITests/testPhysicalCarryoverCancelApplyAndRestartKeepOriginalPurchase",
+      "testName" : "testPhysicalCarryoverCancelApplyAndRestartKeepOriginalPurchase()"
+    }
+  ],
+  "title" : "Test - RoomInTheCart",
+  "topInsights" : [
+
+  ],
+  "totalTestCount" : 4
+}

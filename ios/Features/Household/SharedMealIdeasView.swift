@@ -5,18 +5,41 @@ struct SharedMealIdeasView: View {
     @ObservedObject var household: HouseholdModel
     @Environment(\.scenePhase) private var scenePhase
     @State private var model: SharedMealIdeaModel?
+    @State private var selectedProposal: ProposalSelection?
+    @State private var showingProposal = false
+    private struct ProposalSelection {
+        let idea: SharedMealIdeaPage.Idea
+        let scope: SharedMealChangeScope
+    }
     private var scope: SharedMealChangeScope? { household.sharedMealChangeScope }
     var body: some View {
-        Group {
+        VStack(spacing: 0) {
             if let model, model.scope == scope {
-                SharedMealIdeaEditor(model: model, household: household)
+                SharedMealIdeaEditor(model: model, household: household, onPropose: { idea, reviewedScope in
+                    guard idea.state == "approved", reviewedScope == scope else { return }
+                    selectedProposal = .init(idea: idea, scope: reviewedScope)
+                    showingProposal = true
+                })
             } else {
                 ContentUnavailableView(ht("Household dinner ideas"), systemImage: "person.2", description: Text(ht("Refresh the household and check meal planning access.")))
             }
         }.navigationTitle(ht("Household dinner ideas"))
-        .task(id: scope) { await open() }
+        // Keep the destination outside the editor Form's disabled environment.
+        // Its approved value stays stable when the parent model is invalidated.
+        .navigationDestination(isPresented: $showingProposal) {
+            if let selectedProposal, selectedProposal.scope == scope {
+                SharedMealIdeaProposalView(household: household, idea: selectedProposal.idea, scope: selectedProposal.scope)
+            } else { Text(ht("Refresh the household and check meal planning access.")) }
+        }
+        .task(id: scope) {
+            if selectedProposal?.scope != scope { showingProposal = false; selectedProposal = nil }
+            await open()
+        }
+        .onChange(of: showingProposal) { _, presented in if !presented { selectedProposal = nil } }
         .onChange(of: scenePhase) { _, phase in
-            if phase != .active { model?.invalidate() } else { Task { await open() } }
+            if phase != .active {
+                model?.invalidate(); showingProposal = false; selectedProposal = nil
+            } else { Task { await open() } }
         }.onDisappear { model?.invalidate() }
     }
     @MainActor private func open() async {
@@ -30,6 +53,7 @@ struct SharedMealIdeasView: View {
 private struct SharedMealIdeaEditor: View {
     @ObservedObject var model: SharedMealIdeaModel
     @ObservedObject var household: HouseholdModel
+    let onPropose: (SharedMealIdeaPage.Idea, SharedMealChangeScope) -> Void
     @State private var ideaID = UUID()
     @State private var draft = SharedMealIdeaDraft()
     @State private var reviewed = false
@@ -99,9 +123,8 @@ private struct SharedMealIdeaEditor: View {
                 SharedMealIdeaPreviewView(idea: saved)
                 if saved.state == "approved" {
                     Text(ht("Approved idea only. It is not scheduled and has changed no shared shopping lines."))
-                    NavigationLink(ht("Separately propose this approved meal")) {
-                        SharedMealIdeaProposalView(household: household, idea: saved, scope: model.scope)
-                    }.disabled(!own).accessibilityIdentifier("household-idea-propose")
+                    Button(ht("Separately propose this approved meal")) { onPropose(saved, model.scope) }
+                        .disabled(!own).accessibilityIdentifier("household-idea-propose")
                 } else if own {
                     Toggle(ht("I reviewed these household quantities, exclusions, reservations, and usable packs"), isOn: $reviewed)
                     Button(ht("Review adult approval")) { reviewApproval = true }
@@ -117,9 +140,17 @@ private struct SharedMealIdeaEditor: View {
             if let notice = model.notice { Text(notice) }
             Button(ht("Refresh household ideas")) { Task { await model.load() } }
         }.disabled(model.busy || !model.live)
+        .toolbar { ToolbarItemGroup(placement: .keyboard) {
+            Spacer()
+            Button(ht("Done")) {
+                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+            }.accessibilityIdentifier("household-idea-keyboard-done")
+        } }
         .onChange(of: draft) { _, _ in reviewed = false }
         .confirmationDialog(ht("Approve this household idea?"), isPresented: $reviewApproval, titleVisibility: .visible) {
             Button(ht("Approve meal and quantities")) { Task { await model.write(ideaID: ideaID, draft: draft, approve: true, reviewed: reviewed) } }
+            Button(ht("Cancel")) { reviewApproval = false }
+                .accessibilityIdentifier("household-idea-cancel-approval")
         } message: { Text(ht("This saves adult approval only. Linking a meal and changing shared packs require separate reviews.")) }
     }
     private func lines(_ value: Binding<[String]>) -> Binding<String> {

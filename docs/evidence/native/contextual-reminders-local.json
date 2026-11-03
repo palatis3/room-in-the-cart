@@ -1,0 +1,124 @@
+{
+  "date": "2026-11-03",
+  "requirement": "Foundation 2.1 E08; S07 explicit offer-deadline request and S12 specific deferral review",
+  "status": "implemented-and-locally-validated",
+  "implemented": [
+    "Each saved current S07 offer has a request-only deadline reminder entry bound to its workspace, pickup, offer identity and saved revision; past-cutoff offers have no contextual request action.",
+    "Each S12 review deferral exposes its own request-only entry while the local choice remains Keep deferred; accepted/handled/dismissed local choices suppress it.",
+    "Both routes reuse the existing typed ReminderEditorContext, ReminderCoordinator, private route store, generic notification body and source/persona authorization checks.",
+    "Opening/preparing/reviewing creates no desired reminder, permission request, order decision, purchase, arrival or charge. Only explicit Schedule may request notification permission.",
+    "Shows item identity, pickup saved date, selected local date/time, time zone, expiry, offer cutoff when present, default quiet hours and read-only current saved status.",
+    "Pending, scheduled, off, denied, expired and retry states are distinct; a saved scheduled state displays its saved date and zone. Cancel and Turn off use existing source-safe navigation/coordinator paths.",
+    "No reminders were added for undated dinners, general meal repair or other unsupported subjects."
+  ],
+  "native_model_validation": {
+    "result": "passed",
+    "contextual_reminder_tests": 5,
+    "full_suite_tests": 438,
+    "failures": 0,
+    "result_bundle": ".build/ResumedReviewedNative.xcresult",
+    "log": ".build/resumed-reviewed-native-tests.log",
+    "coverage": [
+      "Preparing/reopening typed offer and deferral contexts keeps stable reminder/route IDs without creating reminder state or mutating pickup history.",
+      "Wrong workspace, pickup, subject kind, source revision, duplicate candidates and passed cutoff fail closed.",
+      "Source edits and locked workspace invalidate the prior authorization.",
+      "Explicit save with the isolated denied adapter and subsequent cancellation preserve pending retailer response and review deferral.",
+      "Creating a next-shop successor retires prior contextual targets without changing the original purchase."
+    ],
+    "fixture_isolation": "Private temporary stores and UserDefaults suites; DEBUG-only isolated notification adapter. Composition-owned SQLite actors have no public close port, so temporary store files remain until process/container cleanup."
+  },
+  "normal_app_ui_validation": {
+    "result": "passed",
+    "tests": 2,
+    "failures": 0,
+    "seconds": 225.063,
+    "device": {
+      "name": "Room in the Cart iOS 17 Small",
+      "model": "iPhone SE",
+      "os": "iOS 17.0 (21A328)",
+      "id": "65B8A2FE-51FE-44A5-A9C7-F2524E33179B"
+    },
+    "entry": "Ordinary shipping SwiftUI Shop/list/checkout routes, manually typed fictional groceries, no preseeded grocery data, fixture authority or deep link. --ui-testing isolates persistence and uses the existing non-OS denied notification adapter.",
+    "result_bundle": ".build/E08ContextualAccepted.xcresult",
+    "log": ".build/e08-contextual-accepted-ui.log",
+    "frozen_products": ".build/ContextualReminderAcceptedUIProducts",
+    "cases": [
+      {
+        "name": "ContextualReminderUITests/testNextShopDeferralRequestsReminderOnlyAfterExplicitScheduleAndCanCancel",
+        "result": "passed",
+        "seconds": 118.005,
+        "assertions": [
+          "Create and review a real specific coffee deferral from Shop.",
+          "Open contextual reminder, explicitly confirm expiry, review chosen time while nothing is scheduled and no permission alert exists.",
+          "Explicit Schedule displays denied/unscheduled under the isolated adapter; Turn off displays off.",
+          "Cancel preserves the old deferral; a local Already handled choice suppresses its request entry and cancelling that choice restores the deferral."
+        ]
+      },
+      {
+        "name": "ContextualReminderUITests/testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending",
+        "result": "passed",
+        "seconds": 107.057,
+        "assertions": [
+          "Create a real pickup, explicitly freeze/report placement, enter a saved store offer and select a future cutoff through the native calendar.",
+          "Open the exact offer deadline reminder and verify source identity, dated cutoff, initial off/unscheduled state and no permission alert.",
+          "Cancel returns to the saved offer with retailer response still Pending and reminder request still available."
+        ]
+      }
+    ],
+    "harness_setting": {
+      "app.launchEnvironment.OS_ACTIVITY_MODE": "disable",
+      "scope": "ContextualReminderUITests app process only",
+      "reason": "Newer XCTest snapshot instrumentation on iOS 17 crashed in runtime_issue_os_log_fault_callback / LIBTRACE high-logging-volume quarantine. XCTest action and assertion logs remain enabled. This run makes no claim about absence of runtime warnings; B01 accessibility audits remain separate and unfiltered."
+    },
+    "prior_attempts": {
+      "preserved_results": [
+        ".build/E08ContextualReminders.xcresult",
+        ".build/E08NavigationReviewed.xcresult",
+        ".build/E08NavigationFocused.xcresult"
+      ],
+      "crashes": [
+        ".build/E08Evidence/RoomInTheCart-2026-11-03-135809.ips",
+        ".build/E08Evidence/RoomInTheCart-2026-11-03-135929.ips"
+      ],
+      "notes": ".build/E08Evidence/harness.json",
+      "corrections": "Test helpers now handle native iOS 17 full-date calendar labels, sheet-covered tab bars, passive text viewport checks and actual unobscured action touch points. No product feature changes were required by those failed attempts."
+    },
+    "screenshots": [
+      "docs/evidence/native/contextual-reminders/s12-reviewed-time-unscheduled.png",
+      "docs/evidence/native/contextual-reminders/s12-off-cancel-keeps-deferral.png",
+      "docs/evidence/native/contextual-reminders/s07-specific-offer-unscheduled.png",
+      "docs/evidence/native/contextual-reminders/s07-cancel-keeps-retailer-pending.png"
+    ]
+  },
+  "verification_scope": [
+    "The simulator uses the isolated denied notification adapter. Real notification authorization UI, OS registration/delivery and signed-device behavior are not asserted by this placement evidence.",
+    "Normal UI evidence is English on iOS 17 Small. Added strings include English/US Spanish translations; this is not a separate full Spanish or VoiceOver/Dynamic Type acceptance run.",
+    "The scheduler and generic notification payload were reused unchanged; existing package tests cover permission/retry/cancellation/DST/quiet-hour behavior."
+  ],
+  "provenance": {
+    "checkpoint": "dbf9b41ecf1914df78a536825c01da2f90a220fc",
+    "source_sha256": {
+      "ios/Features/DeviceSurfaces/ContextualReminderEntry.swift": "33360d48b574d7dbe8194b079b69c1e8cbb1c2be7ddb06d208a5800bafcbc5f4",
+      "ios/Features/DeviceSurfaces/DeviceSurfacesEntry.swift": "14a462163ef4342d1a7911ac8ba0ee52aff589aa7d02bb88118162d3261894e3",
+      "ios/Features/DeviceSurfaces/ReminderEditorView.swift": "912667a88f14823bb12572b7fae0d31a594e16b17a23330cdb875c197a3c05e7",
+      "ios/Features/DeviceSurfaces/DeviceSurfaces.xcstrings": "b53e8e182a42f49ad02050b7a2da7e128a4c1920dc6e0be4dfecd17d3a496f92",
+      "ios/Features/Pickup/PickupArrivalView.swift": "41fc4c73f15878526d3e6b72ad3a98185765ef18a9c7aa0ad457373f35eba2e3",
+      "ios/Features/Pickup/PickupSettlementView.swift": "915ab6e9fc5f92aeb2aded040f817814641e9fbaba1a7781962a410dc0fef307",
+      "ios/Features/Pickup/PickupOfferEditorView.swift": "eb31b823b9fa6cba93e445ca4a5afc11be5161940e1f236d10e8f0cff314886a",
+      "ios/Tests/ContextualReminderTests.swift": "ddf70964bd0b79e787dfa84119ed95830d861647d60c454de512f73174a988d5",
+      "ios/UITests/ContextualReminderUITests.swift": "29191bced70cda566940c11843b45d4778a1dfcdb47e139f49aa171e363d1d58"
+    },
+    "binary_sha256": {
+      ".build/ContextualReminderAcceptedUIProducts/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart": "2ace2078550eb3706e3b2598699815ed476bd3a6bb93d70ee5b28853888eb609",
+      ".build/ContextualReminderAcceptedUIProducts/Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/PlugIns/RoomInTheCartUITests.xctest/RoomInTheCartUITests": "ceaf063c9c65bbbe2c1eb033c7b735c8874444c5e262459358e897be5c65d435"
+    }
+  },
+  "localization_validation": {
+    "command": "python3 scripts/check_localization.py",
+    "result": "passed",
+    "catalogs": 15,
+    "en_es_entries": 3435,
+    "literal_source_keys": 3293,
+    "scope": "Structural source/translation and format-argument checks; dynamic/runtime compositions and human language review remain separate."
+  }
+}

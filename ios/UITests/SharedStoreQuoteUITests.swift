@@ -9,7 +9,7 @@ import XCTest
     override func setUpWithError() throws {
         continueAfterFailure = false
         app = XCUIApplication(bundleIdentifier:"dev.roominthecart.app.debug")
-        app.launchArguments = ["--ui-testing","--shared-store-quotes-fixture","-AppleLanguages","(en)","-AppleLocale","en_US"]
+        app.launchArguments = ["--ui-testing","--shared-store-quotes-fixture","-AppleLanguages","(en)","-AppleLocale","en_US","-UIPreferredContentSizeCategoryName","UICTContentSizeCategoryL"]
         app.launchEnvironment["RITC_QUOTES_FIXTURE_WORKSPACE"] = workspace
         app.launchEnvironment["RITC_QUOTES_FIXTURE_RESET"] = "1"
     }
@@ -101,11 +101,36 @@ import XCTest
         capture("S27-spanish-largest-text-native-fields")
         counter("saves",0); counter("proposals",0); counter("adoptions",0)
     }
+    func testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult() {
+        openAdult(); tap(element("sharedQuotes.enter"))
+        inputMeaning("38.00", id:"sharedQuotes.first.itemSubtotal", title:"Items before fees and discounts in USD, optional")
+        inputMeaning("38.00", id:"sharedQuotes.first.total", title:"Whole checkout total in USD, optional")
+        capture("S27-filled-subtotal-checkout-persistent-labels")
+        inputMeaning("4.00", id:"sharedQuotes.first.tripCash", title:"Incremental trip cash in USD, optional")
+        inputMeaning("18", id:"sharedQuotes.first.extraMinutes", title:"Extra minutes, optional")
+        inputMeaning("40.00", id:"sharedQuotes.first.cap", title:"Applicable cap in USD, optional")
+        capture("S27-filled-trip-time-cap-persistent-labels")
+        counter("saves",0); counter("proposals",0); counter("adoptions",0)
+        tap(element("fixture.s27.switch")); openComparison()
+        let named = element("sharedQuotes.grant.33333333-3333-4333-8333-333333333333")
+        reveal(named)
+        XCTAssertEqual(named.label,"Review revoking budget access from Second adult")
+        capture("S27-named-adult-budget-grant-accessibility-label")
+    }
+    private func inputMeaning(_ value: String, id: String, title: String) {
+        fill(value,into:id)
+        let label = app.staticTexts.matching(identifier:title).firstMatch
+        reveal(label)
+        XCTAssertTrue(label.isHittable,title)
+        XCTAssertEqual(app.textFields.matching(identifier:id).firstMatch.value as? String,value)
+    }
     private func openAdult() { app.launch(); openComparison() }
     private func openComparison() {
         let link = element("sharedShop.storeQuotes")
-        XCTAssertTrue(link.waitForExistence(timeout:25)); tap(link)
-        XCTAssertTrue(element("sharedQuotes.scope").waitForExistence(timeout:15))
+        if !link.waitForExistence(timeout:8) { reveal(link) }
+        tap(link)
+        let ready = app.descendants(matching:.any).matching(NSPredicate(format:"identifier IN %@",["sharedQuotes.scope","sharedQuotes.retry"])).firstMatch
+        XCTAssertTrue(ready.waitForExistence(timeout:15))
     }
     private func enterKnownQuotes() {
         tap(element("sharedQuotes.enter"))
@@ -159,7 +184,7 @@ import XCTest
             if target.exists && target.isHittable, !fullyVisible || (target.frame.minY >= area.minY && target.frame.maxY <= area.maxY) { return }
             let up: Bool
             if target.exists && !target.frame.isEmpty { up = target.frame.midY > area.midY }
-            else { up = attempt < 21 }
+            else { up = (attempt / 6) % 2 == 0 }
             scrollContent(upward:up)
         }
         XCTAssertTrue(target.exists && target.isHittable,"Missing actionable UI element: "+target.debugDescription)

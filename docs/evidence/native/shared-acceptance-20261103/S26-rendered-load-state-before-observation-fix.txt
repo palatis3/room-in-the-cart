@@ -1,0 +1,2 @@
+Form value: Optional(B1L1P0S1E1)
+Changes read value: Optional(C1)

@@ -1,0 +1,18 @@
+{
+  "pendingBefore": [
+    {
+      "job_id": "081b8dd0-60e3-4972-9fae-6353b46aeb4f",
+      "issuer": "https://store-quotes.fixture.invalid",
+      "state": "pending"
+    }
+  ],
+  "result": {
+    "completed": 1,
+    "retryScheduled": 0,
+    "leaseLost": 0,
+    "receiptsCleared": 0,
+    "jobsPurged": 0
+  },
+  "syntheticProviderCalls": 1,
+  "remaining": 0
+}

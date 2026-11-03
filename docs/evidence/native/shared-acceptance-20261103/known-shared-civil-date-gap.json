@@ -1,0 +1,16 @@
+{
+  "status": "open; integration-owned common formatter",
+  "component": "ios/Features/Household/SharedMealViews.swift: SharedMealFacts",
+  "simulatorTimeZone": "America/New_York",
+  "runtime": "iOS27.0 (24A434)",
+  "wireOriginalDay": "2026-11-05",
+  "visibleOriginalDay": "November 4, 2026",
+  "wireNewDay": "2026-11-03",
+  "visibleNewDay": "November 2, 2026",
+  "newWireDayEvidence": "sharedMealDay(day) uses UTC civil components; day starts Date(), the test did not change its DatePicker, and the run clock is November3UTC. POST body was not separately archived.",
+  "screenshot": "screenshots/S26-shopper-applied-once-original-and-half-cup-meals-retained.png",
+  "screenshotSHA256": "879dc5e23fe3ac684e57504653b3e922d96b9c1ef773614ecfd42bd85aeafb56",
+  "scope": "Quantity/proposal/shopper-Apply assertions passed; displayed civil dates were not asserted and are not accepted. Wire/model day handling was not changed by this lane.",
+  "parentNotified": true,
+  "commonSourceEditedByThisLane": false
+}

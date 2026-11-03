@@ -1173,6 +1173,57 @@
           }
         }
       }
+    },
+    "Email support": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Email support"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar correo a soporte"
+          }
+        }
+      }
+    },
+    "Choose your email app and review the message before sending. No message is sent automatically.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose your email app and review the message before sending. No message is sent automatically."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige tu app de correo y revisa el mensaje antes de enviarlo. No se envía ningún mensaje automáticamente."
+          }
+        }
+      }
+    },
+    "Operator": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Operator"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Operador"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -6,6 +6,26 @@ struct SharedMealIdeaProposalView: View {
     let idea: SharedMealIdeaPage.Idea
     let scope: SharedMealChangeScope
     @State private var model: SharedMealChangeModel?
+    var body: some View {
+        Group {
+            if let model {
+                SharedMealIdeaProposalContent(household: household, idea: idea, scope: scope, model: model)
+            } else { Text(ht("Refresh the household and check meal planning access.")) }
+        }.navigationTitle(ht("Propose approved household meal"))
+        .task {
+            guard household.sharedMealChangeScope == scope, let service = household.service else { return }
+            let next = SharedMealChangeModel(scope: scope, service: service, store: household.decisionStore,
+                                            runtime: { household.sharedMealChangeScope })
+            model = next; await next.load()
+        }.onDisappear { model?.invalidate() }
+    }
+}
+
+private struct SharedMealIdeaProposalContent: View {
+    @ObservedObject var household: HouseholdModel
+    let idea: SharedMealIdeaPage.Idea
+    let scope: SharedMealChangeScope
+    @ObservedObject var model: SharedMealChangeModel
     @State private var day = Date()
     @State private var showingShopperReview = false
     @State private var openSharedShop = false
@@ -15,7 +35,7 @@ struct SharedMealIdeaProposalView: View {
             Text(verbatim: idea.draft.title)
             SharedMealIdeaPreviewView(idea: idea)
             Text(ht("An approved idea stays separate from the week. Choose a real date and review this proposal; only the current shopper can apply shared packs."))
-            if let model, model.live {
+            if model.live {
                 if let review = model.review {
                     SharedMealFacts(meal: review.request.meal)
                     Button(ht("Send reviewed proposal")) { Task { await model.sendReviewed() } }.accessibilityIdentifier("household-idea-send-proposal")
@@ -35,8 +55,7 @@ struct SharedMealIdeaProposalView: View {
                 }
                 Button(ht("Refresh shared changes")) { Task { await model.load() } }
             } else { Text(ht("Refresh the household and check meal planning access.")) }
-        }.disabled(model?.busy == true || household.sharedMealChangeScope != scope)
-        .navigationTitle(ht("Propose approved household meal"))
+        }.disabled(model.busy || household.sharedMealChangeScope != scope)
         .sheet(isPresented: $showingShopperReview, onDismiss: {
             if sharedReviewReady { sharedReviewReady = false; openSharedShop = true }
         }) {
@@ -49,11 +68,5 @@ struct SharedMealIdeaProposalView: View {
             if household.sharedMealChangeScope == scope, household.projection?.role == "shopper" { HouseholdShopView(model: household) }
             else { Text(ht("Refresh the household and check meal planning access.")) }
         }
-        .task {
-            guard household.sharedMealChangeScope == scope, let service = household.service else { return }
-            let next = SharedMealChangeModel(scope: scope, service: service, store: household.decisionStore,
-                                            runtime: { household.sharedMealChangeScope })
-            model = next; await next.load()
-        }.onDisappear { model?.invalidate() }
     }
 }

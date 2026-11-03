@@ -1,0 +1,102 @@
+{
+  "issuer": "https://operations019.fixture.invalid",
+  "simulation": "Synthetic JWT signing/session rows and in-process provider/Apple gateway only; no real provider or Apple verification",
+  "sourceDatabase": "ritc_b11_ops019_20261103",
+  "retained": {
+    "householdId": "121a57aa-8fb4-47ed-b4f0-6ce703b44eb8",
+    "quoteShopId": "009067e4-19dc-4e80-b8bc-47a62c75f002",
+    "owner": {
+      "memberId": "884dfcad-5fe9-480c-ac95-d5853fdeccc4",
+      "subject": "bdc03d42-5293-457b-b5d1-fa51c162f846",
+      "session": "90f156e9-c7d2-41d7-af2f-a1c90041d463"
+    },
+    "reader": {
+      "memberId": "3b27bd55-9b03-49ac-8bfa-d0a70adc75a8",
+      "subject": "78b30da1-4ed6-4053-9248-c61a0bbce37a",
+      "session": "d6a637e9-4b6b-41e8-9376-09cc8e675d5a"
+    },
+    "denied": {
+      "memberId": "f53fe9e7-c1af-417f-928d-fea6c3ef7b99",
+      "subject": "a982523a-3d6e-4168-ada0-50786d15bd2a",
+      "session": "7164733e-870e-4ee2-afee-a042d08026bc"
+    },
+    "pairId": "7b9ee329-f5ab-40f3-bb5a-094e7f745c3e",
+    "proposalId": "d0d7b73c-9c44-4c88-899d-da278ab94b03",
+    "measurementShopId": "ec134fc7-ac7e-41f7-8d43-989711b8b114",
+    "consentId": "4a8af064-cbf9-4002-bf78-2e6fa8cc1042",
+    "readerConsentId": "fe253243-7653-4c59-8153-cbb563dbc893",
+    "feedbackId": "e3ccbc7d-490b-4aff-a692-9dde7456e38f",
+    "eligibleWeek": "2026-W45",
+    "billingOriginal": "57927392354881264037337287335633372758"
+  },
+  "billingControls": {
+    "sandbox": {
+      "householdId": "0f356784-d20f-4c1b-ae46-7c06c8e7c48f",
+      "owner": {
+        "memberId": "8db8b07a-28be-4cbf-8aeb-5993c37de6c3",
+        "subject": "195a5d30-2d7f-46a2-80c8-8047559eb509",
+        "session": "75f87beb-7285-4f2b-86ea-cafeb72f707a"
+      },
+      "consentId": "5bd0556c-ce75-44cc-bff4-57439facb910",
+      "expectedWilling": 0
+    },
+    "noConsent": {
+      "householdId": "a0681662-ffbe-4066-979a-1de2790fa833",
+      "owner": {
+        "memberId": "75318e2f-e546-43cd-8e46-c2d3aa49922d",
+        "subject": "b7041ed7-de9f-41ef-b328-9d02b121ce74",
+        "session": "ecd2f6c2-772c-444d-b5d6-765c8cb51403"
+      },
+      "consentId": null,
+      "expectedWilling": 0
+    },
+    "refunded": {
+      "householdId": "219f0a20-c6bf-4d94-acbf-e316ef13a1d3",
+      "owner": {
+        "memberId": "1e65becc-d9d9-4d79-9e18-856a4a4fafcf",
+        "subject": "c22cd04f-3741-40ad-a97d-1be974bdb587",
+        "session": "9d981a26-1b84-4eb2-946b-e89e711f2e96"
+      },
+      "consentId": "0e8d060b-9ff6-4656-a178-75e808954167",
+      "expectedWilling": 0
+    },
+    "expired": {
+      "householdId": "07fe33b9-c057-40fc-8102-9c953e07f474",
+      "owner": {
+        "memberId": "44576fdc-44dc-4616-b24f-963693eacbbf",
+        "subject": "8c75be45-4270-49fe-92e3-7d61f77edaa4",
+        "session": "1029a735-a495-4928-a50c-d1a89b8c0c13"
+      },
+      "consentId": "b8205a93-fa24-44f4-81da-88385a1d8500",
+      "expectedWilling": 0
+    },
+    "grace": {
+      "householdId": "3883ad63-b88e-4fd9-8baf-2c9f5c522722",
+      "owner": {
+        "memberId": "0004b627-9025-477a-9210-3b0bbeb86e9d",
+        "subject": "c21de85b-0fe3-4e08-8b1a-2af8f2987a1a",
+        "session": "15599fed-e64c-44fa-a0b9-af62d0b69df5"
+      },
+      "consentId": "7293a778-8b7a-47a7-b47c-60dbc5429a31",
+      "expectedWilling": 1
+    }
+  },
+  "withdrawn": {
+    "householdId": "3837c047-2d04-489c-831f-4acc3fe080ed",
+    "shopId": "e74a4461-940f-4d24-b429-e28f1e83272b",
+    "owner": {
+      "memberId": "51c6b5a9-0396-443a-8b1e-9e1a59121650",
+      "subject": "b2c50186-ba4d-46bf-8fa3-f337f955d4cd",
+      "session": "f15be982-ef6e-4cb7-861c-7eda39b5bc35"
+    },
+    "consentId": "05047342-d462-4c22-b8ed-73cba484ca9a"
+  },
+  "erased": {
+    "householdId": "13f2ca64-9a97-4d43-abfa-96e4234f38ff",
+    "quoteShopId": "8ee3fb7d-29ae-40e0-923a-efa7a714becc",
+    "measurementShopId": "6bb00798-33de-44db-9feb-6658f53fe122",
+    "subject": "5849076a-c9d7-461d-bfd1-5bbfd7d66f3b",
+    "memberId": "fc6fab29-6799-4a11-9a75-1744eb9183d9",
+    "jobId": "cee69f9a-f436-40db-bfd3-3a0ec138bd09"
+  }
+}

@@ -1,0 +1,52 @@
+{
+    "roles": [
+        {
+            "rolname": "ritc_app",
+            "rolsuper": false,
+            "rolconfig": null,
+            "rolinherit": true,
+            "rolcanlogin": false,
+            "rolcreatedb": false,
+            "rolbypassrls": false,
+            "rolconnlimit": -1,
+            "rolcreaterole": false,
+            "rolvaliduntil": null,
+            "rolreplication": false
+        },
+        {
+            "rolname": "ritc_test_worker",
+            "rolsuper": false,
+            "rolconfig": null,
+            "rolinherit": true,
+            "rolcanlogin": true,
+            "rolcreatedb": false,
+            "rolbypassrls": false,
+            "rolconnlimit": -1,
+            "rolcreaterole": false,
+            "rolvaliduntil": null,
+            "rolreplication": false
+        },
+        {
+            "rolname": "ritc_worker",
+            "rolsuper": false,
+            "rolconfig": null,
+            "rolinherit": true,
+            "rolcanlogin": false,
+            "rolcreatedb": false,
+            "rolbypassrls": false,
+            "rolconnlimit": -1,
+            "rolcreaterole": false,
+            "rolvaliduntil": null,
+            "rolreplication": false
+        }
+    ],
+    "memberships": [
+        {
+            "member": "ritc_test_worker",
+            "granted": "ritc_worker",
+            "set_option": true,
+            "admin_option": false,
+            "inherit_option": true
+        }
+    ]
+}

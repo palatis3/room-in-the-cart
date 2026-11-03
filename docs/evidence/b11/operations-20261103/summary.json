@@ -1,0 +1,206 @@
+{
+  "recordedAt": "2026-11-03T18:40:18.275687+00:00",
+  "scope": "B11 narrow local operations; frozen tracked service/shared HEAD only",
+  "sourceCommit": "b0cbcd7973bf2a2fa5766e48da87be941aa1fcfd",
+  "trackedSourceFiles": 89,
+  "migrations": "001-017",
+  "sourceArchiveSHA256": "4e488dfe52a6e6e7dae1d81205f9fe0a9047072b73562261fca10b040faa3527",
+  "frozenRoot": "/tmp/ritc-b11-operations-20261103",
+  "durableRoot": "/Users/palatis/Documents/Codex/2026-11-03/task-2/operations-resume-evidence",
+  "databaseSocket": "/tmp",
+  "databasePort": 55432,
+  "databases": [
+    "ritc_b11_ops_20261103",
+    "ritc_b11_ops_restore_20261103"
+  ],
+  "createdRoles": [
+    "ritc_b11_ops_app_20261103",
+    "ritc_b11_ops_worker_20261103"
+  ],
+  "sharedRolesPreserved": [
+    "ritc_app",
+    "ritc_worker",
+    "ritc_test_worker"
+  ],
+  "tests": {
+    "authMaintenanceOperations": {
+      "status": "executed",
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "provider": "synthetic in-process logout stubs"
+    },
+    "privacyHTTPIntegration": {
+      "status": "executed",
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0,
+      "provider": "synthetic in-process deletion stub mutating only fixture auth.sessions"
+    }
+  },
+  "restore": {
+    "passed": true,
+    "scope": "post-erasure synthetic database dump into fresh isolated restore; stale pre-erasure backup replay is not exercised",
+    "tableCount": 53,
+    "rowCount": 163,
+    "schemaKindsCompared": [
+      "relations",
+      "columns",
+      "constraints",
+      "indexes",
+      "functions",
+      "policies"
+    ],
+    "semantic": {
+      "privacy": {
+        "complete_jobs": 4,
+        "identity_markers": 4,
+        "erased_targets": 5,
+        "erased_profiles": 6,
+        "retired_purchase_markers": 1
+      },
+      "retainedEvidence": {
+        "other_author_requests": 1,
+        "redacted_accounting_entries": 1,
+        "accounting_heads_at_revision_two": 1
+      },
+      "migrations": [
+        {
+          "version": "001_household_requests.sql",
+          "checksum": "e919302e353eae03f5cf63425ad82924c3c6315321b8b4b07e1253185e79ef5b"
+        },
+        {
+          "version": "002_apple_billing.sql",
+          "checksum": "2f819c06c49f47e32c0093c636bacdfd95ad299ed159337b39041d173385ca6e"
+        },
+        {
+          "version": "003_web_session.sql",
+          "checksum": "dd2b9967be0364bf313afba035e8a60fec948a94aa1cf182e9fea14e269888cb"
+        },
+        {
+          "version": "004_household_lock.sql",
+          "checksum": "65fef08a239f4ea122133c335d56918e9d2ef2c4455418f36e18b6442a473250"
+        },
+        {
+          "version": "005_session_and_policy_hardening.sql",
+          "checksum": "3504fec9398d40cad639aa50c931d7cbe6b585e7cf2dc5059f227b3e87727d45"
+        },
+        {
+          "version": "006_household_lifecycle.sql",
+          "checksum": "7f293a0b681627cccb2d5bdc943eb3ea5c6e1436b063857f4a33f981cced296c"
+        },
+        {
+          "version": "007_selected_helper_session.sql",
+          "checksum": "422f3b0cafc482adb3708689c11bbbab1d026aac69555a8dafcbd3a525f2fca5"
+        },
+        {
+          "version": "008_browser_email_auth.sql",
+          "checksum": "5ad8c46d4146e1ce980e4f8809afa00512b9ed6ae6e41fd76637e0d86a713e1e"
+        },
+        {
+          "version": "009_auth_maintenance.sql",
+          "checksum": "b4e33a77bc0a9576a763062e8f3dddf00c019ecbe5464ad300b1e5fa0e872b6e"
+        },
+        {
+          "version": "010_account_lifecycle.sql",
+          "checksum": "e35ebbc6a2d1fcc3f7d03420542eb4ce588c3708e8bb31fcfc3ec0cc283daa22"
+        },
+        {
+          "version": "011_helper_review_and_shop_selection.sql",
+          "checksum": "23457cac7c614eb8794ec0268641cd1130558ce8d8c576c4ce8bd994253d07b9"
+        },
+        {
+          "version": "012_price_budget_history.sql",
+          "checksum": "dad295084f43a58cd15f58524575e98df66a77bdb0a17bd0f9555b3eac05c5c2"
+        },
+        {
+          "version": "013_shared_meal_occurrences.sql",
+          "checksum": "f574ff8a6b73f0959c622053b9ebd3408d05629d653709a40d631cc58259e1d5"
+        },
+        {
+          "version": "014_shared_meal_moves.sql",
+          "checksum": "2673ea349e6a7cd4df823e4128e4059533049b46071b03a1a1dc90a0d6e90a95"
+        },
+        {
+          "version": "015_family_decisions.sql",
+          "checksum": "c9779d5c19bcbb2e2bc5b3f4ffe0793e459375892d9616d5c0db2ac82686def1"
+        },
+        {
+          "version": "016_shared_meal_changes.sql",
+          "checksum": "362138035995832cc6b1bbffb6e9c0528ee2576945a908a14db03104355da6b0"
+        },
+        {
+          "version": "017_shared_meal_ideas.sql",
+          "checksum": "fe61e6528a38cc9c6c4315587d12ee540ea624422a8e89f8933f05e75addab63"
+        }
+      ],
+      "authRowsAfterOperations": {
+        "browser_auth_rows": 0
+      }
+    },
+    "permissions": {
+      "app_raw_privacy_denied": true,
+      "app_worker_operation_denied": true,
+      "worker_raw_privacy_denied": true,
+      "worker_raw_browser_auth_denied": true,
+      "worker_raw_provider_session_denied": true,
+      "worker_role_verified": true,
+      "application_role_rejected_as_worker": true,
+      "worker_functions": {
+        "privacy_claim": true,
+        "auth_prepare": true
+      }
+    }
+  },
+  "notProven": [
+    "stale pre-erasure backup plus external erasure-journal replay/quarantine before serving",
+    "production retention horizon, backup purge, provider/log retention",
+    "real provider logout/deletion or Apple token revocation",
+    "deployed cron or remote migration/deployment",
+    "current concurrent S27/migration018/measurement019 sources",
+    "full B11 requirements or all routes"
+  ],
+  "localLifecycle": {
+    "checked_at": "2026-11-03T13:38:11.539805-05:00",
+    "connections": null,
+    "fixture_roles": [
+      {
+        "rolname": "ritc_b11_ops_app_20261103",
+        "rolsuper": false,
+        "app_member": true,
+        "rolcanlogin": true,
+        "rolcreatedb": false,
+        "rolbypassrls": false,
+        "rolcreaterole": false,
+        "worker_member": false
+      },
+      {
+        "rolname": "ritc_b11_ops_worker_20261103",
+        "rolsuper": false,
+        "app_member": false,
+        "rolcanlogin": true,
+        "rolcreatedb": false,
+        "rolbypassrls": false,
+        "rolcreaterole": false,
+        "worker_member": true
+      }
+    ],
+    "connection_count": 0,
+    "fixture_databases": [
+      {
+        "owner": "palatis",
+        "datname": "ritc_b11_ops_20261103",
+        "datallowconn": true,
+        "datconnlimit": -1
+      },
+      {
+        "owner": "palatis",
+        "datname": "ritc_b11_ops_restore_20261103",
+        "datallowconn": true,
+        "datconnlimit": -1
+      }
+    ]
+  },
+  "productSourceChanges": [],
+  "diagnostic": "Raw owner-only ACL vs NULL default ACL was semantically equivalent; canonical effective ACL comparison passed. Raw diagnostic retained."
+}

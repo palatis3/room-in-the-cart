@@ -1,0 +1,27 @@
+ M ios/Features/Capture/CaptureMediaStore.swift
+ M ios/Packages/HouseholdClient/Sources/HouseholdClient/HouseholdService.swift
+ M ios/Packages/RecordArchive/Sources/RecordArchive/Archive.swift
+ M ios/Packages/RecordArchive/Sources/RecordArchive/RecoveryRegistry.swift
+ M ios/Tests/SharedMealIdeaTests.swift
+ M ios/UITestSupport/ContributorRequestUIFixture.swift
+ M ios/UITests/SharedMealChangeUITests.swift
+ M service/src/history.ts
+ M service/src/http.ts
+ M service/src/repository.ts
+ M service/tests/history.integration.mjs
+?? ios/Features/Household/SharedStoreQuotesModel.swift
+?? ios/Features/Household/SharedStoreQuotesView.swift
+?? ios/Features/Household/StoreQuotes.xcstrings
+?? ios/Features/Household/StoreQuotesPendingStore.swift
+?? ios/Features/Records/RecordsMedia.swift
+?? ios/Packages/HouseholdClient/Sources/HouseholdClient/HouseholdStoreQuoteService.swift
+?? ios/Packages/HouseholdClient/Sources/HouseholdClient/StoreQuoteContracts.swift
+?? ios/Packages/RecordArchive/Sources/RecordArchive/ArchiveMedia.swift
+?? service/migrations/018_shared_store_quotes.sql
+?? service/migrations/019_optional_measurement.sql
+?? service/src/measurement.ts
+?? service/src/shared-store-quotes.ts
+?? service/tests/measurement.integration.mjs
+?? service/tests/measurement.test.mjs
+?? service/tests/shared-store-quotes-math.test.mjs
+?? service/tests/shared-store-quotes.integration.mjs

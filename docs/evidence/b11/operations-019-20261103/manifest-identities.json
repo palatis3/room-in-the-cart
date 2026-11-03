@@ -1,0 +1,14 @@
+{
+  "source": {
+    "entries": 100,
+    "manifestSHA256": "d57bfdc94d7d8febd4d16788b26047e37b605d6bb46c9584152b6e71de31de89"
+  },
+  "dependencies": {
+    "entries": 2368,
+    "manifestSHA256": "5d225268a4ec2c116fedd72a66aae1adf30175423120a2afdbaf82575d97d739"
+  },
+  "compiled": {
+    "entries": 58,
+    "manifestSHA256": "d733ca2324be17cd2d858312bbb378a6ff8d9a7c9fb85e3f68bb1736656ef13a"
+  }
+}

@@ -18,6 +18,9 @@ import RecordArchive
     @Published private(set) var recipeReport: RecipeImportReport?
     @Published private(set) var busy = false
     @Published private(set) var status: String?
+    /// A completed model action supplies a new focus target; view state cannot
+    /// announce success before the underlying operation has finished.
+    @Published private(set) var actionOutcomeID: UUID?
     @Published private(set) var error: ArchiveError?
     @Published var selectedIDs: Set<String> = []
     /// Attachment disclosure is separate from record selection and defaults off.
@@ -175,7 +178,7 @@ import RecordArchive
         // Every projection must reconcile erasure, including helper-only records.
         try await validate(record)
     }
-    func cancelReview() { review = nil; reviewAuthorization = nil; recipeReport = nil; status = recordsText("Import cancelled. Your records are unchanged.") }
+    func cancelReview() { review = nil; reviewAuthorization = nil; recipeReport = nil; publishOutcome(recordsText("Import cancelled. Your records are unchanged.")) }
     func applyReviewedImport() async {
         guard !busy, let review else { return }
         busy = true; error = nil
@@ -198,12 +201,12 @@ import RecordArchive
             try requireAuthorization(authorize)
             recoveredRecords = try await registry.refreshList()
             try requireAuthorization(authorize)
-            status = result.insertedCount == 0 ? recordsText("Opened the existing recovered copies. Nothing was duplicated.") : recordsText("Saved separate recovered copies. Your current work is unchanged.")
+            publishOutcome(result.insertedCount == 0 ? recordsText("Opened the existing recovered copies. Nothing was duplicated.") : recordsText("Saved separate recovered copies. Your current work is unchanged."))
         } catch { fail(error) }
     }
     func undoImport() async {
         guard !lastImportIDs.isEmpty else { return }
-        do { try await registry.undoImport(insertedCopyIDs: lastImportIDs); lastImportIDs = []; try await cleanupRecovered?(); currentRecords = try await readSnapshot(); recoveredRecords = try await registry.refreshList(); status = recordsText("The imported batch was undone.") }
+        do { try await registry.undoImport(insertedCopyIDs: lastImportIDs); lastImportIDs = []; try await cleanupRecovered?(); currentRecords = try await readSnapshot(); recoveredRecords = try await registry.refreshList(); publishOutcome(recordsText("The imported batch was undone.")) }
         catch { fail(error) }
     }
     func openRecovered(_ record: RecoveredRecord) async {
@@ -217,32 +220,40 @@ import RecordArchive
     func deleteRecovered(_ scope: RecoveryDeleteScope) async {
         do {
             let token = try await registry.delete(scope)
+            let outcome: String
             if let cleanupRecovered {
                 deleteUndo = nil
                 await registry.discardUndo()
                 try await cleanupRecovered()
-                status = recordsText("The recovered copies and their separate workspaces were permanently deleted from this iPhone.")
+                outcome = recordsText("The recovered copies and their separate workspaces were permanently deleted from this iPhone.")
             } else {
                 deleteUndo = token
-                status = recordsText("Deleted from this iPhone. Undo is available until you leave the app.")
+                outcome = recordsText("Deleted from this iPhone. Undo is available until you leave the app.")
             }
             currentRecords = try await readSnapshot()
             recoveredRecords = try await registry.refreshList()
+            publishOutcome(outcome)
         }
         catch { fail(error) }
     }
     func undoRecoveredDeletion() async {
         guard let token = deleteUndo else { return }
-        do { try await registry.undoDelete(token); deleteUndo = nil; recoveredRecords = try await registry.refreshList(); status = recordsText("Deletion undone.") } catch { fail(error) }
+        do { try await registry.undoDelete(token); deleteUndo = nil; recoveredRecords = try await registry.refreshList(); publishOutcome(recordsText("Deletion undone.")) } catch { fail(error) }
     }
     func deleteCurrentRecord(_ record: ArchiveRecord) async {
         guard let deleteSource, deletable(record) else { fail(ArchiveError.unavailable); return }
-        do { try await deleteSource(record); canUndoSourceDeletion = sourceUndo != nil; await refresh(); status = recordsText("The selected source was deleted from this iPhone.") }
+        do {
+            error = nil
+            try await deleteSource(record); canUndoSourceDeletion = sourceUndo != nil
+            await refresh()
+            guard error == nil else { return }
+            publishOutcome(recordsText("The selected source was deleted from this iPhone."))
+        }
         catch { fail(error) }
     }
     func undoCurrentDeletion() async {
         guard let sourceUndo, canUndoSourceDeletion else { return }
-        do { try await sourceUndo(); canUndoSourceDeletion = false; await refresh(); status = recordsText("Deletion undone.") } catch { fail(error) }
+        do { error = nil; try await sourceUndo(); canUndoSourceDeletion = false; await refresh(); if error == nil { publishOutcome(recordsText("Deletion undone.")) } } catch { fail(error) }
     }
     func reviewWholeLedgerDeletion() async {
         guard !busy, let wholeLedgerDeletionAction else { return }
@@ -257,7 +268,7 @@ import RecordArchive
     func invalidateForSourceErasure() {
         preparedDocument = nil; recoveryKey = ""; selectedIDs = []; selectedMediaIDs = []
         review = nil; reviewAuthorization = nil; recipeReport = nil; lastImportIDs = []; deleteUndo = nil
-        currentRecords = []; recoveredRecords = []; unavailableRecords = []; status = nil; error = nil
+        currentRecords = []; recoveredRecords = []; unavailableRecords = []; status = nil; actionOutcomeID = nil; error = nil
     }
     func dismissPreparedFile() { preparedDocument = nil }
     private func authorization() throws -> Authorization {
@@ -268,9 +279,12 @@ import RecordArchive
         guard authorize() else { invalidateForSourceErasure(); throw ArchiveError.unavailable }
     }
     func reportFileError(_ error: Error) { fail(error) }
+    private func publishOutcome(_ text: String) {
+        error = nil; status = text; actionOutcomeID = UUID()
+    }
     private func fail(_ error: Error) {
         self.error = error as? ArchiveError ?? .unavailable
-        status = nil
+        status = nil; actionOutcomeID = nil
     }
 }
 

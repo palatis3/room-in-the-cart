@@ -10898,6 +10898,54 @@
           }
         }
       }
+    },
+    "Household measurement is off": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household measurement is off"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La medición del hogar está desactivada"
+          }
+        }
+      }
+    },
+    "Household measurement consent was withdrawn.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household measurement consent was withdrawn."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se retiró el consentimiento de medición del hogar."
+          }
+        }
+      }
+    },
+    "Household response removed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household response removed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se eliminó la respuesta del hogar."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

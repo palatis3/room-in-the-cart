@@ -1,0 +1,378 @@
+{
+  "recordedAt": "2026-11-03T19:19:03.745275+00:00",
+  "sourceCommit": "dbf9b41ecf1914df78a536825c01da2f90a220fc",
+  "serviceCommit": "fd3aa49",
+  "migrations": "001-019",
+  "sourceFiles": 100,
+  "sourceArchiveSHA256": "c71db5bfc32ac2d275236a9d3aa42f37e7a2d174d5c379c37505239e3c288542",
+  "dumpSHA256": "73c6b493ba1aa6c8525fa90c712ed40e7d3e19d45ccc53c7db6b024a5c287e4c",
+  "manifestIdentities": {
+    "source": {
+      "entries": 100,
+      "manifestSHA256": "d57bfdc94d7d8febd4d16788b26047e37b605d6bb46c9584152b6e71de31de89"
+    },
+    "dependencies": {
+      "entries": 2368,
+      "manifestSHA256": "5d225268a4ec2c116fedd72a66aae1adf30175423120a2afdbaf82575d97d739"
+    },
+    "compiled": {
+      "entries": 58,
+      "manifestSHA256": "d733ca2324be17cd2d858312bbb378a6ff8d9a7c9fb85e3f68bb1736656ef13a"
+    }
+  },
+  "frozenRoot": "/tmp/ritc-b11-operations019-20261103",
+  "durableRoot": "/Users/palatis/Documents/Codex/2026-11-03/task-2/operations019-resume-evidence",
+  "oldBaselinePreserved": "/Users/palatis/Documents/Codex/2026-11-03/task-2/operations-resume-evidence",
+  "tests": {
+    "authOperations": {
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    "privacyHTTPIntegration": {
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0
+    },
+    "storeQuoteHTTPIntegrationFinal": {
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0,
+      "nativeWireOptIn": false
+    },
+    "measurementIntegration": {
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0,
+      "includesParentCaseAndSevenSubcases": true
+    },
+    "quoteMeasurementPure": {
+      "passed": 13,
+      "failed": 0,
+      "skipped": 0
+    },
+    "controlledRetainedFixture": {
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0,
+      "includesParentCaseAndSixSubcases": true
+    }
+  },
+  "initialFixtureFailure": {
+    "suite": "store quotes",
+    "passed": 13,
+    "failed": 1,
+    "reason": "PUBLIC CONNECT deliberately revoked; unchanged harness uses shared ritc_test_worker, initially omitted from fixture DB CONNECT grant",
+    "correction": "CONNECT granted only on the two owned019 fixture DBs; single interrupted synthetic deletion drained with stub; unchanged suite rerun passed14/14",
+    "productDefect": false
+  },
+  "restore": {
+    "passed": true,
+    "sourceCommit": "dbf9b41ecf1914df78a536825c01da2f90a220fc",
+    "migrations": "001-019",
+    "scope": "post-erasure synthetic dump containing existing erasure markers; stale pre-erasure external deletion-journal replay not implemented or proven",
+    "tableCount": 60,
+    "rowCount": 1385,
+    "schemaKindsCompared": [
+      "relations",
+      "columns",
+      "constraints",
+      "indexes",
+      "functions",
+      "views",
+      "triggers",
+      "columnACL",
+      "databaseACL",
+      "policies"
+    ],
+    "effectiveDatabaseACL": [
+      {
+        "owner": "palatis",
+        "effective_acl": [
+          "=T/palatis",
+          "palatis=CTc/palatis",
+          "ritc_b11_ops019_app_20261103=c/palatis",
+          "ritc_b11_ops019_worker_20261103=c/palatis",
+          "ritc_test_worker=c/palatis"
+        ]
+      }
+    ],
+    "semantic": {
+      "privacy": {
+        "complete_jobs": 7,
+        "identity_markers": 7,
+        "erased_targets": 8,
+        "erased_profiles": 9,
+        "retired_purchase_markers": 2
+      },
+      "retainedEvidence": {
+        "other_author_requests": 1,
+        "redacted_accounting_entries": 1,
+        "accounting_heads_at_revision_two": 1
+      },
+      "migrations": [
+        {
+          "version": "001_household_requests.sql",
+          "checksum": "e919302e353eae03f5cf63425ad82924c3c6315321b8b4b07e1253185e79ef5b"
+        },
+        {
+          "version": "002_apple_billing.sql",
+          "checksum": "2f819c06c49f47e32c0093c636bacdfd95ad299ed159337b39041d173385ca6e"
+        },
+        {
+          "version": "003_web_session.sql",
+          "checksum": "dd2b9967be0364bf313afba035e8a60fec948a94aa1cf182e9fea14e269888cb"
+        },
+        {
+          "version": "004_household_lock.sql",
+          "checksum": "65fef08a239f4ea122133c335d56918e9d2ef2c4455418f36e18b6442a473250"
+        },
+        {
+          "version": "005_session_and_policy_hardening.sql",
+          "checksum": "3504fec9398d40cad639aa50c931d7cbe6b585e7cf2dc5059f227b3e87727d45"
+        },
+        {
+          "version": "006_household_lifecycle.sql",
+          "checksum": "7f293a0b681627cccb2d5bdc943eb3ea5c6e1436b063857f4a33f981cced296c"
+        },
+        {
+          "version": "007_selected_helper_session.sql",
+          "checksum": "422f3b0cafc482adb3708689c11bbbab1d026aac69555a8dafcbd3a525f2fca5"
+        },
+        {
+          "version": "008_browser_email_auth.sql",
+          "checksum": "5ad8c46d4146e1ce980e4f8809afa00512b9ed6ae6e41fd76637e0d86a713e1e"
+        },
+        {
+          "version": "009_auth_maintenance.sql",
+          "checksum": "b4e33a77bc0a9576a763062e8f3dddf00c019ecbe5464ad300b1e5fa0e872b6e"
+        },
+        {
+          "version": "010_account_lifecycle.sql",
+          "checksum": "e35ebbc6a2d1fcc3f7d03420542eb4ce588c3708e8bb31fcfc3ec0cc283daa22"
+        },
+        {
+          "version": "011_helper_review_and_shop_selection.sql",
+          "checksum": "23457cac7c614eb8794ec0268641cd1130558ce8d8c576c4ce8bd994253d07b9"
+        },
+        {
+          "version": "012_price_budget_history.sql",
+          "checksum": "dad295084f43a58cd15f58524575e98df66a77bdb0a17bd0f9555b3eac05c5c2"
+        },
+        {
+          "version": "013_shared_meal_occurrences.sql",
+          "checksum": "f574ff8a6b73f0959c622053b9ebd3408d05629d653709a40d631cc58259e1d5"
+        },
+        {
+          "version": "014_shared_meal_moves.sql",
+          "checksum": "2673ea349e6a7cd4df823e4128e4059533049b46071b03a1a1dc90a0d6e90a95"
+        },
+        {
+          "version": "015_family_decisions.sql",
+          "checksum": "c9779d5c19bcbb2e2bc5b3f4ffe0793e459375892d9616d5c0db2ac82686def1"
+        },
+        {
+          "version": "016_shared_meal_changes.sql",
+          "checksum": "362138035995832cc6b1bbffb6e9c0528ee2576945a908a14db03104355da6b0"
+        },
+        {
+          "version": "017_shared_meal_ideas.sql",
+          "checksum": "fe61e6528a38cc9c6c4315587d12ee540ea624422a8e89f8933f05e75addab63"
+        },
+        {
+          "version": "018_shared_store_quotes.sql",
+          "checksum": "ad18c9602e2f3c16d30f1f504ed833995bd2d09231ec405d50c7db592622b849"
+        },
+        {
+          "version": "019_optional_measurement.sql",
+          "checksum": "11cf0700dd146331a6997cca80b011a04fc8028c403745dd9e6b1d8121e959a2"
+        }
+      ],
+      "authRowsAfterOperations": {
+        "browser_auth_rows": 0
+      }
+    },
+    "permissions": {
+      "app_raw_privacy_denied": true,
+      "app_worker_operation_denied": true,
+      "worker_raw_privacy_denied": true,
+      "worker_raw_browser_auth_denied": true,
+      "worker_raw_provider_session_denied": true,
+      "worker_role_verified": true,
+      "application_role_rejected_as_worker": true,
+      "worker_functions": {
+        "privacy_claim": true,
+        "auth_prepare": true
+      }
+    },
+    "currentSchemaRuntime": {
+      "nonempty018019": {
+        "shop_budget_grant": 19,
+        "store_quote_pair": 99,
+        "store_quote_proposal": 9,
+        "store_quote_adoption": 9,
+        "store_quote_mutation": 152,
+        "measurement_consent": 7,
+        "measurement_feedback": 1
+      },
+      "retained": {
+        "shop_budget_grant": 1,
+        "store_quote_pair": 1,
+        "store_quote_proposal": 1,
+        "store_quote_adoption": 1,
+        "store_quote_mutation": 4,
+        "measurement_consent": 2,
+        "measurement_feedback": 1
+      },
+      "erased": {
+        "shop_budget_grant": 0,
+        "store_quote_pair": 0,
+        "store_quote_proposal": 0,
+        "store_quote_adoption": 0,
+        "measurement_consent": 0,
+        "measurement_feedback": 0,
+        "billing_state": 0,
+        "actorMutationReceipts": 0,
+        "identityBlocked": true,
+        "completedJob": {
+          "state": "complete",
+          "issuer": null,
+          "subject": null,
+          "app_erased": true,
+          "provider_erased": true
+        }
+      },
+      "permissions": {
+        "worker_raw_shop_budget_grant_denied": true,
+        "worker_raw_store_quote_pair_denied": true,
+        "worker_raw_store_quote_proposal_denied": true,
+        "worker_raw_store_quote_adoption_denied": true,
+        "worker_raw_store_quote_mutation_denied": true,
+        "worker_raw_measurement_consent_denied": true,
+        "worker_raw_measurement_feedback_denied": true,
+        "effectiveColumnAndTableGrants": {
+          "quote_select": true,
+          "quote_insert": true,
+          "quote_update": false,
+          "quote_delete": false,
+          "budget_grant_update": true,
+          "consent_withdraw_update": true,
+          "consent_notice_update": false,
+          "feedback_insert": true,
+          "feedback_delete": true,
+          "feedback_update": false,
+          "willing_select": true
+        }
+      },
+      "rls": {
+        "shop_budget_grant_without_tenant_empty": true,
+        "store_quote_pair_without_tenant_empty": true,
+        "store_quote_proposal_without_tenant_empty": true,
+        "store_quote_adoption_without_tenant_empty": true,
+        "store_quote_mutation_without_tenant_empty": true,
+        "measurement_consent_without_tenant_empty": true,
+        "measurement_feedback_without_tenant_empty": true,
+        "foreignTenantRetainedRows": {
+          "shop_budget_grant": 0,
+          "store_quote_pair": 0,
+          "store_quote_proposal": 0,
+          "store_quote_adoption": 0,
+          "store_quote_mutation": 0,
+          "measurement_consent": 0,
+          "measurement_feedback": 0
+        }
+      },
+      "protections": {
+        "foreignTenantInsertRejected": true,
+        "quoteProofRewriteDenied": true,
+        "quoteProofDeleteDenied": true,
+        "consentIdentityRewriteDenied": true,
+        "withdrawnConsentResurrectionRejected": true,
+        "secondCanonicalResponseRejected": true,
+        "clientChosenEligibleWeekRejected": true
+      },
+      "runtime": {
+        "retainedShopperQuoteRead": true,
+        "retainedBudgetAdultRead": true,
+        "ungrantedAndForeignDenied": true,
+        "canonicalFeedbackRead": true,
+        "billingDidNotCreateConsent": true,
+        "withdrawnConsentAbsent": true,
+        "fixtureSigningAuthority": true,
+        "actualExactSessionAndTrustedDeviceAuthorization": true
+      },
+      "willing": {
+        "retained": 1,
+        "sandbox": 0,
+        "noConsent": 0,
+        "refunded": 0,
+        "expired": 0,
+        "grace": 1,
+        "erased": 0
+      }
+    }
+  },
+  "sharedRoleFlagsMembershipsAndPasswordAbsenceUnchanged": true,
+  "lifecycle": {
+    "roles": [
+      {
+        "rolname": "ritc_b11_ops019_app_20261103",
+        "rolsuper": false,
+        "app_member": true,
+        "rolcanlogin": true,
+        "rolcreatedb": false,
+        "rolbypassrls": false,
+        "rolcreaterole": false,
+        "worker_member": false
+      },
+      {
+        "rolname": "ritc_b11_ops019_worker_20261103",
+        "rolsuper": false,
+        "app_member": false,
+        "rolcanlogin": true,
+        "rolcreatedb": false,
+        "rolbypassrls": false,
+        "rolcreaterole": false,
+        "worker_member": true
+      }
+    ],
+    "databases": [
+      {
+        "owner": "palatis",
+        "datacl": "{=T/palatis,palatis=CTc/palatis,ritc_b11_ops019_app_20261103=c/palatis,ritc_b11_ops019_worker_20261103=c/palatis,ritc_test_worker=c/palatis}",
+        "datname": "ritc_b11_ops019_20261103",
+        "datallowconn": true,
+        "datconnlimit": -1
+      },
+      {
+        "owner": "palatis",
+        "datacl": "{=T/palatis,palatis=CTc/palatis,ritc_b11_ops019_app_20261103=c/palatis,ritc_b11_ops019_worker_20261103=c/palatis,ritc_test_worker=c/palatis}",
+        "datname": "ritc_b11_ops019_restore_20261103",
+        "datallowconn": true,
+        "datconnlimit": -1
+      }
+    ],
+    "checked_at": "2026-11-03T14:18:39.747576-05:00",
+    "active_connections": 0
+  },
+  "simulation": {
+    "identity": "Local ephemeral JWT fixture signer and synthetic exact provider-session rows",
+    "accountDeletionAndLogout": "In-process stubs only; deletion stub deletes only own fixture auth.sessions",
+    "billing": "In-process Apple gateway verification/current stubs; Production labels are synthetic, not cryptographically verified Apple transactions",
+    "sourceFixtureHTTP": "Actual loopback HTTP and actual service/database",
+    "restoredRuntimeReads": "Actual repository/service methods using exact-session checks and existing supported trusted-device context; no restored raw tokens; not another HTTP or native wire run"
+  },
+  "notProven": [
+    "stale pre-erasure backup external erasure-journal/quarantine replay",
+    "production retention/backup purge/provider log retention",
+    "live provider logout/deletion, real Apple signatures/purchases/revocation",
+    "deployed cron/remote migration/deployment",
+    "full B11 requirements/routes acceptance"
+  ],
+  "publicHelpInventory": {
+    "status": "source/build only, not published; contact pending user",
+    "rootReportedWebTests": 72,
+    "verifiedByThisLane": false
+  },
+  "productSourceEdits": []
+}
