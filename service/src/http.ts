@@ -6,9 +6,12 @@ import { HouseholdRepository,type AuthContext } from './repository.js';
 import { BillingService,billingVerifySchema,billingSeatsSchema,billingNotificationSchema } from './billing/service.js';
 import { ServiceError,accessEnded,invalid } from './errors.js';
 import {BrowserAuthService,emailStartSchema,emailVerifySchema,type BrowserIdentity} from './browser-auth.js';
+import {PriceBudgetHistory} from './history.js';
+import {observationWriteSchema,financialAppendSchema,financialReviewSchema,historyRetireSchema,periodWriteSchema,budgetQuerySchema} from './history-contracts.js';
+import {HelperReview} from './helper-review.js';
 import {HouseholdLifecycle} from './lifecycle.js';
 import {PrivacyService,deletionSchema,exitSchema} from './privacy.js';
-import {householdCreateSchema,inviteCreateSchema,inviteRedeemSchema,viewCreateSchema,viewUpdateSchema,proposalSchema,revocationSchema, parseCommand,previewSchema,uuid } from './contracts.js';
+import {viewReplacementSchema,proposalResolutionSchema,householdCreateSchema,inviteCreateSchema,inviteRedeemSchema,viewCreateSchema,viewUpdateSchema,proposalSchema,revocationSchema, parseCommand,previewSchema,uuid } from './contracts.js';
 export interface HTTPOptions { repository:HouseholdRepository; verifier?:IdentityVerifier; webOrigin?:string; maxRequestsPerMinute?:number; billing?:BillingService; browserAuth?:BrowserAuthService; privacy?:PrivacyService; clientAddress?:(request:IncomingMessage)=>string|undefined }
 async function body(req:IncomingMessage,maxBytes=65_536):Promise<unknown> {
   if(!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type']??''))throw new ServiceError(415,'json_required','Send a JSON command.');
@@ -22,7 +25,7 @@ function cookie(req:IncomingMessage,name='ritc_session'):string|null {
 }
 export function createHTTPServer(options:HTTPOptions) {
   const repository=options.repository,verifier=options.verifier??new DenyIdentityVerifier();
-  const lifecycle=new HouseholdLifecycle(repository);
+  const lifecycle=new HouseholdLifecycle(repository),helperReview=new HelperReview(lifecycle),history=new PriceBudgetHistory(repository,options.billing);
   const limits=new Map<string,{count:number;until:number}>();
   return createServer(async(req,res)=>{
     const correlationId=randomUUID();
@@ -79,7 +82,7 @@ export function createHTTPServer(options:HTTPOptions) {
         const match=/^Bearer ([A-Za-z0-9_.-]+)$/.exec(authorization);
         if(!match)throw new ServiceError(401,'session_needed','Authenticate again.');
         const identity=await verifier.verify(match[1]!);
-        auth={identity,...(typeof req.headers['x-device-token']==='string'?{deviceToken:req.headers['x-device-token']}:{}),...(req.headers['x-view-grant-id']!==undefined?{viewGrantId:uuid.parse(req.headers['x-view-grant-id'])}:{})};
+        auth={identity,...(typeof req.headers['x-device-token']==='string'?{deviceToken:req.headers['x-device-token']}:{}),...(req.headers['x-view-grant-id']!==undefined?{viewGrantId:uuid.parse(req.headers['x-view-grant-id'])}:{}),...(req.headers['x-shop-id']!==undefined?{selectedShopId:uuid.parse(req.headers['x-shop-id'])}:{})};
       }else {
         if(browserCookie&&options.browserAuth){try{browserIdentity=await options.browserAuth.authenticate(browserCookie);auth={identity:browserIdentity.identity};}catch(error){if(!(error instanceof ServiceError)||error.code!=='session_needed')throw error; if(url.pathname!=='/v1/session'||method!=='GET')throw error;}}
         const value=cookie(req);if(value){session=await repository.webIdentity(value,browserIdentity?.identity);auth=session.auth;}
@@ -92,14 +95,14 @@ export function createHTTPServer(options:HTTPOptions) {
       }
       if(auth.viewGrantId){
         const helperView=url.pathname===`/v1/views/${auth.viewGrantId}/current`&&method==='GET';
-        const helperProposal=url.pathname===`/v1/views/${auth.viewGrantId}/proposals`&&method==='POST';
+        const helperProposal=(url.pathname===`/v1/views/${auth.viewGrantId}/proposals`&&method==='POST')||(new RegExp('^/v1/views/'+auth.viewGrantId+'/proposals/[^/]+$').test(url.pathname)&&method==='GET');
         const helperSession=url.pathname==='/v1/session'||(url.pathname==='/v1/invites/redeem'&&method==='POST');
         const helperHousehold=/^\/v1\/households\/[^/]+\/(bootstrap|replay-windows|devices(?:\/current)?)$/.test(url.pathname);
         if(!helperView&&!helperProposal&&!helperSession&&!helperHousehold)throw new ServiceError(404,'unavailable','Use the selected helper view.');
       }
       if(url.pathname==='/v1/session'&&method==='POST') {
-        const input=z.object({householdId:uuid,grantId:uuid.optional()}).strict().parse(await body(req));
-        const result=await repository.startWebSession(input.householdId,auth.identity,input.grantId??(session?.householdId===input.householdId?session.auth.viewGrantId:undefined),Boolean(browserIdentity));
+        const input=z.object({householdId:uuid,grantId:uuid.optional(),shopId:uuid.optional()}).strict().refine(value=>!(value.grantId&&value.shopId)).parse(await body(req));
+        const result=await repository.startWebSession(input.householdId,auth.identity,input.shopId?undefined:input.grantId??(session?.householdId===input.householdId?session.auth.viewGrantId:undefined),Boolean(browserIdentity),input.grantId?undefined:input.shopId??(session?.householdId===input.householdId?session.auth.selectedShopId:undefined));
         res.setHeader('Set-Cookie',`ritc_session=${result.cookie}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${browserIdentity?604800:Math.max(0,Math.floor((result.expiresAt.getTime()-Date.now())/1000))}`);
         send(200,result.session);return;
       }
@@ -117,6 +120,8 @@ export function createHTTPServer(options:HTTPOptions) {
       }
       if(url.pathname==='/v1/households'&&method==='POST'){send(201,await lifecycle.create(auth.identity,householdCreateSchema.parse(await body(req))));return;}
       if(url.pathname==='/v1/invites/redeem'&&method==='POST'){send(200,await lifecycle.redeem(auth.identity,inviteRedeemSchema.parse(await body(req))));return;}
+      const ownProposal=/^\/v1\/views\/([^/]+)\/proposals\/([^/]+)$/.exec(url.pathname);
+      if(ownProposal&&method==='GET'){const householdId=session?.householdId??uuid.parse(req.headers['x-household-id']);send(200,await repository.authorized(householdId,auth,ctx=>helperReview.ownProposal(ctx,uuid.parse(ownProposal[1]),uuid.parse(ownProposal[2]))));return;}
       const viewMatch=/^\/v1\/views\/([^/]+)\/(current|proposals)$/.exec(url.pathname);
       if(viewMatch){
         const grantId=uuid.parse(viewMatch[1]);
@@ -162,10 +167,33 @@ export function createHTTPServer(options:HTTPOptions) {
         if(path==='/guardian/enrollment'&&method==='POST')throw new ServiceError(503,'consent_unavailable','Child enrollment is unavailable until verified guardian consent is configured.');
         const consentMatch=/^\/guardian\/consents\/([^/]+)\/revoke$/.exec(path);
         if(consentMatch&&method==='POST'){z.object({}).strict().parse(payload);return lifecycle.revokeConsent(ctx,uuid.parse(consentMatch[1]));}
+        if(path==='/price-observations'&&method==='POST')return history.observe(ctx,observationWriteSchema.parse(payload));
+        if(path==='/price-observations'&&method==='GET'){const cursor=url.searchParams.get('cursor');if(cursor)uuid.parse(cursor);return history.observations(ctx,cursor);}
+        const observation=/^\/price-observations\/([^/]+)$/.exec(path);
+        if(observation&&method==='GET')return history.observation(ctx,uuid.parse(observation[1]));
+        if(path==='/budget-history'&&method==='POST')return history.budgets(ctx,budgetQuerySchema.parse(payload).shopIds);
+        if(path==='/budget-periods'&&method==='GET'){const cursor=url.searchParams.get('cursor');if(cursor)uuid.parse(cursor);return history.periods(ctx,cursor);}
+        if(path==='/budget-periods'&&method==='POST')return history.writePeriod(ctx,periodWriteSchema.parse(payload));
+        const period=/^\/budget-periods\/([^/]+)(\/record)?$/.exec(path);
+        if(period&&method==='GET')return history.period(ctx,uuid.parse(period[1]),Boolean(period[2]));
+        const financial=/^\/shops\/([^/]+)\/(financial-evidence|financial-reviews|history-retire)$/.exec(path);
+        if(financial){const shopId=uuid.parse(financial[1]);if(financial[2]==='financial-evidence'&&method==='GET'){const cursor=url.searchParams.get('cursor');if(cursor)uuid.parse(cursor);return history.financialRecord(ctx,shopId,cursor);}
+         if(financial[2]==='financial-evidence'&&method==='POST')return history.append(ctx,shopId,financialAppendSchema.parse(payload));
+         if(financial[2]==='financial-reviews'&&method==='POST')return history.review(ctx,shopId,financialReviewSchema.parse(payload));
+         if(financial[2]==='history-retire'&&method==='POST')return history.retire(ctx,shopId,historyRetireSchema.parse(payload));
+        }
+        if(path==='/shops'&&method==='GET'){const scope=z.enum(['active','owned']).parse(url.searchParams.get('scope')??'active'),cursor=url.searchParams.get('cursor');if(cursor)uuid.parse(cursor);return repository.shops(ctx,scope,cursor);}
+        const replacement=/^\/views\/([^/]+)\/replacements$/.exec(path);
+        if(replacement&&method==='POST')return helperReview.replace(ctx,uuid.parse(replacement[1]),viewReplacementSchema.parse(payload));
+        const proposalStatus=/^\/views\/([^/]+)\/proposals\/([^/]+)$/.exec(path);
+        if(proposalStatus&&method==='GET')return helperReview.managementProposal(ctx,uuid.parse(proposalStatus[1]),uuid.parse(proposalStatus[2]));
+        const resolution=/^\/views\/([^/]+)\/proposals\/([^/]+)\/resolve$/.exec(path);
+        if(resolution&&method==='POST')return helperReview.resolve(ctx,uuid.parse(resolution[1]),uuid.parse(resolution[2]),proposalResolutionSchema.parse(payload));
         const managedView=/^\/views\/([^/]+)(\/proposals)?$/.exec(path);
         if(managedView){
           const grantId=uuid.parse(managedView[1]);
-          if(managedView[2]==='/proposals'&&method==='GET')return lifecycle.proposals(ctx,grantId);
+          if(managedView[2]==='/proposals'&&method==='GET'){const cursor=url.searchParams.get('cursor');if(cursor)uuid.parse(cursor);return lifecycle.proposals(ctx,grantId,cursor);}
+          if(!managedView[2]&&method==='GET')return helperReview.current(ctx,grantId);
           if(!managedView[2]&&method==='PUT')return lifecycle.updateView(ctx,grantId,viewUpdateSchema.parse(payload));
         }
         if(path==='/bootstrap'&&method==='GET')return repository.bootstrap(ctx);

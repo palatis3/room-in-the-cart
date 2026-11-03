@@ -104,3 +104,21 @@ test('deletion waits for an authorized identity transaction then closes enrollme
  const attempts=(await admin.query('SELECT attempts FROM ritc.privacy_job WHERE job_id=$1',[input.clientKey])).rows[0].attempts;assert.equal(attempts,0);
  assert.equal((await maintenance.run({batchSize:1})).completed,1);assert.equal((await call(f.owner,`/v1/households/${f.h}/devices`,'POST',{})).status,401);
 });
+test('new helper/history data joins the bounded erasure path without deleting another current shopper accounting facts',async()=>{
+ const f=await fresh(),s=await shop(f),other=await invite(f,await actor());
+ const grant=ok(await call(f.owner,`/v1/households/${f.h}/views`,'POST',{shopId:s,mode:'read',shopLabel:'Owner private view',language:'en',items:[]}));
+ ok(await call(f.owner,`/v1/households/${f.h}/views/${grant.grantId}/replacements`,'POST',{clientKey:randomUUID(),baseRevision:1,projection:{shopLabel:'Owner private replacement',language:'en',items:[]}}));
+ const entryId=randomUUID(),evidenceKey=randomUUID(),periodId=randomUUID();
+ await admin.query("INSERT INTO ritc.financial_entry(household_id,shop_id,entry_id,evidence_key,actor_id,kind,amount_minor,occurred_at,source_text) VALUES($1,$2,$3,$4,$5,'postedCharge',1234,now(),'Owner private financial source')",[f.h,s,entryId,evidenceKey,f.owner.id]);
+ await admin.query('INSERT INTO ritc.financial_head(household_id,shop_id,revision) VALUES($1,$2,1)',[f.h,s]);
+ await admin.query("INSERT INTO ritc.price_observation(household_id,observation_id,shop_id,actor_id,record,observed_at) VALUES($1,$2,$3,$4,'{\"private\":\"Owner price evidence\"}',now())",[f.h,randomUUID(),s,f.owner.id]);
+ await admin.query("INSERT INTO ritc.budget_period(household_id,period_id,owner_id,revision,record,updated_at) VALUES($1,$2,$3,1,'{\"title\":\"Owner private funding\"}',now())",[f.h,periodId,f.owner.id]);
+ await admin.query('INSERT INTO ritc.budget_period_shop VALUES($1,$2,$3)',[f.h,periodId,s]);
+ const input=request([disposition(f.h,{organizer:'transfer',organizerMemberId:other.id,shops:[{shopId:s,revision:1,authorityEpoch:1,action:'transfer',memberId:other.id}]})]);ok(await call(f.owner,'/v1/privacy/deletions','POST',input),202);
+ assert.equal((await maintenance.run({batchSize:1})).completed,1);
+ for(const table of ['helper_mutation','price_observation','budget_period','budget_period_shop'])assert.equal((await admin.query(`SELECT count(*)::int AS n FROM ritc.${table} WHERE household_id=$1`,[f.h])).rows[0].n,0);
+ const retained=(await admin.query('SELECT amount_minor,source_text,evidence_key FROM ritc.financial_entry WHERE household_id=$1 AND entry_id=$2',[f.h,entryId])).rows[0];assert.equal(Number(retained.amount_minor),1234);assert.equal(retained.source_text,'Removed financial evidence');assert.equal(retained.evidence_key,evidenceKey);
+ assert.equal((await admin.query('SELECT revision FROM ritc.financial_head WHERE household_id=$1 AND shop_id=$2',[f.h,s])).rows[0].revision,2);
+ const current=ok(await call(other,`/v1/households/${f.h}/shops/${s}/financial-evidence`));assert.equal(current.entries[0].amountMinor,1234);assert.equal(JSON.stringify(current).includes('Owner private'),false);
+ await assert.rejects(()=>runtime.query('SELECT ritc.privacy_erase_extension($1,$2)',[f.h,other.id]),e=>e.code==='42501');
+});

@@ -5,9 +5,9 @@ import { type Database,type Transaction,digest,tokenHash } from './database.js';
 import { accessEnded,unavailable,invalid,refresh,ServiceError } from './errors.js';
 import { type Envelope,type Decision,type PreviewInput,bodySchemas,decisionSchema } from './contracts.js';
 import { checkout } from './checkout.js';
-export interface AuthContext { identity:VerifiedIdentity; deviceToken?:string; trustedDeviceId?:string;viewGrantId?:string }
+export interface AuthContext { identity:VerifiedIdentity; deviceToken?:string; trustedDeviceId?:string;viewGrantId?:string;selectedShopId?:string }
 export interface Member { member_id:string; kind:'adult'|'child'; organizer:boolean; can_contribute:boolean; alias:string; state:string }
-export interface Context { db:Transaction; householdId:string; member:Member; deviceId:string; now:Date;viewGrantId?:string }
+export interface Context { db:Transaction; householdId:string; member:Member; deviceId:string; now:Date;viewGrantId?:string;selectedShopId?:string }
 interface Shop { household_id:string;shop_id:string;shopper_id:string;authority_epoch:number;revision:number;phase:string;quote:QuoteBasis;frozen_revision:number|null;placed_revision:number|null }
 interface RequestRow { request_id:string;author_id:string;shop_id:string;original_item:string;own_quantity:string|null;revision:number;authored_at:Date;received_at:Date;route:'current'|'next';status:OwnRequest['status'];clarification:string|null;followup_to:string|null }
 const editable=(r:RequestRow)=>r.status==='pending'||r.status==='clarified';
@@ -71,8 +71,10 @@ export class HouseholdRepository {
           WHERE g.household_id=$1 AND g.grant_id=$2 AND g.recipient_id=$3 AND g.revoked_at IS NULL AND g.expires_at>$4 AND creator.state='active'`,[householdId,auth.viewGrantId,member.member_id,now]);
         if(!grant.rowCount)throw accessEnded();
       }
+      if(auth.viewGrantId&&auth.selectedShopId)throw unavailable();
+      if(auth.selectedShopId){const selected=await db.query("SELECT 1 FROM ritc.shop WHERE household_id=$1 AND shop_id=$2 AND ((shopper_id=$3 AND $4='adult') OR (phase<>'closed' AND $5::boolean))",[householdId,auth.selectedShopId,member.member_id,member.kind,member.can_contribute||member.organizer]);if(!selected.rowCount)throw accessEnded();}
       const scopedMember=auth.viewGrantId?{...member,organizer:false,can_contribute:false}:member;
-      return fn({db,householdId,member:scopedMember,deviceId:device.device_id,now,...(auth.viewGrantId?{viewGrantId:auth.viewGrantId}:{})});
+      return fn({db,householdId,member:scopedMember,deviceId:device.device_id,now,...(auth.viewGrantId?{viewGrantId:auth.viewGrantId}:{}),...(auth.selectedShopId?{selectedShopId:auth.selectedShopId}:{})});
     });
   }
   async workspaces(identity:VerifiedIdentity) {
@@ -104,22 +106,30 @@ export class HouseholdRepository {
   }
   async bootstrap(ctx:Context) {
     const house=(await ctx.db.query('SELECT label FROM ritc.household WHERE household_id=$1',[ctx.householdId])).rows[0];
-    const shop=(await ctx.db.query<{shop_id:string;shopper_id:string}>(`SELECT shop_id,shopper_id FROM ritc.shop WHERE household_id=$1 AND phase<>'closed'
-      ORDER BY (shopper_id=$2) DESC,created_at DESC,shop_id LIMIT 1`,[ctx.householdId,ctx.member.member_id])).rows[0];
+    const candidates=(await ctx.db.query<{shop_id:string;shopper_id:string}>(`SELECT shop_id,shopper_id FROM ritc.shop WHERE household_id=$1 AND ($2::uuid IS NOT NULL AND shop_id=$2 OR $2::uuid IS NULL AND phase<>'closed') AND (shopper_id=$3 OR $4::boolean) ORDER BY created_at DESC,shop_id LIMIT 2`,[ctx.householdId,ctx.selectedShopId??null,ctx.member.member_id,ctx.member.can_contribute||ctx.member.organizer])).rows;
+    const shop=ctx.selectedShopId?candidates[0]:candidates.length===1?candidates[0]:undefined;
+    if(ctx.selectedShopId&&!shop)throw accessEnded();
     const helper=(await ctx.db.query(`SELECT g.grant_id,g.shop_id,g.mode FROM ritc.view_grant g JOIN ritc.member creator ON creator.household_id=g.household_id AND creator.member_id=g.created_by
       WHERE g.household_id=$1 AND g.recipient_id=$2 AND g.revoked_at IS NULL AND g.expires_at>$3 AND creator.state='active' AND ($4::uuid IS NULL OR g.grant_id=$4) ORDER BY g.as_of DESC,g.grant_id LIMIT 1`,[ctx.householdId,ctx.member.member_id,ctx.now,ctx.viewGrantId??null])).rows[0];
     if(ctx.viewGrantId&&!helper)throw accessEnded();
     const isShopper=!ctx.viewGrantId&&ctx.member.kind==='adult'&&shop?.shopper_id===ctx.member.member_id;
-    const helperRole=!isShopper&&!ctx.member.organizer&&helper;
+    const helperRole=!ctx.selectedShopId&&!isShopper&&!ctx.member.organizer&&helper;
     return{household:{id:ctx.householdId,label:house.label as string},memberId:ctx.member.member_id,
-      role:isShopper?'shopper':ctx.member.organizer?'organizer':helperRole?(helper.mode==='edit'?'editor':'helper'):'contributor',shopId:helperRole?helper.shop_id:shop?.shop_id??null,...(helperRole?{grantId:helper.grant_id}:{}),enrolled:true,queueConsent:false,
+      selectionRequired:!helperRole&&!ctx.viewGrantId&&!ctx.selectedShopId&&candidates.length>1,role:isShopper?'shopper':ctx.member.organizer?'organizer':helperRole?(helper.mode==='edit'?'editor':'helper'):'contributor',shopId:helperRole?helper.shop_id:shop?.shop_id??null,...(helperRole?{grantId:helper.grant_id}:{}),enrolled:true,queueConsent:false,
       capabilities:[...(ctx.member.can_contribute?['own_requests']:[]),...(isShopper?['shopper_inbox','request_preview','shopper_commands']:[]),...(ctx.member.organizer?['household_admin']:[]),...(helperRole?['helper_view',...(helper.mode==='edit'?['helper_propose']:[])]:[])]};
+  }
+  async shops(ctx:Context,scope:'active'|'owned',after:string|null){
+    if(ctx.viewGrantId||ctx.member.kind!=='adult')throw unavailable();
+    let cursor:string|undefined;
+    if(after){const record=(await ctx.db.query("SELECT created_at::text AS created_at FROM ritc.shop WHERE household_id=$1 AND shop_id=$2 AND ($3='active' AND phase<>'closed' AND (shopper_id=$4 OR $5::boolean) OR $3='owned' AND shopper_id=$4)",[ctx.householdId,after,scope,ctx.member.member_id,ctx.member.can_contribute||ctx.member.organizer])).rows[0];if(!record)throw unavailable();cursor=record.created_at;}
+    const rows=(await ctx.db.query("SELECT shop_id,shopper_id,created_at,phase,revision,authority_epoch FROM ritc.shop WHERE household_id=$1 AND ($2='active' AND phase<>'closed' AND (shopper_id=$3 OR $6::boolean) OR $2='owned' AND shopper_id=$3) AND ($4::timestamptz IS NULL OR (created_at,shop_id)<($4,$5::uuid)) ORDER BY created_at DESC,shop_id DESC LIMIT 51",[ctx.householdId,scope,ctx.member.member_id,cursor??null,after,ctx.member.can_contribute||ctx.member.organizer])).rows;
+    return{shops:rows.slice(0,50).map(s=>({shopId:s.shop_id,createdAt:s.created_at.toISOString(),phase:s.phase,role:s.shopper_id===ctx.member.member_id?'shopper':'contributor',...(s.shopper_id===ctx.member.member_id?{revision:s.revision,authorityEpoch:s.authority_epoch}:{})})),nextCursor:rows.length>50?rows[49].shop_id:null};
   }
   async requests(ctx:Context,after:string|null,shopId?:string) {
     if(shopId)this.requireShopper(ctx,await this.shop(ctx,shopId));
-    let cursor:{received_at:Date;request_id:string}|undefined;
+    let cursor:{received_at:string;request_id:string}|undefined;
     if(after) {
-      cursor=(await ctx.db.query<{received_at:Date;request_id:string}>(`SELECT received_at,request_id FROM ritc.request WHERE household_id=$1 AND request_id=$2 AND ${shopId?'shop_id':'author_id'}=$3`,[ctx.householdId,after,shopId??ctx.member.member_id])).rows[0];
+      cursor=(await ctx.db.query<{received_at:string;request_id:string}>(`SELECT received_at::text AS received_at,request_id FROM ritc.request WHERE household_id=$1 AND request_id=$2 AND ${shopId?'shop_id':'author_id'}=$3`,[ctx.householdId,after,shopId??ctx.member.member_id])).rows[0];
       if(!cursor)throw unavailable();
     }
     const params:unknown[]=[ctx.householdId,shopId??ctx.member.member_id];
@@ -130,6 +140,7 @@ export class HouseholdRepository {
     return{requests:rows.map(r=>({...ownRequest(r),...(shopId?{authorAlias:r.author_alias}: {})})),nextCursor:result.rows.length>50?rows.at(-1)!.request_id:null};
   }
   async shop(ctx:Context,shopId:string):Promise<Shop> {
+    if(ctx.selectedShopId&&ctx.selectedShopId!==shopId)throw unavailable();
     const shop=(await ctx.db.query<Shop>('SELECT * FROM ritc.shop WHERE household_id=$1 AND shop_id=$2',[ctx.householdId,shopId])).rows[0];
     if(!shop)throw unavailable();return shop;
   }
@@ -363,13 +374,13 @@ export class HouseholdRepository {
     // Reporter receipt contains only their evidence disposition, never the current shopper's revision or budget.
     return{operationId,kind:c.kind,reportId,disposition:current?'placed':'pending_reconciliation'};
   }
-  async startWebSession(householdId:string,identity:VerifiedIdentity,viewGrantId?:string,browserBound=false) {
+  async startWebSession(householdId:string,identity:VerifiedIdentity,viewGrantId?:string,browserBound=false,selectedShopId?:string) {
     const device=await this.enroll(householdId,identity);
-    return this.authorized(householdId,{identity,deviceToken:device.deviceToken,...(viewGrantId?{viewGrantId}:{})},async ctx=>{
+    return this.authorized(householdId,{identity,deviceToken:device.deviceToken,...(viewGrantId?{viewGrantId}:{}),...(selectedShopId?{selectedShopId}:{})},async ctx=>{
       const bootstrap=await this.bootstrap(ctx);
       const token=randomBytes(32).toString('base64url'),csrf=randomBytes(32).toString('base64url');
       const expiresAt=new Date(Math.min(identity.expiresAt.getTime(),ctx.now.getTime()+15*60_000));
-      await ctx.db.query('INSERT INTO ritc.web_session(household_id,token_hash,member_id,device_id,csrf,expires_at,grant_id,browser_bound) VALUES($1,$2,$3,$4,$5,$6,$7,$8)',[householdId,tokenHash(token),ctx.member.member_id,ctx.deviceId,csrf,expiresAt,viewGrantId??null,browserBound]);
+      await ctx.db.query('INSERT INTO ritc.web_session(household_id,token_hash,member_id,device_id,csrf,expires_at,grant_id,browser_bound,shop_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)',[householdId,tokenHash(token),ctx.member.member_id,ctx.deviceId,csrf,expiresAt,viewGrantId??null,browserBound,selectedShopId??null]);
       return{cookie:householdId+'.'+token,csrf,expiresAt,session:{authenticated:true,...bootstrap,replayWindow:await this.window(ctx),csrf}};
     });
   }
@@ -377,7 +388,7 @@ export class HouseholdRepository {
     const [householdId,token]=cookie.split('.');
     if(!householdId||!token||!/^[0-9a-f-]{36}$/.test(householdId)||!/^[A-Za-z0-9_-]{43}$/.test(token))throw accessEnded();
     return this.transaction(householdId,async(db,now)=>{
-      const s=(await db.query(`SELECT s.csrf,s.expires_at,s.device_id,s.grant_id,s.browser_bound,m.issuer,m.subject,d.session_id FROM ritc.web_session s
+      const s=(await db.query(`SELECT s.csrf,s.expires_at,s.device_id,s.grant_id,s.shop_id,s.browser_bound,m.issuer,m.subject,d.session_id FROM ritc.web_session s
         JOIN ritc.member m USING(household_id,member_id) JOIN ritc.device d USING(household_id,member_id,device_id)
         WHERE s.household_id=$1 AND s.token_hash=$2 AND s.revoked_at IS NULL AND (s.expires_at>$3 OR $4::boolean) AND d.revoked_at IS NULL AND m.state='active'`,[householdId,tokenHash(token),now,Boolean(freshIdentity)])).rows[0];
       if(!s)throw accessEnded();
@@ -386,7 +397,7 @@ export class HouseholdRepository {
       const identity:VerifiedIdentity=freshIdentity??{issuer:s.issuer,subject:s.subject,sessionId:s.session_id,expiresAt:s.expires_at};
       await this.assertSession(db,identity,now);
       if(freshIdentity)await db.query('UPDATE ritc.web_session SET expires_at=$3 WHERE household_id=$1 AND token_hash=$2',[householdId,tokenHash(token),new Date(Math.min(freshIdentity.expiresAt.getTime(),now.getTime()+15*60_000))]);
-      return{householdId,csrf:s.csrf as string,auth:{identity,trustedDeviceId:s.device_id as string,...(s.grant_id?{viewGrantId:s.grant_id as string}:{})}};
+      return{householdId,csrf:s.csrf as string,auth:{identity,trustedDeviceId:s.device_id as string,...(s.grant_id?{viewGrantId:s.grant_id as string}:{}),...(s.shop_id?{selectedShopId:s.shop_id as string}:{})}};
     });
   }
   async revokeWebCookie(cookie:string){

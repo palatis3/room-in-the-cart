@@ -59,3 +59,12 @@ export const viewCreateSchema=viewProjectionSchema.extend({shopId:uuid,mode:z.en
 export const viewUpdateSchema=viewProjectionSchema.extend({baseRevision:z.number().int().positive()}).strict();
 export const proposalSchema=z.object({clientKey:uuid,baseRevision:z.number().int().positive(),correction:z.string().trim().min(1).max(1000)}).strict();
 export const revocationSchema=z.object({kind:z.enum(['member','invite','view']),targetId:uuid}).strict();
+
+// Preserve the exact reviewed text. The digest binds every field after structural validation.
+const reviewedText=(maximum:number)=>z.string().min(1).max(maximum).refine(value=>value.trim().length>0);
+export const reviewedProjectionSchema=z.object({shopLabel:reviewedText(80),language:z.enum(['en','es']),items:z.array(z.object({label:reviewedText(240),amount:reviewedText(80).nullable(),unit:reviewedText(80).nullable(),action:reviewedText(500)}).strict()).max(200)}).strict();
+export const viewReplacementSchema=z.object({clientKey:uuid,baseRevision:z.number().int().positive(),projection:reviewedProjectionSchema}).strict();
+export const proposalResolutionSchema=z.discriminatedUnion('decision',[
+ z.object({clientKey:uuid,baseRevision:z.number().int().positive(),proposalRevision:z.number().int().positive(),decision:z.literal('dismiss')}).strict(),
+ z.object({clientKey:uuid,baseRevision:z.number().int().positive(),proposalRevision:z.number().int().positive(),decision:z.literal('replace'),projection:reviewedProjectionSchema}).strict()
+]);

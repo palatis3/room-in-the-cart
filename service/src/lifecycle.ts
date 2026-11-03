@@ -1,4 +1,5 @@
 import {randomBytes,randomUUID} from 'node:crypto';
+import {proposalDTO} from './helper-review.js';
 import type {z} from 'zod';
 import type {VerifiedIdentity} from './auth.js';
 import {HouseholdRepository,type Context} from './repository.js';
@@ -122,13 +123,19 @@ export class HouseholdLifecycle {
     const g=await this.grant(ctx,grantId);if(g.mode!=='edit')throw unavailable();
     const fingerprint=digest({grantId,...input});
     const old=(await ctx.db.query('SELECT proposal_id,grant_id,base_revision,payload_digest,status FROM ritc.helper_proposal WHERE household_id=$1 AND actor_id=$2 AND client_key=$3',[ctx.householdId,ctx.member.member_id,input.clientKey])).rows[0];
-    if(old){if(old.payload_digest!==fingerprint)throw new ServiceError(409,'key_reused','Use a fresh key for a changed suggestion.');return{proposalId:old.proposal_id,grantId:old.grant_id,baseRevision:old.base_revision,status:old.status};}
+    if(old){if(old.payload_digest!==fingerprint)throw new ServiceError(409,'key_reused','Use a fresh key for a changed suggestion.');return{proposalId:old.proposal_id,grantId:old.grant_id,baseRevision:old.base_revision,status:'pending' as const};}
     if(g.revision!==input.baseRevision)throw new ServiceError(409,'stale_base','Read the current instructions before proposing a correction.');
     const proposalId=randomUUID();
     await ctx.db.query('INSERT INTO ritc.helper_proposal(household_id,proposal_id,grant_id,actor_id,client_key,base_revision,correction,payload_digest) VALUES($1,$2,$3,$4,$5,$6,$7,$8)',[ctx.householdId,proposalId,grantId,ctx.member.member_id,input.clientKey,input.baseRevision,input.correction,fingerprint]);
     return{proposalId,grantId,baseRevision:input.baseRevision,status:'pending' as const};
   }
-  async proposals(ctx:Context,grantId:string){await this.grant(ctx,grantId,true);const result=await ctx.db.query('SELECT proposal_id,base_revision,correction,status,created_at FROM ritc.helper_proposal WHERE household_id=$1 AND grant_id=$2 ORDER BY created_at,proposal_id LIMIT 100',[ctx.householdId,grantId]);return{proposals:result.rows.map(p=>({proposalId:p.proposal_id,grantId,baseRevision:p.base_revision,correction:p.correction,status:p.status,createdAt:p.created_at.toISOString()}))};}
+  async proposals(ctx:Context,grantId:string,cursor:string|null=null){
+    await this.grant(ctx,grantId,true);let after:string|undefined;
+    if(cursor){after=(await ctx.db.query('SELECT created_at::text AS created_at FROM ritc.helper_proposal WHERE household_id=$1 AND grant_id=$2 AND proposal_id=$3',[ctx.householdId,grantId,cursor])).rows[0]?.created_at;if(!after)throw unavailable();}
+    const rows=(await ctx.db.query('SELECT * FROM ritc.helper_proposal WHERE household_id=$1 AND grant_id=$2 AND ($3::timestamptz IS NULL OR (created_at,proposal_id)>($3,$4::uuid)) ORDER BY created_at,proposal_id LIMIT 101',[ctx.householdId,grantId,after??null,cursor])).rows;
+    return{proposals:rows.slice(0,100).map(p=>proposalDTO(grantId,p)),nextCursor:rows.length>100?rows[99].proposal_id:null};
+  }
+
   async revoke(ctx:Context,input:z.infer<typeof revocationSchema>){
     if(input.kind==='view'){
       const g=(await ctx.db.query('SELECT shop_id FROM ritc.view_grant WHERE household_id=$1 AND grant_id=$2',[ctx.householdId,input.targetId])).rows[0];if(!g)throw unavailable();
