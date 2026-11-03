@@ -59,3 +59,12 @@ export interface SharedMealPlan {
   meals: Array<{ occurrenceId: string; revision: number; meal: SharedMeal }>;
   proposals: Array<{ proposalId: string; occurrenceId: string; day: string }>;
 }
+
+/** Private, optional shopper add-decision provenance; never part of an author/child projection. */
+export interface ReviewedRequestPackQuantity { numerator:string; denominator:string; unit:'count'|'gram'|'kilogram'|'ounce'|'pound'|'milliliter'|'liter'|'fluidOunce'|'cup'; originalLiteral:string }
+export interface ReviewedRequestPackEvidence {
+  version:1; offerId:string; label:string; needed:ReviewedRequestPackQuantity; usablePerPack:ReviewedRequestPackQuantity;
+  packs:number; unitPriceMinor:number|null; productMatchConfirmed:true; availabilityConfirmed:true; availablePackLimit:number|null;
+  quoteSource:string; quoteObservedAt:string; reviewedAt:string;
+}
+export type ShopperRequestDecision={choice:'add';line:BasketLine;promote:boolean;reviewedPackEvidence?:ReviewedRequestPackEvidence}|{choice:'link';lineId:string;promote:boolean}|{choice:'defer'|'dismiss'|'handled'};

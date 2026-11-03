@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import {reviewedPackEvidenceSchema,matchesReviewedPack} from './request-pack-evidence.js';
 export const uuid = z.string().uuid();
 const minor = z.number().int().min(0).max(1_000_000_000);
 const timestamp = z.string().datetime({ offset: true });
@@ -15,10 +16,12 @@ export const quoteSchema = z.object({
   observedAt: timestamp, expiresAt: timestamp,
 }).strict().refine(q => Date.parse(q.expiresAt)>Date.parse(q.observedAt), 'Quote expiry must follow observation');
 export const decisionSchema = z.discriminatedUnion('choice', [
-  z.object({ choice: z.literal('add'), line: lineSchema, promote: z.boolean().default(false) }).strict(),
+  z.object({ choice: z.literal('add'), line: lineSchema, promote: z.boolean().default(false), reviewedPackEvidence: reviewedPackEvidenceSchema.optional() }).strict(),
   z.object({ choice: z.literal('link'), lineId: uuid, promote: z.boolean().default(false) }).strict(),
   z.object({ choice: z.enum(['defer','dismiss','handled']) }).strict(),
-]);
+ ]).superRefine((decision,ctx)=>{
+  if(decision.choice==='add'&&decision.reviewedPackEvidence&&!matchesReviewedPack(decision.line,decision.reviewedPackEvidence))ctx.addIssue({code:'custom',message:'Reviewed pack evidence must match the chosen sufficient available whole packs',path:['reviewedPackEvidence']});
+});
 export const previewSchema = z.object({ requestId: uuid, base: z.object({ shopRevision: z.number().int().positive(), authorityEpoch: z.number().int().positive(), requestRevision: z.number().int().positive() }).strict(), decision: decisionSchema }).strict();
 export const envelopeSchema = z.object({
   v: z.literal(1), replayWindow: uuid, clientKey: uuid, shopId: uuid,

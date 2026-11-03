@@ -224,6 +224,10 @@ export class HouseholdRepository {
       if(r.route==='next'&&!input.decision.promote)throw new ServiceError(409,'next_shop','Explicitly review promotion into this shop.');
       if(Date.parse(shop.quote.expiresAt)<=ctx.now.getTime())throw new ServiceError(409,'stale_quote','Record a current quote before reviewing this purchase.');
     }
+    if(input.decision.choice==='add'&&input.decision.reviewedPackEvidence) {
+      const evidence=input.decision.reviewedPackEvidence;
+      if(Date.parse(evidence.reviewedAt)>ctx.now.getTime()+300000||Date.parse(evidence.quoteObservedAt)>ctx.now.getTime()+300000)throw invalid();
+    }
     const lines=await this.lines(ctx,shopId),previewId=randomUUID();
     const facts=this.previewFacts(shop,r,lines,input.decision);
     const expiresAt=new Date(ctx.now.getTime()+5*60_000);

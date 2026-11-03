@@ -1,0 +1,9 @@
+# Reviewed request packs (S24)
+
+A shopper `POST /v1/households/:household/shops/:shop/previews` add decision may include `reviewedPackEvidence` alongside `line` and `promote`. Existing manual add decisions omit it; link/defer/dismiss/handled do not accept it.
+
+Evidence version 1 records the selected offer identity/label, exact positive needed and usable-per-pack rational quantities (numerator/denominator decimal strings), original literals and units, resulting whole pack count, nullable unit price, explicit product-match and availability confirmations, nullable available-pack limit, quote source/observation time, and review time. The server validates exact same-dimension unit conversion and ceiling division against `line.packs`, and exact label/price correspondence. Unknown prices remain null. Unconfirmed identity/availability and insufficient available counts cannot be represented as a reviewed selection. This does not certify a global cheapest market option or retailer fulfillment.
+
+The unchanged current-shopper, enrolled-device, role/grant, shop/request revision and authority-epoch checks apply. Complete checkout fees, taxes, discounts, cap scope, unknown acceptance and explicit overage acceptance remain server-authoritative. Future observation/review times beyond the five-minute clock allowance are rejected.
+
+The complete decision and metadata persist in the private `ritc.preview.decision` JSONB and its fingerprint. `request.apply` reloads that exact decision, rechecks the fingerprint and authority/source revisions, and atomically records the basket line, request link, outcome and operation receipt. Exact retry reuses the existing preview and command identity. Metadata is not added to basket-line or contributor/child request projections. Existing account/household privacy cleanup deletes the relevant preview rows. No migration or permission broadening is needed.

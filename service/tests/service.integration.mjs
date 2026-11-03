@@ -517,3 +517,23 @@ test('placement command digest matches the native fixed sorted-byte fixture',()=
  const command={v:1,replayWindow:'00000000-0000-4000-8000-000000000062',clientKey:'00000000-0000-4000-8000-000000000061',shopId:'00000000-0000-4000-8000-000000000063',kind:'shop.reportPlaced',base:{shopRevision:4,authorityEpoch:2},body:{occurredAt:'2026-11-03T00:00:00Z'}};
  assert.equal(digest(command),'2c5085b9ab57695f68a2164a13508eb7b1a511f08aeaa6417a1fd357df7a1218');
 });
+
+test('S24 reviewed pack source persists in private exact preview and atomic apply without author leakage',async()=>{
+  const f=await fixture(),sent=await f.send('Sam');
+  const q=n=>({numerator:String(n),denominator:'1',unit:'count',originalLiteral:String(n)});
+  const line={lineId:randomUUID(),originalItem:'Reviewed four-wrap pack',packs:2,unitPriceMinor:300,feeEligible:true};
+  const evidence={version:1,offerId:'reviewed-shelf-A',label:line.originalItem,needed:q(8),usablePerPack:q(4),packs:2,unitPriceMinor:300,productMatchConfirmed:true,availabilityConfirmed:true,availablePackLimit:2,quoteSource:'Private reviewed shelf source',quoteObservedAt:new Date().toISOString(),reviewedAt:new Date().toISOString()};
+  const decision={choice:'add',line,promote:false,reviewedPackEvidence:evidence};
+  const denied=await f.preview(sent.request,decision,'Sam');assert.notEqual(denied.status,200);
+  const preview=await f.preview(sent.request,decision);assert.equal(preview.status,200,JSON.stringify(preview.data));
+  const saved=(await admin.query('SELECT decision,fingerprint FROM ritc.preview WHERE household_id=$1 AND preview_id=$2',[f.h,preview.data.previewId])).rows[0];
+  assert.deepEqual(saved.decision.reviewedPackEvidence,evidence);assert.equal(preview.data.after.totalMinor,4320);
+  const alternate=await f.preview(sent.request,{...decision,reviewedPackEvidence:{...evidence,quoteSource:'Another explicitly reviewed source'}});assert.equal(alternate.status,200);
+  const other=(await admin.query('SELECT fingerprint FROM ritc.preview WHERE household_id=$1 AND preview_id=$2',[f.h,alternate.data.previewId])).rows[0];assert.notEqual(other.fingerprint,saved.fingerprint);
+  const command=f.envelope('Mia','request.apply',{requestId:sent.request.requestId,previewId:preview.data.previewId,acceptOverage:true,acceptUnknown:false},{shopRevision:1,authorityEpoch:1,requestRevision:1});
+  const applied=await f.http('Mia','POST','/commands',command);assert.equal(applied.status,200,JSON.stringify(applied.data));
+  assert.deepEqual((await f.http('Mia','POST','/commands',command)).data,applied.data);
+  const persisted=(await admin.query('SELECT decision FROM ritc.preview WHERE household_id=$1 AND preview_id=$2',[f.h,preview.data.previewId])).rows[0];assert.deepEqual(persisted.decision.reviewedPackEvidence,evidence);
+  const shop=await f.http('Mia','GET','/shops/'+f.shopId);assert.equal(shop.data.lines.length,2);assert.deepEqual(shop.data.lines.find(l=>l.lineId===line.lineId),line);
+  const own=await f.http('Sam','GET','/requests/mine');assert.equal(own.data.requests[0].status,'added');assert.equal(JSON.stringify(own.data).includes('quoteSource'),false);assert.equal(JSON.stringify(own.data).includes('Private reviewed shelf source'),false);
+});

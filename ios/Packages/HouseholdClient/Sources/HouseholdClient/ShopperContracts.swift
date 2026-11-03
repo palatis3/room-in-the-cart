@@ -107,19 +107,19 @@ public struct ShopperShop: Codable, Equatable, Sendable {
     public let quote: ShopperQuote; public let lines: [ShopperBasketLine]; public let frozenRevision: Int?; public let placedRevision: Int?
 }
 public enum ShopperDecision: Equatable, Sendable, Encodable {
-    case add(line: ShopperBasketLine, promote: Bool)
+    case add(line: ShopperBasketLine, promote: Bool, reviewedPackEvidence: ReviewedRequestPackEvidence? = nil)
     case link(lineID: String, promote: Bool)
     case deferRequest, dismiss, handled
     public var choice: String {
         switch self { case .add: return "add"; case .link: return "link"; case .deferRequest: return "defer"
         case .dismiss: return "dismiss"; case .handled: return "handled" }
     }
-    private enum CodingKeys: String, CodingKey { case choice, line, lineId, promote }
+    private enum CodingKeys: String, CodingKey { case choice, line, lineId, promote, reviewedPackEvidence }
     public func encode(to encoder: Encoder) throws {
         var values = encoder.container(keyedBy: CodingKeys.self)
         try values.encode(choice, forKey: .choice)
         switch self {
-        case .add(let line, let promote): try values.encode(line, forKey: .line); try values.encode(promote, forKey: .promote)
+        case .add(let line, let promote, let evidence): try values.encode(line, forKey: .line); try values.encode(promote, forKey: .promote); try values.encodeIfPresent(evidence, forKey: .reviewedPackEvidence)
         case .link(let id, let promote): try values.encode(id, forKey: .lineId); try values.encode(promote, forKey: .promote)
         default: break
         }
