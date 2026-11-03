@@ -27,13 +27,14 @@ enum ShopperDelivery: Equatable {
     @Published private(set) var notice: String?
     @Published private(set) var pending: PendingOperation?
     @Published private(set) var reviewedCurrentFacts = false
+    @Published private(set) var packSelection: HouseholdRequestPackSelection?
     @Published var choice: ShopperChoice = .deferRequest { didSet { invalidatePreview() } }
     @Published var lineItem = "" { didSet { invalidatePreview() } }
     @Published var packs = 1 { didSet { invalidatePreview() } }
     @Published var price = "" { didSet { invalidatePreview() } }
     @Published var feeEligible = true { didSet { invalidatePreview() } }
     @Published var linkedLineID = "" { didSet { invalidatePreview() } }
-    @Published var promote = false { didSet { invalidatePreview() } }
+    @Published var promote = false { didSet { invalidatePreview(preservePackSelection: true) } }
     @Published var clarification = ""
     @Published var acceptOverage = false
     @Published var acceptUnknown = false
@@ -112,8 +113,9 @@ enum ShopperDelivery: Equatable {
         choice = availableChoices.contains(.deferRequest) ? .deferRequest : (availableChoices.first ?? .deferRequest)
         invalidatePreview()
     }
-    func invalidatePreview() {
+    func invalidatePreview(preservePackSelection: Bool = false) {
         draftGeneration = UUID(); preview = nil; acceptOverage = false; acceptUnknown = false
+        if !preservePackSelection { packSelection = nil }
     }
     func cancelReview() { guard pending == nil else { return }; invalidatePreview(); selected = nil; clarification = "" }
     func review() async {
@@ -129,10 +131,31 @@ enum ShopperDelivery: Equatable {
             preview = value
         } catch { await handle(error, start: start) }
     }
+    var packReviewScope: HouseholdRequestPackScope? {
+        guard authorized, pending == nil, let selected, let shop, bootstrap.role == "shopper", bootstrap.grantId == nil else { return nil }
+        return HouseholdRequestPackScope(generation: generation, bootstrap: bootstrap, request: selected, shop: shop)
+    }
+    @discardableResult func usePackSelection(_ selection: HouseholdRequestPackSelection) -> Bool {
+        guard !busy, availableChoices.contains(.add), let scope = packReviewScope else { return false }
+        do {
+            try selection.validate(scope: scope)
+            choice = .add; lineItem = selection.line.originalItem; packs = selection.line.packs
+            if let cents = selection.line.unitPriceMinor { price = "\(cents / 100).\(String(format: "%02d", cents % 100))" }
+            else { price = "" }
+            feeEligible = selection.line.feeEligible
+            packSelection = selection; notice = nil
+            return true
+        } catch { notice = ht("The request or shop changed. Reopen the pack review before using this choice."); return false }
+    }
     private func makeDecision() throws -> ShopperDecision {
         if (choice == .add || choice == .link), selected?.route == "next", !promote { throw ShopperInputError.promotion }
         switch choice {
         case .add:
+            if let packSelection {
+                guard let scope = packReviewScope else { throw ShopperInputError.preview }
+                try packSelection.validate(scope: scope)
+                return .add(line: packSelection.line, promote: promote, reviewedPackEvidence: try packSelection.decisionEvidence())
+            }
             let item = lineItem.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !item.isEmpty, item.count <= 240, (1...10_000).contains(packs) else { throw ShopperInputError.line }
             let amount = try Self.priceMinor(price)

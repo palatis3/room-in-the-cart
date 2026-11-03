@@ -1,0 +1,16 @@
+{
+  "result": "Passed",
+  "passedTests": 395,
+  "failedTests": 0,
+  "skippedTests": 0,
+  "runtimeWarnings": [],
+  "bundle": ".build/RestartCheckedNative.xcresult",
+  "device": "iPhone 17e, iOS 27 simulator",
+  "scope": "RoomInTheCartTests native suite. UI tests compiled in the test build and have separate results. The source comparison covered Swift, Xcode project and string catalogs.",
+  "localization": {
+    "catalogs": 13,
+    "pairedEnglishAndSpanishEntries": 3235,
+    "literalKeysChecked": 3095,
+    "humanSpanishReview": "pending"
+  }
+}

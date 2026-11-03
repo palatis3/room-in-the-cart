@@ -591,3 +591,15 @@ extension HouseholdModel {
         })
     }
 }
+
+// Identity and enrollment generations are native runtime facts, never restored from a proposal file.
+extension HouseholdModel {
+    var sharedMealChangeScope: SharedMealChangeScope? {
+        guard !locked, let subject = identity?.subject, let p = projection, p.grantId == nil,
+              p.enrolled, p.role == "shopper" || p.capabilities.contains("meal_proposals"),
+              let shopID = p.shopId.flatMap(UUID.init(uuidString:)) else { return nil }
+        return .init(subject: subject, householdID: p.household.id, memberID: p.memberId, shopID: shopID,
+            authorityStamp: p.role + "/" + p.capabilities.sorted().joined(separator: ","),
+            generation: generation, enrollmentRevision: contributorEnrollmentRevision)
+    }
+}

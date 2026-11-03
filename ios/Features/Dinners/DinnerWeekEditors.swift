@@ -9,6 +9,15 @@ struct DinnerOccurrenceView: View {
     @State private var showPreview = false
     private var meal: MealOccurrence? { model.shop?.mealOccurrences.first { $0.id == occurrenceID && $0.removedAt == nil } }
     var body: some View {
+        Group {
+            if meal?.carryover != nil {
+                DinnerCarryoverDetailsView(model: model, occurrenceID: occurrenceID)
+            } else {
+                occurrenceForm
+            }
+        }
+    }
+    private var occurrenceForm: some View {
         Form {
             if let meal {
                 Section {
@@ -22,6 +31,7 @@ struct DinnerOccurrenceView: View {
                         } else { RecipeSourceDisclosure(evidence: evidence) }
                     }
                 }
+                Section { DinnerAwayCarryoverLink(model: model, occurrenceID: meal.id) }
                 Section(dinnerText("Move this dinner")) {
                     Toggle(dinnerText("Assign a date"), isOn: $scheduled)
                     if scheduled { DatePicker(dinnerText("Dinner date"), selection: $date, displayedComponents: .date) }
@@ -258,6 +268,9 @@ struct DinnerNoteView: View {
                     guard let shop = model.shop else { return }
                     Task { if await model.saveNote(DinnerWeekNote(id: id, shopID: shop.id, day: day, kind: kind, text: text)) { dismiss() } }
                 }.disabled(!model.editable)
+            }
+            if kind == .away || kind == .carryoverReview {
+                Section { DinnerAwayCarryoverLink(model: model, day: day) }
             }
             Section(dinnerText("Existing notes")) {
                 ForEach(model.state.weekNotes.filter { $0.shopID == model.shop?.id && $0.day == day }) { note in

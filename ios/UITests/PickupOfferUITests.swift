@@ -43,7 +43,6 @@ import XCTest
         fill("0", into: "pickup.offer.remaining")
         fill("4.00", into: "pickup.offer.price")
         fill("3.00", into: "pickup.offer.ceiling")
-        fill("Please leave unresolved", into: "pickup.offer.preference")
         fill("1", into: "pickup.offer.usable")
         tap(element("pickup.offer.retained.kind")); tap(app.buttons["Exact price"])
         fill("0.00", into: "pickup.offer.retained.lower")
@@ -54,6 +53,7 @@ import XCTest
         fill("3.00", into: "pickup.offer.otherCost.lower")
         fill("6.00", into: "pickup.offer.wholeCap")
         fill("Reviewed retained checkout charges excluding replacement", into: "pickup.offer.checkoutSource", replacing: true)
+        fill("Please leave unresolved", into: "pickup.offer.preference")
         tap(element("pickup.offer.review"))
         assertElementContains("pickup.offer.forecast.combined", "$7.00")
         assertElementContains("pickup.offer.forecast.checkout", "exceeds")
@@ -71,10 +71,23 @@ import XCTest
         XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "pickup.offer.edit.")).count, 1)
         capture("Offer-saved-with-price-warning")
         restart()
+        // Current app snapshots expose the saved deadline on the normal Shop route.
+        // The untouched editor cutoff is past by restart; arrival remains a separate review.
+        assertElementContains("shop.resumeOfferStatus", "Await pickup")
+        assertText("Large wrap pack")
+        assertText("Cutoff:")
+        capture("Offer-expired-resume-card-after-restart")
+        tap(element("shop.resumeOffer"))
+        XCTAssertTrue(app.navigationBars["What came home"].waitForExistence(timeout: 8))
+        capture("Offer-resume-opens-actual-arrival")
+        tap(app.navigationBars["What came home"].buttons["BackButton"])
+        XCTAssertTrue(app.navigationBars["Shop"].waitForExistence(timeout: 8))
         tap(app.buttons["Pickup, repairs and handoffs"])
         tap(app.buttons["Review a store offer"])
-        assertElementContains("pickup.offer.forecast.combined", "$7.00")
-        assertElementContains("pickup.offer.forecast.noteCeiling", "$3.00")
+        // The saved facts container has its own accessibility identifier; read
+        // the rendered child labels instead of relying on nested identifiers.
+        assertText("Combined expected cost: $7.00")
+        assertText("Reviewed maximum in the retailer note: $3.00")
         tap(element(editID))
         XCTAssertEqual(element("pickup.offer.replacement").value as? String, "Large wrap pack")
         fill("Retailer response still pending", into: "pickup.offer.response")
@@ -133,13 +146,13 @@ import XCTest
         if done.exists && done.isHittable { done.tap() }
     }
     private func reveal(_ target: XCUIElement) {
-        for attempt in 0..<24 {
+        for attempt in 0..<64 {
             if target.exists && target.isHittable { return }
             let area = scrollableArea()
             let upward: Bool
             if target.exists && !target.frame.isEmpty {
                 upward = target.frame.midY > area.midY
-            } else { upward = attempt < 16 }
+            } else { upward = attempt < 32 }
             scrollContent(upward: upward)
         }
         XCTAssertTrue(target.exists && target.isHittable, "Missing actionable UI element: \(target.debugDescription)")

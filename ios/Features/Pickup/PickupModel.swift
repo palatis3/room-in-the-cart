@@ -136,6 +136,7 @@ struct PickupJourney: Codable, Equatable, Identifiable {
     var urgent: [UrgentMealNeed] = []
     var stockLots: [ConfirmedStockLot] = []
     var stockNeeds: [StockNeed] = []
+    var awayCarryovers: [AwayCarryoverRecord] = []
     var repairs: [PickupRepair] = []
     var deferred: [DeferredPickupNeed] = []
     var flexible: Set<UUID> = []
@@ -165,7 +166,7 @@ extension PickupJourney {
 
     private enum CodingKeys: String, CodingKey {
         case recipientSends
-        case id, savedAt, version, revision, basket, context, cap, quote, quotedRevisionID, frozenQuotes, pickup, needs, plannedNeeds, needDetails, ledgerBasis, ledgerSourceRevisionID, ledgerPackSelections, originShopID, nextShopReview, carriedMeals, urgent, stockLots, stockNeeds, repairs, deferred, flexible, proposals, undoneProposals, offers, offerActions, notes, cookShareEvents, settlement, closedAt, feedback
+        case awayCarryovers, id, savedAt, version, revision, basket, context, cap, quote, quotedRevisionID, frozenQuotes, pickup, needs, plannedNeeds, needDetails, ledgerBasis, ledgerSourceRevisionID, ledgerPackSelections, originShopID, nextShopReview, carriedMeals, urgent, stockLots, stockNeeds, repairs, deferred, flexible, proposals, undoneProposals, offers, offerActions, notes, cookShareEvents, settlement, closedAt, feedback
     }
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -191,6 +192,7 @@ extension PickupJourney {
         if let decoded = try container.decodeIfPresent([UrgentMealNeed].self, forKey: .urgent) { urgent = decoded }
         if let decoded = try container.decodeIfPresent([ConfirmedStockLot].self, forKey: .stockLots) { stockLots = decoded }
         if let decoded = try container.decodeIfPresent([StockNeed].self, forKey: .stockNeeds) { stockNeeds = decoded }
+        awayCarryovers = try container.decodeIfPresent([AwayCarryoverRecord].self, forKey: .awayCarryovers) ?? []
         if let decoded = try container.decodeIfPresent([PickupRepair].self, forKey: .repairs) { repairs = decoded }
         if let decoded = try container.decodeIfPresent([DeferredPickupNeed].self, forKey: .deferred) { deferred = decoded }
         if let decoded = try container.decodeIfPresent(Set<UUID>.self, forKey: .flexible) { flexible = decoded }
@@ -270,17 +272,7 @@ struct PickupPersistenceLocation {
     }
     var allocation: StockAllocationResult? {
         guard let value = journey else { return nil }
-        var lots = value.stockLots
-        if let pickup = value.pickup {
-            for receipt in pickup.receipts {
-                if let observation = pickup.usableObservations.last(where: { $0.receipt == receipt.key }), observation.confirmedMatchToOrderLine {
-                    lots.append(ConfirmedStockLot(id: observation.id, foodID: receipt.key.orderLineID, name: receipt.itemName, usable: observation.usable, confirmedAt: observation.confirmedAt))
-                }
-            }
-        }
-        let commitments = value.pickup == nil ? value.plannedNeeds : value.needs
-        let orderedNeeds = commitments.map { StockNeed(id: $0.id, foodID: $0.orderLineID, name: $0.name, amount: $0.amount, priority: $0.priority) }
-        return try? ConfirmedStockAllocator.allocate(lots: lots, needs: orderedNeeds + value.stockNeeds)
+        return try? value.carryoverAllocation()
     }
     var stockAllocation: StockAllocationResult? { allocation }
     func load() async {
@@ -595,6 +587,7 @@ struct PickupPersistenceLocation {
               Set(value.repairs.map(\.id)).count == value.repairs.count,
               Set(value.deferred.map(\.id)).count == value.deferred.count else { throw PickupModelError.invalid }
         try value.validateRecipientSends()
+        try value.validateAwayCarryovers()
         try value.ledgerBasis?.validate()
         guard value.ledgerPackSelections.count <= 10_000,
               Set(value.ledgerPackSelections.map(\.lineID)).count == value.ledgerPackSelections.count else { throw PickupModelError.invalid }

@@ -173,6 +173,7 @@ struct DinnerPreviewView: View {
                         Text(dinnerText("Changing store facts invalidates the current quote. The reviewed comparison remains in history."))
                     }
                 }
+                DinnerSharedProposalEntry(model: model, preview: preview)
                 Section {
                     Button(dinnerText("Apply once")) { Task { if await model.applyPreview() { finish() } } }
                         .disabled(!model.canApply).accessibilityIdentifier("dinnerApply")

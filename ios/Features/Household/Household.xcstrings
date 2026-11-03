@@ -9353,6 +9353,2886 @@
           }
         }
       }
+    },
+    "The request or shop changed. Reopen the pack review before using this choice.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The request or shop changed. Reopen the pack review before using this choice."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La solicitud o la compra cambió. Vuelve a revisar los paquetes antes de usar esta opción."
+          }
+        }
+      }
+    },
+    "Compare available packs for this request": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare available packs for this request"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparar paquetes disponibles para esta solicitud"
+          }
+        }
+      }
+    },
+    "Enter the usable amount needed for this request. Matching names do not prove that a product or yield is suitable.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the usable amount needed for this request. Matching names do not prove that a product or yield is suitable."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introduce la cantidad utilizable necesaria para esta solicitud. Los nombres iguales no demuestran que el producto o su rendimiento sean adecuados."
+          }
+        }
+      }
+    },
+    "Reviewed usable amount needed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed usable amount needed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad utilizable necesaria revisada"
+          }
+        }
+      }
+    },
+    "Need unit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Need unit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unidad de la necesidad"
+          }
+        }
+      }
+    },
+    "Review available pack comparison": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review available pack comparison"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la comparación de paquetes disponibles"
+          }
+        }
+      }
+    },
+    "Item quantities and prices only. The household preview below checks the complete checkout separately.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item quantities and prices only. The household preview below checks the complete checkout separately."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo cantidades y precios del artículo. La vista previa del hogar comprueba por separado el total de la compra."
+          }
+        }
+      }
+    },
+    "Reviewed need": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed need"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Necesidad revisada"
+          }
+        }
+      }
+    },
+    "Some alternatives remain unresolved. A cheapest known option is not a cheapest overall claim.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some alternatives remain unresolved. A cheapest known option is not a cheapest overall claim."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Algunas alternativas siguen sin resolverse. La opción conocida más barata no garantiza ser la más barata de todas."
+          }
+        }
+      }
+    },
+    "Price source": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price source"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuente del precio"
+          }
+        }
+      }
+    },
+    "Usable per pack": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usable per pack"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad utilizable por paquete"
+          }
+        }
+      }
+    },
+    "Whole packs needed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whole packs needed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquetes enteros necesarios"
+          }
+        }
+      }
+    },
+    "Pack purchase total": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pack purchase total"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total de los paquetes"
+          }
+        }
+      }
+    },
+    "Cheapest sufficient option among reviewed available packs with known prices": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cheapest sufficient option among reviewed available packs with known prices"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opción suficiente más barata entre los paquetes disponibles revisados con precios conocidos"
+          }
+        }
+      }
+    },
+    "Product match has not been confirmed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Product match has not been confirmed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se ha confirmado que el producto corresponda a la solicitud."
+          }
+        }
+      }
+    },
+    "Availability is unknown or insufficient for the required whole packs.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Availability is unknown or insufficient for the required whole packs."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La disponibilidad es desconocida o insuficiente para los paquetes enteros necesarios."
+          }
+        }
+      }
+    },
+    "Usable yield or unit conversion is unresolved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usable yield or unit conversion is unresolved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El rendimiento utilizable o la conversión de unidades sigue sin resolverse."
+          }
+        }
+      }
+    },
+    "Use this reviewed pack in the decision": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use this reviewed pack in the decision"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar este paquete revisado en la decisión"
+          }
+        }
+      }
+    },
+    "Review the need, units, pack labels, source, availability, and prices. The decision has not changed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the need, units, pack labels, source, availability, and prices. The decision has not changed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa la necesidad, las unidades, las etiquetas, la fuente, la disponibilidad y los precios. La decisión no ha cambiado."
+          }
+        }
+      }
+    },
+    "Pack A": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pack A"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquete A"
+          }
+        }
+      }
+    },
+    "Pack B": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pack B"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquete B"
+          }
+        }
+      }
+    },
+    "Reviewed pack label": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed pack label"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etiqueta del paquete revisada"
+          }
+        }
+      }
+    },
+    "Usable amount in one pack, blank if unknown": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usable amount in one pack, blank if unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad utilizable en un paquete; deja vacío si no se sabe"
+          }
+        }
+      }
+    },
+    "Pack usable unit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pack usable unit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unidad de la cantidad utilizable"
+          }
+        }
+      }
+    },
+    "Reviewed availability": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed availability"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disponibilidad revisada"
+          }
+        }
+      }
+    },
+    "Available": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Available"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disponible"
+          }
+        }
+      }
+    },
+    "Unavailable": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unavailable"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No disponible"
+          }
+        }
+      }
+    },
+    "Available pack limit, blank if unlimited confirmed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Available pack limit, blank if unlimited confirmed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Límite de paquetes disponibles; vacío si se confirmó sin límite"
+          }
+        }
+      }
+    },
+    "Price observed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price observed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha del precio observado"
+          }
+        }
+      }
+    },
+    "I confirmed this pack matches the request and intended use": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I confirmed this pack matches the request and intended use"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmé que este paquete corresponde a la solicitud y al uso previsto"
+          }
+        }
+      }
+    },
+    "Reviewed pack used by this decision": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed pack used by this decision"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquete revisado utilizado en esta decisión"
+          }
+        }
+      }
+    },
+    "Selecting a pack only prepares the decision. Review and apply the household preview to change the plan.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selecting a pack only prepares the decision. Review and apply the household preview to change the plan."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir un paquete solo prepara la decisión. Revisa y aplica la vista previa del hogar para cambiar el plan."
+          }
+        }
+      }
+    },
+    "Shop revision": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shop revision"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versión de la compra"
+          }
+        }
+      }
+    },
+    "count": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "count"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "unidades"
+          }
+        }
+      }
+    },
+    "gram": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "gram"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "gramos"
+          }
+        }
+      }
+    },
+    "kilogram": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kilogram"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kilogramos"
+          }
+        }
+      }
+    },
+    "ounce": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ounce"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "onzas"
+          }
+        }
+      }
+    },
+    "pound": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pound"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "libras"
+          }
+        }
+      }
+    },
+    "milliliter": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "milliliter"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mililitros"
+          }
+        }
+      }
+    },
+    "liter": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "liter"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "litros"
+          }
+        }
+      }
+    },
+    "fluidOunce": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "fluidOunce"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "onzas líquidas"
+          }
+        }
+      }
+    },
+    "cup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tazas"
+          }
+        }
+      }
+    },
+    "A private pending proposal needs current planning access before it can be shown.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A private pending proposal needs current planning access before it can be shown."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para mostrar una propuesta privada pendiente, necesitas acceso actual a la planificación."
+          }
+        }
+      }
+    },
+    "Add proposed ingredient": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add proposed ingredient"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agregar ingrediente propuesto"
+          }
+        }
+      }
+    },
+    "Add serving group": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add serving group"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agregar grupo de porciones"
+          }
+        }
+      }
+    },
+    "Applied once by the shopper.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applied once by the shopper."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La persona que compra la aplicó una sola vez."
+          }
+        }
+      }
+    },
+    "Cancel proposal review": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel proposal review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar revisión de la propuesta"
+          }
+        }
+      }
+    },
+    "Changing portions does not scale ingredient quantities or calculate packs here. Review each entered amount.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changing portions does not scale ingredient quantities or calculate packs here. Review each entered amount."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar las porciones no ajusta las cantidades de ingredientes ni calcula paquetes aquí. Revisa cada cantidad ingresada."
+          }
+        }
+      }
+    },
+    "Check status and clear local retry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check status and clear local retry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consultar estado y borrar reintento local"
+          }
+        }
+      }
+    },
+    "Choose the exact shared occurrence": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the exact shared occurrence"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir la ocasión compartida exacta"
+          }
+        }
+      }
+    },
+    "Clear local proposal retry?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear local proposal retry?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Borrar el reintento local de la propuesta?"
+          }
+        }
+      }
+    },
+    "Close": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrar"
+          }
+        }
+      }
+    },
+    "Current shared meal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current shared meal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comida compartida actual"
+          }
+        }
+      }
+    },
+    "Dismiss shared proposal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dismiss shared proposal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descartar propuesta compartida"
+          }
+        }
+      }
+    },
+    "Dismissed by the shopper.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dismissed by the shopper."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La persona que compra la descartó."
+          }
+        }
+      }
+    },
+    "Exact saved proposal retry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exact saved proposal retry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintento de la propuesta exacta guardada"
+          }
+        }
+      }
+    },
+    "Group name": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Group name"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre del grupo"
+          }
+        }
+      }
+    },
+    "Guest, ingredient, and serving-group proposals": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guest, ingredient, and serving-group proposals"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Propuestas de invitados, ingredientes y grupos de porciones"
+          }
+        }
+      }
+    },
+    "Ingredient": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredient"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingrediente"
+          }
+        }
+      }
+    },
+    "Ingredient name": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredient name"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre del ingrediente"
+          }
+        }
+      }
+    },
+    "Ingredient quantity": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredient quantity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad del ingrediente"
+          }
+        }
+      }
+    },
+    "Ingredient quantity is unknown.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredient quantity is unknown."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se desconoce la cantidad del ingrediente."
+          }
+        }
+      }
+    },
+    "Ingredient unit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredient unit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unidad del ingrediente"
+          }
+        }
+      }
+    },
+    "Known ingredient quantity": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Known ingredient quantity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad conocida del ingrediente"
+          }
+        }
+      }
+    },
+    "Local retry cleared after checking shared status. This does not withdraw or undo a shared proposal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Local retry cleared after checking shared status. This does not withdraw or undo a shared proposal."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se borró el reintento local tras consultar el estado compartido. Esto no retira ni deshace una propuesta compartida."
+          }
+        }
+      }
+    },
+    "Local source meal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Local source meal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comida local de origen"
+          }
+        }
+      }
+    },
+    "Mapped local occurrence": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mapped local occurrence"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ocasión local vinculada"
+          }
+        }
+      }
+    },
+    "No shared meal changes yet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No shared meal changes yet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no hay cambios de comidas compartidos."
+          }
+        }
+      }
+    },
+    "Original quantity evidence": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original quantity evidence"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Información original de la cantidad"
+          }
+        }
+      }
+    },
+    "Original reviewed meal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original reviewed meal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comida original revisada"
+          }
+        }
+      }
+    },
+    "Pending shopper review.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pending shopper review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pendiente de revisión por la persona que compra."
+          }
+        }
+      }
+    },
+    "Proposal saved to the household. The meal and basket are unchanged until shopper review.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proposal saved to the household. The meal and basket are unchanged until shopper review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Propuesta guardada en el hogar. La comida y la canasta no cambian hasta que las revise la persona que compra."
+          }
+        }
+      }
+    },
+    "Quantity denominator": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quantity denominator"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denominador de la cantidad"
+          }
+        }
+      }
+    },
+    "Quantity numerator": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quantity numerator"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numerador de la cantidad"
+          }
+        }
+      }
+    },
+    "Reason for change": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reason for change"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Motivo del cambio"
+          }
+        }
+      }
+    },
+    "Refresh shared changes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh shared changes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar cambios compartidos"
+          }
+        }
+      }
+    },
+    "Refresh the household and check meal planning access.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh the household and check meal planning access."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualiza el hogar y comprueba el acceso a la planificación de comidas."
+          }
+        }
+      }
+    },
+    "Remove proposed ingredient": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove proposed ingredient"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar ingrediente propuesto"
+          }
+        }
+      }
+    },
+    "Reserved for group": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reserved for group"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reservado para el grupo"
+          }
+        }
+      }
+    },
+    "Retry keeps the original proposal, occurrence, and reviewed revision. It never updates them silently.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry keeps the original proposal, occurrence, and reviewed revision. It never updates them silently."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El reintento conserva la propuesta, la ocasión y la versión revisada originales. Nunca las actualiza sin avisar."
+          }
+        }
+      }
+    },
+    "Retry saved proposal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry saved proposal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar propuesta guardada"
+          }
+        }
+      }
+    },
+    "Review change with shared packs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review change with shared packs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar cambio con los paquetes compartidos"
+          }
+        }
+      }
+    },
+    "Review exact proposal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review exact proposal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar propuesta exacta"
+          }
+        }
+      }
+    },
+    "Review shared proposal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review shared proposal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar propuesta compartida"
+          }
+        }
+      }
+    },
+    "Select the shared occurrence explicitly. Similar names are not a match.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select the shared occurrence explicitly. Similar names are not a match."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selecciona explícitamente la ocasión compartida. Los nombres similares no confirman una coincidencia."
+          }
+        }
+      }
+    },
+    "Send reviewed proposal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send reviewed proposal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar propuesta revisada"
+          }
+        }
+      }
+    },
+    "Sending a proposal does not change shared packs, spending, reservations, or retailer instructions.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sending a proposal does not change shared packs, spending, reservations, or retailer instructions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar una propuesta no cambia los paquetes compartidos, gastos, reservas ni instrucciones para la tienda."
+          }
+        }
+      }
+    },
+    "Serving denominator": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serving denominator"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denominador de porciones"
+          }
+        }
+      }
+    },
+    "Serving group": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serving group"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grupo de porciones"
+          }
+        }
+      }
+    },
+    "Serving numerator": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serving numerator"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numerador de porciones"
+          }
+        }
+      }
+    },
+    "Shared meal access changed. Refresh the household before continuing.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared meal access changed. Refresh the household before continuing."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambió el acceso a las comidas compartidas. Actualiza el hogar antes de continuar."
+          }
+        }
+      }
+    },
+    "Shared meal changes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared meal changes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambios de comidas compartidos"
+          }
+        }
+      }
+    },
+    "Shared occurrence": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared occurrence"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ocasión compartida"
+          }
+        }
+      }
+    },
+    "Shared proposals": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared proposals"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Propuestas compartidas"
+          }
+        }
+      }
+    },
+    "The household confirmed this proposal. Saving the local receipt failed; retry cleanup with the same proposal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The household confirmed this proposal. Saving the local receipt failed; retry cleanup with the same proposal."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El hogar confirmó esta propuesta. No se pudo guardar el comprobante local; reintenta la limpieza con la misma propuesta."
+          }
+        }
+      }
+    },
+    "The order is frozen or placed. This remains an amendment proposal; it cannot change the placed basket.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The order is frozen or placed. This remains an amendment proposal; it cannot change the placed basket."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El pedido está congelado o realizado. Esto sigue siendo una propuesta de modificación; no puede cambiar la canasta del pedido realizado."
+          }
+        }
+      }
+    },
+    "The proposal result is not confirmed. Refresh shared status or retry the exact saved proposal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The proposal result is not confirmed. Refresh shared status or retry the exact saved proposal."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El resultado de la propuesta no está confirmado. Actualiza el estado compartido o reintenta la propuesta exacta guardada."
+          }
+        }
+      }
+    },
+    "The shared date stays unchanged. Use the separate date proposal for a calendar move.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The shared date stays unchanged. Use the separate date proposal for a calendar move."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La fecha compartida no cambia. Usa la propuesta de fecha por separado para moverla en el calendario."
+          }
+        }
+      }
+    },
+    "The source revision or order phase changed. Review a fresh proposal; this one will not be rebased.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The source revision or order phase changed. Review a fresh proposal; this one will not be rebased."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambió la versión de origen o la fase del pedido. Revisa una propuesta nueva; esta no se adaptará automáticamente."
+          }
+        }
+      }
+    },
+    "This does not withdraw or undo a proposal. The shopper may already have applied it. Exact retry remains the way to confirm the original submission.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This does not withdraw or undo a proposal. The shopper may already have applied it. Exact retry remains the way to confirm the original submission."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esto no retira ni deshace una propuesta. La persona que compra puede haberla aplicado. El reintento exacto permite confirmar el envío original."
+          }
+        }
+      }
+    },
+    "Add ingredient": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add ingredient"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir ingrediente"
+          }
+        }
+      }
+    },
+    "Add named reservation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add named reservation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir reserva con nombre"
+          }
+        }
+      }
+    },
+    "Adult approved": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adult approved"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprobada por un adulto"
+          }
+        }
+      }
+    },
+    "An approved idea stays separate from the week. Choose a real date and review this proposal; only the current shopper can apply shared packs.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An approved idea stays separate from the week. Choose a real date and review this proposal; only the current shopper can apply shared packs."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una idea aprobada sigue separada de la semana. Elige una fecha real y revisa esta propuesta; solo quien hace la compra actual puede aplicar los paquetes compartidos."
+          }
+        }
+      }
+    },
+    "Approve meal and quantities": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approve meal and quantities"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprobar comida y cantidades"
+          }
+        }
+      }
+    },
+    "Approve this household idea?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approve this household idea?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Aprobar esta idea del hogar?"
+          }
+        }
+      }
+    },
+    "Approved idea only. It is not scheduled and has changed no shared shopping lines.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approved idea only. It is not scheduled and has changed no shared shopping lines."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo es una idea aprobada. No está programada y no ha cambiado ningún artículo de la compra compartida."
+          }
+        }
+      }
+    },
+    "As the assigned shopper, review this mapped meal with the actual shared packs and checkout quote before applying.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As the assigned shopper, review this mapped meal with the actual shared packs and checkout quote before applying."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Como responsable de la compra, revisa esta comida vinculada con los paquetes compartidos y el presupuesto real antes de aplicarla."
+          }
+        }
+      }
+    },
+    "Assumed extras, one per line": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assumed extras, one per line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extras supuestos, uno por línea"
+          }
+        }
+      }
+    },
+    "Bean and rice bowls": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bean and rice bowls"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Platos de frijoles con arroz"
+          }
+        }
+      }
+    },
+    "Beans": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beans"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frijoles"
+          }
+        }
+      }
+    },
+    "Count": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Count"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unidades"
+          }
+        }
+      }
+    },
+    "Draft only": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Draft only"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo borrador"
+          }
+        }
+      }
+    },
+    "Editable household idea": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editable household idea"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idea editable del hogar"
+          }
+        }
+      }
+    },
+    "Enter a meal name, ingredient names, and household evidence. Quantities may stay unknown while drafting.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a meal name, ingredient names, and household evidence. Quantities may stay unknown while drafting."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe el nombre de la comida, los ingredientes y la información del hogar. Las cantidades pueden quedar sin especificar en el borrador."
+          }
+        }
+      }
+    },
+    "Enter only food evidence this household may share. Private device stock, prices, and decision history are not imported.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter only food evidence this household may share. Private device stock, prices, and decision history are not imported."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introduce solo información alimentaria que este hogar pueda compartir. No se importan existencias, precios ni decisiones privadas del dispositivo."
+          }
+        }
+      }
+    },
+    "Grams": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grams"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gramos"
+          }
+        }
+      }
+    },
+    "Household dinner ideas": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household dinner ideas"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ideas de comidas del hogar"
+          }
+        }
+      }
+    },
+    "Household scope": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household scope"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ámbito del hogar"
+          }
+        }
+      }
+    },
+    "Household stock and package evidence": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household stock and package evidence"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Información de existencias y envases del hogar"
+          }
+        }
+      }
+    },
+    "Household stock in this unit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household stock in this unit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Existencias del hogar en esta unidad"
+          }
+        }
+      }
+    },
+    "I reviewed these household quantities, exclusions, reservations, and usable packs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed these household quantities, exclusions, reservations, and usable packs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "He revisado estas cantidades, exclusiones, reservas y paquetes aprovechables del hogar"
+          }
+        }
+      }
+    },
+    "Idea saved in this household. Approval and a proposal are separate; no meal or pack was changed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idea saved in this household. Approval and a proposal are separate; no meal or pack was changed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idea guardada en este hogar. La aprobación y la propuesta son acciones separadas; no se ha cambiado ninguna comida ni paquete."
+          }
+        }
+      }
+    },
+    "Milliliters": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Milliliters"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mililitros"
+          }
+        }
+      }
+    },
+    "Named reservation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Named reservation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre de la reserva"
+          }
+        }
+      }
+    },
+    "Named reserved quantity": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Named reserved quantity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad reservada con nombre"
+          }
+        }
+      }
+    },
+    "New manual household idea": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New manual household idea"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nueva idea manual del hogar"
+          }
+        }
+      }
+    },
+    "New meal from an explicitly approved household idea": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New meal from an explicitly approved household idea"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nueva comida a partir de una idea del hogar aprobada explícitamente"
+          }
+        }
+      }
+    },
+    "Preparation minutes, if known": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparation minutes, if known"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minutos de preparación, si se conocen"
+          }
+        }
+      }
+    },
+    "Price unresolved. The shopper must separately review shared packs and budget.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price unresolved. The shopper must separately review shared packs and budget."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio sin resolver. Quien hace la compra debe revisar por separado los paquetes compartidos y el presupuesto."
+          }
+        }
+      }
+    },
+    "Propose approved household meal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Propose approved household meal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proponer comida aprobada del hogar"
+          }
+        }
+      }
+    },
+    "Reconcile household idea status": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reconcile household idea status"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comprobar el resultado de la idea del hogar"
+          }
+        }
+      }
+    },
+    "Refresh household ideas": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh household ideas"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar ideas del hogar"
+          }
+        }
+      }
+    },
+    "Remaining household stock": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remaining household stock"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Existencias restantes del hogar"
+          }
+        }
+      }
+    },
+    "Remove ingredient": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove ingredient"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar ingrediente"
+          }
+        }
+      }
+    },
+    "Remove reservation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove reservation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar reserva"
+          }
+        }
+      }
+    },
+    "Required quantity": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Required quantity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad necesaria"
+          }
+        }
+      }
+    },
+    "Reserved quantity": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reserved quantity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad reservada"
+          }
+        }
+      }
+    },
+    "Resolve exclusions and unknown stock, quantity, pack, or usable yield before approval.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resolve exclusions and unknown stock, quantity, pack, or usable yield before approval."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resuelve las exclusiones y los datos desconocidos de existencias, cantidades, envases o rendimiento aprovechable antes de aprobar."
+          }
+        }
+      }
+    },
+    "Retry exact saved idea": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry exact saved idea"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar la misma idea guardada"
+          }
+        }
+      }
+    },
+    "Review adult approval": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review adult approval"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar aprobación del adulto"
+          }
+        }
+      }
+    },
+    "Review exclusions with the household. This does not read private decision history.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review exclusions with the household. This does not read private decision history."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa las exclusiones con el hogar. No se consulta el historial privado de decisiones."
+          }
+        }
+      }
+    },
+    "Review mapped meal with shared packs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review mapped meal with shared packs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar comida vinculada con paquetes compartidos"
+          }
+        }
+      }
+    },
+    "Review new household meal proposal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review new household meal proposal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar nueva propuesta de comida del hogar"
+          }
+        }
+      }
+    },
+    "Review shared meal proposals": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review shared meal proposals"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar propuestas de comidas compartidas"
+          }
+        }
+      }
+    },
+    "Reviewed household supply": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed household supply"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Existencias del hogar revisadas"
+          }
+        }
+      }
+    },
+    "Rice": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rice"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arroz"
+          }
+        }
+      }
+    },
+    "Save corrections to receive a fresh household preview. Saving edits replaces any earlier approval of this draft.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save corrections to receive a fresh household preview. Saving edits replaces any earlier approval of this draft."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guarda las correcciones para obtener una nueva vista previa del hogar. Guardar cambios sustituye cualquier aprobación anterior de este borrador."
+          }
+        }
+      }
+    },
+    "Save household draft for review": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save household draft for review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar borrador del hogar para revisión"
+          }
+        }
+      }
+    },
+    "Saved household ideas": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved household ideas"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ideas guardadas del hogar"
+          }
+        }
+      }
+    },
+    "Separately propose this approved meal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Separately propose this approved meal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proponer esta comida aprobada por separado"
+          }
+        }
+      }
+    },
+    "Shared household exclusions, one per line": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared household exclusions, one per line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exclusiones compartidas del hogar, una por línea"
+          }
+        }
+      }
+    },
+    "Source: app-owned editable template": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source: app-owned editable template"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuente: plantilla editable de la aplicación"
+          }
+        }
+      }
+    },
+    "Source: household manual entry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source: household manual entry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuente: entrada manual del hogar"
+          }
+        }
+      }
+    },
+    "Suggested servings": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggested servings"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raciones sugeridas"
+          }
+        }
+      }
+    },
+    "Template quantity; household stock and package evidence still needed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Template quantity; household stock and package evidence still needed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad de la plantilla; faltan los datos de existencias y envases del hogar"
+          }
+        }
+      }
+    },
+    "The household result is not confirmed. Refresh status or retry the exact saved idea after checking your access.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The household result is not confirmed. Refresh status or retry the exact saved idea after checking your access."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El resultado del hogar no está confirmado. Actualiza el estado o reintenta la misma idea guardada tras comprobar tu acceso."
+          }
+        }
+      }
+    },
+    "This ingredient conflicts with a reviewed household exclusion. Replace or remove it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This ingredient conflicts with a reviewed household exclusion. Replace or remove it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este ingrediente contradice una exclusión revisada del hogar. Sustitúyelo o quítalo."
+          }
+        }
+      }
+    },
+    "This saves adult approval only. Linking a meal and changing shared packs require separate reviews.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This saves adult approval only. Linking a meal and changing shared packs require separate reviews."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esto solo guarda la aprobación del adulto. Vincular una comida y cambiar paquetes compartidos requieren revisiones separadas."
+          }
+        }
+      }
+    },
+    "Unconfirmed household idea": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unconfirmed household idea"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idea del hogar sin confirmar"
+          }
+        }
+      }
+    },
+    "Uncovered quantity": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uncovered quantity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad sin cubrir"
+          }
+        }
+      }
+    },
+    "Usable yield denominator": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usable yield denominator"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denominador del rendimiento aprovechable"
+          }
+        }
+      }
+    },
+    "Usable yield numerator": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usable yield numerator"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numerador del rendimiento aprovechable"
+          }
+        }
+      }
+    },
+    "Use editable household idea template": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use editable household idea template"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar plantilla editable de idea del hogar"
+          }
+        }
+      }
+    },
+    "Use the same unit throughout. Enter 1 / 1 only when the whole pack is usable. Blank evidence remains unknown.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use the same unit throughout. Enter 1 / 1 only when the whole pack is usable. Blank evidence remains unknown."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usa la misma unidad en todos los campos. Introduce 1 / 1 solo si todo el paquete es aprovechable. Los campos vacíos quedan sin determinar."
+          }
+        }
+      }
+    },
+    "Water and cooking equipment; review any seasoning separately": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Water and cooking equipment; review any seasoning separately"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agua y utensilios de cocina; revisa los condimentos por separado"
+          }
+        }
+      }
+    },
+    "Whole package quantity": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whole package quantity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad del envase completo"
+          }
+        }
+      }
+    },
+    "Shared meal proposal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared meal proposal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Propuesta de comida compartida"
+          }
+        }
+      }
+    },
+    "Choose one reviewed dinner to share. Review the exact household meal and food details before sending. Local prices and stock are not copied.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose one reviewed dinner to share. Review the exact household meal and food details before sending. Local prices and stock are not copied."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una comida revisada para compartir. Revisa la comida exacta del hogar y los detalles alimentarios antes de enviar. No se copian precios ni existencias locales."
+          }
+        }
+      }
+    },
+    "This dinner needs complete shared portion evidence. Review the groups and quantities before sharing.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This dinner needs complete shared portion evidence. Review the groups and quantities before sharing."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta comida necesita información completa de las raciones compartidas. Revisa los grupos y las cantidades antes de compartir."
+          }
+        }
+      }
+    },
+    "Shared meal dates": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared meal dates"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fechas de comidas compartidas"
+          }
+        }
+      }
+    },
+    "Shared meal ideas": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared meal ideas"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ideas de comidas compartidas"
+          }
+        }
+      }
+    },
+    "Kilograms": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilograms"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilogramos"
+          }
+        }
+      }
+    },
+    "Ounces": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ounces"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onzas"
+          }
+        }
+      }
+    },
+    "Pounds": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pounds"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Libras"
+          }
+        }
+      }
+    },
+    "Liters": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liters"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Litros"
+          }
+        }
+      }
+    },
+    "Fluid ounces": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fluid ounces"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onzas líquidas"
+          }
+        }
+      }
+    },
+    "Cups": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cups"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tazas"
+          }
+        }
+      }
+    },
+    "This fraction exceeds the supported exact calculation range. Review smaller equivalent quantities.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This fraction exceeds the supported exact calculation range. Review smaller equivalent quantities."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta fracción supera el rango de cálculo exacto admitido. Revisa cantidades equivalentes más pequeñas."
+          }
+        }
+      }
+    },
+    "Enter a whole number or an exact fraction, such as 1/2. Blank means unknown.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a whole number or an exact fraction, such as 1/2. Blank means unknown."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introduce un número entero o una fracción exacta, como 1/2. Un campo vacío significa desconocido."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

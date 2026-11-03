@@ -9306,210 +9306,971 @@
         }
       }
     },
-    "Use the latest saved checkout terms. Choose one item sold by weight. The other items and their charges stay in the calculation.": {
+    "Amount to reserve from this dinner portion": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Use the latest saved checkout terms. Choose one item sold by weight. The other items and their charges stay in the calculation."
+            "value": "Amount to reserve from this dinner portion"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Se usan las últimas condiciones de pago guardadas. Elige un artículo que se venda por peso. Los demás artículos y sus cargos siguen en el cálculo."
+            "value": "Cantidad que se reservará de esta porción de cena"
           }
         }
       }
     },
-    "Weighed item": {
+    "An away note does not create food. Recount one existing physical source before reserving an eligible dinner portion for a later date.": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Weighed item"
+            "value": "An away note does not create food. Recount one existing physical source before reserving an eligible dinner portion for a later date."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Artículo que se vende por peso"
+            "value": "Una nota de ausencia no crea comida. Vuelve a contar una fuente física existente antes de reservar una porción de cena disponible para una fecha posterior."
           }
         }
       }
     },
-    "Choose an item": {
+    "Away after purchase: review physical carryover": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choose an item"
+            "value": "Away after purchase: review physical carryover"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Elige un artículo"
+            "value": "Ausencia después de comprar: revisar comida para otro día"
           }
         }
       }
     },
-    "Price and increment unit": {
+    "Cancel carryover review": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Price and increment unit"
+            "value": "Cancel carryover review"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unidad del precio y del incremento"
+            "value": "Cancelar la revisión de comida para otro día"
           }
         }
       }
     },
-    "Price per selected weight unit": {
+    "Carryover dinner date": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Price per selected weight unit"
+            "value": "Carryover dinner date"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Precio por unidad de peso seleccionada"
+            "value": "Fecha de la cena con comida reservada"
           }
         }
       }
     },
-    "Retailer billing increment": {
+    "Carryover is not complete. Its saved operation can be retried after reviewing current access and pending save controls. No second stock lot or dinner will be created.": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Retailer billing increment"
+            "value": "Carryover is not complete. Its saved operation can be retried after reviewing current access and pending save controls. No second stock lot or dinner will be created."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Incremento de peso que cobra la tienda"
+            "value": "La reserva para otro día no está completa. Puedes reintentar la operación guardada después de revisar el acceso actual y los cambios pendientes de guardar. No se creará otro lote ni otra cena."
           }
         }
       }
     },
-    "Enter the smallest weight the retailer bills in that unit, such as 0.01 lb.": {
+    "Carryover needs reconciliation": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Enter the smallest weight the retailer bills in that unit, such as 0.01 lb."
+            "value": "Carryover needs reconciliation"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ingresa el menor incremento de peso que cobra la tienda en esa unidad, por ejemplo, 0.01 lb."
+            "value": "La reserva para otro día necesita conciliarse"
           }
         }
       }
     },
-    "Fractional-cent rounding": {
+    "Choose a dinner": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fractional-cent rounding"
+            "value": "Choose a dinner"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Redondeo de fracciones de centavo"
+            "value": "Elegir una cena"
           }
         }
       }
     },
-    "Round up to a cent": {
+    "Choose a food need": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Round up to a cent"
+            "value": "Choose a food need"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Redondear al centavo superior"
+            "value": "Elegir una necesidad de alimentos"
           }
         }
       }
     },
-    "Nearest cent, half up": {
+    "Choose the physical source": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nearest cent, half up"
+            "value": "Choose the physical source"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Al centavo más cercano, con mitades hacia arriba"
+            "value": "Elegir la fuente física"
           }
         }
       }
     },
-    "Maximum weight that fits": {
+    "Close": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Maximum weight that fits"
+            "value": "Close"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Peso máximo que cabe en el presupuesto"
+            "value": "Cerrar"
           }
         }
       }
     },
-    "Maximum billed weight": {
+    "Closing keeps this operation. Retry its original identities after resolving pending save controls; do not create another copy.": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Maximum billed weight"
+            "value": "Closing keeps this operation. Retry its original identities after resolving pending save controls; do not create another copy."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Peso máximo facturable"
+            "value": "Al cerrar, esta operación se conserva. Reintenta la misma operación después de resolver los cambios pendientes de guardar; no crees otra copia."
           }
         }
       }
     },
-    "Item charge at that weight": {
+    "Confirmed-food carryover, not a new recipe": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Item charge at that weight"
+            "value": "Confirmed-food carryover, not a new recipe"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cargo del artículo a ese peso"
+            "value": "Comida confirmada reservada para otro día, no una receta nueva"
+          }
+        }
+      }
+    },
+    "Counted now": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Counted now"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contado ahora"
+          }
+        }
+      }
+    },
+    "Current physically counted amount in this source": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current physically counted amount in this source"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad física que acabas de contar en esta fuente"
+          }
+        }
+      }
+    },
+    "Currently allocated from confirmed food": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Currently allocated from confirmed food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad asignada actualmente de la comida confirmada"
+          }
+        }
+      }
+    },
+    "Dated physical carryover": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dated physical carryover"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comida física reservada con fecha"
+          }
+        }
+      }
+    },
+    "Dinner that will not be eaten as planned": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dinner that will not be eaten as planned"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cena que no se comerá como estaba previsto"
+          }
+        }
+      }
+    },
+    "Eligible dinner portion": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eligible dinner portion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porción de cena disponible para trasladar"
+          }
+        }
+      }
+    },
+    "Enter exact positive amounts and a real later date. Nothing has been saved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter exact positive amounts and a real later date. Nothing has been saved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresa cantidades positivas exactas y una fecha posterior real. No se ha guardado nada."
+          }
+        }
+      }
+    },
+    "Generic recipe, guest, and calendar edits cannot change this physical reservation. Recount and review the original carryover before changing its commitments.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generic recipe, guest, and calendar edits cannot change this physical reservation. Recount and review the original carryover before changing its commitments."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los cambios generales de recetas, invitados y calendario no pueden modificar esta reserva física. Vuelve a contar y revisar la reserva original antes de cambiar sus compromisos."
+          }
+        }
+      }
+    },
+    "I approve this physical reservation and its dated carryover target.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I approve this physical reservation and its dated carryover target."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apruebo esta reserva física y la cena con fecha a la que se destina."
+          }
+        }
+      }
+    },
+    "I physically checked this same food, its identity, exclusions, and remaining usable amount.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I physically checked this same food, its identity, exclusions, and remaining usable amount."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comprobé físicamente este mismo alimento, su identidad, las exclusiones y la cantidad utilizable que queda."
+          }
+        }
+      }
+    },
+    "No confirmed physical source matches this need. Record and review its actual arrival or existing pantry batch first; an expected order is not stock.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No confirmed physical source matches this need. Record and review its actual arrival or existing pantry batch first; an expected order is not stock."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ninguna fuente física confirmada coincide con esta necesidad. Primero registra y revisa su llegada real o el lote existente de despensa; un pedido esperado no cuenta como existencias."
+          }
+        }
+      }
+    },
+    "Only the named physical food is reserved. Other ingredients, complete meal coverage, and future purchase costs remain unverified.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the named physical food is reserved. Other ingredients, complete meal coverage, and future purchase costs remain unverified."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo se reserva el alimento físico indicado. Los demás ingredientes, la cobertura de toda la comida y los costos de compras futuras siguen sin verificar."
+          }
+        }
+      }
+    },
+    "Only this linked physical reservation is claimed. Whole-meal coverage and new-purchase costs are not evaluated here.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only this linked physical reservation is claimed. Whole-meal coverage and new-purchase costs are not evaluated here."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo se confirma esta reserva física vinculada. Aquí no se evalúan la cobertura de toda la comida ni los costos de nuevas compras."
+          }
+        }
+      }
+    },
+    "Open this dinner's pickup before recounting its saved physical food.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open this dinner's pickup before recounting its saved physical food."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre la recogida de esta cena antes de volver a contar sus alimentos físicos guardados."
+          }
+        }
+      }
+    },
+    "Open this pickup's physical food": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open this pickup's physical food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir los alimentos físicos de esta recogida"
+          }
+        }
+      }
+    },
+    "Original dinner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cena original"
+          }
+        }
+      }
+    },
+    "Original purchased dinner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original purchased dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cena original ya comprada"
+          }
+        }
+      }
+    },
+    "Physical carryover": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Physical carryover"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comida física para otro día"
+          }
+        }
+      }
+    },
+    "Physical food checked at": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Physical food checked at"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha y hora de comprobación de la comida física"
+          }
+        }
+      }
+    },
+    "Physical source": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Physical source"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuente física"
+          }
+        }
+      }
+    },
+    "Planned servings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planned servings"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porciones planeadas"
+          }
+        }
+      }
+    },
+    "Planned servings, not verified whole-meal coverage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planned servings, not verified whole-meal coverage"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porciones planeadas, sin verificar la cobertura de toda la comida"
+          }
+        }
+      }
+    },
+    "Previous observation": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous observation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Observación anterior"
+          }
+        }
+      }
+    },
+    "Protected lunch portions cannot be transferred here. The original meal, order, receipt, and charges stay in their history.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protected lunch portions cannot be transferred here. The original meal, order, receipt, and charges stay in their history."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las porciones protegidas de almuerzo no se pueden trasladar aquí. La comida, el pedido, el recibo y los cargos originales permanecen en su historial."
+          }
+        }
+      }
+    },
+    "Real dated dinner target": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Real dated dinner target"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cena de destino con una fecha real"
+          }
+        }
+      }
+    },
+    "Recount an existing physical source": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recount an existing physical source"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a contar una fuente física existente"
+          }
+        }
+      }
+    },
+    "Recount the existing physical food and choose a later real date. The carryover must not take food reserved for another meal.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recount the existing physical food and choose a later real date. The carryover must not take food reserved for another meal."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a contar la comida física existente y elige una fecha posterior real. La reserva para otro día no debe tomar comida reservada para otra comida."
+          }
+        }
+      }
+    },
+    "Reserved for carryover": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reserved for carryover"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reservado para otro día"
+          }
+        }
+      }
+    },
+    "Reserved quantity": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reserved quantity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad reservada"
+          }
+        }
+      }
+    },
+    "Retry this saved carryover": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry this saved carryover"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar esta reserva guardada para otro día"
+          }
+        }
+      }
+    },
+    "Review another physical carryover": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review another physical carryover"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar otra reserva de comida física"
+          }
+        }
+      }
+    },
+    "Review dated carryover": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review dated carryover"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la reserva de comida con fecha"
+          }
+        }
+      }
+    },
+    "Review original physical carryover": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review original physical carryover"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la reserva física original"
+          }
+        }
+      }
+    },
+    "Save physical reservation and dated dinner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save physical reservation and dated dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar la reserva física y la cena con fecha"
+          }
+        }
+      }
+    },
+    "Saved batch or confirmed received food": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved batch or confirmed received food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lote guardado o alimento recibido confirmado"
+          }
+        }
+      }
+    },
+    "Saved dated carryovers": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved dated carryovers"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reservas de comida con fecha guardadas"
+          }
+        }
+      }
+    },
+    "The dated carryover and its physical-food reservation are saved. Original purchases and protected lunches are unchanged.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The dated carryover and its physical-food reservation are saved. Original purchases and protected lunches are unchanged."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cena con fecha y su reserva física están guardadas. Las compras originales y los almuerzos protegidos no cambiaron."
+          }
+        }
+      }
+    },
+    "The linked physical evidence is missing on this device. This calendar entry does not establish available food.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The linked physical evidence is missing on this device. This calendar entry does not establish available food."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falta la información física vinculada en este dispositivo. Esta entrada del calendario no confirma que haya comida disponible."
+          }
+        }
+      }
+    },
+    "The operation is saved; physical recount and calendar target are not yet complete.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The operation is saved; physical recount and calendar target are not yet complete."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La operación está guardada; el recuento físico y la cena del calendario aún no están completos."
+          }
+        }
+      }
+    },
+    "The physical reservation and calendar target have not finished reconciling.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The physical reservation and calendar target have not finished reconciling."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La reserva física y la cena del calendario aún no han terminado de conciliarse."
+          }
+        }
+      }
+    },
+    "The physical reservation is saved; the calendar target still needs confirmation.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The physical reservation is saved; the calendar target still needs confirmation."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La reserva física está guardada; la cena del calendario aún necesita confirmación."
+          }
+        }
+      }
+    },
+    "The physical reservation needs review. Do not assume this dinner is covered.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The physical reservation needs review. Do not assume this dinner is covered."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La reserva física necesita revisión. No supongas que esta cena está cubierta."
+          }
+        }
+      }
+    },
+    "The selected amount moves from the eligible original dinner need to one pinned physical-food reservation. It is not added twice. Protected lunches stay reserved on their original dates.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The selected amount moves from the eligible original dinner need to one pinned physical-food reservation. It is not added twice. Protected lunches stay reserved on their original dates."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cantidad seleccionada pasa de la necesidad original de cena disponible a una sola reserva vinculada al alimento físico. No se suma dos veces. Los almuerzos protegidos siguen reservados en sus fechas originales."
+          }
+        }
+      }
+    },
+    "This carryover target is no longer available.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This carryover target is no longer available."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta cena de destino ya no está disponible."
           }
         }
       }
@@ -9530,6 +10291,22 @@
         }
       }
     },
+    "Retailer billing increment": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retailer billing increment"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incremento de peso que cobra la tienda"
+          }
+        }
+      }
+    },
     "Confirm the retailer’s actual weight and total before placing the order.": {
       "localizations": {
         "en": {
@@ -9546,18 +10323,34 @@
         }
       }
     },
-    "No positive billing increment fits this cap with the entered charges.": {
+    "Maximum weight that fits": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No positive billing increment fits this cap with the entered charges."
+            "value": "Maximum weight that fits"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Con estos cargos, ni el menor incremento de peso cabe en el presupuesto."
+            "value": "Peso máximo que cabe en el presupuesto"
+          }
+        }
+      }
+    },
+    "Use the latest saved checkout terms. Choose one item sold by weight. The other items and their charges stay in the calculation.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use the latest saved checkout terms. Choose one item sold by weight. The other items and their charges stay in the calculation."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se usan las últimas condiciones de pago guardadas. Elige un artículo que se venda por peso. Los demás artículos y sus cargos siguen en el cálculo."
           }
         }
       }
@@ -9578,6 +10371,166 @@
         }
       }
     },
+    "No positive billing increment fits this cap with the entered charges.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No positive billing increment fits this cap with the entered charges."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Con estos cargos, ni el menor incremento de peso cabe en el presupuesto."
+          }
+        }
+      }
+    },
+    "Round up to a cent": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Round up to a cent"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redondear al centavo superior"
+          }
+        }
+      }
+    },
+    "Item charge at that weight": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item charge at that weight"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargo del artículo a ese peso"
+          }
+        }
+      }
+    },
+    "Enter the smallest weight the retailer bills in that unit, such as 0.01 lb.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the smallest weight the retailer bills in that unit, such as 0.01 lb."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresa el menor incremento de peso que cobra la tienda en esa unidad, por ejemplo, 0.01 lb."
+          }
+        }
+      }
+    },
+    "Nearest cent, half up": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nearest cent, half up"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al centavo más cercano, con mitades hacia arriba"
+          }
+        }
+      }
+    },
+    "Price per selected weight unit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price per selected weight unit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio por unidad de peso seleccionada"
+          }
+        }
+      }
+    },
+    "Choose an item": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose an item"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige un artículo"
+          }
+        }
+      }
+    },
+    "Maximum billed weight": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maximum billed weight"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Peso máximo facturable"
+          }
+        }
+      }
+    },
+    "Fractional-cent rounding": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fractional-cent rounding"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redondeo de fracciones de centavo"
+          }
+        }
+      }
+    },
+    "Price and increment unit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price and increment unit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unidad del precio y del incremento"
+          }
+        }
+      }
+    },
     "Check price by weight": {
       "localizations": {
         "en": {
@@ -9594,6 +10547,22 @@
         }
       }
     },
+    "Weighed item": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weighed item"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artículo que se vende por peso"
+          }
+        }
+      }
+    },
     "Done": {
       "localizations": {
         "en": {
@@ -9606,6 +10575,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Listo"
+          }
+        }
+      }
+    },
+    "Review before saving carryover": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review before saving carryover"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa antes de guardar lo que se reserva para después"
           }
         }
       }

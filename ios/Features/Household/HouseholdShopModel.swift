@@ -179,8 +179,11 @@ struct SharedShopTransfer: Equatable {
                 var reviewedMeal = draft.mealEdit
                 if let edit = reviewedMeal {
                     guard let meals = shop.meals else { throw ClientError.configuration }
-                    reviewedMeal?.baseMealRevision = meals.first(where: { $0.id == edit.occurrenceID })?.revision
+                    let currentMealRevision = meals.first(where: { $0.id == edit.occurrenceID })?.revision
+                    if let reviewedBase = edit.baseMealRevision, reviewedBase != currentMealRevision { throw ClientError.configuration }
+                    reviewedMeal?.baseMealRevision = currentMealRevision
                     if let meal = edit.meal {
+                        try meal.validatePlanning()
                         guard !meal.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, meal.title.count <= 240,
                               (1...1000).contains(meal.portions), ["dinner", "lunch", "side"].contains(meal.kind),
                               sharedMealDate(meal.day) != nil else { throw ClientError.configuration }

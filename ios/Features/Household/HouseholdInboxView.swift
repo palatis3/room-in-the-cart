@@ -11,8 +11,11 @@ struct HouseholdInboxView: View {
         }.navigationTitle(ht("Family requests"))
     }
 }
-private struct ShopperInboxContent: View {
+struct ShopperInboxContent: View {
     @ObservedObject var model: HouseholdInboxModel
+    @State private var decisionRequest: OwnRequest?
+    @State private var lastRequestID: String?
+    @AccessibilityFocusState private var focusedRequest: String?
     var body: some View {
         List {
             if model.authorized {
@@ -24,8 +27,8 @@ private struct ShopperInboxContent: View {
                 }
                 Section(ht("Requests for this shop")) {
                     ForEach(model.requests) { request in
-                        NavigationLink {
-                            HouseholdRequestDecisionView(model: model, request: request)
+                        Button {
+                            lastRequestID = request.id; decisionRequest = request
                         } label: {
                             VStack(alignment: .leading, spacing: 6) {
                                 Text(request.originalItem).font(.headline)
@@ -38,6 +41,8 @@ private struct ShopperInboxContent: View {
                                 }
                             }
                         }.disabled(model.busy || model.pending != nil)
+                            .accessibilityIdentifier("household.request.\(request.id)")
+                            .accessibilityFocused($focusedRequest, equals: request.id)
                     }
                     if model.requests.isEmpty, !model.busy { Text(ht("No requests are available in this shop.")) }
                     if model.nextCursor != nil { Button(ht("Load more requests")) { Task { await model.load(more: true) } }.disabled(model.busy) }
@@ -46,9 +51,16 @@ private struct ShopperInboxContent: View {
                 if model.busy { ProgressView(ht("Checking service…")) }
             } else { Text(ht("Shopper access has ended. Return to household settings.")) }
         }.task { await model.load() }
+        .sheet(item: $decisionRequest, onDismiss: {
+            model.cancelReview(); focusedRequest = lastRequestID
+        }) { request in
+            NavigationStack { HouseholdRequestDecisionView(model: model, request: request) }
+                .presentationDetents([.large])
+        }
+        .onChange(of: model.authorized) { _, allowed in if !allowed { decisionRequest = nil } }
     }
 }
-private struct HouseholdRequestDecisionView: View {
+struct HouseholdRequestDecisionView: View {
     @ObservedObject var model: HouseholdInboxModel
     let request: OwnRequest
     @Environment(\.dismiss) private var dismiss
@@ -70,8 +82,10 @@ private struct HouseholdRequestDecisionView: View {
                             Section(ht("Choose an outcome")) {
                                 Picker(ht("Outcome"), selection: $model.choice) {
                                     ForEach(model.availableChoices) { choice in Text(choice.title).tag(choice) }
-                                }
+                                }.accessibilityIdentifier("household.decision.choice")
                                 if model.choice == .add {
+                                    HouseholdRequestPackReviewView(model: model)
+                                    if let selection = model.packSelection { HouseholdChosenPackSummary(selection: selection) }
                                     TextField(ht("Pack or item name"), text: $model.lineItem)
                                     Stepper(value: $model.packs, in: 1...10_000) {
                                         LabeledContent(ht("Whole packs"), value: model.packs.formatted())
@@ -98,6 +112,8 @@ private struct HouseholdRequestDecisionView: View {
                         if let preview = model.preview {
                             Section(ht("Review before applying")) {
                                 Text(model.choice.title).font(.headline)
+                                if let selection = model.packSelection { HouseholdChosenPackSummary(selection: selection) }
+                                LabeledContent(ht("Shop revision"), value: shop.shopRevision.formatted())
                                 LabeledContent(ht("Quote recorded"), value: householdTime(shop.quote.observedAt))
                                 LabeledContent(ht("Quote expires"), value: householdTime(shop.quote.expiresAt))
                                 LabeledContent(ht("Cap"), value: householdMoney(shop.quote.capMinor, currency: shop.quote.currency))
@@ -118,7 +134,7 @@ private struct HouseholdRequestDecisionView: View {
                                 ShopperBudgetView(title: ht("After this decision"), value: preview.after)
                                 LabeledContent(ht("Cost change"), value: householdMoney(preview.changeMinor, currency: preview.after.currency))
                                 LabeledContent(ht("Preview expires"), value: householdTime(preview.expiresAt))
-                                if preview.requiresOverageAcceptance { Toggle(ht("I accept the displayed overage"), isOn: $model.acceptOverage) }
+                                if preview.requiresOverageAcceptance { Toggle(ht("I accept the displayed overage"), isOn: $model.acceptOverage).accessibilityIdentifier("household.decision.overage") }
                                 if preview.requiresUnknownAcceptance { Toggle(ht("I understand the total or its scope is unresolved"), isOn: $model.acceptUnknown) }
                                 Button(ht("Apply reviewed decision")) { Task { await model.apply() } }
                                     .disabled(!model.canApply).accessibilityIdentifier("household.decision.apply")
@@ -142,7 +158,7 @@ private struct HouseholdRequestDecisionView: View {
         }
         .disabled(model.busy)
         .navigationTitle(ht("Review request"))
-        .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ht("Done")) { model.cancelReview(); dismiss() } } }
+        .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ht("Cancel")) { model.cancelReview(); dismiss() }.accessibilityIdentifier("household.decision.cancel") } }
         .task { model.select(request) }
     }
 }

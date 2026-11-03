@@ -174,6 +174,7 @@ public struct MealTemplate: Codable, Equatable, Sendable, Identifiable {
 }
 
 public struct MealOccurrence: Codable, Equatable, Sendable, Identifiable {
+    public var carryover: DinnerCarryoverLink? = nil
     public let id: UUID
     public let templateID: UUID?
     public let templateRevision: Int?
@@ -686,6 +687,28 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         quoteReference = reference
     }
 
+    /// Only the coordinated physical-carryover path may create this calendar target.
+    /// It retains source recipe identity and creates no grocery lines/contributions.
+    public mutating func appendConfirmedCarryover(_ plan: DinnerCarryoverPlan, at: Date) throws {
+        try plan.validate()
+        guard plan.link.sourceShopID == id else { throw LedgerError.invalid("carryoverShop") }
+        let source = plan.source
+        let target = MealOccurrence(carryover: plan.link, id: plan.occurrenceID,
+            templateID: source.templateID, templateRevision: source.templateRevision,
+            title: source.title, servings: plan.servings, notes: source.notes, sourceURL: source.sourceURL,
+            sourceEvidence: source.sourceEvidence, exclusions: source.exclusions, servingGroups: [],
+            leadTimeMinutes: nil, completedSteps: [], ingredientContributionIDs: [],
+            scheduledDay: plan.day, isHidden: false, removedAt: nil)
+        if let prior = mealOccurrences.first(where: { $0.id == plan.occurrenceID }) {
+            guard prior == target else { throw DinnerPlanningError.operationConflict }; return
+        }
+        guard revisionID == plan.baseRevisionID,
+              mealOccurrences.first(where: { $0.id == source.id }) == source else { throw DinnerPlanningError.stalePreview }
+        try mutate("physical-carryover:v1:\(plan.link.operationID)", at: at, revisionID: plan.revisionID) { next in
+            next.mealOccurrences.append(target)
+        }
+    }
+
     @discardableResult
     public mutating func chooseMeal(_ template: MealTemplate, on: Date? = nil, at: Date = Date()) throws -> UUID {
         try template.validate()
@@ -718,21 +741,28 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         try day?.validate()
         try mutate("scheduleMeal", at: at) { next in
             let index = try next.mealIndex(occurrenceID)
+            guard next.mealOccurrences[index].carryover == nil else { throw DinnerPlanningError.reviewRequired("physicalCarryover") }
             next.mealOccurrences[index].scheduledDay = day
         }
     }
     public mutating func updateMeal(occurrenceID: UUID, title: String, notes: String, at: Date = Date()) throws {
         try mutate("updateMeal", at: at) { next in
             let index = try next.mealIndex(occurrenceID)
+            guard next.mealOccurrences[index].carryover == nil else { throw DinnerPlanningError.reviewRequired("physicalCarryover") }
             next.mealOccurrences[index].title = title; next.mealOccurrences[index].notes = notes
         }
     }
     public mutating func setMealHidden(occurrenceID: UUID, hidden: Bool, at: Date = Date()) throws {
-        try mutate("setMealHidden", at: at) { next in next.mealOccurrences[try next.mealIndex(occurrenceID)].isHidden = hidden }
+        try mutate("setMealHidden", at: at) { next in
+            let index = try next.mealIndex(occurrenceID)
+            guard next.mealOccurrences[index].carryover == nil else { throw DinnerPlanningError.reviewRequired("physicalCarryover") }
+            next.mealOccurrences[index].isHidden = hidden
+        }
     }
     public mutating func removeMeal(occurrenceID: UUID, at: Date = Date()) throws {
         try mutate("removeMeal", at: at) { next in
             let index = try next.mealIndex(occurrenceID)
+            guard next.mealOccurrences[index].carryover == nil else { throw DinnerPlanningError.reviewRequired("physicalCarryover") }
             try next.removeSources(Set(next.mealOccurrences[index].ingredientContributionIDs), at: at)
             next.mealOccurrences[index].removedAt = at
         }
@@ -825,6 +855,13 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
             }
         }
         for meal in mealOccurrences {
+            if let carryover = meal.carryover {
+                try carryover.validate()
+                guard carryover.sourceShopID == id, carryover.sourceOccurrenceID != meal.id,
+                      mealOccurrences.contains(where: { $0.id == carryover.sourceOccurrenceID }),
+                      meal.ingredientContributionIDs.isEmpty, meal.servingGroups.isEmpty,
+                      meal.scheduledDay != nil else { throw LedgerError.invalid("physicalCarryover") }
+            }
             try ledgerText(meal.title, nonempty: true, maximum: 512); try ledgerText(meal.notes); try validateExclusions(meal.exclusions)
             if let url = meal.sourceURL { try ledgerText(url, maximum: 2048) }
             guard meal.servings > .zero, meal.templateRevision.map({ $0 >= 0 }) ?? true,
@@ -907,11 +944,15 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
                         scheduledDay: dinner.day, isHidden: false, removedAt: nil))
                 case .move(let occurrenceID, let day):
                     guard touchedMeals.insert(occurrenceID).inserted else { throw DinnerPlanningError.invalid("duplicateMealChange") }
-                    try day?.validate(); next.mealOccurrences[try next.mealIndex(occurrenceID)].scheduledDay = day
+                    try day?.validate()
+                    let index = try next.mealIndex(occurrenceID)
+                    guard next.mealOccurrences[index].carryover == nil else { throw DinnerPlanningError.reviewRequired("physicalCarryover") }
+                    next.mealOccurrences[index].scheduledDay = day
                 case .adjust(let adjustment):
                     guard touchedMeals.insert(adjustment.occurrenceID).inserted else { throw DinnerPlanningError.invalid("duplicateMealChange") }
                     let index = try next.mealIndex(adjustment.occurrenceID)
                     let meal = next.mealOccurrences[index]
+                    guard meal.carryover == nil else { throw DinnerPlanningError.reviewRequired("physicalCarryover") }
                     guard Set(adjustment.quantities.map(\.contributionID)).isSubset(of: Set(meal.ingredientContributionIDs)) else { throw DinnerPlanningError.invalid("unrelatedContribution") }
                     for group in meal.servingGroups where group.isProtected {
                         guard adjustment.groups.contains(group) else { throw DinnerPlanningError.reviewRequired("protectedGroup") }
@@ -927,7 +968,8 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
                     guard touchedMeals.insert(occurrenceID).inserted else { throw DinnerPlanningError.invalid("duplicateMealChange") }
                     let index = try next.mealIndex(occurrenceID)
                     guard !next.mealOccurrences[index].servingGroups.contains(where: \.isProtected) else { throw DinnerPlanningError.reviewRequired("separateProtectedNeedsBeforeRemoval") }
-                    try next.removeSources(Set(next.mealOccurrences[index].ingredientContributionIDs), at: at)
+                    guard next.mealOccurrences[index].carryover == nil else { throw DinnerPlanningError.reviewRequired("physicalCarryover") }
+            try next.removeSources(Set(next.mealOccurrences[index].ingredientContributionIDs), at: at)
                     next.mealOccurrences[index].removedAt = at
                 case .reserve(let reservation):
                     let lineID = next.appendLine(id: reservation.lineID, name: reservation.name)

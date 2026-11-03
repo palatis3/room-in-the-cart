@@ -1,17 +1,55 @@
 import Foundation
 
+/// Exact rational household evidence. Legacy JSON integers round-trip as integers.
+public struct SharedMealIdeaAmount: Codable, Equatable, Sendable, ExpressibleByIntegerLiteral {
+    public let numerator: Int
+    public let denominator: Int
+    private let integerEncoding: Bool
+    public init(_ numerator: Int, _ denominator: Int = 1) {
+        self.numerator = numerator; self.denominator = denominator; integerEncoding = denominator == 1
+    }
+    private init(numerator: Int, denominator: Int, integerEncoding: Bool) {
+        self.numerator = numerator; self.denominator = denominator; self.integerEncoding = integerEncoding
+    }
+    public init(integerLiteral value: Int) { self.init(value) }
+    private enum CodingKeys: String, CodingKey { case numerator, denominator }
+    public init(from decoder: Decoder) throws {
+        if let value = try? decoder.singleValueContainer().decode(Int.self) { self.init(value); return }
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        let numerator = try c.decode(Int.self, forKey: .numerator), denominator = try c.decode(Int.self, forKey: .denominator)
+        guard numerator >= 0, denominator > 0 else { throw ClientError.invalidResponse }
+        self.init(numerator: numerator, denominator: denominator, integerEncoding: false)
+    }
+    public func encode(to encoder: Encoder) throws {
+        if integerEncoding { var c = encoder.singleValueContainer(); try c.encode(numerator) }
+        else { var c = encoder.container(keyedBy: CodingKeys.self); try c.encode(numerator, forKey: .numerator); try c.encode(denominator, forKey: .denominator) }
+    }
+    public var text: String { denominator == 1 ? String(numerator) : "\(numerator)/\(denominator)" }
+    public static func parse(_ text: String) -> Self? {
+        let parts = text.split(separator: "/", omittingEmptySubsequences: false).map { $0.trimmingCharacters(in: .whitespaces) }
+        guard (1...2).contains(parts.count), parts.allSatisfy({ !$0.isEmpty && $0.allSatisfy(\.isNumber) }),
+              let n = Int(parts[0]), (0...1_000_000).contains(n) else { return nil }
+        let d = parts.count == 2 ? Int(parts[1]) : 1
+        guard let d, (1...1_000_000).contains(d) else { return nil }
+        return Self(n,d)
+    }
+    public func validInput(allowZero: Bool = false) -> Bool {
+        ((allowZero ? 0 : 1)...1_000_000).contains(numerator) && (1...1_000_000).contains(denominator)
+    }
+}
+
 /// Household-entered evidence only. Never populated from a device-private food or decision store.
 public struct SharedMealIdeaDraft: Codable, Equatable, Sendable {
     public struct Reservation: Codable, Equatable, Sendable {
-        public var name: String; public var amount: Int
-        public init(name: String, amount: Int) { self.name = name; self.amount = amount }
+        public var name: String; public var amount: SharedMealIdeaAmount
+        public init(name: String, amount: SharedMealIdeaAmount) { self.name = name; self.amount = amount }
     }
     public struct Ingredient: Codable, Equatable, Identifiable, Sendable {
-        public var id: UUID; public var name: String; public var required: Int?; public var unit: String
-        public var stock: Int?; public var reservations: [Reservation]; public var pack: Int?
+        public var id: UUID; public var name: String; public var required: SharedMealIdeaAmount?; public var unit: String
+        public var stock: SharedMealIdeaAmount?; public var reservations: [Reservation]; public var pack: SharedMealIdeaAmount?
         public var usableNumerator: Int?; public var usableDenominator: Int?; public var evidence: String
-        public init(id: UUID = UUID(), name: String = "", required: Int? = nil, unit: String = "gram", stock: Int? = nil,
-                    reservations: [Reservation] = [], pack: Int? = nil, usableNumerator: Int? = nil, usableDenominator: Int? = nil, evidence: String = "") {
+        public init(id: UUID = UUID(), name: String = "", required: SharedMealIdeaAmount? = nil, unit: String = "gram", stock: SharedMealIdeaAmount? = nil,
+                    reservations: [Reservation] = [], pack: SharedMealIdeaAmount? = nil, usableNumerator: Int? = nil, usableDenominator: Int? = nil, evidence: String = "") {
             self.id = id; self.name = name; self.required = required; self.unit = unit; self.stock = stock
             self.reservations = reservations; self.pack = pack; self.usableNumerator = usableNumerator; self.usableDenominator = usableDenominator; self.evidence = evidence
         }
@@ -43,9 +81,9 @@ public struct SharedMealIdeaDraft: Codable, Equatable, Sendable {
               assumedExtras.count <= 20, exclusions.count <= 20, (assumedExtras + exclusions).allSatisfy(text),
               (1...60).contains(ingredients.count), Set(ingredients.map(\.id)).count == ingredients.count else { throw ClientError.configuration }
         for i in ingredients {
-            guard text(i.name), text(i.evidence), ["count","gram","milliliter"].contains(i.unit), positive(i.required), positive(i.pack),
-                  positive(i.usableNumerator), positive(i.usableDenominator), i.stock == nil || (0...1_000_000).contains(i.stock!),
-                  i.reservations.count <= 20, i.reservations.allSatisfy({ text($0.name) && positive($0.amount) }),
+            guard text(i.name), text(i.evidence), ["count","gram","kilogram","ounce","pound","milliliter","liter","fluidOunce","cup"].contains(i.unit), i.required?.validInput() != false, i.pack?.validInput() != false,
+                  positive(i.usableNumerator), positive(i.usableDenominator), i.stock?.validInput(allowZero: true) != false,
+                  i.reservations.count <= 20, i.reservations.allSatisfy({ text($0.name) && $0.amount.validInput() }),
                   i.usableNumerator == nil || i.usableDenominator == nil || i.usableNumerator! <= i.usableDenominator! else { throw ClientError.configuration }
         }
     }
@@ -53,7 +91,7 @@ public struct SharedMealIdeaDraft: Codable, Equatable, Sendable {
         try validate()
         let ingredients = ingredients.map { i in
             SharedMealPlanning.Ingredient(id: i.id, name: i.name,
-                quantity: i.required.map { .init(amount: .init(numerator: $0), unit: i.unit, originalLiteral: "\($0) \(i.unit)") }, groupIds: [], exclusions: [])
+                quantity: i.required.map { .init(amount: .init(numerator: $0.numerator, denominator: $0.denominator), unit: i.unit, originalLiteral: "\($0.text) \(i.unit)") }, groupIds: [], exclusions: [])
         }
         let value = SharedMeal(title: title, day: day, kind: "dinner", portions: servings, protected: false,
                                planning: .init(groups: [], ingredients: ingredients))
@@ -62,8 +100,8 @@ public struct SharedMealIdeaDraft: Codable, Equatable, Sendable {
 }
 public struct SharedMealIdeaPreview: Codable, Equatable, Sendable {
     public struct Ingredient: Codable, Equatable, Identifiable, Sendable {
-        public let ingredientId: UUID; public let excluded: Bool; public let reserved: Int
-        public let remaining: Int?; public let shortage: Int?; public let wholePacks: Int?; public let unresolvedPrice: Bool
+        public let ingredientId: UUID; public let excluded: Bool; public let reserved: SharedMealIdeaAmount?
+        public let remaining: SharedMealIdeaAmount?; public let shortage: SharedMealIdeaAmount?; public let wholePacks: Int?; public let unresolvedPrice: Bool; public let arithmeticUnavailable: Bool?
         public var id: UUID { ingredientId }
     }
     public let canApprove: Bool; public let ingredients: [Ingredient]
@@ -81,7 +119,7 @@ public struct SharedMealIdeaPage: Codable, Equatable, Sendable {
         for idea in ideas {
             try idea.draft.validate()
             guard idea.revision > 0, ["draft","approved"].contains(idea.state), idea.preview.ingredients.map(\.id) == idea.draft.ingredients.map(\.id),
-                  idea.preview.ingredients.allSatisfy({ $0.reserved >= 0 && $0.unresolvedPrice && ($0.wholePacks == nil || $0.wholePacks! >= 0) }) else { throw ClientError.invalidResponse }
+                  idea.preview.ingredients.allSatisfy({ ($0.reserved == nil || ($0.reserved!.numerator >= 0 && $0.reserved!.denominator > 0)) && $0.unresolvedPrice && ($0.wholePacks == nil || $0.wholePacks! >= 0) }) else { throw ClientError.invalidResponse }
         }
     }
 }

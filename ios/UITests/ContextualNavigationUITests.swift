@@ -80,7 +80,7 @@ import XCTest
         XCTAssertTrue(app.navigationBars["Two store trips"].waitForExistence(timeout: 8))
         assertText("Same commitments at both stores")
         capture("Checkout-direct-two-store-quotes")
-        back(to: "Save and evaluate checkout")
+        backOnce(from: "Two store trips", to: "Whole checkout")
         fill("Family market", into: "Store", replacing: true)
         fill("Main branch", into: "Branch", replacing: true)
         fill("Tuesday 5 PM", into: "Pickup or delivery slot", replacing: true)
@@ -88,14 +88,21 @@ import XCTest
         enableSwitch("Retailer total already includes all charges")
         fill("3.00", into: "Inclusive total")
         tap(app.buttons["Save and evaluate checkout"])
-        back(to: "Prepare retailer handoff"); tap(app.buttons["Prepare retailer handoff"])
+        backOnce(from: "Whole checkout", to: "Pickup")
+        tap(app.buttons["Prepare retailer handoff"])
         tap(app.buttons["Freeze reviewed basket"]); tap(app.buttons["I placed this order"])
-        back(to: "Tell the cook"); tap(app.buttons["Tell the cook"])
+        backOnce(from: "Retailer handoff", to: "Pickup")
+        tap(app.buttons["Tell the cook"])
         tap(element("cook.currentSharedView"))
         assertText("Your private cook note is not copied here")
         XCTAssertFalse(element("cook.openSharedComposer").exists)
         capture("Cook-distinct-private-copy-and-current-view")
-        back(to: "Start the next shop"); tap(app.buttons["Start the next shop"])
+        backOnce(from: "Current shared view", to: "Tell the cook")
+        backOnce(from: "Tell the cook", to: "Pickup")
+        tap(app.buttons["Start the next shop"])
+        tap(app.buttons["Cancel"])
+        XCTAssertTrue(app.buttons["Start the next shop"].waitForExistence(timeout: 8))
+        tap(app.buttons["Start the next shop"])
         tap(app.buttons["Create fresh next-shop draft"])
         tap(element("nextShop.reuseDinner"))
         XCTAssertTrue(app.navigationBars["Dinner library"].waitForExistence(timeout: 10))
@@ -103,6 +110,139 @@ import XCTest
         assertText("No accepted dinners yet.")
         XCTAssertTrue(element("ledgerNewTemplate").exists)
         capture("Next-shop-direct-Free-dinner-library")
+    }
+
+    func testEnteredStoreQuotesKeepTripCostsSeparateAndAdoptOnlyReviewedSavedProof() {
+        launch(reset: true)
+        tap(element("openPickupList")); tap(element("ledgerStartShop"))
+        fill("Saturday quote review", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
+        tap(element("ledgerImport")); fill("2 wraps", into: "ledgerImportText")
+        tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
+        shopRoot(); tap(app.buttons["Review checkout"])
+        tap(app.buttons["Continue to checkout review"]); tap(app.buttons["Apply reviewed checkout copy"])
+        tap(app.buttons["Review whole checkout"]); tap(element("checkout.twoStoreQuotes"))
+
+        fillQuote("Dinner and protected lunch", into: "Commitment name")
+        fillQuote("3", into: "Required portions")
+        func enterStore(_ slot: String, name: String, branch: String, items: String, total: String, terms: String, cash: String?, minutes: String) {
+            let prefix = "quote." + slot + "."
+            fillQuote(name, into: prefix + "label")
+            fillQuote(name, into: prefix + "storeID")
+            fillQuote(branch, into: prefix + "branch")
+            fillQuote("Customer entered quote", into: prefix + "source")
+            fillQuote(items, into: prefix + "itemSubtotal")
+            fillQuote(terms, into: prefix + "eligibilityTerms")
+            fillQuote(total, into: prefix + "total")
+            enableSwitch(prefix + "allChargesIncluded")
+            enableSwitch(prefix + "quantitiesMatched")
+            enableSwitch(prefix + "singleStore")
+            tap(element(prefix + "availability")); tap(app.buttons["Reviewed available"])
+            if let cash { fillQuote(cash, into: prefix + "tripCash") }
+            fillQuote(minutes, into: prefix + "extraMinutes")
+            if slot == "first" { enableSwitch(prefix + "alreadyPlanned") }
+        }
+        enterStore("first",name: "Market A",branch: "North branch",items: "36",total: "38",terms: "Pickup price",cash: "0",minutes: "0")
+        enterStore("second",name: "Market B",branch: "East branch",items: "32",total: "35",terms: "Card price",cash: nil,minutes: "18")
+        tapQuoteRow("Review two complete trips")
+        assertText("Second trip cash break-even: $3.00")
+        assertText("Total trip cash is unresolved")
+        XCTAssertFalse(app.buttons["Preview using Market B"].exists)
+        capture("S27-unknown-trip-break-even")
+
+        let edit = app.buttons["quoteEditReviewed"]
+        tap(edit)
+        XCTAssertFalse(edit.exists)
+        let cashField = app.textFields["quote.second.tripCash"]
+        for _ in 0..<6 {
+            if cashField.exists && cashField.isHittable { break }
+            app.collectionViews.firstMatch.swipeUp(velocity: .fast)
+        }
+        fillQuote("4",into: "quote.second.tripCash")
+        tapQuoteRow("Review two complete trips")
+        let first = element("quoteFirstResult"), second = element("quoteSecondResult")
+        reveal(first)
+        for part in ["North branch","Pickup price","Items before fees and discounts: $36.00","Checkout: $38.00","Incremental trip cash: $0.00","Checkout plus incremental trip cash: $38.00"] { XCTAssertTrue(first.label.contains(part),first.label) }
+        reveal(second)
+        let reviewedSecondStore = second.label
+        for part in ["East branch","Store slot:","Card price","Items before fees and discounts: $32.00","Checkout: $35.00","Incremental trip cash: $4.00","Checkout plus incremental trip cash: $39.00"] { XCTAssertTrue(second.label.contains(part),second.label) }
+        assertText("Items before fees and discounts, second minus first: -$4.00")
+        assertText("Checkout change, second minus first: -$3.00")
+        assertText("Checkout plus trip cash, second minus first: $1.00")
+        assertText("Extra minutes change: 18")
+        capture("S27-complete-store-differences")
+        XCTAssertFalse(app.buttons["Preview using Market B"].exists)
+        tapQuoteRow("Save reviewed comparison")
+        tapQuoteRow("Preview using Market B")
+        assertText("East branch")
+        let adoptedSlot = element("quoteAdoptionSlot")
+        reveal(adoptedSlot)
+        XCTAssertTrue(adoptedSlot.label.hasPrefix("Store slot: ") && reviewedSecondStore.contains(adoptedSlot.label),adoptedSlot.label)
+        tap(element("dinnerCancelPreview"))
+        XCTAssertFalse(app.staticTexts["Current pickup branch: East branch"].exists)
+        tapQuoteRow("Preview using Market B"); tap(element("dinnerApply"))
+        assertText("Current pickup branch: East branch")
+        assertText("This saved comparison uses an earlier pickup revision.")
+        let adoptAgain = app.buttons["Preview using Market B"]
+        reveal(adoptAgain); XCTAssertFalse(adoptAgain.isEnabled)
+        restart(); tap(app.tabBars.buttons["Dinners"]); tap(app.buttons["Compare two store trips"])
+        assertText("Current pickup branch: East branch")
+        tap(app.buttons["Market A and Market B"])
+        assertText("This saved comparison uses an earlier pickup revision.")
+        capture("S27-reopened-adopted-branch-and-dated-comparison")
+    }
+
+    func testMissingStorePricesAndAvailabilityRemainConditionalAfterSaving() {
+        launch(reset: true)
+        tap(app.tabBars.buttons["Dinners"]); tap(element("dinnerStartPickup"))
+        fill("Unpriced pickup",into: "ledgerShopName"); tap(element("ledgerCreateShop"))
+        tap(app.buttons["Compare two store trips"])
+        fillQuote("Two dinners",into: "Commitment name"); fillQuote("2",into: "Required portions")
+        for (slot,name) in [("first","A"),("second","B")] {
+            let prefix = "quote." + slot + "."
+            fillQuote(name,into: prefix + "label")
+            fillQuote(name,into: prefix + "storeID")
+            fillQuote("Main",into: prefix + "branch")
+            fillQuote("Shopper note",into: prefix + "source")
+            enableSwitch(prefix + "quantitiesMatched"); enableSwitch(prefix + "singleStore")
+        }
+        tapQuoteRow("Review two complete trips")
+        assertText("Checkout change, second minus first: Unresolved")
+        assertText("Required product availability is unknown or unavailable")
+        assertText("Checkout terms are incomplete")
+        XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Second trip cash break-even:")).firstMatch.exists)
+        tapQuoteRow("Save reviewed comparison")
+        let adopt = app.buttons["Preview using B"]
+        reveal(adopt)
+        XCTAssertFalse(adopt.isEnabled)
+        capture("S27-saved-unknown-availability-and-prices")
+    }
+
+    private func tapQuoteRow(_ id: String) {
+        let row = app.buttons[id]
+        let table = app.collectionViews.firstMatch
+        let bounds = app.frame
+        let top = bounds.minY + 85
+        let tab = app.tabBars.buttons["Shop"]
+        let bottom = tab.exists ? min(bounds.maxY,tab.frame.minY) - 4 : bounds.maxY - 8
+        let viewport = CGRect(x: bounds.minX,y: top,width: bounds.width,height: bottom - top)
+        for attempt in 0..<20 {
+            if row.exists {
+                let rect = row.frame
+                if !rect.isEmpty && viewport.contains(CGPoint(x: rect.midX, y: rect.midY)) && row.isHittable { row.tap(); return }
+                if !rect.isEmpty && rect.midY < viewport.minY { table.swipeDown(); continue }
+            }
+            if attempt < 14 { table.swipeUp() } else { table.swipeDown() }
+        }
+        XCTFail("Quote action did not scroll above the tab bar: " + id)
+    }
+    private func fillQuote(_ text: String, into id: String) {
+        let field = app.textFields[id]
+        tap(field)
+        field.typeText(text)
+        XCTAssertEqual(field.value as? String,text,id)
+        let done = app.buttons["quoteKeyboardDone"]
+        XCTAssertTrue(done.waitForExistence(timeout: 3) && done.isHittable)
+        done.tap()
     }
 
     private func launch(reset: Bool) {
@@ -145,8 +285,8 @@ import XCTest
     private func scrollableArea() -> CGRect {
         let bounds = app.frame
         let keyboardTop = app.keyboards.allElementsBoundByIndex.filter { $0.exists }.map { $0.frame.minY }.min() ?? bounds.maxY
-        let barBottom = app.navigationBars.allElementsBoundByIndex.filter { $0.exists && $0.isHittable }.map { $0.frame.maxY }.max() ?? bounds.minY + 88
-        let top = max(bounds.minY + 88, min(barBottom + 12, keyboardTop - 140))
+        // Navigation bar containers do not have an activation point during a sheet dismissal.
+        let top = max(bounds.minY + 88, min(bounds.minY + 140, keyboardTop - 140))
         let bottom = min(bounds.maxY - 100, keyboardTop - 16)
         return CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))
     }
@@ -176,8 +316,16 @@ import XCTest
         tap(app.tabBars.buttons["Shop"])
         returnToVisibleAnchor(element("newComparison"))
     }
-    private func back(to label: String) {
-        returnToVisibleAnchor(app.buttons.matching(identifier: label).firstMatch)
+    private func backOnce(from source: String, to destination: String) {
+        let sourceBar = app.navigationBars[source]
+        XCTAssertTrue(sourceBar.waitForExistence(timeout: 8))
+        let back = sourceBar.buttons["BackButton"]
+        XCTAssertTrue(back.waitForExistence(timeout: 8))
+        XCTAssertTrue(back.isHittable, back.debugDescription)
+        back.tap()
+        // Assert the navigation destination itself. An offscreen form button is
+        // not an anchor: absence from the lazy tree must never pop another screen.
+        XCTAssertTrue(app.navigationBars[destination].waitForExistence(timeout: 8))
     }
     private func returnToVisibleAnchor(_ target: XCUIElement) {
         for _ in 0..<8 {

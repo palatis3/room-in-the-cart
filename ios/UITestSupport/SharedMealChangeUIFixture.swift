@@ -1,0 +1,146 @@
+#if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
+import Foundation
+import SwiftUI
+import HouseholdClient
+
+private final class S17FixtureVault: RefreshTokenVault, @unchecked Sendable {
+    private var value: String?
+    func read() throws -> String? { value }
+    func write(_ value: String) throws { self.value = value }
+    func clear() throws { value = nil }
+}
+private final class S17FixtureServer: @unchecked Sendable {
+    static let household = "11111111-1111-4111-8111-111111111111"
+    static let shopper = "22222222-2222-4222-8222-222222222222"
+    static let planner = "33333333-3333-4333-8333-333333333333"
+    static let shop = "44444444-4444-4444-8444-444444444444"
+    static let occurrence = "55555555-5555-4555-8555-555555555555"
+    private let lock = NSRecursiveLock()
+    private var revision = 2
+    private var meal: [String:Any] = ["title":"Fixture shared soup","day":"2026-11-05","kind":"dinner","portions":4,"protected":false]
+    private var proposals: [[String:Any]] = []
+    private var receipts: [String:[String:Any]] = [:]
+    private var posts = 0
+    var changed: (@Sendable (Int,Int) -> Void)?
+    func respond(_ request: URLRequest) throws -> (Int,Data) {
+        lock.lock(); defer { lock.unlock() }
+        guard request.url?.host?.hasSuffix(".invalid") == true else { throw URLError(.unsupportedURL) }
+        let path = request.url!.path
+        var bytes = request.httpBody ?? Data()
+        if bytes.isEmpty, let stream = request.httpBodyStream {
+            stream.open(); defer { stream.close() }; var buffer = [UInt8](repeating:0,count:4096)
+            while stream.hasBytesAvailable { let n = stream.read(&buffer,maxLength:buffer.count); if n <= 0 { break }; bytes.append(buffer,count:n) }
+        }
+        let input = (try? JSONSerialization.jsonObject(with:bytes)) as? [String:Any] ?? [:]
+        let shopper = request.value(forHTTPHeaderField:"Authorization")?.contains("shopper") == true
+        func json(_ value: Any, status: Int = 200) throws -> (Int,Data) { (status,try JSONSerialization.data(withJSONObject:value,options:[.sortedKeys])) }
+        func denied() throws -> (Int,Data) { try json(["error":["code":"unavailable"]],status:404) }
+        if path == "/auth/v1/verify" {
+            let role = (input["email"] as? String)?.contains("shopper") == true ? "shopper" : "planner"
+            return try json(["access_token":"fixture-"+role,"refresh_token":"refresh-"+role,"expires_in":3600,"user":["id":"native-"+role,"email_confirmed_at":"date"]])
+        }
+        if path == "/auth/v1/user" { return try json(["id":shopper ? "native-shopper":"native-planner","email_confirmed_at":"date"]) }
+        if path == "/v1/me/workspaces" { return try json(["workspaces":[["householdId":Self.household,"label":"Isolated shared meals","role":"contributor"]]]) }
+        if path.hasSuffix("/devices") { return try json(["deviceId":shopper ? "shopper-device":"planner-device","deviceToken":shopper ? "shopper-token":"planner-token"],status:201) }
+        if path.hasSuffix("/bootstrap") { return try json(["household":["id":Self.household,"label":"Isolated shared meals"],"memberId":shopper ? Self.shopper:Self.planner,"role":shopper ? "shopper":"contributor","shopId":Self.shop,"enrolled":true,"queueConsent":false,"capabilities":shopper ? ["shopper_commands","shopper_inbox","request_preview"]:["meal_proposals"]]) }
+        if path.hasSuffix("/inbox") { return try json(["requests":[],"nextCursor":NSNull()]) }
+        if path.hasSuffix("/requests/mine") { return try json(["requests":[],"nextCursor":NSNull()]) }
+        let occurrence: [String:Any] = ["occurrenceId":Self.occurrence,"revision":revision,"meal":meal]
+        if path.hasSuffix("/meal-plan/changes"), request.httpMethod == "POST" {
+            guard !shopper, let id = input["proposalId"] as? String, input["shopRevision"] as? Int == revision else { return try denied() }
+            if !proposals.contains(where: { ($0["proposalId"] as? String) == id }) { proposals.append(["proposalId":id,"request":input,"original":meal,"state":"pending"]) }
+            changed?(proposals.count,posts)
+            return try json(["saved":true,"proposalId":id])
+        }
+        if path.hasSuffix("/meal-plan/changes") { return try json(["shopId":Self.shop,"shopRevision":revision,"authorityEpoch":1,"grantRevision":1,"phase":"draft","shopper":shopper,"meals":[occurrence],"proposals":proposals]) }
+        if path.hasSuffix("/meal-plan") { return try json(["shopId":Self.shop,"shopRevision":revision,"authorityEpoch":1,"grantRevision":1,"shopper":shopper,"plannerId":Self.planner,"adults":[["id":Self.planner,"label":"Fixture planner"]],"meals":[occurrence],"proposals":[]]) }
+        if path.hasSuffix("/shops/"+Self.shop) {
+            guard shopper else { return try denied() }
+            let quote = try ShopperQuote(scope:"wholeCheckout",complete:true,capMinor:1000,capScope:"wholeCheckout",fee:.fixed(0),taxesMinor:0,depositsMinor:0,discountsMinor:0,observedAt:Date().addingTimeInterval(-60),expiresAt:Date().addingTimeInterval(3600))
+            return try json(["shopId":Self.shop,"shopRevision":revision,"authorityEpoch":1,"phase":"draft","meals":[occurrence],"quote":try JSONSerialization.jsonObject(with:JSONEncoder().encode(quote)),"lines":[["lineId":"66666666-6666-4666-8666-666666666666","originalItem":"Entered soup packs","packs":1,"unitPriceMinor":500,"feeEligible":true]]])
+        }
+        if path.hasSuffix("/replay-windows") { return try json(["id":"77777777-7777-4777-8777-777777777777","expiresAt":"2099-01-01T00:00:00Z"]) }
+        if path.hasSuffix("/commands"), let key = input["clientKey"] as? String {
+            guard shopper else { return try denied() }
+            if let receipt = receipts[key] { return try json(receipt) }
+            guard input["kind"] as? String == "shop.patch", let body = input["body"] as? [String:Any], let edit = body["mealEdit"] as? [String:Any],
+                  let next = edit["meal"] as? [String:Any], (input["base"] as? [String:Any])?["shopRevision"] as? Int == revision else { return try denied() }
+            if let id = edit["changeProposalId"] as? String {
+                guard let index = proposals.firstIndex(where: { ($0["proposalId"] as? String)?.lowercased() == id.lowercased() }) else { return try denied() }
+                proposals[index]["state"] = "applied"
+            }
+            meal = next; revision += 1; posts += 1
+            let receipt: [String:Any] = ["operationId":UUID().uuidString,"kind":"shop.patch","shopId":Self.shop,"shopRevision":revision,"authorityEpoch":1,"disposition":"patched"]
+            receipts[key] = receipt; changed?(proposals.count,posts); return try json(receipt)
+        }
+        return try denied()
+    }
+}
+private final class S17FixtureProtocol: URLProtocol, @unchecked Sendable {
+    static var server: S17FixtureServer?
+    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override func startLoading() {
+        do { guard let server = Self.server else { throw URLError(.unsupportedURL) }
+            let (status,data) = try server.respond(request)
+            client?.urlProtocol(self,didReceive:HTTPURLResponse(url:request.url!,statusCode:status,httpVersion:nil,headerFields:["Content-Type":"application/json"])!,cacheStoragePolicy:.notAllowed)
+            client?.urlProtocol(self,didLoad:data);client?.urlProtocolDidFinishLoading(self)
+        } catch { client?.urlProtocol(self,didFailWithError:error) }
+    }
+    override func stopLoading() {}
+}
+@MainActor private final class S17FixtureState: ObservableObject {
+    @Published var planner: HouseholdModel?
+    @Published var shopper: HouseholdModel?
+    @Published var proposals = 0
+    @Published var applications = 0
+    @Published var failure: String?
+    private let server = S17FixtureServer()
+    func start() async {
+        guard planner == nil, ProcessInfo.processInfo.arguments.contains("--ui-testing"), ProcessInfo.processInfo.arguments.contains("--shared-meal-fixture") else { return }
+        do {
+            S17FixtureProtocol.server = server
+            server.changed = { [weak self] proposed,applied in Task { @MainActor in self?.proposals = proposed; self?.applications = applied } }
+            planner = try await make(role:"planner"); shopper = try await make(role:"shopper")
+        } catch { failure = "Fixture setup failed" }
+    }
+    private func make(role: String) async throws -> HouseholdModel {
+        let config = URLSessionConfiguration.ephemeral; config.protocolClasses = [S17FixtureProtocol.self]
+        let transport = HTTPTransport(session:URLSession(configuration:config))
+        let auth = AdultAuth(configuration:try .init(projectURL:URL(string:"https://s17-identity.invalid")!,publishableKey:"sb_publishable_fixture_only"),vault:S17FixtureVault(),transport:transport)
+        let service = HouseholdService(configuration:try .init(baseURL:URL(string:"https://s17-household.invalid")!),auth:auth,deviceVault:S17FixtureVault(),transport:transport)
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("UITestWorkspace/S17-"+UUID().uuidString).appendingPathComponent("outbox.json")
+        let model = HouseholdModel(auth:auth,service:service,outboxURL:url,deletionVault:S17FixtureVault(),exitVault:S17FixtureVault())
+        model.email = role+"@example.invalid"; model.code = "123456"; await model.verifyCode()
+        guard let workspace = model.workspaces.first else { throw ClientError.invalidResponse }
+        model.keepLocalPrivate = true; await model.join(workspace)
+        guard model.projection != nil else { throw ClientError.invalidResponse }
+        if role == "shopper" { await model.sharedShop?.load() }
+        return model
+    }
+}
+struct S17SharedMealFixtureRoot: View {
+    @StateObject private var state = S17FixtureState()
+    @State private var shopperMode = ProcessInfo.processInfo.arguments.contains("--shopper-meal-seed")
+    @State private var directSeed = ProcessInfo.processInfo.arguments.contains("--shopper-meal-seed")
+    @State private var directShopReview = false
+    private var seed: SharedMealChangeSeed { .init(localOccurrenceID: UUID(uuidString:"88888888-8888-4888-8888-888888888888")!, title:"Fixture guest soup",portions:6,planning:.init(groups:[],ingredients:[])) }
+    var body: some View {
+        VStack {
+            Text("Fixture shared proposals: \(state.proposals)").accessibilityIdentifier("fixture.s17.proposals")
+            Text("Fixture shared applications: \(state.applications)").accessibilityIdentifier("fixture.s17.applications")
+            if let planner = state.planner, let shopper = state.shopper {
+                Button("Switch to assigned shopper") { shopperMode = true; directSeed = false; directShopReview = false }.accessibilityIdentifier("fixture.s17.switch")
+                Button("Open shopper local evidence") { shopperMode = true; directSeed = true; directShopReview = false }.accessibilityIdentifier("fixture.s17.seed")
+                NavigationStack {
+                    if shopperMode && !directSeed {
+                        if directShopReview { HouseholdShopView(model:shopper) } else { DinnerSharedPlanningEntry(household:shopper) }
+                    }
+                    else { SharedMealChangesView(household:shopperMode ? shopper:planner,seed:seed,onReviewOpened:{ directSeed = false; shopperMode = true; directShopReview = true }) }
+                }.id(shopperMode ? (directSeed ? "shopper-seed":"shopper") : "planner")
+            } else if let failure = state.failure { Text(failure).accessibilityIdentifier("fixture.failure") }
+            else { ProgressView("Opening isolated shared meal fixture") }
+        }.task { await state.start() }
+    }
+}
+#endif

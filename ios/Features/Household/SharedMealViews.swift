@@ -36,6 +36,7 @@ struct SharedMealFacts: View {
             }
             LabeledContent(ht("Portions"), value: meal.portions.formatted())
             if meal.protected { Label(ht("Protected portions"), systemImage: "lock") }
+            if let planning = meal.planning { SharedMealPlanningFacts(planning: planning) }
         }
     }
 }
@@ -51,7 +52,7 @@ struct SharedMealEditor: View {
     var body: some View {
         Section(ht("Shared meal plan")) {
             if let edit = model.draft.mealEdit, let meal = edit.meal {
-                if edit.proposalID != nil { SharedMealFacts(meal: meal) }
+                if edit.proposalID != nil || edit.changeProposalID != nil { SharedMealFacts(meal: meal) }
                 else { fields(for: edit.occurrenceID, meal: meal) }
             } else if model.draft.mealEdit == nil {
                 ForEach(meals) { occurrence in
@@ -99,6 +100,7 @@ struct SharedMealEditor: View {
 
 struct SharedMealMovesView: View {
     @ObservedObject var household: HouseholdModel
+    var onReviewOpened: () -> Void = {}
     @Environment(\.dismiss) private var dismiss
     @State private var plan: SharedMealPlan?
     @State private var selectedAdult: UUID?
@@ -107,6 +109,7 @@ struct SharedMealMovesView: View {
     @State private var proposalID = UUID()
     @State private var busy = false
     @State private var notice: String?
+    @State private var showingChanges = false
     @State private var confirmingAccess = false
     @State private var dismissingMove: SharedMealPlan.Move?
 
@@ -120,6 +123,8 @@ struct SharedMealMovesView: View {
     }
     var body: some View {
         Form {
+            NavigationLink(ht("Household dinner ideas")) { SharedMealIdeasView(household: household) }
+            Button(ht("Guest, ingredient, and serving-group proposals")) { showingChanges = true }
             if let plan, plan.shopId == context?.shopId.flatMap(UUID.init(uuidString:)), plan.shopper == (context?.role == "shopper") {
                 if plan.shopper {
                     Section(ht("Meal planning access")) {
@@ -169,6 +174,8 @@ struct SharedMealMovesView: View {
             Button(ht("Refresh meal plan")) { Task { await run() } }
         }.disabled(busy || context == nil)
         .navigationTitle(ht("Shared meal plan"))
+        .sheet(isPresented: $showingChanges) { NavigationStack { SharedMealChangesView(household: household, onReviewOpened: { showingChanges = false; dismiss(); onReviewOpened() })
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ht("Close")) { showingChanges = false } } } } }
         .task(id: bindingID) { plan = nil; notice = nil; await run() }
         .onChange(of: day) { _,_ in proposalID = UUID() }
         .onChange(of: occurrenceID) { _,id in
@@ -213,6 +220,6 @@ struct SharedMealMovesView: View {
         guard model.editing else { return }
         var meal = occurrence.meal; meal.day = move.day
         model.draft.mealEdit = .init(occurrenceID: occurrence.id, meal: meal, proposalID: move.id)
-        dismiss()
+        dismiss(); onReviewOpened()
     }
 }

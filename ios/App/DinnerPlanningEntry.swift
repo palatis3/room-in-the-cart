@@ -21,6 +21,9 @@ struct DinnerPlanningEntry: View {
             if let expectedShopID, ledger.shop?.id != expectedShopID {
                 ContentUnavailableView(dinnerText("Pickup selection changed"), systemImage: "arrow.triangle.2.circlepath",
                     description: Text(dinnerText("Return to the original pickup before reviewing these dinner choices or store quotes.")))
+            } else if destination == nil, household.canOpenSharedDinnerPlanning,
+                      household.projection?.role != "shopper" {
+                DinnerSharedPlanningEntry(household: household)
             } else if let destination {
                 ContextualDinnerFeature(ledger: ledger, destination: destination, access: localAccess, phase: phase,
                     runtimeChanges: runtimeChanges)
@@ -28,7 +31,17 @@ struct DinnerPlanningEntry: View {
                 DinnerPlanningHome(ledger: ledger, access: localAccess, phase: phase, ideaCatalog: DinnerPatternCatalog.patterns,
                     runtimeChanges: runtimeChanges)
             }
-        }.task { await pickup.load() }
+        }
+        .environment(\.dinnerHousehold, household)
+        .toolbar {
+            if household.canOpenSharedDinnerPlanning {
+                ToolbarItem(placement: .primaryAction) {
+                    NavigationLink(ht("Shared meal plan")) { DinnerSharedPlanningEntry(household: household) }
+                        .accessibilityIdentifier("dinner.sharedPlan")
+                }
+            }
+        }
+        .task { await pickup.load() }
     }
     private var runtimeChanges: AnyPublisher<Void, Never> {
         Publishers.Merge4(access.objectWillChange, pickup.objectWillChange,

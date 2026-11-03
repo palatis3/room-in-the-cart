@@ -88,7 +88,8 @@ enum DinnerIdeaSupplyReview {
         needs += named.filter { !separateNeedIDs.contains($0.id) }.map {
             StockNeed(id: $0.id, foodID: $0.orderLineID, name: $0.name, amount: $0.amount, priority: $0.priority)
         }
-        let allocation = try ConfirmedStockAllocator.allocate(lots: lots, needs: needs)
+        let allocation = try ConfirmedCarryoverAllocator.allocate(lots: lots, needs: needs,
+                                                                   reservations: current?.carryoverStockReservations ?? [])
         let availableFoods = foods(shop: shop, journey: current, at: now)
         let foodIDs = Set(availableFoods.map(\.id))
         let scoped = (idea.supplyEvidence ?? []).filter { $0.workspaceID == workspaceID && $0.shopID == shop.id }

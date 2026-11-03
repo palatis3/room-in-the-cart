@@ -5,9 +5,23 @@ import HouseholdClient
 @main struct RoomInTheCartContributorFixtureApp: App {
     var body: some Scene {
         WindowGroup {
-            if ProcessInfo.processInfo.arguments.contains("--ui-testing") { ContributorRequestUIFixtureRoot() }
-            else { Color.clear }
+            if ProcessInfo.processInfo.arguments.contains("--ui-testing") {
+                fixtureContent
+            } else { Color.clear }
         }
+    }
+    @ViewBuilder private var fixtureContent: some View {
+        #if AWAY_CARRYOVER_UI_FIXTURE
+        if ProcessInfo.processInfo.arguments.contains("--away-carryover-fixture") { AwayCarryoverUIFixtureRoot() }
+        else { otherFixtureContent }
+        #else
+        otherFixtureContent
+        #endif
+    }
+    @ViewBuilder private var otherFixtureContent: some View {
+        if ProcessInfo.processInfo.arguments.contains("--shared-meal-fixture") { S17SharedMealFixtureRoot() }
+        else if ProcessInfo.processInfo.arguments.contains("--request-pack-fixture") { S24RequestPackFixtureRoot() }
+        else { ContributorRequestUIFixtureRoot() }
     }
 }
 

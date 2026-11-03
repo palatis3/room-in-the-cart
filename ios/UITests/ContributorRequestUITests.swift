@@ -15,7 +15,7 @@ import XCTest
     func testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest() throws {
         app.launchArguments = ["--ui-testing", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
-        XCTAssertTrue(element("household.request.review").waitForExistence(timeout: 20))
+        waitForHousehold(timeout: 20)
         fill("Rice", into: "Item")
         fill("2 packs", into: "Quantity, optional")
         tap(element("household.request.review"))
@@ -30,17 +30,27 @@ import XCTest
         XCTAssertEqual(element("fixture.requestRows").label, "Fixture saved requests: 0")
         openStructuredReview()
         let approval = element("household.request.approve")
-        reveal(approval)
+        reveal(approval, fullyVisible: true)
         approval.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
         XCTAssertEqual(approval.value as? String, "1")
         tap(element("household.request.sendReviewed"))
-        XCTAssertTrue(element("household.request.review").waitForExistence(timeout: 10))
+        waitForHousehold(timeout: 10)
+        let posts = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND label == %@", "Fixture request POSTs: 1"), object: element("fixture.requestPosts"))
+        let rows = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND label == %@", "Fixture saved requests: 1"), object: element("fixture.requestRows"))
+        XCTAssertEqual(XCTWaiter.wait(for: [posts, rows], timeout: 10), .completed)
         XCTAssertEqual(element("fixture.requestPosts").label, "Fixture request POSTs: 1")
         XCTAssertEqual(element("fixture.requestRows").label, "Fixture saved requests: 1")
         assertText("Wholemeal wraps")
         assertText("2 packs of 8 wraps for lunch without sesame")
         assertText("Received, waiting for review")
         capture("Contributor-reviewed-own-request-received")
+    }
+    private func waitForHousehold(timeout: TimeInterval) {
+        let visible = XCTNSPredicateExpectation(predicate: NSPredicate { object, _ in
+            guard let bar = object as? XCUIElement else { return false }
+            return bar.exists && bar.isHittable
+        }, object: app.navigationBars["Household"])
+        XCTAssertEqual(XCTWaiter.wait(for: [visible], timeout: timeout), .completed)
     }
     private func openStructuredReview() {
         tap(element("household.request.capture"))
@@ -63,7 +73,7 @@ import XCTest
     private func tap(_ target: XCUIElement) { reveal(target); XCTAssertTrue(target.isHittable, target.debugDescription); target.tap() }
     private func enableSwitch(_ label: String) {
         let control = app.switches[label]
-        reveal(control)
+        reveal(control, fullyVisible: true)
         if control.value as? String == "0" {
             // The accessibility frame includes the Form label. Tap the trailing switch itself.
             control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
@@ -77,10 +87,13 @@ import XCTest
         let done = app.buttons.matching(NSPredicate(format: "label == %@", "Done")).firstMatch
         if done.exists && done.isHittable { done.tap() }
     }
-    private func reveal(_ target: XCUIElement) {
+    private func reveal(_ target: XCUIElement, fullyVisible: Bool = false) {
         for attempt in 0..<24 {
-            if target.exists && target.isHittable { return }
             let area = scrollableArea()
+            // A partly visible multiline switch can be hittable while its
+            // trailing control is still behind the software keyboard.
+            if target.exists && target.isHittable,
+               !fullyVisible || (target.frame.minY >= area.minY && target.frame.maxY <= area.maxY) { return }
             let upward: Bool
             if target.exists && !target.frame.isEmpty {
                 upward = target.frame.midY > area.midY
