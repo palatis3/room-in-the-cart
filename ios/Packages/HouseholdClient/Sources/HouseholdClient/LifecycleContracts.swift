@@ -172,5 +172,13 @@ public actor LifecycleIntentStore {
         state.reviewActions = state.reviewActions?.filter { $0.id != id }
         try write(state)
     }
+    public func purge(householdID: String, memberID: String, subject: String) throws {
+        reviewGeneration = UUID()
+        var state = try read()
+        if state.activation?.subject == subject, state.activation?.receipt.householdId == householdID { state.activation = nil }
+        state.proposals.removeAll { $0.householdID == householdID && $0.memberID == memberID }
+        state.reviewActions?.removeAll { $0.householdID == householdID && $0.memberID == memberID && $0.subject == subject }
+        try write(state)
+    }
     public func purge() throws { reviewGeneration = UUID(); try write(.init()) }
 }

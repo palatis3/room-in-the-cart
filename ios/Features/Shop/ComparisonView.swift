@@ -179,7 +179,7 @@ struct ComparisonView: View {
             }
             Section {
                 Text(tr("Source: prices and usable amounts you entered. Estimates for this item only."))
-                    .font(.body).fixedSize(horizontal: false, vertical: true).foregroundStyle(Theme.secondary)
+                    .font(.body).fixedSize(horizontal: false, vertical: true).foregroundStyle(Theme.ink)
                     .accessibilityIdentifier("comparisonSourceNote")
                 if let date = model.savedAt {
                     VStack(alignment: .leading, spacing: 8) {
@@ -240,7 +240,11 @@ struct ComparisonView: View {
                     .foregroundStyle(Theme.warning)
                     .accessibilityIdentifier(result.offerID + "Issue_" + issue.rawValue)
             }
-        } header: { Text(name).accessibilityIdentifier(result.offerID + "Header") }
+        } header: {
+            Text(name).font(.headline).textCase(nil).foregroundStyle(Theme.ink)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader).accessibilityIdentifier(result.offerID + "Header")
+        }
     }
 
     private func errorRow(_ text: String) -> some View {

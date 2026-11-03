@@ -1,0 +1,58 @@
+{
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "65B8A2FE-51FE-44A5-A9C7-F2524E33179B",
+    "deviceName": "Room in the Cart iOS 17 Small",
+    "modelName": "iPhone SE",
+    "osBuildNumber": "21A328",
+    "osVersion": "17.0",
+    "platform": "iOS Simulator"
+  },
+  "localDatabase": {
+    "suite": "service/tests/privacy.integration.mjs",
+    "passed": 9,
+    "failed": 0,
+    "log": ".build/account-deletion-isolated-privacy-db.log",
+    "isolation": "Dedicated local PostgreSQL database with simulated identities and deletion provider",
+    "guardianScope": {
+      "test": "service/tests/service.integration.mjs – guardian access is scoped to actual relationships and withdrawal revokes child devices and replay",
+      "passed": 1,
+      "failed": 0,
+      "log": ".build/native-guardian-postgres.log"
+    }
+  },
+  "client": {
+    "passed": 44,
+    "failed": 0,
+    "log": ".build/household-privacy-client-complete.log",
+    "scope": "Integrated HouseholdClient package suite"
+  },
+  "boundary": "Native mutation tests use URLProtocol fixtures. The local database privacy and guardian suites use simulated identities. No live provider deletion or remote configuration was performed. English and Spanish catalogs passed structural validation; human language review is pending.",
+  "accountDeletionCheckpoint": {
+    "passed": 5,
+    "failed": 0,
+    "result": ".build/AccountDeletionVerified.xcresult",
+    "cases": [
+      "Explicit organizer, shop and guardian responsibilities, including duplicate IDs across households",
+      "Lost POST response recovered with a Keychain-backed, read-only receipt after sign-out",
+      "Expired authentication, fresh OTP, receipt 404 and same-key retry",
+      "Unavailable provider, child scope, changed account, background lock and receipt write failure",
+      "Shipping Settings screen in English and Spanish before sign-in"
+    ],
+    "screenshots": ".build/account-deletion-verified-attachments/manifest.json"
+  },
+  "native": {
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "result": ".build/HouseholdPrivacyComplete.xcresult",
+    "screenshots": ".build/household-privacy-final-attachments/manifest.json",
+    "scope": "Seven native model tests of deletion, household exit and guardian withdrawal, plus one Settings UI test in English and Spanish. The earlier unconfigured bilingual run is in .build/AccountDeletionSettings.xcresult.",
+    "exitAndWithdrawalCases": [
+      "An accepted exit with a lost response survives client restart. The same subject retries the identical body and receives confirmation after the membership has disappeared. Other memberships and sign-in remain available.",
+      "A sole guardian cannot erase a child profile by leaving. Expired authentication and stale shop or membership decisions require a new review.",
+      "Guardian withdrawal with a lost reply is resolved by refreshing the enrolled guardian’s consent list. The old consent confirmation cannot be applied after revocation or scope loss."
+    ],
+    "updatedDeletionCase": "An ambiguous account deletion closes local signed-in access. Its device-only status receipt survives."
+  }
+}

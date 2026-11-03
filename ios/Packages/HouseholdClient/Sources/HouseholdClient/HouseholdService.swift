@@ -10,6 +10,7 @@ public actor HouseholdService {
     private var householdID: String?
     private var subject: String?
     private var memberID: String?
+    private var selectedShopID: UUID?
     private var selectedGrantID: String?
     private var generation = UUID()
     public init(configuration: ServiceConfiguration, auth: AdultAuth, deviceVault: any RefreshTokenVault,
@@ -20,7 +21,7 @@ public actor HouseholdService {
         guard UUID(uuidString: householdID) != nil else { throw ClientError.configuration }
         if let grantID, UUID(uuidString: grantID) == nil { throw ClientError.configuration }
         generation = UUID(); enrollment = nil; self.householdID = nil; subject = nil; memberID = nil
-        selectedGrantID = grantID
+        selectedGrantID = grantID; selectedShopID = nil
         let start = generation
         let access = try await auth.access()
         guard generation == start else { throw ClientError.cancelled }
@@ -30,18 +31,55 @@ public actor HouseholdService {
            record.householdID == householdID, record.subject == access.identity.subject {
             enrollment = record.device; self.householdID = householdID; subject = access.identity.subject
             selectedGrantID = grantID ?? record.grantID
+            selectedShopID = selectedGrantID == nil ? record.shopID : nil
             return try await bootstrap()
         }
         let device: DeviceEnrollment = try await transport.json(request(base: configuration.baseURL,
             path: "v1/households/\(householdID)/devices", method: "POST", token: access.accessToken, body: Data("{}".utf8)))
         guard generation == start else { throw ClientError.cancelled }
-        let stored = StoredEnrollment(householdID: householdID, subject: access.identity.subject, device: device, grantID: selectedGrantID)
+        let stored = StoredEnrollment(householdID: householdID, subject: access.identity.subject, device: device, grantID: selectedGrantID, shopID: selectedShopID)
         try deviceVault.write(String(decoding: encoded(stored), as: UTF8.self))
         enrollment = device; self.householdID = householdID; subject = access.identity.subject
         return try await bootstrap()
     }
     public func matches(_ operation: PendingOperation, memberID: String) -> Bool {
         operation.householdID == householdID && operation.memberID == memberID && operation.deviceID == enrollment?.deviceId
+    }
+    private func accountRequest(subject: String, path: String, body: Data? = nil) async throws -> URLRequest {
+        let start = generation
+        guard selectedGrantID == nil else { throw ClientError.accessEnded }
+        let access = try await auth.access()
+        guard generation == start, access.identity.subject == subject else { throw ClientError.accessEnded }
+        return request(base: configuration.baseURL, path: path, method: body == nil ? "GET" : "POST",
+                       token: access.accessToken, body: body)
+    }
+    public func deletionPreview(subject: String) async throws -> DeletionPreview {
+        let req = try await accountRequest(subject: subject, path: "v1/privacy/deletion-preview")
+        return try await transport.json(req)
+    }
+    public func requestDeletion(receipt: DeletionReceipt, households: [HouseholdDisposition]) async throws -> DeletionStatus {
+        struct Input: Encodable {
+            let clientKey, statusToken: String
+            let confirm = true
+            let households: [HouseholdDisposition]
+        }
+        let body = try encoded(Input(clientKey: receipt.id.uuidString.lowercased(), statusToken: receipt.statusToken, households: households))
+        let req = try await accountRequest(subject: receipt.subject, path: "v1/privacy/deletions", body: body)
+        let status: DeletionStatus = try await transport.json(req)
+        return try status.checked(for: receipt)
+    }
+    public func leaveHousehold(_ intent: HouseholdExitIntent) async throws {
+        guard UUID(uuidString: intent.householdID) != nil else { throw ClientError.configuration }
+        let req = try await accountRequest(subject: intent.subject, path: "v1/households/\(intent.householdID)/exit", body: intent.bytes)
+        struct Receipt: Decodable { let householdId: String; let left, accountDeleted: Bool }
+        let receipt: Receipt = try await transport.json(req)
+        guard receipt.householdId == intent.householdID, receipt.left, !receipt.accountDeleted else { throw ClientError.invalidResponse }
+    }
+    public func deletionStatus(_ receipt: DeletionReceipt) async throws -> DeletionStatus {
+        var req = request(base: configuration.baseURL, path: "v1/privacy/jobs/\(receipt.id.uuidString.lowercased())", method: "GET")
+        req.setValue(receipt.statusToken, forHTTPHeaderField: "X-Deletion-Token")
+        let status: DeletionStatus = try await transport.json(req)
+        return try status.checked(for: receipt)
     }
     public func workspaces() async throws -> WorkspaceList {
         let start = generation
@@ -57,7 +95,7 @@ public actor HouseholdService {
         var value: HouseholdBootstrap = try await perform("bootstrap", method: "GET")
         guard generation == start else { throw ClientError.cancelled }
         guard value.household.id == householdID, value.enrolled else { throw ClientError.accessEnded }
-        if selectedGrantID == nil, ["helper", "editor"].contains(value.role) {
+        if selectedShopID == nil, selectedGrantID == nil, ["helper", "editor"].contains(value.role) {
             guard let grant = value.grantId, UUID(uuidString: grant) != nil else { throw ClientError.accessEnded }
             selectedGrantID = grant
             value = try await perform("bootstrap", method: "GET")
@@ -68,9 +106,12 @@ public actor HouseholdService {
                   value.capabilities.allSatisfy({ ["helper_view", "helper_propose"].contains($0) }),
                   value.capabilities.contains("helper_view") else { await clearScope(); throw ClientError.accessEnded }
         }
+        if let selectedShopID {
+            guard value.grantId == nil, value.shopId.flatMap(UUID.init(uuidString:)) == selectedShopID else { throw ClientError.accessEnded }
+        }
         memberID = value.memberId
         if let enrollment, let householdID, let subject {
-            let stored = StoredEnrollment(householdID: householdID, subject: subject, device: enrollment, grantID: selectedGrantID)
+            let stored = StoredEnrollment(householdID: householdID, subject: subject, device: enrollment, grantID: selectedGrantID, shopID: selectedShopID)
             try deviceVault.write(String(decoding: encoded(stored), as: UTF8.self))
         }
         return value
@@ -87,6 +128,53 @@ public actor HouseholdService {
               ["shopper_inbox", "request_preview", "shopper_commands"].allSatisfy(projection.capabilities.contains) else {
             throw ClientError.accessEnded
         }
+    }
+    public func selectableShops(closedAndOwned: Bool, cursor: UUID?) async throws -> HouseholdShopChoices {
+        guard selectedGrantID == nil else { throw ClientError.accessEnded }
+        var query = [URLQueryItem(name: "scope", value: closedAndOwned ? "owned" : "active")]
+        if let cursor { query.append(.init(name: "cursor", value: cursor.uuidString.lowercased())) }
+        let page: HouseholdShopChoices = try await perform("shops", method: "GET", query: query)
+        guard page.shops.count <= 50, Set(page.shops.map(\.id)).count == page.shops.count,
+              page.nextCursor == nil || (page.nextCursor != cursor && page.nextCursor == page.shops.last?.id) else { throw ClientError.invalidResponse }
+        return page
+    }
+    public func selectShop(_ id: UUID?) async throws -> HouseholdBootstrap {
+        guard selectedGrantID == nil, enrollment != nil else { throw ClientError.accessEnded }
+        generation = UUID()
+        selectedShopID = id
+        return try await bootstrap()
+    }
+    public func shopperAssignment(shopID: UUID) async throws -> ShopperAssignment {
+        let start = generation
+        try await authorizeAdmin()
+        guard start == generation else { throw ClientError.cancelled }
+        let assignment: ShopperAssignment = try await perform("shops/\(shopID.uuidString.lowercased())/shopper-assignment", method: "GET")
+        guard assignment.shopId == shopID, assignment.shopRevision > 0, assignment.authorityEpoch > 0,
+              assignment.adults.contains(where: { $0.id == assignment.shopperId }) else { throw ClientError.invalidResponse }
+        return assignment
+    }
+    public func mealPlan(shopID: UUID) async throws -> SharedMealPlan {
+        let plan: SharedMealPlan = try await perform("shops/\(shopID.uuidString.lowercased())/meal-plan", method: "GET")
+        guard plan.shopId == shopID, plan.meals.count <= 100, plan.proposals.count <= 100 else { throw ClientError.invalidResponse }
+        return plan
+    }
+    public func changeMealPlanner(_ plannerID: UUID?, plan: SharedMealPlan) async throws {
+        let fields: [String: JSONValue] = ["plannerId": plannerID.map { .string($0.uuidString.lowercased()) } ?? .null,
+            "grantRevision": .integer(plan.grantRevision), "authorityEpoch": .integer(plan.authorityEpoch)]
+        let status: MealPlanReceipt = try await perform("shops/\(plan.shopId.uuidString.lowercased())/meal-plan/planner", method: "PUT", body: encoded(fields))
+        guard status.saved else { throw ClientError.invalidResponse }
+    }
+    public func dismissMealMove(_ move: SharedMealPlan.Move, plan: SharedMealPlan) async throws {
+        let fields: [String: JSONValue] = ["proposalId": .string(move.id.uuidString.lowercased()),
+            "grantRevision": .integer(plan.grantRevision), "authorityEpoch": .integer(plan.authorityEpoch), "shopRevision": .integer(plan.shopRevision)]
+        let status: MealPlanReceipt = try await perform("shops/\(plan.shopId.uuidString.lowercased())/meal-plan/dismissals", method: "POST", body: encoded(fields))
+        guard status.saved else { throw ClientError.invalidResponse }
+    }
+    public func proposeMealMove(id: UUID, occurrenceID: UUID, day: String, plan: SharedMealPlan) async throws {
+        let fields: [String: JSONValue] = ["proposalId": .string(id.uuidString.lowercased()), "occurrenceId": .string(occurrenceID.uuidString.lowercased()),
+            "day": .string(day), "grantRevision": .integer(plan.grantRevision), "authorityEpoch": .integer(plan.authorityEpoch), "shopRevision": .integer(plan.shopRevision)]
+        let status: MealPlanReceipt = try await perform("shops/\(plan.shopId.uuidString.lowercased())/meal-plan/proposals", method: "POST", body: encoded(fields))
+        guard status.saved else { throw ClientError.invalidResponse }
     }
     public func shopperShop(shopID: String) async throws -> ShopperShop {
         let start = generation
@@ -151,14 +239,16 @@ public actor HouseholdService {
               operation.deviceID == enrollment.deviceId else { throw ClientError.accessEnded }
         let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes)
         guard envelope.clientKey == operation.clientKey, UUID(uuidString: envelope.shopId) != nil,
-              ["shop.create", "shop.patch", "shop.freeze", "shop.reopen"].contains(envelope.kind) else { throw ClientError.configuration }
+              ["shop.create", "shop.patch", "shop.freeze", "shop.reopen", "shop.transferAuthority"].contains(envelope.kind) else { throw ClientError.configuration }
         if envelope.kind == "shop.create" {
             guard envelope.base.shopRevision == 0, envelope.base.authorityEpoch == 0 else { throw ClientError.configuration }
+            try await authorizeAdmin()
+        } else if envelope.kind == "shop.transferAuthority" {
             try await authorizeAdmin()
         } else { try await authorizeShopper(shopID: envelope.shopId) }
         guard start == generation else { throw ClientError.cancelled }
         guard operation.memberID == memberID else { throw ClientError.accessEnded }
-        return try await perform("commands", method: "POST", body: operation.bytes)
+        return try await perform("commands", method: "POST", body: operation.bytes, creatingShop: envelope.kind == "shop.create")
     }
     /// For other native service adapters; returning a token never grants a role.
     public func currentDeviceToken(householdID: String, memberID: String) async throws -> String {
@@ -363,12 +453,160 @@ public actor HouseholdService {
             throw error
         }
     }
+    // These routes independently verify current adult/shopper ownership and paid seats where required.
+    // Historical shops need not be the bootstrap's currently active shop.
+    private func historyContext() async throws {
+        guard selectedGrantID == nil else { throw ClientError.accessEnded }
+        let start = generation
+        let scope = try await bootstrap()
+        guard generation == start else { throw ClientError.cancelled }
+        guard selectedGrantID == nil, !["helper", "editor"].contains(scope.role),
+              subject != nil, memberID != nil, enrollment != nil else { throw ClientError.accessEnded }
+    }
+    private func historyRead<T: Decodable & Sendable>(_ path: String, method: String = "GET", body: Data? = nil, query: [URLQueryItem] = []) async throws -> T {
+        let start = generation; try await historyContext()
+        guard generation == start else { throw ClientError.cancelled }
+        return try await perform(path, method: method, body: body, query: query)
+    }
+    private func historyCursor(_ cursor: String?) throws -> [URLQueryItem] {
+        if let cursor { guard HistoryValidation.ids([cursor]) else { throw ClientError.configuration }; return [.init(name: "cursor", value: cursor)] }
+        return []
+    }
+    private func validateHistoryPage(ids: [String], next: String?, cursor: String?, limit: Int) throws {
+        guard ids.count <= limit, HistoryValidation.uniqueIDs(ids),
+              !ids.contains(where: { id in cursor.map { HistoryValidation.sameID(id, $0) } == true }) else { throw ClientError.invalidResponse }
+        if let next {
+            guard ids.count == limit, let last = ids.last, HistoryValidation.sameID(next, last),
+                  cursor.map({ !HistoryValidation.sameID($0, next) }) ?? true else { throw ClientError.invalidResponse }
+        }
+    }
+    public func historyOwnedShops(cursor: String? = nil) async throws -> HistoryOwnedShopPage {
+        let query = try [.init(name: "scope", value: "owned")] + historyCursor(cursor)
+        let page: HistoryOwnedShopPage = try await historyRead("shops", query: query)
+        try validateHistoryPage(ids: page.shops.map(\.shopId), next: page.nextCursor, cursor: cursor, limit: 50)
+        guard page.shops.allSatisfy({ $0.role == "shopper" && ["draft", "frozen", "placed", "closed"].contains($0.phase) && $0.revision > 0 && $0.authorityEpoch > 0 && HistoryValidation.date($0.createdAt) != nil }) else { throw ClientError.invalidResponse }
+        return page
+    }
+    public func priceObservations(cursor: String? = nil) async throws -> HistoryPriceObservationPage {
+        let page: HistoryPriceObservationPage = try await historyRead("price-observations", query: historyCursor(cursor))
+        try validateHistoryPage(ids: page.observations.map(\.id), next: page.nextCursor, cursor: cursor, limit: 100)
+        do { for observation in page.observations { try observation.validate() } } catch { throw ClientError.invalidResponse }
+        return page
+    }
+    public func priceObservation(observationID: String) async throws -> HistoryPriceObservation {
+        guard HistoryValidation.ids([observationID]) else { throw ClientError.configuration }
+        struct Response: Decodable, Sendable { let observation: HistoryPriceObservation }
+        let response: Response = try await historyRead("price-observations/\(observationID)")
+        guard HistoryValidation.sameID(response.observation.id, observationID) else { throw ClientError.invalidResponse }
+        do { try response.observation.validate() } catch { throw ClientError.invalidResponse }
+        return response.observation
+    }
+    public func budgetHistory(shopIDs: [String]) async throws -> HistoryPermittedSubtotal {
+        guard shopIDs.count <= 100, HistoryValidation.uniqueIDs(shopIDs) else { throw ClientError.configuration }
+        struct Input: Encodable { let shopIds: [String] }
+        struct Response: Decodable, Sendable { let permitted: HistoryPermittedSubtotal }
+        let response: Response = try await historyRead("budget-history", method: "POST", body: encoded(Input(shopIds: shopIDs)))
+        try response.permitted.validate(allowedShopIDs: shopIDs)
+        return response.permitted
+    }
+    public func budgetPeriods(cursor: String? = nil) async throws -> HistoryBudgetPeriodPage {
+        let page: HistoryBudgetPeriodPage = try await historyRead("budget-periods", query: historyCursor(cursor))
+        try validateHistoryPage(ids: page.periods.map(\.periodId), next: page.nextCursor, cursor: cursor, limit: 50)
+        guard page.periods.allSatisfy({ $0.revision > 0 && HistoryValidation.date($0.updatedAt) != nil }) else { throw ClientError.invalidResponse }
+        return page
+    }
+    public func savedBudgetPeriod(periodID: String) async throws -> HistorySavedBudgetPeriod {
+        guard HistoryValidation.ids([periodID]) else { throw ClientError.configuration }
+        let result: HistorySavedBudgetPeriod = try await historyRead("budget-periods/\(periodID)/record")
+        try result.validate(id: periodID); return result
+    }
+    public func budgetPeriod(periodID: String) async throws -> HistoryPeriodResponse {
+        guard HistoryValidation.ids([periodID]) else { throw ClientError.configuration }
+        let result: HistoryPeriodResponse = try await historyRead("budget-periods/\(periodID)")
+        switch result {
+        case .permittedOnly(let subtotal): try subtotal.validate()
+        case .complete(let complete): try complete.validate(id: periodID)
+        }
+        return result
+    }
+    private func historySource(shopID: String) async throws {
+        guard HistoryValidation.ids([shopID]) else { throw ClientError.configuration }
+        struct Source: Decodable, Sendable { let shopId: String; let sourceVersion: HistorySourceVersion; let evidenceSource: String }
+        let source: Source = try await historyRead("shops/\(shopID)/financial-evidence")
+        guard HistoryValidation.sameID(source.shopId, shopID), source.evidenceSource == "shopper_reported" else { throw ClientError.invalidResponse }
+        try source.sourceVersion.validate()
+    }
+    private func matchesHistory(subject: String, household: String, member: String, device: String) throws {
+        guard selectedGrantID == nil, self.subject == subject, householdID == household, memberID == member, enrollment?.deviceId == device else { throw ClientError.accessEnded }
+    }
+    public func authorizePriceObservation(_ intent: PriceObservationIntent) async throws {
+        try intent.validate()
+        try matchesHistory(subject: intent.subject, household: intent.householdID, member: intent.memberID, device: intent.deviceID)
+        let start = generation
+        try await historySource(shopID: intent.observation.shopId)
+        guard generation == start else { throw ClientError.cancelled }
+        try matchesHistory(subject: intent.subject, household: intent.householdID, member: intent.memberID, device: intent.deviceID)
+    }
+    public func preparePriceObservation(_ observation: HistoryPriceObservation) async throws -> PriceObservationIntent {
+        try observation.validate()
+        let start = generation; try await historySource(shopID: observation.shopId)
+        guard generation == start else { throw ClientError.cancelled }
+        guard let subject, let householdID, let memberID, let enrollment else { throw ClientError.accessEnded }
+        return try .init(subject: subject, householdID: householdID, memberID: memberID, deviceID: enrollment.deviceId, observation: observation)
+    }
+    public func executePriceObservation(_ intent: PriceObservationIntent) async throws -> PriceObservationReceipt {
+        let start = generation; try await authorizePriceObservation(intent)
+        guard generation == start else { throw ClientError.cancelled }
+        let receipt: PriceObservationReceipt = try await perform("price-observations", method: "POST", body: intent.bytes)
+        guard receipt.recorded, HistoryValidation.sameID(receipt.observationId, intent.observation.id), HistoryValidation.sameID(receipt.shopId, intent.observation.shopId) else { throw ClientError.invalidResponse }
+        return receipt
+    }
+    public func authorizeBudgetPeriod(_ intent: BudgetPeriodIntent) async throws {
+        try intent.validate()
+        try matchesHistory(subject: intent.subject, household: intent.householdID, member: intent.memberID, device: intent.deviceID)
+        let start = generation
+        let permitted = try await budgetHistory(shopIDs: intent.period.shopIds)
+        guard generation == start else { throw ClientError.cancelled }
+        guard permitted.shops.count == intent.period.shopIds.count else { throw ClientError.accessEnded }
+        if intent.baseRevision > 0 {
+            let current = try await budgetPeriod(periodID: intent.period.id)
+            guard generation == start else { throw ClientError.cancelled }
+            // A cached pending envelope must not restore details hidden by current source access.
+            guard case .complete = current else { throw ClientError.accessEnded }
+        }
+        try matchesHistory(subject: intent.subject, household: intent.householdID, member: intent.memberID, device: intent.deviceID)
+    }
+    public func prepareBudgetPeriod(_ period: HistoryBudgetPeriod, baseRevision: Int) async throws -> BudgetPeriodIntent {
+        try period.validate(); guard baseRevision >= 0, baseRevision < Int.max else { throw ClientError.configuration }
+        let start = generation
+        let permitted = try await budgetHistory(shopIDs: period.shopIds)
+        guard generation == start else { throw ClientError.cancelled }
+        guard permitted.shops.count == period.shopIds.count else { throw ClientError.accessEnded }
+        if baseRevision > 0 {
+            let current = try await savedBudgetPeriod(periodID: period.id)
+            guard generation == start else { throw ClientError.cancelled }
+            guard current.revision == baseRevision else { throw ClientError.service(status: 409, code: "stale_base", correlationID: nil, retryAfter: nil) }
+            for old in current.period.reservations where old.state != .reserved {
+                guard period.reservations.contains(old) else { throw ClientError.service(status: 409, code: "reservation_final", correlationID: nil, retryAfter: nil) }
+            }
+        }
+        guard let subject, let householdID, let memberID, let enrollment else { throw ClientError.accessEnded }
+        return try .init(subject: subject, householdID: householdID, memberID: memberID, deviceID: enrollment.deviceId, baseRevision: baseRevision, period: period)
+    }
+    public func executeBudgetPeriod(_ intent: BudgetPeriodIntent) async throws -> BudgetPeriodReceipt {
+        let start = generation; try await authorizeBudgetPeriod(intent)
+        guard generation == start else { throw ClientError.cancelled }
+        let receipt: BudgetPeriodReceipt = try await perform("budget-periods", method: "POST", body: intent.bytes)
+        guard receipt.saved, HistoryValidation.sameID(receipt.periodId, intent.period.id), receipt.revision == intent.baseRevision + 1 else { throw ClientError.invalidResponse }
+        return receipt
+    }
+
     public func clearScope() async {
-        generation = UUID(); enrollment = nil; householdID = nil; subject = nil; memberID = nil; selectedGrantID = nil
+        generation = UUID(); enrollment = nil; householdID = nil; subject = nil; memberID = nil; selectedGrantID = nil; selectedShopID = nil
         try? deviceVault.clear()
     }
     private func perform<T: Decodable & Sendable>(_ path: String, method: String, body: Data? = nil,
-                                                 query: [URLQueryItem] = [], absolutePath: Bool = false) async throws -> T {
+                                                 query: [URLQueryItem] = [], absolutePath: Bool = false, creatingShop: Bool = false) async throws -> T {
         let start = generation
         guard let householdID, let enrollment else { throw ClientError.sessionNeeded }
         if let selectedGrantID, path != "bootstrap",
@@ -382,6 +620,7 @@ public actor HouseholdService {
         req.setValue(enrollment.deviceToken, forHTTPHeaderField: "X-Device-Token")
         req.setValue(householdID, forHTTPHeaderField: "X-Household-ID")
         if let selectedGrantID { req.setValue(selectedGrantID, forHTTPHeaderField: "X-View-Grant-ID") }
+        if let selectedShopID, !creatingShop { req.setValue(selectedShopID.uuidString.lowercased(), forHTTPHeaderField: "X-Shop-ID") }
         if !query.isEmpty {
             var components = URLComponents(url: req.url!, resolvingAgainstBaseURL: false)!
             components.queryItems = query; req.url = components.url
@@ -415,6 +654,9 @@ public actor OperationOutbox {
         all.append(operation); try save(all)
     }
     public func remove(_ id: String) throws { try save(operations().filter { $0.id != id }) }
+    public func purge(householdID: String, memberID: String) throws {
+        try save(operations().filter { $0.householdID != householdID || $0.memberID != memberID })
+    }
     public func purge() throws { try save([]) }
     private func save(_ all: [PendingOperation]) throws {
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
@@ -429,4 +671,4 @@ public actor OperationOutbox {
     }
 }
 
-private struct StoredEnrollment: Codable { let householdID: String; let subject: String; let device: DeviceEnrollment; let grantID: String? }
+private struct StoredEnrollment: Codable { let householdID: String; let subject: String; let device: DeviceEnrollment; let grantID: String?; let shopID: UUID? }

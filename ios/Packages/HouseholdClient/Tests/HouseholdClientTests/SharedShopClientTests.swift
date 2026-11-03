@@ -2,6 +2,48 @@ import XCTest
 @testable import HouseholdClient
 
 extension HouseholdClientTests {
+    func testSelectedShopIsPinnedAcrossEnrollmentAndClearedForHouseholdOverview() async throws {
+        let auth = try auth(), vault = MemoryVault(), shopID = UUID()
+        let config = try ServiceConfiguration(baseURL: URL(string: "https://service.test")!)
+        var service = HouseholdService(configuration: config, auth: auth, deviceVault: vault, transport: transport())
+        var ignoreSelection = false
+        var bootstrapHeaders: [String?] = []
+        MockURLProtocol.handler = { request in
+            if let response = self.authResponse(request) { return response }
+            if request.url!.path.hasSuffix("/devices") { return (201, Data(#"{"deviceId":"device","deviceToken":"test"}"#.utf8)) }
+            let selected = request.value(forHTTPHeaderField: "X-Shop-ID")
+            if request.url!.path.hasSuffix("/bootstrap") {
+                bootstrapHeaders.append(selected)
+                var result: [String:Any] = ["household":["id":self.household,"label":"Home"],"memberId":self.member,
+                    "role":"organizer","enrolled":true,"capabilities":["household_admin"],"queueConsent":false,"canSelectShop":true,
+                    "selectionRequired":selected == nil]
+                result["shopId"] = ignoreSelection ? nil : selected
+                return (200,try JSONSerialization.data(withJSONObject:result))
+            }
+            if request.url!.path.hasSuffix("/shops") {
+                XCTAssertNil(selected)
+                let shop: [String:Any] = ["shopId":shopID.uuidString,"createdAt":"2026-11-01T00:00:00Z","phase":"draft","role":"contributor"]
+                return (200,try JSONSerialization.data(withJSONObject:["shops":[shop],"nextCursor":NSNull()]))
+            }
+            throw URLError(.unsupportedURL)
+        }
+        _ = try await auth.verifyEmailCode(email:"adult@example.test",code:"123456")
+        let initial = try await service.enroll(householdID: household)
+        XCTAssertEqual(initial.selectionRequired,true)
+        let choices = try await service.selectableShops(closedAndOwned:false,cursor:nil)
+        XCTAssertEqual(choices.shops.map(\.id),[shopID])
+        let selected = try await service.selectShop(shopID)
+        XCTAssertEqual(selected.shopId,shopID.uuidString.lowercased())
+        service = HouseholdService(configuration: config, auth: auth, deviceVault: vault, transport: transport())
+        let restored = try await service.enroll(householdID: household)
+        XCTAssertEqual(restored.shopId, selected.shopId)
+        let overview = try await service.selectShop(nil)
+        XCTAssertNil(overview.shopId)
+        XCTAssertEqual(bootstrapHeaders,[nil,selected.shopId,selected.shopId,nil])
+        ignoreSelection = true
+        do { _ = try await service.selectShop(shopID); XCTFail("Ignored shop selection must fail closed") }
+        catch { XCTAssertEqual(error as? ClientError,.accessEnded) }
+    }
     func testSharedQuoteEncodesRequiredNullsAndOnlyActiveFeeFields() throws {
         for fee in [ShopperQuote.Fee.fixed(nil), .threshold(3500, below: nil, above: 0)] {
             let quote = try ShopperQuote(scope: "wholeCheckout", complete: false, capMinor: nil, capScope: "unknown", fee: fee,

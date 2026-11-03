@@ -35,8 +35,9 @@ public struct HTTPTransport: @unchecked Sendable {
         guard let http = response as? HTTPURLResponse else { throw ClientError.invalidResponse }
         guard (200..<300).contains(http.statusCode) else {
             if http.statusCode == 401 { throw ClientError.sessionNeeded }
-            if http.statusCode == 403 { throw ClientError.accessEnded }
             let envelope = try? JSONDecoder().decode(ErrorEnvelope.self, from: data)
+            // Paid tools can lapse while Free saved-record access remains authorized.
+            if http.statusCode == 403, envelope?.error.code != "membership_inactive" { throw ClientError.accessEnded }
             let retry: TimeInterval?
             if let value = http.value(forHTTPHeaderField: "Retry-After") {
                 if let seconds = Double(value) { retry = max(0, seconds) }

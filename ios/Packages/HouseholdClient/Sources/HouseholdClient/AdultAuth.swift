@@ -97,11 +97,14 @@ public actor AdultAuth {
             throw error
         }
     }
+    public func clearLocalSession() throws {
+        generation = UUID(); current = nil; refreshTask?.cancel(); refreshTask = nil
+        try vault.clear()
+    }
     /// Clears local credentials first, even if remote revocation cannot be reached. Caller must also tear down household projections.
     public func signOut(allDevices: Bool = false) async throws {
         let token = current?.accessToken
-        generation = UUID(); current = nil; refreshTask?.cancel(); refreshTask = nil
-        try vault.clear()
+        try clearLocalSession()
         guard let token else { return }
         var request = authRequest("logout", token: token)
         var components = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)!

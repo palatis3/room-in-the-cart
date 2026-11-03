@@ -330,6 +330,7 @@ public struct LedgerWorkspace: Codable, Equatable, Sendable {
     public var mealTemplates: [MealTemplate]
     public var selectedShopID: UUID?
     public var dinnerPlanning: DinnerPlanningState
+    public var listLayout = LedgerListLayout()
     public var packSelections: [LedgerPackSelection]
     public init(shops: [ShoppingLedger] = [], mealTemplates: [MealTemplate] = [], selectedShopID: UUID? = nil,
                 dinnerPlanning: DinnerPlanningState = DinnerPlanningState(), packSelections: [LedgerPackSelection] = []) {
@@ -337,9 +338,20 @@ public struct LedgerWorkspace: Codable, Equatable, Sendable {
         self.dinnerPlanning = dinnerPlanning
         self.packSelections = packSelections
     }
-    private enum CodingKeys: String, CodingKey { case shops, mealTemplates, selectedShopID, dinnerPlanning, packSelections }
+    private enum CodingKeys: String, CodingKey { case shops, mealTemplates, selectedShopID, dinnerPlanning, packSelections, listLayout }
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(shops, forKey: .shops)
+        try c.encode(mealTemplates, forKey: .mealTemplates)
+        try c.encodeIfPresent(selectedShopID, forKey: .selectedShopID)
+        try c.encode(dinnerPlanning, forKey: .dinnerPlanning)
+        try c.encode(packSelections, forKey: .packSelections)
+        // A previously exported workspace keeps its canonical digest until its contents change.
+        if listLayout != LedgerListLayout() { try c.encode(listLayout, forKey: .listLayout) }
+    }
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
+        listLayout = try c.decodeIfPresent(LedgerListLayout.self, forKey: .listLayout) ?? LedgerListLayout()
         shops = try c.decode([ShoppingLedger].self, forKey: .shops)
         mealTemplates = try c.decode([MealTemplate].self, forKey: .mealTemplates)
         selectedShopID = try c.decodeIfPresent(UUID.self, forKey: .selectedShopID)
@@ -354,6 +366,7 @@ public struct LedgerWorkspace: Codable, Equatable, Sendable {
         for shop in shops { try shop.validate() }
         for meal in mealTemplates { try meal.validate() }
         try dinnerPlanning.validate(shops: shops)
+        try listLayout.validate(shops: shops)
         guard packSelections.count <= 10_000 else { throw LedgerError.invalid("packSelections") }
         try uniqueIDs(packSelections.map(\.id))
         for selection in packSelections {

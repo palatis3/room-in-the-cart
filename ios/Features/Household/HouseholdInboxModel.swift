@@ -84,7 +84,7 @@ enum ShopperDelivery: Equatable {
                 if pending == nil {
                     let saved = try await outbox.operations()
                     guard start == generation else { return }
-                    if let operation = saved.first(where: { $0.householdID == householdID && $0.memberID == memberID }) {
+                    if let operation = saved.first(where: { $0.householdID == householdID && $0.memberID == memberID && $0.targetsShop(shopID) }) {
                         let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes)
                         pending = operation
                         let matches = await service.matches(operation, memberID: memberID)

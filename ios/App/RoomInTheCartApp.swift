@@ -11,6 +11,10 @@ import DeviceSurfaces
     @StateObject private var surfaces = DeviceSurfacesComposition()
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("appearance") private var appearance = "system"
+    init() {
+        // Keep inactive navigation labels legible against both system bar appearances.
+        UITabBar.appearance().unselectedItemTintColor = UIColor(named: "secondary") ?? .secondaryLabel
+    }
     var body: some Scene {
         WindowGroup {
             Group {
@@ -121,16 +125,21 @@ struct ShopView: View {
                         LedgerHomeView(model: ledger).navigationTitle(ledger.shop?.title ?? tr("Shop"))
                     } label: {
                         Label(ledger.shop == nil ? ledgerText("Start pickup") : ledgerText("Shopping list"), systemImage: "list.bullet")
-                            .font(.headline).frame(minHeight: 44)
-                    }.accessibilityIdentifier("openPickupList")
+                            .font(.headline).fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
+                    }.foregroundStyle(Theme.action).accessibilityIdentifier("openPickupList")
                     if let shop = ledger.shop {
                         Text(shop.title).font(.title2.bold())
                         NavigationLink(tr("Review checkout")) {
                             LedgerCheckoutEntry(ledger: ledger, pickup: pickup)
                         }.frame(minHeight: 44)
                     }
-                    NavigationLink(tr("Something is missing")) { UrgentRepairView(model: pickup).environment(\.pickupLedger, ledger) }
-                        .frame(minHeight: 44).accessibilityIdentifier("urgentRepairShortcut")
+                    NavigationLink {
+                        UrgentRepairView(model: pickup).environment(\.pickupLedger, ledger)
+                    } label: {
+                        Text(tr("Something is missing")).font(.body).fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
+                    }.foregroundStyle(Theme.action).accessibilityIdentifier("urgentRepairShortcut")
                     if !pickup.journeys.isEmpty {
                         NavigationLink(tr("Pickup, repairs and handoffs")) { PickupHomeView(model: pickup).environment(\.pickupLedger, ledger) }
                             .frame(minHeight: 44)
@@ -177,6 +186,7 @@ struct SavedRow: View {
 }
 
 struct RecordsView: View {
+    @EnvironmentObject private var household: HouseholdModel
     @EnvironmentObject private var surfaces: DeviceSurfacesComposition
     @EnvironmentObject private var model: AppModel
     @EnvironmentObject private var pickup: PickupModel
@@ -194,6 +204,9 @@ struct RecordsView: View {
                         try await surfaces.erasePickupRecord(workspaceID: workspaceID, recordID: recordID)
                     }))
             }
+            NavigationLink(HistoryCopy.text("Prices and period budgets")) {
+                HistoryRecordsEntryView(household: household)
+            }.accessibilityIdentifier("records.priceBudgetHistory")
             if model.records.isEmpty && model.unavailableRecords.isEmpty {
                 ContentUnavailableView(tr("Your comparisons live here"), systemImage: "tray", description: Text(tr("Save a pack comparison to return to the same amounts and prices, even offline.")))
             }
@@ -232,6 +245,7 @@ private struct SettingsButton: ViewModifier {
 extension View { func settingsButton() -> some View { modifier(SettingsButton()) } }
 
 struct SettingsView: View {
+    @AppStorage(PickupFeedbackSection.consentKey) private var feedbackEnabled = false
     @EnvironmentObject private var surfaces: DeviceSurfacesComposition
     @EnvironmentObject private var household: HouseholdModel
     @Environment(\.dismiss) private var dismiss
@@ -261,6 +275,7 @@ struct SettingsView: View {
                 }
             }
             Section(tr("Your data")) {
+                Toggle(pTr("Offer optional feedback after a pickup"), isOn: $feedbackEnabled)
                 Text(tr("Private comparisons and planning stay on this iPhone. Joining a household does not upload existing work."))
             }
             #if DEBUG

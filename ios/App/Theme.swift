@@ -13,7 +13,7 @@ enum Theme {
 
 struct PrimaryAction: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label.font(.headline).frame(maxWidth: .infinity, minHeight: 44)
+        configuration.label.font(.headline).fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, minHeight: 44)
             .padding(.horizontal, 12).padding(.vertical, 4)
             .foregroundStyle(Theme.onAction).background(Theme.action, in: RoundedRectangle(cornerRadius: 14))
             .opacity(configuration.isPressed ? 0.8 : 1)

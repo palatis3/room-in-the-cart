@@ -11,6 +11,7 @@ struct SharedShopLineDraft: Identifiable, Equatable {
 }
 struct SharedShopDraft: Equatable {
     var lines: [SharedShopLineDraft] = []
+    var mealEdit: SharedMealEdit?
     var scope = "wholeCheckout", capScope = "wholeCheckout"
     var complete = false
     var cap = "", fee = "", tax = "", deposits = "", discounts = ""
@@ -47,6 +48,14 @@ struct SharedShopDraft: Equatable {
 }
 struct SharedShopReview: Equatable {
     let shopID: String; let kind: String; let base: CommandBase; let candidate: ShopperShopCandidate?
+    var mealEdit: SharedMealEdit? = nil
+    var transfer: SharedShopTransfer? = nil
+}
+
+struct SharedShopTransfer: Equatable {
+    let adultID: UUID
+    let fromLabel: String
+    let toLabel: String
 }
 
 /// The shared shop is explicitly entered and reviewed here. It never reads the private local ledger.
@@ -57,6 +66,7 @@ struct SharedShopReview: Equatable {
     @Published private(set) var busy = false
     @Published private(set) var authorized = true
     @Published private(set) var editing = false
+    @Published private(set) var creatingAnother = false
     @Published private(set) var requiresRefresh = false
     @Published private(set) var review: SharedShopReview?
     @Published private(set) var pending: PendingOperation?
@@ -78,14 +88,22 @@ struct SharedShopReview: Equatable {
         self.scope = scope; self.service = service; self.outbox = outbox; self.onConfirmed = onConfirmed; self.onAccessEnded = onAccessEnded
         householdID = scope.household.id; memberID = scope.memberId
     }
-    var canCreate: Bool { authorized && !requiresRefresh && scope.grantId == nil && scope.role == "organizer" && scope.capabilities.contains("household_admin") && scope.shopId == nil }
+    var canCreate: Bool { authorized && !requiresRefresh && scope.grantId == nil && scope.role == "organizer" && scope.capabilities.contains("household_admin") && scope.shopId == nil && scope.selectionRequired != true }
     var canManage: Bool { authorized && !requiresRefresh && scope.grantId == nil && scope.role == "shopper" && scope.capabilities.contains("shopper_commands") && scope.shopId != nil }
+    var canStartAnother: Bool {
+        authorized && !requiresRefresh && scope.canSelectShop == true && scope.grantId == nil &&
+        scope.capabilities.contains("household_admin") && !canCreate
+    }
+    func beginAnotherShop() {
+        guard canStartAnother, !busy, !editing, pending == nil else { return }
+        draft = .init(); creatingAnother = true; editing = true
+    }
     func updateScope(_ value: HouseholdBootstrap) {
         guard value.household.id == householdID, value.memberId == memberID, value.grantId == nil else { clear(); return }
         if scope.shopId != value.shopId || scope.role != value.role || Set(scope.capabilities) != Set(value.capabilities) {
             financialEntries = nil
             draft = .init()
-            editing = false
+            editing = false; creatingAnother = false
             shop = nil
         }
         scope = value
@@ -97,7 +115,7 @@ struct SharedShopReview: Equatable {
             try await refreshFacts(start: start)
             if pending == nil {
                 let saved = try await outbox.operations(); guard start == generation else { return }
-                if let operation = saved.first(where: { $0.householdID == householdID && $0.memberID == memberID }) {
+                if let operation = saved.first(where: { $0.householdID == householdID && $0.memberID == memberID && $0.targetsShop(scope.shopId, includeCreation: scope.capabilities.contains("household_admin")) }) {
                     pending = operation
                     let matches = await service.matches(operation, memberID: memberID)
                     guard start == generation else { return }
@@ -115,7 +133,14 @@ struct SharedShopReview: Equatable {
         if fresh.role == "shopper", fresh.capabilities.contains("shopper_commands"), let id = fresh.shopId {
             let value = try await service.shopperShop(shopID: id)
             guard start == generation, scope == fresh else { throw ClientError.cancelled }
-            if shop != value { review = nil; acknowledged = false }; shop = value
+            if shop != value {
+                review = nil; acknowledged = false
+                if editing {
+                    draft = .init(); editing = false; creatingAnother = false
+                    notice = ht("The shared shop changed. Open the current revision to edit again.")
+                }
+            }
+            shop = value
         } else { shop = nil }
         requiresRefresh = false
     }
@@ -134,23 +159,45 @@ struct SharedShopReview: Equatable {
     }
     func beginEditing() {
         guard authorized, !busy, pending == nil else { return }
+        creatingAnother = false
         if canCreate { draft = .init(); editing = true }
         else if canManage, let shop, shop.phase == "draft" {
             do { draft = try .init(shop); editing = true } catch { notice = ht("The shared shop could not be opened for editing. Refresh before trying again.") }
         }
     }
-    func cancelEditing() { guard !busy, pending == nil else { return }; editing = false; review = nil; acknowledged = false }
+    func cancelEditing() { guard !busy, pending == nil else { return }; editing = false; creatingAnother = false; review = nil; acknowledged = false }
     func reviewDraft() {
         guard authorized, !busy, pending == nil, editing else { return }
         do {
             guard draft.expiresAt > Date(), draft.observedAt <= Date().addingTimeInterval(300) else { throw ClientError.configuration }
             let candidate = try draft.candidate()
-            if canCreate { review = .init(shopID: UUID().uuidString.lowercased(), kind: "shop.create", base: .init(shopRevision: 0, authorityEpoch: 0), candidate: candidate) }
+            if canCreate || (creatingAnother && canStartAnother) { review = .init(shopID: UUID().uuidString.lowercased(), kind: "shop.create", base: .init(shopRevision: 0, authorityEpoch: 0), candidate: candidate) }
             else if canManage, let shop, shop.phase == "draft" {
-                review = .init(shopID: shop.shopId, kind: "shop.patch", base: .init(shopRevision: shop.shopRevision, authorityEpoch: shop.authorityEpoch), candidate: candidate)
+                var reviewedMeal = draft.mealEdit
+                if let edit = reviewedMeal {
+                    guard let meals = shop.meals else { throw ClientError.configuration }
+                    reviewedMeal?.baseMealRevision = meals.first(where: { $0.id == edit.occurrenceID })?.revision
+                    if let meal = edit.meal {
+                        guard !meal.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, meal.title.count <= 240,
+                              (1...1000).contains(meal.portions), ["dinner", "lunch", "side"].contains(meal.kind),
+                              sharedMealDate(meal.day) != nil else { throw ClientError.configuration }
+                    } else if !meals.contains(where: { $0.id == edit.occurrenceID }) { throw ClientError.configuration }
+                }
+                review = .init(shopID: shop.shopId, kind: "shop.patch", base: .init(shopRevision: shop.shopRevision, authorityEpoch: shop.authorityEpoch), candidate: candidate, mealEdit: reviewedMeal)
             } else { return }
             acknowledged = false; notice = nil
         } catch { notice = ht("Review every item and price. Leave unknown costs blank, enter a fee threshold when selected, and set a future quote expiry.") }
+    }
+    func reviewTransfer(_ assignment: ShopperAssignment, to adultID: UUID) {
+        guard authorized, !busy, !editing, pending == nil, !requiresRefresh, scope.grantId == nil,
+              scope.capabilities.contains("household_admin"), scope.shopId.flatMap(UUID.init(uuidString:)) == assignment.shopId,
+              assignment.phase != "closed", assignment.shopperId != adultID,
+              let from = assignment.adults.first(where: { $0.id == assignment.shopperId }),
+              let to = assignment.adults.first(where: { $0.id == adultID }) else { return }
+        review = .init(shopID: assignment.shopId.uuidString.lowercased(), kind: "shop.transferAuthority",
+            base: .init(shopRevision: assignment.shopRevision, authorityEpoch: assignment.authorityEpoch), candidate: nil,
+            transfer: SharedShopTransfer(adultID: adultID, fromLabel: from.label, toLabel: to.label))
+        acknowledged = false
     }
     func reviewPhaseChange(_ kind: String) {
         guard canManage, !busy, pending == nil, let shop,
@@ -167,8 +214,11 @@ struct SharedShopReview: Equatable {
         do {
             let window = try await service.replayWindow(); guard start == generation else { return }
             guard self.review == review, acknowledged else { return }
+            var body = try review.candidate?.commandBody() ?? [:]
+            if let transfer = review.transfer { body["newShopperId"] = .string(transfer.adultID.uuidString.lowercased()) }
+            if let edit = review.mealEdit { body["mealEdit"] = try edit.commandValue() }
             let operation = try await service.prepare(envelope: .init(replayWindow: window.id, shopId: review.shopID, kind: review.kind,
-                base: review.base, body: try review.candidate?.commandBody() ?? [:]), bootstrap: scope)
+                base: review.base, body: body), bootstrap: scope)
             guard start == generation else { return }; try await outbox.append(operation)
             guard start == generation else { return }; pending = operation; delivery = .waiting; attempts = 0; reviewedCurrentFacts = false
             await deliver(operation, start: start)
@@ -185,10 +235,15 @@ struct SharedShopReview: Equatable {
             let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes)
             let receipt = try await service.executeSharedShop(operation); guard start == generation else { return }
             guard receipt.shopId == envelope.shopId, receipt.kind == envelope.kind else { throw ClientError.invalidResponse }
-            delivery = .confirmed(receipt); pending = nil; editing = false; review = nil; acknowledged = false; requiresRefresh = true
+            delivery = .confirmed(receipt); pending = nil; editing = false; creatingAnother = false; review = nil; acknowledged = false; requiresRefresh = true
             do { try await outbox.remove(operation.id) } catch { notice = ht("The shared shop change was confirmed. Local retry cleanup needs another attempt.") }
             guard start == generation else { return }
-            do { try await refreshFacts(start: start); await onConfirmed() }
+            do {
+                if envelope.kind == "shop.create", scope.canSelectShop == true, let id = UUID(uuidString: receipt.shopId) {
+                    _ = try await service.selectShop(id)
+                }
+                try await refreshFacts(start: start); await onConfirmed()
+            }
             catch {
                 guard start == generation else { return }
                 switch error as? ClientError {

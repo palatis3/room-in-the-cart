@@ -237,6 +237,27 @@ import XCTest
         reveal(element(id))
     }
 
+    func testManualListOrderSurvivesRestartAndOpensLargePrint() throws {
+        launch(reset: true)
+        tap(element("openPickupList")); tap(element("ledgerStartShop"))
+        fill("Market walk", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
+        tap(element("ledgerImport")); fill("Apples\nMilk", into: "ledgerImportText")
+        tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
+        tap(element("ledgerListOptions")); tap(app.buttons["List order and aisles"])
+        choose("List order", value: "Manual item order")
+        tap(app.buttons["Move Milk up"]); tap(element("saveListOrder"))
+        restart(); tap(element("openPickupList"))
+        let items = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "ledgerInspect-"))
+        XCTAssertTrue(items.firstMatch.waitForExistence(timeout: 10))
+        XCTAssertTrue(items.firstMatch.label.contains("Milk"))
+        tap(element("ledgerListOptions")); tap(app.buttons["Large-print list"])
+        XCTAssertTrue(element("printShoppingList").waitForExistence(timeout: 8))
+        XCTAssertTrue(element("printShoppingList").isEnabled)
+        assertText("Milk"); assertText("Apples")
+        capture("Large-print-shopping-list")
+        tap(app.buttons["Done"]); XCTAssertTrue(element("ledgerListOptions").exists)
+    }
+
     private func launch(reset: Bool) {
         app.launchArguments = ["--ui-testing", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         if reset { app.launchArguments.append("--reset-test-workspace") }

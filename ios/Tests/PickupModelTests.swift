@@ -4,6 +4,46 @@ import LocalStore
 @testable import RoomInTheCart
 
 final class PickupModelTests: XCTestCase {
+    @MainActor func testFeedbackRequiresClosedPlacedPickupAndConsentAndSurvivesRestart() async throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let model = PickupModel(databaseURL: url)
+        let id = UUID()
+        let context = CheckoutContext(storeID: "Private store", branchID: "Branch", mode: .pickup,
+            slot: "Evening", commitmentsID: id, observedAt: Date(), source: "Private note")
+        let line = BasketLine(id: UUID(), name: "Secret grocery", quantity: quantity(2), expectedCost: .exact(.zero))
+        _ = await model.start(from: [line], shopID: id, context: context)
+        let feedback = PickupFeedback(decision: .unchanged, baseline: .list, comparison: .same)
+        XCTAssertEqual(feedback.incrementalBenefit, 0)
+        XCTAssertNil(PickupFeedback(decision: .acted, baseline: .retailer, comparison: .different).incrementalBenefit)
+        let encoded = try JSONSerialization.jsonObject(with: JSONEncoder().encode(feedback)) as? [String: String]
+        XCTAssertEqual(encoded, ["decision": "unchanged", "baseline": "list", "comparison": "same"])
+        XCTAssertEqual(PickupDecision.allCases.count, 6)
+        var revision = try XCTUnwrap(model.journey?.revision)
+        let early = await model.recordFeedback(feedback, shopID: id, revision: revision, consent: true)
+        XCTAssertFalse(early)
+        _ = await model.setQuote(CheckoutQuote(scope: .wholeCheckout, context: context, pricing: .inclusiveTotal(.exact(.zero))), cap: nil)
+        _ = await model.freeze()
+        _ = await model.reportPlaced()
+        _ = await model.change { $0.closedAt = Date() }
+        revision = try XCTUnwrap(model.journey?.revision)
+        let declined = await model.recordFeedback(feedback, shopID: id, revision: revision, consent: false)
+        let stale = await model.recordFeedback(feedback, shopID: id, revision: revision - 1, consent: true)
+        let wrongShop = await model.recordFeedback(feedback, shopID: UUID(), revision: revision, consent: true)
+        XCTAssertFalse(declined)
+        XCTAssertFalse(stale)
+        XCTAssertFalse(wrongShop)
+        XCTAssertNil(model.journey?.feedback)
+        let saved = await model.recordFeedback(feedback, shopID: id, revision: revision, consent: true)
+        XCTAssertTrue(saved)
+        let reopened = PickupModel(databaseURL: url)
+        await reopened.load()
+        XCTAssertEqual(reopened.journey?.feedback, feedback)
+        let removed = await reopened.recordFeedback(nil, shopID: id, revision: try XCTUnwrap(reopened.journey?.revision), consent: false)
+        XCTAssertTrue(removed)
+        XCTAssertNil(reopened.journey?.feedback)
+    }
+
     @MainActor func testKnownAndUnknownQuoteSurviveRestart() async throws {
         for unknown in [false, true] {
             let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)

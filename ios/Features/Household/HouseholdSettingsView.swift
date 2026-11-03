@@ -41,8 +41,14 @@ struct HouseholdSettingsView: View {
                     Section(ht("Connected household")) {
                         Text(projection.household.label)
                         Text(ht("Access is checked by the household service."))
+                        if projection.canSelectShop == true || projection.selectionRequired == true {
+                            NavigationLink(ht("Choose shared shop")) { HouseholdShopSelector(household: model) }
+                        }
                         Button(ht("Refresh household")) { Task { await model.refresh() } }
                         if model.sharedShop != nil { NavigationLink(ht("Open shared household shop")) { HouseholdShopView(model: model) } }
+                        if projection.capabilities.contains("meal_proposals") {
+                            NavigationLink(ht("Propose a meal move")) { SharedMealMovesView(household: model) }
+                        }
                         if model.canReviewHouseholdRequests {
                             NavigationLink(ht("Review family requests")) { HouseholdInboxView(model: model) }
                         }
@@ -104,6 +110,21 @@ struct HouseholdSettingsView: View {
                     Button(ht("Sign out"), role: .destructive) { Task { await model.signOut() } }
                     Button(ht("Sign out all devices"), role: .destructive) { Task { await model.signOut(allDevices: true) } }
                 }
+            }
+            Section {
+                if let exit = model.householdExit, model.identity != nil, !model.locked, model.projection?.grantId == nil {
+                    NavigationLink(ht("Leave a household")) { HouseholdExitView(account: model, exit: exit) }
+                }
+                NavigationLink(ht("Account deletion")) {
+                    if let deletion = model.accountDeletion {
+                        AccountDeletionView(account: model, deletion: deletion)
+                    } else {
+                        Form {
+                            Section { Text(ht("This iPhone has no household service connection configured. Account deletion is unavailable.")) }
+                            AccountDeletionScope()
+                        }.navigationTitle(ht("Account deletion"))
+                    }
+                }.accessibilityIdentifier("household.accountDeletion")
             }
             if let notice = model.notice { Section { Text(notice).accessibilityIdentifier("household.notice") } }
             if model.busy { ProgressView(ht("Checking service…")) }

@@ -6681,6 +6681,2246 @@
           }
         }
       }
+    },
+    "Lunch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lunch"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Almuerzo"
+          }
+        }
+      }
+    },
+    "Side": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Side"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guarnición"
+          }
+        }
+      }
+    },
+    "Dinner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cena"
+          }
+        }
+      }
+    },
+    "Portions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porciones"
+          }
+        }
+      }
+    },
+    "Protected portions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protected portions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porciones protegidas"
+          }
+        }
+      }
+    },
+    "Shared meal plan": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared meal plan"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan de comidas compartido"
+          }
+        }
+      }
+    },
+    "Add a dated meal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a dated meal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir una comida con fecha"
+          }
+        }
+      }
+    },
+    "Review removing this meal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review removing this meal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la eliminación de esta comida"
+          }
+        }
+      }
+    },
+    "Edit this meal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit this meal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar esta comida"
+          }
+        }
+      }
+    },
+    "Review meal removal alongside the packs below.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review meal removal alongside the packs below."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa la eliminación de la comida junto con los paquetes que aparecen abajo."
+          }
+        }
+      }
+    },
+    "Check the shared packs and quote below. Changing a meal does not calculate or remove packs automatically.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the shared packs and quote below. Changing a meal does not calculate or remove packs automatically."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa los paquetes compartidos y los precios que aparecen abajo. Cambiar una comida no calcula ni elimina paquetes automáticamente."
+          }
+        }
+      }
+    },
+    "Discard meal edit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard meal edit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descartar los cambios en la comida"
+          }
+        }
+      }
+    },
+    "Meal name": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal name"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre de la comida"
+          }
+        }
+      }
+    },
+    "Meal type": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal type"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tipo de comida"
+          }
+        }
+      }
+    },
+    "Meal day": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal day"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Día de la comida"
+          }
+        }
+      }
+    },
+    "Protect these portions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protect these portions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proteger estas porciones"
+          }
+        }
+      }
+    },
+    "Previously planned": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previously planned"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan anterior"
+          }
+        }
+      }
+    },
+    "Proposed meal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proposed meal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comida propuesta"
+          }
+        }
+      }
+    },
+    "Remove this occurrence from the shared plan.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this occurrence from the shared plan."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar esta comida del plan compartido."
+          }
+        }
+      }
+    },
+    "The shared shop changed. Open the current revision to edit again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The shared shop changed. Open the current revision to edit again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La compra compartida cambió. Abre la versión actual para editarla."
+          }
+        }
+      }
+    },
+    "Account deletion": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account deletion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminación de la cuenta"
+          }
+        }
+      }
+    },
+    "What will be deleted": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What will be deleted"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qué se eliminará"
+          }
+        }
+      }
+    },
+    "This permanently deletes your household service account and its private data across all households. Access ends when the service accepts the request. The receipt shows when deletion finishes.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This permanently deletes your household service account and its private data across all households. Access ends when the service accepts the request. The receipt shows when deletion finishes."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se eliminarán de forma permanente tu cuenta del servicio y sus datos privados en todos tus hogares. Tu acceso terminará cuando el servicio acepte la solicitud. El comprobante indicará cuándo finalice la eliminación."
+          }
+        }
+      }
+    },
+    "An App Store subscription can continue to renew after account deletion.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An App Store subscription can continue to renew after account deletion."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu suscripción del App Store puede seguir renovándose después de eliminar la cuenta."
+          }
+        }
+      }
+    },
+    "Manage App Store subscriptions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage App Store subscriptions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Administrar suscripciones del App Store"
+          }
+        }
+      }
+    },
+    "Sign in again with a new email code, then review deletion within five minutes.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in again with a new email code, then review deletion within five minutes."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a iniciar sesión con un código nuevo enviado por correo y revisa la solicitud de eliminación en un plazo de cinco minutos."
+          }
+        }
+      }
+    },
+    "Sign out to verify again": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign out to verify again"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrar sesión para volver a verificar mi identidad"
+          }
+        }
+      }
+    },
+    "Unlock household access to review your account.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock household access to review your account."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desbloquea el acceso al hogar para revisar tu cuenta."
+          }
+        }
+      }
+    },
+    "Sign in to your adult account to review deletion. Saved receipts can be checked after sign-out.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in to your adult account to review deletion. Saved receipts can be checked after sign-out."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicia sesión con tu cuenta de adulto para revisar la eliminación. Puedes consultar los comprobantes guardados después de cerrar sesión."
+          }
+        }
+      }
+    },
+    "Permanently delete this account?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permanently delete this account?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Eliminar esta cuenta de forma permanente?"
+          }
+        }
+      }
+    },
+    "Request permanent deletion": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request permanent deletion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicitar la eliminación permanente"
+          }
+        }
+      }
+    },
+    "You cannot undo an accepted request. The service will apply the household choices you reviewed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You cannot undo an accepted request. The service will apply the household choices you reviewed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una vez aceptada la solicitud, no podrás deshacerla. El servicio aplicará las decisiones que revisaste para cada hogar."
+          }
+        }
+      }
+    },
+    "Remove this receipt from this phone?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this receipt from this phone?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Borrar este comprobante del teléfono?"
+          }
+        }
+      }
+    },
+    "Remove receipt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove receipt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrar comprobante"
+          }
+        }
+      }
+    },
+    "Removing this receipt ends your ability to check this request on this phone. It does not cancel deletion.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removing this receipt ends your ability to check this request on this phone. It does not cancel deletion."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si borras el comprobante, ya no podrás consultar esta solicitud en este teléfono. La eliminación de la cuenta seguirá su curso."
+          }
+        }
+      }
+    },
+    "Review this account": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review this account"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar esta cuenta"
+          }
+        }
+      }
+    },
+    "Review current responsibilities": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review current responsibilities"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar mis responsabilidades actuales"
+          }
+        }
+      }
+    },
+    "Older backups may retain data for up to %lld days.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Older backups may retain data for up to %lld days."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las copias de seguridad anteriores pueden conservar datos durante un máximo de %lld días."
+          }
+        }
+      }
+    },
+    "The service has not supplied a verified backup retention period.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The service has not supplied a verified backup retention period."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servicio no ha indicado un plazo verificado de conservación de las copias de seguridad."
+          }
+        }
+      }
+    },
+    "This deletion flow is available to adult accounts only.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This deletion flow is available to adult accounts only."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo las cuentas de adultos pueden solicitar la eliminación por este medio."
+          }
+        }
+      }
+    },
+    "Account deletion is currently unavailable. Check again later.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account deletion is currently unavailable. Check again later."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La eliminación de cuentas no está disponible en este momento. Vuelve a consultar más tarde."
+          }
+        }
+      }
+    },
+    "Delete my account…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete my account…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar mi cuenta…"
+          }
+        }
+      }
+    },
+    "Organizer responsibility": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Organizer responsibility"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Responsabilidad de organización"
+          }
+        }
+      }
+    },
+    "Close the app’s shop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close the app’s shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrar la compra en la app"
+          }
+        }
+      }
+    },
+    "Closing a shop here does not cancel a retailer order.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Closing a shop here does not cancel a retailer order."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrar una compra aquí no cancela el pedido en la tienda."
+          }
+        }
+      }
+    },
+    "Erase %@’s child profile in this household": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erase %@’s child profile in this household"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrar el perfil infantil de %@ en este hogar"
+          }
+        }
+      }
+    },
+    "This affects only the listed household profiles where you are the sole verified guardian.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This affects only the listed household profiles where you are the sole verified guardian."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esto afecta solo a los perfiles indicados de este hogar de los que eres la única persona con tutela verificada."
+          }
+        }
+      }
+    },
+    "Choose an action": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose an action"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una acción"
+          }
+        }
+      }
+    },
+    "Transfer to %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer to %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transferir a %@"
+          }
+        }
+      }
+    },
+    "Deletion receipt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deletion receipt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comprobante de eliminación"
+          }
+        }
+      }
+    },
+    "Deletion complete. The service erased the live account data and confirmed deletion of the sign-in account.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deletion complete. The service erased the live account data and confirmed deletion of the sign-in account."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La eliminación ha finalizado. El servicio borró los datos activos de la cuenta y confirmó la eliminación de la cuenta de inicio de sesión."
+          }
+        }
+      }
+    },
+    "Deletion accepted and still pending. Check this receipt again later.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deletion accepted and still pending. Check this receipt again later."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La solicitud de eliminación se ha aceptado y sigue pendiente. Vuelve a consultar este comprobante más tarde."
+          }
+        }
+      }
+    },
+    "Live application data has been erased.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Live application data has been erased."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se borraron los datos activos de la aplicación."
+          }
+        }
+      }
+    },
+    "This device saved a receipt. Check it to learn whether the service accepted the request.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This device saved a receipt. Check it to learn whether the service accepted the request."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este dispositivo guardó un comprobante. Consúltalo para saber si el servicio aceptó la solicitud."
+          }
+        }
+      }
+    },
+    "Check deletion status": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check deletion status"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consultar el estado de la eliminación"
+          }
+        }
+      }
+    },
+    "Remove receipt from this phone": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove receipt from this phone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrar el comprobante de este teléfono"
+          }
+        }
+      }
+    },
+    "Unlock this phone and try reading the deletion receipt again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock this phone and try reading the deletion receipt again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desbloquea el teléfono y vuelve a consultar el comprobante de eliminación."
+          }
+        }
+      }
+    },
+    "No status is available for this receipt. It may have expired or the request may not have reached the service. You can check again. If you can still sign in, review the request again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No status is available for this receipt. It may have expired or the request may not have reached the service. You can check again. If you can still sign in, review the request again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay un estado disponible para este comprobante. Puede que haya caducado o que el servicio no haya recibido la solicitud. Puedes volver a consultarlo. Si aún puedes iniciar sesión, vuelve a revisar la solicitud."
+          }
+        }
+      }
+    },
+    "Status could not be checked. Your receipt is saved on this phone. Try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status could not be checked. Your receipt is saved on this phone. Try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo consultar el estado. El comprobante está guardado en este teléfono. Vuelve a intentarlo."
+          }
+        }
+      }
+    },
+    "Household responsibilities changed. Check the receipt, then review the current choices again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household responsibilities changed. Check the receipt, then review the current choices again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las responsabilidades del hogar han cambiado. Consulta el comprobante y vuelve a revisar las opciones actuales."
+          }
+        }
+      }
+    },
+    "The service could not confirm this action. Check any saved receipt before trying again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The service could not confirm this action. Check any saved receipt before trying again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servicio no pudo confirmar esta acción. Consulta el comprobante guardado antes de volver a intentarlo."
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar"
+          }
+        }
+      }
+    },
+    "Meal planning access and proposals": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal planning access and proposals"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acceso y propuestas de planificación de comidas"
+          }
+        }
+      }
+    },
+    "Meal planning access": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal planning access"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acceso al plan de comidas"
+          }
+        }
+      }
+    },
+    "Propose a meal move": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Propose a meal move"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proponer un cambio de día"
+          }
+        }
+      }
+    },
+    "Choose an adult who can use a named planning seat to see these meals and suggest a different day. Only the shopper can apply changes.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose an adult who can use a named planning seat to see these meals and suggest a different day. Only the shopper can apply changes."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige a una persona adulta que pueda usar una plaza de planificación asignada para ver estas comidas y proponer un cambio de día. Solo la persona encargada de comprar puede aplicar los cambios."
+          }
+        }
+      }
+    },
+    "Planning adult": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planning adult"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Persona adulta que planifica"
+          }
+        }
+      }
+    },
+    "No planning adult": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No planning adult"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nadie asignado"
+          }
+        }
+      }
+    },
+    "Review planning access": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review planning access"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar el acceso al plan"
+          }
+        }
+      }
+    },
+    "Meal to move": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal to move"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comida que se va a mover"
+          }
+        }
+      }
+    },
+    "Choose a meal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a meal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una comida"
+          }
+        }
+      }
+    },
+    "Proposed day": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proposed day"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Día propuesto"
+          }
+        }
+      }
+    },
+    "The current meal and basket stay in place until the shopper reviews the move.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The current meal and basket stay in place until the shopper reviews the move."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La comida y la canasta se mantienen hasta que la persona encargada de comprar revise el cambio."
+          }
+        }
+      }
+    },
+    "Send this proposed day": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send this proposed day"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar el día propuesto"
+          }
+        }
+      }
+    },
+    "Meal move proposals": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal move proposals"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Propuestas de cambio de día"
+          }
+        }
+      }
+    },
+    "No current meal moves to review.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No current meal moves to review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay cambios de día pendientes de revisión."
+          }
+        }
+      }
+    },
+    "Review move with shared packs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review move with shared packs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar el cambio junto con los paquetes compartidos"
+          }
+        }
+      }
+    },
+    "Refresh meal plan": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh meal plan"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar el plan de comidas"
+          }
+        }
+      }
+    },
+    "Change meal planning access?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change meal planning access?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Cambiar el acceso al plan de comidas?"
+          }
+        }
+      }
+    },
+    "Save planning access": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save planning access"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar el acceso al plan"
+          }
+        }
+      }
+    },
+    "Meal planning access or the plan changed. Refresh to check your current access and proposals.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal planning access or the plan changed. Refresh to check your current access and proposals."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El acceso o el plan de comidas cambió. Actualiza para comprobar el acceso y las propuestas actuales."
+          }
+        }
+      }
+    },
+    "Return to the shared shop and refresh or finish the current edit first.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Return to the shared shop and refresh or finish the current edit first."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a la compra compartida y actualiza o termina de editar primero."
+          }
+        }
+      }
+    },
+    "Dismiss proposed move": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dismiss proposed move"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descartar el cambio propuesto"
+          }
+        }
+      }
+    },
+    "Shop %@ · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shop %@ · %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compra %@ · %@"
+          }
+        }
+      }
+    },
+    "Leaving one household only ends that membership. Account deletion applies to every household.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leaving one household only ends that membership. Account deletion applies to every household."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salir de un hogar solo pone fin a esa membresía. La eliminación de la cuenta se aplica a todos tus hogares."
+          }
+        }
+      }
+    },
+    "Receipt available until %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt available until %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comprobante disponible hasta el %@."
+          }
+        }
+      }
+    },
+    "This iPhone has no household service connection configured. Account deletion is unavailable.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This iPhone has no household service connection configured. Account deletion is unavailable."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este iPhone no tiene configurada una conexión al servicio del hogar. La eliminación de cuentas no está disponible."
+          }
+        }
+      }
+    },
+    "Your request has not been sent. Unlock this phone so it can save a deletion receipt, then try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your request has not been sent. Unlock this phone so it can save a deletion receipt, then try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu solicitud no se ha enviado. Desbloquea el teléfono para que pueda guardar un comprobante de eliminación y vuelve a intentarlo."
+          }
+        }
+      }
+    },
+    "Older backups may retain data for up to one day.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Older backups may retain data for up to one day."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las copias de seguridad anteriores pueden conservar datos durante un máximo de un día."
+          }
+        }
+      }
+    },
+    "Choose shared shop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose shared shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir una compra compartida"
+          }
+        }
+      }
+    },
+    "Show shops": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show shops"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar compras"
+          }
+        }
+      }
+    },
+    "Active shops": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active shops"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compras activas"
+          }
+        }
+      }
+    },
+    "Shops assigned to me": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shops assigned to me"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compras asignadas a mí"
+          }
+        }
+      }
+    },
+    "Assigned shopper": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assigned shopper"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Persona encargada de comprar"
+          }
+        }
+      }
+    },
+    "Contributor": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contributor"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Colaborador"
+          }
+        }
+      }
+    },
+    "Closed shop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Closed shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compra cerrada"
+          }
+        }
+      }
+    },
+    "Retry loading shops": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry loading shops"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a cargar las compras"
+          }
+        }
+      }
+    },
+    "No shops in this view.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No shops in this view."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay compras en esta vista."
+          }
+        }
+      }
+    },
+    "Load more shops": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load more shops"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargar más compras"
+          }
+        }
+      }
+    },
+    "Use household overview": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use household overview"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver el resumen del hogar"
+          }
+        }
+      }
+    },
+    "Start a separate shared shop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start a separate shared shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar otra compra compartida"
+          }
+        }
+      }
+    },
+    "Enter a new shared shop. Your existing shop stays separate.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a new shared shop. Your existing shop stays separate."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresa una compra compartida nueva. La compra actual se mantiene por separado."
+          }
+        }
+      }
+    },
+    "Fresh email verification is unavailable on this build. Review deletion again when household sign-in is available.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fresh email verification is unavailable on this build. Review deletion again when household sign-in is available."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta versión no permite volver a verificar tu identidad por correo. Revisa la eliminación cuando el inicio de sesión del hogar esté disponible."
+          }
+        }
+      }
+    },
+    "Current shopper": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current shopper"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Persona actualmente encargada de comprar"
+          }
+        }
+      }
+    },
+    "New shopper": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New shopper"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nueva persona encargada de comprar"
+          }
+        }
+      }
+    },
+    "Change assigned shopper": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change assigned shopper"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar a la persona encargada de comprar"
+          }
+        }
+      }
+    },
+    "Choose the next shopper": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the next shopper"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir quién se encargará de comprar"
+          }
+        }
+      }
+    },
+    "Invite another adult to the household before transferring this shop.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invite another adult to the household before transferring this shop."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invita a otra persona adulta al hogar antes de transferir esta compra."
+          }
+        }
+      }
+    },
+    "The shopper assignment could not be loaded.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The shopper assignment could not be loaded."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo cargar la asignación de la compra."
+          }
+        }
+      }
+    },
+    "Refresh shopper assignment": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh shopper assignment"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar la asignación de la compra"
+          }
+        }
+      }
+    },
+    "Transfer shopper authority": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer shopper authority"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transferir la autoridad de compra"
+          }
+        }
+      }
+    },
+    "This adult will control shared basket changes. A frozen basket stays frozen. Existing planning access must be granted again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This adult will control shared basket changes. A frozen basket stays frozen. Existing planning access must be granted again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta persona controlará los cambios de la canasta compartida. Las canastas cerradas a cambios seguirán así. Habrá que volver a conceder el acceso al plan."
+          }
+        }
+      }
+    },
+    "Archive if I am the last organizer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archive if I am the last organizer"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archivar si soy la última persona organizadora"
+          }
+        }
+      }
+    },
+    "The exit request has not been sent. Unlock this phone so it can save the request and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The exit request has not been sent. Unlock this phone so it can save the request and try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La solicitud de salida no se ha enviado. Desbloquea el teléfono para que pueda guardarla y vuelve a intentarlo."
+          }
+        }
+      }
+    },
+    "Unlock this phone to update the saved household exit request.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock this phone to update the saved household exit request."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desbloquea el teléfono para actualizar la solicitud de salida guardada."
+          }
+        }
+      }
+    },
+    "You left this household. Unlock this phone to clear the saved request.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You left this household. Unlock this phone to clear the saved request."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Has salido de este hogar. Desbloquea el teléfono para borrar la solicitud guardada."
+          }
+        }
+      }
+    },
+    "You left this household. Your account is still active.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You left this household. Your account is still active."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Has salido de este hogar. Tu cuenta sigue activa."
+          }
+        }
+      }
+    },
+    "Sign in again with a new email code before leaving a household.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in again with a new email code before leaving a household."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Antes de salir de un hogar, vuelve a iniciar sesión con un código nuevo enviado por correo."
+          }
+        }
+      }
+    },
+    "Resolve sole guardianship before leaving. Leaving a household cannot erase a child profile.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resolve sole guardianship before leaving. Leaving a household cannot erase a child profile."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Antes de salir, resuelve la tutela de los perfiles infantiles que solo están a tu cargo. Salir de un hogar no borra ningún perfil infantil."
+          }
+        }
+      }
+    },
+    "The household or its responsibilities changed. Review the current memberships before leaving.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The household or its responsibilities changed. Review the current memberships before leaving."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El hogar o sus responsabilidades han cambiado. Revisa tus membresías actuales antes de salir."
+          }
+        }
+      }
+    },
+    "Could not load your memberships. Check your connection and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not load your memberships. Check your connection and try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron cargar tus membresías. Comprueba la conexión y vuelve a intentarlo."
+          }
+        }
+      }
+    },
+    "The service has not confirmed the exit. Retry the saved request to check the same action.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The service has not confirmed the exit. Retry the saved request to check the same action."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servicio no ha confirmado la salida. Reintenta la solicitud guardada para comprobar la misma acción."
+          }
+        }
+      }
+    },
+    "Leaving ends your access to one household and its shared views. You keep your account, other memberships and private Records. Your App Store subscription is managed separately.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leaving ends your access to one household and its shared views. You keep your account, other memberships and private Records. Your App Store subscription is managed separately."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al salir, termina tu acceso a un hogar y a sus vistas compartidas. Conservas tu cuenta, tus otras membresías y tus registros privados. La suscripción del App Store se administra por separado."
+          }
+        }
+      }
+    },
+    "Saved exit request": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved exit request"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicitud de salida guardada"
+          }
+        }
+      }
+    },
+    "Retry the saved exit request": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry the saved exit request"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar la solicitud de salida guardada"
+          }
+        }
+      }
+    },
+    "Your households": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your households"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus hogares"
+          }
+        }
+      }
+    },
+    "Review current memberships": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review current memberships"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar mis membresías actuales"
+          }
+        }
+      }
+    },
+    "Only an adult account can leave a household here.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only an adult account can leave a household here."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo una cuenta de adulto puede salir de un hogar por este medio."
+          }
+        }
+      }
+    },
+    "This account has no active household memberships.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This account has no active household memberships."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta cuenta no tiene membresías activas en ningún hogar."
+          }
+        }
+      }
+    },
+    "Review household exit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review household exit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la salida del hogar"
+          }
+        }
+      }
+    },
+    "Leave this household…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave this household…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salir de este hogar…"
+          }
+        }
+      }
+    },
+    "Fresh email verification is unavailable on this build.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fresh email verification is unavailable on this build."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta versión no permite volver a verificar tu identidad por correo."
+          }
+        }
+      }
+    },
+    "Sign in to your adult account to review household memberships.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in to your adult account to review household memberships."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicia sesión con tu cuenta de adulto para revisar tus membresías en hogares."
+          }
+        }
+      }
+    },
+    "Leave a household": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave a household"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salir de un hogar"
+          }
+        }
+      }
+    },
+    "Leave this household?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave this household?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Salir de este hogar?"
+          }
+        }
+      }
+    },
+    "Confirm household exit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm household exit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar la salida del hogar"
+          }
+        }
+      }
+    },
+    "Your membership in %@ will end and the reviewed choices will apply.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your membership in %@ will end and the reviewed choices will apply."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu membresía en %@ terminará y se aplicarán las decisiones que revisaste."
+          }
+        }
+      }
+    },
+    "You left the household. Its access is closed. The remaining memberships could not be refreshed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You left the household. Its access is closed. The remaining memberships could not be refreshed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Has salido del hogar y tu acceso ha terminado. No se pudieron actualizar las demás membresías."
+          }
+        }
+      }
+    },
+    "You left the household. Some local household retries could not be cleared.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You left the household. Some local household retries could not be cleared."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Has salido del hogar. No se pudieron borrar algunas acciones de ese hogar que estaban pendientes de reintento en este teléfono."
+          }
+        }
+      }
+    },
+    "Your private Records stay on this phone. Copies you already shared stay with their recipients. Other members keep their own records.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your private Records stay on this phone. Copies you already shared stay with their recipients. Other members keep their own records."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus registros privados se conservan en este teléfono. Quienes ya recibieron copias tuyas las conservan. Los demás miembros conservan sus propios registros."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -2,7 +2,7 @@ import SwiftUI
 import CoreDomain
 
 private enum LedgerHomeSheet: String, Identifiable {
-    case newShop, entry, facts, history
+    case newShop, entry, facts, history, layout, printList
     var id: String { rawValue }
 }
 
@@ -22,16 +22,19 @@ struct LedgerHomeView: View {
                             .accessibilityFocused($focus, equals: model.error == nil ? .result : .error)
                         factsSummary(shop)
                     }
-                    Section(ledgerText("Shopping list")) {
-                        let lines = shop.search(model.search).filter { $0.checkedAt == nil && $0.handledAt == nil && $0.trashedAt == nil }
-                        if lines.isEmpty {
+                    let groups = model.workspace.listLayout.groups(shop: shop, search: model.search)
+                    if groups.allSatisfy({ $0.lines.isEmpty }) {
+                        Section(ledgerText("Shopping list")) {
                             Text(ledgerText(model.search.isEmpty ? "Add the groceries you need for this pickup." : "No active items match your search."))
                                 .foregroundStyle(Theme.secondary)
                         }
-                        ForEach(lines, id: \.id) { line in
-                            row(line, shop: shop)
-                                .id(line.id)
-                                .accessibilityFocused($focus, equals: .line(line.id))
+                    } else {
+                        ForEach(groups) { group in
+                            Section(group.aisle.isEmpty ? ledgerText(model.workspace.listLayout.layout(for: shop).mode == .aisle ? "No aisle assigned" : "Shopping list") : group.aisle) {
+                                ForEach(group.lines) { line in
+                                    row(line, shop: shop).id(line.id).accessibilityFocused($focus, equals: .line(line.id))
+                                }
+                            }
                         }
                     }
                     Section {
@@ -80,6 +83,10 @@ struct LedgerHomeView: View {
                     if let shop = model.shop { LedgerImportView(model: model, shopID: shop.id) }
                 case .facts:
                     if let shop = model.shop { LedgerFactsView(model: model, shop: shop) }
+                case .layout:
+                    if let shop = model.shop { LedgerLayoutEditor(model: model, shop: shop) }
+                case .printList:
+                    if let shop = model.shop { LargePrintList(shop: shop, layout: model.workspace.listLayout) }
                 case .history:
                     if let shop = model.shop { LedgerHistoryView(model: model, shopID: shop.id) }
                 }
@@ -90,14 +97,24 @@ struct LedgerHomeView: View {
 
     private func controls(_ shop: ShoppingLedger) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Menu {
-                ForEach(model.workspace.shops, id: \.id) { item in
-                    Button(item.title) { Task { await model.selectShop(item.id) } }
-                }
-                Button(ledgerText("Start another pickup")) { sheet = .newShop }
-            } label: {
-                Label(shop.title, systemImage: "chevron.down").font(.headline).frame(minHeight: 44)
-            }.disabled(model.saving || model.hasPendingSave).accessibilityIdentifier("ledgerShopPicker")
+            HStack(alignment: .center) {
+                Menu {
+                    ForEach(model.workspace.shops, id: \.id) { item in
+                        Button(item.title) { Task { await model.selectShop(item.id) } }
+                    }
+                    Button(ledgerText("Start another pickup")) { sheet = .newShop }
+                } label: {
+                    Label(shop.title, systemImage: "chevron.down").font(.headline).frame(minHeight: 44)
+                }.disabled(model.saving || model.hasPendingSave).accessibilityIdentifier("ledgerShopPicker")
+                Spacer()
+                Menu {
+                    Button(ledgerText("List order and aisles")) { sheet = .layout }
+                    Button(ledgerText("Large-print list")) { sheet = .printList }
+                } label: {
+                    Label(ledgerText("List options"), systemImage: "ellipsis.circle").labelStyle(.iconOnly)
+                        .frame(minWidth: 44, minHeight: 44)
+                }.accessibilityIdentifier("ledgerListOptions")
+            }
             TextField(ledgerText("Search active items"), text: $model.search)
                 .textFieldStyle(.roundedBorder).accessibilityIdentifier("ledgerSearch")
             Button { sheet = .entry } label: { Label(ledgerText("Type or paste a list"), systemImage: "plus") }

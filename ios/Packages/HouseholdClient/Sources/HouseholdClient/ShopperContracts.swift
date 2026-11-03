@@ -69,8 +69,41 @@ public struct ShopperShopCandidate: Codable, Equatable, Sendable {
     }
     public func commandBody() throws -> [String: JSONValue] { try JSONDecoder().decode([String: JSONValue].self, from: encoded(self)) }
 }
+public struct SharedMeal: Codable, Equatable, Sendable {
+    public var title: String
+    public var day: String
+    public var kind: String
+    public var portions: Int
+    public var protected: Bool
+    public init(title: String, day: String, kind: String, portions: Int, protected: Bool) {
+        self.title = title; self.day = day; self.kind = kind; self.portions = portions; self.protected = protected
+    }
+}
+public struct SharedMealOccurrence: Codable, Equatable, Identifiable, Sendable {
+    public let occurrenceId: UUID
+    public let revision: Int
+    public let meal: SharedMeal
+    public var id: UUID { occurrenceId }
+}
+public struct SharedMealEdit: Equatable, Sendable {
+    public let occurrenceID: UUID
+    public let meal: SharedMeal?
+    public let proposalID: UUID?
+    public var baseMealRevision: Int?
+    public init(occurrenceID: UUID, meal: SharedMeal?, proposalID: UUID? = nil) {
+        self.occurrenceID = occurrenceID; self.meal = meal; self.proposalID = proposalID
+    }
+    public func commandValue() throws -> JSONValue {
+        let value = try meal.map { try JSONDecoder().decode(JSONValue.self, from: encoded($0)) } ?? .null
+        var fields: [String: JSONValue] = ["occurrenceId": .string(occurrenceID.uuidString.lowercased()), "meal": value]
+        fields["baseMealRevision"] = baseMealRevision.map(JSONValue.integer) ?? .null
+        if let proposalID { fields["proposalId"] = .string(proposalID.uuidString.lowercased()) }
+        return .object(fields)
+    }
+}
 public struct ShopperShop: Codable, Equatable, Sendable {
     public let shopId: String; public let shopRevision: Int; public let authorityEpoch: Int; public let phase: String
+    public let meals: [SharedMealOccurrence]?
     public let quote: ShopperQuote; public let lines: [ShopperBasketLine]; public let frozenRevision: Int?; public let placedRevision: Int?
 }
 public enum ShopperDecision: Equatable, Sendable, Encodable {
@@ -131,4 +164,48 @@ struct ShopperFinancialPage: Decodable, Sendable {
     let evidenceSource: String
     let entries: [ShopperFinancialEntry]
     let nextCursor: UUID?
+}
+
+public struct SharedMealPlan: Decodable, Sendable {
+    public struct Adult: Decodable, Identifiable, Sendable {
+        public let id: UUID
+        public let label: String
+    }
+    public struct Move: Decodable, Identifiable, Sendable {
+        public var id: UUID { proposalId }
+        public let proposalId: UUID
+        public let occurrenceId: UUID
+        public let day: String
+    }
+    public let shopId: UUID
+    public let shopRevision: Int
+    public let authorityEpoch: Int
+    public let grantRevision: Int
+    public let shopper: Bool
+    public let plannerId: UUID?
+    public let adults: [Adult]
+    public let meals: [SharedMealOccurrence]
+    public let proposals: [Move]
+}
+struct MealPlanReceipt: Decodable, Sendable { let saved: Bool }
+
+public struct HouseholdShopChoice: Decodable, Identifiable, Sendable {
+    public let shopId: UUID
+    public var id: UUID { shopId }
+    public let createdAt: String
+    public let phase: String
+    public let role: String
+}
+public struct HouseholdShopChoices: Decodable, Sendable {
+    public let shops: [HouseholdShopChoice]
+    public let nextCursor: UUID?
+}
+
+public struct ShopperAssignment: Decodable, Sendable {
+    public let shopId: UUID
+    public let shopRevision: Int
+    public let authorityEpoch: Int
+    public let shopperId: UUID
+    public let phase: String
+    public let adults: [SharedMealPlan.Adult]
 }

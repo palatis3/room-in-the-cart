@@ -16,6 +16,29 @@ final class RoomInTheCartUITests: XCTestCase {
         app.terminate()
     }
 
+    func testAccountDeletionSettingsExplainsScopeInEnglishAndSpanishBeforeSignIn() {
+        for language in ["en", "es"] {
+            launch(language: language)
+            tap(app.buttons["settings"])
+            tap(app.buttons[language == "en" ? "Household requests" : "Solicitudes del hogar"])
+            let configured = !app.staticTexts[language == "en" ? "Household service is not configured" : "El servicio del hogar no está configurado"].exists
+            tap(app.buttons["household.accountDeletion"])
+            let title = language == "en" ? "Account deletion" : "Eliminación de la cuenta"
+            XCTAssertTrue(app.navigationBars[title].waitForExistence(timeout: 5))
+            let unavailable = language == "en" ? "This iPhone has no household service connection configured. Account deletion is unavailable." :
+                "Este iPhone no tiene configurada una conexión al servicio del hogar. La eliminación de cuentas no está disponible."
+            let signIn = language == "en" ? "Sign in to your adult account to review deletion. Saved receipts can be checked after sign-out." :
+                "Inicia sesión con tu cuenta de adulto para revisar la eliminación. Puedes consultar los comprobantes guardados después de cerrar sesión."
+            reveal(app.staticTexts.matching(NSPredicate(format: "label == %@", configured ? signIn : unavailable)).firstMatch)
+            let renewal = language == "en" ? "An App Store subscription can continue to renew after account deletion." :
+                "Tu suscripción del App Store puede seguir renovándose después de eliminar la cuenta."
+            reveal(app.staticTexts[renewal])
+            XCTAssertFalse(app.buttons[language == "en" ? "Request permanent deletion" : "Solicitar la eliminación permanente"].exists)
+            screenshot("Account-deletion-scope-" + language)
+            app.terminate()
+        }
+    }
+
     func testOwnerExportReviewAndCancelledDeletionPreserveComparisonAfterRestart() throws {
         let title = "Fictional recovery rice"
         launch()
@@ -217,6 +240,10 @@ final class RoomInTheCartUITests: XCTestCase {
                              "The combined confirmation must include the saved date")
         captureComparisonFrames("Largest-text-complete-saved-details")
         screenshot("Largest-text-complete-saved-details")
+        let back = app.navigationBars.buttons.firstMatch
+        XCTAssertTrue(back.exists && back.isHittable)
+        back.tap()
+        XCTAssertTrue(element("newComparison").waitForExistence(timeout: 5))
     }
 
     func testShopRepairShortcutRemainsInsideViewportAndOpens() throws {

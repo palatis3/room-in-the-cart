@@ -29,18 +29,21 @@ import HouseholdClient
     let emailOTPEnabled: Bool
     private(set) var serviceURL: URL?
     var onScopeChange: (() -> Void)?
+    private(set) var accountDeletion: AccountDeletionModel?
+    private(set) var householdExit: HouseholdExitModel?
     private let auth: AdultAuth?
-    private let service: HouseholdService?
+    let service: HouseholdService?
     private let outbox: OperationOutbox
     private let shopperOutbox: OperationOutbox
     private let sharedShopOutbox: OperationOutbox
     private let lifecycleStore: LifecycleIntentStore
+    private let historyStore: HistoryPendingStore
     private var pending: PendingOperation?
     private var attempts = 0
     private var retryAfter = Date.distantPast
     private var generation = UUID()
 
-    init(bundle: Bundle = .main, auth: AdultAuth? = nil, service: HouseholdService? = nil, outboxURL: URL? = nil) {
+    init(bundle: Bundle = .main, auth: AdultAuth? = nil, service: HouseholdService? = nil, outboxURL: URL? = nil, deletionVault: (any RefreshTokenVault)? = nil, exitVault: (any RefreshTokenVault)? = nil) {
         let otpSetting = bundle.object(forInfoDictionaryKey: "RITCEmailOTPEnabled")
         emailOTPEnabled = (auth != nil && service != nil) || (otpSetting as? String == "YES") || (otpSetting as? Bool == true)
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
@@ -49,7 +52,13 @@ import HouseholdClient
         shopperOutbox = OperationOutbox(url: queueURL.deletingPathExtension().appendingPathExtension("shopper.json"))
         sharedShopOutbox = OperationOutbox(url: queueURL.deletingPathExtension().appendingPathExtension("shared-shop.json"))
         lifecycleStore = LifecycleIntentStore(url: queueURL.deletingPathExtension().appendingPathExtension("lifecycle.json"))
-        if let auth, let service { self.auth = auth; self.service = service; configured = true; return }
+        historyStore = HistoryPendingStore(url: queueURL.deletingPathExtension().appendingPathExtension("history.json"))
+        if let auth, let service {
+            self.auth = auth; self.service = service; configured = true
+            householdExit = HouseholdExitModel(service: service, vault: exitVault ?? KeychainRefreshTokenVault(service: "RoomInTheCart.injected", account: "household-exits"))
+            accountDeletion = AccountDeletionModel(service: service, vault: deletionVault ?? KeychainRefreshTokenVault(service: "RoomInTheCart.injected", account: "deletion-receipts"))
+            return
+        }
         guard let serviceString = bundle.object(forInfoDictionaryKey: "HouseholdServiceURL") as? String,
               let authString = bundle.object(forInfoDictionaryKey: "SupabaseProjectURL") as? String,
               let key = bundle.object(forInfoDictionaryKey: "SupabasePublishableKey") as? String,
@@ -62,8 +71,13 @@ import HouseholdClient
         let managedAuth = AdultAuth(configuration: authConfig, vault: KeychainRefreshTokenVault(service: namespace))
         self.serviceURL = serviceURL
         self.auth = managedAuth
-        self.service = HouseholdService(configuration: serviceConfig, auth: managedAuth,
+        let householdService = HouseholdService(configuration: serviceConfig, auth: managedAuth,
             deviceVault: KeychainRefreshTokenVault(service: namespace, account: "household-device"))
+        self.service = householdService
+        householdExit = HouseholdExitModel(service: householdService, vault: KeychainRefreshTokenVault(
+            service: namespace + "." + serviceURL.absoluteString, account: "household-exits"))
+        accountDeletion = AccountDeletionModel(service: householdService, vault: KeychainRefreshTokenVault(
+            service: namespace + "." + serviceURL.absoluteString, account: "deletion-receipts"))
         configured = true
     }
     func sendCode() async {
@@ -116,7 +130,7 @@ import HouseholdClient
             // Old device-bound operations require review; never attach them to this new enrollment.
             let old = try await outbox.operations()
             guard start == generation else { return }
-            if let operation = old.first(where: { $0.householdID == value.household.id && $0.memberID == value.memberId }) {
+            if let operation = old.first(where: { $0.householdID == value.household.id && $0.memberID == value.memberId && $0.targetsShop(value.shopId) }) {
                 pending = operation
                 let matches = await service.matches(operation, memberID: value.memberId)
                 guard start == generation else { return }
@@ -144,6 +158,22 @@ import HouseholdClient
             try await self.finishEnrollment(value, start: current)
         } onAccessEnded: { [weak self] in
             await self?.show(ClientError.accessEnded, start: start)
+        }
+    }
+    func selectShop(_ id: UUID?) async {
+        guard let service, let scope = projection, scope.canSelectShop == true || scope.selectionRequired == true,
+              scope.grantId == nil, !busy, !locked else { return }
+        onScopeChange?()
+        clearProjection()
+        busy = true; defer { busy = false }
+        let start = generation
+        do {
+            let value = try await service.selectShop(id)
+            guard start == generation else { return }
+            try await finishEnrollment(value, start: start)
+        } catch {
+            guard start == generation else { return }
+            await show(error, start: start)
         }
     }
     func refresh() async {
@@ -276,6 +306,7 @@ import HouseholdClient
     }
     /// Scene transitions hide protected projections; returning requires OS owner authentication and fresh authorization.
     func lock() {
+        accountDeletion?.clearReview(); householdExit?.clear()
         onScopeChange?(); generation = UUID(); locked = identity != nil
         clearProjection(); lifecycle?.clear(); lifecycle = nil; workspaces = []; code = ""; notice = nil
     }
@@ -295,21 +326,74 @@ import HouseholdClient
             configureLifecycle(access.identity)
         } catch { await show(error, start: start) }
     }
+    func hideExitingScope(_ intent: HouseholdExitIntent) async {
+        guard let identity, identity.subject == intent.subject else { return }
+        workspaces.removeAll { $0.householdId == intent.householdID }
+        if projection?.household.id == intent.householdID, projection?.memberId == intent.memberID {
+            generation = UUID(); onScopeChange?(); clearProjection()
+            await service?.clearScope()
+            if self.identity == identity, !locked { configureLifecycle(identity) }
+        }
+    }
+    func householdExited(_ intent: HouseholdExitIntent) async {
+        let subject = intent.subject, householdID = intent.householdID
+        guard identity?.subject == subject, let service else { return }
+        await hideExitingScope(intent)
+        let start = generation
+        var cleanupFailed = false
+        for queue in [outbox, shopperOutbox, sharedShopOutbox] {
+            do { try await queue.purge(householdID: householdID, memberID: intent.memberID) } catch { cleanupFailed = true }
+        }
+        do { try await lifecycleStore.purge(householdID: householdID, memberID: intent.memberID, subject: subject) } catch { cleanupFailed = true }
+        do { try await historyStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
+        guard start == generation, self.identity?.subject == subject, !locked else { return }
+        do {
+            let list = try await service.workspaces()
+            guard start == generation, self.identity?.subject == subject, !locked else { return }
+            workspaces = list.workspaces
+        } catch { notice = ht("You left the household. Its access is closed. The remaining memberships could not be refreshed.") }
+        if cleanupFailed { notice = ht("You left the household. Some local household retries could not be cleared.") }
+    }
+    func submitAccountDeletion(subject: String) async {
+        guard identity?.subject == subject, !locked, let accountDeletion else { return }
+        switch await accountDeletion.submit(subject: subject) {
+        case .accepted: await deletionAccepted(subject: subject)
+        case .uncertain:
+            // Acceptance may already have revoked the account. Keep only receipt-based status access.
+            if identity?.subject == subject { await finishSignOut(allDevices: false, alreadyRevoked: true) }
+        case .rejected: break
+        }
+    }
+    func deletionAccepted(subject: String) async {
+        guard identity?.subject == subject else { return }
+        let removed: Bool
+        do { try householdExit?.forget(subject: subject); removed = true } catch { removed = false }
+        await finishSignOut(allDevices: false, alreadyRevoked: true)
+        if !removed { notice = ht("Unlock this phone to update the saved household exit request.") }
+    }
     func signOut(allDevices: Bool = false) async {
-        guard !busy else { return }
+        await finishSignOut(allDevices: allDevices, alreadyRevoked: false)
+    }
+    private func finishSignOut(allDevices: Bool, alreadyRevoked: Bool) async {
+        guard alreadyRevoked || !busy else { return }
         busy = true; defer { busy = false }
         onScopeChange?()
+        accountDeletion?.clearReview(); householdExit?.clear()
         generation = UUID(); identity = nil; workspaces = []; clearProjection(); lifecycle?.clear(); lifecycle = nil
         delivery = .localDraft; code = ""; email = ""; item = ""; quantity = ""; codeSent = false; locked = false
         keepLocalPrivate = false; editing = nil
         var failed = false
-        do { try await service?.revokeCurrentDevice() } catch { failed = true }
+        if !alreadyRevoked { do { try await service?.revokeCurrentDevice() } catch { failed = true } }
         await service?.clearScope()
         do { try await outbox.purge() } catch { failed = true }
         do { try await shopperOutbox.purge() } catch { failed = true }
         do { try await sharedShopOutbox.purge() } catch { failed = true }
         do { try await lifecycleStore.purge() } catch { failed = true }
-        do { try await auth?.signOut(allDevices: allDevices) } catch { failed = true }
+        do { try await historyStore.purge() } catch { failed = true }
+        do {
+            if alreadyRevoked { try await auth?.clearLocalSession() }
+            else { try await auth?.signOut(allDevices: allDevices) }
+        } catch { failed = true }
         notice = failed ? ht("Signed out on this phone. Remote sign-out or local cleanup could not be confirmed.") : nil
     }
     func adultAccessToken() async throws -> String {
@@ -377,6 +461,8 @@ import HouseholdClient
             catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
             do { try await lifecycleStore.purge() }
             catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
+            do { try await historyStore.purge() }
+            catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
         case .service(let status, _, _, _) where status == 409:
             notice = ht("This request needs review against the current household state. It has not been applied again.")
         case .service(let status, _, _, _) where status == 429:
@@ -387,3 +473,23 @@ import HouseholdClient
     }
 }
 func ht(_ key: String) -> String { String(localized: String.LocalizationValue(key), table: "Household") }
+
+// E09 uses the active native session; recovered files never supply this authority.
+extension HouseholdModel {
+    func makeHistoryModel() -> HistoryFeatureModel? {
+        guard let service else { return nil }
+        return HistoryFeatureModel(service: service, store: historyStore, runtime: { [weak self] in
+            guard let self, !self.locked, let identity = self.identity, let scope = self.projection,
+                  scope.enrolled, scope.grantId == nil,
+                  ["organizer", "shopper", "contributor"].contains(scope.role) else { return nil }
+            return HistoryRuntimeScope(generation: self.generation, subject: identity.subject,
+                householdID: scope.household.id, memberID: scope.memberId, currentShopID: scope.shopId,
+                authorityStamp: scope.role + "|" + scope.capabilities.sorted().joined(separator: ","))
+        }, onAccessEnded: { [weak self] in
+            guard let self else { return }
+            await self.show(ClientError.accessEnded, start: self.generation)
+        })
+    }
+    /// Also used by the account deletion coordinator before dismissing native access.
+    func purgeHistoryLocalState() async throws { try await historyStore.purge() }
+}

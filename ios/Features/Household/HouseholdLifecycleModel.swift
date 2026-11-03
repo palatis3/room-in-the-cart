@@ -268,7 +268,7 @@ import HouseholdClient
         catch { if start == scopeGeneration { await handle(error) } }
     }
     func withdrawConsent(_ consent: GuardianConsent) async {
-        guard !isHelper, scope != nil, !busy else { return }
+        guard !isHelper, scope != nil, !busy, consent.revokedAt == nil, consents.contains(consent) else { return }
         busy = true; notice = nil; defer { busy = false }; let start = scopeGeneration
         do {
             let result = try await service.withdrawConsent(consentID: consent.id)

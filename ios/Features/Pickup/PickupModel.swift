@@ -124,6 +124,7 @@ struct PickupJourney: Codable, Equatable, Identifiable {
     var notes: [PickupCookNote] = []
     var cookShareEvents: [PickupCookShareEvent] = []
     var settlement = SettlementLedger()
+    var feedback: PickupFeedback?
     var closedAt: Date?
     var savedAt: Date
 }
@@ -132,7 +133,7 @@ struct PickupJourney: Codable, Equatable, Identifiable {
 // Required identity/version/date still fail closed, and validate checks all links.
 extension PickupJourney {
     private enum CodingKeys: String, CodingKey {
-        case id, savedAt, version, revision, basket, context, cap, quote, quotedRevisionID, frozenQuotes, pickup, needs, plannedNeeds, needDetails, ledgerBasis, ledgerSourceRevisionID, ledgerPackSelections, originShopID, carriedMeals, urgent, stockLots, stockNeeds, repairs, deferred, flexible, proposals, undoneProposals, offers, offerActions, notes, cookShareEvents, settlement, closedAt
+        case id, savedAt, version, revision, basket, context, cap, quote, quotedRevisionID, frozenQuotes, pickup, needs, plannedNeeds, needDetails, ledgerBasis, ledgerSourceRevisionID, ledgerPackSelections, originShopID, carriedMeals, urgent, stockLots, stockNeeds, repairs, deferred, flexible, proposals, undoneProposals, offers, offerActions, notes, cookShareEvents, settlement, closedAt, feedback
     }
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -167,6 +168,7 @@ extension PickupJourney {
         if let decoded = try container.decodeIfPresent([PickupCookNote].self, forKey: .notes) { notes = decoded }
         if let decoded = try container.decodeIfPresent([PickupCookShareEvent].self, forKey: .cookShareEvents) { cookShareEvents = decoded }
         if let decoded = try container.decodeIfPresent(SettlementLedger.self, forKey: .settlement) { settlement = decoded }
+        feedback = try container.decodeIfPresent(PickupFeedback.self, forKey: .feedback)
         closedAt = try container.decodeIfPresent(Date.self, forKey: .closedAt)
     }
 }
@@ -258,7 +260,7 @@ struct PickupPersistenceLocation {
             let records = try await store.list()
             let decoded = try records.map { record -> PickupJourney in
                 let value = try JSONDecoder().decode(PickupJourney.self, from: record.payload)
-                guard value.version == 1, value.id == record.id else { throw PickupModelError.unsupported }
+                guard value.feedback == nil || value.eligibleForFeedback, value.version == 1, value.id == record.id else { throw PickupModelError.unsupported }
                 try Self.validate(value)
                 return value
             }
@@ -475,7 +477,7 @@ struct PickupPersistenceLocation {
         }
     }
     static func validate(_ value: PickupJourney) throws {
-        guard value.version == 1, value.revision >= 0, value.savedAt.timeIntervalSinceReferenceDate.isFinite,
+        guard value.feedback == nil || value.eligibleForFeedback, value.version == 1, value.revision >= 0, value.savedAt.timeIntervalSinceReferenceDate.isFinite,
               value.basket != nil || !value.urgent.isEmpty,
               value.basket == nil || value.basket?.id == value.id,
               Set(value.urgent.map(\.id)).count == value.urgent.count,

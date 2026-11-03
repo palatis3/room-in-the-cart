@@ -8,6 +8,8 @@ public struct HouseholdBootstrap: Codable, Equatable, Sendable {
     public let grantId: String?
     public let shopId: String?
     public let enrolled: Bool
+    public let selectionRequired: Bool?
+    public let canSelectShop: Bool?
     public let queueConsent: Bool
     public let capabilities: [String]
 }
@@ -62,6 +64,12 @@ public struct PendingOperation: Codable, Equatable, Identifiable, Sendable {
     public var id: String { clientKey }
     public let clientKey: String; public let householdID: String; public let memberID: String
     public let deviceID: String; public let bytes: Data
+    public func targetsShop(_ shopID: String?, includeCreation: Bool = false) -> Bool {
+        guard let envelope = try? JSONDecoder().decode(CommandEnvelope.self, from: bytes) else { return false }
+        if includeCreation, envelope.kind == "shop.create" { return true }
+        guard let shopID else { return true }
+        return envelope.shopId.caseInsensitiveCompare(shopID) == .orderedSame
+    }
     public init(envelope: CommandEnvelope, householdID: String, memberID: String, deviceID: String) throws {
         clientKey = envelope.clientKey; self.householdID = householdID; self.memberID = memberID
         self.deviceID = deviceID; bytes = try encoded(envelope)

@@ -73,10 +73,18 @@ struct PickupSettlementView: View {
             }
             Section {
                 Text(pTr("Closing preserves unresolved meal needs and pending credits for later correction. Feedback is optional."))
-                Button(pTr("Close this pickup")) { Task { await model.change { $0.closedAt = Date() } } }.buttonStyle(.borderedProminent)
+                if let current = model.journey, current.pickup != nil || current.basket == nil, current.closedAt == nil {
+                    Button(pTr("Close this pickup")) {
+                        Task { await model.change { value in
+                            guard value.id == current.id, value.closedAt == nil else { throw CocoaError(.validationMissingMandatoryProperty) }
+                            value.closedAt = Date()
+                        } }
+                    }.buttonStyle(.borderedProminent)
+                }
                 if let closed = model.journey?.closedAt { Text("\(pTr("Closed")): \(closed.formatted())") }
                 NavigationLink(pTr("Review next shop")) { PickupNextShopView(model: model) }
             }
+            if let journey = model.journey { PickupFeedbackSection(model: model, journey: journey) }
         }.navigationTitle(pTr("Close the pickup"))
             .disabled(model.saving)
     }

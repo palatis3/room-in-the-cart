@@ -29,6 +29,13 @@ private struct SharedShopContent: View {
                             LabeledContent(ht("Revision"), value: shop.shopRevision.formatted())
                             Text(phaseName(shop.phase))
                             SharedShopFields(quote: shop.quote, lines: shop.lines)
+                            if shop.meals != nil, shop.phase == "draft", model.canManage {
+                                NavigationLink(ht("Meal planning access and proposals")) { SharedMealMovesView(household: household) }
+                            }
+                            if let meals = shop.meals, !meals.isEmpty {
+                                Text(ht("Shared meal plan")).font(.headline)
+                                ForEach(meals) { SharedMealFacts(meal: $0.meal) }
+                            }
                             if model.canManage {
                                 NavigationLink(ht("Shared financial evidence")) { SharedFinancialEvidenceView(model: model) }
                             }
@@ -49,10 +56,32 @@ private struct SharedShopContent: View {
                     } else {
                         Section { Text(ht("The current shop belongs to another assigned shopper. Contributor requests and household management keep their separate permissions.")) }
                     }
-                    if model.editing { SharedShopEditor(model: model) }
+                    if model.scope.capabilities.contains("household_admin"), model.scope.shopId != nil, !model.editing {
+                        NavigationLink(ht("Change assigned shopper")) { SharedShopAssignmentView(household: household, model: model) }
+                    }
+                    if model.canStartAnother && !model.editing {
+                        Button(ht("Start a separate shared shop")) { model.beginAnotherShop() }
+                    }
+                    if model.creatingAnother && model.editing { Text(ht("Enter a new shared shop. Your existing shop stays separate.")) }
+                    if model.editing {
+                        if !model.creatingAnother, model.canManage, let meals = model.shop?.meals { SharedMealEditor(model: model, meals: meals) }
+                        SharedShopEditor(model: model)
+                    }
                     if let review = model.review {
                         Section(ht("Review shared shop change")) {
                             Text(actionName(review.kind)).font(.headline)
+                            if let transfer = review.transfer {
+                                LabeledContent(ht("Current shopper"), value: transfer.fromLabel)
+                                LabeledContent(ht("New shopper"), value: transfer.toLabel)
+                                Text(ht("This adult will control shared basket changes. A frozen basket stays frozen. Existing planning access must be granted again."))
+                            }
+                            if let edit = review.mealEdit {
+                                if let previous = model.shop?.meals?.first(where: { $0.id == edit.occurrenceID }) {
+                                    Text(ht("Previously planned")); SharedMealFacts(meal: previous.meal)
+                                }
+                                if let meal = edit.meal { Text(ht("Proposed meal")); SharedMealFacts(meal: meal) }
+                                else { Text(ht("Remove this occurrence from the shared plan.")) }
+                            }
                             if let candidate = review.candidate { SharedShopFields(quote: candidate.quote, lines: candidate.lines) }
                             if review.kind == "shop.create" { Text(ht("Only these entered fields will be sent. The service will assign this household's organizer as shopper for the new shop.")) }
                             if review.kind == "shop.freeze" { Text(ht("Freeze the displayed revision. This records a shared snapshot; it does not place an order with a retailer. Later requests go to next shop.")) }
@@ -92,7 +121,7 @@ private struct SharedShopContent: View {
         switch phase { case "draft": return ht("Draft shared shop"); case "frozen": return ht("Frozen shared shop"); case "placed": return ht("Order reported placed"); default: return ht("Check current shop status") }
     }
     private func actionName(_ kind: String) -> String {
-        switch kind { case "shop.create": return ht("Create reviewed shared shop"); case "shop.patch": return ht("Publish reviewed items and quote"); case "shop.freeze": return ht("Freeze reviewed shared shop"); default: return ht("Reopen reviewed shared shop") }
+        switch kind { case "shop.create": return ht("Create reviewed shared shop"); case "shop.patch": return ht("Publish reviewed items and quote"); case "shop.transferAuthority": return ht("Transfer shopper authority"); case "shop.freeze": return ht("Freeze reviewed shared shop"); default: return ht("Reopen reviewed shared shop") }
     }
 }
 private struct SharedShopEditor: View {

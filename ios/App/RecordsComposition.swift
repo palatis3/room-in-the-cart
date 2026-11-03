@@ -110,8 +110,18 @@ private struct RecordsPlanningProjection: Codable {
     }
     static func ledgerScope(_ workspace: LedgerWorkspace, shop: ShoppingLedger) throws -> LedgerWorkspace {
         let planning = try RecordsPlanningProjection(workspace.dinnerPlanning, shop: shop).decoded()
-        let value = LedgerWorkspace(shops: [shop], mealTemplates: [], selectedShopID: shop.id, dinnerPlanning: planning,
+        var value = LedgerWorkspace(shops: [shop], mealTemplates: [], selectedShopID: shop.id, dinnerPlanning: planning,
             packSelections: workspace.packSelections.filter { $0.shopID == shop.id })
+        let shopKey = shop.id.uuidString.lowercased()
+        let visibleAisles = Set(shop.lines.map { $0.aisle.trimmingCharacters(in: .whitespacesAndNewlines) })
+        if var local = workspace.listLayout.shopLayouts[shopKey] {
+            local.aisleOverride = local.aisleOverride?.filter(visibleAisles.contains)
+            value.listLayout.shopLayouts[shopKey] = local
+        }
+        let branch = shop.basis.branch.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let order = workspace.listLayout.storeAisles[branch]?.filter(visibleAisles.contains), !order.isEmpty {
+            value.listLayout.storeAisles[branch] = order
+        }
         try value.validate()
         return value
     }

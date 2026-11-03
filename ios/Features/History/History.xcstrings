@@ -1,0 +1,2966 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "A mass ounce and a fluid ounce are different units. Enter the quantity shown; no density conversion is inferred.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A mass ounce and a fluid ounce are different units. Enter the quantity shown; no density conversion is inferred."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La onza de peso y la onza líquida son unidades distintas. Ingresa la cantidad indicada; no se infiere una conversión de densidad."
+          }
+        }
+      }
+    },
+    "A reviewed write still needs reconciliation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A reviewed write still needs reconciliation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un registro revisado aún necesita conciliación"
+          }
+        }
+      }
+    },
+    "Add a future reservation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a future reservation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agregar una reserva futura"
+          }
+        }
+      }
+    },
+    "All channels": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All channels"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todos los canales"
+          }
+        }
+      }
+    },
+    "All fulfillment modes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All fulfillment modes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todas las modalidades de compra"
+          }
+        }
+      }
+    },
+    "Applied and released evidence stays unchanged. Add a new reservation for a new plan.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applied and released evidence stays unchanged. Add a new reservation for a new plan."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los registros aplicados y liberados se conservan sin cambios. Agrega una reserva nueva para un plan nuevo."
+          }
+        }
+      }
+    },
+    "Applied to an assigned shop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applied to an assigned shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aplicada a una compra asignada"
+          }
+        }
+      }
+    },
+    "Apply to shop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apply to shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aplicar a la compra"
+          }
+        }
+      }
+    },
+    "Assign selected shop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assign selected shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asignar la compra seleccionada"
+          }
+        }
+      }
+    },
+    "Assigned shop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assigned shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compra asignada"
+          }
+        }
+      }
+    },
+    "Assigned shop reference": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assigned shop reference"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referencia de la compra asignada"
+          }
+        }
+      }
+    },
+    "Assigned shops": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assigned shops"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compras asignadas"
+          }
+        }
+      }
+    },
+    "Authorized shop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Authorized shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compra autorizada"
+          }
+        }
+      }
+    },
+    "Base revision": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Base revision"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisión de base"
+          }
+        }
+      }
+    },
+    "Branch or location": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Branch or location"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sucursal o ubicación"
+          }
+        }
+      }
+    },
+    "Cancel editing": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel editing"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar edición"
+          }
+        }
+      }
+    },
+    "Check access again": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check access again"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a verificar el acceso"
+          }
+        }
+      }
+    },
+    "Check the item, pack, price evidence, store, branch, source and observed date before reviewing.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the item, pack, price evidence, store, branch, source and observed date before reviewing."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verifica el artículo, el paquete, el precio registrado, la tienda, la sucursal, la fuente y la fecha de observación antes de revisar."
+          }
+        }
+      }
+    },
+    "Check the period dates, time zone, budget, assigned shops and reservation evidence before reviewing.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the period dates, time zone, budget, assigned shops and reservation evidence before reviewing."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verifica las fechas del período, la zona horaria, el presupuesto, las compras asignadas y los registros de reservas antes de revisar."
+          }
+        }
+      }
+    },
+    "Checking current access and records…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking current access and records…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verificando el acceso y los registros actuales…"
+          }
+        }
+      }
+    },
+    "Choose a shop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una compra"
+          }
+        }
+      }
+    },
+    "Clear only the local retry record?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear only the local retry record?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Borrar solo el registro local de reintento?"
+          }
+        }
+      }
+    },
+    "Closed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Closed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrada"
+          }
+        }
+      }
+    },
+    "Completion review date": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completion review date"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha de revisión final"
+          }
+        }
+      }
+    },
+    "Completion review must follow the period end, with no reserved future plans. Financial reconciliation still depends on every shop's current evidence.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completion review must follow the period end, with no reserved future plans. Financial reconciliation still depends on every shop's current evidence."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La revisión final debe ser posterior al cierre del período y no debe haber planes futuros reservados. La conciliación financiera aún depende de los registros actuales de cada compra."
+          }
+        }
+      }
+    },
+    "Conditional maximum remaining": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conditional maximum remaining"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Máximo restante condicional"
+          }
+        }
+      }
+    },
+    "Conditional minimum remaining": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conditional minimum remaining"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mínimo restante condicional"
+          }
+        }
+      }
+    },
+    "Connect your household to open saved price records and period plans.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect your household to open saved price records and period plans."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conecta tu hogar para abrir registros de precios y planes por período guardados."
+          }
+        }
+      }
+    },
+    "Continue editing": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue editing"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seguir editando"
+          }
+        }
+      }
+    },
+    "Count": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Count"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unidades"
+          }
+        }
+      }
+    },
+    "Credits already included, not deducted again": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Credits already included, not deducted again"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Créditos ya incluidos, sin volver a descontarlos"
+          }
+        }
+      }
+    },
+    "Cup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taza"
+          }
+        }
+      }
+    },
+    "Current access and saved status will be checked first. Clearing a retry does not undo a write already received. Exact retry is the way to recover the original receipt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current access and saved status will be checked first. Clearing a retry does not undo a write already received. Exact retry is the way to recover the original receipt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Primero se verificarán el acceso actual y el estado guardado. Borrar un reintento no deshace un registro ya recibido. El reintento exacto permite recuperar el comprobante original."
+          }
+        }
+      }
+    },
+    "Current access is checked again. Do not start a replacement action while this result is uncertain.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current access is checked again. Do not start a replacement action while this result is uncertain."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se vuelve a verificar el acceso actual. No inicies una acción de reemplazo mientras este resultado sea incierto."
+          }
+        }
+      }
+    },
+    "Current entered evidence reconciled": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current entered evidence reconciled"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registros ingresados actuales conciliados"
+          }
+        }
+      }
+    },
+    "Deferring a purchase moves expected spending. It does not establish savings. Applying a reservation transfers the plan to its assigned shop instead of counting it twice.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deferring a purchase moves expected spending. It does not establish savings. Applying a reservation transfers the plan to its assigned shop instead of counting it twice."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Posponer una compra cambia cuándo se espera gastar. No demuestra un ahorro. Aplicar una reserva transfiere el plan a su compra asignada, sin contarlo dos veces."
+          }
+        }
+      }
+    },
+    "Delivery": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delivery"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entrega a domicilio"
+          }
+        }
+      }
+    },
+    "Draft": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Draft"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrador"
+          }
+        }
+      }
+    },
+    "Edit this period plan": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit this period plan"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar este plan del período"
+          }
+        }
+      }
+    },
+    "Eligibility": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eligibility"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Requisitos de elegibilidad"
+          }
+        }
+      }
+    },
+    "Eligibility or offer conditions, optional": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eligibility or offer conditions, optional"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Requisitos o condiciones de la oferta, opcional"
+          }
+        }
+      }
+    },
+    "Entered evidence has been reconciled for this period. This is not bank verification.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entered evidence has been reconciled for this period. This is not bank verification."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los registros ingresados se han conciliado para este período. Esto no es una verificación bancaria."
+          }
+        }
+      }
+    },
+    "Entered posted net spending": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entered posted net spending"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gasto neto registrado como contabilizado"
+          }
+        }
+      }
+    },
+    "Entered price": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entered price"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio ingresado"
+          }
+        }
+      }
+    },
+    "Entered price range": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entered price range"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rango de precios ingresado"
+          }
+        }
+      }
+    },
+    "Entered prices and period plans": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entered prices and period plans"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precios ingresados y planes por período"
+          }
+        }
+      }
+    },
+    "Every assigned shop is checked again before the reviewed plan can be saved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every assigned shop is checked again before the reviewed plan can be saved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada compra asignada se verifica de nuevo antes de guardar el plan revisado."
+          }
+        }
+      }
+    },
+    "Evidence date and time": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evidence date and time"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha y hora del registro"
+          }
+        }
+      }
+    },
+    "Exact entered price": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exact entered price"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio exacto ingresado"
+          }
+        }
+      }
+    },
+    "Expected credits, not yet deducted": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expected credits, not yet deducted"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Créditos esperados, aún sin descontar"
+          }
+        }
+      }
+    },
+    "Expected unpaid amount": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expected unpaid amount"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importe pendiente de pago esperado"
+          }
+        }
+      }
+    },
+    "Filter by branch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter by branch"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filtrar por sucursal"
+          }
+        }
+      }
+    },
+    "Filter by channel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter by channel"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filtrar por canal"
+          }
+        }
+      }
+    },
+    "Filter by fulfillment": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter by fulfillment"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filtrar por modalidad"
+          }
+        }
+      }
+    },
+    "Filter by store": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter by store"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filtrar por tienda"
+          }
+        }
+      }
+    },
+    "Filter from an evidence date": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter from an evidence date"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filtrar desde una fecha de observación"
+          }
+        }
+      }
+    },
+    "Filter through an evidence date": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter through an evidence date"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filtrar hasta una fecha de observación"
+          }
+        }
+      }
+    },
+    "Filters apply only to loaded, authorized records. Load more to continue searching.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filters apply only to loaded, authorized records. Load more to continue searching."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los filtros se aplican solo a los registros autorizados que ya se cargaron. Carga más para seguir buscando."
+          }
+        }
+      }
+    },
+    "Fluid ounce": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fluid ounce"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onza líquida"
+          }
+        }
+      }
+    },
+    "Frozen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frozen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fijada"
+          }
+        }
+      }
+    },
+    "Fulfillment mode": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fulfillment mode"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modalidad de compra"
+          }
+        }
+      }
+    },
+    "Future plans still reserved": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Future plans still reserved"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planes futuros aún reservados"
+          }
+        }
+      }
+    },
+    "Future shop plan": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Future shop plan"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan de compra futura"
+          }
+        }
+      }
+    },
+    "Gram": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gram"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gramo"
+          }
+        }
+      }
+    },
+    "History analysis and period planning need a current Household membership. Your authorized saved raw records remain available.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "History analysis and period planning need a current Household membership. Your authorized saved raw records remain available."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El análisis del historial y la planificación por período requieren una membresía Household vigente. Tus registros guardados autorizados siguen disponibles sin cálculos."
+          }
+        }
+      }
+    },
+    "History is not configured on this iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "History is not configured on this iPhone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El historial no está configurado en este iPhone."
+          }
+        }
+      }
+    },
+    "History requires active membership and current access. Saved individual records remain available with Free access.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "History requires active membership and current access. Saved individual records remain available with Free access."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El historial requiere una membresía activa y acceso vigente. Los registros individuales guardados siguen disponibles con acceso Free."
+          }
+        }
+      }
+    },
+    "I reviewed these exact fields and their source": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed these exact fields and their source"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé estos campos exactos y su fuente"
+          }
+        }
+      }
+    },
+    "I reviewed this ended period as complete": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed this ended period as complete"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé este período finalizado y lo marqué como completo"
+          }
+        }
+      }
+    },
+    "In store": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In store"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En la tienda"
+          }
+        }
+      }
+    },
+    "Item name as observed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item name as observed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre del artículo observado"
+          }
+        }
+      }
+    },
+    "Keep the pack, store branch, channel and fulfillment mode separate. Nothing is matched or converted automatically.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep the pack, store branch, channel and fulfillment mode separate. Nothing is matched or converted automatically."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mantén separados el paquete, la sucursal, el canal y la modalidad de compra. Nada se vincula ni se convierte automáticamente."
+          }
+        }
+      }
+    },
+    "Kilogram": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilogram"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilogramo"
+          }
+        }
+      }
+    },
+    "Liter": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liter"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Litro"
+          }
+        }
+      }
+    },
+    "Load more assigned shops": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load more assigned shops"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargar más compras asignadas"
+          }
+        }
+      }
+    },
+    "Load more periods": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load more periods"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargar más períodos"
+          }
+        }
+      }
+    },
+    "Load more price records": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load more price records"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargar más registros de precios"
+          }
+        }
+      }
+    },
+    "Load price history": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load price history"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargar historial de precios"
+          }
+        }
+      }
+    },
+    "Lower price in USD": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lower price in USD"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio mínimo en USD"
+          }
+        }
+      }
+    },
+    "Manual price evidence · Free": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manual price evidence · Free"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registro manual de precios · Free"
+          }
+        }
+      }
+    },
+    "Mass ounce": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mass ounce"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onza de peso"
+          }
+        }
+      }
+    },
+    "Milliliter": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Milliliter"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mililitro"
+          }
+        }
+      }
+    },
+    "Observation reference": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Observation reference"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referencia de la observación"
+          }
+        }
+      }
+    },
+    "Observed item and pack": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Observed item and pack"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artículo y paquete observados"
+          }
+        }
+      }
+    },
+    "Observed on or after": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Observed on or after"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Observado desde"
+          }
+        }
+      }
+    },
+    "Observed on or before": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Observed on or before"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Observado hasta"
+          }
+        }
+      }
+    },
+    "Only the currently permitted subtotal is shown. It is not a complete period balance.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the currently permitted subtotal is shown. It is not a complete period balance."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo se muestra el subtotal permitido actualmente. No es un saldo completo del período."
+          }
+        }
+      }
+    },
+    "Open household": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open household"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir el hogar"
+          }
+        }
+      }
+    },
+    "Open raw saved plan": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open raw saved plan"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir el plan guardado sin cálculos"
+          }
+        }
+      }
+    },
+    "Open saved observation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open saved observation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir observación guardada"
+          }
+        }
+      }
+    },
+    "Open this saved observation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open this saved observation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir esta observación guardada"
+          }
+        }
+      }
+    },
+    "Open your adult household account to use these records. Each source still requires current shopper access.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open your adult household account to use these records. Each source still requires current shopper access."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre tu cuenta de adulto del hogar para usar estos registros. Cada fuente aún requiere acceso vigente como responsable de compras."
+          }
+        }
+      }
+    },
+    "Opening a saved raw plan stays Free when all its sources remain authorized. Creating plans and calculating period totals require Household membership.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opening a saved raw plan stays Free when all its sources remain authorized. Creating plans and calculating period totals require Household membership."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir un plan guardado sin cálculos sigue siendo Free si todas sus fuentes permanecen autorizadas. Crear planes y calcular los totales del período requiere una membresía Household."
+          }
+        }
+      }
+    },
+    "Original plan or deferral wording": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original plan or deferral wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto original del plan o aplazamiento"
+          }
+        }
+      }
+    },
+    "Original quantity wording": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original quantity wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto original de la cantidad"
+          }
+        }
+      }
+    },
+    "Original source text": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original source text"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto original de la fuente"
+          }
+        }
+      }
+    },
+    "Other channel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other channel"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otro canal"
+          }
+        }
+      }
+    },
+    "Pack label": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pack label"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etiqueta del paquete"
+          }
+        }
+      }
+    },
+    "Pack label as observed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pack label as observed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etiqueta del paquete observado"
+          }
+        }
+      }
+    },
+    "Pack unit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pack unit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unidad del paquete"
+          }
+        }
+      }
+    },
+    "Payment holds, not spending": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Payment holds, not spending"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retenciones de pago, no gastos"
+          }
+        }
+      }
+    },
+    "Pending credits do not reduce posted spending. Holds are separate. A missing upper bound keeps the minimum remaining amount unknown.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pending credits do not reduce posted spending. Holds are separate. A missing upper bound keeps the minimum remaining amount unknown."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los créditos pendientes no reducen el gasto contabilizado. Las retenciones se muestran por separado. Si falta un límite superior, el importe mínimo restante sigue siendo desconocido."
+          }
+        }
+      }
+    },
+    "Period budgets": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Period budgets"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Presupuestos por período"
+          }
+        }
+      }
+    },
+    "Period ends": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Period ends"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fin del período"
+          }
+        }
+      }
+    },
+    "Period plan and entered evidence": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Period plan and entered evidence"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan del período y registros ingresados"
+          }
+        }
+      }
+    },
+    "Period planning envelope · USD": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Period planning envelope · USD"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fondo de planificación del período · USD"
+          }
+        }
+      }
+    },
+    "Period reference": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Period reference"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referencia del período"
+          }
+        }
+      }
+    },
+    "Period starts": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Period starts"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicio del período"
+          }
+        }
+      }
+    },
+    "Period title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Period title"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Título del período"
+          }
+        }
+      }
+    },
+    "Permitted entered subtotal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permitted entered subtotal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subtotal ingresado permitido"
+          }
+        }
+      }
+    },
+    "Pickup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pickup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recogida"
+          }
+        }
+      }
+    },
+    "Placed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Placed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Realizada"
+          }
+        }
+      }
+    },
+    "Plan a new period": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan a new period"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planificar un período nuevo"
+          }
+        }
+      }
+    },
+    "Planned date and time": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planned date and time"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha y hora planificadas"
+          }
+        }
+      }
+    },
+    "Planning time zone": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planning time zone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zona horaria de planificación"
+          }
+        }
+      }
+    },
+    "Pound": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pound"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Libra"
+          }
+        }
+      }
+    },
+    "Price certainty": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price certainty"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Certeza del precio"
+          }
+        }
+      }
+    },
+    "Price channel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price channel"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Canal del precio"
+          }
+        }
+      }
+    },
+    "Price evidence · USD": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price evidence · USD"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registro de precios · USD"
+          }
+        }
+      }
+    },
+    "Price history · Household": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price history · Household"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Historial de precios · Household"
+          }
+        }
+      }
+    },
+    "Price in USD": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price in USD"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio en USD"
+          }
+        }
+      }
+    },
+    "Price records": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price records"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registros de precios"
+          }
+        }
+      }
+    },
+    "Prices and period budgets": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prices and period budgets"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precios y presupuestos por período"
+          }
+        }
+      }
+    },
+    "Projected commitment including posted spending": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Projected commitment including posted spending"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compromiso proyectado incluido el gasto contabilizado"
+          }
+        }
+      }
+    },
+    "Quantity denominator": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quantity denominator"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denominador de la cantidad"
+          }
+        }
+      }
+    },
+    "Quantity numerator": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quantity numerator"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numerador de la cantidad"
+          }
+        }
+      }
+    },
+    "Record a usable pack quantity": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record a usable pack quantity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registrar una cantidad utilizable del paquete"
+          }
+        }
+      }
+    },
+    "Record an observed price": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record an observed price"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registrar un precio observado"
+          }
+        }
+      }
+    },
+    "Records view": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Records view"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vista de registros"
+          }
+        }
+      }
+    },
+    "Refresh access for the saved retry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh access for the saved retry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar acceso para el reintento guardado"
+          }
+        }
+      }
+    },
+    "Refresh current access to reopen the original retry. Its private fields stay hidden until access is confirmed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh current access to reopen the original retry. Its private fields stay hidden until access is confirmed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualiza el acceso actual para volver a abrir el reintento original. Sus campos privados permanecen ocultos hasta que se confirme el acceso."
+          }
+        }
+      }
+    },
+    "Refresh saved periods": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh saved periods"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar períodos guardados"
+          }
+        }
+      }
+    },
+    "Refresh status and clear local retry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh status and clear local retry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar el estado y borrar el reintento local"
+          }
+        }
+      }
+    },
+    "Released from this plan": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Released from this plan"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liberada de este plan"
+          }
+        }
+      }
+    },
+    "Remove": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar"
+          }
+        }
+      }
+    },
+    "Remove this draft reservation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this draft reservation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar esta reserva en borrador"
+          }
+        }
+      }
+    },
+    "Reservation state": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reservation state"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estado de la reserva"
+          }
+        }
+      }
+    },
+    "Reserve already excluded": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reserve already excluded"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reserva ya excluida"
+          }
+        }
+      }
+    },
+    "Reserve already excluded, optional USD": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reserve already excluded, optional USD"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reserva ya excluida, USD opcional"
+          }
+        }
+      }
+    },
+    "Reserved amount in USD": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reserved amount in USD"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importe reservado en USD"
+          }
+        }
+      }
+    },
+    "Reserved for a future shop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reserved for a future shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reservada para una compra futura"
+          }
+        }
+      }
+    },
+    "Retailer app": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retailer app"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aplicación de la tienda"
+          }
+        }
+      }
+    },
+    "Retailer website": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retailer website"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sitio web de la tienda"
+          }
+        }
+      }
+    },
+    "Retry and reconcile the same write": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry and reconcile the same write"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar y conciliar el mismo registro"
+          }
+        }
+      }
+    },
+    "Review complete period plan": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review complete period plan"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar el plan completo del período"
+          }
+        }
+      }
+    },
+    "Review exactly what will be saved": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review exactly what will be saved"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa exactamente lo que se guardará"
+          }
+        }
+      }
+    },
+    "Review period totals": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review period totals"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar totales del período"
+          }
+        }
+      }
+    },
+    "Review status and clear local retry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review status and clear local retry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar el estado y borrar el reintento local"
+          }
+        }
+      }
+    },
+    "Review this observation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review this observation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar esta observación"
+          }
+        }
+      }
+    },
+    "Reviewed write awaiting confirmation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed write awaiting confirmation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registro revisado pendiente de confirmación"
+          }
+        }
+      }
+    },
+    "Revision": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revision"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisión"
+          }
+        }
+      }
+    },
+    "Save reviewed record": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save reviewed record"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar registro revisado"
+          }
+        }
+      }
+    },
+    "Saved observation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved observation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Observación guardada"
+          }
+        }
+      }
+    },
+    "Saved observation reference": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved observation reference"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referencia de la observación guardada"
+          }
+        }
+      }
+    },
+    "Saved period": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved period"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Período guardado"
+          }
+        }
+      }
+    },
+    "Saved raw plan · no calculated balance": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved raw plan · no calculated balance"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan guardado sin cálculos · sin saldo calculado"
+          }
+        }
+      }
+    },
+    "Shop budget after excluded reserve": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shop budget after excluded reserve"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Presupuesto de compras tras excluir la reserva"
+          }
+        }
+      }
+    },
+    "Shop budget after excluded reserve, USD": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shop budget after excluded reserve, USD"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Presupuesto de compras tras excluir la reserva, USD"
+          }
+        }
+      }
+    },
+    "Shop evidence remains incomplete": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shop evidence remains incomplete"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los registros de la compra siguen incompletos"
+          }
+        }
+      }
+    },
+    "Source language or locale": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source language or locale"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idioma o configuración regional de la fuente"
+          }
+        }
+      }
+    },
+    "Store": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Store"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tienda"
+          }
+        }
+      }
+    },
+    "Store shelf": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Store shelf"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estante de la tienda"
+          }
+        }
+      }
+    },
+    "The budget is already net of the excluded reserve. The reserve is explanatory and will not be subtracted twice.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The budget is already net of the excluded reserve. The reserve is explanatory and will not be subtracted twice."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El presupuesto ya descuenta la reserva excluida. La reserva es informativa y no se descontará dos veces."
+          }
+        }
+      }
+    },
+    "The exact reviewed record and action identity are saved for retry. A retry sends those same bytes; it does not create a second record.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The exact reviewed record and action identity are saved for retry. A retry sends those same bytes; it does not create a second record."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El registro exacto revisado y la identidad de la acción se guardan para reintentar. El reintento envía los mismos datos; no crea un segundo registro."
+          }
+        }
+      }
+    },
+    "The local retry was cleared after checking current access and record status. This does not undo a saved record or confirm the original result.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The local retry was cleared after checking current access and record status. This does not undo a saved record or confirm the original result."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El reintento local se borró tras verificar el acceso actual y el estado del registro. Esto no deshace un registro guardado ni confirma el resultado original."
+          }
+        }
+      }
+    },
+    "The record was saved. Retry to finish clearing its local retry record.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The record was saved. Retry to finish clearing its local retry record."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El registro se guardó. Reintenta para terminar de borrar su registro local de reintento."
+          }
+        }
+      }
+    },
+    "The result is not confirmed. Keep the original retry and reconcile it before starting another action.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The result is not confirmed. Keep the original retry and reconcile it before starting another action."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El resultado no está confirmado. Conserva el reintento original y concílialo antes de iniciar otra acción."
+          }
+        }
+      }
+    },
+    "The reviewed record was saved. Refresh its current record or analysis before making another change.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The reviewed record was saved. Refresh its current record or analysis before making another change."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El registro revisado se guardó. Actualiza su registro o análisis actual antes de hacer otro cambio."
+          }
+        }
+      }
+    },
+    "The saved facts changed. Refresh and review a new action; an existing retry keeps its original bytes and revision.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The saved facts changed. Refresh and review a new action; an existing retry keeps its original bytes and revision."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los datos guardados cambiaron. Actualiza y revisa una acción nueva; un reintento existente conserva sus datos y revisión originales."
+          }
+        }
+      }
+    },
+    "These are household-entered records, not retailer prices, bank balances or verified savings.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These are household-entered records, not retailer prices, bank balances or verified savings."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estos registros fueron ingresados por el hogar; no son precios de tiendas, saldos bancarios ni ahorros verificados."
+          }
+        }
+      }
+    },
+    "This is a shop-plan envelope, not a posting-date statement. Later credits for assigned shops remain part of their entered evidence.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is a shop-plan envelope, not a posting-date statement. Later credits for assigned shops remain part of their entered evidence."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este fondo organiza compras planificadas; no es un estado de cuenta por fecha de contabilización. Los créditos posteriores de las compras asignadas siguen formando parte de sus registros."
+          }
+        }
+      }
+    },
+    "This period is incomplete. Remaining amounts are conditional, not a verified balance.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This period is incomplete. Remaining amounts are conditional, not a verified balance."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este período está incompleto. Los importes restantes son condicionales, no un saldo verificado."
+          }
+        }
+      }
+    },
+    "This raw record does not calculate a remaining balance or establish current membership.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This raw record does not calculate a remaining balance or establish current membership."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este registro sin cálculos no calcula un saldo restante ni demuestra una membresía vigente."
+          }
+        }
+      }
+    },
+    "This record is unavailable in your current access. Refresh your household before trying again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This record is unavailable in your current access. Refresh your household before trying again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este registro no está disponible con tu acceso actual. Actualiza tu hogar antes de volver a intentarlo."
+          }
+        }
+      }
+    },
+    "Unknown": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desconocido"
+          }
+        }
+      }
+    },
+    "Unknown is not zero. An exact zero must be entered explicitly.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown is not zero. An exact zero must be entered explicitly."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desconocido no significa cero. Un cero exacto debe ingresarse explícitamente."
+          }
+        }
+      }
+    },
+    "Unknown price": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown price"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio desconocido"
+          }
+        }
+      }
+    },
+    "Unknown upper bound": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown upper bound"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Límite superior desconocido"
+          }
+        }
+      }
+    },
+    "Unspecified channel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unspecified channel"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Canal sin especificar"
+          }
+        }
+      }
+    },
+    "Upper price in USD": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upper price in USD"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio máximo en USD"
+          }
+        }
+      }
+    },
+    "Usable pack quantity not recorded": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usable pack quantity not recorded"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad utilizable del paquete no registrada"
+          }
+        }
+      }
+    },
+    "Warehouse": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warehouse"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Club de compras"
+          }
+        }
+      }
+    },
+    "Where and when observed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where and when observed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dónde y cuándo se observó"
+          }
+        }
+      }
+    },
+    "Why the price is uncertain": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Why the price is uncertain"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Por qué el precio es incierto"
+          }
+        }
+      }
+    },
+    "Your saved period records": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your saved period records"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus registros de períodos guardados"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

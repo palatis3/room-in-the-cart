@@ -78,6 +78,37 @@ import HouseholdClient
         shared.beginEditing(); shared.draft.tax = "1.25"; shared.reviewDraft(); shared.acknowledged = true; await shared.applyReviewed()
         XCTAssertEqual(shared.shop?.quote.taxesMinor, 125); XCTAssertEqual(shared.shop?.shopRevision, 2)
     }
+    func testSharedMealReviewBindsPacksDateAndRevisionAndRejectsAStaleEditor() async throws {
+        let fixture = SharedFlowService()
+        let mia = try await createdHousehold(fixture)
+        let shared = try XCTUnwrap(mia.sharedShop)
+        enterShop(shared); await shared.applyReviewed()
+        let occurrenceID = UUID()
+        let meal = SharedMeal(title: "Chickpea dinner", day: "2026-11-05", kind: "dinner", portions: 3, protected: false)
+        shared.beginEditing()
+        shared.draft.mealEdit = SharedMealEdit(occurrenceID: occurrenceID, meal: meal)
+        shared.draft.lines[0].packs = 2
+        shared.reviewDraft()
+        XCTAssertEqual(shared.review?.mealEdit?.meal, meal)
+        XCTAssertTrue(fixture.meals.isEmpty)
+        shared.acknowledged = true; await shared.applyReviewed()
+        XCTAssertEqual(shared.shop?.shopRevision, 2)
+        XCTAssertEqual(shared.shop?.meals?.first?.meal, meal)
+        XCTAssertEqual(shared.shop?.lines.first?.packs, 2)
+        shared.beginEditing()
+        shared.draft.mealEdit = SharedMealEdit(occurrenceID: occurrenceID, meal: nil)
+        shared.reviewDraft()
+        fixture.revision += 1
+        await shared.load()
+        XCTAssertNil(shared.review); XCTAssertFalse(shared.editing)
+        shared.reviewDraft(); shared.acknowledged = true; await shared.applyReviewed()
+        XCTAssertEqual(fixture.meals.count, 1)
+        shared.beginEditing()
+        shared.draft.mealEdit = SharedMealEdit(occurrenceID: occurrenceID, meal: nil)
+        shared.reviewDraft(); shared.acknowledged = true; await shared.applyReviewed()
+        XCTAssertEqual(shared.shop?.meals?.count, 0)
+        XCTAssertEqual(shared.shop?.lines.first?.packs, 2)
+    }
     func testLostCreateResponseCanRecoverOriginalOperationWithoutSecondShop() async throws {
         let fixture = SharedFlowService(); let mia = try await createdHousehold(fixture)
         let shared = try XCTUnwrap(mia.sharedShop); enterShop(shared); fixture.loseCreateResponse = true
@@ -152,6 +183,23 @@ import HouseholdClient
         XCTAssertTrue(shared.draft.lines.isEmpty)
     }
 
+    func testOrganizerReviewsTransferAndLosesShopperBudgetAfterConfirmation() async throws {
+        let fixture = SharedFlowService()
+        let mia = try await createdHousehold(fixture)
+        let shared = try XCTUnwrap(mia.sharedShop)
+        enterShop(shared); await shared.applyReviewed()
+        let id = try XCTUnwrap(fixture.shopID.flatMap(UUID.init(uuidString:)))
+        let service = try XCTUnwrap(mia.service)
+        let authority = try await service.shopperAssignment(shopID: id)
+        let next = try XCTUnwrap(authority.adults.first(where: { $0.id != authority.shopperId }))
+        shared.reviewTransfer(authority, to: next.id)
+        XCTAssertEqual(shared.review?.transfer?.toLabel, "Alex")
+        await shared.applyReviewed(); XCTAssertFalse(fixture.shopperTransferred)
+        shared.acknowledged = true; await shared.applyReviewed()
+        XCTAssertTrue(fixture.shopperTransferred); XCTAssertFalse(shared.canManage)
+        XCTAssertNil(shared.shop); XCTAssertNil(mia.shopperInbox)
+        XCTAssertEqual(fixture.kinds.filter { $0 == "shop.transferAuthority" }.count, 1)
+    }
     func testLockClearsSharedBudgetAndPreventsRetainedModelFromPublishing() async throws {
         let fixture = SharedFlowService(); let mia = try await createdHousehold(fixture)
         let shared = try XCTUnwrap(mia.sharedShop); enterShop(shared); await shared.applyReviewed()
@@ -166,6 +214,7 @@ import HouseholdClient
 private final class SharedFlowService {
     let household = UUID().uuidString.lowercased(), miaID = UUID().uuidString.lowercased(), samID = UUID().uuidString.lowercased()
     var householdCreates = 0, sharedShopCreates = 0, privateReads = 0
+    var meals: [[String: Any]] = []
     var joined = Set<String>(), shopID: String?, revision = 0, phase = "draft"
     var quote: [String: Any] = [:], lines: [[String: Any]] = [], requests: [[String: Any]] = []
     var kinds: [String] = [], commandBodies: [(kind: String, bytes: Data)] = []
@@ -207,13 +256,17 @@ private final class SharedFlowService {
         if path.hasSuffix("/invites") { return try ok(["inviteId":UUID().uuidString.lowercased(),"token":household+"."+String(repeating:"a",count:43),"expiresAt":"2099-01-01T00:00:00Z"]) }
         if path.hasSuffix("/requests/mine"), ownRequestsUnavailable { return try ok(["error":["code":"unavailable"]],503) }
         if path.hasSuffix("/requests/mine") { return try ok(["requests":actor == "sam" ? requests : [],"nextCursor":NSNull()]) }
+        if path.hasSuffix("/shopper-assignment"), let shopID {
+            return try ok(["shopId":shopID,"shopRevision":revision,"authorityEpoch":1,"phase":phase,"shopperId":miaID,
+                "adults":[["id":miaID,"label":"Mia"],["id":samID,"label":"Alex"]]])
+        }
         if path.hasSuffix("/financial-evidence"), let shopID {
             return try ok(["shopId": shopID, "sourceVersion": ["shopRevision": revision, "authorityEpoch": 1, "financialRevision": 1],
                 "evidenceSource": "shopper_reported", "entries": [["id": UUID().uuidString, "kind": "paymentHold", "amountMinor": 3200,
                 "currency": "USD", "occurredAt": "2026-01-01T12:00:00.000Z", "sourceText": "Hold on the entered receipt"]], "nextCursor": NSNull()])
         }
         if path.hasSuffix("/inbox") { return try ok(["requests":requests.map { $0.merging(["authorAlias":"Sam"]) { _, new in new } },"nextCursor":NSNull()]) }
-        if path.contains("/shops/"), request.httpMethod == "GET" { return try ok(["shopId":shopID!,"shopRevision":revision,"authorityEpoch":1,"phase":phase,"quote":quote,"lines":lines,"frozenRevision":phase == "frozen" ? revision : NSNull(),"placedRevision":NSNull()]) }
+        if path.contains("/shops/"), request.httpMethod == "GET" { return try ok(["shopId":shopID!,"shopRevision":revision,"authorityEpoch":1,"phase":phase,"quote":quote,"lines":lines,"meals":meals,"frozenRevision":phase == "frozen" ? revision : NSNull(),"placedRevision":NSNull()]) }
         if path.hasSuffix("/previews") {
             let id = UUID().uuidString.lowercased(); previews[id] = json
             let total = lines.reduce(0) { $0 + ($1["packs"] as! Int) * ($1["unitPriceMinor"] as? Int ?? 0) }
@@ -230,6 +283,14 @@ private final class SharedFlowService {
             kinds.append(kind)
             if kind == "shop.create" { sharedShopCreates += 1; shopID = json["shopId"] as? String; revision = 1; quote = body["quote"] as! [String:Any]; lines = body["lines"] as! [[String:Any]] }
             if kind == "shop.patch" { quote = body["quote"] as! [String:Any]; lines = body["lines"] as! [[String:Any]]; revision += 1 }
+            if kind == "shop.patch", let edit = body["mealEdit"] as? [String:Any], let id = edit["occurrenceId"] as? String {
+                meals.removeAll { $0["occurrenceId"] as? String == id }
+                if let meal = edit["meal"] as? [String:Any] { meals.append(["occurrenceId": id,"revision":revision,"meal":meal]) }
+            }
+            if kind == "shop.transferAuthority" {
+                guard body["newShopperId"] as? String == samID else { throw URLError(.badServerResponse) }
+                shopperTransferred = true
+            }
             if kind == "shop.freeze" { phase = "frozen"; revision += 1 }
             if kind == "shop.reopen" { phase = "draft"; revision += 1 }
             if kind == "request.send" {
