@@ -136,8 +136,13 @@ export class BrowserAuthService {
       const row=await this.record(db,hash,now);if(row.phase!=='authenticated'||!row.secret_cipher||!row.access_expires_at)return{failure:sessionNeeded()};
       let tokens:ProviderTokens,identity:VerifiedIdentity;
       try{
+        await this.repo.assertIdentityAllowed(db,row.issuer!,row.subject!);
         tokens=tokensSchema.parse(this.open(row.secret_cipher,hash));
         if(refresh||row.access_expires_at.getTime()<=now.getTime()+60_000){
+          // Check the stored, previously verified binding before contacting the refresh endpoint.
+          // Signature validity or a cached refresh token cannot revive a revoked provider session.
+          const live=(await db.query('SELECT ritc.provider_session_refreshable($1::uuid,$2::uuid) AND NOT ritc.identity_blocked($3,$2::text) AS live',[row.session_id,row.subject,row.issuer])).rows[0]?.live;
+          if(live!==true)throw sessionNeeded();
           tokens=tokensSchema.parse(await this.provider.refresh(tokens.refreshToken));
         }
         identity=await this.verifier.verify(tokens.accessToken);
@@ -163,11 +168,11 @@ export class BrowserAuthService {
       const row=(await db.query<AuthRow>('SELECT * FROM ritc.browser_auth WHERE token_hash=$1 FOR UPDATE',[hash])).rows[0];if(!row)return;this.csrf(row,csrf);
       if(row.secret_cipher)tokens=tokensSchema.parse(this.open(row.secret_cipher,hash));
       // Local logout commits even if the provider is temporarily unavailable.
-      await db.query('UPDATE ritc.browser_auth SET revoked_at=COALESCE(revoked_at,$2),email_cipher=NULL WHERE token_hash=$1',[hash,now]);
+      await db.query("UPDATE ritc.browser_auth SET revoked_at=COALESCE(revoked_at,$2),email_cipher=NULL,logout_state=CASE WHEN secret_cipher IS NULL THEN 'complete' ELSE 'pending' END,logout_next_at=$2 WHERE token_hash=$1",[hash,now]);
     });
     let providerRevoked=tokens===null;
     if(tokens){try{await this.provider.logout((tokens as ProviderTokens).accessToken);providerRevoked=true;}catch{providerRevoked=false;}}
-    if(providerRevoked)await this.transaction(hash,async db=>{await db.query("UPDATE ritc.browser_auth SET phase='challenge',secret_cipher=NULL,issuer=NULL,subject=NULL,session_id=NULL,access_expires_at=NULL WHERE token_hash=$1",[hash]);});
+    if(providerRevoked)await this.transaction(hash,async db=>{await db.query("UPDATE ritc.browser_auth SET phase='challenge',secret_cipher=NULL,issuer=NULL,subject=NULL,session_id=NULL,access_expires_at=NULL,logout_state='complete',logout_finished_at=clock_timestamp(),logout_lease_id=NULL,logout_lease_until=NULL WHERE token_hash=$1",[hash]);});
     return{signedOut:true as const,providerRevoked};
   }
 }

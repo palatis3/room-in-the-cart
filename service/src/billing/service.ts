@@ -44,6 +44,10 @@ export class BillingService {
     if (account.rows[0]?.app_account_token !== transaction.appAccountToken) throw bindingConflict();
   }
   private async bind(ctx: BillingContext, state: VerifiedSubscription): Promise<void> {
+    // Called only with a cryptographically verified current Apple transaction.
+    // Erasure must not turn a previously bound original purchase into new household authority.
+    await ctx.db.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',['apple-retired:'+state.environment+'\n'+state.originalTransactionID]);
+    if((await ctx.db.query('SELECT ritc.purchase_retired($1,$2) AS retired',[state.environment,state.originalTransactionID])).rows[0]?.retired)throw bindingConflict();
     // Global unique key arbitrates cross-household races even though RLS hides foreign rows.
     await ctx.db.query(`INSERT INTO ritc.billing_binding(environment,original_transaction_id,household_id,purchaser_id,app_account_token)
       VALUES($1,$2,$3,$4,$5) ON CONFLICT(environment,original_transaction_id) DO NOTHING`,

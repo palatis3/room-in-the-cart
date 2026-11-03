@@ -194,3 +194,9 @@ test('encrypted browser credentials are bound to their own cookie and private ta
   assert.equal((await runtime.query('SELECT * FROM ritc.browser_auth')).rowCount,0);
   assert.equal((await runtime.query('SELECT * FROM ritc.auth_rate_bucket')).rowCount,0);
 });
+
+ test('explicit refresh never contacts the provider after its exact session is revoked',async()=>{
+ const logged=await signIn(),record=(await admin.query('SELECT session_id FROM ritc.browser_auth WHERE token_hash=$1',[cookieHash(logged.client)])).rows[0];
+ await admin.query('DELETE FROM auth.sessions WHERE id=$1',[record.session_id]);const before=calls.refresh;
+ const result=await logged.client.call('/v1/auth/refresh','POST',{},logged.csrf);assert.equal(result.status,401);assert.equal(calls.refresh,before);
+ });

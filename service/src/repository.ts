@@ -18,8 +18,14 @@ export function ownRequest(r:RequestRow):OwnRequest {
 }
 export class HouseholdRepository {
   constructor(readonly pool:Database,readonly options:{allowChildNetwork:boolean;noticeVersion:string;sessionStatus?:SessionStatusVerifier}) {}
+  async assertIdentityAllowed(db:Transaction,issuer:string,subject:string){
+    const lock=(await db.query("SELECT pg_try_advisory_xact_lock_shared(hashtextextended($1,0)) AS acquired",[tokenHash(issuer+'\n'+subject)])).rows[0]?.acquired;
+    if(!lock)throw new ServiceError(409,'account_action_pending','Wait for the pending account action to finish.');
+    if((await db.query('SELECT ritc.identity_blocked($1,$2) AS blocked',[issuer,subject])).rows[0]?.blocked)throw new ServiceError(401,'session_needed','Account deletion has revoked this identity.');
+  }
   async assertSession(db:Transaction,identity:VerifiedIdentity,now:Date) {
     if(!this.options.sessionStatus||identity.expiresAt<=now)throw new ServiceError(401,'session_needed','Authenticate with the configured live session provider.');
+    await this.assertIdentityAllowed(db,identity.issuer,identity.subject);
     await this.options.sessionStatus.assertLive(db,identity,now);
   }
   async transaction<T>(householdId:string,fn:(db:Transaction,now:Date)=>Promise<T>):Promise<T> {

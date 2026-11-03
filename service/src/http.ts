@@ -7,8 +7,9 @@ import { BillingService,billingVerifySchema,billingSeatsSchema,billingNotificati
 import { ServiceError,accessEnded,invalid } from './errors.js';
 import {BrowserAuthService,emailStartSchema,emailVerifySchema,type BrowserIdentity} from './browser-auth.js';
 import {HouseholdLifecycle} from './lifecycle.js';
+import {PrivacyService,deletionSchema,exitSchema} from './privacy.js';
 import {householdCreateSchema,inviteCreateSchema,inviteRedeemSchema,viewCreateSchema,viewUpdateSchema,proposalSchema,revocationSchema, parseCommand,previewSchema,uuid } from './contracts.js';
-export interface HTTPOptions { repository:HouseholdRepository; verifier?:IdentityVerifier; webOrigin?:string; maxRequestsPerMinute?:number; billing?:BillingService; browserAuth?:BrowserAuthService; clientAddress?:(request:IncomingMessage)=>string|undefined }
+export interface HTTPOptions { repository:HouseholdRepository; verifier?:IdentityVerifier; webOrigin?:string; maxRequestsPerMinute?:number; billing?:BillingService; browserAuth?:BrowserAuthService; privacy?:PrivacyService; clientAddress?:(request:IncomingMessage)=>string|undefined }
 async function body(req:IncomingMessage,maxBytes=65_536):Promise<unknown> {
   if(!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type']??''))throw new ServiceError(415,'json_required','Send a JSON command.');
   const chunks:Buffer[]=[];let size=0;
@@ -42,6 +43,12 @@ export function createHTTPServer(options:HTTPOptions) {
       const bucket=old&&old.until>now?old:{count:0,until:now+60_000};bucket.count++;limits.set(ip,bucket);
       if(bucket.count>(options.maxRequestsPerMinute??120)){res.setHeader('Retry-After','60');throw new ServiceError(429,'rate_limited','Keep the operation key and retry later.');}
       if(url.pathname==='/v1/apple/notifications'&&method==='POST'&&options.billing){const input=billingNotificationSchema.parse(await body(req,262_144));send(200,await options.billing.notification(repository.pool,input.signedPayload));return;}
+      const privacyStatus=/^\/v1\/privacy\/jobs\/([^/]+)$/.exec(url.pathname);
+      if(privacyStatus&&method==='GET'){
+        if(!options.privacy)throw new ServiceError(503,'deletion_unavailable','Account deletion is not configured.');
+        const token=z.string().regex(/^[A-Za-z0-9_-]{43}$/).parse(req.headers['x-deletion-token']);
+        send(200,await options.privacy.status(uuid.parse(privacyStatus[1]),token));return;
+      }
       const browserCookie=cookie(req,'__Host-ritc_auth');
       const setAuthCookie=(value:string,maxAge:number)=>`__Host-ritc_auth=${value}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${maxAge}`;
       const clearScope='ritc_session=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0';
@@ -100,6 +107,14 @@ export function createHTTPServer(options:HTTPOptions) {
         if(method==='GET'){send(200,await repository.authorized(session.householdId,auth,async ctx=>({authenticated:true,...await repository.bootstrap(ctx),replayWindow:await repository.window(ctx),csrf:session!.csrf})));return;}
         if(method==='DELETE'){let result:unknown=await repository.authorized(session.householdId,auth,ctx=>repository.logout(ctx));if(browserCookie&&browserIdentity&&options.browserAuth)result=await options.browserAuth.logout(browserCookie,browserIdentity.csrf);res.setHeader('Set-Cookie',[clearScope,...(browserCookie?[setAuthCookie('',0)]:[])]);send(200,result);return;}
       }
+      if(url.pathname.startsWith('/v1/privacy/')){
+        if(!options.privacy)throw new ServiceError(503,'deletion_unavailable','Account deletion is not configured.');
+        if(url.pathname==='/v1/privacy/deletion-preview'&&method==='GET'){send(200,await options.privacy.preview(auth.identity));return;}
+        if(url.pathname==='/v1/privacy/deletions'&&method==='POST'){
+          const result=await options.privacy.request(auth.identity,deletionSchema.parse(await body(req)));
+          res.setHeader('Set-Cookie',[clearScope,setAuthCookie('',0)]);send(202,result);return;
+        }
+      }
       if(url.pathname==='/v1/households'&&method==='POST'){send(201,await lifecycle.create(auth.identity,householdCreateSchema.parse(await body(req))));return;}
       if(url.pathname==='/v1/invites/redeem'&&method==='POST'){send(200,await lifecycle.redeem(auth.identity,inviteRedeemSchema.parse(await body(req))));return;}
       const viewMatch=/^\/v1\/views\/([^/]+)\/(current|proposals)$/.exec(url.pathname);
@@ -119,6 +134,11 @@ export function createHTTPServer(options:HTTPOptions) {
       if(!match)throw new ServiceError(404,'unavailable','Return to your current workspace.');
       const householdId=uuid.parse(match[1]),path=match[2]!;
       if(session&&session.householdId!==householdId)throw accessEnded();
+      if(path==='/exit'&&method==='POST'){
+        if(!options.privacy)throw new ServiceError(503,'deletion_unavailable','Account lifecycle is not configured.');
+        const result=await options.privacy.leave(auth.identity,householdId,exitSchema.parse(await body(req)));
+        if(session)res.setHeader('Set-Cookie',clearScope);send(200,result);return;
+      }
       if(path==='/devices'&&method==='POST') {
         z.object({}).strict().parse(await body(req));
         send(201,await repository.enroll(householdId,auth.identity));return;

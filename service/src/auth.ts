@@ -1,7 +1,7 @@
 import { createRemoteJWKSet, jwtVerify, type JWTVerifyGetKey } from 'jose';
 import type { Transaction } from './database.js';
 import { ServiceError } from './errors.js';
-export interface VerifiedIdentity { readonly issuer:string; readonly subject:string; readonly sessionId:string; readonly expiresAt:Date }
+export interface VerifiedIdentity { readonly issuer:string; readonly subject:string; readonly sessionId:string; readonly expiresAt:Date; readonly authenticatedAt?:Date }
 export interface IdentityVerifier { verify(token:string):Promise<VerifiedIdentity> }
 export class DenyIdentityVerifier implements IdentityVerifier {
   async verify(_token:string):Promise<never> { throw new ServiceError(401,'session_needed','Sign in with the configured identity provider.'); }
@@ -19,7 +19,10 @@ export class JWTIdentityVerifier implements IdentityVerifier {
       const {payload}=await jwtVerify(token,this.key,{issuer:this.config.issuer,audience:this.config.audience,algorithms:['ES256','RS256'],requiredClaims:['iss','aud','sub','exp','iat',this.config.sessionClaim??'session_id'],clockTolerance:5});
       const sessionId=payload[this.config.sessionClaim??'session_id'];
       if(typeof payload.sub!=='string'||!payload.sub.length||payload.sub.length>256||typeof sessionId!=='string'||!sessionId.length||sessionId.length>256||payload.iat!>Date.now()/1000+5) throw new Error('Invalid identity');
-      return Object.freeze({issuer:this.config.issuer,subject:payload.sub,sessionId,expiresAt:new Date(payload.exp!*1000)});
+      const amr=Array.isArray(payload.amr)?payload.amr:[];
+      const proof=amr.flatMap(entry=>{if(!entry||typeof entry!=='object')return[];const value=entry as Record<string,unknown>;return ['otp','password','oauth','sso/saml'].includes(String(value.method))&&typeof value.timestamp==='number'&&Number.isSafeInteger(value.timestamp)&&value.timestamp>0&&value.timestamp<=Math.min(Date.now()/1000,payload.iat!)+5?[value.timestamp]:[];});
+      const authenticatedAt=proof.length?new Date(Math.max(...proof)*1000):undefined;
+      return Object.freeze({issuer:this.config.issuer,subject:payload.sub,sessionId,expiresAt:new Date(payload.exp!*1000),...(authenticatedAt?{authenticatedAt}:{})});
     }catch { throw new ServiceError(401,'session_needed','Authenticate again; keep private drafts on this device.'); }
   }
 }
