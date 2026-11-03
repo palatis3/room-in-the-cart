@@ -34,3 +34,28 @@ export interface RequestPreview {
   changeMinor: number | null; requiresOverageAcceptance: boolean; requiresUnknownAcceptance: boolean;
 }
 export interface ServiceError { error: { code: string; correlationId: string; recovery: string } }
+
+export interface SharedMeal {
+  title: string;
+  day: string; // Civil date, YYYY-MM-DD
+  kind: 'dinner' | 'lunch' | 'side';
+  portions: number;
+  protected: boolean;
+}
+export interface SharedMealEdit {
+  occurrenceId: string;
+  baseMealRevision: number | null;
+  meal: SharedMeal | null;
+  proposalId?: string;
+}
+export interface SharedMealPlan {
+  shopId: string;
+  shopRevision: number;
+  authorityEpoch: number;
+  grantRevision: number;
+  shopper: boolean;
+  plannerId: string | null;
+  adults: Array<{ id: string; label: string }>;
+  meals: Array<{ occurrenceId: string; revision: number; meal: SharedMeal }>;
+  proposals: Array<{ proposalId: string; occurrenceId: string; day: string }>;
+}

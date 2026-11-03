@@ -1,0 +1,129 @@
+import Security
+import XCTest
+@testable import HouseholdClient
+
+private final class LoopbackTrust: NSObject, URLSessionDelegate, @unchecked Sendable {
+    let certificate: Data
+    init(certificate: Data) { self.certificate = certificate }
+
+    func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge,
+                    completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+        let space = challenge.protectionSpace
+        guard space.host == "127.0.0.1", space.authenticationMethod == NSURLAuthenticationMethodServerTrust,
+              let trust = space.serverTrust, let chain = SecTrustCopyCertificateChain(trust) as? [SecCertificate],
+              let leaf = chain.first, SecCertificateCopyData(leaf) as Data == certificate,
+              SecTrustSetAnchorCertificates(trust, [leaf] as CFArray) == errSecSuccess,
+              SecTrustSetAnchorCertificatesOnly(trust, true) == errSecSuccess,
+              SecTrustEvaluateWithError(trust, nil) else {
+            completionHandler(.cancelAuthenticationChallenge, nil)
+            return
+        }
+        completionHandler(.useCredential, URLCredential(trust: trust))
+    }
+}
+
+final class NativeServiceWireTests: XCTestCase {
+    func testNativeClientAgainstPostgres() async throws {
+        let env = ProcessInfo.processInfo.environment
+        guard let rawPort = env["RITC_WIRE_PORT"] else { throw XCTSkip("Run the PostgreSQL integration suite with RITC_TEST_NATIVE_WIRE=1.") }
+        let port = try XCTUnwrap(UInt16(rawPort))
+        let base = try XCTUnwrap(URL(string: "https://127.0.0.1:\(port)"))
+        let certificate = try Data(contentsOf: URL(fileURLWithPath: XCTUnwrap(env["RITC_WIRE_CERT"])))
+        let session = URLSession(configuration: .ephemeral, delegate: LoopbackTrust(certificate: certificate), delegateQueue: nil)
+        defer { session.invalidateAndCancel() }
+        let transport = HTTPTransport(session: session)
+        let auth = AdultAuth(configuration: try .init(projectURL: base, publishableKey: "sb_publishable_native_fixture"),
+                             vault: MemoryVault(), transport: transport)
+        _ = try await auth.verifyEmailCode(email: "wire@example.invalid", code: XCTUnwrap(env["RITC_WIRE_CODE"]))
+        let householdID = try XCTUnwrap(env["RITC_WIRE_HOUSEHOLD"])
+        let shop = try XCTUnwrap(env["RITC_WIRE_SHOP"])
+        let other = try XCTUnwrap(env["RITC_WIRE_OTHER"])
+        let vault = MemoryVault(), config = try ServiceConfiguration(baseURL: base)
+        let service = HouseholdService(configuration: config, auth: auth, deviceVault: vault, transport: transport)
+        _ = try await service.enroll(householdID: householdID)
+        let scope = try await service.selectShop(XCTUnwrap(UUID(uuidString: shop)))
+        XCTAssertEqual(scope.shopId, shop)
+        let mealPlan = try await service.mealPlan(shopID: XCTUnwrap(UUID(uuidString: shop)))
+        XCTAssertTrue(mealPlan.shopper)
+        let observation = try await service.priceObservation(observationID: XCTUnwrap(env["RITC_WIRE_OBSERVATION"]))
+        XCTAssertEqual(observation.shopId, shop)
+        XCTAssertEqual(observation.sourceLocale, "es-US")
+        var entered = observation
+        entered.id = UUID().uuidString.lowercased()
+        entered.itemName = "  Maíz  "
+        let intent = try await service.preparePriceObservation(entered)
+        let firstReceipt = try await service.executePriceObservation(intent)
+        let replay = try await service.executePriceObservation(intent)
+        XCTAssertEqual(replay, firstReceipt)
+        let saved = try await service.priceObservation(observationID: entered.id)
+        XCTAssertEqual(saved, entered)
+
+        let current = try await service.shopperShop(shopID: shop)
+        var patch = try ShopperShopCandidate(quote: current.quote, lines: current.lines).commandBody()
+        let meal = SharedMeal(title: "Sopa de maíz", day: "2026-11-05", kind: "dinner", portions: 4, protected: false)
+        patch["mealEdit"] = try SharedMealEdit(occurrenceID: UUID(), meal: meal).commandValue()
+        let window = try await service.replayWindow()
+        let op = try await service.prepare(envelope: .init(replayWindow: window.id, shopId: shop, kind: "shop.patch",
+            base: .init(shopRevision: current.shopRevision, authorityEpoch: current.authorityEpoch), body: patch), bootstrap: scope)
+        let mealReceipt = try await service.executeSharedShop(op)
+        let mealReplay = try await service.executeSharedShop(op)
+        XCTAssertEqual(mealReceipt.operationId, mealReplay.operationId)
+        let revisedPlan = try await service.mealPlan(shopID: XCTUnwrap(UUID(uuidString: shop)))
+        XCTAssertEqual(revisedPlan.meals.map(\.meal), [meal])
+        if env["RITC_WIRE_PAID"] == "1" {
+            let history = try await service.priceObservations()
+            XCTAssertTrue(history.observations.contains(entered))
+            let date = ISO8601DateFormatter()
+            let period = try HistoryBudgetPeriod(title: "Dos compras", startsAt: date.string(from: Date().addingTimeInterval(-86400)),
+                endsAt: date.string(from: Date().addingTimeInterval(86400)), timeZoneId: "America/New_York",
+                shopBudgetMinor: 50000, alreadyExcludedReserveMinor: 0, shopIds: [shop, other], reservations: [], reviewedCompleteAt: nil)
+            do {
+                _ = try await service.prepareBudgetPeriod(period, baseRevision: 0)
+                XCTFail("The selected shop must not authorize a second shop.")
+            } catch ClientError.service(status: 404, code: "unavailable", correlationID: _, retryAfter: _) { }
+            _ = try await service.selectShop(nil)
+            let pending = try await service.prepareBudgetPeriod(period, baseRevision: 0)
+            let receipt = try await service.executeBudgetPeriod(pending)
+            let retained = try await service.savedBudgetPeriod(periodID: receipt.periodId)
+            XCTAssertEqual(retained.period, period)
+        } else {
+            do {
+                _ = try await service.priceObservations()
+                XCTFail("Free must keep saved observations without granting paid history.")
+            } catch ClientError.service(status: 403, code: "membership_inactive", correlationID: _, retryAfter: _) { }
+        }
+        let second = try await service.selectShop(XCTUnwrap(UUID(uuidString: other)))
+        XCTAssertEqual(second.shopId, other)
+        let reopened = HouseholdService(configuration: config, auth: auth, deviceVault: vault, transport: transport)
+        let restored = try await reopened.enroll(householdID: householdID)
+        XCTAssertEqual(restored.shopId, other)
+
+        // Placement uses the actual Swift transport, pinned loopback TLS and PostgreSQL route.
+        let originalPlacement = try await reopened.placementShop(shopID: other)
+        let capture = try await reopened.preparePlacementSnapshot(reviewed: originalPlacement)
+        XCTAssertEqual(capture.snapshot, originalPlacement)
+        let clock = ISO8601DateFormatter(); clock.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let occurredAt = clock.string(from: Date())
+        let sealedReport = try capture.report(occurredAt: occurredAt)
+        let persistedReport = try JSONDecoder().decode(PlacementReportIntent.self, from: JSONEncoder().encode(sealedReport))
+        XCTAssertEqual(persistedReport.bytes, sealedReport.bytes)
+        let placementReceipt = try await reopened.executePlacementReport(persistedReport)
+        let placementReplay = try await reopened.executePlacementReport(persistedReport)
+        XCTAssertEqual(placementReplay, placementReceipt)
+        XCTAssertEqual(placementReceipt.disposition, "placed")
+        let receivedStatus = try await reopened.placementReportStatus(persistedReport)
+        let placementStatus = try XCTUnwrap(receivedStatus)
+        XCTAssertEqual(placementStatus.reportId, placementReceipt.reportId)
+        XCTAssertEqual(placementStatus.state, "applied")
+        XCTAssertEqual(placementStatus.occurredAt, occurredAt)
+        XCTAssertEqual(placementStatus.reportedRevision, originalPlacement.shopRevision)
+        XCTAssertEqual(placementStatus.reportedAuthorityEpoch, originalPlacement.authorityEpoch)
+        let placedDetail = try await reopened.placementReport(shopID: other, reportID: placementReceipt.reportId)
+        XCTAssertEqual(placedDetail.report.snapshot.quote, originalPlacement.quote)
+        XCTAssertEqual(placedDetail.report.snapshot.lines, originalPlacement.lines)
+        XCTAssertEqual(placedDetail.report.snapshot.revision, originalPlacement.shopRevision)
+        XCTAssertEqual(placedDetail.report.occurredAt, occurredAt)
+        let minimal = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(placementStatus)) as? [String: Any])
+        XCTAssertEqual(Set(minimal.keys), ["clientKey", "operationId", "reportId", "shopId", "reportedRevision", "reportedAuthorityEpoch", "occurredAt", "receivedAt", "source", "state"])
+    }
+}

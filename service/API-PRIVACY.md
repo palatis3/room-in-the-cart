@@ -16,6 +16,7 @@ Deletion takes an exclusive identity lock, checks all affected households under 
 {
   adult: boolean,
   deletionAvailable: boolean,
+  verifiedBackupRetentionDays: number|null,
   reauthenticationRequired: boolean,
   subscriptionManagementURL: 'https://apps.apple.com/account/subscriptions/',
   subscriptionCancelledByDeletion: false,

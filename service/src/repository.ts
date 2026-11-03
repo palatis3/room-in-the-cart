@@ -5,7 +5,7 @@ import { type Database,type Transaction,digest,tokenHash } from './database.js';
 import { accessEnded,unavailable,invalid,refresh,ServiceError } from './errors.js';
 import { type Envelope,type Decision,type PreviewInput,bodySchemas,decisionSchema } from './contracts.js';
 import { checkout } from './checkout.js';
-export interface AuthContext { identity:VerifiedIdentity; deviceToken?:string; trustedDeviceId?:string;viewGrantId?:string;selectedShopId?:string }
+export interface AuthContext { identity:VerifiedIdentity; deviceToken?:string; trustedDeviceId?:string;viewGrantId?:string;selectedShopId?:string;historicalReportShopId?:string }
 export interface Member { member_id:string; kind:'adult'|'child'; organizer:boolean; can_contribute:boolean; alias:string; state:string }
 export interface Context { db:Transaction; householdId:string; member:Member; deviceId:string; now:Date;viewGrantId?:string;selectedShopId?:string }
 interface Shop { household_id:string;shop_id:string;shopper_id:string;authority_epoch:number;revision:number;phase:string;quote:QuoteBasis;frozen_revision:number|null;placed_revision:number|null }
@@ -72,7 +72,12 @@ export class HouseholdRepository {
         if(!grant.rowCount)throw accessEnded();
       }
       if(auth.viewGrantId&&auth.selectedShopId)throw unavailable();
-      if(auth.selectedShopId){const selected=await db.query("SELECT 1 FROM ritc.shop WHERE household_id=$1 AND shop_id=$2 AND ((shopper_id=$3 AND $4='adult') OR (phase<>'closed' AND $5::boolean))",[householdId,auth.selectedShopId,member.member_id,member.kind,member.can_contribute||member.organizer]);if(!selected.rowCount)throw accessEnded();}
+      if(auth.selectedShopId){const selected=await db.query("SELECT 1 FROM ritc.shop WHERE household_id=$1 AND shop_id=$2 AND ((shopper_id=$3 AND $4='adult') OR (phase<>'closed' AND $5::boolean))",[householdId,auth.selectedShopId,member.member_id,member.kind,member.can_contribute||member.organizer]);if(!selected.rowCount){
+        // HTTP supplies this marker only for placement-report routes; each still applies its reporter/current-shopper check.
+        const historical=auth.historicalReportShopId===auth.selectedShopId&&member.kind==='adult'&&!auth.viewGrantId
+          ? await db.query('SELECT 1 FROM ritc.shop_authority WHERE household_id=$1 AND shop_id=$2 AND member_id=$3 LIMIT 1',[householdId,auth.selectedShopId,member.member_id]) : null;
+        if(!historical?.rowCount)throw accessEnded();
+      }}
       const scopedMember=auth.viewGrantId?{...member,organizer:false,can_contribute:false}:member;
       return fn({db,householdId,member:scopedMember,deviceId:device.device_id,now,...(auth.viewGrantId?{viewGrantId:auth.viewGrantId}:{}),...(auth.selectedShopId?{selectedShopId:auth.selectedShopId}:{})});
     });
@@ -114,9 +119,13 @@ export class HouseholdRepository {
     if(ctx.viewGrantId&&!helper)throw accessEnded();
     const isShopper=!ctx.viewGrantId&&ctx.member.kind==='adult'&&shop?.shopper_id===ctx.member.member_id;
     const helperRole=!ctx.selectedShopId&&!isShopper&&!ctx.member.organizer&&helper;
+    const planning = !ctx.viewGrantId && !helperRole && !isShopper && shop && ctx.member.kind==='adult' &&
+      (await ctx.db.query(`SELECT 1 FROM ritc.meal_planner p JOIN ritc.shop s USING(household_id,shop_id,authority_epoch)
+       WHERE p.household_id=$1 AND p.shop_id=$2 AND p.planner_id=$3 AND s.phase='draft'`,[ctx.householdId,shop.shop_id,ctx.member.member_id])).rowCount;
     return{household:{id:ctx.householdId,label:house.label as string},memberId:ctx.member.member_id,
+      canSelectShop:!helperRole&&!ctx.viewGrantId&&ctx.member.kind==='adult'&&(ctx.member.can_contribute||ctx.member.organizer||isShopper),
       selectionRequired:!helperRole&&!ctx.viewGrantId&&!ctx.selectedShopId&&candidates.length>1,role:isShopper?'shopper':ctx.member.organizer?'organizer':helperRole?(helper.mode==='edit'?'editor':'helper'):'contributor',shopId:helperRole?helper.shop_id:shop?.shop_id??null,...(helperRole?{grantId:helper.grant_id}:{}),enrolled:true,queueConsent:false,
-      capabilities:[...(ctx.member.can_contribute?['own_requests']:[]),...(isShopper?['shopper_inbox','request_preview','shopper_commands']:[]),...(ctx.member.organizer?['household_admin']:[]),...(helperRole?['helper_view',...(helper.mode==='edit'?['helper_propose']:[])]:[])]};
+      capabilities:[...(planning?['meal_proposals']:[]),...(ctx.member.can_contribute?['own_requests']:[]),...(isShopper?['shopper_inbox','request_preview','shopper_commands']:[]),...(ctx.member.organizer?['household_admin']:[]),...(helperRole?['helper_view',...(helper.mode==='edit'?['helper_propose']:[])]:[])]};
   }
   async shops(ctx:Context,scope:'active'|'owned',after:string|null){
     if(ctx.viewGrantId||ctx.member.kind!=='adult')throw unavailable();
@@ -129,13 +138,13 @@ export class HouseholdRepository {
     if(shopId)this.requireShopper(ctx,await this.shop(ctx,shopId));
     let cursor:{received_at:string;request_id:string}|undefined;
     if(after) {
-      cursor=(await ctx.db.query<{received_at:string;request_id:string}>(`SELECT received_at::text AS received_at,request_id FROM ritc.request WHERE household_id=$1 AND request_id=$2 AND ${shopId?'shop_id':'author_id'}=$3`,[ctx.householdId,after,shopId??ctx.member.member_id])).rows[0];
+      cursor=(await ctx.db.query<{received_at:string;request_id:string}>(`SELECT received_at::text AS received_at,request_id FROM ritc.request WHERE household_id=$1 AND request_id=$2 AND ${shopId?'shop_id':'author_id'}=$3 AND ($4::uuid IS NULL OR shop_id=$4)`,[ctx.householdId,after,shopId??ctx.member.member_id,ctx.selectedShopId??null])).rows[0];
       if(!cursor)throw unavailable();
     }
-    const params:unknown[]=[ctx.householdId,shopId??ctx.member.member_id];
+    const params:unknown[]=[ctx.householdId,shopId??ctx.member.member_id,ctx.selectedShopId??null];
     if(cursor)params.push(cursor.received_at,cursor.request_id);
     const result=await ctx.db.query<RequestRow & {author_alias?:string}>(`SELECT r.*${shopId?',(SELECT m.alias FROM ritc.member m WHERE m.household_id=r.household_id AND m.member_id=r.author_id) AS author_alias':''} FROM ritc.request r WHERE household_id=$1 AND ${shopId?'shop_id':'author_id'}=$2
-      ${cursor?'AND (received_at,request_id)>($3,$4)':''} ORDER BY received_at,request_id LIMIT 51`,params);
+      AND ($3::uuid IS NULL OR shop_id=$3) ${cursor?'AND (received_at,request_id)>($4,$5)':''} ORDER BY received_at,request_id LIMIT 51`,params);
     const rows=result.rows.slice(0,50);
     return{requests:rows.map(r=>({...ownRequest(r),...(shopId?{authorAlias:r.author_alias}: {})})),nextCursor:result.rows.length>50?rows.at(-1)!.request_id:null};
   }
@@ -158,13 +167,28 @@ export class HouseholdRepository {
   async lines(ctx:Context,shopId:string):Promise<BasketLine[]> {
     return(await ctx.db.query('SELECT line_id,original_item,packs,unit_price_minor,fee_eligible FROM ritc.basket_line WHERE household_id=$1 AND shop_id=$2 ORDER BY line_id',[ctx.householdId,shopId])).rows.map(r=>({lineId:r.line_id,originalItem:r.original_item,packs:r.packs,feeEligible:r.fee_eligible,unitPriceMinor:r.unit_price_minor===null?null:Number(r.unit_price_minor)}));
   }
+  async meals(ctx: Context, shopId: string) {
+    const result = await ctx.db.query(`SELECT occurrence_id,revision,meal FROM (
+      SELECT DISTINCT ON (occurrence_id) occurrence_id,revision,meal FROM ritc.shared_meal_revision
+      WHERE household_id=$1 AND shop_id=$2 ORDER BY occurrence_id,revision DESC
+    ) latest WHERE meal IS NOT NULL ORDER BY meal->>'day',occurrence_id`, [ctx.householdId, shopId]);
+    return result.rows.map(row => ({occurrenceId: row.occurrence_id as string, revision: row.revision as number, meal: row.meal}));
+  }
+  async shopperAssignment(ctx: Context,shopId: string) {
+    this.requireOrganizer(ctx);
+    const shop=await this.shop(ctx,shopId);
+    const adults=await ctx.db.query("SELECT member_id,alias FROM ritc.member WHERE household_id=$1 AND kind='adult' AND state='active' ORDER BY alias,member_id",[ctx.householdId]);
+    return {shopId,shopRevision:shop.revision,authorityEpoch:shop.authority_epoch,shopperId:shop.shopper_id,phase:shop.phase,
+      adults:adults.rows.map(row=>({id:row.member_id,label:row.alias}))};
+  }
   async adultShop(ctx:Context,shopId:string) {
     const s=await this.shop(ctx,shopId);this.requireShopper(ctx,s);
-    return{shopId:s.shop_id,shopRevision:s.revision,authorityEpoch:s.authority_epoch,phase:s.phase,quote:s.quote,lines:await this.lines(ctx,shopId),frozenRevision:s.frozen_revision,placedRevision:s.placed_revision};
+    return{shopId:s.shop_id,shopRevision:s.revision,authorityEpoch:s.authority_epoch,phase:s.phase,quote:s.quote,meals:await this.meals(ctx,shopId),lines:await this.lines(ctx,shopId),frozenRevision:s.frozen_revision,placedRevision:s.placed_revision};
   }
   private async snapshot(ctx:Context,shopId:string,operationId:string,purpose:string) {
     const shop=await this.shop(ctx,shopId),lines=await this.lines(ctx,shopId);
-    const snapshot={shopId,revision:shop.revision,phase:shop.phase,quote:shop.quote,lines,budget:checkout(lines,shop.quote)};
+    const mealRefs=(await this.meals(ctx,shopId)).map(({occurrenceId,revision})=>({occurrenceId,revision}));
+    const snapshot={shopId,...(mealRefs.length ? {mealRefs} : {}),revision:shop.revision,phase:shop.phase,quote:shop.quote,lines,budget:checkout(lines,shop.quote)};
     await ctx.db.query('INSERT INTO ritc.shop_snapshot(household_id,shop_id,revision,purpose,snapshot,digest,operation_id) VALUES($1,$2,$3,$4,$5,$6,$7)',[ctx.householdId,shopId,shop.revision,purpose,snapshot,digest(snapshot),operationId]);
   }
   private validateQuote(quote:QuoteBasis,now:Date) {
@@ -209,6 +233,7 @@ export class HouseholdRepository {
     return{previewId,expiresAt:expiresAt.toISOString(),shopRevision:shop.revision,authorityEpoch:shop.authority_epoch,requestRevision:r.revision,choice:input.decision.choice,...facts};
   }
   async execute(ctx:Context,command:Envelope):Promise<unknown> {
+    if(ctx.selectedShopId && command.shopId!==ctx.selectedShopId) throw unavailable();
     const window=(await ctx.db.query('SELECT 1 FROM ritc.replay_window WHERE household_id=$1 AND window_id=$2 AND member_id=$3 AND device_id=$4 AND revoked_at IS NULL AND expires_at>$5',[ctx.householdId,command.replayWindow,ctx.member.member_id,ctx.deviceId,ctx.now])).rowCount;
     if(!window)throw refresh();
     const payloadDigest=digest(command);
@@ -249,6 +274,7 @@ export class HouseholdRepository {
         const body=bodySchemas['shop.transferAuthority'].parse(command.body);
         const eligible=await ctx.db.query("SELECT 1 FROM ritc.member WHERE household_id=$1 AND member_id=$2 AND kind='adult' AND state='active'",[ctx.householdId,body.newShopperId]);
         if(!eligible.rowCount)throw unavailable();
+        if(shop.shopper_id===body.newShopperId)throw new ServiceError(409,'already_assigned','This adult is already the assigned shopper.');
         if(shop.phase==='closed')throw new ServiceError(409,'checkout_locked','Open a current shop.');
         await ctx.db.query('UPDATE ritc.shop SET shopper_id=$3,authority_epoch=authority_epoch+1 WHERE household_id=$1 AND shop_id=$2',[ctx.householdId,shop.shop_id,body.newShopperId]);
         await ctx.db.query('INSERT INTO ritc.shop_authority(household_id,shop_id,epoch,member_id) VALUES($1,$2,$3,$4)',[ctx.householdId,shop.shop_id,shop.authority_epoch+1,body.newShopperId]);
@@ -297,6 +323,30 @@ export class HouseholdRepository {
     if(c.kind==='request.apply')return this.apply(ctx,shop,c,operationId);
     if(c.kind==='shop.patch') {
       this.requireDraft(shop);const b=bodySchemas['shop.patch'].parse(c.body);this.validateQuote(b.quote,ctx.now);checkout(b.lines,b.quote);
+      if(b.mealEdit) {
+        const {occurrenceId,meal}=b.mealEdit;
+        const current=await this.meals(ctx,shop.shop_id);
+        const original=current.find(entry=>entry.occurrenceId===occurrenceId);
+        const exists=Boolean(original);
+        if((original?.revision ?? null)!==b.mealEdit.baseMealRevision)
+          throw new ServiceError(409,'stale_meal','Review this occurrence again before applying a change.');
+        if(b.mealEdit.proposalId) {
+          const proposal=(await ctx.db.query(`SELECT m.proposed_day::text FROM ritc.meal_move m
+            JOIN ritc.meal_planner p USING(household_id,shop_id,authority_epoch)
+            JOIN ritc.member a ON a.household_id=m.household_id AND a.member_id=m.actor_id AND a.state='active'
+            WHERE m.household_id=$1 AND m.shop_id=$2 AND m.proposal_id=$3 AND m.occurrence_id=$4 AND m.shop_revision=$5
+            AND m.authority_epoch=$6 AND m.state='pending' AND p.planner_id=m.actor_id AND m.grant_revision=p.revision`,
+            [ctx.householdId,shop.shop_id,b.mealEdit.proposalId,occurrenceId,shop.revision,shop.authority_epoch])).rows[0];
+          if(!proposal || !original || digest(meal)!==digest({...original.meal,day:proposal.proposed_day}))
+            throw new ServiceError(409,'stale_proposal','Read the current proposal and review its exact move.');
+          await ctx.db.query("UPDATE ritc.meal_move SET state='applied' WHERE household_id=$1 AND shop_id=$2 AND proposal_id=$3",
+            [ctx.householdId,shop.shop_id,b.mealEdit.proposalId]);
+        }
+        if(!exists && !meal)throw unavailable();
+        if(!exists && current.length>=100)throw new ServiceError(409,'meal_limit','Remove a finished occurrence before adding another.');
+        await ctx.db.query('INSERT INTO ritc.shared_meal_revision(household_id,shop_id,occurrence_id,revision,actor_id,meal) VALUES($1,$2,$3,$4,$5,$6)',
+          [ctx.householdId,shop.shop_id,occurrenceId,shop.revision+1,ctx.member.member_id,meal]);
+      }
       await this.setLines(ctx,shop.shop_id,b.lines);
       await ctx.db.query('UPDATE ritc.shop SET quote=$3,revision=revision+1 WHERE household_id=$1 AND shop_id=$2',[ctx.householdId,shop.shop_id,b.quote]);
       await this.snapshot(ctx,shop.shop_id,operationId,'patch');return this.receipt(ctx,c,operationId,'patched');

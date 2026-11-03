@@ -28,3 +28,19 @@ Bootstrap adds `selectionRequired:boolean`. With multiple available active shops
 The final combined real PostgreSQL suite passed 76 tests with zero failures or skips; eight cover helper review and selected-shop context, including pagination. The full evidence is `../.build/history-pg.log`. Explicit fast tests passed 32/32 and isolated maintenance tests passed 5/5. Pagination retains PostgreSQL timestamp microseconds, preventing duplicate or omitted rows at a page boundary; this also corrects the existing request pager in the independent scratch copy.
 
 Frozen privacy package files and migrations 001–010 remain unchanged. This slice has not been installed or deployed. Native adapter integration and live end-to-end evidence remain separate work.
+
+### Shop selection and dated meals
+
+An enrolled native adult selects a shop with `X-Shop-ID`. The service checks the selected shop for reads, commands and replays. A scoped helper keeps its separate view grant. The app saves the selected shop with its enrollment and clears the previous projection before switching.
+
+The following paths are relative to `/v1/households/{householdId}/shops/{shopId}`.
+
+| Method and path | Action |
+| --- | --- |
+| GET `/shopper-assignment` | Review the current buying authority and eligible reassignment choices. |
+| GET `/meal-plan` | Read current dated meals and pending moves within the caller's planning access. |
+| PUT `/meal-plan/planner` | Shopper grants or revokes access for one adult using the current grant revision and authority epoch. |
+| POST `/meal-plan/proposals` | The explicitly assigned, seated planner proposes a new civil date against the current shop, grant and authority versions. |
+| POST `/meal-plan/dismissals` | Shopper dismisses a pending move against the reviewed versions. |
+
+A shopper creates, edits or removes one dated occurrence through the existing `shop.patch` command. Include the reviewed quote and pack lines alongside `mealEdit`. Set `baseMealRevision` to null for creation or the reviewed revision for an existing occurrence. Set `meal` to null for removal. Accepting a planner's move includes its `proposalId`; the shopper reviews the meal, packs and price before applying. A stale base requires a new review. Frozen snapshots carry versioned meal references, allowing later erasure of personal meal content.

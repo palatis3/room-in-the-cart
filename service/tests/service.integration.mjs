@@ -7,7 +7,7 @@ import {migrate} from '../scripts/migrate.mjs';
 import {HouseholdRepository} from '../dist/repository.js';
 import {JWTIdentityVerifier,SupabaseSessionVerifier} from '../dist/auth.js';
 import {createHTTPServer} from '../dist/http.js';
-import {assertRuntimeRole} from '../dist/database.js';
+import {assertRuntimeRole,digest} from '../dist/database.js';
 import {BillingService} from '../dist/billing/service.js';
 const runtimeURL=process.env.TEST_DATABASE_URL,adminURL=process.env.TEST_ADMIN_DATABASE_URL;
 if(!runtimeURL||!adminURL)throw new Error('Real PostgreSQL tests require TEST_DATABASE_URL and TEST_ADMIN_DATABASE_URL; they are never replaced by an in-memory mock.');
@@ -123,6 +123,13 @@ test('request edit invalidates preview; deferral preserves basket and routes obl
 });
 test('freeze survives authority transfer and stale placement is preserved without closing the new shop',async()=>{
   const f=await fixture(),sent=await f.send();
+  const assignment='/shops/'+f.shopId+'/shopper-assignment';
+  const initial=await f.http('Mia','GET',assignment);
+  assert.equal(initial.data.shopperId,f.actors.Mia.id);
+  assert.deepEqual(new Set(initial.data.adults.map(a=>a.id)),new Set([f.actors.Mia.id,f.actors.Alex.id]));
+  assert.equal(initial.data.quote,undefined);assert.equal(initial.data.lines,undefined);
+  assert.equal((await f.http('Alex','GET',assignment)).status,404);
+  assert.equal((await f.command('Mia','shop.transferAuthority',{newShopperId:f.actors.Mia.id})).data.error.code,'already_assigned');
   assert.equal((await f.command('Mia','shop.freeze',{})).status,200);
   assert.equal((await f.command('Mia','shop.transferAuthority',{newShopperId:f.actors.Alex.id},{shopRevision:2,authorityEpoch:1})).status,200);
   const late=await f.send('Jo');assert.equal(late.request.route,'next');
@@ -405,4 +412,108 @@ test('managed invitation and view lists reconcile creation without disclosing to
   assert.equal((await f.http(actor,'GET','/views',undefined,{'X-View-Grant-ID':grantId})).status,404);
   await f.http('Mia','POST','/revocations',{kind:'view',targetId:grantId});
   assert.equal((await f.http('Mia','GET','/views')).data.views[0].status,'revoked');
+});
+
+test('shopper reviews a dated dinner and packs in one revision, preserves protected lunch, and cannot replay after transfer',async()=>{
+  const f=await fixture(), path='/shops/'+f.shopId;
+  const lunch={occurrenceId:randomUUID(),baseMealRevision:null,meal:{title:'Friday lunch',day:'2026-11-06',kind:'lunch',portions:2,protected:true}};
+  const dinner={occurrenceId:randomUUID(),baseMealRevision:null,meal:{title:'Chickpea dinner',day:'2026-11-05',kind:'dinner',portions:3,protected:false}};
+  const patch=(mealEdit,lines=[f.line])=>({quote:f.quote,lines,mealEdit});
+  const base=shopRevision=>({shopRevision,authorityEpoch:1});
+  assert.equal((await f.command('Sam','shop.patch',patch(lunch))).status,404);
+  assert.equal((await f.command('Alex','shop.patch',patch(lunch))).status,404);
+  assert.equal((await f.command('Mia','shop.patch',patch(lunch))).status,200);
+  assert.equal((await f.command('Mia','shop.patch',patch(dinner),base(2))).status,200);
+  const move={...dinner,baseMealRevision:3,meal:{...dinner.meal,day:'2026-11-08'}};
+  const change=f.envelope('Mia','shop.patch',patch(move,[{...f.line,packs:2}]),base(3));
+  const receipt=await f.http('Mia','POST','/commands',change);
+  assert.equal(receipt.status,200);assert.equal(receipt.data.shopRevision,4);
+  assert.deepEqual((await f.http('Mia','POST','/commands',change)).data,receipt.data);
+  assert.equal((await f.command('Mia','shop.patch',patch(dinner),base(3))).data.error.code,'stale_base');
+  const state=(await f.http('Mia','GET',path)).data;
+  assert.deepEqual(state.meals,[{occurrenceId:lunch.occurrenceId,meal:lunch.meal,revision:2},{occurrenceId:move.occurrenceId,meal:move.meal,revision:4}]);
+  assert.equal(state.lines[0].packs,2);
+  assert.equal((await f.command('Mia','shop.patch',patch({...move,baseMealRevision:3}),base(4))).data.error.code,'stale_meal');
+  assert.equal((await f.command('Mia','shop.patch',patch({...move,meal:{...move.meal,day:'2026-02-30'}}),base(4))).status,422);
+  assert.equal((await f.command('Mia','shop.patch',{quote:f.quote,lines:[f.line]},base(4))).status,200);
+  assert.deepEqual((await f.http('Mia','GET',path)).data.meals,state.meals);
+  assert.equal((await f.command('Mia','shop.freeze',{},base(5))).status,200);
+  assert.equal((await f.command('Mia','shop.patch',patch(dinner),base(6))).data.error.code,'checkout_locked');
+  assert.equal((await f.command('Mia','shop.transferAuthority',{newShopperId:f.actors.Alex.id},base(6))).status,200);
+  assert.equal((await f.http('Mia','POST','/commands',change)).status,404);
+  assert.equal((await f.http('Mia','GET',path)).status,404);
+  assert.deepEqual((await f.http('Alex','GET',path)).data.meals,state.meals);
+});
+
+test('placement reviewer reads original snapshot; reporter replay/status survives transfer, closure and expired window without budget disclosure',async()=>{
+ const f=await fixture();await f.command('Mia','shop.freeze',{});
+ const command=f.envelope('Mia','shop.reportPlaced',{occurredAt:new Date().toISOString()},{shopRevision:2,authorityEpoch:1});
+ await f.command('Mia','shop.transferAuthority',{newShopperId:f.actors.Alex.id},{shopRevision:2,authorityEpoch:1});
+ const headers={'X-Shop-ID':f.shopId},own='/shops/'+f.shopId+'/placement-reports/mine/'+command.clientKey+'?commandDigest='+digest(command),list='/shops/'+f.shopId+'/placement-reports';
+ assert.deepEqual((await f.http('Mia','GET',own,undefined,headers)).data,{status:null});
+ const sent=await Promise.all([f.http('Mia','POST','/commands',command,headers),f.http('Mia','POST','/commands',command,headers)]);
+ assert.equal(sent[0].status,200,JSON.stringify(sent[0].data));assert.deepEqual(sent[0].data,sent[1].data);
+ assert.deepEqual(Object.keys(sent[0].data).sort(),['operationId','kind','reportId','disposition'].sort());
+ const page=await f.http('Alex','GET',list);assert.equal(page.status,200,JSON.stringify(page.data));assert.equal(page.data.reports.length,1);
+ assert.equal(page.data.shopRevision,2);assert.equal(page.data.authorityEpoch,2);assert.equal(page.data.frozenRevision,2);
+ const row=page.data.reports[0];assert.equal(row.reportedAuthorityEpoch,1);assert.equal(row.snapshot.revision,2);assert.equal(row.snapshot.lines[0].originalItem,'Original basket');assert.equal(row.snapshot.budget.totalMinor,3720);
+ assert.equal(row.actorId,undefined);assert.equal(row.alias,undefined);assert.equal(row.snapshotDigest,digest(row.snapshot));
+ assert.equal((await f.http('Mia','GET',list,undefined,headers)).status,404);assert.equal((await f.http('Sam','GET',list)).status,404);
+ const foreign=await fixture();assert.equal((await f.http(foreign.actors.Mia,'GET',list)).status,404);
+ const review=f.envelope('Alex','shop.reconcileReport',{reportId:row.reportId,choice:'apply'},{shopRevision:2,authorityEpoch:2});
+ const applied=await Promise.all([f.http('Alex','POST','/commands',review),f.http('Alex','POST','/commands',review)]);
+ assert.equal(applied[0].status,200);assert.deepEqual(applied[0].data,applied[1].data);
+ const detail=await f.http('Alex','GET',list+'/'+row.reportId);assert.equal(detail.data.report.state,'applied');assert.equal(detail.data.report.resolutionClientKey,review.clientKey);
+ assert.equal((await f.http('Alex','GET',list)).data.reports.length,0);
+ assert.equal((await f.http('Alex','POST','/shops/'+f.shopId+'/financial-reviews',{clientKey:randomUUID(),sourceVersion:{shopRevision:3,authorityEpoch:2,financialRevision:0},allEvidenceEntered:false,closeShop:true})).status,200);
+ await admin.query("UPDATE ritc.replay_window SET issued_at=now()-interval '2 days',expires_at=now()-interval '1 day' WHERE household_id=$1 AND window_id=$2",[f.h,f.actors.Mia.window]);
+ assert.equal((await f.http('Mia','POST','/commands',command,headers)).data.error.code,'refresh_required');
+ const status=await f.http('Mia','GET',own,undefined,headers);assert.equal(status.status,200,JSON.stringify(status.data));assert.equal(status.data.status.state,'applied');
+ assert.deepEqual(Object.keys(status.data.status).sort(),['clientKey','operationId','reportId','shopId','reportedRevision','reportedAuthorityEpoch','occurredAt','receivedAt','source','state'].sort());
+ assert.equal(status.data.status.reportedRevision,2);assert.equal(status.data.status.reportedAuthorityEpoch,1);
+ assert.equal((await f.http('Mia','GET',own.replace(digest(command),'0'.repeat(64)),undefined,headers)).data.error.code,'key_reused');
+ assert.equal((await f.http('Alex','GET',own)).data.status,null);
+ assert.equal((await f.http('Mia','GET','/shops/'+f.shopId,undefined,headers)).status,403);
+ assert.equal((await f.http('Mia','GET',list,undefined,headers)).status,404);
+ assert.equal((await f.http('Mia','GET',list+'/current-shop',undefined,headers)).status,404);
+ assert.equal((await admin.query('SELECT count(*)::int AS n FROM ritc.placement_report WHERE household_id=$1',[f.h])).rows[0].n,1);
+ await admin.query("UPDATE ritc.member SET state='revoked' WHERE household_id=$1 AND member_id=$2",[f.h,f.actors.Mia.id]);
+ assert.equal((await f.http('Mia','GET',own,undefined,headers)).status,403);
+});
+
+test('changed basket cannot apply an old placement; concurrent current-shopper resolution and transfer preserve one resolution',async()=>{
+ const f=await fixture();await f.command('Mia','shop.freeze',{});
+ await f.command('Mia','shop.transferAuthority',{newShopperId:f.actors.Alex.id},{shopRevision:2,authorityEpoch:1});
+ await f.command('Alex','shop.reopen',{}, {shopRevision:2,authorityEpoch:2});
+ await f.command('Alex','shop.patch',{quote:f.quote,lines:[{...f.line,originalItem:'New private basket',unitPriceMinor:1200}]},{shopRevision:3,authorityEpoch:2});
+ await f.command('Alex','shop.freeze',{}, {shopRevision:4,authorityEpoch:2});
+ const reported=await f.command('Mia','shop.reportPlaced',{occurredAt:new Date().toISOString()},{shopRevision:2,authorityEpoch:1});
+ const path='/shops/'+f.shopId+'/placement-reports',page=await f.http('Alex','GET',path);assert.equal(page.data.reports[0].snapshot.lines[0].originalItem,'Original basket');
+ assert.equal(page.data.frozenRevision,5);assert.equal(page.data.reports[0].reportedRevision,2);
+ const apply=await f.command('Alex','shop.reconcileReport',{reportId:reported.data.reportId,choice:'apply'},{shopRevision:5,authorityEpoch:2});assert.equal(apply.data.error.code,'reconciliation_required');
+ const choice=f.envelope('Alex','shop.reconcileReport',{reportId:reported.data.reportId,choice:'reject'},{shopRevision:5,authorityEpoch:2});
+ const transfer=f.envelope('Mia','shop.transferAuthority',{newShopperId:f.actors.Mia.id},{shopRevision:5,authorityEpoch:2});
+ const raced=await Promise.all([f.http('Alex','POST','/commands',choice),f.http('Mia','POST','/commands',transfer)]);assert.equal(raced[1].status,200,JSON.stringify(raced));assert.ok([200,404].includes(raced[0].status));
+ const current=await f.http('Mia','GET','/shops/'+f.shopId);assert.equal(current.data.shopRevision,5);assert.equal(current.data.authorityEpoch,3);assert.equal(current.data.phase,'frozen');assert.equal(current.data.lines[0].originalItem,'New private basket');
+ const detail=await f.http('Mia','GET',path+'/'+reported.data.reportId);assert.equal(detail.data.report.state,raced[0].status===200?'rejected':'pending_reconciliation');
+ assert.equal(detail.data.report.resolutionClientKey,null);assert.equal((await f.http('Alex','GET',path)).status,404);
+ if(raced[0].status===404){const resolved=await f.command('Mia','shop.reconcileReport',{reportId:reported.data.reportId,choice:'reject'},{shopRevision:5,authorityEpoch:3});assert.equal(resolved.status,200);}
+ assert.equal((await f.http('Mia','GET',path)).data.reports.length,0);
+ assert.equal((await f.http('Mia','POST','/shops/'+f.shopId+'/financial-reviews',{clientKey:randomUUID(),sourceVersion:{shopRevision:5,authorityEpoch:3,financialRevision:0},allEvidenceEntered:false,closeShop:true})).status,200);
+ assert.equal((await f.http('Alex','POST','/commands',choice,{'X-Shop-ID':f.shopId})).status,404);
+});
+
+test('placement report pages are bounded, stable and bind cursors to the authorized shop',async()=>{
+ const f=await fixture();await f.command('Mia','shop.freeze',{});await f.command('Mia','shop.transferAuthority',{newShopperId:f.actors.Alex.id},{shopRevision:2,authorityEpoch:1});
+ for(let i=0;i<6;i++)assert.equal((await f.command('Mia','shop.reportPlaced',{occurredAt:new Date().toISOString()},{shopRevision:2,authorityEpoch:1})).status,200);
+ const path='/shops/'+f.shopId+'/placement-reports',a=await f.http('Alex','GET',path),b=await f.http('Alex','GET',path+'?cursor='+a.data.nextCursor);
+ assert.equal(a.data.reports.length,5);assert.equal(a.data.nextCursor,a.data.reports[4].reportId);assert.equal(b.data.reports.length,1);assert.equal(b.data.nextCursor,null);
+ assert.equal(new Set([...a.data.reports,...b.data.reports].map(r=>r.reportId)).size,6);
+ assert.equal((await f.http('Alex','GET',path+'?cursor='+randomUUID())).status,404);
+});
+
+
+test('placement command digest matches the native fixed sorted-byte fixture',()=>{
+ const command={v:1,replayWindow:'00000000-0000-4000-8000-000000000062',clientKey:'00000000-0000-4000-8000-000000000061',shopId:'00000000-0000-4000-8000-000000000063',kind:'shop.reportPlaced',base:{shopRevision:4,authorityEpoch:2},body:{occurredAt:'2026-11-03T00:00:00Z'}};
+ assert.equal(digest(command),'2c5085b9ab57695f68a2164a13508eb7b1a511f08aeaa6417a1fd357df7a1218');
 });

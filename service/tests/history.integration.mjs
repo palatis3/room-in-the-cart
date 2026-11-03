@@ -84,3 +84,59 @@ test('history pagination retains submillisecond boundaries and rejects foreign s
  const o=observation(f.shopId);await admin.query(`INSERT INTO ritc.price_observation(household_id,observation_id,shop_id,actor_id,record,observed_at) SELECT $1,id,$2,$3,jsonb_set($4::jsonb,'{id}',to_jsonb(id::text)),'2026-01-01 00:00:00.123456+00' FROM (SELECT gen_random_uuid() AS id FROM generate_series(1,101)) fixture`,[f.h,f.shopId,f.owner.id,o]);
  const c=ok(await call(f.owner,f.base+'/price-observations')),d=ok(await call(f.owner,f.base+'/price-observations?cursor='+c.nextCursor));assert.equal(c.observations.length,100);assert.equal(d.observations.length,1);assert.equal(new Set([...c.observations,...d.observations].map(e=>e.id)).size,101);assert.equal(d.nextCursor,null);assert.equal((await call(f.owner,f.base+'/price-observations?cursor='+randomUUID())).status,404);
 });
+
+test('explicit planner access and an active adult seat allow proposing an exact move without basket or budget access',async()=>{
+ const f=await fixture(), base=f.base+'/shops/'+f.shopId, plan=base+'/meal-plan';
+ const alex=await actor(),invite=ok(await call(f.owner,f.base+'/invites','POST',{kind:'adult_contributor'}));
+ alex.id=ok(await call(alex,'/v1/invites/redeem','POST',{token:invite.token,intent:'join',adultAttestation:true,alias:'Alex'})).memberId;
+ await enroll(alex,f.h);
+ const initial=ok(await call(f.owner,base)), occurrenceId=randomUUID();
+ const patch=(revision,mealEdit)=>({v:1,replayWindow:f.owner.window,clientKey:randomUUID(),shopId:f.shopId,kind:'shop.patch',
+  base:{shopRevision:revision,authorityEpoch:1},body:{quote:initial.quote,lines:initial.lines,mealEdit}});
+ const meal={title:'Thursday soup',kind:'dinner',portions:4,day:'2026-11-05',protected:false};
+ ok(await call(f.owner,f.base+'/commands','POST',patch(1,{occurrenceId,baseMealRevision:null,meal})));
+ await f.paid();const seats=ok(await call(f.owner,f.base+'/entitlements'));
+ ok(await call(f.owner,f.base+'/billing/seats','PUT',{revision:seats.revision,userIDs:[f.owner.id,alex.id]}));
+ assert.equal((await call(alex,plan)).status,404);
+ const grant={authorityEpoch:1,grantRevision:0,plannerId:alex.id};
+ ok(await call(f.owner,plan+'/planner','PUT',grant));
+ ok(await call(f.owner,plan+'/planner','PUT',grant));
+ assert.ok(ok(await call(alex,f.base+'/bootstrap')).capabilities.includes('meal_proposals'));
+ const read=ok(await call(alex,plan));
+ assert.deepEqual(read.adults,[]);assert.equal(read.meals[0].meal.day,meal.day);
+ assert.equal(read.quote,undefined);assert.equal(read.lines,undefined);assert.equal((await call(alex,base)).status,404);
+ const move={proposalId:randomUUID(),occurrenceId,day:'2026-11-08',shopRevision:2,authorityEpoch:1,grantRevision:1};
+ ok(await call(alex,plan+'/proposals','POST',move));ok(await call(alex,plan+'/proposals','POST',move));
+ assert.equal((await call(alex,plan+'/proposals','POST',{...move,day:'2026-11-09'})).status,409);
+ const alternate={...move,proposalId:randomUUID(),day:'2026-11-10'};
+ ok(await call(alex,plan+'/proposals','POST',alternate));
+ const dismissal={proposalId:alternate.proposalId,shopRevision:2,authorityEpoch:1,grantRevision:1};
+ assert.equal((await call(alex,plan+'/dismissals','POST',dismissal)).status,404);
+ ok(await call(f.owner,plan+'/dismissals','POST',dismissal));
+ ok(await call(f.owner,plan+'/dismissals','POST',dismissal));
+ assert.equal(ok(await call(f.owner,plan)).proposals.length,1);
+ assert.equal(ok(await call(f.owner,base)).shopRevision,2);
+ const accepted=patch(2,{occurrenceId,baseMealRevision:2,meal:{...meal,day:move.day},proposalId:move.proposalId});
+ assert.equal((await call(f.owner,f.base+'/commands','POST',patch(2,{...accepted.body.mealEdit,meal:{...meal,day:'2026-11-12'}}))).status,409);
+ const receipt=ok(await call(f.owner,f.base+'/commands','POST',accepted));
+ assert.equal(receipt.shopRevision,3);assert.deepEqual(ok(await call(f.owner,f.base+'/commands','POST',accepted)),receipt);
+ assert.equal(ok(await call(alex,plan)).meals[0].meal.day,move.day);
+ const current=ok(await call(f.owner,f.base+'/entitlements'));
+ ok(await call(f.owner,f.base+'/billing/seats','PUT',{revision:current.revision,userIDs:[f.owner.id]}));
+ assert.equal((await call(alex,plan)).data.error.code,'membership_inactive');
+ ok(await call(f.owner,plan+'/planner','PUT',{...grant,grantRevision:1,plannerId:null}));
+ assert.equal((await call(alex,plan+'/proposals','POST',move)).status,404);
+ assert.equal(ok(await call(alex,f.base+'/bootstrap')).capabilities.includes('meal_proposals'),false);
+});
+
+if (process.env.RITC_TEST_NATIVE_WIRE === '1') {
+ for(const paid of [false,true]) {
+  test(`Swift household client records meals and price history over HTTPS and PostgreSQL (paid=${paid})`,async()=>{
+   const {exerciseNativeClient}=await import('./native-wire.mjs');
+   const f=await fixture(), second=await f.shop(), record=observation(f.shopId);
+   if(paid) await f.paid();
+   ok(await call(f.owner,f.base+'/price-observations','POST',{clientKey:randomUUID(),observation:record}));
+   await exerciseNativeClient({service:server,owner:f.owner,householdId:f.h,shopId:f.shopId,secondShopId:second,observationId:record.id,paid});
+  });
+ }
+}

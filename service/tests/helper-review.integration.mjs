@@ -90,3 +90,20 @@ test('shop and request cursors preserve PostgreSQL submillisecond peers without 
  await admin.query(`INSERT INTO ritc.request(household_id,request_id,author_id,client_request_id,shop_id,original_item,route,authored_at,received_at) SELECT $1,gen_random_uuid(),$2,gen_random_uuid(),$3,'Own request','current',now(),'2026-01-01 00:00:00.123456+00' FROM generate_series(1,51)`,[f.h,f.owner.id,f.shopId]);
  for(const route of ['/requests/mine','/shops/'+f.shopId+'/inbox']){const a=ok(await call(f.owner,f.base+route)),b=ok(await call(f.owner,f.base+route+'?cursor='+a.nextCursor));assert.equal(a.requests.length,50);assert.equal(b.requests.length,1);assert.equal(new Set([...a.requests,...b.requests].map(r=>r.requestId)).size,51);assert.equal(b.nextCursor,null);}
 });
+
+test('a selected shop excludes another shop’s own request, cursor, command and prior receipt',async()=>{
+  const f=await fixture(), second=await f.shop();
+  const selected={'X-Shop-ID':f.shopId}, other={'X-Shop-ID':second};
+  function send(shopId,name) {
+    return {v:1,replayWindow:f.owner.window,clientKey:randomUUID(),shopId,kind:'request.send',
+      base:{shopRevision:0,authorityEpoch:0},body:{clientRequestId:randomUUID(),originalItem:name,ownQuantity:null,authoredAt:new Date().toISOString()}};
+  }
+  const first=send(f.shopId,'First shop request'), later=send(second,'Other shop request');
+  ok(await call(f.owner,f.base+'/commands','POST',first,selected));
+  assert.equal((await call(f.owner,f.base+'/commands','POST',later,selected)).status,404);
+  const received=ok(await call(f.owner,f.base+'/commands','POST',later,other));
+  assert.equal((await call(f.owner,f.base+'/commands','POST',later,selected)).status,404);
+  const mine=ok(await call(f.owner,f.base+'/requests/mine','GET',undefined,selected));
+  assert.deepEqual(mine.requests.map(r=>r.originalItem),['First shop request']);
+  assert.equal((await call(f.owner,f.base+'/requests/mine?cursor='+received.request.requestId,'GET',undefined,selected)).status,404);
+});

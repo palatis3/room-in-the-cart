@@ -8,7 +8,9 @@ import { ServiceError,accessEnded,invalid } from './errors.js';
 import {BrowserAuthService,emailStartSchema,emailVerifySchema,type BrowserIdentity} from './browser-auth.js';
 import {PriceBudgetHistory} from './history.js';
 import {observationWriteSchema,financialAppendSchema,financialReviewSchema,historyRetireSchema,periodWriteSchema,budgetQuerySchema} from './history-contracts.js';
+import {MealMoves,grantChange,moveRequest,dismissMove} from './meal-moves.js';
 import {HelperReview} from './helper-review.js';
+import {PlacementReports} from './placement-reports.js';
 import {HouseholdLifecycle} from './lifecycle.js';
 import {PrivacyService,deletionSchema,exitSchema} from './privacy.js';
 import {viewReplacementSchema,proposalResolutionSchema,householdCreateSchema,inviteCreateSchema,inviteRedeemSchema,viewCreateSchema,viewUpdateSchema,proposalSchema,revocationSchema, parseCommand,previewSchema,uuid } from './contracts.js';
@@ -26,6 +28,8 @@ function cookie(req:IncomingMessage,name='ritc_session'):string|null {
 export function createHTTPServer(options:HTTPOptions) {
   const repository=options.repository,verifier=options.verifier??new DenyIdentityVerifier();
   const lifecycle=new HouseholdLifecycle(repository),helperReview=new HelperReview(lifecycle),history=new PriceBudgetHistory(repository,options.billing);
+  const mealMoves = new MealMoves(repository,options.billing);
+  const placementReports = new PlacementReports(repository);
   const limits=new Map<string,{count:number;until:number}>();
   return createServer(async(req,res)=>{
     const correlationId=randomUUID();
@@ -149,7 +153,13 @@ export function createHTTPServer(options:HTTPOptions) {
         send(201,await repository.enroll(householdId,auth.identity));return;
       }
       const payload=method==='POST'||method==='PUT'?await body(req):undefined;
-      const output=await repository.authorized(householdId,auth,async ctx=>{
+      const ownPlacement=/^\/shops\/([^/]+)\/placement-reports\/mine\/([^/]+)$/.exec(path);
+      const placementCommand=path==='/commands'&&method==='POST'&&typeof payload==='object'&&payload!==null&&'kind' in payload&&(payload.kind==='shop.reportPlaced'||payload.kind==='shop.reconcileReport')?parseCommand(payload):undefined;
+      const placementRead=method==='GET'?/^\/shops\/([^/]+)\/placement-reports(?:\/[^/]+)?$/.exec(path):null;
+      const historicalReportShopId=placementCommand?.shopId??(ownPlacement&&method==='GET'?uuid.parse(ownPlacement[1]):placementRead?uuid.parse(placementRead[1]):undefined);
+      const scopedAuth=historicalReportShopId?{...auth,historicalReportShopId}:auth;
+      const output=await repository.authorized(householdId,scopedAuth,async ctx=>{
+        if(ownPlacement&&method==='GET')return placementReports.own(ctx,uuid.parse(ownPlacement[1]),uuid.parse(ownPlacement[2]),z.string().regex(/^[0-9a-f]{64}$/).parse(url.searchParams.get('commandDigest')));
         if(path==='/devices/current'&&method==='DELETE')return repository.logout(ctx);
         if(options.billing){
           if(path==='/entitlements'&&method==='GET')return options.billing.snapshot(ctx);
@@ -206,6 +216,15 @@ export function createHTTPServer(options:HTTPOptions) {
         const shopMatch=/^\/shops\/([^/]+)(.*)$/.exec(path);
         if(shopMatch) {
           const shopId=uuid.parse(shopMatch[1]),tail=shopMatch[2];
+          if(tail==='/placement-reports'&&method==='GET'){const cursor=url.searchParams.get('cursor');if(cursor)uuid.parse(cursor);return placementReports.pending(ctx,shopId,cursor);}
+          if(tail==='/placement-reports/current-shop'&&method==='GET')return placementReports.currentShop(ctx,shopId);
+          const placementDetail=/^\/placement-reports\/([^/]+)$/.exec(tail??'');
+          if(placementDetail&&method==='GET')return placementReports.detail(ctx,shopId,uuid.parse(placementDetail[1]));
+          if(tail==='/shopper-assignment'&&method==='GET')return repository.shopperAssignment(ctx,shopId);
+          if(tail==='/meal-plan'&&method==='GET')return mealMoves.read(ctx,shopId);
+          if(tail==='/meal-plan/planner'&&method==='PUT')return mealMoves.grant(ctx,shopId,grantChange.parse(payload));
+          if(tail==='/meal-plan/dismissals'&&method==='POST')return mealMoves.dismiss(ctx,shopId,dismissMove.parse(payload));
+          if(tail==='/meal-plan/proposals'&&method==='POST')return mealMoves.propose(ctx,shopId,moveRequest.parse(payload));
           if(tail===''&&method==='GET')return repository.adultShop(ctx,shopId);
           if(tail==='/inbox'&&method==='GET'){const cursor=url.searchParams.get('cursor');if(cursor)uuid.parse(cursor);return repository.requests(ctx,cursor,shopId);}
           if(tail==='/previews'&&method==='POST')return repository.preview(ctx,shopId,previewSchema.parse(payload));

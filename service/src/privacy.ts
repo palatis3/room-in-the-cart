@@ -57,7 +57,7 @@ export class PrivacyService {
  async preview(identity:VerifiedIdentity){
   await this.authenticated(identity);
   try{const result=(await workerQuery(this.repo.pool,'SELECT ritc.privacy_preview($1,$2,$3::uuid) AS value',[identity.issuer,identity.subject,identity.sessionId])).rows[0].value;
-   return{...result,deletionAvailable:Boolean(this.options.provider&&this.policy),reauthenticationRequired:!identity.authenticatedAt||Date.now()-identity.authenticatedAt.getTime()>300000,subscriptionManagementURL:'https://apps.apple.com/account/subscriptions/',subscriptionCancelledByDeletion:false};
+   return{...result,verifiedBackupRetentionDays:this.policy?.verifiedBackupRetentionDays??null,deletionAvailable:Boolean(this.options.provider&&this.policy),reauthenticationRequired:!identity.authenticatedAt||Date.now()-identity.authenticatedAt.getTime()>300000,subscriptionManagementURL:'https://apps.apple.com/account/subscriptions/',subscriptionCancelledByDeletion:false};
   }catch(e){return mapped(e);}
  }
  async request(identity:VerifiedIdentity,input:z.infer<typeof deletionSchema>){
