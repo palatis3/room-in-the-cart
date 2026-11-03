@@ -101,7 +101,7 @@ export function createHTTPServer(options:HTTPOptions) {
       }
       if(auth.viewGrantId){
         const helperView=url.pathname===`/v1/views/${auth.viewGrantId}/current`&&method==='GET';
-        const helperProposal=(url.pathname===`/v1/views/${auth.viewGrantId}/proposals`&&method==='POST')||(new RegExp('^/v1/views/'+auth.viewGrantId+'/proposals/[^/]+$').test(url.pathname)&&method==='GET');
+        const helperProposal=(url.pathname===`/v1/views/${auth.viewGrantId}/proposals`&&(method==='POST'||method==='GET'))||(new RegExp('^/v1/views/'+auth.viewGrantId+'/proposals/[^/]+$').test(url.pathname)&&method==='GET');
         const helperSession=url.pathname==='/v1/session'||(url.pathname==='/v1/invites/redeem'&&method==='POST');
         const helperHousehold=/^\/v1\/households\/[^/]+\/(bootstrap|replay-windows|devices(?:\/current)?)$/.test(url.pathname);
         if(!helperView&&!helperProposal&&!helperSession&&!helperHousehold)throw new ServiceError(404,'unavailable','Use the selected helper view.');
@@ -135,6 +135,7 @@ export function createHTTPServer(options:HTTPOptions) {
         const payload=method==='POST'?await body(req):undefined;
         send(200,await repository.authorized<unknown>(householdId,auth,async ctx=>{
           if(viewMatch[2]==='current'&&method==='GET')return lifecycle.currentView(ctx,grantId);
+          if(viewMatch[2]==='proposals'&&method==='GET'){const cursor=url.searchParams.get('cursor');if(cursor)uuid.parse(cursor);return helperReview.ownProposals(ctx,grantId,cursor);}
           if(viewMatch[2]==='proposals'&&method==='POST')return lifecycle.propose(ctx,grantId,proposalSchema.parse(payload));
           throw new ServiceError(404,'unavailable','Return to your current workspace.');
         }));return;

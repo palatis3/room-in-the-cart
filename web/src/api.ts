@@ -15,6 +15,41 @@ export interface CookView {
   expiresAt: string; canPropose: boolean;
   instructions: { item: string; amount: string | null; action: string; basis?: string }[];
 }
+export interface ProposalIntent {
+  readonly householdId:string; readonly memberId:string; readonly shopId:string; readonly grantId:string;
+  readonly baseRevision:number; readonly correction:string; readonly clientKey:string; readonly expiresAt:string;
+  readonly body:string;
+}
+export interface ProposalReceipt { proposalId:string; grantId:string; baseRevision:number; status:'pending' }
+export interface OwnProposal {
+  proposalId:string; grantId:string; baseRevision:number; proposalRevision:number; correction:string;
+  status:'pending'|'reviewed'|'dismissed'; createdAt:string;
+  resolution:{mutationId:string; decision:'replaced'|'dismissed'; revision:number; resolvedAt:string}|null;
+}
+export interface OwnProposalPage { proposals:OwnProposal[]; nextCursor:string|null }
+function ownProposalValue(value:unknown,grantId:string):OwnProposal {
+  const d=record(value);
+  if(d.grantId!==grantId||!['pending','reviewed','dismissed'].includes(String(d.status)))return invalid();
+  let resolution:OwnProposal['resolution']=null;
+  if(d.resolution!==null){const r=record(d.resolution);if(!['replaced','dismissed'].includes(String(r.decision)))return invalid();
+    resolution={mutationId:identity(r.mutationId),decision:r.decision as 'replaced'|'dismissed',revision:integer(r.revision,1),resolvedAt:timestamp(r.resolvedAt)};}
+  if((d.status==='pending')!==(resolution===null)||(d.status==='reviewed'&&resolution?.decision!=='replaced')||(d.status==='dismissed'&&resolution?.decision!=='dismissed'))return invalid();
+  return {proposalId:identity(d.proposalId),grantId,baseRevision:integer(d.baseRevision,1),proposalRevision:integer(d.proposalRevision,1),
+    correction:text(d.correction,1000),status:d.status as OwnProposal['status'],createdAt:timestamp(d.createdAt),resolution};
+}
+export function prepareProposal(session:Session,view:CookView,correction:string,clientKey:string):ProposalIntent {
+  const intent={householdId:session.household.id,memberId:session.memberId,shopId:view.shopId,grantId:view.grantId,
+    baseRevision:view.revision,correction,clientKey,expiresAt:view.expiresAt,
+    body:JSON.stringify({clientKey,baseRevision:view.revision,correction})};
+  if(!view.canPropose)throw new ApiError('access_ended',403);
+  authorizeProposal(session,intent);return Object.freeze(intent);
+}
+function authorizeProposal(session:Session,intent:ProposalIntent):void {
+  if(session.role!=='editor'||!session.enrolled||session.household.id!==intent.householdId||session.memberId!==intent.memberId
+      ||session.grantId!==intent.grantId||session.shopId!==intent.shopId||Date.parse(intent.expiresAt)<=Date.now())throw new ApiError('access_ended',403);
+  identity(intent.grantId);identity(intent.shopId);identity(intent.clientKey);integer(intent.baseRevision,1);text(intent.correction,1000);timestamp(intent.expiresAt);
+  if(intent.body!==JSON.stringify({clientKey:intent.clientKey,baseRevision:intent.baseRevision,correction:intent.correction}))return invalid();
+}
 export class ApiError extends Error {
   constructor(readonly code: string, readonly status: number) { super(code); }
 }
@@ -96,12 +131,12 @@ function parseBrowserAuth(value:unknown):BrowserAuthState {
 }
 export class API {
   constructor(private readonly fetcher: typeof fetch = (input, init) => globalThis.fetch(input, init)) {}
-  private async call(path: string, method = 'GET', body?: unknown, csrf?: string): Promise<unknown> {
+  private async call(path: string, method = 'GET', body?: unknown, csrf?: string, encodedBody?:string): Promise<unknown> {
     const headers: Record<string, string> = { Accept: 'application/json' };
     if (body !== undefined) headers['Content-Type'] = 'application/json';
     if (csrf) headers['X-CSRF-Token'] = csrf;
     let response: Response;
-    try { response = await this.fetcher(path, { method, credentials: 'same-origin', cache: 'no-store', referrerPolicy: 'no-referrer', headers, ...(body !== undefined ? { body: JSON.stringify(body) } : {}) }); }
+    try { response = await this.fetcher(path, { method, credentials: 'same-origin', cache: 'no-store', referrerPolicy: 'no-referrer', headers, ...(body !== undefined ? { body: encodedBody ?? JSON.stringify(body) } : {}) }); }
     catch { throw new ApiError('network', 0); }
     const data: unknown = await response.json().catch(() => null);
     if (!response.ok) {
@@ -178,12 +213,31 @@ export class API {
       instructions:d.items.map(value => { const i = record(value), amount = optionalText(i.amount, 80), unit = optionalText(i.unit, 80);
         return {item:text(i.label, 240), amount:amount === null ? null : [amount, unit].filter(Boolean).join(' '), action:text(i.action, 500)}; })};
   }
-  async propose(session: Session, view: CookView, correction: string, clientKey: string): Promise<void> {
-    if (session.role !== 'editor' || session.grantId !== view.grantId || !view.canPropose || Date.parse(view.expiresAt) <= Date.now()) throw new ApiError('access_ended', 403);
-    text(correction, 1000); identity(clientKey);
-    const receipt = record(await this.call(`/v1/views/${segment(view.grantId)}/proposals`, 'POST', {clientKey, baseRevision:view.revision, correction}, session.csrf));
-    identity(receipt.proposalId);
-    if (receipt.grantId !== view.grantId || receipt.baseRevision !== view.revision || receipt.status !== 'pending') return invalid();
+  async propose(session: Session, view: CookView, correction: string, clientKey: string): Promise<ProposalReceipt> {
+    return this.sendProposal(session,prepareProposal(session,view,correction,clientKey));
+  }
+  async sendProposal(session:Session,intent:ProposalIntent):Promise<ProposalReceipt> {
+    authorizeProposal(session,intent);
+    const receipt=record(await this.call(`/v1/views/${segment(intent.grantId)}/proposals`,'POST',JSON.parse(intent.body),session.csrf,intent.body));
+    if(receipt.grantId!==intent.grantId||receipt.baseRevision!==intent.baseRevision||receipt.status!=='pending')return invalid();
+    return {proposalId:identity(receipt.proposalId),grantId:intent.grantId,baseRevision:intent.baseRevision,status:'pending'};
+  }
+  async ownProposal(session:Session,intent:ProposalIntent,receipt:ProposalReceipt):Promise<OwnProposal> {
+    authorizeProposal(session,intent);
+    if(receipt.grantId!==intent.grantId||receipt.baseRevision!==intent.baseRevision)return invalid();
+    const proposal=ownProposalValue(await this.call(`/v1/views/${segment(intent.grantId)}/proposals/${segment(identity(receipt.proposalId))}`),intent.grantId);
+    if(proposal.proposalId!==receipt.proposalId||proposal.baseRevision!==intent.baseRevision||proposal.correction!==intent.correction.trim())return invalid();
+    return proposal;
+  }
+  async receivedProposals(session:Session,view:CookView,cursor:string|null=null):Promise<OwnProposalPage> {
+    if(!['editor','helper'].includes(session.role)||!session.enrolled||session.grantId!==view.grantId||session.shopId!==view.shopId
+      ||Date.parse(timestamp(view.expiresAt))<=Date.now())throw new ApiError('access_ended',403);
+    const d=record(await this.call(`/v1/views/${segment(identity(view.grantId))}/proposals${cursor?'?cursor='+segment(identity(cursor)):''}`));
+    if(!Array.isArray(d.proposals)||d.proposals.length>20)return invalid();
+    const proposals=d.proposals.map(p=>ownProposalValue(p,view.grantId)),nextCursor=d.nextCursor===null?null:identity(d.nextCursor);
+    if(new Set(proposals.map(p=>p.proposalId)).size!==proposals.length||proposals.some(p=>p.proposalId===cursor)
+      ||(nextCursor!==null&&nextCursor!==proposals.at(-1)?.proposalId))return invalid();
+    return {proposals,nextCursor};
   }
   async logout(session: Session): Promise<{providerRevoked:boolean|null}> { const result=record(await this.call('/v1/session', 'DELETE', undefined, session.csrf));if(result.signedOut!==true)return invalid();return{providerRevoked:result.providerRevoked===undefined?null:boolean(result.providerRevoked)}; }
 }

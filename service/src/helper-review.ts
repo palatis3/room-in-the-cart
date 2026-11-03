@@ -34,6 +34,12 @@ export class HelperReview {
   return this.record(ctx,grantId,'resolve',input.clientKey,prior.fingerprint,{mutationId,...{grantId,proposalId,proposalRevision:proposal.revision+1,baseRevision:input.baseRevision,revision,status,resolution,resolvedAt:ctx.now.toISOString()}});
  }
  async managementProposal(ctx:Context,grantId:string,proposalId:string){await this.lifecycle.grant(ctx,grantId,true);const p=(await ctx.db.query('SELECT * FROM ritc.helper_proposal WHERE household_id=$1 AND grant_id=$2 AND proposal_id=$3',[ctx.householdId,grantId,proposalId])).rows[0];if(!p)throw unavailable();return proposalDTO(grantId,p);}
+ async ownProposals(ctx:Context,grantId:string,cursor:string|null=null){
+  await this.lifecycle.grant(ctx,grantId);let before:string|undefined;
+  if(cursor){before=(await ctx.db.query('SELECT created_at::text AS created_at FROM ritc.helper_proposal WHERE household_id=$1 AND grant_id=$2 AND actor_id=$3 AND proposal_id=$4',[ctx.householdId,grantId,ctx.member.member_id,cursor])).rows[0]?.created_at;if(!before)throw unavailable();}
+  const rows=(await ctx.db.query('SELECT * FROM ritc.helper_proposal WHERE household_id=$1 AND grant_id=$2 AND actor_id=$3 AND ($4::timestamptz IS NULL OR (created_at,proposal_id)<($4,$5::uuid)) ORDER BY created_at DESC,proposal_id DESC LIMIT 21',[ctx.householdId,grantId,ctx.member.member_id,before??null,cursor])).rows;
+  return{proposals:rows.slice(0,20).map(p=>proposalDTO(grantId,p)),nextCursor:rows.length>20?rows[19].proposal_id:null};
+ }
  async ownProposal(ctx:Context,grantId:string,proposalId:string){await this.lifecycle.grant(ctx,grantId);const proposal=(await ctx.db.query('SELECT * FROM ritc.helper_proposal WHERE household_id=$1 AND grant_id=$2 AND proposal_id=$3 AND actor_id=$4',[ctx.householdId,grantId,proposalId,ctx.member.member_id])).rows[0];if(!proposal)throw unavailable();return proposalDTO(grantId,proposal);}
 }
 export function proposalDTO(grantId:string,p:Record<string,any>){return{proposalId:p.proposal_id,grantId,baseRevision:p.base_revision,proposalRevision:p.revision,correction:p.correction,status:p.status,createdAt:p.created_at.toISOString(),resolution:p.resolution?{mutationId:p.resolution_id,decision:p.resolution,revision:p.resolved_revision,resolvedAt:p.resolved_at.toISOString()}:null};}

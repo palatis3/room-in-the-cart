@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {JSDOM} from 'jsdom';
 import {IDBFactory} from 'fake-indexeddb';
-import {API,ApiError,consumeInvitation} from '../dist/api.js';
+import {API,ApiError,consumeInvitation,prepareProposal} from '../dist/api.js';
 import {Outbox,scopeFor} from '../dist/outbox.js';
 import {WebApp} from '../dist/app.js';
 
@@ -25,7 +25,7 @@ const setup = async (api,language='en') => {
 const click=(root,label)=>{const b=[...root.querySelectorAll('button')].find(b=>b.textContent===label);assert.ok(b,`button ${label}`);b.click();};
 const type=(dom,id,value)=>{const input=dom.window.document.getElementById(id);assert.ok(input,id);input.value=value;input.dispatchEvent(new dom.window.Event('input',{bubbles:true}));};
 const submit=(root,dom)=>root.querySelector('form').dispatchEvent(new dom.window.Event('submit',{cancelable:true,bubbles:true}));
-const fakeAPI=(overrides={})=>({authState:async()=>({available:true,authenticated:true,csrf:'csrf-test'}),session:async()=>session(),requests:async()=>[],command:async()=>{},logout:async()=>{},...overrides});
+const fakeAPI=(overrides={})=>({authState:async()=>({available:true,authenticated:true,csrf:'csrf-test'}),session:async()=>session(),requests:async()=>[],receivedProposals:async()=>({proposals:[],nextCursor:null}),command:async()=>{},logout:async()=>{},...overrides});
 
 test('invitation secrets leave URL before a request and never enter storage',()=>{
  const dom=new JSDOM('',{url:'https://food.example/invite?token=query-secret#token=fragment-secret'});
@@ -96,8 +96,8 @@ test('helper content is inert text, read-only grants cannot propose or show adul
 });
 
 test('editor proposal is submitted against displayed revision and cannot apply a basket change',async()=>{
- const proposals=[];const {root,dom}=await setup(fakeAPI({session:async()=>({...session(),role:'editor',grantId:'grant-a'}),view:async()=>({grantId:'grant-a',shopId:'shop-a',shopLabel:'Tuesday',revision:7,asOf:'2026-01-01T12:00:00Z',expiresAt:'2099-01-01T00:00:00Z',canPropose:true,instructions:[]}),propose:async(...args)=>proposals.push(args)}));
- type(dom,'correction','Keep two for lunch');submit(root,dom);await waitForIdle(root);assert.equal(proposals[0][1].revision,7);assert.equal(proposals[0][2],'Keep two for lunch');assert.match(root.textContent,/shopper must review/);
+ const proposals=[];const {root,dom}=await setup(fakeAPI({session:async()=>({...session(),role:'editor',grantId:'grant-a'}),view:async()=>({grantId:'grant-a',shopId:'shop-a',shopLabel:'Tuesday',revision:7,asOf:'2026-01-01T12:00:00Z',expiresAt:'2099-01-01T00:00:00Z',canPropose:true,instructions:[]}),sendProposal:async(...args)=>{proposals.push(args);return {proposalId:'proposal-a',grantId:'grant-a',baseRevision:7,status:'pending'};}}));
+ type(dom,'correction','Keep two for lunch');submit(root,dom);await waitForIdle(root);assert.equal(proposals[0][1].baseRevision,7);assert.equal(proposals[0][1].correction,'Keep two for lunch');assert.match(root.textContent,/shopper must review/);
 });
 
 test('a 200 response without the durable author receipt is not accepted',async()=>{
@@ -318,4 +318,175 @@ test('a helper correction draft is cleared when refresh opens a different grant'
  grantId='grant-b';click(root,'Refresh');await waitForIdle(root);
  assert.match(root.textContent,/grant-b/);
  assert.equal(dom.window.document.getElementById('correction').value,'');
+});
+
+const editorSession=()=>({...session(),role:'editor',grantId:'grant-a'});
+const cookView=(revision=7)=>({grantId:'grant-a',shopId:'shop-a',shopLabel:'Tuesday',revision,asOf:'2026-01-01T12:00:00Z',expiresAt:'2099-01-01T00:00:00Z',canPropose:true,instructions:[]});
+const suggestionReceipt=(intent)=>({proposalId:'proposal-a',grantId:intent.grantId,baseRevision:intent.baseRevision,status:'pending'});
+
+test('lost editor reply retries identical reviewed bytes after refresh advances instructions and recovers current status',async()=>{
+ let revision=7,commits=0;const requests=[],accepted=new Map();
+ const api=new API(async(path,options)=>{
+  if(options.method==='POST'){
+   requests.push(options.body);const body=JSON.parse(options.body),old=accepted.get(body.clientKey);
+   if(old){assert.equal(options.body,old.body);return new Response(JSON.stringify(old.receipt));}
+   assert.equal(body.baseRevision,revision);commits++;
+   const receipt={proposalId:'proposal-a',grantId:'grant-a',baseRevision:body.baseRevision,status:'pending'};
+   accepted.set(body.clientKey,{body:options.body,receipt});throw Error('response lost after commit');
+  }
+  assert.equal(path,'/v1/views/grant-a/proposals/proposal-a');
+  return new Response(JSON.stringify({proposalId:'proposal-a',grantId:'grant-a',baseRevision:7,proposalRevision:2,
+   correction:'No-salt frijoles / dos latas',status:'reviewed',createdAt:'2026-01-01T12:00:00Z',
+   resolution:{mutationId:'resolution-a',decision:'replaced',revision:8,resolvedAt:'2026-01-01T13:00:00Z'},budgetMinor:99999}));
+ });
+ const {root,dom}=await setup(fakeAPI({session:async()=>editorSession(),view:async()=>cookView(revision),sendProposal:api.sendProposal.bind(api),ownProposal:api.ownProposal.bind(api)}));
+ type(dom,'correction','No-salt frijoles / dos latas');submit(root,dom);await waitForIdle(root);
+ assert.match(root.textContent,/receipt is unconfirmed/);assert.doesNotMatch(root.textContent,/Not saved/);
+ assert.equal(root.querySelector('#correction'),null);assert.match(root.textContent,/only kept on this page/);
+ revision=8;click(root,'Refresh');await waitForIdle(root);
+ assert.match(root.textContent,/Reviewed revision: 7/);click(root,'Retry original suggestion');await waitForIdle(root);
+ assert.equal(commits,1);assert.equal(requests.length,2);assert.equal(requests[0],requests[1]);
+ assert.match(root.textContent,/Suggestion received for shopper review/);
+ click(root,'Check suggestion status');await waitForIdle(root);
+ assert.match(root.textContent,/Suggestion reviewed/);assert.doesNotMatch(root.textContent,/99999/);
+});
+
+test('stale unaccepted suggestion requires explicit current review and then a different key',async()=>{
+ let revision=7;const intents=[];
+ const {root,dom}=await setup(fakeAPI({session:async()=>editorSession(),view:async()=>cookView(revision),sendProposal:async(_,intent)=>{
+  intents.push(intent);if(intents.length===1)throw new ApiError('stale_base',409);return suggestionReceipt(intent);
+ }}));
+ type(dom,'correction','Keep original wording');submit(root,dom);await waitForIdle(root);
+ assert.match(root.textContent,/not accepted/);assert.equal(root.querySelector('#correction'),null);
+ revision=8;click(root,'Review current instructions');await waitForIdle(root);
+ assert.equal(root.querySelector('#correction').value,'Keep original wording');assert.equal(intents.length,1);
+ submit(root,dom);await waitForIdle(root);
+ assert.equal(intents[0].baseRevision,7);assert.equal(intents[1].baseRevision,8);assert.notEqual(intents[0].clientKey,intents[1].clientKey);
+});
+
+test('editor exact retry stops and clears private intent after grant, shop, actor or role changes',async()=>{
+ for(const change of [{grantId:'grant-b'},{shopId:'shop-b'},{memberId:'member-b'},{role:'helper'}]){
+  let active=editorSession(),attempts=0;
+  const {root,dom}=await setup(fakeAPI({session:async()=>active,view:async()=>cookView(),sendProposal:async()=>{attempts++;throw new ApiError('network',0);}}));
+  type(dom,'correction','Private original suggestion');submit(root,dom);await waitForIdle(root);
+  active={...active,...change};click(root,'Retry original suggestion');await waitForIdle(root);
+  assert.equal(attempts,1);assert.doesNotMatch(root.textContent,/Private original suggestion/);assert.match(root.textContent,/Access has ended/);
+ }
+});
+
+test('late proposal receipt cannot restore private text after displayed grant expires',async()=>{
+ let finish;const view=cookView();
+ const {root,dom,app}=await setup(fakeAPI({session:async()=>editorSession(),view:async()=>view,
+  sendProposal:async(_,intent)=>new Promise(resolve=>{finish=()=>resolve(suggestionReceipt(intent));})}));
+ type(dom,'correction','Private late suggestion');submit(root,dom);
+ while(!finish)await new Promise(resolve=>setTimeout(resolve,5));
+ view.expiresAt='2020-01-01T00:00:00Z';app.checkExpiry();finish();await waitForIdle(root);
+ assert.doesNotMatch(root.textContent,/Private late suggestion|Suggestion received|shopper must review/);assert.match(root.textContent,/Access has ended/);
+});
+
+test('own suggestion status rejects mismatched proposal body or resolution and prepared bodies cannot be tampered',async()=>{
+ const s=editorSession(),intent=prepareProposal(s,cookView(),'Keep two','key-a'),receipt=suggestionReceipt(intent);
+ assert.ok(Object.isFrozen(intent));let calls=0;
+ const denied=new API(async()=>{calls++;throw Error('must not fetch');});
+ await assert.rejects(denied.sendProposal(s,{...intent,body:intent.body.replace('Keep two','Keep three')}),e=>e.code==='invalid_response');
+ await assert.rejects(denied.sendProposal({...s,memberId:'member-b'},intent),e=>e.status===403);assert.equal(calls,0);
+ const valid={...receipt,proposalRevision:1,correction:'Keep two',createdAt:'2026-01-01T00:00:00Z',resolution:null};
+ for(const patch of [{proposalId:'other'},{baseRevision:8},{correction:'Other private text'},{status:'reviewed'},{resolution:{mutationId:'mutation-a',decision:'dismissed',revision:8,resolvedAt:'2026-01-01T00:00:00Z'}}]){
+  const api=new API(async()=>new Response(JSON.stringify({...valid,...patch})));
+  await assert.rejects(api.ownProposal(s,intent,receipt),e=>e.code==='invalid_response');
+ }
+});
+
+test('revoked editor status clears original text and Spanish lost reply stays honest',async()=>{
+ const {root,dom}=await setup(fakeAPI({session:async()=>editorSession(),view:async()=>cookView(),sendProposal:async()=>{throw new ApiError('network',0);}}),'es-US');
+ type(dom,'correction','Texto privado');submit(root,dom);await waitForIdle(root);
+ assert.match(root.textContent,/No se ha confirmado/);assert.match(root.textContent,/solo se conserva en esta página/i);assert.doesNotMatch(root.textContent,/Not saved|Retry original suggestion/);
+ const other=await setup(fakeAPI({session:async()=>editorSession(),view:async()=>cookView(),sendProposal:async(_,i)=>suggestionReceipt(i),ownProposal:async()=>{throw new ApiError('unavailable',404);}}));
+ type(other.dom,'correction','Private revoked text');submit(other.root,other.dom);await waitForIdle(other.root);
+ click(other.root,'Check suggestion status');await waitForIdle(other.root);
+ assert.doesNotMatch(other.root.textContent,/Private revoked text/);assert.match(other.root.textContent,/Access has ended/);
+});
+
+
+test('status network failure never downgrades a confirmed suggestion to not saved',async()=>{
+ const {root,dom}=await setup(fakeAPI({session:async()=>editorSession(),view:async()=>cookView(),sendProposal:async(_,i)=>suggestionReceipt(i),ownProposal:async()=>{throw new ApiError('network',0);}}));
+ type(dom,'correction','Confirmed original text');submit(root,dom);await waitForIdle(root);
+ click(root,'Check suggestion status');await waitForIdle(root);
+ assert.match(root.textContent,/earlier receipt is still confirmed/);assert.match(root.textContent,/Confirmed original text/);assert.doesNotMatch(root.textContent,/Not saved|Receipt unconfirmed/);
+});
+
+test('key-reused conflict cannot silently replace the original envelope or reopen an editable form',async()=>{
+ const intents=[];
+ const {root,dom}=await setup(fakeAPI({session:async()=>editorSession(),view:async()=>cookView(9),sendProposal:async(_,i)=>{intents.push(i);throw new ApiError('key_reused',409);}}));
+ type(dom,'correction','Exact original text');submit(root,dom);await waitForIdle(root);
+ click(root,'Refresh');await waitForIdle(root);click(root,'Retry original suggestion');await waitForIdle(root);
+ assert.equal(intents.length,2);assert.equal(intents[0],intents[1]);assert.equal(root.querySelector('#correction'),null);
+ assert.doesNotMatch(root.textContent,/original suggestion was not accepted/);assert.match(root.textContent,/may already have received/);
+});
+
+
+test('render-time grant expiry clears a pending suggestion before the timer can run',async()=>{
+ const view=cookView();const {root,dom,app}=await setup(fakeAPI({session:async()=>editorSession(),view:async()=>view,sendProposal:async()=>{throw new ApiError('network',0);}}));
+ type(dom,'correction','Expired private intent');submit(root,dom);await waitForIdle(root);
+ view.expiresAt='2020-01-01T00:00:00Z';app.render();assert.doesNotMatch(root.textContent,/Expired private intent/);
+ view.expiresAt='2099-01-01T00:00:00Z';await app.start();assert.equal(root.querySelector('#correction').value,'');assert.doesNotMatch(root.textContent,/Expired private intent/);
+});
+
+
+test('own status matches server whitespace normalization while retries retain exact original text bytes',async()=>{
+ const s=editorSession(),intent=prepareProposal(s,cookView(),'  Keep two / frijoles  ','key-a'),receipt=suggestionReceipt(intent),bodies=[];
+ const api=new API(async(_,options)=>{if(options.method==='POST'){bodies.push(options.body);return new Response(JSON.stringify(receipt));}
+  return new Response(JSON.stringify({...receipt,proposalRevision:1,correction:'Keep two / frijoles',createdAt:'2026-01-01T00:00:00Z',resolution:null}));});
+ await api.sendProposal(s,intent);await api.sendProposal(s,intent);assert.equal(bodies[0],bodies[1]);assert.equal(JSON.parse(bodies[0]).correction,'  Keep two / frijoles  ');
+ const result=await api.ownProposal(s,intent,receipt);assert.equal(result.correction,'Keep two / frijoles');assert.equal(intent.correction,'  Keep two / frijoles  ');
+});
+
+
+const receivedSuggestion=(overrides={})=>({proposalId:'proposal-a',grantId:'grant-a',baseRevision:7,proposalRevision:1,correction:'Previously received private suggestion',status:'pending',createdAt:'2026-01-01T00:00:00Z',resolution:null,...overrides});
+
+test('full app recreation recovers received suggestions from the service without a local intent or submission',async()=>{
+ let posts=0;const api=fakeAPI({session:async()=>editorSession(),view:async()=>cookView(8),receivedProposals:async()=>({proposals:[receivedSuggestion()],nextCursor:null}),sendProposal:async()=>{posts++;}});
+ const first=await setup(api);assert.match(first.root.textContent,/Previously received private suggestion/);
+ const second=await setup(api);assert.match(second.root.textContent,/Reviewed revision: 7/);assert.match(second.root.textContent,/do not need to be sent again/);
+ assert.equal(second.root.querySelector('#correction').value,'');assert.equal(posts,0);assert.equal(second.dom.window.localStorage.length,0);
+ click(second.root,'Check received suggestions');await waitForIdle(second.root);assert.equal(posts,0);assert.equal(second.root.querySelectorAll('[data-proposal-id]').length,1);
+});
+
+test('failed discovery blocks a new suggestion until explicit recovery succeeds and permits read-only own status',async()=>{
+ let failed=true,posts=0;
+ const {root}=await setup(fakeAPI({session:async()=>editorSession(),view:async()=>cookView(),receivedProposals:async()=>{if(failed)throw new ApiError('network',0);return {proposals:[receivedSuggestion()],nextCursor:null};},sendProposal:async()=>{posts++;}}));
+ assert.equal(root.querySelector('#correction'),null);assert.match(root.textContent,/Retry recovery before sending/);
+ failed=false;click(root,'Check received suggestions');await waitForIdle(root);assert.ok(root.querySelector('#correction'));assert.equal(posts,0);assert.doesNotMatch(root.textContent,/Retry recovery before sending/);
+ const readonly=await setup(fakeAPI({session:async()=>({...editorSession(),role:'helper'}),view:async()=>({...cookView(),canPropose:false}),receivedProposals:async()=>({proposals:[receivedSuggestion()],nextCursor:null})}));
+ assert.match(readonly.root.textContent,/Previously received private suggestion/);assert.match(readonly.root.textContent,/read-only/);assert.equal(readonly.root.querySelector('#correction'),null);
+});
+
+test('late received-page response cannot expose old actor data after account switch or local expiry',async()=>{
+ for(const expire of [false,true]){
+  let active=editorSession(),release;const view=cookView();
+  const api=fakeAPI({session:async()=>active,view:async()=>view,receivedProposals:async()=>({proposals:[],nextCursor:null})});
+  const {root,app}=await setup(api);
+  api.receivedProposals=async()=>new Promise(resolve=>{release=()=>resolve({proposals:[receivedSuggestion()],nextCursor:null});});
+  click(root,'Check received suggestions');while(!release)await new Promise(r=>setTimeout(r,5));
+  if(expire){view.expiresAt='2020-01-01T00:00:00Z';app.checkExpiry();}else active={...active,memberId:'other-member'};
+  release();await waitForIdle(root);assert.doesNotMatch(root.textContent,/Previously received private suggestion/);assert.match(root.textContent,/Access has ended/);
+ }
+});
+
+test('received pages reject wrong grants, duplicate rows, wrong cursors and private projection fields are discarded',async()=>{
+ const view=cookView(),s=editorSession();
+ for(const page of [{proposals:[receivedSuggestion({grantId:'other'})],nextCursor:null},{proposals:[receivedSuggestion(),receivedSuggestion()],nextCursor:null},
+   {proposals:[receivedSuggestion()],nextCursor:'other'},{proposals:Array.from({length:21},(_,i)=>receivedSuggestion({proposalId:'p'+i})),nextCursor:null}]){
+  await assert.rejects(new API(async()=>new Response(JSON.stringify(page))).receivedProposals(s,view),e=>e.code==='invalid_response');
+ }
+ const calls=[],api=new API(async(path)=>{calls.push(path);return new Response(JSON.stringify({proposals:[{...receivedSuggestion(),budgetMinor:999,otherAuthors:['secret']}],nextCursor:null}));});
+ const result=await api.receivedProposals({...s,role:'helper'},{...view,canPropose:false});assert.equal('budgetMinor' in result.proposals[0],false);assert.equal('otherAuthors' in result.proposals[0],false);
+ await assert.rejects(api.receivedProposals(s,view,'proposal-a'),e=>e.code==='invalid_response');assert.equal(calls[1],'/v1/views/grant-a/proposals?cursor=proposal-a');
+});
+
+test('pagination appends only distinct own rows and receipt recovery avoids duplicate received cards',async()=>{
+ const requests=[];const {root,dom}=await setup(fakeAPI({session:async()=>editorSession(),view:async()=>cookView(),receivedProposals:async(_,__,cursor)=>{requests.push(cursor);return cursor?{proposals:[receivedSuggestion({proposalId:'proposal-b',correction:'Older suggestion'})],nextCursor:null}:{proposals:[receivedSuggestion()],nextCursor:'proposal-a'};},sendProposal:async(_,i)=>suggestionReceipt(i)}));
+ click(root,'Show older suggestions');await waitForIdle(root);assert.equal(root.querySelectorAll('[data-proposal-id]').length,2);assert.deepEqual(requests,[null,'proposal-a']);
+ type(dom,'correction','Previously received private suggestion');submit(root,dom);await waitForIdle(root);
+ assert.equal(root.querySelector('[data-proposal-id="proposal-a"]'),null);assert.match(root.textContent,/Your reviewed suggestion/);assert.ok(root.querySelector('[data-proposal-id="proposal-b"]'));
 });

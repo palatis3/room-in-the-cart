@@ -1,4 +1,4 @@
-import { API, ApiError, isContributorSession, type BrowserAuthState,type Session, type OwnRequest, type Command, type CookView, type InviteRedemption } from './api.js';
+import { API, ApiError, isContributorSession, type BrowserAuthState,type Session, type OwnRequest, type Command, type CookView, type InviteRedemption, prepareProposal, type ProposalIntent, type ProposalReceipt, type OwnProposal } from './api.js';
 import { Outbox, scopeFor, type Pending } from './outbox.js';
 import { languageFor, translate, type Language } from './i18n.js';
 
@@ -34,7 +34,14 @@ export class WebApp {
   private redemption:InviteRedemption|null = null;
   private retryCommand:Command|null = null;
   private uncertainSend = false;
-  private proposalKey:string|null = null;
+  private proposalIntent:ProposalIntent|null = null;
+  private proposalReceipt:ProposalReceipt|null = null;
+  private proposalStatus:OwnProposal|null = null;
+  private proposalConflict=false;
+  private proposalGeneration=0;
+  private receivedSuggestions:OwnProposal[]=[];
+  private suggestionsCursor:string|null=null;
+  private suggestionsState:'unchecked'|'ready'|'unavailable'='unchecked';
   private correction = '';
   private withdrawn:OwnRequest|null = null;
   private withdrawalCommand:Command|null = null;
@@ -58,7 +65,8 @@ export class WebApp {
   private clearPrivate():void {
     this.session=null;this.reviewedScope=null;this.requests=[];this.view=null;this.pending=[];this.draft=blank();
     this.retryCommand=null;this.uncertainSend=false;this.consent=false;this.review=false;this.correction='';
-    this.proposalKey=null;this.withdrawn=null;this.withdrawalCommand=null;this.confirmedOperations.clear();
+    this.receivedSuggestions=[];this.suggestionsCursor=null;this.suggestionsState='unchecked';
+    this.proposalGeneration++;this.proposalIntent=null;this.proposalReceipt=null;this.proposalStatus=null;this.proposalConflict=false;this.withdrawn=null;this.withdrawalCommand=null;this.confirmedOperations.clear();
   }
   checkExpiry():void {
     if(this.view && Date.parse(this.view.expiresAt)<=Date.now()) {
@@ -67,18 +75,24 @@ export class WebApp {
     }
   }
   private async load():Promise<void> {
-    const fresh=await this.api.session();
+    const start=this.proposalGeneration,fresh=await this.api.session();
+    if(start!==this.proposalGeneration)return;
     if(this.reviewedScope && fresh && this.reviewedScope!==reviewScope(fresh)) {
       this.clearPrivate();this.notice='';
       await this.outbox.retainScope(scopeFor(fresh)).catch(()=>{});
     }
     this.session=fresh;
-    if(!fresh){this.requests=[];this.view=null;this.pending=[];this.consent=false;this.browserAuth=await this.api.authState();return;}
+    if(!fresh){this.requests=[];this.view=null;this.pending=[];this.receivedSuggestions=[];this.suggestionsState='unchecked';this.consent=false;this.browserAuth=await this.api.authState();return;}
     this.reviewedScope=reviewScope(fresh);
     if(fresh.role==='helper'||fresh.role==='editor') {
       this.requests=[];this.view=null;this.pending=[];this.draft=blank();this.retryCommand=null;this.uncertainSend=false;this.consent=false;
-      await this.outbox.clear().catch(()=>{});this.view=await this.api.view(fresh);
-      if(Date.parse(this.view.expiresAt)<=Date.now())throw new ApiError('access_ended',403);
+      this.receivedSuggestions=[];this.suggestionsCursor=null;this.suggestionsState='unchecked';
+      const generation=this.proposalGeneration;
+      await this.outbox.clear().catch(()=>{});const view=await this.api.view(fresh);
+      if(generation!==this.proposalGeneration)return;
+      this.view=view;
+      if(Date.parse(view.expiresAt)<=Date.now())throw new ApiError('access_ended',403);
+      await this.readReceivedSuggestions(fresh,null);
     } else {this.view=null;this.requests=await this.api.requests(fresh);}
     if(isContributorSession(fresh)&&fresh.queueConsent&&fresh.enrolled) {
       try {await this.outbox.retainScope(scopeFor(fresh));this.pending=await this.outbox.list(scopeFor(fresh));}
@@ -104,17 +118,20 @@ export class WebApp {
   private async fail(error:unknown,purpose:'load'|'mutation'='mutation'):Promise<void> {
     this.failurePurpose=purpose;
     const e=error instanceof ApiError ? error:new ApiError('unavailable',500);
-    if(e.status===403||e.code==='access_ended') {
+    if(e.status===403||e.code==='access_ended'||(e.status===404&&(this.proposalIntent!==null||['editor','helper'].includes(this.session?.role??'')))) {
       this.clearPrivate();
       await this.outbox.clear().catch(()=>{});this.notice='Access has ended. Ask your household for a new invitation.';
-    } else if(e.status===401) {this.session=null;this.requests=[];this.view=null;this.pending=[];this.notice='Sign in again to continue. Your text stays on this page.';this.browserAuth=await this.api.authState().catch(()=>null);this.codeRequested=false;this.loginCode='';}
+    } else if(e.status===401) {this.session=null;this.requests=[];this.view=null;this.pending=[];this.receivedSuggestions=[];this.suggestionsState='unchecked';this.notice='Sign in again to continue. Your text stays on this page.';this.browserAuth=await this.api.authState().catch(()=>null);this.codeRequested=false;this.loginCode='';}
     else if(e.code==='login_unavailable')this.notice='Email sign-in is not available yet. Your invitation stays on this page.';
     else if(e.code==='code_not_accepted')this.notice='That code was not accepted. Check the latest code or request another one.';
     else if(e.code==='login_rate_limited')this.notice='Wait before requesting or checking another code.';
     else if(e.code==='consent_unavailable')this.notice='Child enrollment is not available here yet. Ask a guardian to use the verified setup.';
     else if(e.status===409) this.notice='This information changed. Refresh, review, and try again.';
     else if(e.status===422) this.notice='Check your entry and try again.';
+    else if(this.suggestionsState==='unavailable')this.notice='Received suggestions could not be checked. Retry recovery before sending another suggestion.';
     else if(purpose==='load')this.notice='Could not load your account. Refresh to try again.';
+    else if(this.proposalReceipt)this.notice='Suggestion status could not be checked. Its earlier receipt is still confirmed. Try again.';
+    else if(this.proposalIntent)this.notice='Suggestion receipt is unconfirmed. Retry the original suggestion. It is only kept on this page; closing or reloading loses this local copy.';
     else this.notice=this.uncertainSend?'Not saved in this browser. Receipt is unconfirmed. Your text is still here. Retry to check.':'Not saved. Your text is still here. Reconnect and try again.';
   }
   private date(value:string):string {
@@ -269,17 +286,101 @@ export class WebApp {
     if(fresh.replayWindow.id!==p.command.replayWindow||Date.parse(fresh.replayWindow.expiresAt)<=Date.now()) {this.notice='This queued request needs a new review. It was not resent.';return;}
     await this.api.command(fresh,p.command);await this.outbox.remove(p.id);this.session=fresh;this.pending=this.pending.filter(x=>x.id!==p.id);this.notice='Received by the shopper.';await this.load();
   }
+  private resetProposal():void {
+    this.proposalGeneration++;this.proposalIntent=null;this.proposalReceipt=null;this.proposalStatus=null;this.proposalConflict=false;
+  }
+  private async sendProposal(view:CookView):Promise<void> {
+    const generation=this.proposalGeneration;
+    const fresh=await this.reauthenticate(undefined,this.proposalIntent?.grantId??view.grantId);
+    if(generation!==this.proposalGeneration)return;
+    this.proposalIntent??=prepareProposal(fresh,view,this.correction,crypto.randomUUID());
+    const intent=this.proposalIntent;
+    try {
+      const receipt=await this.api.sendProposal(fresh,intent);
+      if(generation!==this.proposalGeneration||this.proposalIntent!==intent)return;
+      this.proposalReceipt=receipt;this.proposalStatus=this.receivedSuggestions.find(p=>p.proposalId===receipt.proposalId)??null;this.proposalConflict=false;
+      this.notice='Proposal received. The shopper must review it before anything changes.';
+    }catch(error){
+      if(generation!==this.proposalGeneration||this.proposalIntent!==intent)return;
+      this.proposalConflict=error instanceof ApiError&&error.status===409&&error.code==='stale_base';
+      throw error;
+    }
+  }
+  private async checkProposal():Promise<void> {
+    const intent=this.proposalIntent,receipt=this.proposalReceipt,generation=this.proposalGeneration;
+    if(!intent||!receipt)return;
+    const fresh=await this.reauthenticate(undefined,intent.grantId);
+    if(generation!==this.proposalGeneration)return;
+    const status=await this.api.ownProposal(fresh,intent,receipt);
+    if(generation!==this.proposalGeneration||this.proposalIntent!==intent)return;
+    this.proposalStatus=status;this.receivedSuggestions=this.receivedSuggestions.map(p=>p.proposalId===status.proposalId?status:p);this.notice='Suggestion status checked.';
+  }
+  private async readReceivedSuggestions(fresh:Session,cursor:string|null):Promise<void> {
+    const view=this.view,generation=this.proposalGeneration;
+    if(!view)return;
+    try {
+      const page=await this.api.receivedProposals(fresh,view,cursor);
+      if(generation!==this.proposalGeneration)return;
+      const current=await this.api.session();
+      if(generation!==this.proposalGeneration)return;
+      if(!current||reviewScope(current)!==reviewScope(fresh)||Date.parse(view.expiresAt)<=Date.now())throw new ApiError('access_ended',403);
+      if(cursor&&page.proposals.some(p=>this.receivedSuggestions.some(old=>old.proposalId===p.proposalId)))throw new ApiError('invalid_response',502);
+      this.receivedSuggestions=cursor?[...this.receivedSuggestions,...page.proposals]:page.proposals;
+      this.suggestionsCursor=page.nextCursor;this.suggestionsState='ready';
+      if(this.proposalReceipt)this.proposalStatus=this.receivedSuggestions.find(p=>p.proposalId===this.proposalReceipt?.proposalId)??this.proposalStatus;
+    }catch(error){if(generation!==this.proposalGeneration)return;this.suggestionsState='unavailable';throw error;}
+  }
+  private async recoverSuggestions(more=false):Promise<void> {
+    const generation=this.proposalGeneration,fresh=await this.api.session();
+    if(generation!==this.proposalGeneration)return;
+    if(!fresh||!this.reviewedScope||reviewScope(fresh)!==this.reviewedScope||!['helper','editor'].includes(fresh.role))throw new ApiError('access_ended',403);
+    await this.readReceivedSuggestions(fresh,more?this.suggestionsCursor:null);
+    if(generation===this.proposalGeneration&&this.suggestionsState==='ready')this.notice='Received suggestions checked.';
+  }
+  private renderReceivedSuggestions(main:HTMLElement):void {
+    const section=this.el('section');section.append(this.el('h2',this.t('Suggestions received by the service')),
+      this.el('p',this.t('These suggestions are recovered from your current account and invitation. They do not need to be sent again.')));
+    for(const proposal of this.receivedSuggestions){
+      if(proposal.proposalId===this.proposalReceipt?.proposalId)continue;
+      const card=this.el('article');card.className='card';card.dataset.proposalId=proposal.proposalId;
+      card.append(this.el('p',proposal.correction),this.el('p',`${this.t('Reviewed revision')}: ${proposal.baseRevision}`),
+        this.el('p',`${this.t('Received')}: ${this.date(proposal.createdAt)}`),
+        this.el('p',this.t(proposal.status==='reviewed'?'Suggestion reviewed':proposal.status==='dismissed'?'Suggestion dismissed':'Suggestion received for shopper review')));
+      if(proposal.resolution)card.append(this.el('p',this.date(proposal.resolution.resolvedAt)));
+      section.append(card);
+    }
+    if(this.suggestionsState!=='ready')section.append(this.el('p',this.t('Received suggestions could not be checked. Retry recovery before sending another suggestion.')));
+    else if(this.receivedSuggestions.length===0)section.append(this.el('p',this.t('No received suggestions for this invitation. An unsent draft cannot be recovered after reloading.')));
+    section.append(this.button('Check received suggestions',()=>void this.run(()=>this.recoverSuggestions())));
+    if(this.suggestionsCursor&&this.suggestionsState==='ready')section.append(this.button('Show older suggestions',()=>void this.run(()=>this.recoverSuggestions(true))));
+    main.append(section);
+  }
   private renderCook(main:HTMLElement):void {
     const view=this.view!;
-    if(Date.parse(view.expiresAt)<=Date.now()){main.append(this.el('p',this.t('Access has ended. Ask your household for a new invitation.')));this.view=null;return;}
+    if(Date.parse(view.expiresAt)<=Date.now()){main.append(this.el('p',this.t('Access has ended. Ask your household for a new invitation.')));this.clearPrivate();void this.outbox.clear().catch(()=>{});return;}
     main.append(this.el('h1',this.t('Current instructions')),this.el('h2',view.shopLabel));
     main.append(this.el('p',`${this.t('As of')}: ${this.date(view.asOf)}`),this.el('p',`${this.t('Revision')}: ${view.revision}`),this.el('p',`${this.t('Expires')}: ${this.date(view.expiresAt)}`));
     for(const line of view.instructions){const a=this.el('article');a.className='card';a.append(this.el('h3',line.item),this.el('p',line.amount??this.t('Unknown amount')),this.el('p',line.action));if(line.basis)a.append(this.el('p',line.basis));main.append(a);}
+    this.renderReceivedSuggestions(main);
     if(!view.canPropose){main.append(this.el('p',this.t('This view is read-only.')));return;}
-    const form=this.el('form');form.append(this.el('h2',this.t('Propose a correction')));this.field(form,'Correction for the shopper to review','correction',this.correction,v=>{this.correction=v;this.proposalKey=null;},true);
-    const send=this.button('Send proposal',()=>{},true);send.type='submit';form.append(send);form.addEventListener('submit',e=>{e.preventDefault();if(!this.correction.trim())return;void this.run(async()=>{
-      const fresh=await this.reauthenticate(undefined,view.grantId);
-      this.proposalKey??=crypto.randomUUID();await this.api.propose(fresh,view,this.correction,this.proposalKey);this.correction='';this.proposalKey=null;this.notice='Proposal received. The shopper must review it before anything changes.';
-    });});main.append(form);
+    if(this.proposalIntent){
+      const intent=this.proposalIntent,card=this.el('section');
+      card.append(this.el('h2',this.t('Your reviewed suggestion')),this.el('p',intent.correction),this.el('p',`${this.t('Reviewed revision')}: ${intent.baseRevision}`));
+      card.append(this.el('p',this.t('This draft is only kept on this page. After reloading, only suggestions already received by the service can be recovered.')));
+      if(this.proposalReceipt){
+        card.append(this.el('p',this.t(this.proposalStatus?.status==='reviewed'?'Suggestion reviewed':this.proposalStatus?.status==='dismissed'?'Suggestion dismissed':'Suggestion received for shopper review')),
+          this.button('Check suggestion status',()=>void this.run(()=>this.checkProposal())),
+          this.button('Write another suggestion',()=>{this.resetProposal();this.correction='';this.render();}));
+      }else if(this.proposalConflict){
+        card.append(this.el('p',this.t('The original suggestion was not accepted because its reviewed instructions changed. Review the current instructions before starting a new suggestion.')),
+          this.button('Review current instructions',()=>void this.run(async()=>{await this.load();if(this.proposalIntent===intent){this.resetProposal();this.correction=intent.correction;this.notice='Review the current instructions before sending again.';}})));
+      }else card.append(this.el('p',this.t('Receipt unconfirmed; the shopper may already have received this suggestion.')),
+        this.button('Retry original suggestion',()=>void this.run(()=>this.sendProposal(view))));
+      main.append(card);return;
+    }
+    if(this.suggestionsState!=='ready')return;
+    const form=this.el('form');form.append(this.el('h2',this.t('Propose a correction')));this.field(form,'Correction for the shopper to review','correction',this.correction,v=>{this.correction=v;},true);
+    form.append(this.el('p',this.t('This draft is only kept on this page. After reloading, only suggestions already received by the service can be recovered.')));
+    const send=this.button('Send proposal',()=>{},true);send.type='submit';form.append(send);form.addEventListener('submit',e=>{e.preventDefault();if(!this.correction.trim())return;void this.run(()=>this.sendProposal(view));});main.append(form);
   }
 }

@@ -50,6 +50,9 @@ jobs:
           cache-dependency-path: service/package-lock.json
       - run: npm ci --ignore-scripts
         working-directory: service
+      - name: Build the web client for the PostgreSQL browser retry tests
+        run: npm ci --ignore-scripts && npm run build
+        working-directory: web
       - name: Prepare disposable provider-session and maintenance fixtures
         run: |
           psql "$TEST_ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 -c 'CREATE SCHEMA auth; CREATE TABLE auth.sessions(id uuid PRIMARY KEY, user_id uuid NOT NULL, not_after timestamptz);'
@@ -62,6 +65,8 @@ jobs:
           "CREATE ROLE ritc_runtime LOGIN PASSWORD 'fixture-only' NOSUPERUSER NOBYPASSRLS; GRANT ritc_app TO ritc_runtime; CREATE ROLE ritc_test_worker LOGIN PASSWORD 'fixture-only' NOSUPERUSER NOBYPASSRLS; GRANT ritc_worker TO ritc_test_worker;"
       - run: npm test && npm run test:integration
         working-directory: service
+        env:
+          RITC_TEST_WEB_WIRE: "1"
       - name: Verify maintenance with a separate database and worker role
         run: node scripts/test-operations.mjs
         working-directory: service

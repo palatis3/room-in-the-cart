@@ -1,5 +1,23 @@
 /** US Spanish draft; human language review remains a release gate. */
 const es: Record<string, string> = {
+  'Received suggestions checked.':'Sugerencias recibidas consultadas.',
+  'Suggestions received by the service':'Sugerencias recibidas por el servicio',
+  'These suggestions are recovered from your current account and invitation. They do not need to be sent again.':'Estas sugerencias se recuperan de tu cuenta e invitación actuales. No es necesario volver a enviarlas.',
+  'Received suggestions could not be checked. Retry recovery before sending another suggestion.':'No se pudieron consultar las sugerencias recibidas. Reintenta la recuperación antes de enviar otra sugerencia.',
+  'No received suggestions for this invitation. An unsent draft cannot be recovered after reloading.':'No hay sugerencias recibidas para esta invitación. Un borrador sin enviar no se puede recuperar después de volver a cargar la página.',
+  'Check received suggestions':'Consultar sugerencias recibidas', 'Show older suggestions':'Mostrar sugerencias anteriores',
+
+  'Suggestion status could not be checked. Its earlier receipt is still confirmed. Try again.':'No se pudo consultar el estado de la sugerencia. Su recepción anterior sigue confirmada. Inténtalo de nuevo.',
+  'Your reviewed suggestion':'Tu sugerencia revisada', 'Reviewed revision':'Revisión consultada',
+  'This draft is only kept on this page. After reloading, only suggestions already received by the service can be recovered.':'Este borrador solo se conserva en esta página. Después de volver a cargarla, solo se pueden recuperar las sugerencias que el servicio ya recibió.',
+  'Suggestion receipt is unconfirmed. Retry the original suggestion. It is only kept on this page; closing or reloading loses this local copy.':'No se ha confirmado la recepción de la sugerencia. Reintenta la sugerencia original. Solo se conserva en esta página; al cerrarla o volver a cargarla, se pierde esta copia local.',
+  'Receipt unconfirmed; the shopper may already have received this suggestion.':'Recepción sin confirmar; es posible que quien hace la compra ya haya recibido esta sugerencia.',
+  'Retry original suggestion':'Reintentar sugerencia original', 'Check suggestion status':'Consultar estado de la sugerencia',
+  'Write another suggestion':'Escribir otra sugerencia', 'Suggestion received for shopper review':'Sugerencia recibida para revisión de quien hace la compra',
+  'Suggestion reviewed':'Sugerencia revisada', 'Suggestion dismissed':'Sugerencia descartada', 'Suggestion status checked.':'Estado de la sugerencia consultado.',
+  'The original suggestion was not accepted because its reviewed instructions changed. Review the current instructions before starting a new suggestion.':'No se aceptó la sugerencia original porque cambiaron las instrucciones consultadas. Revisa las instrucciones actuales antes de iniciar otra sugerencia.',
+  'Review current instructions':'Revisar instrucciones actuales', 'Review the current instructions before sending again.':'Revisa las instrucciones actuales antes de volver a enviar.',
+
   'Could not load your account. Refresh to try again.':'No se pudo cargar tu cuenta. Actualiza para volver a intentarlo.',
   'Connect to load sign-in options.':'Conéctate para cargar las opciones de inicio de sesión.',
   'Email sign-in is not available yet.':'El inicio de sesión por correo aún no está disponible.',
