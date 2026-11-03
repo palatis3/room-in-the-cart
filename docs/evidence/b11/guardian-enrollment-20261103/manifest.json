@@ -1,0 +1,258 @@
+{
+  "generatedAtUTC": "2026-11-03T21:25:36.443110+00:00",
+  "status": "local backend verification passed; external readiness remains gated",
+  "sourceSnapshot": "/Users/palatis/Room in the Cart/.build/guardian-backend-final-20261103",
+  "node": "22.14.0",
+  "postgres": "17.11",
+  "database": "fresh disposable databases; Unix /tmp port 55432; all dropped by harness",
+  "roles": {
+    "application": "ritc_test_runtime -> ritc_app",
+    "verification": "ritc_guardian_test_verifier -> ritc_guardian_verifier",
+    "worker": "ritc_test_worker -> ritc_worker"
+  },
+  "runtimeDefaults": {
+    "childNetworking": false,
+    "realEmailSent": false,
+    "providerVerificationLive": false,
+    "deployed": false,
+    "providerAccountDeleted": false
+  },
+  "runs": [
+    {
+      "suite": "focused",
+      "command": "node service/scripts/test-guardian.mjs",
+      "exitCode": 0,
+      "tests": 29,
+      "pass": 29,
+      "fail": 0,
+      "skipped": 0,
+      "artifact": "focused.tap",
+      "sha256": "81e4e40d263f3bfa6c99dec6d9352a1fe90200b04de35f32337ed72593879ff7"
+    },
+    {
+      "suite": "application",
+      "command": "node service/scripts/test-guardian.mjs tests/browser-auth.integration.mjs tests/service.integration.mjs tests/runtime-privacy.integration.mjs",
+      "exitCode": 0,
+      "tests": 50,
+      "pass": 50,
+      "fail": 0,
+      "skipped": 0,
+      "artifact": "application.tap",
+      "sha256": "6b3cc81e5e5b6fa99582872d7c221156503f6ebdd76c60713736808548473df7"
+    },
+    {
+      "suite": "operations",
+      "command": "node service/scripts/test-guardian.mjs tests/maintenance.operations.mjs tests/runtime.operations.mjs",
+      "exitCode": 0,
+      "tests": 15,
+      "pass": 15,
+      "fail": 0,
+      "skipped": 0,
+      "artifact": "operations.tap",
+      "sha256": "9cce9bf570fb754f8c45efd799f3c1adc2c0c2278f601494dc2acc5ff2fbe432"
+    },
+    {
+      "suite": "unit",
+      "command": "npm --prefix service test",
+      "exitCode": 0,
+      "tests": 68,
+      "pass": 67,
+      "fail": 0,
+      "skipped": 1,
+      "artifact": "unit.tap",
+      "sha256": "c1da16a9b3aeee7e5895f05cd4fa8cc986228c0645ddabfa70f1c4750b9c4f00"
+    }
+  ],
+  "sources": [
+    {
+      "path": "service/src/auth.ts",
+      "sha256": "5682779ce7def47fb3ca8e2615ecd365b822db1875ffaf6b42e22e4055993c9f"
+    },
+    {
+      "path": "service/src/browser-auth.ts",
+      "sha256": "d9f5aa471c84993d6242aff0423857d0148dbcd83c1faf1dd694d1561cf66683"
+    },
+    {
+      "path": "service/src/guardian.ts",
+      "sha256": "d63b964e1fae757c9267c475f0eeb3f2a8655f67d666538548596f542c28eb28"
+    },
+    {
+      "path": "service/src/guardian-provider.ts",
+      "sha256": "aae0f453f2d2a3c8dae8aa87f5e6cdfadb19d79850a48224ed4106be58614321"
+    },
+    {
+      "path": "service/src/guardian-runtime.ts",
+      "sha256": "9dc4ac5b871aa919ee52aaaed14aacc8af8dbb8ccecfbaaadb31b768529de41d"
+    },
+    {
+      "path": "service/src/guardian-policy.ts",
+      "sha256": "e321da45a8a641175a4ab523cf1a0cfb12c1fda89e68dc627e1d348c866baacf"
+    },
+    {
+      "path": "service/src/http.ts",
+      "sha256": "71bc7e3ee1cebf23021b511a6979e9d118050dceb87547cf4b547e9120365282"
+    },
+    {
+      "path": "service/src/lifecycle.ts",
+      "sha256": "3719a3e86525975fdfd893e4d334649ee4efb9f2878da75ce3889a8e398581da"
+    },
+    {
+      "path": "service/src/operations-runtime.ts",
+      "sha256": "a94ab12148516bd5ed4817d214bdc91fe3d6c212c36009fee0457397cf8c6de5"
+    },
+    {
+      "path": "service/src/repository.ts",
+      "sha256": "f01e189b4507b3d7316f28a29bd7858d4bb100f8597a6dbbef0dc59970a949d6"
+    },
+    {
+      "path": "service/src/runtime.ts",
+      "sha256": "fcbd5dfe3df32d7d425eab61fa5b977a895168712a1802ee65b46b46c592422b"
+    },
+    {
+      "path": "service/migrations/021_guardian_enrollment.sql",
+      "sha256": "73e33d596776a1874aeb4715b16abed3f18829d1415ed6b0dd2799e356df4c04"
+    },
+    {
+      "path": "service/scripts/test-database.mjs",
+      "sha256": "ffe9df1faa7c189d4b4b18f220811392e27f4ba68a5e58960ae0d86b5458c72e"
+    },
+    {
+      "path": "service/scripts/test-operations.mjs",
+      "sha256": "dd68bf93fd9fe34ccd8bda7bf9df82cd6cc58c9822522a3c9c25617d21a0522f"
+    },
+    {
+      "path": "service/scripts/test-guardian.mjs",
+      "sha256": "8a33d38cbe5bd4a93c28e322e7d4d068fba92da0140d485f6a1732354f193305"
+    },
+    {
+      "path": "service/tests/guardian.integration.mjs",
+      "sha256": "27efbf01ca165b4c74aa3483f03122ae1b0c7aec060537266aaf8a1bcab350b2"
+    },
+    {
+      "path": "service/tests/guardian-provider.test.mjs",
+      "sha256": "687a2b5ce9475654b2cdb742609ca18af26929652e28b20ddb459ae38fe2af0e"
+    },
+    {
+      "path": "service/tests/service.integration.mjs",
+      "sha256": "f1a6c8263845f013d9a4651cfd8bddacc2c395a40fbe5bad498001862114018c"
+    },
+    {
+      "path": "service/package.json",
+      "sha256": "1ae270edf862179971e73661293828bc7a68c3a10c6ef6e9679d801ff7d8421b"
+    },
+    {
+      "path": "shared/contracts/guardian-enrollment-v1.d.ts",
+      "sha256": "fd88eee34a27137bd167131a45a1e720b5abc07c795135285b6293f43db5dd02"
+    },
+    {
+      "path": "shared/contracts/guardian-enrollment-proposed-v1.d.ts",
+      "sha256": "80feba3354ab41440fc399bc674f83e2b8f8105fb5640e76f1eca98ae81c1ac1"
+    },
+    {
+      "path": "service/GUARDIAN-ENROLLMENT-PLAN.md",
+      "sha256": "3c95c5429752b425f29bb6c08f46b9bc82922511fc0e2a37ac57b02b31263e9e"
+    },
+    {
+      "path": "service/OPERATIONS.md",
+      "sha256": "8415816095419277b28416f289bd81d907ec3f26399e20a0ed16787a4a8247f1"
+    }
+  ],
+  "migrations": [
+    {
+      "path": "service/migrations/001_household_requests.sql",
+      "sha256": "e919302e353eae03f5cf63425ad82924c3c6315321b8b4b07e1253185e79ef5b"
+    },
+    {
+      "path": "service/migrations/002_apple_billing.sql",
+      "sha256": "2f819c06c49f47e32c0093c636bacdfd95ad299ed159337b39041d173385ca6e"
+    },
+    {
+      "path": "service/migrations/003_web_session.sql",
+      "sha256": "dd2b9967be0364bf313afba035e8a60fec948a94aa1cf182e9fea14e269888cb"
+    },
+    {
+      "path": "service/migrations/004_household_lock.sql",
+      "sha256": "65fef08a239f4ea122133c335d56918e9d2ef2c4455418f36e18b6442a473250"
+    },
+    {
+      "path": "service/migrations/005_session_and_policy_hardening.sql",
+      "sha256": "3504fec9398d40cad639aa50c931d7cbe6b585e7cf2dc5059f227b3e87727d45"
+    },
+    {
+      "path": "service/migrations/006_household_lifecycle.sql",
+      "sha256": "7f293a0b681627cccb2d5bdc943eb3ea5c6e1436b063857f4a33f981cced296c"
+    },
+    {
+      "path": "service/migrations/007_selected_helper_session.sql",
+      "sha256": "422f3b0cafc482adb3708689c11bbbab1d026aac69555a8dafcbd3a525f2fca5"
+    },
+    {
+      "path": "service/migrations/008_browser_email_auth.sql",
+      "sha256": "5ad8c46d4146e1ce980e4f8809afa00512b9ed6ae6e41fd76637e0d86a713e1e"
+    },
+    {
+      "path": "service/migrations/009_auth_maintenance.sql",
+      "sha256": "b4e33a77bc0a9576a763062e8f3dddf00c019ecbe5464ad300b1e5fa0e872b6e"
+    },
+    {
+      "path": "service/migrations/010_account_lifecycle.sql",
+      "sha256": "e35ebbc6a2d1fcc3f7d03420542eb4ce588c3708e8bb31fcfc3ec0cc283daa22"
+    },
+    {
+      "path": "service/migrations/011_helper_review_and_shop_selection.sql",
+      "sha256": "23457cac7c614eb8794ec0268641cd1130558ce8d8c576c4ce8bd994253d07b9"
+    },
+    {
+      "path": "service/migrations/012_price_budget_history.sql",
+      "sha256": "dad295084f43a58cd15f58524575e98df66a77bdb0a17bd0f9555b3eac05c5c2"
+    },
+    {
+      "path": "service/migrations/013_shared_meal_occurrences.sql",
+      "sha256": "f574ff8a6b73f0959c622053b9ebd3408d05629d653709a40d631cc58259e1d5"
+    },
+    {
+      "path": "service/migrations/014_shared_meal_moves.sql",
+      "sha256": "2673ea349e6a7cd4df823e4128e4059533049b46071b03a1a1dc90a0d6e90a95"
+    },
+    {
+      "path": "service/migrations/015_family_decisions.sql",
+      "sha256": "c9779d5c19bcbb2e2bc5b3f4ffe0793e459375892d9616d5c0db2ac82686def1"
+    },
+    {
+      "path": "service/migrations/016_shared_meal_changes.sql",
+      "sha256": "362138035995832cc6b1bbffb6e9c0528ee2576945a908a14db03104355da6b0"
+    },
+    {
+      "path": "service/migrations/017_shared_meal_ideas.sql",
+      "sha256": "fe61e6528a38cc9c6c4315587d12ee540ea624422a8e89f8933f05e75addab63"
+    },
+    {
+      "path": "service/migrations/018_shared_store_quotes.sql",
+      "sha256": "ad18c9602e2f3c16d30f1f504ed833995bd2d09231ec405d50c7db592622b849"
+    },
+    {
+      "path": "service/migrations/019_optional_measurement.sql",
+      "sha256": "11cf0700dd146331a6997cca80b011a04fc8028c403745dd9e6b1d8121e959a2"
+    },
+    {
+      "path": "service/migrations/020_operations_health.sql",
+      "sha256": "daa858b576a969c5c8297a87ed88deeb4cda5c24a0b9f588f5a3429e92a0c2e7"
+    },
+    {
+      "path": "service/migrations/021_guardian_enrollment.sql",
+      "sha256": "73e33d596776a1874aeb4715b16abed3f18829d1415ed6b0dd2799e356df4c04"
+    }
+  ],
+  "knownValidationNotes": [
+    "Unit suite intentionally skips the separate billing PostgreSQL fixture; its durable tests belong to the full configured integration run.",
+    "Operations file cleanup needs serial file execution; harness now always uses --test-concurrency=1, matching the dedicated operations runner.",
+    "The full multi-feature migration/restore suite and current native/web device flows are owned by root/other lanes; these tests do not certify those artifacts."
+  ],
+  "releaseGates": [
+    "Actual configured test/prod provider credentials, deployed callback and role grants",
+    "Operator-approved en/es direct notice and combined verification/declaration/consent method",
+    "Actual approved numeric pending/evidence retention policy",
+    "SMTP/email OTP enabled by owner; real bounded provider acceptance and webhook delivery",
+    "Current native/mobile-web device acceptance and separate deployment authorization"
+  ]
+}

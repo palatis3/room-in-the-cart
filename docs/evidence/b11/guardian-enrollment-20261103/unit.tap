@@ -1,0 +1,358 @@
+
+> @room-in-the-cart/service@0.0.0 test
+> npm run build && node --test tests/*.test.mjs src/billing/tests/*.test.mjs
+
+
+> @room-in-the-cart/service@0.0.0 build
+> tsc -p tsconfig.json
+
+TAP version 13
+# Subtest: renewal order uses purchase and signature authority rather than longest expiry
+ok 1 - renewal order uses purchase and signature authority rather than longest expiry
+  ---
+  duration_ms: 0.298625
+  ...
+# Subtest: expiry, grace, retry and revoked access are evaluated against the trusted clock
+ok 2 - expiry, grace, retry and revoked access are evaluated against the trusted clock
+  ---
+  duration_ms: 0.104083
+  ...
+# Subtest: offline cache never exceeds subscription end or five-minute verified lease
+ok 3 - offline cache never exceeds subscription end or five-minute verified lease
+  ---
+  duration_ms: 4.338625
+  ...
+# Subtest: server configuration is absent by default and incomplete / local-Xcode configuration fails closed
+ok 4 - server configuration is absent by default and incomplete / local-Xcode configuration fails closed
+  ---
+  duration_ms: 0.638709
+  ...
+# Subtest: seat command rejects more than two, duplicates, extras and invalid revision; verify rejects client purchaser claims
+ok 5 - seat command rejects more than two, duplicates, extras and invalid revision; verify rejects client purchaser claims
+  ---
+  duration_ms: 1.441792
+  ...
+# Subtest: PostgreSQL durable billing / RLS / named seats contract
+ok 6 - PostgreSQL durable billing / RLS / named seats contract # SKIP
+  ---
+  duration_ms: 0.248709
+  ...
+# Subtest: official Apple verifier rejects unsigned and forged JWS instead of trusting payload fields
+ok 7 - official Apple verifier rejects unsigned and forged JWS instead of trusting payload fields
+  ---
+  duration_ms: 24.381709
+  ...
+# Subtest: unconfigured authentication denies every identity
+ok 8 - unconfigured authentication denies every identity
+  ---
+  duration_ms: 0.752333
+  ...
+# Subtest: JWT configuration requires HTTPS and an explicit audience
+ok 9 - JWT configuration requires HTTPS and an explicit audience
+  ---
+  duration_ms: 0.1125
+  ...
+# Subtest: canonical receipts bind all ordered array and scalar values independent of object key order
+ok 10 - canonical receipts bind all ordered array and scalar values independent of object key order
+  ---
+  duration_ms: 8.546459
+  ...
+# Subtest: email provider uses fixed documented endpoints and never follows provider redirects
+ok 11 - email provider uses fixed documented endpoints and never follows provider redirects
+  ---
+  duration_ms: 17.217375
+  ...
+# Subtest: email provider rejects secret credentials, arbitrary paths and malformed/oversized upstream responses
+ok 12 - email provider rejects secret credentials, arbitrary paths and malformed/oversized upstream responses
+  ---
+  duration_ms: 1.235667
+  ...
+# Subtest: provider errors are fixed public codes and do not expose upstream text or credentials
+ok 13 - provider errors are fixed public codes and do not expose upstream text or credentials
+  ---
+  duration_ms: 0.595416
+  ...
+# Subtest: independent checkout vector: cereal-over-cap
+ok 14 - independent checkout vector: cereal-over-cap
+  ---
+  duration_ms: 1.334542
+  ...
+# Subtest: independent checkout vector: existing-box-linked-once
+ok 15 - independent checkout vector: existing-box-linked-once
+  ---
+  duration_ms: 0.28875
+  ...
+# Subtest: independent checkout vector: fee-reversal-still-29-cents-over
+ok 16 - independent checkout vector: fee-reversal-still-29-cents-over
+  ---
+  duration_ms: 0.318292
+  ...
+# Subtest: independent checkout vector: price-and-fee-unknown
+ok 17 - independent checkout vector: price-and-fee-unknown
+  ---
+  duration_ms: 0.342167
+  ...
+# Subtest: independent checkout vector: fee-unknown-never-under
+ok 18 - independent checkout vector: fee-unknown-never-under
+  ---
+  duration_ms: 0.185333
+  ...
+# Subtest: independent checkout vector: item-cap-cannot-certify-whole-pickup
+ok 19 - independent checkout vector: item-cap-cannot-certify-whole-pickup
+  ---
+  duration_ms: 0.065291
+  ...
+# Subtest: independent checkout vector: dinner-cap-not-whole-checkout-cap
+ok 20 - independent checkout vector: dinner-cap-not-whole-checkout-cap
+  ---
+  duration_ms: 0.045708
+  ...
+# Subtest: independent checkout vector: unpriced-original-lines-remain-unknown
+ok 21 - independent checkout vector: unpriced-original-lines-remain-unknown
+  ---
+  duration_ms: 0.034125
+  ...
+# Subtest: independent checkout vector: threshold-uses-only-eligible-goods
+ok 22 - independent checkout vector: threshold-uses-only-eligible-goods
+  ---
+  duration_ms: 0.214666
+  ...
+# Subtest: independent checkout vector: tax-deposit-discount-all-included
+ok 23 - independent checkout vector: tax-deposit-discount-all-included
+  ---
+  duration_ms: 0.265541
+  ...
+# Subtest: typed command boundary rejects forged actors, totals and unrecognized command kinds
+ok 24 - typed command boundary rejects forged actors, totals and unrecognized command kinds
+  ---
+  duration_ms: 6.031666
+  ...
+# Subtest: KWS authenticates original UTF-8 bytes, exact scope and rotating secrets
+ok 25 - KWS authenticates original UTF-8 bytes, exact scope and rotating secrets
+  ---
+  duration_ms: 13.234417
+  ...
+# Subtest: organization webhook scope accepts only null product, product scope only its exact product
+ok 26 - organization webhook scope accepts only null product, product scope only its exact product
+  ---
+  duration_ms: 0.534833
+  ...
+# Subtest: documented OAuth token and PV request use fixed origins, Basic/Bearer and strict accepted response
+ok 27 - documented OAuth token and PV request use fixed origins, Basic/Bearer and strict accepted response
+  ---
+  duration_ms: 16.97425
+  ...
+# Subtest: ambiguous PV reply is never retried and 202 is never considered verified proof
+ok 28 - ambiguous PV reply is never retried and 202 is never considered verified proof
+  ---
+  duration_ms: 0.553334
+  ...
+# Subtest: OAuth rejects oversized/invalid token replies without returning provider content
+ok 29 - OAuth rejects oversized/invalid token replies without returning provider content
+  ---
+  duration_ms: 0.265083
+  ...
+# Subtest: definitive KWS 401 renews token once, while ambiguous responses never trigger retries
+ok 30 - definitive KWS 401 renews token once, while ambiguous responses never trigger retries
+  ---
+  duration_ms: 2.756542
+  ...
+# Subtest: entered credits and holds do not double-subtract or become spending
+ok 31 - entered credits and holds do not double-subtract or become spending
+  ---
+  duration_ms: 2.384125
+  ...
+# Subtest: posted cash is inside an inclusive expectation and unresolved review stays conditional
+ok 32 - posted cash is inside an inclusive expectation and unresolved review stays conditional
+  ---
+  duration_ms: 0.194
+  ...
+# Subtest: period reservation transfers count once and already-excluded reserve is explanatory only
+ok 33 - period reservation transfers count once and already-excluded reserve is explanatory only
+  ---
+  duration_ms: 0.18
+  ...
+# Subtest: eligible week is the ISO UTC closure week, including year boundaries
+ok 34 - eligible week is the ISO UTC closure week, including year boundaries
+  ---
+  duration_ms: 0.320417
+  ...
+# Subtest: tie, late, known, wrong and unchanged outcomes never produce benefit
+ok 35 - tie, late, known, wrong and unchanged outcomes never produce benefit
+  ---
+  duration_ms: 0.073
+  ...
+# Subtest: measurement allowlist rejects grocery data, client identity/week and billing claims
+ok 36 - measurement allowlist rejects grocery data, client identity/week and billing claims
+  ---
+  duration_ms: 1.425667
+  ...
+# Subtest: worker credentials are explicit and different from application credentials
+ok 37 - worker credentials are explicit and different from application credentials
+  ---
+  duration_ms: 0.387708
+  ...
+# Subtest: remote worker TLS and limits cannot be overridden by PostgreSQL URL options
+ok 38 - remote worker TLS and limits cannot be overridden by PostgreSQL URL options
+  ---
+  duration_ms: 0.2155
+  ...
+# Subtest: local disposable sockets are explicit and cannot be used in the deployment
+ok 39 - local disposable sockets are explicit and cannot be used in the deployment
+  ---
+  duration_ms: 0.068792
+  ...
+# Subtest: reauthentication derives only from a signed authentication method, never refreshed iat or user metadata
+ok 40 - reauthentication derives only from a signed authentication method, never refreshed iat or user metadata
+  ---
+  duration_ms: 14.69725
+  ...
+# Subtest: privileged account deletion is fixed-origin, exact-subject, hard delete and verifies absence
+ok 41 - privileged account deletion is fixed-origin, exact-subject, hard delete and verifies absence
+  ---
+  duration_ms: 11.16675
+  ...
+# Subtest: missing Apple revocation or mismatched provider subjects never claim deletion
+ok 42 - missing Apple revocation or mismatched provider subjects never claim deletion
+  ---
+  duration_ms: 1.027208
+  ...
+# Subtest: optional reviewed evidence retains exact selected source and quantities; legacy manual omits it
+ok 43 - optional reviewed evidence retains exact selected source and quantities; legacy manual omits it
+  ---
+  duration_ms: 7.364875
+  ...
+# Subtest: reviewed choice must match price, label, count, exact ceil and confirmed available limit
+ok 44 - reviewed choice must match price, label, count, exact ceil and confirmed available limit
+  ---
+  duration_ms: 1.693333
+  ...
+# Subtest: same-dimension exact conversions and null prices are validated without inventing price
+ok 45 - same-dimension exact conversions and null prices are validated without inventing price
+  ---
+  duration_ms: 0.109625
+  ...
+# Subtest: metadata cannot attach to links, contributor-like decisions, or unbounded malformed fields
+ok 46 - metadata cannot attach to links, contributor-like decisions, or unbounded malformed fields
+  ---
+  duration_ms: 0.495042
+  ...
+# Subtest: remote database configuration verifies TLS even if URL requests disabled SSL
+ok 47 - remote database configuration verifies TLS even if URL requests disabled SSL
+  ---
+  duration_ms: 0.45225
+  ...
+# Subtest: only loopback fixture databases can run without TLS
+ok 48 - only loopback fixture databases can run without TLS
+  ---
+  duration_ms: 0.142792
+  ...
+# Subtest: forwarded addresses are trusted only within the Vercel runtime and malformed metadata fails closed
+ok 49 - forwarded addresses are trusted only within the Vercel runtime and malformed metadata fails closed
+  ---
+  duration_ms: 2.851083
+  ...
+# Subtest: named reservations are deducted before exact usable whole packs, with price unresolved
+ok 50 - named reservations are deducted before exact usable whole packs, with price unresolved
+  ---
+  duration_ms: 2.9755
+  ...
+# Subtest: unknown stock, pack, yield or required amount blocks coverage and approval
+ok 51 - unknown stock, pack, yield or required amount blocks coverage and approval
+  ---
+  duration_ms: 0.629042
+  ...
+# Subtest: excluded ingredient blocks approval until replaced or removed; accents and case cannot bypass
+ok 52 - excluded ingredient blocks approval until replaced or removed; accents and case cannot bypass
+  ---
+  duration_ms: 1.262209
+  ...
+# Subtest: zero stock is explicit evidence; reserved amounts never create negative stock credit
+ok 53 - zero stock is explicit evidence; reserved amounts never create negative stock credit
+  ---
+  duration_ms: 0.461083
+  ...
+# Subtest: invalid yield, duplicate ingredient identity and invented private price fields fail closed
+ok 54 - invalid yield, duplicate ingredient identity and invented private price fields fail closed
+  ---
+  duration_ms: 2.117417
+  ...
+# Subtest: write binds exact shop authority and separates save from approval
+ok 55 - write binds exact shop authority and separates save from approval
+  ---
+  duration_ms: 1.503958
+  ...
+# Subtest: fractional cups and named reserves use exact arithmetic through usable pack yield
+ok 56 - fractional cups and named reserves use exact arithmetic through usable pack yield
+  ---
+  duration_ms: 0.378
+  ...
+# Subtest: fractional packs, ounce and fluid ounce stay distinct without unit conversion or rounding
+ok 57 - fractional packs, ounce and fluid ounce stay distinct without unit conversion or rounding
+  ---
+  duration_ms: 0.334583
+  ...
+# Subtest: invalid fractions fail closed and unrepresentable exact previews stay unresolved
+ok 58 - invalid fractions fail closed and unrepresentable exact previews stay unresolved
+  ---
+  duration_ms: 0.618458
+  ...
+# Subtest: separates item, checkout, incremental trip and elapsed time
+ok 59 - separates item, checkout, incremental trip and elapsed time
+  ---
+  duration_ms: 1.423459
+  ...
+# Subtest: unknown travel keeps the winner open and yields a conditional break-even
+ok 60 - unknown travel keeps the winner open and yields a conditional break-even
+  ---
+  duration_ms: 0.094625
+  ...
+# Subtest: unreviewed charges leave checkout and winner unknown
+ok 61 - unreviewed charges leave checkout and winner unknown
+  ---
+  duration_ms: 0.105542
+  ...
+# Subtest: unavailable or unknown availability gives no winner
+ok 62 - unavailable or unknown availability gives no winner
+  ---
+  duration_ms: 0.059
+  ...
+# Subtest: unmatched quantities and multistore packages are incomparable
+ok 63 - unmatched quantities and multistore packages are incomparable
+  ---
+  duration_ms: 0.117542
+  ...
+# Subtest: ties and missing minutes remain explicit
+ok 64 - ties and missing minutes remain explicit
+  ---
+  duration_ms: 0.042375
+  ...
+# Subtest: each cap uses its own scope and excludes incremental travel
+ok 65 - each cap uses its own scope and excludes incremental travel
+  ---
+  duration_ms: 0.368084
+  ...
+# Subtest: missing fee does not resolve a whole-checkout cap while a known item scope stays explicit
+ok 66 - missing fee does not resolve a whole-checkout cap while a known item scope stays explicit
+  ---
+  duration_ms: 0.046375
+  ...
+# Subtest: unknown eligibility preserves conditional deltas but withholds winner and break-even
+ok 67 - unknown eligibility preserves conditional deltas but withholds winner and break-even
+  ---
+  duration_ms: 0.193958
+  ...
+# Subtest: either option can have extra travel and cents stay exact at the accepted bound
+ok 68 - either option can have extra travel and cents stay exact at the accepted bound
+  ---
+  duration_ms: 0.254041
+  ...
+1..68
+# tests 68
+# suites 0
+# pass 67
+# fail 0
+# cancelled 0
+# skipped 1
+# todo 0
+# duration_ms 364.256208

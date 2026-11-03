@@ -52,6 +52,7 @@ export class HouseholdLifecycle {
     const [householdId,secret]=input.token.split('.');
     return this.repo.transaction(householdId!,async(db,now)=>{
       await this.repo.assertSession(db,identity,now);
+      await db.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[identity.issuer+'|'+identity.subject]);
       if((await db.query('SELECT ritc.identity_has_child_profile($1,$2) AS child',[identity.issuer,identity.subject])).rows[0].child)throw consentUnavailable();
       const invite=(await db.query(`SELECT i.* FROM ritc.invite i JOIN ritc.member m ON m.household_id=i.household_id AND m.member_id=i.created_by
         WHERE i.household_id=$1 AND i.token_hash=$2 AND i.revoked_at IS NULL AND i.expires_at>$3 AND m.state='active' AND m.kind='adult'`,[householdId,tokenHash(secret!),now])).rows[0];

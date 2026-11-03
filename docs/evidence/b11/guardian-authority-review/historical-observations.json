@@ -1,0 +1,62 @@
+{
+  "kind": "independent-guardian-authority-review-historical-observations",
+  "date": "2026-11-03",
+  "status": "Historical findings; closed by the current checked snapshot",
+  "currentEvidence": "current-results.json",
+  "currentReproduction": "independent-repro.mjs",
+  "currentCommand": "./.tools/node-v22.14.0-darwin-arm64/bin/node docs/evidence/b11/guardian-authority-review/independent-repro.mjs > docs/evidence/b11/guardian-authority-review/current-results.json",
+  "focusedHarnessCommand": "PATH=\"$PWD/.tools/node-v22.14.0-darwin-arm64/bin:$PATH\" node service/scripts/test-guardian.mjs > docs/evidence/b11/guardian-authority-review/focused-harness.log",
+  "environment": {
+    "database": "Disposable database on the explicitly local /tmp PostgreSQL socket, port 55432",
+    "migrations": "Frozen source text of migrations 001 through 021; 022 journal work excluded",
+    "roles": "ritc_test_runtime inherits ritc_app; separate ritc_guardian_test_verifier inherits ritc_guardian_verifier",
+    "fixtures": "Fictional confirmed emails, live provider-session rows, and one legitimate fixture guardian verification event. No live provider request or real account action.",
+    "cleanup": "Every review database was dropped after the run. Temporary review roles were dropped."
+  },
+  "historicalSnapshotIntegrity": {
+    "fullSourceHashesAvailable": false,
+    "reason": "Historical failing snapshots were read and executed before source hashes were recorded, and the disposable databases were dropped. No historical whole-file hash is invented or attributed retroactively.",
+    "currentSnapshotHashes": "current-results.json records SHA-256 for every frozen migration and relevant current source, compiled runtime, contract, test, and independent script."
+  },
+  "findings": [
+    {
+      "name": "Ordinary application SQL could bypass intended child sign-in",
+      "historicalBoundary": "guardian_finish was executable by ritc_app and did not require guardian_child_signin; guardian_admit_signin accepted a caller-supplied copy of guardian_enrollment.child_email_digest after only checking that the supplied subject had some confirmed email.",
+      "reproduction": [
+        "Seed a valid guardian, live guardian device/session, reviewed enrollment, and one trusted fixture provider event.",
+        "As ritc_test_runtime, advance enrollment through the permitted consent/claim/approval states and INSERT a claim for a different confirmed nonadult subject/session.",
+        "With zero guardian_child_signin rows, invoke SELECT ritc.guardian_finish(h,claim,issuer,subject,session,pairing_hash,old_attempt_email_digest,new_device_id,device_hash).",
+        "Roll back to the pre-finalization savepoint, then invoke SELECT ritc.guardian_admit_signin(h,invite,issuer,wrong_subject,wrong_session,copied_setup_child_email_digest)."
+      ],
+      "expected": {"finalizedWithoutSignin": false, "admittedWithCallerDigestAndDifferentEmail": false},
+      "historicalActual": {"existingSigninRows": 0, "finalizedWithoutSignin": true, "admittedWithCallerDigestAndDifferentEmail": true},
+      "fix": "Admission/finalization moved behind the separate verifier connection. Application EXECUTE was revoked from the original and new functions; trusted finalization checks the exact admitted subject/session and current confirmed emails.",
+      "currentExpected": "All original/new application-role calls reject with SQLSTATE 42501",
+      "currentActualReference": "current-results.json outcomes.appSQL"
+    },
+    {
+      "name": "Trusted finalization could race a pending child's zero-target erasure",
+      "historicalBoundary": "The initial application preparation released its shared identity fence before the separate trusted finalization transaction. The trusted function checked identity_blocked before waiting for the household lock but did not hold the shared identity advisory fence.",
+      "reproduction": [
+        "Seed a pending approved claim with an admitted child subject/session and no child member yet.",
+        "Hold the household row lock in a third connection.",
+        "Start guardian_finish_verified on the verifier connection and wait until it blocks on the household row.",
+        "Start privacy_request for the still-pending child on the application connection. It obtains the exclusive identity fence, sees no member, creates a zero-target job, and waits on the household inside the identity_erasure trigger.",
+        "Release the household lock; finalization commits first, then erasure accepts and deletes the enrollment."
+      ],
+      "expected": "An accepted pending-identity deletion must not leave a newly created untargeted child profile.",
+      "historicalActual": {"finishCommitted": true, "deletionAccepted": true, "privacyTargets": 0, "retainedChild": {"state": "active", "alias": "Child private alias", "erased_at": null}, "remainingEnrollments": 0},
+      "fix": "Both trusted admission and finalization now acquire the same nonblocking shared identity advisory fences for child and initiating guardian before acquiring the household lock, then recheck current authority.",
+      "currentExpected": {
+        "finalization_first": "Finalization commits; deletion rejects adult_scope_required instead of falsely accepting an empty target set.",
+        "deletion_first": "Deletion accepts; finalization rejects; no child member remains."
+      },
+      "currentActualReference": "current-results.json outcomes.erasureInterleavings"
+    }
+  ],
+  "acceptanceLimits": [
+    "This is source and disposable PostgreSQL/HTTP evidence, not evidence of a successful live KWS delivery/adult verification or production configuration.",
+    "Operator-approved notices, retention, provider credentials, signing/billing/deployment prerequisites and intended-device acceptance remain separate release requirements.",
+    "No remaining authority blocker was found in the current boundaries exercised by this independent review."
+  ]
+}

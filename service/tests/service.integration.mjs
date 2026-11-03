@@ -1,13 +1,13 @@
 import test,{before,after} from 'node:test';
 import assert from 'node:assert/strict';
 import pg from 'pg';
-import {randomUUID} from 'node:crypto';
+import {randomUUID,randomBytes} from 'node:crypto';
 import {generateKeyPair,exportJWK,createLocalJWKSet,SignJWT} from 'jose';
 import {migrate} from '../scripts/migrate.mjs';
 import {HouseholdRepository} from '../dist/repository.js';
 import {JWTIdentityVerifier,SupabaseSessionVerifier} from '../dist/auth.js';
 import {createHTTPServer} from '../dist/http.js';
-import {assertRuntimeRole,digest} from '../dist/database.js';
+import {assertRuntimeRole,digest,tokenHash} from '../dist/database.js';
 import {BillingService} from '../dist/billing/service.js';
 const runtimeURL=process.env.TEST_DATABASE_URL,adminURL=process.env.TEST_ADMIN_DATABASE_URL;
 if(!runtimeURL||!adminURL)throw new Error('Real PostgreSQL tests require TEST_DATABASE_URL and TEST_ADMIN_DATABASE_URL; they are never replaced by an in-memory mock.');
@@ -43,9 +43,18 @@ async function fixture() {
     const response=await fetch(origin+(tail.startsWith('/v1/')?tail:path+tail),{method,headers:{Authorization:'Bearer '+a.token,...(a.deviceToken?{'X-Device-Token':a.deviceToken}:{}),...(value===undefined?{}:{'Content-Type':'application/json'}),...extra},...(value===undefined?{}:{body:JSON.stringify(value)})});
     return{status:response.status,data:await response.json(),headers:response.headers};
   }
-  for(const actor of Object.values(actors)) {
-    const device=await http(actor,'POST','/devices',{});assert.equal(device.status,201,JSON.stringify(device.data));actor.deviceToken=device.data.deviceToken;actor.deviceId=device.data.deviceId;
-    const window=await http(actor,'POST','/replay-windows',{});assert.equal(window.status,200);actor.window=window.data.id;
+  for(const [name,actor] of Object.entries(actors)) {
+    if(['Sam','Jo'].includes(name)){
+      // This request-command fixture starts after independently tested guardian
+      // enrollment. Only its privileged fixture owner seeds granted authority;
+      // the public generic device route must not enroll a child.
+      const consent=(await admin.query('SELECT consent_id FROM ritc.consent WHERE household_id=$1 AND child_id=$2',[h,actor.id])).rows[0].consent_id;
+      actor.deviceId=randomUUID();actor.deviceToken=randomBytes(32).toString('base64url');
+      await admin.query('INSERT INTO ritc.device(household_id,device_id,member_id,token_hash,session_id,guardian_consent_id) VALUES($1,$2,$3,$4,$5,$6)',[h,actor.deviceId,actor.id,tokenHash(actor.deviceToken),actor.session,consent]);
+      await admin.query(`INSERT INTO ritc.guardian_enrollment(household_id,enrollment_id,guardian_id,guardian_device_id,guardian_issuer,guardian_subject,guardian_session,child_id,child_alias,notice_version,notice_digest,method_version,language,child_location,declaration,state,expires_at,consent_id,verified_at,consented_at)
+       VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,'fixture-notice-v1',$10,'fixture-method','en','US','parent_or_legal_guardian','active',clock_timestamp()+interval '1 hour',$11,clock_timestamp(),clock_timestamp())`,[h,randomUUID(),actors.Mia.id,actors.Mia.deviceId,issuer,actors.Mia.subject,actors.Mia.session,actor.id,name,digest('fixture-notice'),consent]);
+    }else{const device=await http(actor,'POST','/devices',{});assert.equal(device.status,201,JSON.stringify(device.data));actor.deviceToken=device.data.deviceToken;actor.deviceId=device.data.deviceId;}
+    const window=await http(actor,'POST','/replay-windows',{});assert.equal(window.status,200,JSON.stringify(window.data));actor.window=window.data.id;
   }
   const quote={currency:'USD',scope:'wholeCheckout',complete:true,capMinor:3800,capScope:'wholeCheckout',fee:{kind:'fixed',amountMinor:0},taxesMinor:0,depositsMinor:0,discountsMinor:0,observedAt:new Date(Date.now()-60_000).toISOString(),expiresAt:new Date(Date.now()+3_600_000).toISOString()};
   const line={lineId,originalItem:'Original basket',packs:1,unitPriceMinor:3720,feeEligible:true};
@@ -154,7 +163,7 @@ test('SQL exception at event insert rolls back basket, operation and request mut
   assert.equal((await f.http('Mia','POST','/commands',c)).status,200);
 });
 test('BFF cookie is HttpOnly, CSRF required, logout revokes protected reads; no tokens in JSON',async()=>{
-  const f=await fixture();const login=await f.http('Sam','POST','/v1/session',{householdId:f.h},{Origin:'https://web.fixture.invalid'});assert.equal(login.status,200);
+  const f=await fixture();assert.equal((await f.http('Sam','POST','/v1/session',{householdId:f.h},{Origin:'https://web.fixture.invalid'})).status,403);const login=await f.http('Alex','POST','/v1/session',{householdId:f.h},{Origin:'https://web.fixture.invalid'});assert.equal(login.status,200);
   const header=login.headers.get('set-cookie');assert.match(header,/HttpOnly/);assert.match(header,/Secure/);assert.match(header,/SameSite=Strict/);
   assert.equal('deviceToken'in login.data,false);assert.equal(login.data.role,'contributor');
   const cookie=header.split(';')[0];

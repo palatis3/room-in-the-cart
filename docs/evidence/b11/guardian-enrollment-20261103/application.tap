@@ -1,0 +1,260 @@
+TAP version 13
+# Subtest: email code login stores encrypted provider state and grants no household authority
+ok 1 - email code login stores encrypted provider state and grants no household authority
+  ---
+  duration_ms: 93.777375
+  ...
+# Subtest: pre-auth CSRF, exact origin, strict bodies and persistent attempt bounds guard email verification
+ok 2 - pre-auth CSRF, exact origin, strict bodies and persistent attempt bounds guard email verification
+  ---
+  duration_ms: 25.340208
+  ...
+# Subtest: two service instances enforce the same durable account-scoped OTP request limit
+ok 3 - two service instances enforce the same durable account-scoped OTP request limit
+  ---
+  duration_ms: 27.309333
+  ...
+# Subtest: concurrent BFF requests refresh once and preserve household context without exposing tokens
+ok 4 - concurrent BFF requests refresh once and preserve household context without exposing tokens
+  ---
+  duration_ms: 45.739333
+  ...
+# Subtest: live session deletion and a refreshed subject mismatch both fail closed
+ok 5 - live session deletion and a refreshed subject mismatch both fail closed
+  ---
+  duration_ms: 38.057834
+  ...
+# Subtest: logout revokes local authentication and scoped device even when provider logout fails
+ok 6 - logout revokes local authentication and scoped device even when provider logout fails
+  ---
+  duration_ms: 36.02675
+  ...
+# Subtest: context switch requires actual membership and a fresh login clears the previous scoped cookie
+ok 7 - context switch requires actual membership and a fresh login clears the previous scoped cookie
+  ---
+  duration_ms: 48.695541
+  ...
+# Subtest: trusted client-address port separates proxy clients and forwarded-header spoofing cannot evade the socket limit
+ok 8 - trusted client-address port separates proxy clients and forwarded-header spoofing cannot evade the socket limit
+  ---
+  duration_ms: 2.802
+  ...
+# Subtest: unconfigured email auth is explicitly unavailable and never reports a sent code
+ok 9 - unconfigured email auth is explicitly unavailable and never reports a sent code
+  ---
+  duration_ms: 1.671875
+  ...
+# Subtest: trusted IP OTP limits persist across service instances and distinct email addresses
+ok 10 - trusted IP OTP limits persist across service instances and distinct email addresses
+  ---
+  duration_ms: 86.023542
+  ...
+# Subtest: encrypted browser credentials are bound to their own cookie and private tables remain RLS-isolated
+ok 11 - encrypted browser credentials are bound to their own cookie and private tables remain RLS-isolated
+  ---
+  duration_ms: 15.074459
+  ...
+# Subtest: explicit refresh never contacts the provider after its exact session is revoked
+ok 12 - explicit refresh never contacts the provider after its exact session is revoked
+  ---
+  duration_ms: 10.968959
+  ...
+# Subtest: production runtime exposes authenticated responsibility preview while new provider deletion remains disabled
+ok 13 - production runtime exposes authenticated responsibility preview while new provider deletion remains disabled
+  ---
+  duration_ms: 46.901375
+  ...
+# Subtest: production runtime can read an existing pending deletion receipt without accepting or claiming provider erasure
+ok 14 - production runtime can read an existing pending deletion receipt without accepting or claiming provider erasure
+  ---
+  duration_ms: 3.757625
+  ...
+# Subtest: production runtime leaves only the reviewed household, retries once and still requires recent authentication
+ok 15 - production runtime leaves only the reviewed household, retries once and still requires recent authentication
+  ---
+  duration_ms: 24.838333
+  ...
+# Subtest: real JWT auth denies missing, forged, expired, wrong issuer and wrong audience tokens
+ok 16 - real JWT auth denies missing, forged, expired, wrong issuer and wrong audience tokens
+  ---
+  duration_ms: 113.573084
+  ...
+# Subtest: whole checkout recompute requires explicit $2.69 overage approval; exact retry applies once
+ok 17 - whole checkout recompute requires explicit $2.69 overage approval; exact retry applies once
+  ---
+  duration_ms: 50.407791
+  ...
+# Subtest: known foreign IDs cannot cross tenant or author boundaries, including a child preview
+ok 18 - known foreign IDs cannot cross tenant or author boundaries, including a child preview
+  ---
+  duration_ms: 55.963875
+  ...
+# Subtest: revocation blocks prior success replay and child consent cannot be resurrected
+ok 19 - revocation blocks prior success replay and child consent cannot be resurrected
+  ---
+  duration_ms: 24.560375
+  ...
+# Subtest: replay window expiry and compacted receipt never recreate a command
+ok 20 - replay window expiry and compacted receipt never recreate a command
+  ---
+  duration_ms: 29.908041
+  ...
+# Subtest: simultaneous exact retries and competing approvals conserve lines and revisions
+ok 21 - simultaneous exact retries and competing approvals conserve lines and revisions
+  ---
+  duration_ms: 30.827792
+  ...
+# Subtest: request edit invalidates preview; deferral preserves basket and routes obligation next
+ok 22 - request edit invalidates preview; deferral preserves basket and routes obligation next
+  ---
+  duration_ms: 35.330833
+  ...
+# Subtest: freeze survives authority transfer and stale placement is preserved without closing the new shop
+ok 23 - freeze survives authority transfer and stale placement is preserved without closing the new shop
+  ---
+  duration_ms: 45.868
+  ...
+# Subtest: SQL exception at event insert rolls back basket, operation and request mutation together
+ok 24 - SQL exception at event insert rolls back basket, operation and request mutation together
+  ---
+  duration_ms: 30.983542
+  ...
+# Subtest: BFF cookie is HttpOnly, CSRF required, logout revokes protected reads; no tokens in JSON
+ok 25 - BFF cookie is HttpOnly, CSRF required, logout revokes protected reads; no tokens in JSON
+  ---
+  duration_ms: 20.900334
+  ...
+# Subtest: runtime RLS hides cross-tenant rows and runtime cannot rewrite evidence or enroll members
+ok 26 - runtime RLS hides cross-tenant rows and runtime cannot rewrite evidence or enroll members
+  ---
+  duration_ms: 29.594042
+  ...
+# Subtest: missing prices stay unresolved, expired previews fail and foreign browser origins are denied
+ok 27 - missing prices stay unresolved, expired previews fail and foreign browser origins are denied
+  ---
+  duration_ms: 21.779
+  ...
+# Subtest: child default-off gate and device/session binding reject authenticated but unauthorized clients
+ok 28 - child default-off gate and device/session binding reject authenticated but unauthorized clients
+  ---
+  duration_ms: 19.691291
+  ...
+# Subtest: billing HTTP wiring remains Free and blocks delivery without configured Apple authority
+ok 29 - billing HTTP wiring remains Free and blocks delivery without configured Apple authority
+  ---
+  duration_ms: 18.15625
+  ...
+# Subtest: two contributors can reuse the same local key and local request ID without collision
+ok 30 - two contributors can reuse the same local key and local request ID without collision
+  ---
+  duration_ms: 19.536833
+  ...
+# Subtest: signed provider sessions require a live row bound to subject; cookie and reenrollment recheck revocation
+ok 31 - signed provider sessions require a live row bound to subject; cookie and reenrollment recheck revocation
+  ---
+  duration_ms: 16.14975
+  ...
+# Subtest: bootstrap shopper capabilities follow adult role and assigned current shop
+ok 32 - bootstrap shopper capabilities follow adult role and assigned current shop
+  ---
+  duration_ms: 20.634791
+  ...
+# Subtest: self-serve adult household creation is atomic, idempotent and rejects child elevation
+ok 33 - self-serve adult household creation is atomic, idempotent and rejects child elevation
+  ---
+  duration_ms: 28.901083
+  ...
+# Subtest: single-use invitations serialize racing identities and permit only the original identity retry
+ok 34 - single-use invitations serialize racing identities and permit only the original identity retry
+  ---
+  duration_ms: 44.235
+  ...
+# Subtest: helper projection excludes private data and durable proposals never mutate the shared basket
+ok 35 - helper projection excludes private data and durable proposals never mutate the shared basket
+  ---
+  duration_ms: 42.946916
+  ...
+# Subtest: read-only helper and expired grants cannot propose; browser can switch to its newly redeemed household
+ok 36 - read-only helper and expired grants cannot propose; browser can switch to its newly redeemed household
+  ---
+  duration_ms: 33.086458
+  ...
+# Subtest: guardian access is scoped to actual relationships and withdrawal revokes child devices and replay
+ok 37 - guardian access is scoped to actual relationships and withdrawal revokes child devices and replay
+  ---
+  duration_ms: 18.787292
+  ...
+# Subtest: new private tables enforce tenant isolation and provider checker cannot leak sessions
+ok 38 - new private tables enforce tenant isolation and provider checker cannot leak sessions
+  ---
+  duration_ms: 10.274542
+  ...
+# Subtest: browser helper session stays bound to its selected grant and cannot fall back after revocation
+ok 39 - browser helper session stays bound to its selected grant and cannot fall back after revocation
+  ---
+  duration_ms: 33.608292
+  ...
+# Subtest: only shopper inbox includes author aliases; own requests and receipts remain minimal
+ok 40 - only shopper inbox includes author aliases; own requests and receipts remain minimal
+  ---
+  duration_ms: 15.938625
+  ...
+# Subtest: JWT without signed session_id is rejected before device enrollment
+ok 41 - JWT without signed session_id is rejected before device enrollment
+  ---
+  duration_ms: 9.477458
+  ...
+# Subtest: live provider session lock serializes logout with the authorized transaction
+ok 42 - live provider session lock serializes logout with the authorized transaction
+  ---
+  duration_ms: 115.31475
+  ...
+# Subtest: native selected-grant header enforces the exact recipient and removes broader shopper authority
+ok 43 - native selected-grant header enforces the exact recipient and removes broader shopper authority
+  ---
+  duration_ms: 55.084708
+  ...
+# Subtest: managed invitation and view lists reconcile creation without disclosing tokens or unrelated shops
+ok 44 - managed invitation and view lists reconcile creation without disclosing tokens or unrelated shops
+  ---
+  duration_ms: 88.907625
+  ...
+# Subtest: shopper reviews a dated dinner and packs in one revision, preserves protected lunch, and cannot replay after transfer
+ok 45 - shopper reviews a dated dinner and packs in one revision, preserves protected lunch, and cannot replay after transfer
+  ---
+  duration_ms: 87.172916
+  ...
+# Subtest: placement reviewer reads original snapshot; reporter replay/status survives transfer, closure and expired window without budget disclosure
+ok 46 - placement reviewer reads original snapshot; reporter replay/status survives transfer, closure and expired window without budget disclosure
+  ---
+  duration_ms: 133.662917
+  ...
+# Subtest: changed basket cannot apply an old placement; concurrent current-shopper resolution and transfer preserve one resolution
+ok 47 - changed basket cannot apply an old placement; concurrent current-shopper resolution and transfer preserve one resolution
+  ---
+  duration_ms: 84.348084
+  ...
+# Subtest: placement report pages are bounded, stable and bind cursors to the authorized shop
+ok 48 - placement report pages are bounded, stable and bind cursors to the authorized shop
+  ---
+  duration_ms: 57.668125
+  ...
+# Subtest: placement command digest matches the native fixed sorted-byte fixture
+ok 49 - placement command digest matches the native fixed sorted-byte fixture
+  ---
+  duration_ms: 0.208125
+  ...
+# Subtest: S24 reviewed pack source persists in private exact preview and atomic apply without author leakage
+ok 50 - S24 reviewed pack source persists in private exact preview and atomic apply without author leakage
+  ---
+  duration_ms: 52.586167
+  ...
+1..50
+# tests 50
+# suites 0
+# pass 50
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2377.128625

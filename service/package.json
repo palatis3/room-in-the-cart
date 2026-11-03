@@ -13,7 +13,8 @@
     "operations": "node dist/operations-cli.js",
     "test:operations": "npm run build && node scripts/test-operations.mjs",
     "migrate": "node scripts/migrate.mjs",
-    "test:integration": "npm run build && node scripts/test-database.mjs"
+    "test:integration": "npm run build && node scripts/test-database.mjs",
+    "test:guardian": "npm run build && node scripts/test-guardian.mjs"
   },
   "devDependencies": {
     "@types/node": "22.14.0",

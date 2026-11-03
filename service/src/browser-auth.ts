@@ -56,13 +56,15 @@ export class SupabaseEmailOTPProvider implements EmailOTPProvider {
 interface AuthRow {
  token_hash:string;csrf:string;phase:'challenge'|'authenticated';issuer:string|null;subject:string|null;session_id:string|null;
  access_expires_at:Date|null;secret_cipher:string|null;email_cipher:string|null;code_expires_at:Date|null;send_after:Date|null;
- verify_attempts:number;expires_at:Date;revoked_at:Date|null;
+ verify_attempts:number;expires_at:Date;revoked_at:Date|null;guardian_household_id?:string|null;guardian_invite_id?:string|null;guardian_signin_started_at?:Date|null;
 }
 export interface BrowserIdentity {identity:VerifiedIdentity;csrf:string;cookie:string}
+export interface ChildSigninBinding {householdId:string;inviteId:string}
+export interface BrowserChildSigninGuard {beforeChildSignin(binding:ChildSigninBinding,email:string):Promise<void>;afterChildSignin(binding:ChildSigninBinding,identity:VerifiedIdentity,email:string,notBefore:Date):Promise<void>}
 interface Outcome<T>{value?:T;failure?:ServiceError}
 export class BrowserAuthService {
   private readonly key:Buffer;
-  constructor(private readonly repo:HouseholdRepository,private readonly verifier:IdentityVerifier,private readonly provider:EmailOTPProvider,options:{encryptionKey:string}){
+  constructor(private readonly repo:HouseholdRepository,private readonly verifier:IdentityVerifier,private readonly provider:EmailOTPProvider,private readonly options:{encryptionKey:string;childSignin?:BrowserChildSigninGuard}){
     this.key=Buffer.from(options.encryptionKey,'base64');
     if(this.key.length!==32||this.key.toString('base64')!==options.encryptionKey)throw new Error('Browser auth encryption key must be canonical base64 for 32 random bytes');
   }
@@ -95,13 +97,20 @@ export class BrowserAuthService {
     if(phase.phase==='challenge')return{authenticated:false as const,csrf:phase.csrf};
     const authenticated=await this.authenticate(cookie);return{authenticated:true as const,csrf:authenticated.csrf};
   }
-  async start(cookie:string,csrf:string,input:z.infer<typeof emailStartSchema>,clientAddress:string){
+  async start(cookie:string,csrf:string,input:z.infer<typeof emailStartSchema>,clientAddress:string,childBinding?:ChildSigninBinding){
     const hash=this.hash(cookie),email=input.email.trim().toLowerCase();
+    // Household checks never run while holding a browser_auth lock: scheduled
+    // expiry and erasure take household locks before retiring browser challenges.
+    const existing=await this.transaction(hash,async(db,now)=>{const row=await this.record(db,hash,now);this.csrf(row,csrf);return row.guardian_household_id&&row.guardian_invite_id?{householdId:row.guardian_household_id,inviteId:row.guardian_invite_id}:undefined;});
+    if(childBinding&&existing&&(childBinding.householdId!==existing.householdId||childBinding.inviteId!==existing.inviteId))throw sessionNeeded();
+    const binding=existing??childBinding;
+    if(binding){if(!this.options.childSignin)throw unavailable();await this.options.childSignin.beforeChildSignin(binding,email);}
     const result=await this.transaction<Outcome<{status:'check_email'}>>(hash,async(db,now)=>{
       const row=await this.record(db,hash,now);this.csrf(row,csrf);
       if(row.phase!=='challenge')return{failure:new ServiceError(409,'already_signed_in','Sign out before using a different email address.')};
+      if(row.guardian_invite_id&&(row.guardian_invite_id!==binding?.inviteId||row.guardian_household_id!==binding?.householdId))return{failure:sessionNeeded()};
       if(row.send_after&&row.send_after>now)return{failure:limited()};
-      await db.query('UPDATE ritc.browser_auth SET send_after=$2 WHERE token_hash=$1',[hash,new Date(now.getTime()+60_000)]);
+      await db.query('UPDATE ritc.browser_auth SET send_after=$2,guardian_household_id=$3,guardian_invite_id=$4,guardian_signin_started_at=$5 WHERE token_hash=$1',[hash,new Date(now.getTime()+60_000),binding?.householdId??null,binding?.inviteId??null,binding?now:null]);
       if(!await this.rate(db,now,'otp-ip',clientAddress,20))return{failure:limited()};
       if(!await this.rate(db,now,'otp-email',email,5))return{failure:limited()};
       try{await this.provider.start(email);}catch(e){return{failure:e instanceof ServiceError?e:unavailable()};}
@@ -111,24 +120,30 @@ export class BrowserAuthService {
   }
   async verify(cookie:string,csrf:string,input:z.infer<typeof emailVerifySchema>){
     const hash=this.hash(cookie);
-    const result=await this.transaction<Outcome<{cookie:string;csrf:string;authenticated:true;expiresIn:number}>>(hash,async(db,now)=>{
+    const prepared=this.unwrap(await this.transaction<Outcome<{tokens:ProviderTokens;identity:VerifiedIdentity;email:string;source:AuthRow}>>(hash,async(db,now)=>{
       const row=await this.record(db,hash,now);this.csrf(row,csrf);
       if(row.phase!=='challenge'||!row.email_cipher||!row.code_expires_at||row.code_expires_at<=now)return{failure:codeRejected()};
       if(row.verify_attempts>=5)return{failure:limited()};
       await db.query('UPDATE ritc.browser_auth SET verify_attempts=verify_attempts+1 WHERE token_hash=$1',[hash]);
-      let tokens:ProviderTokens,identity:VerifiedIdentity;
       try{
         const email=z.object({email:z.string().email()}).parse(this.open(row.email_cipher,hash)).email;
-        tokens=tokensSchema.parse(await this.provider.verify(email,input.code));identity=await this.verifier.verify(tokens.accessToken);
-        await this.repo.assertSession(db,identity,now);
+        const tokens=tokensSchema.parse(await this.provider.verify(email,input.code)),identity=await this.verifier.verify(tokens.accessToken);
+        await this.repo.assertSession(db,identity,now);return{value:{tokens,identity,email,source:row}};
       }catch(e){return{failure:e instanceof ServiceError?e:unavailable()};}
+    }));
+    const {tokens,identity,email,source}=prepared;
+    if(source.guardian_household_id&&source.guardian_invite_id){if(!this.options.childSignin)throw unavailable();await this.options.childSignin.afterChildSignin({householdId:source.guardian_household_id,inviteId:source.guardian_invite_id},identity,email,source.guardian_signin_started_at??new Date());}
+    return this.transaction(hash,async(db,now)=>{
+      const row=await this.record(db,hash,now);this.csrf(row,csrf);
+      if(row.phase!=='challenge'||row.email_cipher!==source.email_cipher||row.guardian_household_id!==source.guardian_household_id||row.guardian_invite_id!==source.guardian_invite_id||!row.code_expires_at||row.code_expires_at<=now)throw codeRejected();
+      await this.repo.assertSession(db,identity,now);
       await db.query('UPDATE ritc.browser_auth SET revoked_at=$2,email_cipher=NULL WHERE token_hash=$1',[hash,now]);
       const nextCookie=randomBytes(32).toString('base64url'),nextHash=this.hash(nextCookie),nextCSRF=randomBytes(32).toString('base64url');
       await db.query("SELECT set_config('app.browser_token_hash',$1,true)",[nextHash]);
-      await db.query(`INSERT INTO ritc.browser_auth(token_hash,csrf,phase,issuer,subject,session_id,access_expires_at,secret_cipher,expires_at)
-        VALUES($1,$2,'authenticated',$3,$4,$5,$6,$7,$8)`,[nextHash,nextCSRF,identity.issuer,identity.subject,identity.sessionId,identity.expiresAt,this.seal(tokens,nextHash),new Date(now.getTime()+7*24*60*60_000)]);
-      return{value:{cookie:nextCookie,csrf:nextCSRF,authenticated:true,expiresIn:7*24*60*60}};
-    });return this.unwrap(result);
+      await db.query(`INSERT INTO ritc.browser_auth(token_hash,csrf,phase,issuer,subject,session_id,access_expires_at,secret_cipher,expires_at,guardian_household_id,guardian_invite_id)
+        VALUES($1,$2,'authenticated',$3,$4,$5,$6,$7,$8,$9,$10)`,[nextHash,nextCSRF,identity.issuer,identity.subject,identity.sessionId,identity.expiresAt,this.seal(tokens,nextHash),new Date(now.getTime()+7*24*60*60_000),row.guardian_household_id??null,row.guardian_invite_id??null]);
+      return{cookie:nextCookie,csrf:nextCSRF,authenticated:true as const,expiresIn:7*24*60*60};
+    });
   }
   async authenticate(cookie:string,refresh=false):Promise<BrowserIdentity>{
     const hash=this.hash(cookie);
@@ -158,6 +173,7 @@ export class BrowserAuthService {
       return{value:{identity,csrf:row.csrf,cookie}};
     });return this.unwrap(result);
   }
+  async childBinding(cookie:string):Promise<ChildSigninBinding|undefined>{return this.transaction(this.hash(cookie),async(db,now)=>{const row=await this.record(db,this.hash(cookie),now);return row.guardian_household_id&&row.guardian_invite_id?{householdId:row.guardian_household_id,inviteId:row.guardian_invite_id}:undefined;});}
   async refresh(cookie:string,csrf:string){
     await this.transaction(this.hash(cookie),async(db,now)=>{this.csrf(await this.record(db,this.hash(cookie),now),csrf);});
     const identity=await this.authenticate(cookie,true);return{authenticated:true as const,csrf:identity.csrf};

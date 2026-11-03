@@ -1,0 +1,117 @@
+{
+  "kind": "independent-local-guardian-authority-review",
+  "startedAt": "2026-11-03T21:20:58.763Z",
+  "nodeVersion": "v22.14.0",
+  "scope": "Frozen migrations 001–021; no 022 journal changes or provider/staging actions",
+  "sourceHashes": {
+    "service/migrations/001_household_requests.sql": "e919302e353eae03f5cf63425ad82924c3c6315321b8b4b07e1253185e79ef5b",
+    "service/migrations/002_apple_billing.sql": "2f819c06c49f47e32c0093c636bacdfd95ad299ed159337b39041d173385ca6e",
+    "service/migrations/003_web_session.sql": "dd2b9967be0364bf313afba035e8a60fec948a94aa1cf182e9fea14e269888cb",
+    "service/migrations/004_household_lock.sql": "65fef08a239f4ea122133c335d56918e9d2ef2c4455418f36e18b6442a473250",
+    "service/migrations/005_session_and_policy_hardening.sql": "3504fec9398d40cad639aa50c931d7cbe6b585e7cf2dc5059f227b3e87727d45",
+    "service/migrations/006_household_lifecycle.sql": "7f293a0b681627cccb2d5bdc943eb3ea5c6e1436b063857f4a33f981cced296c",
+    "service/migrations/007_selected_helper_session.sql": "422f3b0cafc482adb3708689c11bbbab1d026aac69555a8dafcbd3a525f2fca5",
+    "service/migrations/008_browser_email_auth.sql": "5ad8c46d4146e1ce980e4f8809afa00512b9ed6ae6e41fd76637e0d86a713e1e",
+    "service/migrations/009_auth_maintenance.sql": "b4e33a77bc0a9576a763062e8f3dddf00c019ecbe5464ad300b1e5fa0e872b6e",
+    "service/migrations/010_account_lifecycle.sql": "e35ebbc6a2d1fcc3f7d03420542eb4ce588c3708e8bb31fcfc3ec0cc283daa22",
+    "service/migrations/011_helper_review_and_shop_selection.sql": "23457cac7c614eb8794ec0268641cd1130558ce8d8c576c4ce8bd994253d07b9",
+    "service/migrations/012_price_budget_history.sql": "dad295084f43a58cd15f58524575e98df66a77bdb0a17bd0f9555b3eac05c5c2",
+    "service/migrations/013_shared_meal_occurrences.sql": "f574ff8a6b73f0959c622053b9ebd3408d05629d653709a40d631cc58259e1d5",
+    "service/migrations/014_shared_meal_moves.sql": "2673ea349e6a7cd4df823e4128e4059533049b46071b03a1a1dc90a0d6e90a95",
+    "service/migrations/015_family_decisions.sql": "c9779d5c19bcbb2e2bc5b3f4ffe0793e459375892d9616d5c0db2ac82686def1",
+    "service/migrations/016_shared_meal_changes.sql": "362138035995832cc6b1bbffb6e9c0528ee2576945a908a14db03104355da6b0",
+    "service/migrations/017_shared_meal_ideas.sql": "fe61e6528a38cc9c6c4315587d12ee540ea624422a8e89f8933f05e75addab63",
+    "service/migrations/018_shared_store_quotes.sql": "ad18c9602e2f3c16d30f1f504ed833995bd2d09231ec405d50c7db592622b849",
+    "service/migrations/019_optional_measurement.sql": "11cf0700dd146331a6997cca80b011a04fc8028c403745dd9e6b1d8121e959a2",
+    "service/migrations/020_operations_health.sql": "daa858b576a969c5c8297a87ed88deeb4cda5c24a0b9f588f5a3429e92a0c2e7",
+    "service/migrations/021_guardian_enrollment.sql": "73e33d596776a1874aeb4715b16abed3f18829d1415ed6b0dd2799e356df4c04",
+    "service/src/guardian.ts": "7e3c3f7da92d86cb8b2b1d7bcaa3ef4d5086b69f8e186490bdb0449ece84bef0",
+    "service/src/guardian-provider.ts": "bdddf75d447924df44f16e31b2e6ee9efe8e098dd49b35cfc9d93078d43ba99d",
+    "service/src/guardian-runtime.ts": "9dc4ac5b871aa919ee52aaaed14aacc8af8dbb8ccecfbaaadb31b768529de41d",
+    "service/src/guardian-policy.ts": "e321da45a8a641175a4ab523cf1a0cfb12c1fda89e68dc627e1d348c866baacf",
+    "service/src/http.ts": "71bc7e3ee1cebf23021b511a6979e9d118050dceb87547cf4b547e9120365282",
+    "service/src/repository.ts": "f01e189b4507b3d7316f28a29bd7858d4bb100f8597a6dbbef0dc59970a949d6",
+    "service/src/auth.ts": "5682779ce7def47fb3ca8e2615ecd365b822db1875ffaf6b42e22e4055993c9f",
+    "service/src/browser-auth.ts": "d9f5aa471c84993d6242aff0423857d0148dbcd83c1faf1dd694d1561cf66683",
+    "service/src/lifecycle.ts": "3719a3e86525975fdfd893e4d334649ee4efb9f2878da75ce3889a8e398581da",
+    "service/src/privacy.ts": "e9644d5582f8ae9e8d86ba9f3164ac5f43cb1d167cceaa08c9749bae9b869c6f",
+    "service/src/operations-runtime.ts": "a94ab12148516bd5ed4817d214bdc91fe3d6c212c36009fee0457397cf8c6de5",
+    "service/tests/guardian.integration.mjs": "27efbf01ca165b4c74aa3483f03122ae1b0c7aec060537266aaf8a1bcab350b2",
+    "service/tests/guardian-provider.test.mjs": "87d09bc5cf186b484634e904229d9141d48dc2256239050a95f598231cd1c2bd",
+    "service/dist/guardian-runtime.js": "28966df987b8d40985e9050435024788591b278e5cd48fc9b4ac77f4fa8f8b69",
+    "service/dist/guardian.js": "c196879ee6d11d9ed190df09cd2b4b889a8b99aa238245c0b01ebb39d6de113a",
+    "service/dist/browser-auth.js": "3886fc0e9d7900acf2b707b81f58fa48c31e18aa5a13adacfad7a1ee00e72d5f",
+    "shared/contracts/guardian-enrollment-v1.d.ts": "fd88eee34a27137bd167131a45a1e720b5abc07c795135285b6293f43db5dd02",
+    "independent-repro.mjs": "b828679f452c40286efdca3e49f644695f8116a6ac76386338e5f78f5be609c5"
+  },
+  "outcomes": {
+    "appSQL": {
+      "expected": "Every call fails with SQLSTATE 42501",
+      "actual": {
+        "oldFinalizer": "42501",
+        "oldAdmission": "42501",
+        "verifiedFinalizer": "42501",
+        "verifiedAdmission": "42501",
+        "nativeVerifiedAdmission": "42501"
+      }
+    },
+    "nativeChallengeColumns": {
+      "subject_update": false,
+      "session_update": false
+    },
+    "erasureInterleavings": [
+      {
+        "order": "finalization_first",
+        "expected": "Finish commits; deletion rejects adult_scope_required",
+        "actual": {
+          "finishCommitted": true,
+          "deletion": {
+            "accepted": false,
+            "error": "adult_scope_required"
+          },
+          "remainingChildMembers": 1
+        }
+      },
+      {
+        "order": "deletion_first",
+        "expected": "Deletion accepts; finish rejects; no child member remains",
+        "actual": {
+          "finishCommitted": false,
+          "deletion": {
+            "accepted": true
+          },
+          "remainingChildMembers": 0
+        }
+      }
+    ],
+    "membership": [
+      {
+        "name": "new_child_organizer_lost",
+        "expected": false,
+        "actual": false
+      },
+      {
+        "name": "existing_child_wrong_guardian",
+        "expected": false,
+        "actual": false
+      },
+      {
+        "name": "existing_active_child_own_nonorganizer_guardian",
+        "expected": true,
+        "actual": true
+      },
+      {
+        "name": "revoked_child_nonorganizer_guardian",
+        "expected": false,
+        "actual": false
+      }
+    ],
+    "verifierWorkerExclusion": {
+      "expected": "Rejected",
+      "actual": "Rejected",
+      "message": "Guardian proof requires a distinct verifier-only database login"
+    }
+  },
+  "finishedAt": "2026-11-03T21:20:59.012Z",
+  "assertionsPassed": true
+}

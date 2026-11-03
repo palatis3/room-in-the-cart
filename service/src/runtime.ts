@@ -9,6 +9,7 @@ import { HouseholdRepository } from './repository.js';
 import { createHTTPServer } from './http.js';
 import { BrowserAuthService, SupabaseEmailOTPProvider } from './browser-auth.js';
 import { PrivacyService } from './privacy.js';
+import { guardianRuntime } from './guardian-runtime.js';
 
 /** Trust Vercel's overwritten edge metadata only inside its deployed runtime.
  * https://vercel.com/docs/headers/request-headers#x-vercel-forwarded-for
@@ -44,6 +45,7 @@ export function databaseConfiguration(environment: NodeJS.ProcessEnv): PoolConfi
 export async function createRuntime(environment: NodeJS.ProcessEnv = process.env) {
   const pool = new Pool(databaseConfiguration(environment));
   pool.on('error', () => { console.error(JSON.stringify({ event: 'database_idle_connection_error' })); });
+  let guardianPool:Awaited<ReturnType<typeof guardianRuntime>>['pool'];
   try {
     await assertRuntimeRole(pool);
     const { JWT_ISSUER: issuer, JWT_AUDIENCE: audience, JWT_JWKS_URL: jwksUrl, WEB_ORIGIN: webOrigin } = environment;
@@ -56,15 +58,20 @@ export async function createRuntime(environment: NodeJS.ProcessEnv = process.env
       noticeVersion: environment.CONSENT_NOTICE_VERSION ?? '',
       ...(configured ? { sessionStatus: new SupabaseSessionVerifier(issuer!) } : {}),
     });
+    const guardian = await guardianRuntime(repository,environment,databaseConfiguration);
+    guardianPool=guardian.pool;
     let browserAuth: BrowserAuthService | undefined;
     if (environment.EMAIL_OTP_ENABLED === 'true') {
       if (!configured || !webOrigin || !environment.SUPABASE_URL || !environment.SUPABASE_PUBLISHABLE_KEY || !environment.BFF_TOKEN_ENCRYPTION_KEY) {
         throw new Error('Enabled email sign-in requires complete provider and encryption configuration');
       }
-      browserAuth = new BrowserAuthService(repository, verifier,
-        new SupabaseEmailOTPProvider({ url: environment.SUPABASE_URL, publicKey: environment.SUPABASE_PUBLISHABLE_KEY }),
-        { encryptionKey: environment.BFF_TOKEN_ENCRYPTION_KEY });
+      const childOTP=new SupabaseEmailOTPProvider({ url: environment.SUPABASE_URL, publicKey: environment.SUPABASE_PUBLISHABLE_KEY });
+      browserAuth = new BrowserAuthService(repository, verifier,childOTP,
+        { encryptionKey: environment.BFF_TOKEN_ENCRYPTION_KEY,childSignin:guardian.service });
+      guardian.service.attachChildSignin(browserAuth,childOTP);
     }
+    repository.options.allowChildNetwork=guardian.service.notice('en').available&&guardian.service.notice('es').available;
+    if(repository.options.allowChildNetwork)repository.options.noticeVersion=guardian.service.notice('en').notice!.version;
     const clientAddress = deploymentClientAddress(environment);
     // Free responsibility preview, existing status receipts and household exit
     // do not depend on an account-deletion provider. The default service keeps
@@ -72,12 +79,14 @@ export async function createRuntime(environment: NodeJS.ProcessEnv = process.env
     // retention policy are explicitly supplied by the deployment owner.
     const privacy = new PrivacyService(repository);
     const server = createHTTPServer({ repository, verifier, billing: new BillingService(appleGatewayFromEnvironment(environment)),
-      privacy,
+      privacy,guardian:guardian.service,
       ...(webOrigin ? { webOrigin } : {}), ...(browserAuth ? { browserAuth } : {}), ...(clientAddress ? { clientAddress } : {}) });
     server.requestTimeout = 15_000;
     server.headersTimeout = 10_000;
+    if(guardianPool)server.once('close',()=>{void guardianPool!.end();});
     return { server, pool };
   } catch (error) {
+    if(guardianPool)await guardianPool.end();
     await pool.end();
     throw error;
   }

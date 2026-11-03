@@ -1,12 +1,12 @@
 # Scheduled housekeeping and operator commands
 
-The application and operations function use different PostgreSQL logins and pools. `api/maintenance.js` composes the operations runtime without importing the application runtime. Its current responsibilities are bounded browser-auth expiry/logout retries, expired temporary email and rate-bucket cleanup, completed privacy-receipt cleanup, and aggregate monitoring.
+The application and operations function use different PostgreSQL logins and pools. `api/maintenance.js` composes the operations runtime without importing the application runtime. Its current responsibilities are bounded browser-auth expiry/logout retries, expired temporary email and rate-bucket cleanup, completed privacy-receipt cleanup, aggregate monitoring, and bounded guardian setup expiry/policy-gated purge.
 
 **Pending account-deletion jobs are never claimed or erased by this runtime. Provider account deletion remains unavailable.** No environment variable enables it. Future processing requires reviewed provider/Apple revocation composition, approved numeric retention and backup horizons, deletion-journal replay, and a tested restore/purge drill. Completed receipts are retired only at their already-persisted receipt/marker dates. Cleanup does not invent a new retention policy.
 
 ## Credentials and deployment configuration
 
-Apply migrations through `020_operations_health.sql` with the migration administrator before invoking the worker. Provision a dedicated login that inherits `ritc_worker`; it must not inherit `ritc_app`, own the database/schema/tables, be superuser, or bypass RLS. Do not grant it raw table privileges. Store its URL separately as `WORKER_DATABASE_URL`, and keep the application login in `DATABASE_URL`. The runtime rejects a matching application username and independently verifies the connected role.
+Apply migrations through `021_guardian_enrollment.sql` with the migration administrator before invoking the worker. Provision a dedicated login that inherits `ritc_worker`; it must not inherit `ritc_app`, own the database/schema/tables, be superuser, or bypass RLS. Do not grant it raw table privileges. Store its URL separately as `WORKER_DATABASE_URL`, and keep the application login in `DATABASE_URL`. The runtime rejects a matching application username and independently verifies the connected role.
 
 Remote worker connections verify the TLS certificate and hostname. Supply `WORKER_DATABASE_CA_PEM` only when the deployment needs a private CA. PostgreSQL URL query options cannot override TLS, host, credentials, startup role, or timeouts. An explicit local loopback URL may use `?host=%2Ftmp` for a disposable Unix-socket fixture; that socket exception is rejected in Vercel. An empty URL password does not inherit `PGPASSWORD`.
 
@@ -52,3 +52,9 @@ npm --prefix service run test:operations
 ```
 
 The runner applies migrations and executes the existing auth lease/retry tests plus actual HTTP/worker-pool/PostgreSQL tests serially. It tests denied HTTP access before database setup, wrong roles, fixed request scope, auth expiry, provider outage/retry, expired/unconfirmed outcomes, abandoned/interrupted leases, privacy cleanup-only behavior, aggregate permissions, and the runnable CLI. Provider requests use fictional bounded HTTP fixtures, not a live provider account. Production scheduler execution, live-provider revocation, backup retention, restore replay, alert delivery, and policy approval remain separate release evidence.
+
+## Guardian setup housekeeping
+
+Migration 021 adds `guardian_housekeeping`, executed in the actual scheduled/CLI `run` path using the same batch of 25 and aggregate 25-second deadline. Its SQL skips locked households rather than waiting across active work. Technical expiry retires invitation, pairing and BFF challenge authority immediately; no provider call occurs. `status` remains read-only.
+
+Pending and withdrawn-evidence deletion requires all of `GUARDIAN_PENDING_RETENTION_HOURS`, `GUARDIAN_EVIDENCE_RETENTION_DAYS` and `GUARDIAN_RETENTION_APPROVAL_REFERENCE`. There are no default legal horizons. Without the approved numeric policy, the worker expires access but preserves evidence. Supply the same policy to the application readiness composition and worker. Active consent is excluded from purge; independent provider accounts and lifetime-bound negative child classification are untouched. Per-run `guardian` counters contain only `expired`, `purged` and `retentionConfigured`. New provider account deletion and KWS verification remain outside this scheduled runtime.

@@ -1,0 +1,36 @@
+{
+  "reviewDate": "2026-11-03",
+  "currentAuthorityBlockers": [],
+  "snapshot": {
+    "migration021SHA256": "73e33d596776a1874aeb4715b16abed3f18829d1415ed6b0dd2799e356df4c04",
+    "allRelevantSourceAndCompiledHashes": "current-results.json",
+    "sourceChangedBetweenIndependentRunAndFocusedHarness": false
+  },
+  "independentReproduction": {
+    "command": "./.tools/node-v22.14.0-darwin-arm64/bin/node docs/evidence/b11/guardian-authority-review/independent-repro.mjs > docs/evidence/b11/guardian-authority-review/current-results.json",
+    "exitCode": 0,
+    "assertionsPassed": true,
+    "results": "current-results.json"
+  },
+  "focusedHarness": {
+    "command": "PATH=\"$PWD/.tools/node-v22.14.0-darwin-arm64/bin:$PATH\" node service/scripts/test-guardian.mjs > docs/evidence/b11/guardian-authority-review/focused-harness.log",
+    "exitCode": 0,
+    "tests": 28,
+    "passed": 28,
+    "failed": 0,
+    "log": "focused-harness.log",
+    "logSHA256": "9e09d271439d555694e2cbdd9a6f8c9bc0feda780906311464ace7f7e55f31f5"
+  },
+  "verifiedCurrentBoundaries": [
+    "Original and new admission/finalizer functions reject ordinary application SQL with 42501.",
+    "Native challenge subject/session UPDATE column privileges are absent from the application role.",
+    "Trusted finalization versus pending-child deletion is safe in both deterministic orderings.",
+    "Fresh child membership rejects organizer loss before finalization.",
+    "Existing active child rejects another guardian without the current relationship.",
+    "An actual nonorganizer guardian can reconsent an existing active child.",
+    "A nonorganizer guardian cannot restore revoked child membership.",
+    "Production runtime rejects a verifier login inheriting the erasure-worker role.",
+    "Focused HTTP/PostgreSQL tests cover raw-body KWS authentication, confirmed-email and nonce binding, separate consent, covered OTP sign-in, pairing, exact retries, withdrawal, erasure, own-request privacy, browser-cookie handling and operations expiry."
+  ],
+  "limits": "Local source/PostgreSQL/HTTP evidence only. This does not establish live KWS delivery/verification, approved operator configuration, production migration, or native/browser intended-device acceptance. Historical failures and unavailable historical whole-file hashes are documented honestly in historical-observations.json."
+}

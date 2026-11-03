@@ -18,14 +18,17 @@ import {HelperReview} from './helper-review.js';
 import {PlacementReports} from './placement-reports.js';
 import {HouseholdLifecycle} from './lifecycle.js';
 import {PrivacyService,deletionSchema,exitSchema} from './privacy.js';
+import {GuardianEnrollmentService,guardianCreateSchema,guardianActionSchema,guardianConsentSchema,guardianInvitationSchema,guardianConfirmSchema,childClaimSchema,childFinishSchema,childAuthStartSchema,childNativeStartSchema,childNativeAdmitSchema} from './guardian.js';
 import {viewReplacementSchema,proposalResolutionSchema,householdCreateSchema,inviteCreateSchema,inviteRedeemSchema,viewCreateSchema,viewUpdateSchema,proposalSchema,revocationSchema, parseCommand,previewSchema,uuid } from './contracts.js';
-export interface HTTPOptions { repository:HouseholdRepository; verifier?:IdentityVerifier; webOrigin?:string; maxRequestsPerMinute?:number; billing?:BillingService; browserAuth?:BrowserAuthService; privacy?:PrivacyService; clientAddress?:(request:IncomingMessage)=>string|undefined }
-async function body(req:IncomingMessage,maxBytes=65_536):Promise<unknown> {
+export interface HTTPOptions { repository:HouseholdRepository; verifier?:IdentityVerifier; webOrigin?:string; maxRequestsPerMinute?:number; billing?:BillingService; browserAuth?:BrowserAuthService; privacy?:PrivacyService; guardian?:GuardianEnrollmentService; clientAddress?:(request:IncomingMessage)=>string|undefined }
+async function rawBody(req:IncomingMessage,maxBytes=65_536):Promise<Buffer> {
   if(!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type']??''))throw new ServiceError(415,'json_required','Send a JSON command.');
   const chunks:Buffer[]=[];let size=0;
   for await(const chunk of req) {size+=chunk.length;if(size>maxBytes)throw new ServiceError(413,'body_too_large','Send one bounded command.');chunks.push(chunk);}
-  try{return JSON.parse(Buffer.concat(chunks).toString('utf8'));}catch{throw invalid();}
+  return Buffer.concat(chunks);
 }
+async function body(req:IncomingMessage,maxBytes=65_536):Promise<unknown>{try{return JSON.parse((await rawBody(req,maxBytes)).toString('utf8'));}catch(error){if(error instanceof ServiceError)throw error;throw invalid();}}
+
 function equal(a:string,b:string){const aa=Buffer.from(a),bb=Buffer.from(b);return aa.length===bb.length&&timingSafeEqual(aa,bb);}
 function cookie(req:IncomingMessage,name='ritc_session'):string|null {
   return req.headers.cookie?.split(';').map(s=>s.trim()).find(s=>s.startsWith(name+'='))?.slice(name.length+1)??null;
@@ -40,6 +43,7 @@ export function createHTTPServer(options:HTTPOptions) {
   const storeQuotes = new SharedStoreQuotes(repository);
   const measurement = new HouseholdMeasurement(repository);
   const placementReports = new PlacementReports(repository);
+  const guardian = options.guardian??new GuardianEnrollmentService(repository);
   const limits=new Map<string,{count:number;until:number}>();
   return createServer(async(req,res)=>{
     const correlationId=randomUUID();
@@ -60,6 +64,8 @@ export function createHTTPServer(options:HTTPOptions) {
       const bucket=old&&old.until>now?old:{count:0,until:now+60_000};bucket.count++;limits.set(ip,bucket);
       if(bucket.count>(options.maxRequestsPerMinute??120)){res.setHeader('Retry-After','60');throw new ServiceError(429,'rate_limited','Keep the operation key and retry later.');}
       if(url.pathname==='/v1/apple/notifications'&&method==='POST'&&options.billing){const input=billingNotificationSchema.parse(await body(req,262_144));send(200,await options.billing.notification(repository.pool,input.signedPayload));return;}
+      if(url.pathname==='/v1/guardian/availability'&&method==='GET'){const {notice:_,...availability}=guardian.notice(z.enum(['en','es']).parse(url.searchParams.get('language')??'en'));send(200,availability);return;}
+      if(url.pathname==='/v1/guardian/providers/kws/webhook'&&method==='POST'){const header=req.headers['x-kws-signature'];send(200,await guardian.webhook(await rawBody(req,16_384),typeof header==='string'?header:undefined));return;}
       const privacyStatus=/^\/v1\/privacy\/jobs\/([^/]+)$/.exec(url.pathname);
       if(privacyStatus&&method==='GET'){
         if(!options.privacy)throw new ServiceError(503,'deletion_unavailable','Account deletion is not configured.');
@@ -70,6 +76,8 @@ export function createHTTPServer(options:HTTPOptions) {
       const setAuthCookie=(value:string,maxAge:number)=>`__Host-ritc_auth=${value}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${maxAge}`;
       const clearScope='ritc_session=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0';
       const csrfHeader=()=>{const value=req.headers['x-csrf-token'];if(!options.webOrigin||req.headers.origin!==options.webOrigin||typeof value!=='string')throw new ServiceError(403,'csrf_failed','Reload sign-in and try again.');return value;};
+      if(url.pathname==='/v1/child-invitations/native-auth/start'&&method==='POST'){send(200,await guardian.nativeSigninStart(childNativeStartSchema.parse(await body(req,4096)),ip));return;}
+      if(url.pathname==='/v1/child-invitations/auth/start'&&method==='POST'){const csrf=csrfHeader();if(!browserCookie)throw new ServiceError(401,'session_needed','Open the current sign-in challenge.');send(200,await guardian.startChildSignin(browserCookie,csrf,childAuthStartSchema.parse(await body(req,4096)),ip));return;}
       if(url.pathname.startsWith('/v1/auth/')){
         const bff=options.browserAuth;
         if(!bff||!options.webOrigin){if(url.pathname==='/v1/auth/session'&&method==='GET'){send(200,{available:false,authenticated:false,csrf:null});return;}throw new ServiceError(503,'login_unavailable','Email sign-in is unavailable. Keep your invitation and try again later.');}
@@ -102,6 +110,7 @@ export function createHTTPServer(options:HTTPOptions) {
         const value=cookie(req);if(value){session=await repository.webIdentity(value,browserIdentity?.identity);auth=session.auth;}
       }
       if(method==='GET'&&url.pathname==='/v1/session'&&!session){send(200,{authenticated:false});return;}
+      if(url.pathname==='/v1/child-invitations/session'&&method==='GET'){send(200,await guardian.childSession(browserIdentity?.identity,browserIdentity&&options.browserAuth?await options.browserAuth.childBinding(browserIdentity.cookie):undefined));return;}
       if(!auth)throw new ServiceError(401,'session_needed','Sign in; preserve private local drafts.');
       if((session||browserIdentity)&&method!=='GET'&&method!=='HEAD') {
         const csrf=req.headers['x-csrf-token'];
@@ -134,6 +143,11 @@ export function createHTTPServer(options:HTTPOptions) {
       }
       if(url.pathname==='/v1/households'&&method==='POST'){send(201,await lifecycle.create(auth.identity,householdCreateSchema.parse(await body(req))));return;}
       if(url.pathname==='/v1/invites/redeem'&&method==='POST'){send(200,await lifecycle.redeem(auth.identity,inviteRedeemSchema.parse(await body(req))));return;}
+      if(url.pathname==='/v1/child-invitations/native-auth/admit'&&method==='POST'){send(200,await guardian.nativeSigninAdmit(auth.identity,childNativeAdmitSchema.parse(await body(req,4096))));return;}
+      if(url.pathname==='/v1/child-invitations/claim'&&method==='POST'){send(200,await guardian.claim(auth.identity,childClaimSchema.parse(await body(req,4096))));return;}
+      if(url.pathname==='/v1/child-invitations/finish'&&method==='POST'){const result=await guardian.finish(auth.identity,childFinishSchema.parse(await body(req,4096)));if(browserIdentity){const scoped=await repository.startWebSession(result.householdId,auth.identity,undefined,true,undefined,result.deviceToken);res.setHeader('Set-Cookie',`ritc_session=${scoped.cookie}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=604800`);const {deviceToken:_,...receipt}=result;send(200,receipt);return;}send(200,result);return;}
+      const childClaim=/^\/v1\/child-invitations\/claims\/([^/]+)$/.exec(url.pathname);
+      if(childClaim&&method==='GET'){send(200,await guardian.claimStatus(auth.identity,uuid.parse(url.searchParams.get('householdId')),uuid.parse(childClaim[1])));return;}
       const ownProposal=/^\/v1\/views\/([^/]+)\/proposals\/([^/]+)$/.exec(url.pathname);
       if(ownProposal&&method==='GET'){const householdId=session?.householdId??uuid.parse(req.headers['x-household-id']);send(200,await repository.authorized(householdId,auth,ctx=>helperReview.ownProposal(ctx,uuid.parse(ownProposal[1]),uuid.parse(ownProposal[2]))));return;}
       const viewMatch=/^\/v1\/views\/([^/]+)\/(current|proposals)$/.exec(url.pathname);
@@ -163,6 +177,8 @@ export function createHTTPServer(options:HTTPOptions) {
         z.object({}).strict().parse(await body(req));
         send(201,await repository.enroll(householdId,auth.identity));return;
       }
+      const verificationRoute=/^\/guardian\/enrollments\/([^/]+)\/verification$/.exec(path);
+      if(verificationRoute&&method==='POST'){send(200,await guardian.verification(householdId,auth,uuid.parse(verificationRoute[1]),guardianActionSchema.parse(await body(req,4096))));return;}
       const payload=method==='POST'||method==='PUT'||(method==='DELETE'&&/\/measurement-feedback$/.test(path))?await body(req):undefined;
       const ownPlacement=/^\/shops\/([^/]+)\/placement-reports\/mine\/([^/]+)$/.exec(path);
       const placementCommand=path==='/commands'&&method==='POST'&&typeof payload==='object'&&payload!==null&&'kind' in payload&&(payload.kind==='shop.reportPlaced'||payload.kind==='shop.reconcileReport')?parseCommand(payload):undefined;
@@ -184,7 +200,17 @@ export function createHTTPServer(options:HTTPOptions) {
         if(path==='/invites'&&method==='POST')return lifecycle.invite(ctx,inviteCreateSchema.parse(payload));
         if(path==='/views'&&method==='POST')return lifecycle.createView(ctx,viewCreateSchema.parse(payload));
         if(path==='/revocations'&&method==='POST')return lifecycle.revoke(ctx,revocationSchema.parse(payload));
-        if(path==='/guardian/consents'&&method==='GET')return lifecycle.consents(ctx);
+        if(path==='/guardian/notice'&&method==='GET'){if(ctx.member.kind!=='adult'||ctx.viewGrantId)throw accessEnded();return guardian.notice(z.enum(['en','es']).parse(url.searchParams.get('language')??'en'));}
+        if(path==='/guardian/enrollments'&&method==='GET')return guardian.list(ctx,auth.identity);
+        if(path==='/guardian/enrollments'&&method==='POST')return guardian.create(ctx,auth.identity,guardianCreateSchema.parse(payload));
+        const guardianRoute=/^\/guardian\/enrollments\/([^/]+)(?:\/(consent|child-invitations|confirm-child|cancel))?$/.exec(path);
+        if(guardianRoute){const id=uuid.parse(guardianRoute[1]);if(!guardianRoute[2]&&method==='GET')return guardian.read(ctx,auth.identity,id);if(method==='POST'){
+          if(guardianRoute[2]==='consent')return guardian.consent(ctx,auth.identity,id,guardianConsentSchema.parse(payload));
+          if(guardianRoute[2]==='child-invitations')return guardian.invite(ctx,auth.identity,id,guardianInvitationSchema.parse(payload));
+          if(guardianRoute[2]==='confirm-child')return guardian.confirm(ctx,auth.identity,id,guardianConfirmSchema.parse(payload));
+          if(guardianRoute[2]==='cancel')return guardian.cancel(ctx,auth.identity,id,guardianActionSchema.parse(payload));
+        }}
+        if(path==='/guardian/consents'&&method==='GET')return {...await lifecycle.consents(ctx),enrollmentEnabled:guardian.notice('en').available||guardian.notice('es').available};
         if(path==='/guardian/enrollment'&&method==='POST')throw new ServiceError(503,'consent_unavailable','Child enrollment is unavailable until verified guardian consent is configured.');
         const consentMatch=/^\/guardian\/consents\/([^/]+)\/revoke$/.exec(path);
         if(consentMatch&&method==='POST'){z.object({}).strict().parse(payload);return lifecycle.revokeConsent(ctx,uuid.parse(consentMatch[1]));}

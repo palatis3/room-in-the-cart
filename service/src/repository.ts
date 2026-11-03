@@ -68,6 +68,7 @@ export class HouseholdRepository {
         AND session_id=$3 AND revoked_at IS NULL AND ${auth.trustedDeviceId?'device_id=$4':'token_hash=$4'}`,
         [householdId,member.member_id,auth.identity.sessionId,auth.trustedDeviceId??tokenHash(auth.deviceToken??'')])).rows[0];
       if(!device)throw accessEnded();
+      if(member.kind==='child'){const generation=await db.query(`SELECT 1 FROM ritc.device d JOIN ritc.consent c ON c.household_id=d.household_id AND c.consent_id=d.guardian_consent_id JOIN ritc.guardian_enrollment e ON e.household_id=c.household_id AND e.consent_id=c.consent_id WHERE d.household_id=$1 AND d.device_id=$2 AND c.child_id=$3 AND c.revoked_at IS NULL AND e.state='active'`,[householdId,device.device_id,member.member_id]);if(!generation.rowCount)throw accessEnded();}
       if(auth.viewGrantId){
         const grant=await db.query(`SELECT 1 FROM ritc.view_grant g JOIN ritc.member creator ON creator.household_id=g.household_id AND creator.member_id=g.created_by
           WHERE g.household_id=$1 AND g.grant_id=$2 AND g.recipient_id=$3 AND g.revoked_at IS NULL AND g.expires_at>$4 AND creator.state='active'`,[householdId,auth.viewGrantId,member.member_id,now]);
@@ -96,6 +97,7 @@ export class HouseholdRepository {
     return this.transaction(householdId,async(db,now)=>{
       await this.assertSession(db,identity,now);
       const member=await this.member(db,householdId,identity);
+      if(member.kind==='child')throw new ServiceError(403,'guardian_reenrollment_required','A guardian must approve a fresh child device.');
       const count=(await db.query('SELECT count(*)::integer AS count FROM ritc.device WHERE household_id=$1 AND member_id=$2 AND revoked_at IS NULL',[householdId,member.member_id])).rows[0].count;
       if(count>=20)throw new ServiceError(429,'device_limit','Revoke an old device before enrolling again.');
       const deviceId=randomUUID(),deviceToken=randomBytes(32).toString('base64url');
@@ -464,13 +466,17 @@ export class HouseholdRepository {
     // Reporter receipt contains only their evidence disposition, never the current shopper's revision or budget.
     return{operationId,kind:c.kind,reportId,disposition:current?'placed':'pending_reconciliation'};
   }
-  async startWebSession(householdId:string,identity:VerifiedIdentity,viewGrantId?:string,browserBound=false,selectedShopId?:string) {
-    const device=await this.enroll(householdId,identity);
+  async startWebSession(householdId:string,identity:VerifiedIdentity,viewGrantId?:string,browserBound=false,selectedShopId?:string,pairedDeviceToken?:string) {
+    const device=pairedDeviceToken?{deviceToken:pairedDeviceToken}:await this.enroll(householdId,identity);
     return this.authorized(householdId,{identity,deviceToken:device.deviceToken,...(viewGrantId?{viewGrantId}:{}),...(selectedShopId?{selectedShopId}:{})},async ctx=>{
       const bootstrap=await this.bootstrap(ctx);
       const token=randomBytes(32).toString('base64url'),csrf=randomBytes(32).toString('base64url');
       const expiresAt=new Date(Math.min(identity.expiresAt.getTime(),ctx.now.getTime()+15*60_000));
-      await ctx.db.query('INSERT INTO ritc.web_session(household_id,token_hash,member_id,device_id,csrf,expires_at,grant_id,browser_bound,shop_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)',[householdId,tokenHash(token),ctx.member.member_id,ctx.deviceId,csrf,expiresAt,viewGrantId??null,browserBound,selectedShopId??null]);
+      const previous=pairedDeviceToken?(await ctx.db.query('SELECT token_hash FROM ritc.web_session WHERE household_id=$1 AND device_id=$2 AND revoked_at IS NULL ORDER BY expires_at DESC,token_hash LIMIT 1',[householdId,ctx.deviceId])).rows[0]:undefined;
+      if(previous){
+        await ctx.db.query('UPDATE ritc.web_session SET revoked_at=COALESCE(revoked_at,$4) WHERE household_id=$1 AND device_id=$2 AND token_hash<>$3',[householdId,ctx.deviceId,previous.token_hash,ctx.now]);
+        await ctx.db.query('UPDATE ritc.web_session SET token_hash=$3,csrf=$4,expires_at=$5,grant_id=$6,browser_bound=$7,shop_id=$8 WHERE household_id=$1 AND token_hash=$2',[householdId,previous.token_hash,tokenHash(token),csrf,expiresAt,viewGrantId??null,browserBound,selectedShopId??null]);
+      }else await ctx.db.query('INSERT INTO ritc.web_session(household_id,token_hash,member_id,device_id,csrf,expires_at,grant_id,browser_bound,shop_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)',[householdId,tokenHash(token),ctx.member.member_id,ctx.deviceId,csrf,expiresAt,viewGrantId??null,browserBound,selectedShopId??null]);
       return{cookie:householdId+'.'+token,csrf,expiresAt,session:{authenticated:true,...bootstrap,replayWindow:await this.window(ctx),csrf}};
     });
   }

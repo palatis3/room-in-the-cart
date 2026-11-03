@@ -2,6 +2,7 @@ import type {PoolConfig} from 'pg';
 import {Pool} from './database.js';
 import {AuthMaintenance,assertWorkerRole} from './maintenance.js';
 import {PrivacyMaintenance} from './privacy.js';
+import {guardianRetentionPolicy} from './guardian-policy.js';
 import {SupabaseEmailOTPProvider} from './browser-auth.js';
 
 export const OPERATIONS_DEADLINE_MS=25_000;
@@ -34,6 +35,7 @@ export function workerDatabaseConfiguration(environment:NodeJS.ProcessEnv):PoolC
 
 export function createOperationsRuntime(environment:NodeJS.ProcessEnv=process.env){
  const configuration=workerDatabaseConfiguration(environment);
+ const guardianPolicy=guardianRetentionPolicy(environment);
  let provider:SupabaseEmailOTPProvider|undefined;
  if(environment.BFF_TOKEN_ENCRYPTION_KEY){
   if(!environment.SUPABASE_URL||!environment.SUPABASE_PUBLISHABLE_KEY)throw Error('Complete logout provider and encryption configuration required');
@@ -59,10 +61,12 @@ export function createOperationsRuntime(environment:NodeJS.ProcessEnv=process.en
    signal.throwIfAborted();
    const privacyResult=mode==='run'?await privacy.cleanup({batchSize:OPERATIONS_BATCH_SIZE,signal}):null;
    signal.throwIfAborted();
+   const guardianResult=mode==='run'?(await pool.query('SELECT * FROM ritc.guardian_housekeeping($1,$2,$3)',[OPERATIONS_BATCH_SIZE,guardianPolicy?.pendingHours??null,guardianPolicy?.evidenceDays??null])).rows[0]:null;
+   signal.throwIfAborted();
    const row=(await pool.query('SELECT * FROM ritc.operations_health()')).rows[0];signal.throwIfAborted();
    const health={authDue:Number(row.auth_due),authRetryPending:Number(row.auth_retry_pending),authExpiredUnconfirmed:Number(row.auth_expired_unconfirmed),privacyPending:Number(row.privacy_pending),privacyDue:Number(row.privacy_due)};
    return{event:'operations_result' as const,mode,durationMs:Date.now()-started,batchSize:OPERATIONS_BATCH_SIZE,
-    logoutProviderConfigured:Boolean(provider),privacyJobProcessingEnabled:false as const,auth:authResult,privacy:privacyResult,health,
+    logoutProviderConfigured:Boolean(provider),privacyJobProcessingEnabled:false as const,auth:authResult,privacy:privacyResult,guardian:guardianResult?{expired:Number(guardianResult.expired),purged:Number(guardianResult.purged),retentionConfigured:Boolean(guardianPolicy)}:null,health,
     attentionRequired:Boolean(health.authDue||health.authRetryPending||health.authExpiredUnconfirmed||health.privacyPending||authResult?.logoutExpiredUnconfirmed||authResult?.leaseLost),
    };
   }finally{running=false;}
