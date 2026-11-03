@@ -23,6 +23,7 @@ struct HouseholdSettingsView: View {
             } else if model.identity == nil {
                 Section(ht("Adult sign-in")) {
                     Button(ht("Resume saved account")) { Task { await model.unlock() } }
+                    if model.emailOTPEnabled {
                     TextField(ht("Email"), text: $model.email).textContentType(.emailAddress)
                         .keyboardType(.emailAddress).textInputAutocapitalization(.never).autocorrectionDisabled()
                     Button(ht("Email me a code")) { Task { await model.sendCode() } }
@@ -30,6 +31,9 @@ struct HouseholdSettingsView: View {
                     if model.codeSent {
                         SecureField(ht("Email sign-in code"), text: $model.code).textContentType(.oneTimeCode)
                         Button(ht("Verify code")) { Task { await model.verifyCode() } }.disabled(model.code.isEmpty)
+                    }
+                    } else {
+                        Text(ht("Email sign-in is not ready yet. Your private shopping tools work without an account."))
                     }
                 }
             } else {
@@ -42,7 +46,15 @@ struct HouseholdSettingsView: View {
                             NavigationLink(ht("Review family requests")) { HouseholdInboxView(model: model) }
                         }
                     }
-                    if projection.shopId != nil || !model.requests.isEmpty {
+                    if let lifecycle = model.lifecycle {
+                        Section(ht("Household access")) {
+                            if lifecycle.isHelper { NavigationLink(ht("Cook instructions")) { HouseholdHelperView(model: lifecycle) } }
+                            if lifecycle.canAdminister { NavigationLink(ht("People and invitations")) { HouseholdPeopleView(model: lifecycle) } }
+                            if lifecycle.canShare || lifecycle.canAdminister { NavigationLink(ht("Manage shared views")) { HouseholdManagedViewsView(model: lifecycle) } }
+                            if !lifecycle.isHelper { NavigationLink(ht("Guardian controls")) { HouseholdGuardianView(model: lifecycle) } }
+                        }
+                    }
+                    if projection.capabilities.contains("own_requests"), projection.shopId != nil || !model.requests.isEmpty {
                         Section(ht("My requests")) {
                             ForEach(model.requests) { request in
                                 VStack(alignment: .leading, spacing: 6) {
@@ -66,7 +78,7 @@ struct HouseholdSettingsView: View {
                             }
                         }
                     }
-                    if projection.shopId != nil || model.editing != nil || model.followingUp != nil {
+                    if projection.capabilities.contains("own_requests"), projection.shopId != nil || model.editing != nil || model.followingUp != nil {
                         Section(model.editing == nil ? ht("New request") : ht("Edit request")) {
                             if model.editing != nil || model.followingUp != nil { Button(ht("Cancel edit")) { model.cancelEdit() } }
                             if model.followingUp != nil { Text(ht("This follow-up leaves the accepted request unchanged.")) }
@@ -85,6 +97,7 @@ struct HouseholdSettingsView: View {
                         }
                         if model.workspaces.isEmpty { Text(ht("No active household access is available for this account.")) }
                     }
+                    if let lifecycle = model.lifecycle { HouseholdSetupSections(model: lifecycle) }
                 }
                 Section {
                     Button(ht("Sign out"), role: .destructive) { Task { await model.signOut() } }

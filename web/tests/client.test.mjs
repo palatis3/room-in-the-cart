@@ -19,7 +19,7 @@ const setup = async (api,language='en') => {
 const click=(root,label)=>{const b=[...root.querySelectorAll('button')].find(b=>b.textContent===label);assert.ok(b,`button ${label}`);b.click();};
 const type=(dom,id,value)=>{const input=dom.window.document.getElementById(id);assert.ok(input,id);input.value=value;input.dispatchEvent(new dom.window.Event('input',{bubbles:true}));};
 const submit=(root,dom)=>root.querySelector('form').dispatchEvent(new dom.window.Event('submit',{cancelable:true,bubbles:true}));
-const fakeAPI=(overrides={})=>({session:async()=>session(),requests:async()=>[],command:async()=>{},logout:async()=>{},...overrides});
+const fakeAPI=(overrides={})=>({authState:async()=>({available:true,authenticated:true,csrf:'csrf-test'}),session:async()=>session(),requests:async()=>[],command:async()=>{},logout:async()=>{},...overrides});
 
 test('invitation secrets leave URL before a request and never enter storage',()=>{
  const dom=new JSDOM('',{url:'https://food.example/invite?token=query-secret#token=fragment-secret'});

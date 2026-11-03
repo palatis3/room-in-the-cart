@@ -16,13 +16,3 @@ public struct RetryPolicy: Sendable {
         return max(backoff, serverDelay ?? 0)
     }
 }
-
-/// Safe helper projection has no price, household roster, other requests, or private planning fields.
-/// Service capability is currently unavailable: this type does not imply an active share grant.
-public struct ScopedCookView: Codable, Equatable, Sendable {
-    public struct Item: Codable, Equatable, Sendable {
-        public let item: String; public let amount: String?; public let action: String?; public let basis: String?
-    }
-    public let grantId: String; public let shopId: String; public let revision: Int
-    public let generatedAt: String; public let expiresAt: String; public let items: [Item]
-}

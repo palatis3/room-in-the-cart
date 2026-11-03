@@ -1,5 +1,6 @@
 {
   "environment": "staging",
+  "emailOTPEnabled": false,
   "supabaseOrganization": "Room in the Cart",
   "supabaseOrganizationId": "ybzztipzreurtjtjhmbo",
   "supabaseProject": "Room in the Cart Staging",

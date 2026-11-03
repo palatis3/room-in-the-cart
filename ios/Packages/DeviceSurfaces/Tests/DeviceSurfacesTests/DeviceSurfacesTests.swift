@@ -1,0 +1,218 @@
+import XCTest
+@testable import DeviceSurfaces
+
+final class DeviceSurfacesTests: XCTestCase {
+    let now = Date(timeIntervalSince1970: 1_800_000_000)
+    func file(_ name: String = "data.sqlite") throws -> URL {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("DeviceSurfaces-\(UUID())")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        addTeardownBlock { try? FileManager.default.removeItem(at: directory) }
+        return directory.appendingPathComponent(name)
+    }
+    func intent(id: UUID = UUID(), handle: RouteHandle = .random(), day: Int = 20, subject: ReminderSubject = .offer) throws -> ReminderIntent {
+        try ReminderIntent(id: id, personaID: UUID(), targetID: UUID(), subject: subject, sourceRevision: 4, routeHandle: handle,
+            localTime: CivilReminderTime(year: 2027, month: 1, day: day, hour: 13, minute: 0, timeZoneID: "America/New_York"),
+            expiresAt: Date(timeIntervalSince1970: 1_810_000_000), cutoff: Date(timeIntervalSince1970: 1_810_000_000), language: .english, now: now)
+    }
+    func testSelectedTextExactReplayAfterReopenAndChangedReplayFails() async throws {
+        let url = try file(), id = UUID(), inbox = try SelectedTextInbox(url: url)
+        let first = try await inbox.stage(operationID: id, originalText: "12 tortillas — sin sal 🍚", now: now)
+        let reopened = try SelectedTextInbox(url: url)
+        let retry = try await reopened.stage(operationID: id, originalText: "12 tortillas — sin sal 🍚", now: now.addingTimeInterval(12))
+        XCTAssertEqual(first, retry)
+        do { _ = try await reopened.stage(operationID: id, originalText: "24 tortillas", now: now); XCTFail() } catch { XCTAssertEqual(error as? SurfaceError, .changedReplay) }
+        let entries = try await reopened.pending(now: now); XCTAssertEqual(entries.count, 1); XCTAssertEqual(entries[0].originalText, "12 tortillas — sin sal 🍚")
+    }
+    func testIndependentIntentionalSharesStaySeparateAndOriginalSurvivesEditing() async throws {
+        let inbox = try SelectedTextInbox(url: file())
+        for _ in 0..<2 { _ = try await inbox.stage(operationID: UUID(), originalText: "12 wraps", editedText: "6 wraps", now: now) }
+        let rows = try await inbox.pending(now: now)
+        XCTAssertEqual(rows.count, 2); XCTAssertEqual(rows[0].originalText, "12 wraps"); XCTAssertEqual(rows[0].textForReview, "6 wraps")
+    }
+    func testCancelSessionNeverWritesAndCannotLaterSave() async throws {
+        let inbox = try SelectedTextInbox(url: file()), session = SelectedTextSession()
+        try await session.cancel()
+        do { _ = try await session.save(original: "coffee", edited: nil, now: now, inbox: inbox); XCTFail() } catch { XCTAssertEqual(error as? SurfaceError, .cancelled) }
+        let rows = try await inbox.pending(now: now); XCTAssertTrue(rows.isEmpty)
+    }
+    func testConsumedAndDiscardedReceiptsCannotResurrectPrivateText() async throws {
+        let url = try file(), inbox = try SelectedTextInbox(url: url), id = UUID()
+        let receipt = try await inbox.stage(operationID: id, originalText: "private selected phrase", now: now)
+        let consumed = try await inbox.acknowledgeCommitted(operationID: id, digest: receipt.digest, now: now)
+        XCTAssertEqual(consumed.disposition, .consumed)
+        let repeated = try await inbox.stage(operationID: id, originalText: "private selected phrase", now: now)
+        XCTAssertEqual(repeated.disposition, .consumed)
+        let rows = try await inbox.pending(now: now); XCTAssertTrue(rows.isEmpty)
+        XCTAssertNil(try Data(contentsOf: url).range(of: Data("private selected phrase".utf8)))
+        let second = try await inbox.stage(operationID: UUID(), originalText: "discard this", now: now)
+        _ = try await inbox.discard(operationID: second.operationID, digest: second.digest, now: now)
+        let discarded = try await inbox.stage(operationID: second.operationID, originalText: "discard this", now: now)
+        XCTAssertEqual(discarded.disposition, .discarded)
+    }
+    func testExpiryRetainsDeduplicationReceiptAndDropsBody() async throws {
+        let inbox = try SelectedTextInbox(url: file()), id = UUID()
+        _ = try await inbox.stage(operationID: id, originalText: "12 wraps", now: now)
+        let later = now.addingTimeInterval(SelectedTextInbox.lifetime)
+        let rows = try await inbox.pending(now: later); XCTAssertTrue(rows.isEmpty)
+        let retry = try await inbox.stage(operationID: id, originalText: "12 wraps", now: later)
+        XCTAssertEqual(retry.disposition, .expired)
+    }
+    func testBoundedBytesLinesAndPendingCapacityPreserveExistingRows() async throws {
+        let inbox = try SelectedTextInbox(url: file())
+        for bad in [String(repeating: "x", count: SelectedTextInbox.maximumEntryBytes + 1), String(repeating: "x\n", count: 501), "a\0b", "  "] {
+            do { _ = try await inbox.stage(operationID: UUID(), originalText: bad, now: now); XCTFail() } catch { XCTAssertEqual(error as? SurfaceError, .invalid) }
+        }
+        for _ in 0..<20 { _ = try await inbox.stage(operationID: UUID(), originalText: "item", now: now) }
+        do { _ = try await inbox.stage(operationID: UUID(), originalText: "extra", now: now); XCTFail() } catch { XCTAssertEqual(error as? SurfaceError, .capacity) }
+        let rows = try await inbox.pending(now: now); XCTAssertEqual(rows.count, 20)
+    }
+    func testConcurrentConnectionsReturnOneDurableReceipt() async throws {
+        let url = try file(), a = try SelectedTextInbox(url: url), b = try SelectedTextInbox(url: url), id = UUID(), date = now
+        async let first = a.stage(operationID: id, originalText: "12 wraps", now: date)
+        async let second = b.stage(operationID: id, originalText: "12 wraps", now: date)
+        let values = try await [first, second]; XCTAssertEqual(values[0], values[1])
+        let rows = try await a.pending(now: now); XCTAssertEqual(rows.count, 1)
+    }
+    func testMalformedDatabaseIsNotRecreated() throws {
+        let url = try file(), bytes = Data("damaged file".utf8); try bytes.write(to: url)
+        XCTAssertThrowsError(try SelectedTextInbox(url: url)); XCTAssertEqual(try Data(contentsOf: url), bytes)
+    }
+    func testRouteCodecRejectsCredentialsExtraKeysAndNoncanonicalHandles() throws {
+        let codec = try SurfaceURLCodec(scheme: "test-surface"), handle = RouteHandle.random()
+        XCTAssertEqual(try codec.parse(codec.url(handle: handle)), handle)
+        XCTAssertNil(try codec.parse(codec.url(handle: nil)))
+        for text in ["https://surface/open?handle=\(handle.rawValue)", "test-surface://x:password@surface/open?handle=\(handle.rawValue)", "test-surface://surface/open?handle=\(handle.rawValue)&budget=3", "test-surface://surface/open?handle=\(handle.rawValue)#secret", "test-surface://surface/open?handle=\(handle.rawValue.uppercased())"] {
+            XCTAssertThrowsError(try codec.parse(URL(string: text)!))
+        }
+    }
+    func testHandleNeverGrantsCrossPersonaOrLockedAdultAccess() throws {
+        let person = UUID(), target = UUID(), generation = UUID(), handle = RouteHandle.random()
+        let route = try PrivateRoute(handle: handle, personaID: person, targetID: target, generation: generation, destination: .shoppingList, expiresAt: now.addingTimeInterval(10))
+        func context(_ role: SurfacePersona, unlocked: Bool = true, persona: UUID? = nil, permitted: Bool = true) -> RouteAuthorization {
+            RouteAuthorization(personaID: persona ?? person, role: role, generation: generation, unlocked: unlocked, permittedTargetIDs: permitted ? [target] : [])
+        }
+        XCTAssertEqual(SurfaceRouter.resolve(route, handle: handle, authorization: context(.adult), now: now), .shoppingList)
+        for auth in [context(.adult, unlocked: false), context(.contributor), context(.helper), context(.adult, persona: UUID()), context(.adult, permitted: false)] {
+            XCTAssertNil(SurfaceRouter.resolve(route, handle: handle, authorization: auth, now: now))
+        }
+        XCTAssertNil(SurfaceRouter.resolve(route, handle: handle, authorization: context(.adult), now: route.expiresAt))
+    }
+    func testWidgetProjectionAllowsNoPrivateFieldAndConfigFailsClosed() throws {
+        let projection = try WidgetProjection(writtenAt: now, routeHandle: .random(), destination: .shoppingList)
+        let data = try canonical(projection); XCTAssertEqual(try WidgetProjection.decode(data), projection)
+        var object = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any]); object["budget"] = 38
+        XCTAssertThrowsError(try WidgetProjection.decode(JSONSerialization.data(withJSONObject: object)))
+        XCTAssertThrowsError(try SurfaceConfiguration(inboxGroup: nil, widgetGroup: nil, urlScheme: nil))
+        XCTAssertThrowsError(try SurfaceConfiguration(inboxGroup: "group.test", widgetGroup: "group.test", urlScheme: "test-surface"))
+    }
+    func testDSTGapAndInvalidDateRejectWhileFoldNeedsExplicitOffset() throws {
+        XCTAssertThrowsError(try ReminderPlanner.resolve(CivilReminderTime(year: 2027, month: 3, day: 14, hour: 2, minute: 30, timeZoneID: "America/New_York")))
+        XCTAssertThrowsError(try ReminderPlanner.resolve(CivilReminderTime(year: 2027, month: 2, day: 30, hour: 12, minute: 0, timeZoneID: "UTC")))
+        XCTAssertThrowsError(try ReminderPlanner.resolve(CivilReminderTime(year: 2027, month: 11, day: 7, hour: 1, minute: 30, timeZoneID: "America/New_York"))) { XCTAssertEqual($0 as? SurfaceError, .ambiguousCivilTime) }
+        let a = try ReminderPlanner.resolve(CivilReminderTime(year: 2027, month: 11, day: 7, hour: 1, minute: 30, timeZoneID: "America/New_York", confirmedGMTOffset: -14400))
+        let b = try ReminderPlanner.resolve(CivilReminderTime(year: 2027, month: 11, day: 7, hour: 1, minute: 30, timeZoneID: "America/New_York", confirmedGMTOffset: -18000))
+        XCTAssertEqual(b.timeIntervalSince(a), 3600)
+    }
+    func testQuietHoursAndPastOrCutoffTimesNeverShiftSilently() throws {
+        let quiet = try QuietHours(startMinute: 22*60, endMinute: 7*60)
+        XCTAssertTrue(quiet.contains(hour: 23, minute: 0)); XCTAssertTrue(quiet.contains(hour: 6, minute: 59)); XCTAssertFalse(quiet.contains(hour: 7, minute: 0))
+        let ordinary = try intent()
+        XCTAssertThrowsError(try ReminderIntent(personaID: UUID(), targetID: UUID(), subject: .offer, sourceRevision: 1, routeHandle: .random(), localTime: ordinary.localTime, expiresAt: ordinary.fireAt, cutoff: ordinary.fireAt, language: .english, now: now))
+        XCTAssertThrowsError(try ReminderIntent(personaID: UUID(), targetID: UUID(), subject: .deferral, sourceRevision: 1, routeHandle: .random(), localTime: ordinary.localTime, expiresAt: ordinary.expiresAt, quietHours: QuietHours(startMinute: 12*60, endMinute: 14*60), language: .english, now: now)) { XCTAssertEqual($0 as? SurfaceError, .quietHours) }
+        XCTAssertThrowsError(try ordinary.validate(now: ordinary.fireAt))
+    }
+    func testLateOfferAlwaysOpensCurrentAwaitPickupWithoutFillClaim() throws {
+        let value = try intent(), cutoff = now.addingTimeInterval(20)
+        XCTAssertEqual(ReminderOpening.evaluate(intent: value, authorized: true, currentTargetID: value.targetID, currentCutoff: cutoff, now: cutoff), .awaitPickup(cutoff: cutoff))
+        XCTAssertEqual(ReminderOpening.evaluate(intent: value, authorized: false, currentTargetID: value.targetID, currentCutoff: cutoff, now: cutoff), .unavailable)
+        XCTAssertEqual(ReminderOpening.evaluate(intent: value, authorized: true, currentTargetID: nil, currentCutoff: cutoff, now: cutoff), .unavailable)
+    }
+    func testReminderSaveReplayAndStaleEditCannotResurrectCancellation() async throws {
+        let store = try ReminderStore(url: file()), value = try intent()
+        let a = try await store.put(value, expectedVersion: nil, now: now)
+        let b = try await store.put(value, expectedVersion: nil, now: now); XCTAssertEqual(a, b)
+        _ = try await store.cancel(value.id)
+        do { _ = try await store.put(value, expectedVersion: nil, now: now); XCTFail() } catch { XCTAssertEqual(error as? SurfaceError, .stale) }
+        let stale = try await store.mark(value.id, version: a.version, status: .scheduled); XCTAssertFalse(stale)
+    }
+    func testPermissionDenialAndRetryAreTruthfulAndDoNotDuplicateID() async throws {
+        let store = try ReminderStore(url: file()), fake = FakeScheduler(), value = try intent(), date = now
+        let coordinator = ReminderCoordinator(store: store, scheduler: fake, now: { date })
+        let first = try await coordinator.save(value, expectedVersion: nil, requestPermission: false); XCTAssertEqual(first.status, .permissionRequired)
+        let calls = await fake.requestCalls; XCTAssertEqual(calls, 0)
+        await fake.setPermission(.denied)
+        let denied = try await coordinator.save(value, expectedVersion: first.version, requestPermission: false); XCTAssertEqual(denied.status, .denied)
+        await fake.setPermission(.authorized); await fake.setFailure(true)
+        let failed = try await coordinator.save(value, expectedVersion: first.version, requestPermission: false); XCTAssertEqual(failed.status, .retryNeeded)
+        await fake.setFailure(false); try await coordinator.reconcileAll()
+        let saved = try await store.get(value.id); XCTAssertEqual(saved?.status, .scheduled)
+        let pending = await fake.pending; XCTAssertEqual(pending.count, 1)
+    }
+    func testCancellationWhileOSAddWaitsCannotPublishStaleScheduledResult() async throws {
+        let store = try ReminderStore(url: file()), fake = FakeScheduler(), value = try intent(), date = now
+        await fake.setPermission(.authorized); await fake.blockNextAdd()
+        let coordinator = ReminderCoordinator(store: store, scheduler: fake, now: { date })
+        let save = Task { try await coordinator.save(value, expectedVersion: nil, requestPermission: false) }
+        await fake.waitUntilAddEntered()
+        let cancellation = Task { try await coordinator.cancel(value.id) }
+        while try await store.get(value.id)?.status != .cancelled { await Task.yield() }
+        await fake.releaseAdd()
+        try await cancellation.value
+        let final = try await save.value; XCTAssertEqual(final.status, .cancelled)
+        let pending = await fake.pending; XCTAssertTrue(pending.isEmpty)
+    }
+    func testSessionChangedReplayCannotReuseSuccessfulSave() async throws {
+        let inbox = try SelectedTextInbox(url: file()), session = SelectedTextSession()
+        _ = try await session.save(original: "12 wraps", edited: nil, now: now, inbox: inbox)
+        do { _ = try await session.save(original: "24 wraps", edited: nil, now: now, inbox: inbox); XCTFail() } catch { XCTAssertEqual(error as? SurfaceError, .changedReplay) }
+        let rows = try await inbox.pending(now: now); XCTAssertEqual(rows.map(\.originalText), ["12 wraps"])
+    }
+    func testInboxCannotOpenPrivateReminderDatabase() async throws {
+        let url = try file(); let store = try ReminderStore(url: url)
+        _ = try await store.put(intent(), expectedVersion: nil, now: now)
+        let before = try Data(contentsOf: url)
+        XCTAssertThrowsError(try SelectedTextInbox(url: url))
+        XCTAssertEqual(try Data(contentsOf: url), before)
+    }
+    func testWidgetFileRejectsCorruptionAndClearContainsOnlyGenericRoute() throws {
+        let projectionFile = try WidgetProjectionFile(directory: file().deletingLastPathComponent())
+        try projectionFile.publishAfterCommit(WidgetProjection(writtenAt: now, routeHandle: .random(), destination: .shoppingList))
+        XCTAssertNotNil(try projectionFile.read().routeHandle)
+        try projectionFile.clear(now: now); XCTAssertNil(try projectionFile.read().routeHandle)
+        try Data("{not json".utf8).write(to: projectionFile.url)
+        XCTAssertThrowsError(try projectionFile.read())
+    }
+    func testReminderCapacityAndPersonaCancellationKeepUnrelatedWork() async throws {
+        let store = try ReminderStore(url: file()), fake = FakeScheduler(), date = now
+        let coordinator = ReminderCoordinator(store: store, scheduler: fake, now: { date })
+        let first = try intent(); _ = try await store.put(first, expectedVersion: nil, now: now)
+        for _ in 1..<ReminderStore.maximumActive { _ = try await store.put(intent(), expectedVersion: nil, now: now) }
+        do { _ = try await store.put(intent(), expectedVersion: nil, now: now); XCTFail() } catch { XCTAssertEqual(error as? SurfaceError, .capacity) }
+        try await coordinator.cancelAll(personaID: first.personaID)
+        let rows = try await store.all(); XCTAssertEqual(rows.filter { $0.status == .cancelled }.count, 1)
+        _ = try await store.put(intent(), expectedVersion: nil, now: now)
+    }
+}
+
+actor FakeScheduler: NotificationScheduling {
+    var authorization: NotificationPermission = .unknown
+    var pending: [String: ReminderNotification] = [:]
+    var requestCalls = 0
+    var failure = false
+    var shouldBlock = false
+    var entered = false
+    var waiter: CheckedContinuation<Void, Never>?
+    func permission() -> NotificationPermission { authorization }
+    func requestPermission() -> Bool { requestCalls += 1; return authorization == .authorized }
+    func setPermission(_ value: NotificationPermission) { authorization = value }
+    func setFailure(_ value: Bool) { failure = value }
+    func blockNextAdd() { shouldBlock = true }
+    func waitUntilAddEntered() async { while !entered { await Task.yield() } }
+    func releaseAdd() { waiter?.resume(); waiter = nil }
+    func add(_ notification: ReminderNotification) async throws {
+        if shouldBlock { shouldBlock = false; entered = true; await withCheckedContinuation { waiter = $0 } }
+        if failure { throw SurfaceError.unavailable }
+        pending[notification.identifier] = notification
+    }
+    func remove(_ identifiers: [String]) { for id in identifiers { pending.removeValue(forKey: id) } }
+}

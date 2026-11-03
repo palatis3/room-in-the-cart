@@ -225,13 +225,16 @@ final class DinnerPlanningTests: XCTestCase {
         DinnerCommitmentSet(commitments: [DinnerCommitment(name: "Wednesday dinner", kind: .dinner, portions: try Rational(4)),
             DinnerCommitment(name: "Two lunches", kind: .lunch, portions: try Rational(2), protected: true)])
     }
+    private func scenarioMeal(_ name: String = "Tacos", quantity: Int64 = 6) throws -> MealTemplate {
+        MealTemplate(title: name, servings: try Rational(4), ingredients: [MealIngredient(name: "wraps", quantity: try q(quantity))])
+    }
     private func scenario(_ ledger: ShoppingLedger, _ commitments: DinnerCommitmentSet, dinner: AcceptedDinner,
         baseline: Int64 = 3340, wraps: Int64 = 8, price: Int64? = 240, stockQuantity: Int64 = 0,
         fee: CostEvidence = .exact(Money(minorUnits: 495)), available: DinnerAvailability = .confirmed(maximumPacks: nil),
         prep: DinnerPreparation = DinnerPreparation(handsOnMinutes: 15, remainingLeadMinutes: 20, availableMinutes: 45)) throws -> DinnerScenario {
         let food = UUID()
-        let demands = [DinnerDemand(commitmentID: commitments.commitments[0].id, foodID: food, name: "wraps", quantity: try q(wraps - 2), acceptedDinnerID: dinner.id),
-            DinnerDemand(commitmentID: commitments.commitments[1].id, foodID: food, name: "wraps", quantity: try q(2), acceptedDinnerID: dinner.id)]
+        let demands = [DinnerDemand(commitmentID: commitments.commitments[0].id, foodID: food, name: "wraps", quantity: try q(wraps - 2), acceptedDinnerID: dinner.id, ingredientID: dinner.template.ingredients[0].id),
+            DinnerDemand(commitmentID: commitments.commitments[1].id, foodID: food, name: "wraps", quantity: try q(2))]
         return DinnerScenario(commitments: commitments, acceptedDinnerIDs: [dinner.id], demands: demands,
             stock: stockQuantity > 0 ? [.init(id: UUID(), foodID: food, name: "Confirmed food", usable: try q(stockQuantity), confirmedAt: now)] : [],
             packs: [.init(foodID: food, offer: .init(id: "wrap-pack", label: "Eight wraps", usableQuantity: try q(8), price: price.map { Money(minorUnits: $0) }), availability: available)],
@@ -242,8 +245,8 @@ final class DinnerPlanningTests: XCTestCase {
     }
     func testG12PairingAndGuestWholeCheckoutUseActualThresholdEngine() throws {
         let ledger = ShoppingLedger(); var state = DinnerPlanningState()
-        let fallback = try accept(meal("Freezer dinner"), ledger: ledger, state: &state, fallback: true)
-        let fajitas = try accept(meal("Fajitas"), ledger: ledger, state: &state)
+        let fallback = try accept(scenarioMeal("Freezer dinner"), ledger: ledger, state: &state, fallback: true)
+        let fajitas = try accept(scenarioMeal("Fajitas"), ledger: ledger, state: &state)
         let needs = try commitments()
         let a = try scenario(ledger, needs, dinner: fallback, stockQuantity: 8)
         let b = try scenario(ledger, needs, dinner: fajitas)
@@ -264,7 +267,7 @@ final class DinnerPlanningTests: XCTestCase {
     }
     func testPairingUnknownPriceAvailabilityAndDifferentCommitmentsNeverWin() throws {
         let ledger = ShoppingLedger(); var state = DinnerPlanningState()
-        let a = try accept(meal("Original"), ledger: ledger, state: &state), b = try accept(meal("Alternate"), ledger: ledger, state: &state)
+        let a = try accept(scenarioMeal("Original"), ledger: ledger, state: &state), b = try accept(scenarioMeal("Alternate"), ledger: ledger, state: &state)
         let needs = try commitments(); let original = try scenario(ledger, needs, dinner: a, stockQuantity: 8)
         let unknown = try scenario(ledger, needs, dinner: b, price: nil)
         let result = try DinnerScenarioEngine.pair(current: original, alternatives: [unknown], selectedAcceptedDinnerIDs: [a.id], state: state, cap: nil, access: access(ledger), at: now)
@@ -275,7 +278,7 @@ final class DinnerPlanningTests: XCTestCase {
     }
     func testConfirmedStockProtectsLunchAndFallbackRequiresTimeAndTripConsent() throws {
         let ledger = ShoppingLedger(); var state = DinnerPlanningState()
-        let fallback = try accept(meal(), ledger: ledger, state: &state, fallback: true), unaccepted = try accept(meal("Other"), ledger: ledger, state: &state)
+        let fallback = try accept(scenarioMeal(quantity: 4), ledger: ledger, state: &state, fallback: true), unaccepted = try accept(scenarioMeal("Other"), ledger: ledger, state: &state)
         let needs = try commitments(); let topup = try scenario(ledger, needs, dinner: fallback, wraps: 6, stockQuantity: 5)
         let result = try DinnerScenarioEngine.recover(alternatives: [topup, scenario(ledger, needs, dinner: unaccepted)], state: state, cap: nil, access: access(ledger), at: now)
         XCTAssertEqual(result.alternatives.count, 1); XCTAssertTrue(result.needsExtraTripConfirmation)

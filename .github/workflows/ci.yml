@@ -101,6 +101,10 @@ jobs:
           xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart-Release
           -configuration Release -sdk iphoneos -destination 'generic/platform=iOS'
           -derivedDataPath .build/ReleaseDerivedData CODE_SIGNING_ALLOWED=NO build
+      - name: Verify compiled app configuration
+        run: |
+          python3 scripts/check_built_app.py .build/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app --configuration Debug
+          python3 scripts/check_built_app.py .build/ReleaseDerivedData/Build/Products/Release-iphoneos/RoomInTheCart.app --configuration Release
       - name: Upload test evidence
         if: always()
         uses: actions/upload-artifact@v4

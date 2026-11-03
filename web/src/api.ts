@@ -6,6 +6,7 @@ export interface Session {
   shopId: string | null; replayWindow: { id: string; expiresAt: string }; csrf: string;
   enrolled: boolean; queueConsent: boolean; grantId?: string;
 }
+export interface BrowserAuthState { available:boolean; authenticated:boolean; csrf:string|null }
 export interface InviteRedemption {
   householdId: string; memberId: string; role: 'contributor' | 'helper' | 'editor'; grantId?: string;
 }
@@ -87,6 +88,12 @@ function parseSession(value: unknown): Session | null {
     enrolled: boolean(d.enrolled), queueConsent: boolean(d.queueConsent), ...(grantId ? { grantId } : {}) };
 }
 
+function parseBrowserAuth(value:unknown):BrowserAuthState {
+  const d=record(value),available=boolean(d.available),authenticated=boolean(d.authenticated);
+  if(!available&&authenticated)return invalid();
+  const csrf=available?text(d.csrf,1024):d.csrf===null?null:invalid();
+  return{available,authenticated,csrf};
+}
 export class API {
   constructor(private readonly fetcher: typeof fetch = fetch) {}
   private async call(path: string, method = 'GET', body?: unknown, csrf?: string): Promise<unknown> {
@@ -104,6 +111,21 @@ export class API {
     }
     if (!data && response.status !== 204) return invalid();
     return data;
+  }
+  async authState():Promise<BrowserAuthState>{return parseBrowserAuth(await this.call('/v1/auth/session'));}
+  async sendEmailCode(email:string,csrf:string):Promise<void>{
+    const clean=email.trim();if(clean.length>254||!/^\S+@\S+\.\S+$/.test(clean))throw new ApiError('invalid_entry',422);
+    const result=record(await this.call('/v1/auth/email/start','POST',{email:clean},csrf));if(result.status!=='check_email')return invalid();
+  }
+  async verifyEmailCode(code:string,csrf:string):Promise<BrowserAuthState>{
+    if(!/^\d{6}$/.test(code))throw new ApiError('invalid_entry',422);
+    const state=parseBrowserAuth(await this.call('/v1/auth/email/verify','POST',{code},csrf));if(!state.authenticated)return invalid();return state;
+  }
+  async refreshIdentity(csrf:string):Promise<BrowserAuthState>{
+    const state=parseBrowserAuth(await this.call('/v1/auth/refresh','POST',{},csrf));if(!state.authenticated)return invalid();return state;
+  }
+  async logoutIdentity(csrf:string):Promise<{providerRevoked:boolean}>{
+    const result=record(await this.call('/v1/auth/session','DELETE',undefined,csrf));if(result.signedOut!==true)return invalid();return{providerRevoked:boolean(result.providerRevoked)};
   }
   async session(): Promise<Session | null> { return parseSession(await this.call('/v1/session')); }
   async redeem(token: string, csrf: string | undefined, review: {adultAttestation: boolean; alias?: string}): Promise<InviteRedemption> {
@@ -163,7 +185,7 @@ export class API {
     identity(receipt.proposalId);
     if (receipt.grantId !== view.grantId || receipt.baseRevision !== view.revision || receipt.status !== 'pending') return invalid();
   }
-  async logout(session: Session): Promise<void> { await this.call('/v1/session', 'DELETE', undefined, session.csrf); }
+  async logout(session: Session): Promise<{providerRevoked:boolean|null}> { const result=record(await this.call('/v1/session', 'DELETE', undefined, session.csrf));if(result.signedOut!==true)return invalid();return{providerRevoked:result.providerRevoked===undefined?null:boolean(result.providerRevoked)}; }
 }
 
 /** Consume secret links before the first API request or application rendering. */

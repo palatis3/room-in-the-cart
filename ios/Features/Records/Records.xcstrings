@@ -1,6 +1,40 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "%lld shopping lists · %lld reusable dinners": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld shopping lists · %lld reusable dinners"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld listas de compras · %lld cenas reutilizables"
+          }
+        }
+      }
+    },
+    "A previously confirmed ledger deletion is pending. Open Data and recovery to retry it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A previously confirmed ledger deletion is pending. Open Data and recovery to retry it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hay una eliminación del registro confirmada anteriormente pendiente. Abre Datos y recuperación para reintentarlo."
+          }
+        }
+      }
+    },
     "A recovery file includes selected private records and their saved history. It excludes photos, voice, credentials, membership, consent and live permissions.": {
       "extractionState": "manual",
       "localizations": {
@@ -14,6 +48,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Un archivo de recuperación incluye los registros privados seleccionados y su historial guardado. Excluye fotos, voz, credenciales, membresía, consentimiento y permisos activos."
+          }
+        }
+      }
+    },
+    "A shop backup includes its linked dinner evidence and quote history. Reusable dinners, rotations and saved ideas are a separate library selection. Imported planning never restores paid access or permissions.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A shop backup includes its linked dinner evidence and quote history. Reusable dinners, rotations and saved ideas are a separate library selection. Imported planning never restores paid access or permissions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una copia de seguridad de una compra incluye sus datos de cenas vinculadas y su historial de cotizaciones. Las cenas reutilizables, rotaciones e ideas guardadas se seleccionan como biblioteca aparte. La planificación importada nunca restaura el acceso de pago ni los permisos."
           }
         }
       }
@@ -188,6 +239,23 @@
         }
       }
     },
+    "Close and review again": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close and review again"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrar y revisar de nuevo"
+          }
+        }
+      }
+    },
     "Cook and helper copies include selected food labels, amounts, purposes and actions. They leave out native financial and private record data.": {
       "extractionState": "manual",
       "localizations": {
@@ -239,6 +307,23 @@
         }
       }
     },
+    "Delete all shopping lists and saved dinners…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete all shopping lists and saved dinners…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar todas las listas de compras y cenas guardadas…"
+          }
+        }
+      }
+    },
     "Delete from this iPhone": {
       "extractionState": "manual",
       "localizations": {
@@ -269,6 +354,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Eliminar copias recuperadas de esta fuente"
+          }
+        }
+      }
+    },
+    "Delete the entire local ledger": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete the entire local ledger"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar todo el registro local"
           }
         }
       }
@@ -320,6 +422,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Eliminado de este iPhone. Puedes deshacerlo hasta que salgas de la app."
+          }
+        }
+      }
+    },
+    "Deleting the reviewed ledger…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deleting the reviewed ledger…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminando el registro revisado…"
+          }
+        }
+      }
+    },
+    "Deletion or recovery cleanup is pending. Retry the same confirmed operation.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deletion or recovery cleanup is pending. Retry the same confirmed operation."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La eliminación o la limpieza de la recuperación está pendiente. Reintenta la misma operación confirmada."
           }
         }
       }
@@ -388,6 +524,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Recuperación personal cifrada"
+          }
+        }
+      }
+    },
+    "Entire ledger deletion": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entire ledger deletion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminación de todo el registro"
           }
         }
       }
@@ -575,6 +728,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Clave del archivo de recuperación cifrado"
+          }
+        }
+      }
+    },
+    "Ledger deletion is pending. Retry the same confirmed deletion in Data and recovery.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ledger deletion is pending. Retry the same confirmed deletion in Data and recovery."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La eliminación del registro está pendiente. Reintenta la misma eliminación confirmada en Datos y recuperación."
           }
         }
       }
@@ -800,6 +970,23 @@
         }
       }
     },
+    "Pack comparisons, pickup histories, imported recipe source files and files already shared are kept.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pack comparisons, pickup histories, imported recipe source files and files already shared are kept."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se conservan las comparaciones de paquetes, los historiales de recogida, los archivos originales de recetas importadas y los archivos ya compartidos."
+          }
+        }
+      }
+    },
     "Parent: ": {
       "extractionState": "manual",
       "localizations": {
@@ -813,6 +1000,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Revisión anterior: "
+          }
+        }
+      }
+    },
+    "Permanently delete entire ledger": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permanently delete entire ledger"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar permanentemente todo el registro"
           }
         }
       }
@@ -1038,6 +1242,23 @@
         }
       }
     },
+    "Recovered copies from this ledger are also removed. An old backup cannot restore this retired ledger on this iPhone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recovered copies from this ledger are also removed. An old backup cannot restore this retired ledger on this iPhone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "También se eliminan las copias recuperadas de este registro. Una copia de seguridad antigua no puede restaurar este registro eliminado en este iPhone."
+          }
+        }
+      }
+    },
     "Recovered workspace": {
       "extractionState": "manual",
       "localizations": {
@@ -1119,6 +1340,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Revisión relacionada — conservar ambas copias"
+          }
+        }
+      }
+    },
+    "Retry confirmed ledger deletion": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry confirmed ledger deletion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar la eliminación confirmada del registro"
+          }
+        }
+      }
+    },
+    "Retry or discard the pending shopping-list save before reviewing ledger deletion.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry or discard the pending shopping-list save before reviewing ledger deletion."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintenta o descarta el guardado pendiente de la lista de compras antes de revisar la eliminación del registro."
           }
         }
       }
@@ -1497,6 +1752,23 @@
         }
       }
     },
+    "The ledger changed after review. Nothing was deleted. Review the entire ledger again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The ledger changed after review. Nothing was deleted. Review the entire ledger again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El registro cambió después de la revisión. No se eliminó nada. Revisa todo el registro de nuevo."
+          }
+        }
+      }
+    },
     "The local operation could not finish. Your current records are still available. Try again.": {
       "extractionState": "manual",
       "localizations": {
@@ -1582,6 +1854,23 @@
         }
       }
     },
+    "The reviewed ledger and its history were deleted. You can start a new ledger in Shop.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The reviewed ledger and its history were deleted. You can start a new ledger in Shop."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se eliminaron el registro revisado y su historial. Puedes iniciar un registro nuevo en Compras."
+          }
+        }
+      }
+    },
     "The selected source was deleted from this iPhone.": {
       "extractionState": "manual",
       "localizations": {
@@ -1629,6 +1918,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Este lote entra en conflicto con una copia existente o eliminada. No se importó nada."
+          }
+        }
+      }
+    },
+    "This cannot be undone. Export anything you want to keep before continuing.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This cannot be undone. Export anything you want to keep before continuing."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esto no se puede deshacer. Exporta lo que quieras conservar antes de continuar."
+          }
+        }
+      }
+    },
+    "This deletion was already confirmed. Retry finishes the same operation; it does not delete a newer ledger.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This deletion was already confirmed. Retry finishes the same operation; it does not delete a newer ledger."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta eliminación ya se confirmó. Reintentar completa la misma operación; no elimina un registro más reciente."
           }
         }
       }
@@ -1714,6 +2037,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "Este es un espacio recuperado por separado. Tu recogida actual no cambió."
+          }
+        }
+      }
+    },
+    "This ledger was deleted. Unsaved edits from its old workspace were discarded.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This ledger was deleted. Unsaved edits from its old workspace were discarded."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este registro fue eliminado. Se descartaron los cambios sin guardar de su espacio anterior."
+          }
+        }
+      }
+    },
+    "This permanently deletes every shopping list, dinner plan, reusable dinner and saved revision in this ledger.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This permanently deletes every shopping list, dinner plan, reusable dinner and saved revision in this ledger."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esto elimina permanentemente todas las listas de compras, planes de cenas, cenas reutilizables y revisiones guardadas de este registro."
+          }
+        }
+      }
+    },
+    "This separate action reviews the entire local ledger and its history before deletion.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This separate action reviews the entire local ledger and its history before deletion."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta acción independiente revisa todo el registro local y su historial antes de eliminarlos."
           }
         }
       }

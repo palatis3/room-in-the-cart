@@ -29,6 +29,7 @@ private struct ShopperInboxContent: View {
                         } label: {
                             VStack(alignment: .leading, spacing: 6) {
                                 Text(request.originalItem).font(.headline)
+                                if let alias = request.authorAlias { Text(alias).font(.subheadline) }
                                 if let quantity = request.ownQuantity { Text(quantity) }
                                 Text(shopperRequestStatus(request)).foregroundStyle(.secondary)
                                 Text(householdTime(request.receivedAt)).font(.caption)
@@ -58,6 +59,7 @@ private struct HouseholdRequestDecisionView: View {
                 if let selected = model.selected, selected.id == request.id {
                     Section(ht("Request")) {
                         Text(selected.originalItem).font(.headline)
+                        if let alias = selected.authorAlias { LabeledContent(ht("Requested by"), value: alias) }
                         if let quantity = selected.ownQuantity { Text(quantity) }
                         Text(shopperRequestStatus(selected))
                         LabeledContent(ht("Received"), value: householdTime(selected.receivedAt))

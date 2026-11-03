@@ -35,7 +35,7 @@ Invite tokens have format `householdUUID.randomSecret` and only a SHA-256 hash i
 
 `GET /v1/households/{h}/bootstrap` returns the same household/member/role/shop/grant/enrollment/capability fields without session/CSRF/replay metadata. `own_requests` requires contribution rights. `shopper_inbox`, `request_preview` and `shopper_commands` require the adult assigned to the selected shop. `household_admin` requires organizer status. A selected helper session has only `helper_view` and, for editor grants, `helper_propose`; it cannot use shopper authority even if that identity has a broader adult membership.
 
-The managed login/BFF OAuth flow is a separate deployment dependency. These APIs do not create a provider login or treat an invitation token as identity.
+The email-code BFF in API-AUTH.md is implemented but remains disabled until real provider code delivery is configured. These lifecycle APIs do not create a provider login or treat an invitation token as identity.
 
 ## Scoped helper views and suggestions
 
@@ -72,3 +72,15 @@ Proposal receipts are durable and idempotent for the authenticated member/key/bo
 ## Shopper inbox addition
 
 `GET /v1/households/{h}/shops/{s}/inbox` now adds `authorAlias:string` to each existing own-request-shaped row, for the assigned shopper only. `/requests/mine` and own command receipts continue to omit this field and every other author's information.
+
+## Native helper context and management lists
+
+Bearer clients may send `X-View-Grant-ID: UUID` together with their enrolled device token. The service validates the exact live grant and recipient, then restricts the context to that helper view. An assigned shopper selecting a helper grant loses shopper, household-admin, contribution and billing routes in that context. Invalid UUIDs fail validation; a missing, expired or wrong-recipient grant ends access. The header is not a membership or invitation credential.
+
+`GET /v1/households/{h}/invites` is organizer-only and returns `{invites:[{inviteId,kind,grantId,expiresAt,redeemedAt,revokedAt,status}]}`. Nullable IDs/dates use JSON null. Status is `pending`, `redeemed`, `revoked` or `expired`.
+
+`GET /v1/households/{h}/views` returns `{views:[{grantId,shopId,mode,revision,shopLabel,expiresAt,revokedAt,recipientAlias,status}]}`. The organizer can manage household grants; another adult sees only grants for shops they currently shop. A selected helper context cannot list them. `recipientAlias` and `revokedAt` are nullable. Status is `available`, `active`, `revoked` or `expired`.
+
+Both lists are bounded to 200 rows and ordered by expiry descending. Neither returns an invitation secret, token hash, credentials or provider evidence. Link creation is not an idempotent operation: after an uncertain response, refresh management, review/revoke the uncertain link, and require explicit fresh intent before creating another. Do not automatically repeat creation or claim an original token can be recovered from its hash.
+
+See [API-AUTH.md](API-AUTH.md) for the implemented, explicitly gated email-code BFF and its live-provider deployment blocker.

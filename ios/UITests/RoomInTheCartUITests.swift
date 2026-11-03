@@ -113,19 +113,32 @@ final class RoomInTheCartUITests: XCTestCase {
     }
 
     func testAutomatedAccessibilityAuditOnShopAndKnownResults() throws {
+        // Collect failures from every viewport in this audit-only test.
+        continueAfterFailure = true
         launch()
-        try app.performAccessibilityAudit()
+        XCTAssertNoThrow(try auditAccessibility())
         openEmptyComparison()
         enterComparison(item: "Audit wraps", firstQuantity: "8", cap: "30")
         compare()
-        // Audit the initial result before scrolling caches offscreen List rows
-        // behind translucent system bars in the accessibility hierarchy.
+        // Cover both the initial viewport and the lower results after scrolling.
         screenshot("Initial-result-before-audit")
         // Keep audit failures separate from persistence so every functional
         // restart check still runs. No issue categories/elements are filtered.
-        try app.performAccessibilityAudit()
+        XCTAssertNoThrow(try auditAccessibility())
         assertKnownTotals()
         assertContains("Room within the item limit: $26.00")
+        screenshot("Scrolled-result-before-audit")
+        XCTAssertNoThrow(try auditAccessibility())
+    }
+
+    private func auditAccessibility() throws {
+        try app.performAccessibilityAudit { issue in
+            let details = XCTAttachment(string: "\(issue.detailedDescription)\n\(issue.element?.debugDescription ?? "No element supplied")")
+            details.name = "Accessibility issue details"
+            details.lifetime = .keepAlways
+            self.add(details)
+            return false // Record every issue as a failure; never suppress it.
+        }
     }
 
     private func launch(language: String = "en", reset: Bool = true, largeDark: Bool = false) {

@@ -6,7 +6,7 @@ Room in the Cart has its own Supabase organization and project. Its Vercel team 
 - Project: `uwjxrotnocxxomqdetzk` (Room in the Cart Staging), US West Oregon.
 - Auth URL: `https://uwjxrotnocxxomqdetzk.supabase.co`.
 - PostgreSQL transaction pooler: `aws-1-us-west-2.pooler.supabase.com:6543/postgres`, verified in the project dashboard.
-- Migrations 001–007 applied and checksum-registered. All 28 application tables have forced row-level security in private schema `ritc`.
+- Migrations 001–008 applied and checksum-registered. All 30 application tables have forced row-level security in private schema `ritc`.
 - Runtime role `ritc_runtime` inherits `ritc_app`, is not a table owner, superuser or RLS bypass role. It has no tenant scope by default.
 
 The public client configuration in `config/staging.json` contains a publishable key, never the database password or a service-role key. Debug and Staging builds receive this configuration; Release requires its own production configuration.
@@ -21,9 +21,13 @@ The live staging project is `room-in-the-cart-staging`, owned by the renamed **R
 
 The root `vercel.json` builds the narrow web client and Node service together. `/v1/*` and `/health` route to the same Node HTTP implementation used by integration tests; the web client uses a same-origin, HttpOnly-cookie session. Production publishing remains a separate release gate.
 
+Browser email-code sign-in additionally requires `EMAIL_OTP_ENABLED=true`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, and a server-only `BFF_TOKEN_ENCRYPTION_KEY` containing a canonical base64-encoded 32-byte key. Keep the flag false until email delivery is configured and verified. Vercel deployments use the platform-overwritten client-address header for request limiting; direct local requests use their socket address.
+
 Required server variables: `DATABASE_URL`, `DATABASE_CA_PEM`, `JWT_ISSUER`, `JWT_AUDIENCE`, `JWT_JWKS_URL`, and the exact HTTPS `WEB_ORIGIN`. Apple billing configuration must use the actual signed app and App Store product. Child network access remains disabled until real guardian verification and consent revocation are integrated.
 
 ## Evidence and open gates
+
+The owner deferred Apple Developer membership and email-provider configuration on November 3, 2026. Development continues; signed distribution and live email-code sign-in are pending those setups. The current Supabase default email sends a magic link without a code, and its dashboard requires custom SMTP or a paid plan to edit that template. `emailOTPEnabled` remains false until the configured email includes a token and delivery is verified. Native builds receive an explicit disabled availability setting; service/BFF enablement must follow the same gate.
 
 - `evidence/staging-public-smoke.json`: deployed health/session responses, missing and invalid credential denial, and wrong-origin denial. Signed-in journeys remain separate gates.
 

@@ -150,6 +150,8 @@ enum MembershipSessionEvent: Equatable { case projection, identity, lock }
                 guard let self, self.generation == current, !Task.isCancelled else { fresh.stop(); return }
                 self.model = fresh
                 self.modelChanges = fresh.$state.sink { [weak self] state in
+                    guard let self, self.generation == current else { return }
+                    self.objectWillChange.send()
                     guard state.issue == .signInRequired else { return }
                     Task { @MainActor [weak self] in
                         guard let self, self.generation == current else { return }

@@ -5,6 +5,7 @@ public struct HouseholdBootstrap: Codable, Equatable, Sendable {
     public let household: Household
     public let memberId: String
     public let role: String
+    public let grantId: String?
     public let shopId: String?
     public let enrolled: Bool
     public let queueConsent: Bool
@@ -16,6 +17,7 @@ public struct OwnRequest: Codable, Equatable, Identifiable, Sendable {
     public let ownQuantity: String?; public let authoredAt: String; public let receivedAt: String
     public let route: String; public let status: String; public let ownActionAllowed: Bool
     public let clarification: String?; public let followupTo: String?
+    public let authorAlias: String?
 }
 public struct OwnRequestsPage: Codable, Equatable, Sendable { public let requests: [OwnRequest]; public let nextCursor: String? }
 public struct ReplayWindow: Codable, Equatable, Sendable { public let id: String; public let expiresAt: String }

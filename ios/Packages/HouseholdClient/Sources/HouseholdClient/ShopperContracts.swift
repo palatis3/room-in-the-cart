@@ -9,6 +9,13 @@ public struct ShopperBasketLine: Codable, Equatable, Identifiable, Sendable {
         self.lineId = lineId.uuidString.lowercased(); self.originalItem = originalItem; self.packs = packs
         self.unitPriceMinor = unitPriceMinor; self.feeEligible = feeEligible
     }
+    private enum CodingKeys: String, CodingKey { case lineId, originalItem, packs, unitPriceMinor, feeEligible }
+    public func encode(to encoder: Encoder) throws {
+        var values = encoder.container(keyedBy: CodingKeys.self)
+        try values.encode(lineId, forKey: .lineId); try values.encode(originalItem, forKey: .originalItem)
+        try values.encode(packs, forKey: .packs); try values.encode(unitPriceMinor, forKey: .unitPriceMinor)
+        try values.encode(feeEligible, forKey: .feeEligible)
+    }
 }
 public struct ShopperQuote: Codable, Equatable, Sendable {
     public struct Fee: Codable, Equatable, Sendable {

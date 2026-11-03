@@ -171,6 +171,26 @@ extension PickupJourney {
 
 private enum PickupModelError: Error { case missing, invalid, pending, unsupported }
 
+struct PickupPersistenceLocation {
+    let databaseURL: URL
+    let resetTestDatabase: Bool
+
+    /// An injected database is authoritative, including in UI-test processes.
+    /// Resolve the default support location only when no database was supplied.
+    static func resolve(databaseURL: URL?, arguments: [String],
+                        applicationSupport: () throws -> URL) rethrows -> PickupPersistenceLocation {
+        if let databaseURL { return PickupPersistenceLocation(databaseURL: databaseURL, resetTestDatabase: false) }
+        let base = try applicationSupport()
+        #if DEBUG
+        if arguments.contains("--ui-testing") {
+            return PickupPersistenceLocation(databaseURL: base.appendingPathComponent("UITestWorkspace", isDirectory: true).appendingPathComponent("pickup.sqlite"),
+                resetTestDatabase: arguments.contains("--reset-test-workspace"))
+        }
+        #endif
+        return PickupPersistenceLocation(databaseURL: base.appendingPathComponent("RoomInTheCart", isDirectory: true).appendingPathComponent("pickup.sqlite"), resetTestDatabase: false)
+    }
+}
+
 /// One durable document per journey. Candidate data is published only after SQLite
 /// commits; retry writes the identical encoded candidate and original event IDs.
 @MainActor final class PickupModel: ObservableObject {
@@ -183,11 +203,13 @@ private enum PickupModelError: Error { case missing, invalid, pending, unsupport
     private var store: ComparisonStore?
     private let databaseURL: URL?
     private let clock: () -> Date
+    private let launchArguments: [String]
     private var opening = false
     private struct Pending { let value: PickupJourney; let payload: Data }
     private var pending: Pending?
-    init(store: ComparisonStore? = nil, databaseURL: URL? = nil, clock: @escaping () -> Date = Date.init) {
-        self.store = store; self.databaseURL = databaseURL; self.clock = clock
+    init(store: ComparisonStore? = nil, databaseURL: URL? = nil, clock: @escaping () -> Date = Date.init,
+         launchArguments: [String] = ProcessInfo.processInfo.arguments) {
+        self.store = store; self.databaseURL = databaseURL; self.clock = clock; self.launchArguments = launchArguments
     }
     var journey: PickupJourney? { journeys.first { $0.id == selectedID } }
     var result: CheckoutResult? {
@@ -213,12 +235,21 @@ private enum PickupModelError: Error { case missing, invalid, pending, unsupport
         opening = true; defer { opening = false }
         do {
             if store == nil {
-                let directory = try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true).appendingPathComponent("RoomInTheCart", isDirectory: true)
+                let location = try PickupPersistenceLocation.resolve(databaseURL: databaseURL, arguments: launchArguments) {
+                    try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+                }
+                let directory = location.databaseURL.deletingLastPathComponent()
                 try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
                 #if os(iOS)
                 try FileManager.default.setAttributes([.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication], ofItemAtPath: directory.path)
                 #endif
-                store = try ComparisonStore(url: databaseURL ?? directory.appendingPathComponent("pickup.sqlite"))
+                if location.resetTestDatabase {
+                    for suffix in ["", "-wal", "-shm"] {
+                        let file = URL(fileURLWithPath: location.databaseURL.path + suffix)
+                        if FileManager.default.fileExists(atPath: file.path) { try FileManager.default.removeItem(at: file) }
+                    }
+                }
+                store = try ComparisonStore(url: location.databaseURL)
             }
             guard let store else { throw PickupModelError.missing }
             let records = try await store.list()
@@ -503,7 +534,8 @@ private enum PickupModelError: Error { case missing, invalid, pending, unsupport
             next.stockNeeds = next.urgent.map { need in
                 StockNeed(id: need.id, foodID: need.id, name: need.meal, amount: need.required, priority: .required)
             }
-            next.carriedMeals = previous.carriedMeals
+            let handledLineIDs = Set(previous.deferred.filter { ["handled", "dismissed"].contains($0.status) }.map { $0.line.id })
+            next.carriedMeals = previous.carriedMeals.filter { !handledLineIDs.contains($0.orderLineID) }
             if let coverage = allocation {
                 for unmet in coverage.demands where unmet.shortfall != .zero {
                     if let original = previous.needs.first(where: { $0.id == unmet.id }) {

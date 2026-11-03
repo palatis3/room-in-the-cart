@@ -8,12 +8,20 @@ import LocalAuthentication
     @Published private(set) var checking = false
     @Published private(set) var error: String?
     private let defaults: UserDefaults
+    let localActorID: UUID
     private let key = "protectedLocalWorkspace"
     private var generation = UUID()
     private var authentication: LAContext?
     var isProtected: Bool { defaults.bool(forKey: key) }
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
+        if let stored = defaults.string(forKey: "installationPlannerID"), let id = UUID(uuidString: stored) {
+            localActorID = id
+        } else {
+            let id = UUID()
+            localActorID = id
+            defaults.set(id.uuidString, forKey: "installationPlannerID")
+        }
         unlocked = !defaults.bool(forKey: key)
     }
     func protect() { defaults.set(true, forKey: key); generation = UUID(); authentication?.invalidate(); unlocked = false }

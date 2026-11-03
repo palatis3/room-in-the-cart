@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-11-03T06:16:08.246942+00:00",
+  "checkedAt": "2026-11-03T06:40:40.241623+00:00",
   "url": "https://room-in-the-cart-staging.vercel.app",
   "checks": [
     {
@@ -7,7 +7,6 @@
       "path": "/health",
       "status": 200,
       "expected": 200,
-      "body": "{\"service\":\"room-in-the-cart\",\"status\":\"running\"}",
       "pass": true
     },
     {
@@ -15,7 +14,6 @@
       "path": "/v1/session",
       "status": 200,
       "expected": 200,
-      "body": "{\"authenticated\":false}",
       "pass": true
     },
     {
@@ -23,7 +21,6 @@
       "path": "/v1/me/workspaces",
       "status": 401,
       "expected": 401,
-      "body": "{\"error\":{\"code\":\"session_needed\",\"correlationId\":\"c9e009c9-0049-475b-acc0-ab77b446da31\",\"recovery\":\"Sign in; preserve private local drafts.\"}}",
       "pass": true
     },
     {
@@ -31,7 +28,6 @@
       "path": "/v1/me/workspaces",
       "status": 401,
       "expected": 401,
-      "body": "{\"error\":{\"code\":\"session_needed\",\"correlationId\":\"df9d7d08-61e9-4fbe-adb1-d95d43f739e7\",\"recovery\":\"Authenticate again; keep private drafts on this device.\"}}",
       "pass": true
     },
     {
@@ -39,7 +35,6 @@
       "path": "/v1/session",
       "status": 403,
       "expected": 403,
-      "body": "{\"error\":{\"code\":\"origin_denied\",\"correlationId\":\"0eee3712-3e37-4fc9-bd16-4add669aff17\",\"recovery\":\"Use the configured application origin.\"}}",
       "pass": true
     }
   ]

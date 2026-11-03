@@ -34,8 +34,10 @@ public struct DinnerDemand: Codable, Equatable, Sendable, Identifiable {
     public let quantity: Quantity?
     public let exclusions: [String]
     public let acceptedDinnerID: UUID?
-    public init(id: UUID = UUID(), commitmentID: UUID, foodID: UUID, name: String, quantity: Quantity?, exclusions: [String] = [], acceptedDinnerID: UUID? = nil) {
-        self.acceptedDinnerID = acceptedDinnerID
+    /// Explicit reviewed match to the accepted recipe ingredient; never inferred from its name.
+    public let ingredientID: UUID?
+    public init(id: UUID = UUID(), commitmentID: UUID, foodID: UUID, name: String, quantity: Quantity?, exclusions: [String] = [], acceptedDinnerID: UUID? = nil, ingredientID: UUID? = nil) {
+        self.acceptedDinnerID = acceptedDinnerID; self.ingredientID = ingredientID
         self.id = id; self.commitmentID = commitmentID; self.foodID = foodID; self.name = name; self.quantity = quantity; self.exclusions = exclusions
     }
 }
@@ -163,7 +165,8 @@ public enum DinnerScenarioEngine {
             try dinnerText(demand.name); try demand.quantity?.validate()
             guard commitmentIDs.contains(demand.commitmentID) else { throw DinnerPlanningError.invalid("demandCommitment") }
             // Reuse ledger hard-exclusion validation, rather than a second name-matching policy.
-            let sourceID = demand.acceptedDinnerID ?? (scenario.acceptedDinnerIDs.count == 1 ? scenario.acceptedDinnerIDs.first : nil)
+            let isDinner = scenario.commitments.commitments.first(where: { $0.id == demand.commitmentID })?.kind == .dinner
+            let sourceID = demand.acceptedDinnerID ?? (isDinner && scenario.acceptedDinnerIDs.count == 1 ? scenario.acceptedDinnerIDs.first : nil)
             let source = acceptedDinners.first { $0.id == sourceID }
             if let sourceID, !scenario.acceptedDinnerIDs.contains(sourceID) { throw DinnerPlanningError.invalid("demandAcceptedDinner") }
             if scenario.commitments.commitments.first(where: { $0.id == demand.commitmentID })?.kind == .dinner && source == nil {
@@ -171,6 +174,53 @@ public enum DinnerScenarioEngine {
             }
             let check = MealTemplate(title: "Reviewed ingredient", ingredients: [MealIngredient(name: demand.name, quantity: demand.quantity, exclusions: demand.exclusions)], exclusions: (source?.template.exclusions ?? []) + (source?.template.ingredients.flatMap(\.exclusions) ?? []))
             try check.validate()
+        }
+        // A single known demand cannot prove an entire accepted recipe is covered.
+        // Legacy unbound scenarios remain readable, but need review before claiming
+        // complete food or checkout coverage. Names are not ingredient identities.
+        var demandProofComplete = true
+        var representedDinners = Set<UUID>()
+        for commitment in scenario.commitments.commitments {
+            let demands = scenario.demands.filter { $0.commitmentID == commitment.id }
+            let grouped = Dictionary(grouping: demands) { demand -> UUID? in
+                demand.acceptedDinnerID ?? (commitment.kind == .dinner && scenario.acceptedDinnerIDs.count == 1 ? scenario.acceptedDinnerIDs.first : nil)
+            }
+            for (sourceID, mealDemands) in grouped {
+                guard let sourceID else { continue }
+                guard let dinner = acceptedDinners.first(where: { $0.id == sourceID }) else { throw DinnerPlanningError.notFound(sourceID) }
+                representedDinners.insert(sourceID)
+                let required = Set(dinner.template.ingredients.map(\.id))
+                let supplied = Set(mealDemands.compactMap(\.ingredientID))
+                guard supplied.isSubset(of: required) else { throw DinnerPlanningError.invalid("demandIngredient") }
+                if required.isEmpty || required != supplied || mealDemands.contains(where: { $0.ingredientID == nil }) {
+                    demandProofComplete = false
+                    issues.append("Review all required ingredients for \(commitment.name)")
+                }
+                for ingredient in dinner.template.ingredients {
+                    guard let recipeQuantity = ingredient.quantity else {
+                        demandProofComplete = false
+                        issues.append("Review unknown recipe quantity for \(ingredient.name)"); continue
+                    }
+                    let expected = try recipeQuantity.amount.multiplied(by: commitment.portions.divided(by: dinner.template.servings))
+                    var entered = Rational.zero
+                    var complete = true
+                    for demand in mealDemands where demand.ingredientID == ingredient.id {
+                        guard let quantity = demand.quantity,
+                              let normalized = try quantity.converted(to: recipeQuantity.unit, using: recipeQuantity.confirmedConversion) else {
+                            complete = false; continue
+                        }
+                        entered = try entered.adding(normalized)
+                    }
+                    if !complete || entered < expected {
+                        demandProofComplete = false
+                        issues.append("Review required recipe amount and servings for \(ingredient.name)")
+                    }
+                }
+            }
+        }
+        if !Set(scenario.acceptedDinnerIDs).isSubset(of: representedDinners) {
+            demandProofComplete = false
+            issues.append("Review demand for every accepted dinner")
         }
         for commitment in scenario.commitments.commitments {
             let demands = scenario.demands.filter { $0.commitmentID == commitment.id }
@@ -244,7 +294,7 @@ public enum DinnerScenarioEngine {
         let foodComplete = issues.filter { !$0.contains("priceUnknown") }.isEmpty
             && packResults.allSatisfy { $0.availabilityConfirmed && ($0.result?.remainingNeed == nil || $0.result?.remainingNeed == .zero) }
         // Missing selections must not make an incomplete basket look like a complete zero-cost line set.
-        let quoteComplete = scenario.baselineComplete && unknownFoods.isEmpty
+        let quoteComplete = scenario.baselineComplete && demandProofComplete && unknownFoods.isEmpty
             && Set(scenario.demands.map(\.commitmentID)) == commitmentIDs
             && packResults.allSatisfy { $0.result != nil || $0.availabilityConfirmed }
         let quote = CheckoutQuote(scope: scenario.scope, context: scenario.context,

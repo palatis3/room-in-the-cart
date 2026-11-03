@@ -1,0 +1,64 @@
+{
+  "configurations": [
+    {
+      "id": "7BF49BA1-A95F-4385-B7AB-EBA8E6971E01",
+      "name": "US English — local StoreKit",
+      "options": {
+        "language": "en-US",
+        "region": "US",
+        "environmentVariableEntries": [
+          {
+            "key": "RITC_LOCAL_STOREKIT_TESTS",
+            "value": "1"
+          },
+          {
+            "key": "RITC_STOREKIT_LOCALE",
+            "value": "en_US"
+          }
+        ]
+      }
+    },
+    {
+      "id": "7BF49BA1-A95F-4385-B7AB-EBA8E6971E02",
+      "name": "US Spanish — local StoreKit",
+      "options": {
+        "language": "es-US",
+        "region": "US",
+        "environmentVariableEntries": [
+          {
+            "key": "RITC_LOCAL_STOREKIT_TESTS",
+            "value": "1"
+          },
+          {
+            "key": "RITC_STOREKIT_LOCALE",
+            "value": "es_US"
+          }
+        ]
+      }
+    }
+  ],
+  "defaultOptions": {
+    "targetForVariableExpansion": {
+      "containerPath": "container:RoomInTheCart.xcodeproj",
+      "identifier": "8C1A045E96B998B40533C7FF",
+      "name": "RoomInTheCart"
+    },
+    "testTimeoutsEnabled": true,
+    "defaultTestExecutionTimeAllowance": 60,
+    "maximumTestExecutionTimeAllowance": 60
+  },
+  "testTargets": [
+    {
+      "parallelizable": false,
+      "selectedTests": [
+        "StoreKitScenarioTests"
+      ],
+      "target": {
+        "containerPath": "container:RoomInTheCart.xcodeproj",
+        "identifier": "54B28AD096EFC1E350C944C8",
+        "name": "RoomInTheCartTests"
+      }
+    }
+  ],
+  "version": 1
+}

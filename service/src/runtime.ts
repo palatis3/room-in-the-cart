@@ -1,10 +1,25 @@
 import type { PoolConfig } from 'pg';
+import type { IncomingMessage } from 'node:http';
+import { isIP } from 'node:net';
 import { BillingService } from './billing/service.js';
 import { appleGatewayFromEnvironment } from './billing/apple.js';
 import { Pool, assertRuntimeRole } from './database.js';
 import { JWTIdentityVerifier, DenyIdentityVerifier, SupabaseSessionVerifier } from './auth.js';
 import { HouseholdRepository } from './repository.js';
 import { createHTTPServer } from './http.js';
+import { BrowserAuthService, SupabaseEmailOTPProvider } from './browser-auth.js';
+
+/** Trust Vercel's overwritten edge metadata only inside its deployed runtime.
+ * https://vercel.com/docs/headers/request-headers#x-vercel-forwarded-for
+ * No header supplied by a direct local HTTP caller establishes client identity.
+ */
+export function deploymentClientAddress(environment: NodeJS.ProcessEnv): ((request: IncomingMessage) => string | undefined) | undefined {
+  if (environment.VERCEL !== '1') return undefined;
+  return request => {
+    const address = request.headers['x-vercel-forwarded-for'];
+    return typeof address === 'string' && !address.includes('%') && isIP(address) !== 0 ? address : undefined;
+  };
+}
 
 /** One runtime for the local process and deployed function; never a migration role. */
 export function databaseConfiguration(environment: NodeJS.ProcessEnv): PoolConfig {
@@ -40,7 +55,18 @@ export async function createRuntime(environment: NodeJS.ProcessEnv = process.env
       noticeVersion: environment.CONSENT_NOTICE_VERSION ?? '',
       ...(configured ? { sessionStatus: new SupabaseSessionVerifier(issuer!) } : {}),
     });
-    const server = createHTTPServer({ repository, verifier, billing: new BillingService(appleGatewayFromEnvironment(environment)), ...(webOrigin ? { webOrigin } : {}) });
+    let browserAuth: BrowserAuthService | undefined;
+    if (environment.EMAIL_OTP_ENABLED === 'true') {
+      if (!configured || !webOrigin || !environment.SUPABASE_URL || !environment.SUPABASE_PUBLISHABLE_KEY || !environment.BFF_TOKEN_ENCRYPTION_KEY) {
+        throw new Error('Enabled email sign-in requires complete provider and encryption configuration');
+      }
+      browserAuth = new BrowserAuthService(repository, verifier,
+        new SupabaseEmailOTPProvider({ url: environment.SUPABASE_URL, publicKey: environment.SUPABASE_PUBLISHABLE_KEY }),
+        { encryptionKey: environment.BFF_TOKEN_ENCRYPTION_KEY });
+    }
+    const clientAddress = deploymentClientAddress(environment);
+    const server = createHTTPServer({ repository, verifier, billing: new BillingService(appleGatewayFromEnvironment(environment)),
+      ...(webOrigin ? { webOrigin } : {}), ...(browserAuth ? { browserAuth } : {}), ...(clientAddress ? { clientAddress } : {}) });
     server.requestTimeout = 15_000;
     server.headersTimeout = 10_000;
     return { server, pool };

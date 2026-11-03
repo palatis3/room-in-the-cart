@@ -11,6 +11,56 @@ private struct RecordsLedgerDocument: Codable {
     let workspace: LedgerWorkspace
 }
 
+/// Persisted planning evidence only. Runtime DinnerAccessContext is deliberately
+/// absent; restoring these facts cannot restore membership, budget access or seats.
+private struct RecordsPlanningProjection: Codable {
+    let revisionID: UUID
+    let acceptedDinners: [AcceptedDinner]
+    let freeReusableDinnerID: UUID?
+    let rotations: [DinnerRotation]
+    let portionBindings: [DinnerPortionBinding]
+    let protectedDays: [DinnerProtectedDay]
+    let weekNotes: [DinnerWeekNote]
+    let ideas: [DinnerIdeaDraft]
+    let proposals: [DinnerProposal]
+    let applyReceipts: [DinnerApplyReceipt]
+    let quotePairs: [TwoStoreQuotePair]
+    init(_ state: DinnerPlanningState, shop: ShoppingLedger?) {
+        revisionID = state.revisionID
+        if let shop {
+            proposals = state.proposals.filter { $0.shopID == shop.id }
+            applyReceipts = state.applyReceipts.filter { $0.proposal.shopID == shop.id }
+            let referenced = Set((proposals + applyReceipts.map(\.proposal)).flatMap { proposal in
+                proposal.changes.compactMap { change -> UUID? in
+                    if case .choose(let chosen) = change { return chosen.acceptedDinnerID }; return nil
+                }
+            })
+            let accepted = state.acceptedDinners.filter { dinner in
+                referenced.contains(dinner.id) || shop.mealOccurrences.contains {
+                    $0.templateID == dinner.template.id && $0.templateRevision == dinner.template.revision
+                }
+            }
+            acceptedDinners = accepted
+            freeReusableDinnerID = state.freeReusableDinnerID.flatMap { id in accepted.contains(where: { $0.id == id }) ? id : nil }
+            rotations = []
+            let occurrenceIDs = Set(shop.mealOccurrences.map(\.id))
+            portionBindings = state.portionBindings.filter { occurrenceIDs.contains($0.occurrenceID) }
+            protectedDays = state.protectedDays.filter { $0.shopID == shop.id }
+            weekNotes = state.weekNotes.filter { $0.shopID == shop.id }
+            let ideaIDs = Set(acceptedDinners.compactMap(\.sourceIdeaID))
+            ideas = state.ideas.filter { ideaIDs.contains($0.id) }
+            quotePairs = state.quotePairs.filter { $0.shopID == shop.id }
+        } else {
+            acceptedDinners = state.acceptedDinners; freeReusableDinnerID = state.freeReusableDinnerID
+            rotations = state.rotations; ideas = state.ideas
+            portionBindings = []; protectedDays = []; weekNotes = []; proposals = []; applyReceipts = []; quotePairs = []
+        }
+    }
+    func decoded() throws -> DinnerPlanningState {
+        try JSONDecoder().decode(DinnerPlanningState.self, from: ArchiveCodec.canonical(self))
+    }
+}
+
 @MainActor enum RecordsNativeCodec {
     /// These domain fields encode sets or UUID-keyed dictionaries as JSON arrays.
     /// Sort only those schema-defined unordered collections; preserve recipe/list order.
@@ -58,6 +108,30 @@ private struct RecordsLedgerDocument: Codable {
         try ArchiveCodec.preflight(data)
         return try LedgerModel.validatePayload(data)
     }
+    static func ledgerScope(_ workspace: LedgerWorkspace, shop: ShoppingLedger) throws -> LedgerWorkspace {
+        let planning = try RecordsPlanningProjection(workspace.dinnerPlanning, shop: shop).decoded()
+        let value = LedgerWorkspace(shops: [shop], mealTemplates: [], selectedShopID: shop.id, dinnerPlanning: planning)
+        try value.validate()
+        return value
+    }
+    static func ledgerLibrary(_ workspace: LedgerWorkspace) throws -> LedgerWorkspace? {
+        let planning = try RecordsPlanningProjection(workspace.dinnerPlanning, shop: nil).decoded()
+        guard !workspace.mealTemplates.isEmpty || !planning.acceptedDinners.isEmpty || !planning.rotations.isEmpty || !planning.ideas.isEmpty else { return nil }
+        let value = LedgerWorkspace(mealTemplates: workspace.mealTemplates, dinnerPlanning: planning)
+        try value.validate()
+        return value
+    }
+    private static func canonicalLedgerForImport(_ workspace: LedgerWorkspace, original: Data) throws -> Data {
+        let normalized = try canonical(RecordsLedgerDocument(formatVersion: 1, workspace: workspace))
+        // Earlier public v1 ledger files predate planning state. Its documented empty
+        // default is the sole additive migration; unknown fields still fail equality.
+        guard let source = try JSONSerialization.jsonObject(with: original) as? [String: Any],
+              let oldWorkspace = source["workspace"] as? [String: Any], oldWorkspace["dinnerPlanning"] == nil else { return normalized }
+        var object = try JSONSerialization.jsonObject(with: normalized) as! [String: Any]
+        var body = object["workspace"] as! [String: Any]
+        body.removeValue(forKey: "dinnerPlanning"); object["workspace"] = body
+        return try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys, .withoutEscapingSlashes])
+    }
     static func pickup(_ data: Data) throws -> PickupJourney {
         try ArchiveCodec.preflight(data)
         let value = try JSONDecoder().decode(PickupJourney.self, from: data)
@@ -75,7 +149,7 @@ private struct RecordsLedgerDocument: Codable {
         case .ledger:
             let workspace = try ledger(bytes)
             guard (workspace.shops.count == 1 && workspace.shops[0].id.uuidString == record.id) || (workspace.shops.isEmpty && record.id == "meal-library") else { throw ArchiveError.invalidIdentity }
-            normalized = try canonical(RecordsLedgerDocument(formatVersion: 1, workspace: workspace))
+            normalized = try canonicalLedgerForImport(workspace, original: bytes)
         case .pickup:
             let value = try pickup(bytes)
             guard value.id.uuidString == record.id else { throw ArchiveError.invalidIdentity }
@@ -121,9 +195,13 @@ struct RecordsToolsEntryView: View {
                         }.navigationTitle(recordsText("Recovered workspace"))
                     case let .pickup(model): PickupHomeView(model: model).environment(\.pickupLedger, nil)
                     case let .recipe(recipe): RecordsRecipeAdoptionView(recipe: recipe, ledger: composition.ledger)
+                    case let .ledgerDeletion(review):
+                        RecordsLedgerDeletionView(ledger: composition.ledger, review: review) {
+                            try await composition.deleteWholeLedger(review)
+                        }
                     }
                 }
-                .toolbar { ToolbarItem(placement: .cancellationAction) { Button(recordsText("Done")) { composition.destination = nil } } }
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button(recordsText("Done")) { composition.destination = nil }.disabled(composition.deletingLedger) } }
             }
         }
     }
@@ -131,13 +209,14 @@ struct RecordsToolsEntryView: View {
 
 @MainActor private final class RecordsComposition: ObservableObject {
     struct Destination: Identifiable {
-        enum Content { case comparison(AppModel, ComparisonDraft, Date), ledger(LedgerModel), pickup(PickupModel), recipe(ImportedRecipe) }
+        enum Content { case comparison(AppModel, ComparisonDraft, Date), ledger(LedgerModel), pickup(PickupModel), recipe(ImportedRecipe), ledgerDeletion(WholeLedgerDeletionReview) }
         let id: String
         let content: Content
     }
     @Published var tools: RecordsToolsModel?
     @Published var destination: Destination?
     @Published var error: ArchiveError?
+    @Published private(set) var deletingLedger = false
     let app: AppModel
     let ledger: LedgerModel
     let pickup: PickupModel
@@ -151,7 +230,7 @@ struct RecordsToolsEntryView: View {
         loading = true; defer { loading = false }
         do {
             await app.open(); await ledger.open(); await pickup.load()
-            guard app.ready, ledger.ready, pickup.ready else { throw ArchiveError.unavailable }
+            guard (app.ready && ledger.ready && pickup.ready) || ledger.hasPendingLedgerDeletion else { throw ArchiveError.unavailable }
             let base = try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
             var folder = base.appendingPathComponent("RoomInTheCart", isDirectory: true)
             #if DEBUG
@@ -162,8 +241,9 @@ struct RecordsToolsEntryView: View {
             self.directory = directory
             let registry = try RecoveryRegistry(url: directory.appendingPathComponent("recovery-v1.json"))
             self.registry = registry
-            try await synchronizeErasure()
-            pickupOrigin = "pickups/" + (try await pickup.archiveSnapshot()).workspaceID.uuidString
+            if ledger.hasPendingLedgerDeletion { try await synchronizeLedgerErasure() }
+            else { try await synchronizeErasure() }
+            if pickup.ready { pickupOrigin = "pickups/" + (try await pickup.archiveSnapshot()).workspaceID.uuidString }
             tools = RecordsToolsModel(registry: registry, snapshot: { [weak self] in
                 guard let self else { throw ArchiveError.unavailable }; return try await self.snapshot()
             }, validateNativePayload: { [weak self] record in
@@ -177,6 +257,10 @@ struct RecordsToolsEntryView: View {
                 return (record.kind == .comparison && record.origin == self.app.store.map { "comparisons/" + $0.workspaceID.uuidString }) || (record.kind == .pickup && record.origin == self.pickupOrigin)
             }, cleanupRecoveredWorkspaces: { [weak self] in
                 guard let self else { throw ArchiveError.unavailable }; try await self.purgeOrphanWorkspaces()
+            }, reviewWholeLedgerDeletion: { [weak self] in
+                guard let self else { throw ArchiveError.unavailable }
+                let review = try await self.ledger.reviewWholeLedgerDeletion()
+                self.destination = Destination(id: "whole-ledger-deletion", content: .ledgerDeletion(review))
             })
             error = nil
         } catch { self.error = error as? ArchiveError ?? .unavailable }
@@ -192,6 +276,12 @@ struct RecordsToolsEntryView: View {
         let erased = tombstones.map { ArchiveSourceIdentity(origin: "comparisons/" + $0.workspaceID.uuidString, recordID: $0.id.uuidString) }
             + pickupTombstones.map { ArchiveSourceIdentity(origin: "pickups/" + $0.workspaceID.uuidString, recordID: $0.id.uuidString) }
         try await registry.registerErasedSources(erased)
+        try await synchronizeLedgerErasure()
+    }
+    private func synchronizeLedgerErasure() async throws {
+        guard let registry else { throw ArchiveError.unavailable }
+        let retiredOrigins = try await ledger.retiredLedgerWorkspaceIDs().map { "ledger/" + $0.uuidString }
+        try await registry.registerErasedOrigins(retiredOrigins)
         try await purgeOrphanWorkspaces()
     }
     private func purgeOrphanWorkspaces() async throws {
@@ -217,10 +307,10 @@ struct RecordsToolsEntryView: View {
                 savedAtMilliseconds: ArchiveCodec.milliseconds(saved.savedAt),
                 helperLines: [HelperLine(label: draft.item, originalAmount: draft.needed, originalUnit: draft.unit.rawValue)], nativePayload: bytes))
         }
-        let workspace = try RecordsNativeCodec.ledger(ledger.exportPayload())
-        if let originID = ledger.sourceWorkspaceID {
+        if ledger.ready, let originID = ledger.sourceWorkspaceID {
+            let workspace = try RecordsNativeCodec.ledger(ledger.exportPayload())
             for shop in workspace.shops {
-                let scoped = LedgerWorkspace(shops: [shop], mealTemplates: [], selectedShopID: shop.id)
+                let scoped = try RecordsNativeCodec.ledgerScope(workspace, shop: shop)
                 let bytes = try RecordsNativeCodec.canonical(RecordsLedgerDocument(formatVersion: 1, workspace: scoped))
                 let lines = shop.contributions.filter { $0.removedAt == nil }.map { contribution in
                     HelperLine(label: contribution.productName, originalAmount: contribution.quantity?.originalLiteral ?? "",
@@ -230,8 +320,7 @@ struct RecordsToolsEntryView: View {
                     revision: ArchiveCodec.digest(bytes), kind: .ledger, title: shop.title,
                     savedAtMilliseconds: ArchiveCodec.milliseconds(ledger.savedAt ?? Date(timeIntervalSince1970: 0)), helperLines: lines, nativePayload: bytes))
             }
-            if !workspace.mealTemplates.isEmpty {
-                let library = LedgerWorkspace(mealTemplates: workspace.mealTemplates)
+            if let library = try RecordsNativeCodec.ledgerLibrary(workspace) {
                 let bytes = try RecordsNativeCodec.canonical(RecordsLedgerDocument(formatVersion: 1, workspace: library))
                 result.append(ArchiveRecord(id: "meal-library", origin: "ledger/" + originID.uuidString,
                     revision: ArchiveCodec.digest(bytes), kind: .ledger, title: "Reusable dinners",
@@ -253,7 +342,10 @@ struct RecordsToolsEntryView: View {
         // A separately recovered workspace may have been edited since import. Export
         // its committed domain state, retaining the original source identity and parent.
         if let registry {
-            for saved in try await registry.refreshList() { result += try await recoveredSnapshot(saved) }
+            let pendingOrigin = ledger.pendingLedgerDeletionReview.map { "ledger/" + $0.workspaceID.uuidString }
+            for saved in try await registry.refreshList() where saved.record.origin != pendingOrigin {
+                result += try await recoveredSnapshot(saved)
+            }
         }
         var seen = Set<String>()
         return result.filter { seen.insert(RecordsToolsModel.selectionID($0)).inserted }
@@ -285,15 +377,14 @@ struct RecordsToolsEntryView: View {
             guard let current else { throw ArchiveError.unavailable }
             let workspace = try RecordsNativeCodec.ledger(current.payload)
             var result = try workspace.shops.map { shop in
-                let scoped = LedgerWorkspace(shops: [shop], mealTemplates: [], selectedShopID: shop.id)
+                let scoped = try RecordsNativeCodec.ledgerScope(workspace, shop: shop)
                 let bytes = try RecordsNativeCodec.canonical(RecordsLedgerDocument(formatVersion: 1, workspace: scoped))
                 let lines = shop.contributions.filter { $0.removedAt == nil }.map {
                     HelperLine(label: $0.productName, originalAmount: $0.quantity?.originalLiteral ?? "", originalUnit: $0.quantity?.unit.rawValue ?? "")
                 }
                 return revised(bytes, id: shop.id.uuidString, title: shop.title, date: current.savedAt, lines: lines)
             }
-            if !workspace.mealTemplates.isEmpty {
-                let library = LedgerWorkspace(mealTemplates: workspace.mealTemplates)
+            if let library = try RecordsNativeCodec.ledgerLibrary(workspace) {
                 let bytes = try RecordsNativeCodec.canonical(RecordsLedgerDocument(formatVersion: 1, workspace: library))
                 result.append(revised(bytes, id: "meal-library", title: "Reusable dinners", date: current.savedAt, lines: []))
             }
@@ -315,11 +406,25 @@ struct RecordsToolsEntryView: View {
     }
     private func validate(_ record: ArchiveRecord) async throws {
         try await synchronizeErasure()
+        if let pending = ledger.pendingLedgerDeletionReview, record.origin == "ledger/" + pending.workspaceID.uuidString {
+            throw ArchiveError.unavailable
+        }
         if let store = app.store, record.origin == "comparisons/" + store.workspaceID.uuidString,
            let id = UUID(uuidString: record.id), try await store.isErased(id: id) { throw ArchiveError.conflict }
         if record.origin == pickupOrigin, let id = UUID(uuidString: record.id),
            try await pickup.archiveTombstones().contains(where: { $0.id == id }) { throw ArchiveError.conflict }
         try RecordsNativeCodec.validate(record)
+    }
+    func deleteWholeLedger(_ review: WholeLedgerDeletionReview) async throws {
+        guard !deletingLedger else { throw ArchiveError.unavailable }
+        deletingLedger = true; defer { deletingLedger = false }
+        tools?.invalidateForSourceErasure()
+        _ = try await ledger.eraseWholeLedger(review)
+        // Keep the same deletion intent until both durable erasure and all local
+        // recovery projections/workspaces have been reconciled successfully.
+        try await synchronizeLedgerErasure()
+        try await ledger.finishWholeLedgerDeletion()
+        await tools?.refresh()
     }
     private func delete(_ record: ArchiveRecord) async throws {
         if record.kind == .pickup {
@@ -381,6 +486,61 @@ struct RecordsToolsEntryView: View {
             destination = Destination(id: saved.id, content: .pickup(isolated))
         case .recipe: break
         }
+    }
+}
+
+private struct RecordsLedgerDeletionView: View {
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject var ledger: LedgerModel
+    let review: WholeLedgerDeletionReview
+    let erase: () async throws -> Void
+    @State private var attempting = false
+    @State private var completed = false
+    @State private var needsReview = false
+    @State private var failure: String?
+    private var effectiveReview: WholeLedgerDeletionReview { ledger.pendingLedgerDeletionReview ?? review }
+    var body: some View {
+        Form {
+            Section {
+                Text(recordsText("Delete the entire local ledger")).font(.title2.bold())
+                Text(recordsText("This permanently deletes every shopping list, dinner plan, reusable dinner and saved revision in this ledger."))
+                Text(String(format: recordsText("%lld shopping lists · %lld reusable dinners"), Int64(effectiveReview.shopCount), Int64(effectiveReview.reusableDinnerCount)))
+                Text(recordsText("Pack comparisons, pickup histories, imported recipe source files and files already shared are kept."))
+                    .font(.footnote)
+                Text(recordsText("Recovered copies from this ledger are also removed. An old backup cannot restore this retired ledger on this iPhone."))
+                    .font(.footnote)
+                Text(recordsText("This cannot be undone. Export anything you want to keep before continuing."))
+                    .font(.headline)
+            }
+            if completed {
+                Section { Text(recordsText("The reviewed ledger and its history were deleted. You can start a new ledger in Shop.")) }
+            } else {
+                if let failure { Section { Text(failure).foregroundStyle(.red) } }
+                if ledger.hasPendingLedgerDeletion {
+                    Section { Text(recordsText("This deletion was already confirmed. Retry finishes the same operation; it does not delete a newer ledger.")) }
+                }
+                if attempting { ProgressView(recordsText("Deleting the reviewed ledger…")) }
+                else if needsReview {
+                    Button(recordsText("Close and review again")) { dismiss() }
+                } else {
+                    Button(recordsText(ledger.hasPendingLedgerDeletion ? "Retry confirmed ledger deletion" : "Permanently delete entire ledger"), role: .destructive) {
+                        Task {
+                            attempting = true; failure = nil
+                            defer { attempting = false }
+                            do { try await erase(); completed = true }
+                            catch LedgerDeletionError.staleReview {
+                                needsReview = true
+                                failure = recordsText("The ledger changed after review. Nothing was deleted. Review the entire ledger again.")
+                            } catch {
+                                failure = recordsText("Deletion or recovery cleanup is pending. Retry the same confirmed operation.")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .navigationTitle(recordsText("Entire ledger deletion"))
+        .interactiveDismissDisabled(attempting)
     }
 }
 

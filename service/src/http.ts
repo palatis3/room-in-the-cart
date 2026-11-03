@@ -5,9 +5,10 @@ import { type IdentityVerifier,DenyIdentityVerifier } from './auth.js';
 import { HouseholdRepository,type AuthContext } from './repository.js';
 import { BillingService,billingVerifySchema,billingSeatsSchema,billingNotificationSchema } from './billing/service.js';
 import { ServiceError,accessEnded,invalid } from './errors.js';
+import {BrowserAuthService,emailStartSchema,emailVerifySchema,type BrowserIdentity} from './browser-auth.js';
 import {HouseholdLifecycle} from './lifecycle.js';
 import {householdCreateSchema,inviteCreateSchema,inviteRedeemSchema,viewCreateSchema,viewUpdateSchema,proposalSchema,revocationSchema, parseCommand,previewSchema,uuid } from './contracts.js';
-export interface HTTPOptions { repository:HouseholdRepository; verifier?:IdentityVerifier; webOrigin?:string; maxRequestsPerMinute?:number; billing?:BillingService }
+export interface HTTPOptions { repository:HouseholdRepository; verifier?:IdentityVerifier; webOrigin?:string; maxRequestsPerMinute?:number; billing?:BillingService; browserAuth?:BrowserAuthService; clientAddress?:(request:IncomingMessage)=>string|undefined }
 async function body(req:IncomingMessage,maxBytes=65_536):Promise<unknown> {
   if(!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type']??''))throw new ServiceError(415,'json_required','Send a JSON command.');
   const chunks:Buffer[]=[];let size=0;
@@ -15,8 +16,8 @@ async function body(req:IncomingMessage,maxBytes=65_536):Promise<unknown> {
   try{return JSON.parse(Buffer.concat(chunks).toString('utf8'));}catch{throw invalid();}
 }
 function equal(a:string,b:string){const aa=Buffer.from(a),bb=Buffer.from(b);return aa.length===bb.length&&timingSafeEqual(aa,bb);}
-function cookie(req:IncomingMessage):string|null {
-  return req.headers.cookie?.split(';').map(s=>s.trim()).find(s=>s.startsWith('ritc_session='))?.slice(13)??null;
+function cookie(req:IncomingMessage,name='ritc_session'):string|null {
+  return req.headers.cookie?.split(';').map(s=>s.trim()).find(s=>s.startsWith(name+'='))?.slice(name.length+1)??null;
 }
 export function createHTTPServer(options:HTTPOptions) {
   const repository=options.repository,verifier=options.verifier??new DenyIdentityVerifier();
@@ -33,37 +34,71 @@ export function createHTTPServer(options:HTTPOptions) {
       const method=req.method??'GET',url=new URL(req.url??'/','https://service.invalid');
       if(req.headers.origin&&req.headers.origin!==options.webOrigin)throw new ServiceError(403,'origin_denied','Use the configured application origin.');
       if(url.pathname==='/health'&&method==='GET'){send(200,{service:'room-in-the-cart',status:'running'});return;}
-      const ip=req.socket.remoteAddress??'unknown',now=Date.now(),old=limits.get(ip);
+      const ip=options.clientAddress?options.clientAddress(req):req.socket.remoteAddress;
+      if(!ip||ip.length>128)throw new ServiceError(503,'client_context_unavailable','Try again when the service can verify this connection.');
+      const now=Date.now(),old=limits.get(ip);
       if(limits.size>=10_000)for(const[k,v]of limits)if(v.until<now)limits.delete(k);
       if(limits.size>=10_000&&!old){res.setHeader('Retry-After','60');throw new ServiceError(429,'rate_limited','Retry later.');}
       const bucket=old&&old.until>now?old:{count:0,until:now+60_000};bucket.count++;limits.set(ip,bucket);
       if(bucket.count>(options.maxRequestsPerMinute??120)){res.setHeader('Retry-After','60');throw new ServiceError(429,'rate_limited','Keep the operation key and retry later.');}
       if(url.pathname==='/v1/apple/notifications'&&method==='POST'&&options.billing){const input=billingNotificationSchema.parse(await body(req,262_144));send(200,await options.billing.notification(repository.pool,input.signedPayload));return;}
-      let auth:AuthContext|undefined,session:Awaited<ReturnType<HouseholdRepository['webIdentity']>>|undefined;
+      const browserCookie=cookie(req,'__Host-ritc_auth');
+      const setAuthCookie=(value:string,maxAge:number)=>`__Host-ritc_auth=${value}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${maxAge}`;
+      const clearScope='ritc_session=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0';
+      const csrfHeader=()=>{const value=req.headers['x-csrf-token'];if(!options.webOrigin||req.headers.origin!==options.webOrigin||typeof value!=='string')throw new ServiceError(403,'csrf_failed','Reload sign-in and try again.');return value;};
+      if(url.pathname.startsWith('/v1/auth/')){
+        const bff=options.browserAuth;
+        if(!bff||!options.webOrigin){if(url.pathname==='/v1/auth/session'&&method==='GET'){send(200,{available:false,authenticated:false,csrf:null});return;}throw new ServiceError(503,'login_unavailable','Email sign-in is unavailable. Keep your invitation and try again later.');}
+        if(url.pathname==='/v1/auth/session'&&method==='GET'){
+          if(browserCookie){try{send(200,{available:true,...await bff.state(browserCookie)});return;}catch(error){if(!(error instanceof ServiceError)||error.status!==401)throw error;}}
+          const challenge=await bff.challenge(ip);res.setHeader('Set-Cookie',setAuthCookie(challenge.cookie,challenge.expiresIn));send(200,{available:true,authenticated:false,csrf:challenge.csrf});return;
+        }
+        const csrf=csrfHeader();if(!browserCookie)throw new ServiceError(401,'session_needed','Open sign-in before requesting a code.');
+        if(url.pathname==='/v1/auth/email/start'&&method==='POST'){send(200,await bff.start(browserCookie,csrf,emailStartSchema.parse(await body(req,4096)),ip));return;}
+        if(url.pathname==='/v1/auth/email/verify'&&method==='POST'){
+          const result=await bff.verify(browserCookie,csrf,emailVerifySchema.parse(await body(req,1024)));
+          res.setHeader('Set-Cookie',[setAuthCookie(result.cookie,result.expiresIn),clearScope]);send(200,{available:true,authenticated:true,csrf:result.csrf});return;
+        }
+        if(url.pathname==='/v1/auth/refresh'&&method==='POST'){z.object({}).strict().parse(await body(req,1024));send(200,{available:true,...await bff.refresh(browserCookie,csrf)});return;}
+        if(url.pathname==='/v1/auth/session'&&method==='DELETE'){
+          const result=await bff.logout(browserCookie,csrf);const scoped=cookie(req);if(scoped)await repository.revokeWebCookie(scoped);
+          res.setHeader('Set-Cookie',[setAuthCookie('',0),clearScope]);send(200,result);return;
+        }
+        throw new ServiceError(404,'unavailable','Return to sign-in.');
+      }
+      let auth:AuthContext|undefined,session:Awaited<ReturnType<HouseholdRepository['webIdentity']>>|undefined,browserIdentity:BrowserIdentity|undefined;
       const authorization=req.headers.authorization;
       if(authorization) {
         const match=/^Bearer ([A-Za-z0-9_.-]+)$/.exec(authorization);
         if(!match)throw new ServiceError(401,'session_needed','Authenticate again.');
         const identity=await verifier.verify(match[1]!);
-        auth={identity,...(typeof req.headers['x-device-token']==='string'?{deviceToken:req.headers['x-device-token']}:{})};
+        auth={identity,...(typeof req.headers['x-device-token']==='string'?{deviceToken:req.headers['x-device-token']}:{}),...(req.headers['x-view-grant-id']!==undefined?{viewGrantId:uuid.parse(req.headers['x-view-grant-id'])}:{})};
       }else {
-        const value=cookie(req);if(value){session=await repository.webIdentity(value);auth=session.auth;}
+        if(browserCookie&&options.browserAuth){try{browserIdentity=await options.browserAuth.authenticate(browserCookie);auth={identity:browserIdentity.identity};}catch(error){if(!(error instanceof ServiceError)||error.code!=='session_needed')throw error; if(url.pathname!=='/v1/session'||method!=='GET')throw error;}}
+        const value=cookie(req);if(value){session=await repository.webIdentity(value,browserIdentity?.identity);auth=session.auth;}
       }
-      if(method==='GET'&&url.pathname==='/v1/session'&&!auth){send(200,{authenticated:false});return;}
+      if(method==='GET'&&url.pathname==='/v1/session'&&!session){send(200,{authenticated:false});return;}
       if(!auth)throw new ServiceError(401,'session_needed','Sign in; preserve private local drafts.');
-      if(session&&method!=='GET'&&method!=='HEAD') {
+      if((session||browserIdentity)&&method!=='GET'&&method!=='HEAD') {
         const csrf=req.headers['x-csrf-token'];
-        if(!options.webOrigin||req.headers.origin!==options.webOrigin||typeof csrf!=='string'||!equal(csrf,session.csrf))throw new ServiceError(403,'csrf_failed','Reload the current session and try again.');
+        if(!options.webOrigin||req.headers.origin!==options.webOrigin||typeof csrf!=='string'||!equal(csrf,session?.csrf??browserIdentity!.csrf))throw new ServiceError(403,'csrf_failed','Reload the current session and try again.');
+      }
+      if(auth.viewGrantId){
+        const helperView=url.pathname===`/v1/views/${auth.viewGrantId}/current`&&method==='GET';
+        const helperProposal=url.pathname===`/v1/views/${auth.viewGrantId}/proposals`&&method==='POST';
+        const helperSession=url.pathname==='/v1/session'||(url.pathname==='/v1/invites/redeem'&&method==='POST');
+        const helperHousehold=/^\/v1\/households\/[^/]+\/(bootstrap|replay-windows|devices(?:\/current)?)$/.test(url.pathname);
+        if(!helperView&&!helperProposal&&!helperSession&&!helperHousehold)throw new ServiceError(404,'unavailable','Use the selected helper view.');
       }
       if(url.pathname==='/v1/session'&&method==='POST') {
         const input=z.object({householdId:uuid,grantId:uuid.optional()}).strict().parse(await body(req));
-        const result=await repository.startWebSession(input.householdId,auth.identity,input.grantId??(session?.householdId===input.householdId?session.auth.viewGrantId:undefined));
-        res.setHeader('Set-Cookie',`ritc_session=${result.cookie}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${Math.max(0,Math.floor((result.expiresAt.getTime()-Date.now())/1000))}`);
+        const result=await repository.startWebSession(input.householdId,auth.identity,input.grantId??(session?.householdId===input.householdId?session.auth.viewGrantId:undefined),Boolean(browserIdentity));
+        res.setHeader('Set-Cookie',`ritc_session=${result.cookie}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${browserIdentity?604800:Math.max(0,Math.floor((result.expiresAt.getTime()-Date.now())/1000))}`);
         send(200,result.session);return;
       }
       if(url.pathname==='/v1/session'&&session) {
         if(method==='GET'){send(200,await repository.authorized(session.householdId,auth,async ctx=>({authenticated:true,...await repository.bootstrap(ctx),replayWindow:await repository.window(ctx),csrf:session!.csrf})));return;}
-        if(method==='DELETE'){const result=await repository.authorized(session.householdId,auth,ctx=>repository.logout(ctx));res.setHeader('Set-Cookie','ritc_session=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0');send(200,result);return;}
+        if(method==='DELETE'){let result:unknown=await repository.authorized(session.householdId,auth,ctx=>repository.logout(ctx));if(browserCookie&&browserIdentity&&options.browserAuth)result=await options.browserAuth.logout(browserCookie,browserIdentity.csrf);res.setHeader('Set-Cookie',[clearScope,...(browserCookie?[setAuthCookie('',0)]:[])]);send(200,result);return;}
       }
       if(url.pathname==='/v1/households'&&method==='POST'){send(201,await lifecycle.create(auth.identity,householdCreateSchema.parse(await body(req))));return;}
       if(url.pathname==='/v1/invites/redeem'&&method==='POST'){send(200,await lifecycle.redeem(auth.identity,inviteRedeemSchema.parse(await body(req))));return;}
@@ -98,6 +133,8 @@ export function createHTTPServer(options:HTTPOptions) {
           if(path==='/billing/seats'&&method==='PUT')return options.billing.replaceSeats(ctx,billingSeatsSchema.parse(payload));
         }
         if(path==='/members'&&method==='GET')return lifecycle.members(ctx);
+        if(path==='/invites'&&method==='GET')return lifecycle.invites(ctx);
+        if(path==='/views'&&method==='GET')return lifecycle.views(ctx);
         if(path==='/invites'&&method==='POST')return lifecycle.invite(ctx,inviteCreateSchema.parse(payload));
         if(path==='/views'&&method==='POST')return lifecycle.createView(ctx,viewCreateSchema.parse(payload));
         if(path==='/revocations'&&method==='POST')return lifecycle.revoke(ctx,revocationSchema.parse(payload));

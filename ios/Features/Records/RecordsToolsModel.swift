@@ -29,6 +29,7 @@ import RecordArchive
     private let validate: Validate
     private let open: Open
     private let deleteSource: Delete?
+    private let wholeLedgerDeletionAction: (() async throws -> Void)?
     private let cleanupRecovered: (() async throws -> Void)?
     private let deletable: (ArchiveRecord) -> Bool
     private let sourceUndo: (() async throws -> Void)?
@@ -36,14 +37,15 @@ import RecordArchive
     private var selectedSnapshot: [ArchiveRecord] { currentRecords.filter { selectedIDs.contains(Self.selectionID($0)) } }
     var selectedCount: Int { selectedSnapshot.count }
     func canDeleteSource(_ record: ArchiveRecord) -> Bool { deleteSource != nil && deletable(record) }
+    var canReviewWholeLedgerDeletion: Bool { wholeLedgerDeletionAction != nil }
     var recoveredDeletionAllowsUndo: Bool { cleanupRecovered == nil }
     var supportText: String { ReadableArchive.supportReport(error: error, recordCount: currentRecords.count + recoveredRecords.count) }
     static func selectionID(_ record: ArchiveRecord) -> String { record.origin + "/" + record.id + "/" + record.revision }
 
     init(registry: RecoveryRegistry, snapshot: @escaping Snapshot, validateNativePayload: @escaping Validate,
-         openRecovered: @escaping Open, deleteSource: Delete? = nil, undoSourceDeletion: (() async throws -> Void)? = nil, canDeleteSource: @escaping (ArchiveRecord) -> Bool = { _ in true }, cleanupRecoveredWorkspaces: (() async throws -> Void)? = nil) {
+         openRecovered: @escaping Open, deleteSource: Delete? = nil, undoSourceDeletion: (() async throws -> Void)? = nil, canDeleteSource: @escaping (ArchiveRecord) -> Bool = { _ in true }, cleanupRecoveredWorkspaces: (() async throws -> Void)? = nil, reviewWholeLedgerDeletion: (() async throws -> Void)? = nil) {
         self.registry = registry; self.snapshot = snapshot; self.validate = validateNativePayload
-        self.open = openRecovered; self.deleteSource = deleteSource; self.sourceUndo = undoSourceDeletion; self.deletable = canDeleteSource; self.cleanupRecovered = cleanupRecoveredWorkspaces
+        self.open = openRecovered; self.deleteSource = deleteSource; self.sourceUndo = undoSourceDeletion; self.deletable = canDeleteSource; self.cleanupRecovered = cleanupRecoveredWorkspaces; self.wholeLedgerDeletionAction = reviewWholeLedgerDeletion
     }
     func refresh() async {
         do {
@@ -128,14 +130,15 @@ import RecordArchive
         status = nil
     }
     private func validateRecord(_ record: ArchiveRecord) async throws {
-        if record.kind == .recipe {
-            guard let data = record.nativePayload else { return }
+        if record.kind == .recipe, let data = record.nativePayload {
             do {
                 let recipe = try JSONDecoder().decode(ImportedRecipe.self, from: data)
                 _ = try recipe.validated()
                 guard try ArchiveCodec.canonical(recipe) == data else { throw ArchiveError.unsupportedRecord }
             } catch { throw ArchiveError.invalidRecipe }
-        } else if record.nativePayload != nil { try await validate(record) }
+        }
+        // Every projection must reconcile erasure, including helper-only records.
+        try await validate(record)
     }
     func cancelReview() { review = nil; recipeReport = nil; status = recordsText("Import cancelled. Your records are unchanged.") }
     func applyReviewedImport() async {
@@ -189,6 +192,21 @@ import RecordArchive
     func undoCurrentDeletion() async {
         guard let sourceUndo, canUndoSourceDeletion else { return }
         do { try await sourceUndo(); canUndoSourceDeletion = false; await refresh(); status = recordsText("Deletion undone.") } catch { fail(error) }
+    }
+    func reviewWholeLedgerDeletion() async {
+        guard !busy, let wholeLedgerDeletionAction else { return }
+        busy = true; defer { busy = false }
+        do { try await wholeLedgerDeletionAction() }
+        catch LedgerDeletionError.pendingSave {
+            error = nil; status = recordsText("Retry or discard the pending shopping-list save before reviewing ledger deletion.")
+        } catch { fail(error) }
+    }
+    /// Clear cached disclosures and pending imports before retiring a source. A new
+    /// snapshot can only repopulate them after composition rechecks tombstones.
+    func invalidateForSourceErasure() {
+        preparedDocument = nil; recoveryKey = ""; selectedIDs = []
+        review = nil; recipeReport = nil; lastImportIDs = []; deleteUndo = nil
+        currentRecords = []; recoveredRecords = []; status = nil; error = nil
     }
     func dismissPreparedFile() { preparedDocument = nil }
     func reportFileError(_ error: Error) { fail(error) }

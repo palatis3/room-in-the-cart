@@ -1,0 +1,754 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Capture is optional. You can always type your list.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture is optional. You can always type your list."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La captura es opcional. Siempre puedes escribir tu lista."
+          }
+        }
+      }
+    },
+    "Speech and photo text recognition run on this iPhone. Nothing is added until you review the list.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speech and photo text recognition run on this iPhone. Nothing is added until you review the list."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El reconocimiento de voz y de texto en fotos se realiza en este iPhone. No se añade nada hasta que revises la lista."
+          }
+        }
+      }
+    },
+    "Destination: this pickup’s list review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destination: this pickup’s list review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destino: revisión de la lista de esta compra"
+          }
+        }
+      }
+    },
+    "Captured wording — check before using": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captured wording — check before using"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto capturado: revísalo antes de usarlo"
+          }
+        }
+      }
+    },
+    "Use captured text": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use captured text"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar el texto capturado"
+          }
+        }
+      }
+    },
+    "Keep my typed draft": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep my typed draft"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conservar mi borrador escrito"
+          }
+        }
+      }
+    },
+    "Your editable list": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your editable list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu lista editable"
+          }
+        }
+      }
+    },
+    "One item per line. Check item names, amounts, units and any exclusions.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One item per line. Check item names, amounts, units and any exclusions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un artículo por línea. Revisa los nombres, las cantidades, las unidades y las exclusiones."
+          }
+        }
+      }
+    },
+    "List text to review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "List text to review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto de la lista para revisar"
+          }
+        }
+      }
+    },
+    "Compare with the original": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare with the original"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparar con el original"
+          }
+        }
+      }
+    },
+    "This wording may exclude an item. Check the exclusion before continuing.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This wording may exclude an item. Check the exclusion before continuing."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este texto podría excluir un artículo. Revisa la exclusión antes de continuar."
+          }
+        }
+      }
+    },
+    "Optional capture": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional capture"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captura opcional"
+          }
+        }
+      }
+    },
+    "Paste selected text for review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste selected text for review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pegar el texto seleccionado para revisarlo"
+          }
+        }
+      }
+    },
+    "Read text from a selected photo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read text from a selected photo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leer texto de una foto seleccionada"
+          }
+        }
+      }
+    },
+    "Stop recording and review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop recording and review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detener la grabación y revisar"
+          }
+        }
+      }
+    },
+    "Cancel capture": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel capture"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar la captura"
+          }
+        }
+      }
+    },
+    "Dictate on this iPhone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dictate on this iPhone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dictar en este iPhone"
+          }
+        }
+      }
+    },
+    "Listening — tap Stop when finished": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listening — tap Stop when finished"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escuchando: toca Detener cuando termines"
+          }
+        }
+      }
+    },
+    "Preparing text for review…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparing text for review…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparando el texto para revisarlo…"
+          }
+        }
+      }
+    },
+    "Recording stops after 45 seconds. Raw audio is not saved. Unsupported speech languages keep the typed path available.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recording stops after 45 seconds. Raw audio is not saved. Unsupported speech languages keep the typed path available."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La grabación se detiene a los 45 segundos. No se guarda el audio. Si el idioma de voz no es compatible, puedes escribir."
+          }
+        }
+      }
+    },
+    "I checked the wording, amounts, units and exclusions.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I checked the wording, amounts, units and exclusions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé el texto, las cantidades, las unidades y las exclusiones."
+          }
+        }
+      }
+    },
+    "Continue to list review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue to list review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuar a la revisión de la lista"
+          }
+        }
+      }
+    },
+    "The next screen reviews parsed quantities and duplicates. Captured text does not verify a price, a safe ingredient, a paid receipt or what arrived.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The next screen reviews parsed quantities and duplicates. Captured text does not verify a price, a safe ingredient, a paid receipt or what arrived."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En la siguiente pantalla revisarás las cantidades interpretadas y los duplicados. El texto capturado no verifica precios, la seguridad de un ingrediente, el pago de un recibo ni lo que llegó."
+          }
+        }
+      }
+    },
+    "Capture a list": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture a list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capturar una lista"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar"
+          }
+        }
+      }
+    },
+    "Selected source photo. Recognized wording is shown below.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected source photo. Recognized wording is shown below."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foto de origen seleccionada. El texto reconocido aparece debajo."
+          }
+        }
+      }
+    },
+    "No words recognized yet": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No words recognized yet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todavía no se reconocieron palabras"
+          }
+        }
+      }
+    },
+    "Some wording was uncertain. Compare it with the source and correct it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some wording was uncertain. Compare it with the source and correct it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parte del texto es incierta. Compáralo con el original y corrígelo."
+          }
+        }
+      }
+    },
+    "Speech is not available in this build. Type or paste your list instead.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speech is not available in this build. Type or paste your list instead."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La voz no está disponible en esta versión. Escribe o pega tu lista."
+          }
+        }
+      }
+    },
+    "Microphone or speech permission was not granted. Your typed draft is unchanged; typing, paste and photo review remain available.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Microphone or speech permission was not granted. Your typed draft is unchanged; typing, paste and photo review remain available."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se concedió permiso para el micrófono o la voz. Tu borrador escrito no cambió; puedes escribir, pegar o revisar una foto."
+          }
+        }
+      }
+    },
+    "On-device recognition is unavailable for this language or device. Type or paste instead; there is no online speech fallback.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On-device recognition is unavailable for this language or device. Type or paste instead; there is no online speech fallback."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El reconocimiento en el dispositivo no está disponible para este idioma o dispositivo. Escribe o pega el texto; no se usa reconocimiento de voz por internet."
+          }
+        }
+      }
+    },
+    "The microphone is unavailable. Stop another recording or type your list.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The microphone is unavailable. Stop another recording or type your list."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El micrófono no está disponible. Detén otra grabación o escribe tu lista."
+          }
+        }
+      }
+    },
+    "Recognition could not finish. Review any captured wording or keep typing. Your saved pickup is unchanged.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recognition could not finish. Review any captured wording or keep typing. Your saved pickup is unchanged."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El reconocimiento no pudo terminar. Revisa el texto capturado o sigue escribiendo. Tu compra guardada no cambió."
+          }
+        }
+      }
+    },
+    "This photo could not be read. Choose another image or type the text.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This photo could not be read. Choose another image or type the text."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo leer esta foto. Elige otra imagen o escribe el texto."
+          }
+        }
+      }
+    },
+    "Use at most 200 lines and 20,000 characters, or choose a photo under 12 MB and 30 megapixels.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use at most 200 lines and 20,000 characters, or choose a photo under 12 MB and 30 megapixels."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usa como máximo 200 líneas y 20 000 caracteres, o elige una foto de menos de 12 MB y 30 megapíxeles."
+          }
+        }
+      }
+    },
+    "No readable text was found. Choose a clearer photo or type the text.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No readable text was found. Choose a clearer photo or type the text."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se encontró texto legible. Elige una foto más clara o escribe el texto."
+          }
+        }
+      }
+    },
+    "Current dated cook instruction": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current dated cook instruction"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instrucción de cocina actual con fecha"
+          }
+        }
+      }
+    },
+    "VoiceOver can read this instruction. Separate playback is stopped.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VoiceOver can read this instruction. Separate playback is stopped."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VoiceOver puede leer esta instrucción. La reproducción independiente está detenida."
+          }
+        }
+      }
+    },
+    "Pause readback": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause readback"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausar la lectura"
+          }
+        }
+      }
+    },
+    "Resume readback": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resume readback"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reanudar la lectura"
+          }
+        }
+      }
+    },
+    "Read from beginning": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read from beginning"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leer desde el principio"
+          }
+        }
+      }
+    },
+    "Stop readback": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop readback"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detener la lectura"
+          }
+        }
+      }
+    },
+    "A local voice is unavailable. The complete instruction remains readable.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A local voice is unavailable. The complete instruction remains readable."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay una voz local disponible. Puedes seguir leyendo la instrucción completa."
+          }
+        }
+      }
+    },
+    "Prepare the current instruction without private budget details before playback.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prepare the current instruction without private budget details before playback."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prepara la instrucción actual sin detalles privados del presupuesto antes de reproducirla."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

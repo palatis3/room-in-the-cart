@@ -357,27 +357,39 @@ export class HouseholdRepository {
     // Reporter receipt contains only their evidence disposition, never the current shopper's revision or budget.
     return{operationId,kind:c.kind,reportId,disposition:current?'placed':'pending_reconciliation'};
   }
-  async startWebSession(householdId:string,identity:VerifiedIdentity,viewGrantId?:string) {
+  async startWebSession(householdId:string,identity:VerifiedIdentity,viewGrantId?:string,browserBound=false) {
     const device=await this.enroll(householdId,identity);
     return this.authorized(householdId,{identity,deviceToken:device.deviceToken,...(viewGrantId?{viewGrantId}:{})},async ctx=>{
       const bootstrap=await this.bootstrap(ctx);
       const token=randomBytes(32).toString('base64url'),csrf=randomBytes(32).toString('base64url');
       const expiresAt=new Date(Math.min(identity.expiresAt.getTime(),ctx.now.getTime()+15*60_000));
-      await ctx.db.query('INSERT INTO ritc.web_session(household_id,token_hash,member_id,device_id,csrf,expires_at,grant_id) VALUES($1,$2,$3,$4,$5,$6,$7)',[householdId,tokenHash(token),ctx.member.member_id,ctx.deviceId,csrf,expiresAt,viewGrantId??null]);
+      await ctx.db.query('INSERT INTO ritc.web_session(household_id,token_hash,member_id,device_id,csrf,expires_at,grant_id,browser_bound) VALUES($1,$2,$3,$4,$5,$6,$7,$8)',[householdId,tokenHash(token),ctx.member.member_id,ctx.deviceId,csrf,expiresAt,viewGrantId??null,browserBound]);
       return{cookie:householdId+'.'+token,csrf,expiresAt,session:{authenticated:true,...bootstrap,replayWindow:await this.window(ctx),csrf}};
     });
   }
-  async webIdentity(cookie:string) {
+  async webIdentity(cookie:string,freshIdentity?:VerifiedIdentity) {
     const [householdId,token]=cookie.split('.');
     if(!householdId||!token||!/^[0-9a-f-]{36}$/.test(householdId)||!/^[A-Za-z0-9_-]{43}$/.test(token))throw accessEnded();
     return this.transaction(householdId,async(db,now)=>{
-      const s=(await db.query(`SELECT s.csrf,s.expires_at,s.device_id,s.grant_id,m.issuer,m.subject,d.session_id FROM ritc.web_session s
+      const s=(await db.query(`SELECT s.csrf,s.expires_at,s.device_id,s.grant_id,s.browser_bound,m.issuer,m.subject,d.session_id FROM ritc.web_session s
         JOIN ritc.member m USING(household_id,member_id) JOIN ritc.device d USING(household_id,member_id,device_id)
-        WHERE s.household_id=$1 AND s.token_hash=$2 AND s.revoked_at IS NULL AND s.expires_at>$3 AND d.revoked_at IS NULL AND m.state='active'`,[householdId,tokenHash(token),now])).rows[0];
+        WHERE s.household_id=$1 AND s.token_hash=$2 AND s.revoked_at IS NULL AND (s.expires_at>$3 OR $4::boolean) AND d.revoked_at IS NULL AND m.state='active'`,[householdId,tokenHash(token),now,Boolean(freshIdentity)])).rows[0];
       if(!s)throw accessEnded();
-      const identity:VerifiedIdentity={issuer:s.issuer,subject:s.subject,sessionId:s.session_id,expiresAt:s.expires_at};
+      if(s.browser_bound&&!freshIdentity)throw new ServiceError(401,'session_needed','Sign in again to continue.');
+      if(freshIdentity&&(freshIdentity.issuer!==s.issuer||freshIdentity.subject!==s.subject||freshIdentity.sessionId!==s.session_id))throw accessEnded();
+      const identity:VerifiedIdentity=freshIdentity??{issuer:s.issuer,subject:s.subject,sessionId:s.session_id,expiresAt:s.expires_at};
       await this.assertSession(db,identity,now);
+      if(freshIdentity)await db.query('UPDATE ritc.web_session SET expires_at=$3 WHERE household_id=$1 AND token_hash=$2',[householdId,tokenHash(token),new Date(Math.min(freshIdentity.expiresAt.getTime(),now.getTime()+15*60_000))]);
       return{householdId,csrf:s.csrf as string,auth:{identity,trustedDeviceId:s.device_id as string,...(s.grant_id?{viewGrantId:s.grant_id as string}:{})}};
+    });
+  }
+  async revokeWebCookie(cookie:string){
+    const [householdId,token]=cookie.split('.');
+    if(!householdId||!token||!/^[0-9a-f-]{36}$/.test(householdId)||!/^[A-Za-z0-9_-]{43}$/.test(token))return;
+    return this.transaction(householdId,async(db,now)=>{
+      const session=(await db.query('SELECT device_id FROM ritc.web_session WHERE household_id=$1 AND token_hash=$2',[householdId,tokenHash(token)])).rows[0];
+      if(!session)return;
+      for(const table of ['web_session','replay_window','device'])await db.query(`UPDATE ritc.${table} SET revoked_at=COALESCE(revoked_at,$3) WHERE household_id=$1 AND device_id=$2`,[householdId,session.device_id,now]);
     });
   }
   async logout(ctx:Context) {

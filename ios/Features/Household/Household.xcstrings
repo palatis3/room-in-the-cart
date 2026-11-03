@@ -17,6 +17,38 @@
         }
       }
     },
+    "Access expired": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Access expired"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acceso vencido"
+          }
+        }
+      }
+    },
+    "Access expires": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Access expires"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El acceso vence"
+          }
+        }
+      }
+    },
     "Access has ended. Local retry cleanup could not be confirmed.": {
       "localizations": {
         "en": {
@@ -65,6 +97,86 @@
         }
       }
     },
+    "Access revoked": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Access revoked"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acceso revocado"
+          }
+        }
+      }
+    },
+    "Access was revoked. Previously exported copies cannot be recalled.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Access was revoked. Previously exported copies cannot be recalled."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se revocó el acceso. No es posible recuperar las copias ya exportadas."
+          }
+        }
+      }
+    },
+    "Active access": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active access"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acceso activo"
+          }
+        }
+      }
+    },
+    "Add an instruction": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add an instruction"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agregar una instrucción"
+          }
+        }
+      }
+    },
+    "Add at least one complete instruction before sharing.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add at least one complete instruction before sharing."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agrega al menos una instrucción completa antes de compartir."
+          }
+        }
+      }
+    },
     "Add packs to this shop": {
       "localizations": {
         "en": {
@@ -97,6 +209,38 @@
         }
       }
     },
+    "Adult contributor": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adult contributor"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Colaborador adulto"
+          }
+        }
+      }
+    },
+    "Adult household setup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adult household setup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configuración del hogar para adultos"
+          }
+        }
+      }
+    },
     "Adult sign-in": {
       "localizations": {
         "en": {
@@ -125,6 +269,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Después de esta decisión"
+          }
+        }
+      }
+    },
+    "Amount, optional": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amount, optional"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad, opcional"
+          }
+        }
+      }
+    },
+    "An adult contributor can send requests. This invitation does not assign a paid seat or shopper authority.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An adult contributor can send requests. This invitation does not assign a paid seat or shopper authority."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un colaborador adulto puede enviar solicitudes. Esta invitación no asigna una plaza de pago ni autorización para realizar la compra."
           }
         }
       }
@@ -369,6 +545,22 @@
         }
       }
     },
+    "Child enrollment is unavailable until verified guardian consent is connected.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Child enrollment is unavailable until verified guardian consent is connected."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La inscripción de menores no está disponible hasta que se habilite el consentimiento verificado del tutor."
+          }
+        }
+      }
+    },
     "Choose a line": {
       "localizations": {
         "en": {
@@ -449,6 +641,86 @@
         }
       }
     },
+    "Clear after checking households": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear after checking households"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar después de revisar los hogares"
+          }
+        }
+      }
+    },
+    "Clear this local retry?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear this local retry?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Eliminar este reintento local?"
+          }
+        }
+      }
+    },
+    "Clear this suggestion retry?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear this suggestion retry?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Eliminar el reintento de esta sugerencia?"
+          }
+        }
+      }
+    },
+    "Clearing a local retry does not remove a suggestion already received by the shopper.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clearing a local retry does not remove a suggestion already received by the shopper."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar un reintento local no elimina una sugerencia que ya recibió la persona que hace la compra."
+          }
+        }
+      }
+    },
+    "Clearing a retry does not undo a household or membership already created by the service.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clearing a retry does not undo a household or membership already created by the service."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar un reintento no deshace un hogar ni una afiliación que el servicio ya haya creado."
+          }
+        }
+      }
+    },
     "Confirm moving this next-shop request into the current shop.": {
       "localizations": {
         "en": {
@@ -465,6 +737,38 @@
         }
       }
     },
+    "Confirmed membership": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed membership"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afiliación confirmada"
+          }
+        }
+      }
+    },
+    "Connect confirmed household": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect confirmed household"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectar el hogar confirmado"
+          }
+        }
+      }
+    },
     "Connected household": {
       "localizations": {
         "en": {
@@ -477,6 +781,70 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hogar conectado"
+          }
+        }
+      }
+    },
+    "Consent recorded": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consent recorded"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consentimiento registrado"
+          }
+        }
+      }
+    },
+    "Consent was withdrawn. The child's current online access has ended.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consent was withdrawn. The child's current online access has ended."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se retiró el consentimiento. El acceso actual del menor en línea ha terminado."
+          }
+        }
+      }
+    },
+    "Consent withdrawn": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consent withdrawn"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consentimiento retirado"
+          }
+        }
+      }
+    },
+    "Cook instructions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cook instructions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instrucciones para cocinar"
           }
         }
       }
@@ -525,6 +893,134 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cuenta para el mínimo de compra que determina la tarifa de la tienda"
+          }
+        }
+      }
+    },
+    "Create a household": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create a household"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crear un hogar"
+          }
+        }
+      }
+    },
+    "Create adult invitation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create adult invitation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crear invitación para un adulto"
+          }
+        }
+      }
+    },
+    "Create household": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create household"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crear hogar"
+          }
+        }
+      }
+    },
+    "Create scoped invitation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create scoped invitation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crear invitación con acceso limitado"
+          }
+        }
+      }
+    },
+    "Create shared cook instructions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create shared cook instructions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crear instrucciones compartidas para cocinar"
+          }
+        }
+      }
+    },
+    "Creation was not confirmed. Another invitation may remain active until it expires. Review managed access before creating a new one.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Creation was not confirmed. Another invitation may remain active until it expires. Review managed access before creating a new one."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se confirmó la creación. Otra invitación podría seguir activa hasta que venza. Revisa los accesos administrados antes de crear una nueva."
+          }
+        }
+      }
+    },
+    "Current household permission is required to manage shared views.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current household permission is required to manage shared views."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se necesita autorización vigente del hogar para administrar las vistas compartidas."
+          }
+        }
+      }
+    },
+    "Current information has changed. Refresh and review before starting a new action.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current information has changed. Refresh and review before starting a new action."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La información actual ha cambiado. Actualiza y revisa antes de iniciar una nueva acción."
           }
         }
       }
@@ -753,6 +1249,70 @@
         }
       }
     },
+    "Email sign-in is not ready yet. Your private shopping tools work without an account.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Email sign-in is not ready yet. Your private shopping tools work without an account."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El acceso por correo electrónico aún no está disponible. Tus herramientas privadas de compras funcionan sin una cuenta."
+          }
+        }
+      }
+    },
+    "End this recipient's live access?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End this recipient's live access?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Terminar el acceso en línea de esta persona?"
+          }
+        }
+      }
+    },
+    "English": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "English"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inglés"
+          }
+        }
+      }
+    },
+    "Enter a household name and your alias, each up to 80 characters, and confirm the adult declaration.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a household name and your alias, each up to 80 characters, and confirm the adult declaration."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresa un nombre para el hogar y tu alias, de hasta 80 caracteres cada uno, y confirma la declaración de adulto."
+          }
+        }
+      }
+    },
     "Enter a price with up to two decimal places, or leave it blank if unknown.": {
       "localizations": {
         "en": {
@@ -781,6 +1341,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ingresa una pregunta de hasta 300 caracteres."
+          }
+        }
+      }
+    },
+    "Enter a suggestion up to 1,000 characters.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a suggestion up to 1,000 characters."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresa una sugerencia de hasta 1,000 caracteres."
           }
         }
       }
@@ -849,6 +1425,22 @@
         }
       }
     },
+    "Expires after hours": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expires after hours"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vence después de estas horas"
+          }
+        }
+      }
+    },
     "Family requests": {
       "localizations": {
         "en": {
@@ -909,6 +1501,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mínimo para determinar la tarifa"
+          }
+        }
+      }
+    },
+    "Guardian controls": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardian controls"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Controles del tutor"
+          }
+        }
+      }
+    },
+    "Guardian controls require your verified household access.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardian controls require your verified household access."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los controles del tutor requieren tu acceso verificado al hogar."
           }
         }
       }
@@ -977,6 +1601,38 @@
         }
       }
     },
+    "Household access is connected. Your existing private work was not uploaded.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household access is connected. Your existing private work was not uploaded."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se conectó el acceso al hogar. Tu trabajo privado existente no se cargó al servicio."
+          }
+        }
+      }
+    },
+    "Household name": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household name"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre del hogar"
+          }
+        }
+      }
+    },
     "Household service is not configured": {
       "localizations": {
         "en": {
@@ -1009,6 +1665,22 @@
         }
       }
     },
+    "I checked my households; clear retry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I checked my households; clear retry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya revisé mis hogares; eliminar el reintento"
+          }
+        }
+      }
+    },
     "I checked received requests; clear this retry": {
       "localizations": {
         "en": {
@@ -1025,6 +1697,38 @@
         }
       }
     },
+    "I confirm I am an adult": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I confirm I am an adult"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmo que soy una persona adulta"
+          }
+        }
+      }
+    },
+    "I reviewed managed access; allow a new invitation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed managed access; allow a new invitation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya revisé los accesos administrados; permitir una nueva invitación"
+          }
+        }
+      }
+    },
     "I reviewed the current requests; clear this retry": {
       "localizations": {
         "en": {
@@ -1037,6 +1741,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ya revisé las solicitudes actuales; eliminar este reintento"
+          }
+        }
+      }
+    },
+    "I reviewed these instructions for this recipient": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed these instructions for this recipient"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé estas instrucciones para esta persona"
           }
         }
       }
@@ -1073,6 +1793,118 @@
         }
       }
     },
+    "Instruction": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instruction"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instrucción"
+          }
+        }
+      }
+    },
+    "Instruction language": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instruction language"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idioma de las instrucciones"
+          }
+        }
+      }
+    },
+    "Instruction revision reviewed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instruction revision reviewed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versión de las instrucciones revisada"
+          }
+        }
+      }
+    },
+    "Invitation code": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invitation code"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Código de invitación"
+          }
+        }
+      }
+    },
+    "Invitation ready": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invitation ready"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invitación lista"
+          }
+        }
+      }
+    },
+    "Invitation redeemed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invitation redeemed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invitación utilizada"
+          }
+        }
+      }
+    },
+    "Invite an adult contributor": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invite an adult contributor"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invitar a un colaborador adulto"
+          }
+        }
+      }
+    },
     "Item": {
       "localizations": {
         "en": {
@@ -1089,6 +1921,22 @@
         }
       }
     },
+    "Join with invitation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join with invitation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unirse con una invitación"
+          }
+        }
+      }
+    },
     "Keep my existing work private on this phone": {
       "localizations": {
         "en": {
@@ -1101,6 +1949,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mantener mi trabajo existente privado en este teléfono"
+          }
+        }
+      }
+    },
+    "Last updated": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last updated"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Última actualización"
           }
         }
       }
@@ -1137,6 +2001,38 @@
         }
       }
     },
+    "Manage shared views": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage shared views"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Administrar vistas compartidas"
+          }
+        }
+      }
+    },
+    "Managed invitations": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Managed invitations"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invitaciones administradas"
+          }
+        }
+      }
+    },
     "Mark handled": {
       "localizations": {
         "en": {
@@ -1149,6 +2045,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Marcar como atendido"
+          }
+        }
+      }
+    },
+    "Membership was confirmed, but its local recovery record could not be saved. Connect again to continue.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Membership was confirmed, but its local recovery record could not be saved. Connect again to continue."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se confirmó la afiliación, pero no se pudo guardar su registro local de recuperación. Conéctate de nuevo para continuar."
+          }
+        }
+      }
+    },
+    "Membership was confirmed. Connect again to finish opening this household.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Membership was confirmed. Connect again to finish opening this household."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se confirmó la afiliación. Conéctate de nuevo para terminar de abrir este hogar."
           }
         }
       }
@@ -1181,6 +2109,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mis solicitudes"
+          }
+        }
+      }
+    },
+    "Name shown for this shop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name shown for this shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre que se muestra para esta compra"
           }
         }
       }
@@ -1233,6 +2177,38 @@
         }
       }
     },
+    "No guardian consents are available in this scope.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No guardian consents are available in this scope."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay consentimientos de tutor disponibles en este ámbito."
+          }
+        }
+      }
+    },
+    "No managed views are available.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No managed views are available."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay vistas administradas disponibles."
+          }
+        }
+      }
+    },
     "No received requests in this view.": {
       "localizations": {
         "en": {
@@ -1265,6 +2241,22 @@
         }
       }
     },
+    "No suggestions have been received.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No suggestions have been received."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se han recibido sugerencias."
+          }
+        }
+      }
+    },
     "Not included": {
       "localizations": {
         "en": {
@@ -1281,6 +2273,38 @@
         }
       }
     },
+    "Notice version": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notice version"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versión del aviso"
+          }
+        }
+      }
+    },
+    "Only consents covered by your verified guardian relationships appear here.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only consents covered by your verified guardian relationships appear here."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aquí solo aparecen los consentimientos cubiertos por tus relaciones verificadas como tutor."
+          }
+        }
+      }
+    },
     "Only the assigned shopper can review these requests.": {
       "localizations": {
         "en": {
@@ -1293,6 +2317,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "Solo la persona asignada a hacer la compra puede revisar estas solicitudes."
+          }
+        }
+      }
+    },
+    "Only the assigned shopper can share instructions for this shop.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the assigned shopper can share instructions for this shop."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo la persona asignada a hacer la compra puede compartir instrucciones para esta compra."
+          }
+        }
+      }
+    },
+    "Only the fields reviewed here will be shared. Existing budgets, receipts and private notes are not included.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the fields reviewed here will be shared. Existing budgets, receipts and private notes are not included."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo se compartirán los campos revisados aquí. No se incluyen presupuestos, recibos ni notas privadas existentes."
+          }
+        }
+      }
+    },
+    "Only the organizer can manage household members and invitations.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the organizer can manage household members and invitations."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo quien organiza el hogar puede administrar sus miembros e invitaciones."
           }
         }
       }
@@ -1377,6 +2449,38 @@
         }
       }
     },
+    "Paste the code shared by the organizer or shopper. The invitation determines your access.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste the code shared by the organizer or shopper. The invitation determines your access."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pega el código que compartió quien organiza el hogar o hace la compra. La invitación determina tu acceso."
+          }
+        }
+      }
+    },
+    "Paste the complete invitation code and confirm the adult declaration. An alias can have up to 80 characters.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste the complete invitation code and confirm the adult declaration. An alias can have up to 80 characters."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pega el código de invitación completo y confirma la declaración de adulto. El alias puede tener hasta 80 caracteres."
+          }
+        }
+      }
+    },
     "Pending decision": {
       "localizations": {
         "en": {
@@ -1393,6 +2497,86 @@
         }
       }
     },
+    "Pending household action": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pending household action"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acción del hogar pendiente"
+          }
+        }
+      }
+    },
+    "Pending review": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pending review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pendiente de revisión"
+          }
+        }
+      }
+    },
+    "Pending suggestion": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pending suggestion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sugerencia pendiente"
+          }
+        }
+      }
+    },
+    "People": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "People"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personas"
+          }
+        }
+      }
+    },
+    "People and invitations": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "People and invitations"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personas e invitaciones"
+          }
+        }
+      }
+    },
     "Preview expires": {
       "localizations": {
         "en": {
@@ -1405,6 +2589,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "La vista previa vence"
+          }
+        }
+      }
+    },
+    "Previously exported copies cannot be recalled.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previously exported copies cannot be recalled."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No es posible recuperar las copias ya exportadas."
           }
         }
       }
@@ -1537,6 +2737,38 @@
         }
       }
     },
+    "Read and suggest corrections": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read and suggest corrections"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leer y sugerir correcciones"
+          }
+        }
+      }
+    },
+    "Read instructions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read instructions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leer instrucciones"
+          }
+        }
+      }
+    },
     "Received": {
       "localizations": {
         "en": {
@@ -1617,6 +2849,70 @@
         }
       }
     },
+    "Recipient": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipient"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destinatario"
+          }
+        }
+      }
+    },
+    "Recipient access": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipient access"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acceso del destinatario"
+          }
+        }
+      }
+    },
+    "Recipient preview": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipient preview"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vista previa para el destinatario"
+          }
+        }
+      }
+    },
+    "Reference": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reference"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referencia"
+          }
+        }
+      }
+    },
     "Refresh current requests": {
       "localizations": {
         "en": {
@@ -1629,6 +2925,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Actualizar solicitudes actuales"
+          }
+        }
+      }
+    },
+    "Refresh guardian controls": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh guardian controls"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar controles del tutor"
           }
         }
       }
@@ -1649,6 +2961,70 @@
         }
       }
     },
+    "Refresh instructions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh instructions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar instrucciones"
+          }
+        }
+      }
+    },
+    "Refresh instructions and clear retry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh instructions and clear retry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar instrucciones y eliminar el reintento"
+          }
+        }
+      }
+    },
+    "Refresh managed views": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh managed views"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar vistas administradas"
+          }
+        }
+      }
+    },
+    "Refresh people": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh people"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar personas"
+          }
+        }
+      }
+    },
     "Refresh requests": {
       "localizations": {
         "en": {
@@ -1665,6 +3041,22 @@
         }
       }
     },
+    "Refresh suggestions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh suggestions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar sugerencias"
+          }
+        }
+      }
+    },
     "Remaining within this cap": {
       "localizations": {
         "en": {
@@ -1677,6 +3069,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "Disponible dentro de este límite"
+          }
+        }
+      }
+    },
+    "Remove household access": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove household access"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar el acceso al hogar"
+          }
+        }
+      }
+    },
+    "Remove instruction": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove instruction"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar instrucción"
+          }
+        }
+      }
+    },
+    "Remove this person's household access?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this person's household access?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Quitar el acceso de esta persona al hogar?"
           }
         }
       }
@@ -1709,6 +3149,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Solicitud"
+          }
+        }
+      }
+    },
+    "Requested by": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Requested by"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicitado por"
           }
         }
       }
@@ -1777,6 +3233,22 @@
         }
       }
     },
+    "Retry the same household action": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry the same household action"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar la misma acción del hogar"
+          }
+        }
+      }
+    },
     "Retry the same request": {
       "localizations": {
         "en": {
@@ -1793,6 +3265,22 @@
         }
       }
     },
+    "Retry the same suggestion": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry the same suggestion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar la misma sugerencia"
+          }
+        }
+      }
+    },
     "Review a current preview and the required acknowledgments before applying.": {
       "localizations": {
         "en": {
@@ -1805,6 +3293,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Revisa una vista previa vigente y las confirmaciones necesarias antes de aplicar."
+          }
+        }
+      }
+    },
+    "Review and clear this suggestion retry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review and clear this suggestion retry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar y eliminar el reintento de esta sugerencia"
           }
         }
       }
@@ -1857,6 +3361,22 @@
         }
       }
     },
+    "Review managed views": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review managed views"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar vistas administradas"
+          }
+        }
+      }
+    },
     "Review needed. Check received requests before creating a new request.": {
       "localizations": {
         "en": {
@@ -1885,6 +3405,118 @@
           "stringUnit": {
             "state": "translated",
             "value": "Revisar solicitud"
+          }
+        }
+      }
+    },
+    "Review shared fields": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review shared fields"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar campos compartidos"
+          }
+        }
+      }
+    },
+    "Review suggestions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review suggestions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar sugerencias"
+          }
+        }
+      }
+    },
+    "Review the shop name and each instruction. Names and actions are required; keep amounts and units short.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the shop name and each instruction. Names and actions are required; keep amounts and units short."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa el nombre de la compra y cada instrucción. Los nombres y las acciones son obligatorios; usa cantidades y unidades breves."
+          }
+        }
+      }
+    },
+    "Revoke invitation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revoke invitation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revocar invitación"
+          }
+        }
+      }
+    },
+    "Revoke scoped access": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revoke scoped access"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revocar acceso limitado"
+          }
+        }
+      }
+    },
+    "Revoke this invitation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revoke this invitation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revocar esta invitación"
+          }
+        }
+      }
+    },
+    "Revoking an invitation stops further redemption. Remove membership or revoke its scoped view to end existing access.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revoking an invitation stops further redemption. Remove membership or revoke its scoped view to end existing access."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revocar una invitación impide que se vuelva a utilizar. Quita la afiliación o revoca su vista limitada para terminar el acceso existente."
           }
         }
       }
@@ -1921,6 +3553,22 @@
         }
       }
     },
+    "Saved household actions could not be read. Nothing was sent.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved household actions could not be read. Nothing was sent."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron leer las acciones guardadas del hogar. No se envió nada."
+          }
+        }
+      }
+    },
     "Scope": {
       "localizations": {
         "en": {
@@ -1933,6 +3581,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Alcance"
+          }
+        }
+      }
+    },
+    "Scoped helper invitation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scoped helper invitation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invitación para ayudante con acceso limitado"
           }
         }
       }
@@ -1981,6 +3645,70 @@
           "stringUnit": {
             "state": "translated",
             "value": "Enviar solicitud"
+          }
+        }
+      }
+    },
+    "Send suggestion for review": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send suggestion for review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar sugerencia para revisión"
+          }
+        }
+      }
+    },
+    "Share instructions for this shop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share instructions for this shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartir instrucciones para esta compra"
+          }
+        }
+      }
+    },
+    "Share invitation code": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share invitation code"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartir código de invitación"
+          }
+        }
+      }
+    },
+    "Shared cook instructions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared cook instructions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instrucciones compartidas para cocinar"
           }
         }
       }
@@ -2097,6 +3825,102 @@
         }
       }
     },
+    "Spanish": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spanish"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Español"
+          }
+        }
+      }
+    },
+    "Suggest a correction": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggest a correction"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sugerir una corrección"
+          }
+        }
+      }
+    },
+    "Suggestion": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggestion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sugerencia"
+          }
+        }
+      }
+    },
+    "Suggestion received for shopper review": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggestion received for shopper review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sugerencia recibida para revisión de quien hace la compra"
+          }
+        }
+      }
+    },
+    "Suggestions are pending review. Review any basket change separately using the current shop.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggestions are pending review. Review any basket change separately using the current shop."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las sugerencias están pendientes de revisión. Revisa por separado cualquier cambio en la canasta usando la compra actual."
+          }
+        }
+      }
+    },
+    "Suggestions wait for shopper review. They do not change the basket or instructions automatically.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggestions wait for shopper review. They do not change the basket or instructions automatically."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las sugerencias esperan la revisión de quien hace la compra. No cambian automáticamente la canasta ni las instrucciones."
+          }
+        }
+      }
+    },
     "Tax": {
       "localizations": {
         "en": {
@@ -2125,6 +3949,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Se desconocen los impuestos."
+          }
+        }
+      }
+    },
+    "The action was not saved on this phone. Nothing was sent.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The action was not saved on this phone. Nothing was sent."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La acción no se guardó en este teléfono. No se envió nada."
           }
         }
       }
@@ -2177,6 +4017,38 @@
         }
       }
     },
+    "The local retry could not be cleared.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The local retry could not be cleared."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo eliminar el reintento local."
+          }
+        }
+      }
+    },
+    "The local retry was cleared. Check your household list before creating another household.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The local retry was cleared. Check your household list before creating another household."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se eliminó el reintento local. Consulta tu lista de hogares antes de crear otro."
+          }
+        }
+      }
+    },
     "The result is not confirmed. Refresh current requests before creating another decision.": {
       "localizations": {
         "en": {
@@ -2189,6 +4061,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "El resultado no está confirmado. Actualiza las solicitudes actuales antes de crear otra decisión."
+          }
+        }
+      }
+    },
+    "The result is not confirmed. Retry the same action or check your household list before clearing it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The result is not confirmed. Retry the same action or check your household list before clearing it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El resultado no está confirmado. Reintenta la misma acción o consulta tu lista de hogares antes de eliminarla."
+          }
+        }
+      }
+    },
+    "The result is not confirmed. Retry the same suggestion before writing another one.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The result is not confirmed. Retry the same suggestion before writing another one."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El resultado no está confirmado. Reintenta la misma sugerencia antes de escribir otra."
           }
         }
       }
@@ -2221,6 +4125,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "La cotización guardada venció. Actualiza sus precios antes de agregar o vincular una solicitud."
+          }
+        }
+      }
+    },
+    "The service could not confirm this action. Keep the existing retry until you review its status.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The service could not confirm this action. Keep the existing retry until you review its status."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servicio no pudo confirmar esta acción. Conserva el reintento existente hasta revisar su estado."
           }
         }
       }
@@ -2273,6 +4193,22 @@
         }
       }
     },
+    "These are the views you may manage. Previously exported copies keep their original date.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These are the views you may manage. Previously exported copies keep their original date."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estas son las vistas que puedes administrar. Las copias ya exportadas conservan su fecha original."
+          }
+        }
+      }
+    },
     "This account has no active household access. Your private work stays on this phone.": {
       "localizations": {
         "en": {
@@ -2289,6 +4225,22 @@
         }
       }
     },
+    "This code is shown after creation. Share it only with the intended adult recipient.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This code is shown after creation. Share it only with the intended adult recipient."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este código se muestra después de crearlo. Compártelo solo con la persona adulta a quien va dirigido."
+          }
+        }
+      }
+    },
     "This follow-up leaves the accepted request unchanged.": {
       "localizations": {
         "en": {
@@ -2301,6 +4253,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Este seguimiento mantiene sin cambios la solicitud aceptada."
+          }
+        }
+      }
+    },
+    "This invitation or record is unavailable, expired, or outside your access.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This invitation or record is unavailable, expired, or outside your access."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta invitación o registro no está disponible, venció o queda fuera de tu acceso."
+          }
+        }
+      }
+    },
+    "This is your declaration. It does not verify age or establish guardian consent.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is your declaration. It does not verify age or establish guardian consent."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta es tu declaración. No verifica la edad ni establece el consentimiento de un tutor."
           }
         }
       }
@@ -2385,6 +4369,22 @@
         }
       }
     },
+    "This scoped view is no longer available. Ask the shopper for a fresh invitation.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This scoped view is no longer available. Ask the shopper for a fresh invitation."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta vista limitada ya no está disponible. Pide una nueva invitación a quien hace la compra."
+          }
+        }
+      }
+    },
     "Time unavailable": {
       "localizations": {
         "en": {
@@ -2413,6 +4413,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Demasiados intentos. Espera antes de volver a intentarlo."
+          }
+        }
+      }
+    },
+    "Transfer this person's active pickups before removing household access.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer this person's active pickups before removing household access."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfiere las compras activas para recoger de esta persona antes de quitarle el acceso al hogar."
+          }
+        }
+      }
+    },
+    "Unit, optional": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unit, optional"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unidad, opcional"
           }
         }
       }
@@ -2465,6 +4497,22 @@
         }
       }
     },
+    "Use an invitation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use an invitation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar una invitación"
+          }
+        }
+      }
+    },
     "Verify code": {
       "localizations": {
         "en": {
@@ -2493,6 +4541,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Espera antes de reintentar la misma decisión."
+          }
+        }
+      }
+    },
+    "Wait before retrying, or review this action after several failed attempts.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wait before retrying, or review this action after several failed attempts."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Espera antes de reintentar o revisa esta acción después de varios intentos fallidos."
           }
         }
       }
@@ -2529,6 +4593,38 @@
         }
       }
     },
+    "Waiting for the recipient": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting for the recipient"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esperando al destinatario"
+          }
+        }
+      }
+    },
+    "What the cook should do": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What the cook should do"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qué debe hacer quien cocina"
+          }
+        }
+      }
+    },
     "Whole checkout": {
       "localizations": {
         "en": {
@@ -2561,6 +4657,22 @@
         }
       }
     },
+    "Withdraw consent": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Withdraw consent"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retirar consentimiento"
+          }
+        }
+      }
+    },
     "Withdraw request": {
       "localizations": {
         "en": {
@@ -2573,6 +4685,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Retirar solicitud"
+          }
+        }
+      }
+    },
+    "Withdraw this child's consent?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Withdraw this child's consent?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Retirar el consentimiento de este menor?"
+          }
+        }
+      }
+    },
+    "Withdrawal ends the child's current online access and cannot be undone by restoring a backup.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Withdrawal ends the child's current online access and cannot be undone by restoring a backup."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retirar el consentimiento termina el acceso actual del menor en línea. Restaurar una copia de seguridad no puede deshacerlo."
           }
         }
       }
@@ -2593,6 +4737,22 @@
         }
       }
     },
+    "Your household alias": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your household alias"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu alias en el hogar"
+          }
+        }
+      }
+    },
     "Your private work stays on this phone. Signing in does not upload it.": {
       "localizations": {
         "en": {
@@ -2605,6 +4765,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tu trabajo privado permanece en este teléfono. Iniciar sesión no lo carga al servicio."
+          }
+        }
+      }
+    },
+    "Your suggestion was received for review. The shared instructions and shopping basket have not changed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your suggestion was received for review. The shared instructions and shopping basket have not changed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se recibió tu sugerencia para revisión. Las instrucciones compartidas y la canasta no han cambiado."
+          }
+        }
+      }
+    },
+    "Your suggestion was received. Local retry cleanup needs another attempt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your suggestion was received. Local retry cleanup needs another attempt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se recibió tu sugerencia. Es necesario intentar de nuevo la eliminación del reintento local."
           }
         }
       }

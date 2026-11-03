@@ -22,6 +22,9 @@ import SwiftUI
                 .tint(Theme.action)
                 .preferredColorScheme(appearance == "dark" ? .dark : appearance == "light" ? .light : nil)
                 .task { membership.bind(to: household); await model.open(); await ledger.open(); await pickup.load() }
+                .onChange(of: household.identity?.subject) { _, subject in
+                    if subject != nil { access.protect() }
+                }
                 .onChange(of: household.projection?.memberId) { _, id in
                     if id != nil { access.protect() }
                 }
@@ -38,7 +41,7 @@ struct RootView: View {
     @EnvironmentObject private var household: HouseholdModel
     @EnvironmentObject private var access: WorkspaceAccess
     var body: some View {
-        if let role = household.projection?.role, ["contributor", "helper", "editor"].contains(role) {
+        if let role = household.projection?.role, !["shopper", "organizer"].contains(role) {
             NavigationStack { HouseholdSettingsView(model: household) }
         } else if !access.unlocked {
             WorkspaceUnlockView(access: access, household: household)
@@ -48,7 +51,7 @@ struct RootView: View {
         TabView {
             NavigationStack { ShopView() }
                 .tabItem { Label(tr("Shop"), systemImage: "cart") }
-            NavigationStack { LedgerMealsView(model: ledger).navigationTitle(tr("Dinners")).settingsButton() }
+            NavigationStack { DinnerPlanningEntry().settingsButton() }
                 .tabItem { Label(tr("Dinners"), systemImage: "fork.knife") }
             NavigationStack { RecordsView() }
                 .tabItem { Label(tr("Records"), systemImage: "clock.arrow.circlepath") }

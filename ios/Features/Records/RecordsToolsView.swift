@@ -38,6 +38,12 @@ struct RecordsToolsView: View {
             }
             recoveredSection
             Section(recordsText("Privacy and support")) {
+                if model.canReviewWholeLedgerDeletion {
+                    Button(recordsText("Delete all shopping lists and saved dinners…"), role: .destructive) {
+                        Task { await model.reviewWholeLedgerDeletion() }
+                    }
+                    Text(recordsText("This separate action reviews the entire local ledger and its history before deletion.")).font(.footnote)
+                }
                 Text(recordsText("No photos, recordings or media are included. No file is uploaded automatically. Shared copies cannot be recalled from someone else's device."))
                     .font(.footnote)
                 ShareLink(item: model.supportText) { Label(recordsText("Share redacted support details"), systemImage: "lifepreserver") }
@@ -108,6 +114,7 @@ struct RecordsToolsView: View {
             Button(recordsText("Prepare readable cook copy")) { Task { await model.prepareExport(.helperText) } }.disabled(model.selectedCount != 1)
             Button(recordsText("Prepare structured helper copy")) { Task { await model.prepareExport(.helperJSON) } }.disabled(model.selectedCount != 1)
             Text(recordsText("Choose one source for each cook or helper copy.")).font(.footnote)
+            Text(recordsText("A shop backup includes its linked dinner evidence and quote history. Reusable dinners, rotations and saved ideas are a separate library selection. Imported planning never restores paid access or permissions.")).font(.footnote)
             Toggle(recordsText("I understand a readable owner export includes private record data."), isOn: $acknowledgedPrivate)
             Button(recordsText("Prepare readable owner export")) { Task { await model.prepareExport(.ownerText) } }.disabled(model.selectedCount == 0 || !acknowledgedPrivate)
             DisclosureGroup(recordsText("Encrypted personal recovery")) {

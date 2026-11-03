@@ -1,5 +1,18 @@
 /** US Spanish draft; human language review remains a release gate. */
 const es: Record<string, string> = {
+  'Sign in to continue':'Inicia sesión para continuar',
+  'Email sign-in is not available yet. Your invitation stays on this page.':'El inicio de sesión por correo aún no está disponible. Tu invitación permanece en esta página.',
+  'Use your email code. Signing in does not join a household.':'Usa el código de tu correo. Iniciar sesión no te une a una familia.',
+  'Your invitation stays on this page while you sign in.':'Tu invitación permanece en esta página mientras inicias sesión.',
+  'Email address':'Correo electrónico', 'Send sign-in code':'Enviar código de acceso',
+  'Check your email for a six-digit code.':'Busca en tu correo un código de seis dígitos.',
+  'Six-digit code':'Código de seis dígitos', 'Verify code':'Verificar código',
+  'Use a different email':'Usar otro correo',
+  'Signed in. Review your invitation before joining.':'Sesión iniciada. Revisa tu invitación antes de unirte.',
+  'That code was not accepted. Check the latest code or request another one.':'No se aceptó ese código. Revisa el código más reciente o solicita otro.',
+  'Wait before requesting or checking another code.':'Espera antes de solicitar o verificar otro código.',
+  'Signed out of this browser. Provider sign-out could not be confirmed.':'Cerraste la sesión en este navegador. No se pudo confirmar el cierre de sesión con el proveedor.',
+
   'Received; local cleanup pending':'Recibida; limpieza local pendiente',
   'Received by the shopper. A local pending copy remains; retry it to confirm and clear it.':'Recibida por quien hace la compra. Queda una copia local pendiente; reintenta para confirmar y eliminarla.',
   'You are signed out, but browser storage could not be cleared. Clear site data before sharing this browser.':'Cerraste la sesión, pero no se pudo borrar el almacenamiento del navegador. Borra los datos del sitio antes de compartir este navegador.',

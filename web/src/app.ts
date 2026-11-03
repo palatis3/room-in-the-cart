@@ -1,4 +1,4 @@
-import { API, ApiError, isContributorSession, type Session, type OwnRequest, type Command, type CookView, type InviteRedemption } from './api.js';
+import { API, ApiError, isContributorSession, type BrowserAuthState,type Session, type OwnRequest, type Command, type CookView, type InviteRedemption } from './api.js';
 import { Outbox, scopeFor, type Pending } from './outbox.js';
 import { languageFor, translate, type Language } from './i18n.js';
 
@@ -7,6 +7,11 @@ const blank = ():Draft => ({item:'',amount:'',route:'current',editing:null,follo
 const statuses:Record<string,string> = {pending:'Received',clarified:'Needs clarification',added:'Added to the pickup',deferred:'Saved for next shop',handled:'Handled',dismissed:'Dismissed',withdrawn:'Withdrawn'};
 export class WebApp {
   private session:Session|null = null;
+  private browserAuth:BrowserAuthState|null=null;
+  private loginEmail='';
+  private loginCode='';
+  private codeRequested=false;
+  private identityLogoutPending:string|null=null;
   private identityScope:string|null = null;
   private logoutPending:Session|null = null;
   private requests:OwnRequest[] = [];
@@ -62,7 +67,7 @@ export class WebApp {
       this.clearPrivate();this.notice='';await this.outbox.clear().catch(()=>{});
     }
     this.session=fresh;
-    if(!fresh){this.requests=[];this.view=null;this.pending=[];this.consent=false;return;}
+    if(!fresh){this.requests=[];this.view=null;this.pending=[];this.consent=false;this.browserAuth=await this.api.authState();return;}
     this.identityScope=scopeFor(fresh);
     if(fresh.role==='helper'||fresh.role==='editor') {
       this.requests=[];this.view=null;this.pending=[];this.draft=blank();this.retryCommand=null;this.uncertainSend=false;this.consent=false;
@@ -87,7 +92,7 @@ export class WebApp {
     if(!old)return;
     this.logoutPending=old;this.clearPrivate();this.invitation=null;this.invitation=null;this.redemption=null;this.adultAttestation=false;this.inviteAlias='';this.render();
     let cleared=true;try{await this.outbox.clear();}catch{cleared=false;}
-    try {await this.api.logout(old);this.logoutPending=null;this.notice=cleared?'You are signed out.':'You are signed out, but browser storage could not be cleared. Clear site data before sharing this browser.';}
+    try {const result=await this.api.logout(old);this.logoutPending=null;this.browserAuth=null;this.notice=result?.providerRevoked===false?'Signed out of this browser. Provider sign-out could not be confirmed.':cleared?'You are signed out.':'You are signed out, but browser storage could not be cleared. Clear site data before sharing this browser.';}
     catch {this.notice='Sign-out could not be confirmed. Retry before sharing this browser.';}
   }
   private async fail(error:unknown):Promise<void> {
@@ -95,7 +100,10 @@ export class WebApp {
     if(e.status===403||e.code==='access_ended') {
       this.clearPrivate();
       await this.outbox.clear().catch(()=>{});this.notice='Access has ended. Ask your household for a new invitation.';
-    } else if(e.status===401) {this.session=null;this.requests=[];this.view=null;this.pending=[];this.notice='Sign in again to continue. Your text stays on this page.';}
+    } else if(e.status===401) {this.session=null;this.requests=[];this.view=null;this.pending=[];this.notice='Sign in again to continue. Your text stays on this page.';this.browserAuth=await this.api.authState().catch(()=>null);this.codeRequested=false;this.loginCode='';}
+    else if(e.code==='login_unavailable')this.notice='Email sign-in is not available yet. Your invitation stays on this page.';
+    else if(e.code==='code_not_accepted')this.notice='That code was not accepted. Check the latest code or request another one.';
+    else if(e.code==='login_rate_limited')this.notice='Wait before requesting or checking another code.';
     else if(e.code==='consent_unavailable')this.notice='Child enrollment is not available here yet. Ask a guardian to use the verified setup.';
     else if(e.status===409) this.notice='This information changed. Refresh, review, and try again.';
     else if(e.status===422) this.notice='Check your entry and try again.';
@@ -113,6 +121,7 @@ export class WebApp {
     const main=this.el('main');this.root.append(main);
     const status=this.el('p',this.busy?this.t('Loading…'):this.t(this.notice));status.className='notice';status.setAttribute('role','status');status.setAttribute('tabindex','-1');main.append(status);
     if(!this.supportedRoute()){main.append(this.el('h1',this.t('This page is not available.')));const link=this.el('a',this.t('Open your requests'));link.href='/requests';main.append(link);return;}
+    if(this.identityLogoutPending){main.append(this.el('h1',this.t('Finish signing out')),this.button('Retry sign-out',()=>void this.run(()=>this.signOutIdentity()),true));return;}
     if(this.logoutPending){main.append(this.el('h1',this.t('Finish signing out')),this.button('Retry sign-out',()=>void this.run(()=>this.signOut()),true));return;}
     if(this.invitation!==null || !this.session) {this.renderInvite(main);return;}
     const context=this.el('section');context.append(this.el('p',this.session.household.label));
@@ -121,7 +130,34 @@ export class WebApp {
       if(this.view)this.renderCook(main);else main.append(this.el('p',this.t('No instructions are available.')));
     } else this.renderContributor(main);
   }
+  private async signOutIdentity():Promise<void>{
+    const csrf=this.identityLogoutPending??this.browserAuth?.csrf;if(!csrf)return;
+    this.identityLogoutPending=csrf;this.clearPrivate();this.browserAuth=null;this.loginEmail='';this.loginCode='';this.codeRequested=false;this.invitation=null;this.redemption=null;
+    await this.outbox.clear().catch(()=>{});
+    const result=await this.api.logoutIdentity(csrf);this.identityLogoutPending=null;
+    this.notice=result.providerRevoked?'You are signed out.':'Signed out of this browser. Provider sign-out could not be confirmed.';
+    this.browserAuth=await this.api.authState();
+  }
+  private renderLogin(main:HTMLElement):void{
+    main.append(this.el('h1',this.t('Sign in to continue')));
+    if(!this.browserAuth?.available){main.append(this.el('p',this.t('Email sign-in is not available yet. Your invitation stays on this page.')),this.button('Refresh',()=>void this.run(()=>this.load())));return;}
+    main.append(this.el('p',this.t('Use your email code. Signing in does not join a household.')));
+    if(this.invitation)main.append(this.el('p',this.t('Your invitation stays on this page while you sign in.')));
+    const form=this.el('form');
+    if(!this.codeRequested){
+      const label=this.el('label',this.t('Email address'));label.htmlFor='login-email';const email=this.el('input');email.id='login-email';email.type='email';email.autocomplete='email';email.required=true;email.maxLength=254;email.value=this.loginEmail;email.addEventListener('input',()=>{this.loginEmail=email.value;});form.append(label,email);
+      const submit=this.button('Send sign-in code',()=>{},true);submit.type='submit';form.append(submit);
+      form.addEventListener('submit',event=>{event.preventDefault();void this.run(async()=>{await this.api.sendEmailCode(this.loginEmail,this.browserAuth!.csrf!);this.codeRequested=true;this.loginCode='';this.notice='Check your email for a six-digit code.';});});
+    }else{
+      const label=this.el('label',this.t('Six-digit code'));label.htmlFor='login-code';const code=this.el('input');code.id='login-code';code.type='text';code.inputMode='numeric';code.autocomplete='one-time-code';code.pattern='[0-9]{6}';code.maxLength=6;code.required=true;code.value=this.loginCode;code.addEventListener('input',()=>{this.loginCode=code.value;});form.append(label,code);
+      const submit=this.button('Verify code',()=>{},true);submit.type='submit';form.append(submit,this.button('Use a different email',()=>{this.codeRequested=false;this.loginCode='';this.render();}));
+      form.addEventListener('submit',event=>{event.preventDefault();void this.run(async()=>{this.browserAuth=await this.api.verifyEmailCode(this.loginCode,this.browserAuth!.csrf!);this.loginCode='';this.loginEmail='';this.codeRequested=false;this.notice='Signed in. Review your invitation before joining.';await this.load();});});
+    }
+    main.append(form);
+  }
   private renderInvite(main:HTMLElement):void {
+    if(!this.session&&!this.browserAuth?.authenticated){this.renderLogin(main);return;}
+
     main.append(this.el('h1',this.t('Continue with your invitation')),this.el('p',this.t('Open an invitation from your household to join.')));
     const form=this.el('form');const label=this.el('label',this.t('Invitation code'));label.htmlFor='invitation';
     const input=this.el('input');input.id='invitation';input.type='password';input.autocomplete='off';input.required=true;input.value=this.invitation??'';
@@ -134,14 +170,15 @@ export class WebApp {
     form.append(this.el('p',this.t('An adult signs in before joining. Child access requires verified guardian setup.')));
     const submit=this.button('Join this household',()=>{},true);submit.type='submit';form.append(submit);
     form.addEventListener('submit',e=>{e.preventDefault();if(!input.value.trim()||!this.adultAttestation)return;void this.run(async()=>{
-      this.redemption??=await this.api.redeem(input.value.trim(),this.session?.csrf,{adultAttestation:this.adultAttestation,...(this.inviteAlias.trim()?{alias:this.inviteAlias.trim()}:{})});
-      await this.api.activateSession(this.redemption.householdId,this.session?.csrf,this.redemption.grantId);
+      this.redemption??=await this.api.redeem(input.value.trim(),this.session?.csrf??this.browserAuth?.csrf??undefined,{adultAttestation:this.adultAttestation,...(this.inviteAlias.trim()?{alias:this.inviteAlias.trim()}:{})});
+      await this.api.activateSession(this.redemption.householdId,this.session?.csrf??this.browserAuth?.csrf??undefined,this.redemption.grantId);
       const accepted=this.redemption;this.session=null;this.requests=[];this.view=null;this.pending=[];this.notice='';await this.load();
       const opened=this.session as Session|null;
       if(!opened||opened.household.id!==accepted.householdId||opened.memberId!==accepted.memberId)throw new ApiError('session_needed',401);
       if(accepted.grantId&&opened.grantId!==accepted.grantId){this.view=null;this.requests=[];throw new ApiError('grant_context_changed',409);}
       this.invitation=null;this.redemption=null;this.adultAttestation=false;this.inviteAlias='';
     });});main.append(form,this.el('p',this.t('An internet connection is needed to open an invitation.')),this.button('Refresh',()=>void this.run(()=>this.load())));
+    if(!this.session&&this.browserAuth?.authenticated)main.append(this.button('Sign out',()=>void this.run(()=>this.signOutIdentity())));
   }
   private field(form:HTMLElement,key:string,id:string,value:string,update:(value:string)=>void,multiline=false):void {
     const label=this.el('label',this.t(key));label.htmlFor=id;const input=multiline?this.el('textarea'):this.el('input');input.id=id;input.value=value;input.maxLength=id==='item'?240:id==='amount'?80:1000;

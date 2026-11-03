@@ -1,0 +1,229 @@
+import SwiftUI
+import CoreDomain
+
+enum DinnerEditorPurpose { case manual, reusable, idea }
+struct DinnerTemplateEditor: View {
+    @ObservedObject var model: DinnerFeatureModel
+    let purpose: DinnerEditorPurpose
+    let originalIdea: DinnerIdeaDraft?
+    @State private var draft: DinnerTemplateDraft
+    @State private var scheduled = false
+    @State private var date = Date()
+    @State private var fallback = false
+    @State private var yieldConfirmed = false
+    @State private var availabilityConfirmed = false
+    @State private var assumptions = ""
+    @State private var reviewed: MealTemplate?
+    @State private var reviewedIdea: DinnerIdeaDraft?
+    @State private var acceptedID = UUID()
+    @State private var showPreview = false
+    @State private var completed = false
+    @Environment(\.dismiss) private var dismiss
+    init(model: DinnerFeatureModel, purpose: DinnerEditorPurpose, initial: MealTemplate? = nil, idea: DinnerIdeaDraft? = nil) {
+        self.model = model; self.purpose = purpose; originalIdea = idea
+        _draft = State(initialValue: DinnerTemplateDraft(idea?.template ?? initial))
+        _yieldConfirmed = State(initialValue: idea?.yieldConfirmed ?? false)
+        _availabilityConfirmed = State(initialValue: idea?.availabilityConfirmed ?? false)
+        _assumptions = State(initialValue: idea?.assumptions.joined(separator: "\n") ?? "")
+    }
+    var body: some View {
+        Form {
+            if completed {
+                Section {
+                    Text(dinnerText("Dinner saved. Choose it separately to add grocery needs."))
+                    Button(dinnerText("Done")) { dismiss() }
+                }
+            } else if let reviewed {
+                Section(dinnerText("Review dinner")) {
+                    Text(reviewed.title).font(.headline)
+                    Text(dinnerFormat("Servings: %@", reviewed.servings.description))
+                    ForEach(reviewed.ingredients) { ingredient in
+                        VStack(alignment: .leading) { Text(ingredient.name); Text(dinnerQuantity(ingredient.quantity)) }
+                            .accessibilityElement(children: .combine)
+                    }
+                    ForEach(reviewed.servingGroups) { group in
+                        Text(dinnerFormat("%@ · %@ servings", group.name, group.servings.description))
+                        if group.isProtected { Text(dinnerText("Protected group")) }
+                    }
+                    if let idea = reviewedIdea {
+                        let review = DinnerIdeaEngine.review(idea)
+                        ForEach(review.issues, id: \.self) { Text(dinnerIssue($0)) }
+                        Text(review.canClaimCoverage ? dinnerText("Yield and availability were marked reviewed. Pack prices still need separate evidence.") : dinnerText("Acceptance does not confirm food coverage, stock or checkout cost."))
+                        Button(dinnerText("Accept idea")) { Task { completed = await model.acceptIdea(idea, acceptedID: acceptedID) } }
+                            .disabled(!review.canAccept || !model.editable).accessibilityIdentifier("dinnerAcceptIdea")
+                        Button(dinnerText("Save editable draft")) { Task { completed = await model.saveIdea(idea) } }.disabled(!model.editable)
+                    } else {
+                        Button(dinnerText("Save accepted dinner")) { Task { completed = await model.accept(reviewed, id: acceptedID, fallback: fallback) } }
+                            .disabled(!model.editable)
+                    }
+                    Button(dinnerText("Continue editing")) { self.reviewed = nil; reviewedIdea = nil }
+                }
+            } else {
+                DinnerTemplateFields(draft: $draft)
+                if purpose == .manual {
+                    Section(dinnerText("Night")) {
+                        Toggle(dinnerText("Assign a date"), isOn: $scheduled)
+                        if scheduled { DatePicker(dinnerText("Dinner date"), selection: $date, displayedComponents: .date) }
+                        Text(model.shop?.basis.timeZoneIdentifier ?? "")
+                        Text(dinnerText("Choosing without a date keeps the same dinner and grocery needs when you schedule it later."))
+                    }
+                }
+                if purpose == .reusable {
+                    Section {
+                        Toggle(dinnerText("Accept as a fallback dinner"), isOn: $fallback)
+                        Text(dinnerText("Saving a reusable dinner does not choose it for this pickup."))
+                    }
+                }
+                if purpose == .idea {
+                    Section(dinnerText("Review assumptions")) {
+                        TextField(dinnerText("Assumptions, one per line"), text: $assumptions, axis: .vertical)
+                        Toggle(dinnerText("Usable yield reviewed"), isOn: $yieldConfirmed)
+                        Toggle(dinnerText("Availability reviewed"), isOn: $availabilityConfirmed)
+                        if let originalIdea, !originalIdea.hardExclusions.isEmpty {
+                            Text(dinnerFormat("Required exclusions: %@", originalIdea.hardExclusions.joined(separator: ", ")))
+                        }
+                        Text(dinnerText("Review every ingredient and quantity. Accepted ideas remain separate from chosen dinners."))
+                    }
+                }
+                Section { Button(dinnerText("Review"), action: review).disabled(!model.editable).accessibilityIdentifier("dinnerReview") }
+            }
+            DinnerFeedback(model: model)
+        }.navigationTitle(purpose == .manual ? dinnerText("Manual dinner") : purpose == .idea ? dinnerText("Dinner idea") : dinnerText("Reusable dinner")).dinnerAccess(model)
+            .navigationDestination(isPresented: $showPreview) { DinnerPreviewView(model: model) }
+    }
+    private func review() {
+        do {
+            let template = try draft.template(validate: purpose != .idea)
+            if purpose == .manual {
+                guard let shop = model.shop else { return }
+                let day = try DinnerEntry.date(date, zone: shop.basis.timeZoneIdentifier, scheduled: scheduled)
+                showPreview = model.prepare([.choose(PlannedDinner(template: template, day: day))])
+            } else if purpose == .idea {
+                var idea = try originalIdea ?? model.newIdea(seed: 0, exclusions: DinnerEntry.list(draft.exclusions), manual: template)
+                idea.template = template; idea.yieldConfirmed = yieldConfirmed; idea.availabilityConfirmed = availabilityConfirmed
+                idea.assumptions = DinnerEntry.list(assumptions); reviewedIdea = idea; reviewed = template
+            } else { reviewed = template }
+        } catch { model.report(error) }
+    }
+}
+struct DinnerTemplateFields: View {
+    @Binding var draft: DinnerTemplateDraft
+    var body: some View {
+        Section(dinnerText("Dinner")) {
+            TextField(dinnerText("Dinner name"), text: $draft.title)
+            TextField(dinnerText("Total servings"), text: $draft.servings)
+            TextField(dinnerText("Notes"), text: $draft.notes, axis: .vertical)
+            TextField(dinnerText("Source URL, optional"), text: $draft.source)
+            TextField(dinnerText("Hard exclusions, one per line"), text: $draft.exclusions, axis: .vertical)
+            TextField(dinnerText("Remaining lead time in minutes, optional"), text: $draft.lead)
+            TextField(dinnerText("Completed steps, one per line"), text: $draft.completed, axis: .vertical)
+        }
+        Section(dinnerText("Ingredients")) {
+            Text(dinnerText("Enter exact amounts or leave them unresolved. Count means individual units, not packs."))
+            ForEach($draft.ingredients) { $ingredient in
+                VStack(alignment: .leading, spacing: 8) {
+                    TextField(dinnerText("Ingredient name"), text: $ingredient.name)
+                    TextField(dinnerText("Amount, optional"), text: $ingredient.amount)
+                    DinnerUnitPicker(unit: $ingredient.unit)
+                    TextField(dinnerText("Ingredient notes"), text: $ingredient.notes, axis: .vertical)
+                    TextField(dinnerText("Ingredient exclusions, one per line"), text: $ingredient.exclusions, axis: .vertical)
+                    Button(dinnerText("Remove ingredient"), role: .destructive) { draft.ingredients.removeAll { $0.id == ingredient.id } }
+                }.padding(.vertical, 6)
+            }
+            Button(dinnerText("Add ingredient")) { draft.ingredients.append(DinnerIngredientDraft()) }.disabled(draft.ingredients.count >= 200)
+        }
+        Section(dinnerText("Serving groups")) {
+            Text(dinnerText("Name each group explicitly. Protected groups keep their reviewed portions when guests change."))
+            ForEach($draft.groups) { $group in
+                VStack(alignment: .leading, spacing: 8) {
+                    TextField(dinnerText("Group name"), text: $group.name)
+                    TextField(dinnerText("Group servings"), text: $group.servings)
+                    Toggle(dinnerText("Protected group"), isOn: $group.isProtected)
+                    Button(dinnerText("Remove group"), role: .destructive) { draft.groups.removeAll { $0.id == group.id } }
+                }.padding(.vertical, 6)
+            }
+            Button(dinnerText("Add serving group")) { draft.groups.append(DinnerGroupDraft()) }.disabled(draft.groups.count >= 100)
+        }
+    }
+}
+struct DinnerUnitPicker: View {
+    @Binding var unit: UnitOfMeasure
+    var body: some View {
+        Picker(dinnerText("Unit"), selection: $unit) { ForEach(UnitOfMeasure.allCases, id: \.self) { Text(dinnerUnit($0)).tag($0) } }
+    }
+}
+struct DinnerLibraryView: View {
+    @ObservedObject var model: DinnerFeatureModel
+    @State private var showPreview = false
+    var body: some View {
+        List {
+            Section {
+                Text(dinnerText("One accepted dinner can be your Free reusable dinner. Changing this selection does not change dinners already chosen."))
+                NavigationLink(dinnerText("Save a familiar dinner")) { DinnerTemplateEditor(model: model, purpose: .reusable) }
+            }
+            Section(dinnerText("Accepted dinners")) {
+                if model.state.acceptedDinners.isEmpty { Text(dinnerText("No accepted dinners yet.")) }
+                ForEach(model.state.acceptedDinners) { dinner in
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(dinner.template.title).font(.headline)
+                        Text(dinnerFormat("Servings: %@", dinner.template.servings.description))
+                        if dinner.acceptedFallback { Text(dinnerText("Accepted fallback")) }
+                        if model.state.freeReusableDinnerID == dinner.id { Text(dinnerText("Your Free reusable dinner")) }
+                        else { Button(dinnerText("Use as Free reusable dinner")) { Task { _ = await model.selectFree(dinner.id) } } }
+                        Button(dinnerText("Choose for this pickup")) { showPreview = model.choose(dinner, day: nil) }
+                            .disabled(!model.paid && model.state.freeReusableDinnerID != dinner.id)
+                        NavigationLink(dinnerText("Review as a new dinner version")) {
+                            DinnerTemplateEditor(model: model, purpose: .reusable, initial: dinner.template)
+                        }
+                    }.padding(.vertical, 6)
+                }
+            }
+            if !model.workspace.mealTemplates.isEmpty {
+                Section(dinnerText("Earlier reusable dinners")) {
+                    Text(dinnerText("Review an earlier template before adding it to the accepted library."))
+                    ForEach(model.workspace.mealTemplates) { template in
+                        NavigationLink(template.title) { DinnerTemplateEditor(model: model, purpose: .reusable, initial: template) }
+                    }
+                }
+            }
+            DinnerFeedback(model: model)
+        }.navigationTitle(dinnerText("Dinner library")).dinnerAccess(model).disabled(!model.editable)
+            .navigationDestination(isPresented: $showPreview) { DinnerPreviewView(model: model) }
+    }
+}
+struct DinnerIdeasView: View {
+    @ObservedObject var model: DinnerFeatureModel
+    @State private var seed = "0"
+    @State private var exclusions = ""
+    @State private var generated: DinnerIdeaDraft?
+    var body: some View {
+        List {
+            Section {
+                Text(dinnerText("Start with a manual idea or a supplied pattern. Review and accept it before choosing it for your pickup."))
+                NavigationLink(dinnerText("Write a dinner idea")) { DinnerTemplateEditor(model: model, purpose: .idea) }
+            }
+            if !model.ideaCatalog.isEmpty {
+                Section(dinnerText("Deterministic idea pattern")) {
+                    TextField(dinnerText("Pattern number"), text: $seed)
+                    TextField(dinnerText("Hard exclusions, one per line"), text: $exclusions, axis: .vertical)
+                    Button(dinnerText("Prepare editable idea")) {
+                        do {
+                            guard let value = UInt64(seed) else { throw DomainError.invalidNumber }
+                            generated = try model.newIdea(seed: value, exclusions: DinnerEntry.list(exclusions))
+                        } catch { model.report(error) }
+                    }
+                    if let generated {
+                        NavigationLink(dinnerText("Review prepared idea")) { DinnerTemplateEditor(model: model, purpose: .idea, idea: generated) }
+                    }
+                }
+            }
+            Section(dinnerText("Saved idea drafts")) {
+                if model.state.ideas.isEmpty { Text(dinnerText("No saved idea drafts.")) }
+                ForEach(model.state.ideas) { idea in
+                    NavigationLink(idea.template.title) { DinnerTemplateEditor(model: model, purpose: .idea, idea: idea) }
+                }
+            }
+            DinnerFeedback(model: model)
+        }.navigationTitle(dinnerText("Dinner ideas")).dinnerAccess(model).disabled(!model.editable)
+    }
+}

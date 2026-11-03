@@ -2,6 +2,26 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>HouseholdServiceURL</key>
+	<string>$(RITC_SERVICE_URL)</string>
+	<key>RITCEmailOTPEnabled</key>
+	<string>$(RITC_EMAIL_OTP_ENABLED)</string>
+	<key>RITCWidgetAppGroup</key>
+	<string>$(RITC_WIDGET_APP_GROUP)</string>
+	<key>RITCShareInboxAppGroup</key>
+	<string>$(RITC_SHARE_INBOX_APP_GROUP)</string>
+	<key>RITCSurfaceURLScheme</key>
+	<string>$(RITC_SURFACE_URL_SCHEME)</string>
+	<key>CFBundleURLTypes</key>
+	<array><dict>
+		<key>CFBundleTypeRole</key><string>Editor</string>
+		<key>CFBundleURLName</key><string>$(PRODUCT_BUNDLE_IDENTIFIER).surface</string>
+		<key>CFBundleURLSchemes</key><array><string>$(RITC_SURFACE_URL_SCHEME)</string></array>
+	</dict></array>
+	<key>SupabaseProjectURL</key>
+	<string>$(RITC_SUPABASE_URL)</string>
+	<key>SupabasePublishableKey</key>
+	<string>$(RITC_SUPABASE_PUBLISHABLE_KEY)</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Use Face ID to unlock your private shopping workspace.</string>
 	<key>UTExportedTypeDeclarations</key>

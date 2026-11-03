@@ -79,6 +79,18 @@ export class HouseholdLifecycle {
     const rows=(await ctx.db.query('SELECT member_id,alias,kind,state,organizer,can_contribute FROM ritc.member WHERE household_id=$1 ORDER BY alias,member_id LIMIT 200',[ctx.householdId])).rows;
     return{members:rows.map(m=>({memberId:m.member_id,alias:m.alias,kind:m.kind,state:m.state,role:m.organizer?'organizer':m.can_contribute?'contributor':'helper'}))};
   }
+  async invites(ctx:Context){
+    this.organizer(ctx);
+    const rows=(await ctx.db.query('SELECT invite_id,kind,grant_id,expires_at,redeemed_at,revoked_at FROM ritc.invite WHERE household_id=$1 ORDER BY expires_at DESC,invite_id LIMIT 200',[ctx.householdId])).rows;
+    return{invites:rows.map(i=>({inviteId:i.invite_id,kind:i.kind,grantId:i.grant_id,expiresAt:i.expires_at.toISOString(),redeemedAt:i.redeemed_at?.toISOString()??null,revokedAt:i.revoked_at?.toISOString()??null,status:i.revoked_at?'revoked':i.expires_at<=ctx.now?'expired':i.redeemed_at?'redeemed':'pending'}))};
+  }
+  async views(ctx:Context){
+    if(ctx.viewGrantId||ctx.member.kind!=='adult')throw unavailable();
+    const rows=(await ctx.db.query(`SELECT g.grant_id,g.shop_id,g.mode,g.revision,g.projection->>'shopLabel' AS shop_label,g.expires_at,g.revoked_at,m.alias AS recipient_alias
+      FROM ritc.view_grant g JOIN ritc.shop s ON s.household_id=g.household_id AND s.shop_id=g.shop_id LEFT JOIN ritc.member m ON m.household_id=g.household_id AND m.member_id=g.recipient_id
+      WHERE g.household_id=$1 AND ($2::boolean OR s.shopper_id=$3) ORDER BY g.expires_at DESC,g.grant_id LIMIT 200`,[ctx.householdId,ctx.member.organizer,ctx.member.member_id])).rows;
+    return{views:rows.map(g=>({grantId:g.grant_id,shopId:g.shop_id,mode:g.mode,revision:g.revision,shopLabel:g.shop_label,expiresAt:g.expires_at.toISOString(),revokedAt:g.revoked_at?.toISOString()??null,recipientAlias:g.recipient_alias,status:g.revoked_at?'revoked':g.expires_at<=ctx.now?'expired':g.recipient_alias?'active':'available'}))};
+  }
   async createView(ctx:Context,input:z.infer<typeof viewCreateSchema>){
     this.repo.requireShopper(ctx,await this.repo.shop(ctx,input.shopId));
     const grantId=randomUUID(),expiresAt=new Date(ctx.now.getTime()+input.expiresInHours*3_600_000);

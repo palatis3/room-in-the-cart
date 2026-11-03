@@ -378,3 +378,31 @@ test('live provider session lock serializes logout with the authorized transacti
     assert.equal((await f.http('Mia','GET','/bootstrap')).status,401);
   }finally{await provider.query('ROLLBACK');provider.release();}
 });
+
+test('native selected-grant header enforces the exact recipient and removes broader shopper authority',async()=>{
+  const f=await fixture();
+  const view=await f.http('Mia','POST','/views',{shopId:f.shopId,mode:'edit',shopLabel:'Selected native view',language:'en',items:[{label:'Wraps',amount:'six',unit:'wraps',action:'Save two'}]});
+  assert.equal(view.status,200);
+  assert.equal((await f.http('Mia','POST','/v1/invites/redeem',{token:view.data.token,intent:'join',adultAttestation:true})).status,200);
+  const selected={'X-View-Grant-ID':view.data.grantId};
+  const boot=await f.http('Mia','GET','/bootstrap',undefined,selected);assert.equal(boot.status,200);assert.equal(boot.data.role,'editor');assert.equal(boot.data.grantId,view.data.grantId);assert.deepEqual(boot.data.capabilities,['helper_view','helper_propose']);
+  assert.equal((await f.http('Mia','GET','/shops/'+f.shopId+'/inbox',undefined,selected)).status,404);
+  assert.equal((await f.http('Mia','GET','/members',undefined,selected)).status,404);
+  assert.equal((await f.http('Mia','GET','/entitlements',undefined,selected)).status,404);
+  assert.equal((await f.http('Mia','GET','/requests/mine',undefined,selected)).status,404);
+  assert.equal((await f.http('Alex','GET','/bootstrap',undefined,selected)).status,403);
+  assert.equal((await f.http('Mia','GET','/bootstrap',undefined,{'X-View-Grant-ID':'not-a-uuid'})).status,422);
+});
+test('managed invitation and view lists reconcile creation without disclosing tokens or unrelated shops',async()=>{
+  const {f,actor,grantId,created}=await helperFixture();
+  const invitation=await f.http('Mia','POST','/invites',{kind:'adult_contributor'});
+  const invites=await f.http('Mia','GET','/invites');assert.equal(invites.status,200);assert.equal(invites.data.invites.find(i=>i.inviteId===invitation.data.inviteId).status,'pending');
+  assert.equal(invites.data.invites.find(i=>i.inviteId===created.data.inviteId).status,'redeemed');
+  assert.equal(JSON.stringify(invites.data).includes(invitation.data.token),false);assert.equal(JSON.stringify(invites.data).includes('token_hash'),false);
+  assert.equal((await f.http('Alex','GET','/invites')).status,404);
+  const views=await f.http('Mia','GET','/views');assert.equal(views.status,200);assert.equal(views.data.views[0].grantId,grantId);assert.equal(views.data.views[0].recipientAlias,'Cook');
+  assert.equal(JSON.stringify(views.data).includes(created.data.token),false);assert.deepEqual((await f.http('Alex','GET','/views')).data.views,[]);
+  assert.equal((await f.http(actor,'GET','/views',undefined,{'X-View-Grant-ID':grantId})).status,404);
+  await f.http('Mia','POST','/revocations',{kind:'view',targetId:grantId});
+  assert.equal((await f.http('Mia','GET','/views')).data.views[0].status,'revoked');
+});

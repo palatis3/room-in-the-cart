@@ -18,6 +18,7 @@ npm --prefix service test
 xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart \
   -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
   -derivedDataPath .build/DerivedData CODE_SIGNING_ALLOWED=NO build
+python3 scripts/check_built_app.py .build/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app --configuration Debug
 if [ "${RUN_UI_TESTS:-0}" = "1" ]; then
   : "${IOS_SIMULATOR_DESTINATION:?Set IOS_SIMULATOR_DESTINATION, e.g. platform=iOS Simulator,id=<device UUID>}"
   result_bundle="${TEST_RESULT_BUNDLE:-.build/UITests-$(date +%Y%m%d-%H%M%S).xcresult}"
