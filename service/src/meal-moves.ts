@@ -14,7 +14,7 @@ const stale = () => new ServiceError(409,'stale_base','Read the current shared p
 export class MealMoves {
   constructor(private readonly repo: HouseholdRepository, private readonly billing?: BillingService) {}
 
-  private async context(ctx: Context, id: string) {
+  async context(ctx: Context, id: string, allowLocked = false) {
     if(ctx.viewGrantId || ctx.member.kind !== 'adult') throw unavailable();
     const shop = await this.repo.shop(ctx,id);
     const row = (await ctx.db.query('SELECT planner_id,revision,authority_epoch FROM ritc.meal_planner WHERE household_id=$1 AND shop_id=$2',
@@ -22,7 +22,7 @@ export class MealMoves {
     const shopper = shop.shopper_id === ctx.member.member_id;
     const plannerId = row?.authority_epoch === shop.authority_epoch ? row.planner_id as string|null : null;
     if(!shopper) {
-      if(plannerId !== ctx.member.member_id || shop.phase !== 'draft') throw unavailable();
+      if(plannerId !== ctx.member.member_id || (!allowLocked && shop.phase !== 'draft') || shop.phase === 'closed') throw unavailable();
       if(!this.billing) throw unavailable();
       await this.billing.requirePaidSeat(ctx);
     }

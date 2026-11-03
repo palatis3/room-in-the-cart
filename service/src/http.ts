@@ -9,6 +9,8 @@ import {BrowserAuthService,emailStartSchema,emailVerifySchema,type BrowserIdenti
 import {DecisionHistory} from './decision-history.js';
 import {PriceBudgetHistory} from './history.js';
 import {observationWriteSchema,financialAppendSchema,financialReviewSchema,historyRetireSchema,periodWriteSchema,budgetQuerySchema} from './history-contracts.js';
+import {SharedMealChanges,sharedMealChangeSchema,sharedMealDismissSchema} from './shared-meal-changes.js';
+import {SharedMealIdeas,sharedIdeaWriteSchema} from './shared-meal-ideas.js';
 import {MealMoves,grantChange,moveRequest,dismissMove} from './meal-moves.js';
 import {HelperReview} from './helper-review.js';
 import {PlacementReports} from './placement-reports.js';
@@ -31,6 +33,8 @@ export function createHTTPServer(options:HTTPOptions) {
   const lifecycle=new HouseholdLifecycle(repository),helperReview=new HelperReview(lifecycle),history=new PriceBudgetHistory(repository,options.billing);
   const decisions = new DecisionHistory(options.billing);
   const mealMoves = new MealMoves(repository,options.billing);
+  const mealIdeas = new SharedMealIdeas(repository,mealMoves);
+  const mealChanges = new SharedMealChanges(repository,mealMoves);
   const placementReports = new PlacementReports(repository);
   const limits=new Map<string,{count:number;until:number}>();
   return createServer(async(req,res)=>{
@@ -232,6 +236,11 @@ export function createHTTPServer(options:HTTPOptions) {
           const placementDetail=/^\/placement-reports\/([^/]+)$/.exec(tail??'');
           if(placementDetail&&method==='GET')return placementReports.detail(ctx,shopId,uuid.parse(placementDetail[1]));
           if(tail==='/shopper-assignment'&&method==='GET')return repository.shopperAssignment(ctx,shopId);
+          if(tail==='/meal-plan/ideas'&&method==='GET')return mealIdeas.read(ctx,shopId);
+          if(tail==='/meal-plan/ideas'&&method==='POST')return mealIdeas.write(ctx,shopId,sharedIdeaWriteSchema.parse(payload));
+          if(tail==='/meal-plan/changes'&&method==='GET')return mealChanges.read(ctx,shopId);
+          if(tail==='/meal-plan/changes'&&method==='POST')return mealChanges.propose(ctx,shopId,sharedMealChangeSchema.parse(payload));
+          if(tail==='/meal-plan/changes/dismissals'&&method==='POST')return mealChanges.dismiss(ctx,shopId,sharedMealDismissSchema.parse(payload));
           if(tail==='/meal-plan'&&method==='GET')return mealMoves.read(ctx,shopId);
           if(tail==='/meal-plan/planner'&&method==='PUT')return mealMoves.grant(ctx,shopId,grantChange.parse(payload));
           if(tail==='/meal-plan/dismissals'&&method==='POST')return mealMoves.dismiss(ctx,shopId,dismissMove.parse(payload));

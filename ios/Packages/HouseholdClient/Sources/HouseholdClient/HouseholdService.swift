@@ -165,6 +165,73 @@ public actor HouseholdService {
         guard plan.shopId == shopID, plan.meals.count <= 100, plan.proposals.count <= 100 else { throw ClientError.invalidResponse }
         return plan
     }
+    public func sharedMealIdeas(shopID: UUID) async throws -> SharedMealIdeaPage {
+        guard selectedGrantID == nil, selectedShopID == nil || selectedShopID == shopID else { throw ClientError.accessEnded }
+        let page: SharedMealIdeaPage = try await perform("shops/\(shopID.uuidString.lowercased())/meal-plan/ideas", method: "GET")
+        try page.validate()
+        guard page.shopId == shopID else { throw ClientError.invalidResponse }
+        return page
+    }
+    public func writeSharedMealIdea(shopID: UUID, request: SharedMealIdeaWrite) async throws -> SharedMealIdeaReceipt {
+        guard selectedGrantID == nil, selectedShopID == nil || selectedShopID == shopID,
+              ["save","approve"].contains(request.action) else { throw ClientError.accessEnded }
+        try request.draft.validate()
+        let start = generation
+        let page = try await sharedMealIdeas(shopID: shopID)
+        guard generation == start, page.authorityEpoch == request.authorityEpoch, page.grantRevision == request.grantRevision else { throw ClientError.accessEnded }
+        let receipt: SharedMealIdeaReceipt = try await perform("shops/\(shopID.uuidString.lowercased())/meal-plan/ideas", method: "POST", body: encoded(request))
+        guard receipt.saved, receipt.ideaId == request.ideaId, receipt.revision == (request.baseRevision ?? 0) + 1,
+              receipt.state == (request.action == "approve" ? "approved" : "draft") else { throw ClientError.invalidResponse }
+        return receipt
+    }
+    public func sharedMealChanges(shopID: UUID) async throws -> SharedMealChangePage {
+        let page: SharedMealChangePage = try await perform("shops/\(shopID.uuidString.lowercased())/meal-plan/changes", method: "GET")
+        try page.validate()
+        guard page.shopId == shopID else { throw ClientError.invalidResponse }
+        return page
+    }
+    public func prepareSharedMealChange(page: SharedMealChangePage, occurrenceID: UUID, meal: SharedMeal, reason: String) async throws -> SharedMealChangeIntent {
+        let start = generation
+        let live = try await sharedMealChanges(shopID: page.shopId)
+        guard start == generation, !live.shopper, live.shopRevision == page.shopRevision, live.authorityEpoch == page.authorityEpoch,
+              live.grantRevision == page.grantRevision, let original = page.meals.first(where: { $0.id == occurrenceID }),
+              live.meals.contains(original), meal.day == original.meal.day, meal != original.meal,
+              let subject, let householdID, let memberID, let enrollment else { throw ClientError.configuration }
+        let request = SharedMealChangeRequest(occurrenceId: occurrenceID, baseMealRevision: original.revision, shopRevision: page.shopRevision,
+            authorityEpoch: page.authorityEpoch, grantRevision: page.grantRevision, meal: meal, reason: reason)
+        return try SharedMealChangeIntent(subject: subject, householdID: householdID, memberID: memberID, deviceID: enrollment.deviceId, shopID: page.shopId, request: request)
+    }
+    public func prepareNewSharedMealChange(shopID: UUID, idea: SharedMealIdeaPage.Idea, day: String) async throws -> SharedMealChangeIntent {
+        let start = generation
+        let ideas = try await sharedMealIdeas(shopID: shopID)
+        guard start == generation, ideas.ideas.contains(idea), idea.state == "approved", idea.preview.canApprove,
+              idea.actorId.uuidString.lowercased() == memberID?.lowercased() else { throw ClientError.configuration }
+        let page = try await sharedMealChanges(shopID: shopID)
+        guard start == generation, page.shopRevision == ideas.shopRevision, page.authorityEpoch == ideas.authorityEpoch,
+              page.grantRevision == ideas.grantRevision, let subject, let householdID, let memberID, let enrollment else { throw ClientError.cancelled }
+        let request = SharedMealChangeRequest(occurrenceId: UUID(), baseMealRevision: nil, shopRevision: page.shopRevision,
+            authorityEpoch: page.authorityEpoch, grantRevision: page.grantRevision, meal: try idea.draft.proposedMeal(day: day),
+            reason: idea.draft.title, approvedIdeaId: idea.id, approvedIdeaRevision: idea.revision)
+        return try SharedMealChangeIntent(subject: subject, householdID: householdID, memberID: memberID, deviceID: enrollment.deviceId, shopID: shopID, request: request)
+    }
+    public func authorizeSharedMealChange(_ intent: SharedMealChangeIntent) async throws {
+        try intent.validate()
+        let start = generation
+        let page = try await sharedMealChanges(shopID: intent.shopID)
+        guard start == generation, !page.shopper || intent.request.baseMealRevision == nil else { throw ClientError.cancelled }
+        try matchesHistory(subject: intent.subject, household: intent.householdID, member: intent.memberID, device: intent.deviceID)
+    }
+    public func executeSharedMealChange(_ intent: SharedMealChangeIntent) async throws {
+        try await authorizeSharedMealChange(intent)
+        let receipt: SharedMealChangeReceipt = try await perform("shops/\(intent.shopID.uuidString.lowercased())/meal-plan/changes", method: "POST", body: intent.bytes)
+        guard receipt.saved, receipt.proposalId == intent.id else { throw ClientError.invalidResponse }
+    }
+    public func dismissSharedMealChange(_ proposal: SharedMealChangePage.Proposal, page: SharedMealChangePage) async throws {
+        let fields: [String: JSONValue] = ["proposalId": .string(proposal.id.uuidString.lowercased()), "shopRevision": .integer(page.shopRevision),
+            "authorityEpoch": .integer(page.authorityEpoch), "grantRevision": .integer(page.grantRevision)]
+        let receipt: SharedMealChangeReceipt = try await perform("shops/\(page.shopId.uuidString.lowercased())/meal-plan/changes/dismissals", method: "POST", body: encoded(fields))
+        guard receipt.saved, receipt.proposalId == proposal.id else { throw ClientError.invalidResponse }
+    }
     public func changeMealPlanner(_ plannerID: UUID?, plan: SharedMealPlan) async throws {
         let fields: [String: JSONValue] = ["plannerId": plannerID.map { .string($0.uuidString.lowercased()) } ?? .null,
             "grantRevision": .integer(plan.grantRevision), "authorityEpoch": .integer(plan.authorityEpoch)]

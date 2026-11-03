@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { sharedMealSchema } from './shared-meal-planning.js';
 import {reviewedPackEvidenceSchema,matchesReviewedPack} from './request-pack-evidence.js';
 export const uuid = z.string().uuid();
 const minor = z.number().int().min(0).max(1_000_000_000);
@@ -30,11 +31,8 @@ export const envelopeSchema = z.object({
   body: z.record(z.string(),z.unknown()),
 }).strict();
 const empty = z.object({}).strict();
-const mealFields = z.object({
-  title: item, day: z.iso.date(), kind: z.enum(['dinner','lunch','side']),
-  portions: z.number().int().min(1).max(1000), protected: z.boolean(),
-}).strict();
-const mealEdit = z.object({ occurrenceId: uuid, baseMealRevision: z.number().int().positive().nullable(), meal: mealFields.nullable(), proposalId: uuid.optional() }).strict();
+const mealEdit = z.object({ occurrenceId: uuid, baseMealRevision: z.number().int().positive().nullable(), meal: sharedMealSchema.nullable(), proposalId: uuid.optional(), changeProposalId: uuid.optional() }).strict()
+  .refine(value => !(value.proposalId && value.changeProposalId), 'Review one proposal at a time');
 export const bodySchemas = {
   'shop.create': z.object({ quote: quoteSchema, lines: z.array(lineSchema).max(200) }).strict(),
   'shop.patch': z.object({ quote: quoteSchema, lines: z.array(lineSchema).max(200), mealEdit: mealEdit.optional() }).strict(),

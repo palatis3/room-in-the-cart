@@ -1,3 +1,5 @@
+import { sharedMealSchema, preserveProtectedMeal } from './shared-meal-planning.js';
+import { consumeSharedMealChange } from './shared-meal-changes.js';
 import { randomBytes, randomUUID } from 'node:crypto';
 import type { OwnRequest, ShopperReceipt, RequestPreview, QuoteBasis, BasketLine } from '../../shared/contracts/service-v1.js';
 import type { VerifiedIdentity,SessionStatusVerifier } from './auth.js';
@@ -8,7 +10,7 @@ import { checkout } from './checkout.js';
 export interface AuthContext { identity:VerifiedIdentity; deviceToken?:string; trustedDeviceId?:string;viewGrantId?:string;selectedShopId?:string;historicalReportShopId?:string }
 export interface Member { member_id:string; kind:'adult'|'child'; organizer:boolean; can_contribute:boolean; alias:string; state:string }
 export interface Context { db:Transaction; householdId:string; member:Member; deviceId:string; now:Date;viewGrantId?:string;selectedShopId?:string }
-interface Shop { household_id:string;shop_id:string;shopper_id:string;authority_epoch:number;revision:number;phase:string;quote:QuoteBasis;frozen_revision:number|null;placed_revision:number|null }
+export interface Shop { household_id:string;shop_id:string;shopper_id:string;authority_epoch:number;revision:number;phase:string;quote:QuoteBasis;frozen_revision:number|null;placed_revision:number|null }
 interface RequestRow { request_id:string;author_id:string;shop_id:string;original_item:string;own_quantity:string|null;revision:number;authored_at:Date;received_at:Date;route:'current'|'next';status:OwnRequest['status'];clarification:string|null;followup_to:string|null }
 const editable=(r:RequestRow)=>r.status==='pending'||r.status==='clarified';
 export function ownRequest(r:RequestRow):OwnRequest {
@@ -121,7 +123,7 @@ export class HouseholdRepository {
     const helperRole=!ctx.selectedShopId&&!isShopper&&!ctx.member.organizer&&helper;
     const planning = !ctx.viewGrantId && !helperRole && !isShopper && shop && ctx.member.kind==='adult' &&
       (await ctx.db.query(`SELECT 1 FROM ritc.meal_planner p JOIN ritc.shop s USING(household_id,shop_id,authority_epoch)
-       WHERE p.household_id=$1 AND p.shop_id=$2 AND p.planner_id=$3 AND s.phase='draft'`,[ctx.householdId,shop.shop_id,ctx.member.member_id])).rowCount;
+       WHERE p.household_id=$1 AND p.shop_id=$2 AND p.planner_id=$3 AND s.phase<>'closed'`,[ctx.householdId,shop.shop_id,ctx.member.member_id])).rowCount;
     return{household:{id:ctx.householdId,label:house.label as string},memberId:ctx.member.member_id,
       canSelectShop:!helperRole&&!ctx.viewGrantId&&ctx.member.kind==='adult'&&(ctx.member.can_contribute||ctx.member.organizer||isShopper),
       selectionRequired:!helperRole&&!ctx.viewGrantId&&!ctx.selectedShopId&&candidates.length>1,role:isShopper?'shopper':ctx.member.organizer?'organizer':helperRole?(helper.mode==='edit'?'editor':'helper'):'contributor',shopId:helperRole?helper.shop_id:shop?.shop_id??null,...(helperRole?{grantId:helper.grant_id}:{}),enrolled:true,queueConsent:false,
@@ -332,8 +334,10 @@ export class HouseholdRepository {
         const current=await this.meals(ctx,shop.shop_id);
         const original=current.find(entry=>entry.occurrenceId===occurrenceId);
         const exists=Boolean(original);
+        preserveProtectedMeal(original ? sharedMealSchema.parse(original.meal) : undefined, meal);
         if((original?.revision ?? null)!==b.mealEdit.baseMealRevision)
           throw new ServiceError(409,'stale_meal','Review this occurrence again before applying a change.');
+        if(b.mealEdit.changeProposalId) await consumeSharedMealChange(ctx,shop,b.mealEdit.changeProposalId,occurrenceId,b.mealEdit.baseMealRevision,meal);
         if(b.mealEdit.proposalId) {
           const proposal=(await ctx.db.query(`SELECT m.proposed_day::text FROM ritc.meal_move m
             JOIN ritc.meal_planner p USING(household_id,shop_id,authority_epoch)

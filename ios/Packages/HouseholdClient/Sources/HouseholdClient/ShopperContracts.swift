@@ -75,8 +75,9 @@ public struct SharedMeal: Codable, Equatable, Sendable {
     public var kind: String
     public var portions: Int
     public var protected: Bool
-    public init(title: String, day: String, kind: String, portions: Int, protected: Bool) {
-        self.title = title; self.day = day; self.kind = kind; self.portions = portions; self.protected = protected
+    public var planning: SharedMealPlanning?
+    public init(title: String, day: String, kind: String, portions: Int, protected: Bool, planning: SharedMealPlanning? = nil) {
+        self.title = title; self.day = day; self.kind = kind; self.portions = portions; self.protected = protected; self.planning = planning
     }
 }
 public struct SharedMealOccurrence: Codable, Equatable, Identifiable, Sendable {
@@ -89,15 +90,17 @@ public struct SharedMealEdit: Equatable, Sendable {
     public let occurrenceID: UUID
     public let meal: SharedMeal?
     public let proposalID: UUID?
+    public let changeProposalID: UUID?
     public var baseMealRevision: Int?
-    public init(occurrenceID: UUID, meal: SharedMeal?, proposalID: UUID? = nil) {
-        self.occurrenceID = occurrenceID; self.meal = meal; self.proposalID = proposalID
+    public init(occurrenceID: UUID, meal: SharedMeal?, proposalID: UUID? = nil, changeProposalID: UUID? = nil) {
+        self.occurrenceID = occurrenceID; self.meal = meal; self.proposalID = proposalID; self.changeProposalID = changeProposalID
     }
     public func commandValue() throws -> JSONValue {
         let value = try meal.map { try JSONDecoder().decode(JSONValue.self, from: encoded($0)) } ?? .null
         var fields: [String: JSONValue] = ["occurrenceId": .string(occurrenceID.uuidString.lowercased()), "meal": value]
         fields["baseMealRevision"] = baseMealRevision.map(JSONValue.integer) ?? .null
         if let proposalID { fields["proposalId"] = .string(proposalID.uuidString.lowercased()) }
+        if let changeProposalID { fields["changeProposalId"] = .string(changeProposalID.uuidString.lowercased()) }
         return .object(fields)
     }
 }

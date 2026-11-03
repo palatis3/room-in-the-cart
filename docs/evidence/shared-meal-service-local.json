@@ -1,0 +1,55 @@
+{
+  "date": "2026-11-03",
+  "scope": "Local PostgreSQL 17 and a separately built service and web app. Migrations 001–017 applied to a fresh disposable database. Staging was unchanged.",
+  "integration": {
+    "tests": 110,
+    "passed": 110,
+    "failed": 0,
+    "skipped": 0,
+    "command": "RITC_TEST_NATIVE_WIRE=1 RITC_TEST_WEB_WIRE=1 node scripts/test-database.mjs",
+    "log": ".build/shared-ideas-verified-wire.log"
+  },
+  "web": {
+    "tests": 66,
+    "passed": 66,
+    "log": ".build/shared-ideas-wire-web-tests.log"
+  },
+  "HouseholdClientStandalone": {
+    "tests": 51,
+    "passed": 49,
+    "skipped": 2,
+    "reason": "Wire-only cases require the configured backend; the integration run provides the native TLS fixture.",
+    "log": ".build/shared-ideas-wire-swift.log"
+  },
+  "covered": [
+    "Separated a household planner proposal from assigned-shopper approval over pinned HTTPS with the compiled HouseholdClient.",
+    "Retried the exact proposal and applied its reviewed change only once; rejected stale roles, unauthorized recipients, and invalidated meal revisions.",
+    "Revised and approved a shared dinner idea before submitting a separate change. Rejected a stale or substituted approved revision, and erased author-owned drafts and receipts on deletion.",
+    "Exercised browser recovery after a lost response and app recreation."
+  ],
+  "knownLimits": [
+    "This service snapshot supports integer shared-idea ingredient quantities in count, grams and milliliters. Exact fractions and additional units need separate verification.",
+    "These checks do not exercise public hosted authentication or production provider operations."
+  ],
+  "sourceSHA256": {
+    "ios/Packages/HouseholdClient/Sources/HouseholdClient/HouseholdService.swift": "5f855441dee01b915c98fbfc434a3c58a1f5806d39c2a2fd2f507e2bda490fff",
+    "ios/Packages/HouseholdClient/Sources/HouseholdClient/SharedMealChangeContracts.swift": "62db6793f00e00bde988550aa7ff8da73ba9284101fbe96d69d7266d103112a6",
+    "ios/Packages/HouseholdClient/Sources/HouseholdClient/SharedMealIdeaContracts.swift": "ccbd8138fbcd0be595d1b6ca071c6c7707fe951592682e51e3cdfb0c96703977",
+    "ios/Packages/HouseholdClient/Sources/HouseholdClient/ShopperContracts.swift": "e205e55899a4e21705454b96d6cd232cdd973e1540d008cf5706564e29ffe4fc",
+    "ios/Packages/HouseholdClient/Tests/HouseholdClientTests/SharedMealNativeWireTests.swift": "ecacc73b4848e93fec2ff1da471250abf4d590b156ec1dd0d81b6a6abb1ec426",
+    "service/migrations/016_shared_meal_changes.sql": "362138035995832cc6b1bbffb6e9c0528ee2576945a908a14db03104355da6b0",
+    "service/migrations/017_shared_meal_ideas.sql": "fe61e6528a38cc9c6c4315587d12ee540ea624422a8e89f8933f05e75addab63",
+    "service/src/contracts.ts": "b803205663e62dedbf088c28db3ef55f2130f4d240895d8ddac837f3abc7d935",
+    "service/src/http.ts": "07b1596d4573144b65f2de8e7ea5407bf60417002eb49d7ed9ec0fa3cb0836c4",
+    "service/src/meal-moves.ts": "33bc4a1a9cf1d4b198489d7f2f65caf38ad6470d579d6fdc71610aa79a8b8a1c",
+    "service/src/repository.ts": "9801234b435873d6380ff37202a0117bb7b6113b1f16eec4d9371bd8ec135898",
+    "service/src/request-pack-evidence.ts": "131138e3a21b60de396cd546723bafdecb1ca9f4b4473a8db5b77f177b90659f",
+    "service/src/shared-meal-changes.ts": "ecaed2565b47fe61d2dc1bbae6b3b4c1b1e118d135851fd4360c666e9e942085",
+    "service/src/shared-meal-ideas.ts": "ff0423f7dab4ce85862959eb60bfe0e5ce5a0b3529224829f66e75e1dddc0253",
+    "service/src/shared-meal-planning.ts": "c1da848a8db729e1287aeaf3bb8675c0ed27af6cc871bd75b3057fcc6ac0e49c",
+    "service/tests/shared-meal-changes.integration.mjs": "5063f888cd957149c4a0aa6f992da44ef10451d715d58a90f36b4bd75cbee661",
+    "service/tests/shared-meal-ideas.integration.mjs": "be9951e09cd02f222e3739f1068cc5649d5ae91d6f9bd799757dec2d6c3d87fc",
+    "service/tests/shared-meal-ideas.test.mjs": "a684419e442ecbd2ee871b1b120829295162bad6bb1f3be27d77c0fa2f8abcf4",
+    "service/tests/shared-meal-native-wire.mjs": "c035663a5c38f17a9ab36fae3c361d4d1215431f8e152f9d56a4e81b9fb2050d"
+  }
+}
