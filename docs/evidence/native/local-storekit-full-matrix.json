@@ -1,0 +1,235 @@
+{
+  "scope": "Local Xcode StoreKitTest. The real app storefront and membership model used the bundled annual fixture and an unavailable entitlement service.",
+  "fixtureSKU": "local.testing.household.annual",
+  "testedSourceSHA256": {
+    "ios/Tests/StoreKitScenarioTests.swift": "e7a0b3802156c0cb699f95e0bb9c34554ed7e4d05f9f5930a46d882d272cb867",
+    "ios/Tests/LocalStoreKit.xctestplan": "77d789396c8521d079002ffcc150e5b434206bd460a21c56778b4109dab5b879",
+    "ios/RoomInTheCart.xcodeproj/xcshareddata/xcschemes/RoomInTheCart-LocalStoreKit.xcscheme": "7bad915f869bf237e85fbd97dd3025a00d814cc3adf7df5a3702ebb7bcc0c2ce",
+    "ios/RoomInTheCart.xcodeproj/project.pbxproj": "93df55400c8154aa2e4b73476c7acf90ac9dd875835fca36ccb6c709b4b2ae4d",
+    "ios/App/MembershipCoordinator.swift": "9381c55f631c43949fda8a48afdc9e4cab1df37d64431df18f57142169bcc9a2",
+    "ios/App/MembershipEntryView.swift": "2660e8304c459896dd70542d740368307be39729bcba7421d294daedf35146b8",
+    "ios/Features/Membership/MembershipStoreKit.swift": "483eed984ae19e274cd4115207bb20cbb4c99d4f5523793d5311b4507381d056",
+    "ios/Features/Membership/HouseholdLocalTesting.storekit": "4803f75689da6bcdfa4fb21b64c1b3fe39931a456c61dc8703be34108b44278b",
+    "ios/Features/Membership/MembershipDomain.swift": "c16d4d9793d0d47c9f541e4a9c2fb6d8dca4efa2b2955206295899e1dadcfe32",
+    "ios/Features/Membership/Membership.xcstrings": "cf86ff79d4e8039f56b2190abdd97f6cf35a4e4ac04f8e2952a8220a63099e48",
+    "ios/Features/Membership/MembershipModel.swift": "073b084c5fb96d08676fec198977185c88d5681d20966f9ec96d4d8dd7aa5330",
+    "ios/Features/Membership/MembershipView.swift": "766d1df8d99422d9e094640585e490048b833926245d20e3c01faa54a1e8224c",
+    "ios/Features/Membership/MembershipHTTPService.swift": "2c2ca2bd3bbbf458393652e45e34fa9044f575de8350703ce6653af25560c8e1"
+  },
+  "buildScope": "Snapshot of shared project sources. Billing files and the shipped annual test fixture were compared directly. Other integration work proceeded concurrently.",
+  "diagnostic": {
+    "fullPlan": ".build/StoreKitAnnualSequence27.xcresult",
+    "focusedReproduction": ".build/StoreKitPendingAudit27.xcresult",
+    "note": "The iOS 27.0 full plan used the same cases with earlier diagnostic text. The focused trace showed the request was deferred, purchase had returned pending, and there was no current entitlement. After decline the SKTestSession request failed. StoreKit 2 returned the exact same request ID as verified, unexpired, unrevoked, for the same local account token. The app remained Free and submitted only to the unavailable test service."
+  },
+  "runs": [
+    {
+      "purpose": "final",
+      "resultBundle": ".build/StoreKitMatrixFinal17.xcresult",
+      "result": "Passed",
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "65B8A2FE-51FE-44A5-A9C7-F2524E33179B",
+        "deviceName": "Room in the Cart iOS 17 Small",
+        "modelName": "iPhone SE",
+        "osBuildNumber": "21A328",
+        "osVersion": "17.0",
+        "platform": "iOS Simulator"
+      },
+      "configurations": [
+        {
+          "name": "US English — local StoreKit",
+          "passed": 15,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "name": "US Spanish app · Spanish (Mexico) offer · USA storefront",
+          "passed": 15,
+          "failed": 0,
+          "skipped": 0
+        }
+      ],
+      "failedMethods": [],
+      "structuralAttachments": [
+        {
+          "test": "StoreKitScenarioTests/testAskToBuyDeclineGrantsNothing()",
+          "configuration": "US English — local StoreKit",
+          "state": "purchaseFinished=true; modelBusy=false; pendingFlags=0; purchased=0; failed=0; deferred=1; currentWhilePending=0; current=0; verified=0; unverified=0; verifiedUnexpiredDeclinedRequest=false; notice=Optional(RoomInTheCart.MembershipModel.Notice.pending)"
+        },
+        {
+          "test": "StoreKitScenarioTests/testAskToBuyDeclineGrantsNothing()",
+          "configuration": "US Spanish app · Spanish (Mexico) offer · USA storefront",
+          "state": "purchaseFinished=true; modelBusy=false; pendingFlags=0; purchased=0; failed=0; deferred=1; currentWhilePending=0; current=0; verified=0; unverified=0; verifiedUnexpiredDeclinedRequest=false; notice=Optional(RoomInTheCart.MembershipModel.Notice.pending)"
+        },
+        {
+          "test": "StoreKitScenarioTests/testRestoredSubscriptionThenCancelledAndDeclinedRepurchasesStayFree()",
+          "configuration": "US English — local StoreKit",
+          "state": "purchaseFinished=true; modelBusy=false; pendingFlags=0; purchased=0; failed=0; deferred=1; currentWhilePending=0; current=0; verified=0; unverified=0; verifiedUnexpiredDeclinedRequest=false; notice=Optional(RoomInTheCart.MembershipModel.Notice.pending)"
+        },
+        {
+          "test": "StoreKitScenarioTests/testRestoredSubscriptionThenCancelledAndDeclinedRepurchasesStayFree()",
+          "configuration": "US Spanish app · Spanish (Mexico) offer · USA storefront",
+          "state": "purchaseFinished=true; modelBusy=false; pendingFlags=0; purchased=0; failed=0; deferred=1; currentWhilePending=0; current=0; verified=0; unverified=0; verifiedUnexpiredDeclinedRequest=false; notice=Optional(RoomInTheCart.MembershipModel.Notice.pending)"
+        },
+        {
+          "test": "StoreKitScenarioTests/testSimulatedPurchaseCancellationGrantsNothing()",
+          "configuration": "US English — local StoreKit",
+          "state": "historyStates=[2]; current=0; unfinished=0"
+        },
+        {
+          "test": "StoreKitScenarioTests/testSimulatedPurchaseCancellationGrantsNothing()",
+          "configuration": "US Spanish app · Spanish (Mexico) offer · USA storefront",
+          "state": "historyStates=[2]; current=0; unfinished=0"
+        }
+      ]
+    },
+    {
+      "purpose": "full-plan diagnosis",
+      "resultBundle": ".build/StoreKitAnnualSequence27.xcresult",
+      "result": "Failed",
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "06D25B16-A1BC-4293-B22B-BD79538A331F",
+        "deviceName": "iPhone Air",
+        "modelName": "iPhone Air",
+        "osBuildNumber": "24A434",
+        "osVersion": "27.0",
+        "platform": "iOS Simulator"
+      },
+      "configurations": [
+        {
+          "name": "US English — local StoreKit",
+          "passed": 13,
+          "failed": 2,
+          "skipped": 0
+        },
+        {
+          "name": "US Spanish app · Spanish (Mexico) offer · USA storefront",
+          "passed": 13,
+          "failed": 2,
+          "skipped": 0
+        }
+      ],
+      "failedMethods": [
+        "StoreKitScenarioTests/testAskToBuyDeclineGrantsNothing()",
+        "StoreKitScenarioTests/testRestoredSubscriptionThenCancelledAndDeclinedRepurchasesStayFree()"
+      ],
+      "structuralAttachments": [
+        {
+          "test": "StoreKitScenarioTests/testAskToBuyDeclineGrantsNothing()",
+          "configuration": "US English — local StoreKit",
+          "state": "purchaseFinished=true; modelBusy=false; pendingFlags=0; purchased=0; failed=1; deferred=0; current=1; verified=1; unverified=0; notice=Optional(RoomInTheCart.MembershipModel.Notice.failed(RoomInTheCart.MembershipFailure.notConfigured))"
+        },
+        {
+          "test": "StoreKitScenarioTests/testAskToBuyDeclineGrantsNothing()",
+          "configuration": "US Spanish app · Spanish (Mexico) offer · USA storefront",
+          "state": "purchaseFinished=true; modelBusy=false; pendingFlags=0; purchased=0; failed=1; deferred=0; current=1; verified=1; unverified=0; notice=Optional(RoomInTheCart.MembershipModel.Notice.failed(RoomInTheCart.MembershipFailure.notConfigured))"
+        },
+        {
+          "test": "StoreKitScenarioTests/testRestoredSubscriptionThenCancelledAndDeclinedRepurchasesStayFree()",
+          "configuration": "US English — local StoreKit",
+          "state": "purchaseFinished=true; modelBusy=false; pendingFlags=0; purchased=0; failed=1; deferred=0; current=1; verified=1; unverified=0; notice=Optional(RoomInTheCart.MembershipModel.Notice.failed(RoomInTheCart.MembershipFailure.notConfigured))"
+        },
+        {
+          "test": "StoreKitScenarioTests/testRestoredSubscriptionThenCancelledAndDeclinedRepurchasesStayFree()",
+          "configuration": "US Spanish app · Spanish (Mexico) offer · USA storefront",
+          "state": "purchaseFinished=true; modelBusy=false; pendingFlags=0; purchased=0; failed=1; deferred=0; current=1; verified=1; unverified=0; notice=Optional(RoomInTheCart.MembershipModel.Notice.failed(RoomInTheCart.MembershipFailure.notConfigured))"
+        },
+        {
+          "test": "StoreKitScenarioTests/testSimulatedPurchaseCancellationGrantsNothing()",
+          "configuration": "US English — local StoreKit",
+          "state": "historyStates=[]; current=0; unfinished=0"
+        },
+        {
+          "test": "StoreKitScenarioTests/testSimulatedPurchaseCancellationGrantsNothing()",
+          "configuration": "US Spanish app · Spanish (Mexico) offer · USA storefront",
+          "state": "historyStates=[]; current=0; unfinished=0"
+        }
+      ]
+    },
+    {
+      "purpose": "final",
+      "resultBundle": ".build/StoreKitMatrixWarm271.xcresult",
+      "result": "Failed",
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "DC337D2A-5A47-45C9-95E2-87ABFA05046E",
+        "deviceName": "RITC StoreKit iOS 27.1",
+        "modelName": "iPhone",
+        "osBuildNumber": "24A94425",
+        "osVersion": "27.1",
+        "platform": "iOS Simulator"
+      },
+      "configurations": [
+        {
+          "name": "US English — local StoreKit",
+          "passed": 12,
+          "failed": 3,
+          "skipped": 0
+        },
+        {
+          "name": "US Spanish app · Spanish (Mexico) offer · USA storefront",
+          "passed": 13,
+          "failed": 2,
+          "skipped": 0
+        }
+      ],
+      "failedMethods": [
+        "StoreKitScenarioTests/testAskToBuyDeclineGrantsNothing()",
+        "StoreKitScenarioTests/testRealTransactionObserverAttemptsDeliveryWithoutUnlock()",
+        "StoreKitScenarioTests/testRestoredSubscriptionThenCancelledAndDeclinedRepurchasesStayFree()"
+      ],
+      "structuralAttachments": [
+        {
+          "test": "StoreKitScenarioTests/testAskToBuyDeclineGrantsNothing()",
+          "configuration": "US English — local StoreKit",
+          "state": "purchaseFinished=true; modelBusy=false; pendingFlags=0; purchased=0; failed=1; deferred=0; currentWhilePending=0; current=1; verified=1; unverified=0; verifiedUnexpiredDeclinedRequest=true; notice=Optional(RoomInTheCart.MembershipModel.Notice.failed(RoomInTheCart.MembershipFailure.notConfigured))"
+        },
+        {
+          "test": "StoreKitScenarioTests/testAskToBuyDeclineGrantsNothing()",
+          "configuration": "US Spanish app · Spanish (Mexico) offer · USA storefront",
+          "state": "purchaseFinished=true; modelBusy=false; pendingFlags=0; purchased=0; failed=1; deferred=0; currentWhilePending=1; current=1; verified=1; unverified=0; verifiedUnexpiredDeclinedRequest=true; notice=Optional(RoomInTheCart.MembershipModel.Notice.failed(RoomInTheCart.MembershipFailure.notConfigured))"
+        },
+        {
+          "test": "StoreKitScenarioTests/testRestoredSubscriptionThenCancelledAndDeclinedRepurchasesStayFree()",
+          "configuration": "US English — local StoreKit",
+          "state": "purchaseFinished=true; modelBusy=false; pendingFlags=0; purchased=0; failed=1; deferred=0; currentWhilePending=0; current=1; verified=1; unverified=0; verifiedUnexpiredDeclinedRequest=true; notice=Optional(RoomInTheCart.MembershipModel.Notice.failed(RoomInTheCart.MembershipFailure.notConfigured))"
+        },
+        {
+          "test": "StoreKitScenarioTests/testRestoredSubscriptionThenCancelledAndDeclinedRepurchasesStayFree()",
+          "configuration": "US Spanish app · Spanish (Mexico) offer · USA storefront",
+          "state": "purchaseFinished=true; modelBusy=false; pendingFlags=0; purchased=0; failed=1; deferred=0; currentWhilePending=1; current=1; verified=1; unverified=0; verifiedUnexpiredDeclinedRequest=true; notice=Optional(RoomInTheCart.MembershipModel.Notice.failed(RoomInTheCart.MembershipFailure.notConfigured))"
+        },
+        {
+          "test": "StoreKitScenarioTests/testSimulatedPurchaseCancellationGrantsNothing()",
+          "configuration": "US English — local StoreKit",
+          "state": "historyStates=[]; current=0; unfinished=0"
+        },
+        {
+          "test": "StoreKitScenarioTests/testSimulatedPurchaseCancellationGrantsNothing()",
+          "configuration": "US Spanish app · Spanish (Mexico) offer · USA storefront",
+          "state": "historyStates=[]; current=0; unfinished=0"
+        }
+      ]
+    }
+  ],
+  "isolatedObserver": {
+    "resultBundle": ".build/StoreKitObserver271.xcresult",
+    "runtime": "iOS 27.1",
+    "configurations": [
+      {
+        "name": "US English — local StoreKit",
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "US Spanish app · Spanish (Mexico) offer · USA storefront",
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0
+      }
+    ]
+  }
+}

@@ -298,3 +298,184 @@ import HouseholdClient
         }
     }
 }
+
+// MARK: Shopper review of helper instructions
+
+protocol HelperReviewServing: Sendable {
+    func managedHelperProjection(grantID: String, shopID: String) async throws -> ManagedHelperProjection
+    func managedHelperProposal(grantID: String, proposalID: String, shopID: String) async throws -> HelperProposal
+    func prepareHelperReview(current: ManagedHelperProjection, proposal: HelperProposal?, decision: HelperReviewDecision, projection: HelperProjection?) async throws -> HelperReviewIntent
+    func reconcileHelperReview(_ intent: HelperReviewIntent) async throws -> HelperReviewReceipt
+}
+extension HouseholdService: HelperReviewServing {}
+protocol HelperReviewPersisting: Sendable {
+    func read() async throws -> LifecyclePendingState
+    func reviewEpoch() async -> UUID
+    func saveReviewAction(_ intent: HelperReviewIntent, expectedEpoch: UUID) async throws
+    func removeReviewAction(id: String) async throws
+}
+extension LifecycleIntentStore: HelperReviewPersisting {}
+
+struct HouseholdHelperReviewScope: Equatable {
+    let generation: UUID
+    let subject: String
+    let householdID: String
+    let memberID: String
+    let shopID: String
+}
+struct HouseholdReviewedHelperAction: Equatable {
+    let current: ManagedHelperProjection
+    let proposal: HelperProposal?
+    let decision: HelperReviewDecision
+    let projection: HelperProjection?
+}
+
+@MainActor final class HouseholdHelperReviewModel: ObservableObject {
+    let grantID: String
+    let proposalID: String?
+    @Published private(set) var current: ManagedHelperProjection?
+    @Published private(set) var proposal: HelperProposal?
+    @Published private(set) var reviewed: HouseholdReviewedHelperAction?
+    @Published private(set) var pending: HelperReviewIntent?
+    @Published private(set) var receipt: HelperReviewReceipt?
+    @Published private(set) var busy = false
+    @Published private(set) var notice: String?
+    @Published var approved = false
+    private let service: any HelperReviewServing
+    private let store: any HelperReviewPersisting
+    private let runtime: () -> HouseholdHelperReviewScope?
+    private let accessEnded: () async -> Void
+    private let clock: () -> Date
+    private var binding: HouseholdHelperReviewScope?
+    private var storeEpoch: UUID?
+    private var generation = UUID()
+
+    init(grantID: String, proposalID: String? = nil, service: any HelperReviewServing,
+         store: any HelperReviewPersisting, runtime: @escaping () -> HouseholdHelperReviewScope?,
+         accessEnded: @escaping () async -> Void, clock: @escaping () -> Date = Date.init) {
+        self.grantID = grantID; self.proposalID = proposalID; self.service = service
+        self.store = store; self.runtime = runtime; self.accessEnded = accessEnded; self.clock = clock
+    }
+    var authorized: Bool {
+        guard let binding, runtime() == binding, let current, current.grantId == grantID,
+              current.shopId == binding.shopID, let expiry = serviceDate(current.expiresAt), expiry > clock() else { return false }
+        return true
+    }
+    var canReview: Bool { authorized && !busy && pending == nil && receipt == nil && (proposalID == nil || proposal?.status == "pending") }
+    var canApply: Bool { canReview && reviewed != nil && approved }
+    func invalidate() {
+        generation = UUID(); binding = nil; current = nil; proposal = nil; reviewed = nil
+        pending = nil; receipt = nil; approved = false; storeEpoch = nil; notice = nil
+    }
+    func enforceRuntime() {
+        if let binding, runtime() != binding { invalidate() }
+        else if current != nil && !authorized { invalidate() }
+    }
+    private func live(_ start: UUID, _ context: HouseholdHelperReviewScope) -> Bool {
+        start == generation && runtime() == context && binding == context
+    }
+    func load() async {
+        guard !busy, let context = runtime() else { return }
+        invalidate(); binding = context; busy = true; defer { busy = false }
+        let start = generation
+        do {
+            let epoch = await store.reviewEpoch()
+            let value = try await service.managedHelperProjection(grantID: grantID, shopID: context.shopID)
+            let detail = try await proposalID.asyncMap { try await service.managedHelperProposal(grantID: grantID, proposalID: $0, shopID: context.shopID) }
+            let saved = try await store.read()
+            guard live(start, context) else { return }
+            current = value; proposal = detail; storeEpoch = epoch
+            guard authorized else { invalidate(); return }
+            pending = saved.reviewActions?.first { $0.subject == context.subject && $0.householdID == context.householdID &&
+                $0.memberID == context.memberID && $0.shopID == context.shopID && $0.grantID == grantID }
+        } catch { if live(start, context) { await fail(error) } }
+    }
+    func review(decision: HelperReviewDecision, projection: HelperProjection?) {
+        guard canReview, let current, (decision == .replace ? projection != nil : projection == nil),
+              decision != .dismiss || proposalID != nil else { return }
+        reviewed = HouseholdReviewedHelperAction(current: current, proposal: proposal, decision: decision, projection: projection)
+        approved = false; notice = nil
+    }
+    func cancelReview() { reviewed = nil; approved = false }
+    func apply() async {
+        guard canApply, let action = reviewed, let context = binding, let epoch = storeEpoch else { return }
+        busy = true; notice = nil; defer { busy = false }; let start = generation
+        do {
+            // Preparation re-reads the current grant and proposal. The final reviewed
+            // snapshot must still match; no draft is silently rebased onto new data.
+            let intent = try await service.prepareHelperReview(current: action.current, proposal: action.proposal,
+                decision: action.decision, projection: action.projection)
+            guard live(start, context), authorized else { return }
+            try await store.saveReviewAction(intent, expectedEpoch: epoch)
+            guard live(start, context), authorized else { return }
+            pending = intent; reviewed = nil; approved = false
+            await deliver(intent, start: start, context: context)
+        } catch { if live(start, context) { cancelReview(); await fail(error) } }
+    }
+    func retryAndReconcile() async {
+        guard !busy, authorized, let pending, let context = binding else { return }
+        busy = true; notice = nil; defer { busy = false }
+        await deliver(pending, start: generation, context: context)
+    }
+    private func deliver(_ intent: HelperReviewIntent, start: UUID, context: HouseholdHelperReviewScope) async {
+        do {
+            if receipt == nil {
+                let result = try await service.reconcileHelperReview(intent)
+                guard live(start, context) else { return }; receipt = result
+            }
+            // A confirmed receipt survives local cleanup failure in memory. After a
+            // restart, the preserved intent recovers that same receipt by exact replay.
+            try await store.removeReviewAction(id: intent.id)
+            guard live(start, context) else { return }
+            pending = nil
+            notice = ht("The reviewed action was confirmed. The shopping basket was not changed.")
+        } catch {
+            guard live(start, context) else { return }
+            if receipt != nil { notice = ht("The shared action was confirmed. Retry to finish clearing its local retry record.") }
+            else { await fail(error) }
+        }
+    }
+    func clearRetryAfterStatusReview() async {
+        guard !busy, authorized, let pending, let context = binding else { return }
+        busy = true; defer { busy = false }; let start = generation
+        do {
+            let value = try await service.managedHelperProjection(grantID: grantID, shopID: context.shopID)
+            let detail = try await pending.proposalID.asyncMap { try await service.managedHelperProposal(grantID: grantID, proposalID: $0, shopID: context.shopID) }
+            guard live(start, context) else { return }
+            try await store.removeReviewAction(id: pending.id)
+            guard live(start, context) else { return }
+            self.pending = nil; reviewed = nil; approved = false; receipt = nil; current = value
+            if proposalID == detail?.id { proposal = detail }
+            notice = ht("The local retry was cleared after refreshing shared status. This does not undo a shared action.")
+        } catch { if live(start, context) { await fail(error) } }
+    }
+    private func fail(_ error: Error) async {
+        switch error as? ClientError {
+        case .accessEnded, .sessionNeeded:
+            invalidate(); await accessEnded()
+        case .service(let status, _, _, _):
+            if status == 404 || status == 403 { invalidate(); notice = ht("This shared view is no longer available to the current shopper.") }
+            else if status == 409 { notice = ht("The current instructions or suggestion changed. Refresh and review again; an existing retry keeps its original action.") }
+            else { notice = ht("The result is not confirmed. Retry and reconcile the same reviewed action before starting another.") }
+        case .cancelled: break
+        default: notice = ht("The result is not confirmed. Retry and reconcile the same reviewed action before starting another.")
+        }
+    }
+}
+
+private extension Optional where Wrapped == String {
+    func asyncMap<T>(_ transform: (String) async throws -> T) async rethrows -> T? {
+        guard let value = self else { return nil }; return try await transform(value)
+    }
+}
+extension HouseholdLifecycleModel {
+    func helperReviewModel(grantID: String, proposalID: String? = nil) -> HouseholdHelperReviewModel {
+        HouseholdHelperReviewModel(grantID: grantID, proposalID: proposalID, service: service, store: store,
+            runtime: { [weak self] in
+                guard let self, self.canShare, let scope = self.scope, scope.enrolled, scope.grantId == nil,
+                      let shopID = scope.shopId else { return nil }
+                return HouseholdHelperReviewScope(generation: self.scopeGeneration, subject: self.subject,
+                    householdID: scope.household.id, memberID: scope.memberId, shopID: shopID)
+            }, accessEnded: { [weak self] in self?.clearScope(); await self?.onAccessEnded() })
+    }
+}

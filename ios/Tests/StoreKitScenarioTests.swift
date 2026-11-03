@@ -6,7 +6,7 @@ import StoreKitTest
 /// Opt-in, serial integration suite. Never pointed at a service or an App Store Connect product.
 @MainActor final class StoreKitScenarioTests: XCTestCase {
     private let productID = "local.testing.household.annual"
-    private let accountToken = UUID(uuidString: "C1C79EF0-6AC2-4201-A999-B12D79AF2001")!
+    private let accountToken = UUID()
     private var session: SKTestSession!
 
     override func setUp() async throws {
@@ -24,13 +24,25 @@ import StoreKitTest
         session.storefront = "USA"
         let requestedLocale = ProcessInfo.processInfo.environment["RITC_STOREKIT_LOCALE"] ?? "en_US"
         session.locale = Locale(identifier: requestedLocale)
+        try await AppStore.sync()
         XCTAssertEqual(session.locale.identifier.replacingOccurrences(of: "-", with: "_"), requestedLocale,
                        "Use the explicit supported product-metadata locale from the plan; never silently change it.")
     }
 
     override func tearDown() async throws {
-        session?.clearTransactions()
-        session?.resetToDefaultState()
+        if let session {
+            session.resetToDefaultState()
+            session.disableDialogs = true
+            for await result in StoreKit.Transaction.unfinished {
+                if case .verified(let transaction) = result,
+                   transaction.environment == .xcode && transaction.productID == productID {
+                    await transaction.finish()
+                }
+            }
+            session.clearTransactions()
+            try await AppStore.sync()
+            session.resetToDefaultState()
+        }
         session = nil
         try await super.tearDown()
     }
@@ -81,21 +93,24 @@ import StoreKitTest
             model.notice == .failed(.notConfigured)
         }
         assertFree(model)
-        let unfinished = await storefront.unfinishedTransactions()
-        XCTAssertTrue(unfinished.contains { id($0) == String(purchased.id) })
+        try await eventually("The observed transaction remains unfinished") {
+            await storefront.unfinishedTransactions().contains { self.id($0) == String(purchased.id) }
+        }
     }
 
     func testRelaunchAndExplicitRestoreReplayUnfinishedWithoutUnlock() async throws {
         let transaction = try await session.buyProduct(identifier: productID, options: [.appAccountToken(accountToken)])
         let (storefront, model) = try await loadedModel()
         defer { model.stop() }
-        let before = await storefront.unfinishedTransactions()
-        XCTAssertTrue(before.contains { id($0) == String(transaction.id) })
+        try await eventually("The local purchase becomes unfinished before restore") {
+            await storefront.unfinishedTransactions().contains { self.id($0) == String(transaction.id) }
+        }
         await model.restore()
         XCTAssertEqual(model.notice, .failed(.notConfigured))
         assertFree(model)
-        let after = await storefront.unfinishedTransactions()
-        XCTAssertTrue(after.contains { id($0) == String(transaction.id) })
+        try await eventually("The same undelivered purchase stays unfinished after restore") {
+            await storefront.unfinishedTransactions().contains { self.id($0) == String(transaction.id) }
+        }
         // A new adapter/model represents relaunch; no entitlement snapshot is restored from local defaults.
         let (_, relaunched) = try await loadedModel()
         defer { relaunched.stop() }
@@ -125,28 +140,83 @@ import StoreKitTest
             await storefront.currentTransactions().contains { self.id($0) != nil }
         }
         assertFree(model)
-        let unfinished = await storefront.unfinishedTransactions()
-        XCTAssertFalse(unfinished.isEmpty)
+        try await eventually("The approved purchase remains unfinished") {
+            await storefront.unfinishedTransactions().contains {
+                if case .verified(let transaction) = $0 { return transaction.appAccountToken == self.accountToken }
+                return false
+            }
+        }
     }
 
     func testAskToBuyDeclineGrantsNothing() async throws {
-        session.askToBuyEnabled = true
         let (storefront, model) = try await loadedModel()
+        defer { model.stop() }
+        let before = await storefront.currentTransactions()
+        XCTAssertTrue(before.isEmpty, "The fresh customer has no prior entitlement")
+        try await declineNewPurchase(storefront: storefront, model: model)
+    }
+
+    func testRestoredSubscriptionThenCancelledAndDeclinedRepurchasesStayFree() async throws {
+        let original = try await session.buyProduct(identifier: productID, options: [.appAccountToken(accountToken)])
+        // Seed a previously completed local purchase. An unfinished purchase would
+        // be replayed by StoreKit when this customer later attempts to repurchase.
+        await original.finish()
+        let (storefront, model) = try await loadedModel()
+        defer { model.stop() }
+        await model.restore()
+        try await eventually("Restore sees the same previously completed subscription") {
+            await storefront.currentTransactions().contains { self.id($0) == String(original.id) }
+        }
+        XCTAssertEqual(model.notice, .failed(.notConfigured))
+        assertFree(model)
+
+        // End the original term, then attempt two new purchases with this same
+        // model, account and annual SKU.
+        try session.expireSubscription(productIdentifier: productID)
+        try await AppStore.sync()
+        try await eventually("The restored subscription expires before repurchase") {
+            await storefront.currentTransactions().isEmpty
+        }
+        let latest = await StoreKit.Transaction.latest(for: productID)
+        guard case .verified(let ended) = try XCTUnwrap(latest) else { return XCTFail("Unverified fixture expiry") }
+        XCTAssertEqual(ended.id, original.id)
+        XCTAssertLessThanOrEqual(try XCTUnwrap(ended.expirationDate), Date())
+        // SKTestSession emits the forced expiry as an unfinished update for the same
+        // transaction. Complete that fixture update before testing a new purchase.
+        await ended.finish()
+        try await eventually("The expired fixture update is complete before repurchase") {
+            await storefront.unfinishedTransactions().isEmpty
+        }
+        try await session.setSimulatedError(.generic(.userCancelled), forAPI: .purchase)
+        await model.purchase()
+        XCTAssertTrue(model.notice == .cancelled || model.notice == .failed(.unavailable))
+        let afterCancel = await storefront.currentTransactions()
+        XCTAssertTrue(afterCancel.isEmpty)
+        assertFree(model)
+        try await session.setSimulatedError(nil, forAPI: .purchase)
+        try await declineNewPurchase(storefront: storefront, model: model)
+    }
+
+    private func declineNewPurchase(storefront: StoreKitMembershipStorefront, model: MembershipModel) async throws {
+        session.askToBuyEnabled = true
         let purchase = beginPurchase(model)
-        defer { purchase.task?.cancel(); model.stop() }
+        defer { purchase.task?.cancel() }
         try await eventually("A real Ask to Buy request reaches pending approval") {
             self.session.allTransactions().contains { $0.pendingAskToBuyConfirmation }
         }
         let request = try XCTUnwrap(session.allTransactions().first { $0.pendingAskToBuyConfirmation })
+        let pendingEntitlements = await storefront.currentTransactions()
+        XCTAssertTrue(pendingEntitlements.isEmpty, "The pending request has no current entitlement")
         if purchase.finished { XCTAssertEqual(model.notice, .pending) }
         else { XCTAssertTrue(model.isBusy) }
         assertFree(model)
         try session.declineAskToBuyTransaction(identifier: request.identifier)
+        try await AppStore.sync()
         let deadline = ContinuousClock.now.advanced(by: .seconds(10))
         var pendingCount = 0, purchasedCount = 0, failedCount = 0, deferredCount = 0
         var currentCount = 0, verifiedCount = 0, unverifiedCount = 0
         repeat {
-            let transactions = session.allTransactions()
+            let transactions = session.allTransactions().filter { $0.identifier == request.identifier }
             pendingCount = transactions.filter { $0.pendingAskToBuyConfirmation }.count
             purchasedCount = transactions.filter { $0.state == .purchased }.count
             failedCount = transactions.filter { $0.state == .failed }.count
@@ -158,25 +228,46 @@ import StoreKitTest
             if purchase.finished && pendingCount == 0 && currentCount == 0 { break }
             try await Task.sleep(for: .milliseconds(100))
         } while ContinuousClock.now < deadline
-        let diagnostic = "purchaseFinished=\(purchase.finished); modelBusy=\(model.isBusy); pendingFlags=\(pendingCount); purchased=\(purchasedCount); failed=\(failedCount); deferred=\(deferredCount); current=\(currentCount); verified=\(verifiedCount); unverified=\(unverifiedCount); notice=\(String(describing: model.notice))"
+        var returnedDeclinedRequest = false
+        for await result in StoreKit.Transaction.currentEntitlements {
+            if case .verified(let transaction) = result, transaction.id == UInt64(request.identifier),
+               transaction.productID == productID, transaction.appAccountToken == accountToken,
+               transaction.environment == .xcode, transaction.revocationDate == nil,
+               let expiration = transaction.expirationDate, expiration > Date() {
+                returnedDeclinedRequest = true
+            }
+        }
+        let diagnostic = "purchaseFinished=\(purchase.finished); modelBusy=\(model.isBusy); pendingFlags=\(pendingCount); purchased=\(purchasedCount); failed=\(failedCount); deferred=\(deferredCount); currentWhilePending=\(pendingEntitlements.count); current=\(currentCount); verified=\(verifiedCount); unverified=\(unverifiedCount); verifiedUnexpiredDeclinedRequest=\(returnedDeclinedRequest); notice=\(String(describing: model.notice))"
         let attachment = XCTAttachment(string: diagnostic)
         attachment.name = "Ask to Buy decline — structural state only"; attachment.lifetime = .keepAlways
         add(attachment)
         XCTAssertTrue(purchase.finished, "Purchase call did not finish after decline. " + diagnostic)
         XCTAssertEqual(pendingCount, 0, "Declined request still carries a pending flag. " + diagnostic)
         XCTAssertEqual(currentCount, 0, "Declined request must not be a current entitlement. " + diagnostic)
+        XCTAssertFalse(returnedDeclinedRequest, diagnostic)
         XCTAssertTrue(model.notice == .pending || model.notice == .cancelled || model.notice == .failed(.unavailable))
         assertFree(model)
     }
 
     func testSimulatedPurchaseCancellationGrantsNothing() async throws {
-        let (_, model) = try await loadedModel()
+        let (storefront, model) = try await loadedModel()
         defer { model.stop() }
         try await session.setSimulatedError(.generic(.userCancelled), forAPI: .purchase)
         await model.purchase()
         // StoreKit may deliver a cancellation result or throw its simulated cancellation error.
         XCTAssertTrue(model.notice == .cancelled || model.notice == .failed(.unavailable))
-        XCTAssertTrue(session.allTransactions().isEmpty)
+        // Some StoreKitTest runtimes retain a failed transaction for the cancelled attempt.
+        let history = session.allTransactions()
+        XCTAssertTrue(history.allSatisfy { $0.state == .failed && !$0.pendingAskToBuyConfirmation },
+                      "Unexpected cancellation history states: \(history.map { $0.state.rawValue })")
+        let current = await storefront.currentTransactions()
+        let unfinished = await storefront.unfinishedTransactions()
+        XCTAssertTrue(current.isEmpty, "Cancellation must not create an entitlement")
+        XCTAssertTrue(unfinished.isEmpty, "Cancellation must not create an unfinished purchase")
+        let summary = XCTAttachment(string: "historyStates=\(history.map { $0.state.rawValue }); current=\(current.count); unfinished=\(unfinished.count)")
+        summary.name = "Cancelled purchase — structural state only"
+        summary.lifetime = .keepAlways
+        add(summary)
         assertFree(model)
     }
 
@@ -211,10 +302,13 @@ import StoreKitTest
         }
         let (storefront, model) = try await loadedModel()
         defer { model.stop() }
-        let current = await storefront.currentTransactions().compactMap { outcome -> SignedMembershipTransaction? in
-            if case .verified(let transaction) = outcome { return transaction }; return nil
+        try await eventually("The renewed transaction retains the original purchase identity") {
+            await storefront.currentTransactions().contains {
+                guard case .verified(let transaction) = $0 else { return false }
+                return transaction.originalTransactionID == String(original.originalID)
+                    && transaction.transactionID != String(original.id)
+            }
         }
-        XCTAssertTrue(current.contains { $0.originalTransactionID == String(original.originalID) && $0.transactionID != String(original.id) })
         await model.refresh()
         assertFree(model)
     }

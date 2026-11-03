@@ -264,6 +264,71 @@ public actor HouseholdService {
         guard view.canPropose else { throw ClientError.accessEnded }
         return try await perform("v1/views/\(intent.grantID)/proposals", method: "POST", body: intent.bytes, absolutePath: true)
     }
+    public func managedHelperProjection(grantID: String, shopID: String) async throws -> ManagedHelperProjection {
+        guard UUID(uuidString: grantID) != nil, selectedGrantID == nil else { throw ClientError.configuration }
+        let start = generation; try await authorizeShopper(shopID: shopID)
+        guard start == generation else { throw ClientError.cancelled }
+        let result: ManagedHelperProjection = try await perform("views/\(grantID)", method: "GET")
+        guard result.grantId == grantID, result.shopId == shopID, result.revision > 0,
+              ["read", "edit"].contains(result.mode), validHelperTimestamp(result.asOf), validHelperTimestamp(result.expiresAt)
+        else { throw ClientError.invalidResponse }
+        do { try result.projection.validateReviewed() } catch { throw ClientError.invalidResponse }
+        return result
+    }
+    public func managedHelperProposal(grantID: String, proposalID: String, shopID: String) async throws -> HelperProposal {
+        guard UUID(uuidString: proposalID) != nil else { throw ClientError.configuration }
+        let start = generation
+        _ = try await managedHelperProjection(grantID: grantID, shopID: shopID)
+        guard start == generation else { throw ClientError.cancelled }
+        let result: HelperProposal = try await perform("views/\(grantID)/proposals/\(proposalID)", method: "GET")
+        guard result.proposalId == proposalID, result.grantId == grantID, result.proposalRevision > 0,
+              result.baseRevision > 0, validHelperTimestamp(result.createdAt),
+              ["pending", "reviewed", "dismissed"].contains(result.status) else { throw ClientError.invalidResponse }
+        if result.status == "pending" {
+            guard result.resolution == nil else { throw ClientError.invalidResponse }
+        } else {
+            guard let resolution = result.resolution, UUID(uuidString: resolution.mutationId) != nil,
+                  resolution.revision > 0, validHelperTimestamp(resolution.resolvedAt),
+                  resolution.decision == (result.status == "reviewed" ? "replaced" : "dismissed") else { throw ClientError.invalidResponse }
+        }
+        return result
+    }
+    public func prepareHelperReview(current: ManagedHelperProjection, proposal: HelperProposal? = nil,
+                                    decision: HelperReviewDecision, projection: HelperProjection? = nil) async throws -> HelperReviewIntent {
+        let start = generation
+        let fresh = try await managedHelperProjection(grantID: current.grantId, shopID: current.shopId)
+        guard start == generation else { throw ClientError.cancelled }
+        guard fresh == current else { throw ClientError.service(status: 409, code: "stale_base", correlationID: nil, retryAfter: nil) }
+        if let proposal {
+            guard proposal.grantId == current.grantId, proposal.status == "pending", proposal.proposalRevision > 0 else { throw ClientError.configuration }
+            let freshProposal = try await managedHelperProposal(grantID: current.grantId, proposalID: proposal.proposalId, shopID: current.shopId)
+            guard start == generation else { throw ClientError.cancelled }
+            guard freshProposal == proposal else { throw ClientError.service(status: 409, code: "stale_base", correlationID: nil, retryAfter: nil) }
+        }
+        guard let subject, let householdID, let memberID, let enrollment else { throw ClientError.accessEnded }
+        return try HelperReviewIntent(subject: subject, householdID: householdID, memberID: memberID, deviceID: enrollment.deviceId,
+                                      current: current, proposal: proposal, decision: decision, projection: projection)
+    }
+    public func executeHelperReview(_ intent: HelperReviewIntent) async throws -> HelperReviewReceipt {
+        try intent.validate()
+        let start = generation
+        guard selectedGrantID == nil, intent.subject == subject, intent.householdID == householdID,
+              intent.memberID == memberID, intent.deviceID == enrollment?.deviceId else { throw ClientError.accessEnded }
+        // Revalidate live shopper/grant authority, but allow the original base to replay a committed receipt.
+        _ = try await managedHelperProjection(grantID: intent.grantID, shopID: intent.shopID)
+        guard start == generation else { throw ClientError.cancelled }
+        guard intent.subject == subject, intent.householdID == householdID, intent.memberID == memberID,
+              intent.deviceID == enrollment?.deviceId else { throw ClientError.accessEnded }
+        let path = intent.proposalID.map { "views/\(intent.grantID)/proposals/\($0)/resolve" } ?? "views/\(intent.grantID)/replacements"
+        let receipt: HelperReviewReceipt = try await perform(path, method: "POST", body: intent.bytes)
+        try receipt.validate(for: intent)
+        return receipt
+    }
+    /// Replaying the durable mutation returns its original receipt, even after later projection edits.
+    /// A proposal status read alone cannot prove that this particular action committed.
+    public func reconcileHelperReview(_ intent: HelperReviewIntent) async throws -> HelperReviewReceipt {
+        try await executeHelperReview(intent)
+    }
     public func helperProposals(grantID: String, cursor: String? = nil) async throws -> HelperProposals {
         guard UUID(uuidString: grantID) != nil, selectedGrantID == nil else { throw ClientError.configuration }
         if let cursor, UUID(uuidString: cursor) == nil { throw ClientError.configuration }

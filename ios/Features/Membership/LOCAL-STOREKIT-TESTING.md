@@ -23,7 +23,7 @@ xcodebuild test -project ios/RoomInTheCart.xcodeproj \
   -resultBundlePath /tmp/ritc-local-storekit.xcresult
 ```
 
-Do not interpret a normal suite's skip as a StoreKit pass. A local plan should execute **14 scenarios per locale (28 runs)**, with zero skips. Apple documents that all `SKTestSession` instances share one environment, so these tests must remain serial. [SKTestSession](https://developer.apple.com/documentation/storekittest/sktestsession)
+Do not interpret a normal suite's skip as a StoreKit pass. A local plan should execute **15 scenarios per locale (30 runs)**, with zero skips. Apple documents that all `SKTestSession` instances share one environment, so these tests must remain serial. [SKTestSession](https://developer.apple.com/documentation/storekittest/sktestsession)
 
 ## Scope of the scenarios
 
@@ -31,7 +31,8 @@ Do not interpret a normal suite's skip as a StoreKit pass. A local plan should e
 - Actual purchase has the expected account token; unavailable service delivery grants no paid access and leaves the transaction unfinished.
 - Actual transaction updates reach the app's observer but do not grant paid access.
 - New adapter/model and explicit AppStore.sync replay unfinished delivery without restoring a local paid snapshot.
-- Ask to Buy pending, approval, and decline.
+- Ask to Buy pending, approval, and decline for a fresh customer.
+- Restore a completed local purchase, verify the original transaction and expiry, and exercise cancellation and decline on the same annual SKU and account. The fixture completes the expired transaction update before testing new purchases. The separate interrupted-delivery case verifies that the app leaves its undelivered transaction unfinished.
 - Simulated cancellation, invalid signature and unavailable product leave Free routes usable.
 - Renewal retains original purchase identity; expiration removes current entitlement; refund records revocation.
 - Billing retry without grace and configured grace produce their respective StoreKit states, while shared paid access still requires the service.
@@ -46,10 +47,16 @@ The first actual SDK 27 simulator run verified that setting `SKTestSession.local
 
 ## Evidence and remaining gates
 
-The 14 scenarios compile against the installed StoreKitTest SDK with the app's real Membership sources, targeting iOS 17. The fixture and test plan are syntactically valid JSON. Compilation of the staged runtime fix: `/tmp/ritc-storekit-stage/typecheck-fix.log`.
+The full plan ran serially on three local simulator runtimes. Both configurations ran every method with zero skips.
 
-First parent-owned simulator run: `.build/LocalStoreKitScenarios.xcresult`, overall **Failed**. `xcresulttool get test-results summary` reports 14 unique tests across 28 runs; per configuration English passed 12/failed 2/skipped 0, Spanish passed 0/failed 14/skipped 0. The top-level aggregate is passed 0/failed 14 because every unique method failed in at least one configuration. Compact evidence: `/tmp/ritc-storekit-stage/first-runtime-summary.json`. The English failures were the first Ask-to-Buy purchase timing out and the immediate post-decline entitlement assertion; all Spanish runs also failed the exact unsupported-locale assertion. Do not count this as a local-suite pass.
+| Runtime | US English | US Spanish |
+| --- | --- | --- |
+| iOS 17.0 | 15 passed | 15 passed |
+| iOS 27.0 | 13 passed, 2 failed | 13 passed, 2 failed |
+| iOS 27.1 | 12 passed, 3 failed | 13 passed, 2 failed |
 
-The staged fix starts the real model's transaction observer before purchase, launches the actual purchase independently, waits for a real `pendingAskToBuyConfirmation` transaction, and resolves approval/decline without waiting on a possibly still-open purchase call first. Completion and entitlement transitions are bounded by observable-state waits. A decline must yield no current entitlement and no paid access. This fixes the test ordering/lifecycle hypothesis; a parent-owned rerun is required to establish that it resolves the observed SDK behavior. There is no mock pending transaction, ignored failure or paid service fallback.
+Both iOS 27 runtimes failed the fresh-customer decline and the same-SKU sequence. StoreKitTest marked the declined request as failed with its pending flag cleared. StoreKit 2 exposed the same request ID as a verified, unexpired, unrevoked Xcode entitlement on the same synthetic account. The app's service-authority and Free continuity assertions passed. The English iOS 27.1 run also timed out waiting for the observed transaction to appear in the unfinished queue. That observer case passed in both languages when run alone. The local StoreKit gate remains open. [Run summaries, structural diagnostics and source hashes](../../../docs/evidence/native/local-storekit-full-matrix.json)
 
-No real sandbox purchase, TestFlight submission, certificate/account provisioning or Apple server trust result is claimed by local tests. The parent owns simulator execution; preserve its final `.xcresult` and exact per-configuration results before checking the local Foundation 12 gate.
+The initial 14-method run also captured the Spanish metadata-locale mismatch. The next full run reproduced the Ask to Buy failure in both languages, and the isolated decline passed in both. [Initial run](../../../docs/evidence/native/local-storekit-initial-summary.json) · [Second full run](../../../docs/evidence/native/local-storekit-second-summary.json) · [Isolated decline](../../../docs/evidence/native/dot-storekit-decline-summary.json)
+
+Apple sandbox purchases, signed-device checks, durable server verification and TestFlight remain separate acceptance gates.

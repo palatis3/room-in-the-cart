@@ -1,6 +1,7 @@
 import Foundation
 import Vision
 import ImageIO
+import CoreML
 
 struct OnDeviceScanService: LocalScanService {
     func scan(_ data: Data) async throws -> ScannedSource {
@@ -23,6 +24,17 @@ struct OnDeviceScanService: LocalScanService {
                 let request = VNDetectBarcodesRequest()
                 request.revision = revision
                 request.symbologies = [.ean8, .ean13, .upce, .code128, .qr, .dataMatrix]
+                if revision == VNDetectBarcodesRequestRevision2 {
+                    // Use a supported CPU device for the compatibility pass rather
+                    // than retrying the same unavailable accelerated inference path.
+                    if let stages = try? request.supportedComputeStageDevices {
+                        for (stage, devices) in stages {
+                            if let cpu = devices.first(where: { if case .cpu = $0 { return true }; return false }) {
+                                request.setComputeDevice(cpu, for: stage)
+                            }
+                        }
+                    }
+                }
                 cancellation.install(request)
                 try Task.checkCancellation()
                 do { try VNImageRequestHandler(data: jpeg, options: [:]).perform([request]) }

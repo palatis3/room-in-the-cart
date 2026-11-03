@@ -78,6 +78,18 @@ public struct HelperProposal: Codable, Equatable, Identifiable, Sendable {
     public var id: String { proposalId }
     public let proposalId: String; public let grantId: String; public let baseRevision: Int; public let correction: String
     public let status: String; public let createdAt: String
+    public let proposalRevision: Int
+    public let resolution: HelperProposalResolution?
+    private enum CodingKeys: String, CodingKey { case proposalId, grantId, baseRevision, correction, status, createdAt, proposalRevision, resolution }
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        proposalId = try values.decode(String.self, forKey: .proposalId); grantId = try values.decode(String.self, forKey: .grantId)
+        baseRevision = try values.decode(Int.self, forKey: .baseRevision); correction = try values.decode(String.self, forKey: .correction)
+        status = try values.decode(String.self, forKey: .status); createdAt = try values.decode(String.self, forKey: .createdAt)
+        // Legacy list rows remain readable, but cannot be used to prepare a reviewed mutation.
+        proposalRevision = try values.decodeIfPresent(Int.self, forKey: .proposalRevision) ?? 0
+        resolution = try values.decodeIfPresent(HelperProposalResolution.self, forKey: .resolution)
+    }
 }
 public struct HelperProposals: Codable, Equatable, Sendable {
     public let proposals: [HelperProposal]
@@ -109,18 +121,27 @@ public struct LifecyclePendingState: Codable, Equatable, Sendable {
     public var membership: MembershipIntent?
     public var activation: Activation?
     public var proposals: [HelperProposalIntent]
-    public init(membership: MembershipIntent? = nil, activation: Activation? = nil, proposals: [HelperProposalIntent] = []) {
-        self.membership = membership; self.activation = activation; self.proposals = proposals
+    public var reviewActions: [HelperReviewIntent]?
+    public init(membership: MembershipIntent? = nil, activation: Activation? = nil, proposals: [HelperProposalIntent] = [], reviewActions: [HelperReviewIntent]? = nil) {
+        self.membership = membership; self.activation = activation; self.proposals = proposals; self.reviewActions = reviewActions
     }
 }
 public actor LifecycleIntentStore {
     private let url: URL
+    private var reviewGeneration = UUID()
     public init(url: URL) { self.url = url }
     public func read() throws -> LifecyclePendingState {
         guard FileManager.default.fileExists(atPath: url.path) else { return .init() }
         return try JSONDecoder().decode(LifecyclePendingState.self, from: Data(contentsOf: url))
     }
+    /// Legacy lifecycle updates cannot replace review actions from an older snapshot.
+    /// Review actions are changed only through the atomic, epoch-checked operations below.
     public func save(_ state: LifecyclePendingState) throws {
+        var merged = state
+        merged.reviewActions = try read().reviewActions
+        try write(merged)
+    }
+    private func write(_ state: LifecyclePendingState) throws {
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
         #if os(iOS)
         try encoded(state).write(to: url, options: [.atomic, .completeFileProtection])
@@ -130,5 +151,26 @@ public actor LifecycleIntentStore {
         try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
         var protected = url; var values = URLResourceValues(); values.isExcludedFromBackup = true; try protected.setResourceValues(values)
     }
-    public func purge() throws { try save(.init()) }
+    public func reviewEpoch() -> UUID { reviewGeneration }
+    public func saveReviewAction(_ intent: HelperReviewIntent, expectedEpoch: UUID) throws {
+        guard expectedEpoch == reviewGeneration else { throw ClientError.cancelled }
+        try intent.validate()
+        var state = try read()
+        var actions = state.reviewActions ?? []
+        if let existing = actions.first(where: { $0.id == intent.id }) {
+            guard existing == intent else { throw ClientError.service(status: 409, code: "key_reused", correlationID: nil, retryAfter: nil) }
+            return
+        }
+        guard !actions.contains(where: {
+            $0.subject == intent.subject && $0.householdID == intent.householdID &&
+            $0.memberID == intent.memberID && $0.grantID == intent.grantID
+        }) else { throw ClientError.service(status: 409, code: "helper_review_pending", correlationID: nil, retryAfter: nil) }
+        actions.append(intent); state.reviewActions = actions; try write(state)
+    }
+    public func removeReviewAction(id: String) throws {
+        var state = try read()
+        state.reviewActions = state.reviewActions?.filter { $0.id != id }
+        try write(state)
+    }
+    public func purge() throws { reviewGeneration = UUID(); try write(.init()) }
 }

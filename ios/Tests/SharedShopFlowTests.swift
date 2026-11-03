@@ -265,3 +265,142 @@ private final class SharedFlowURLProtocol: URLProtocol {
     }
     override func stopLoading() {}
 }
+
+@MainActor final class HouseholdHelperReviewFlowTests: XCTestCase {
+    private func fixture(store: HelperReviewMemoryStore = .init()) async -> (HouseholdHelperReviewModel, HelperReviewFakeService, HelperReviewMemoryStore, HelperReviewScopeBox) {
+        let box = HelperReviewScopeBox(), service = HelperReviewFakeService(store: store)
+        let model = HouseholdHelperReviewModel(grantID: HelperReviewData.grant, service: service, store: store,
+            runtime: { box.value }, accessEnded: { box.value = nil })
+        await model.load(); return (model, service, store, box)
+    }
+    func testExplicitReviewAndApprovalPersistBeforeSending() async throws {
+        let (model, service, store, _) = await fixture()
+        await model.apply(); XCTAssertTrue(service.sent.isEmpty)
+        model.review(decision: .replace, projection: service.current.projection)
+        await model.apply(); XCTAssertTrue(service.sent.isEmpty)
+        model.approved = true; await model.apply()
+        XCTAssertEqual(service.sent.count, 1); XCTAssertTrue(service.wasPersistedBeforeSend)
+        XCTAssertNotNil(model.receipt); XCTAssertNil(model.pending)
+        let saved = try await store.read(); XCTAssertTrue(saved.reviewActions?.isEmpty ?? true)
+    }
+    func testUncertainResultRestoresAndReplaysOriginalBytesAfterRevisionChanges() async throws {
+        let (model, service, store, box) = await fixture()
+        model.review(decision: .replace, projection: service.current.projection); model.approved = true
+        service.failDelivery = true; await model.apply()
+        let original = try XCTUnwrap(model.pending); XCTAssertNil(model.receipt)
+        service.current = HelperReviewData.current(revision: 2); service.failDelivery = false
+        let restored = HouseholdHelperReviewModel(grantID: HelperReviewData.grant, service: service, store: store,
+            runtime: { box.value }, accessEnded: {})
+        await restored.load(); XCTAssertEqual(restored.pending, original); XCTAssertFalse(restored.canReview)
+        XCTAssertEqual(service.sent.count, 1) // Loading never sends.
+        await restored.retryAndReconcile()
+        XCTAssertEqual(service.sent, [original, original]); XCTAssertEqual(service.preparations, 1)
+        XCTAssertNotNil(restored.receipt); XCTAssertNil(restored.pending)
+    }
+    func testPersistenceFailureNeverSends() async throws {
+        let store = HelperReviewMemoryStore(failSave: true)
+        let (model, service, _, _) = await fixture(store: store)
+        model.review(decision: .replace, projection: service.current.projection); model.approved = true
+        await model.apply(); XCTAssertTrue(service.sent.isEmpty); XCTAssertNil(model.receipt)
+    }
+    func testConfirmedReceiptCleanupRetryDoesNotSendAgain() async throws {
+        let store = HelperReviewMemoryStore(failRemove: true)
+        let (model, service, _, _) = await fixture(store: store)
+        model.review(decision: .replace, projection: service.current.projection); model.approved = true
+        await model.apply(); XCTAssertNotNil(model.receipt); XCTAssertNotNil(model.pending)
+        await store.allowRemoval(); await model.retryAndReconcile()
+        XCTAssertEqual(service.sent.count, 1); XCTAssertNil(model.pending)
+    }
+    func testScopeChangeDuringPreparationCannotPersistOrSendAndClearsVisibleData() async throws {
+        let (model, service, store, box) = await fixture()
+        model.review(decision: .replace, projection: service.current.projection); model.approved = true
+        service.beforePrepare = { box.value = nil }
+        await model.apply(); model.enforceRuntime()
+        XCTAssertTrue(service.sent.isEmpty); XCTAssertNil(model.current); XCTAssertNil(model.reviewed)
+        let saved = try await store.read(); XCTAssertNil(saved.reviewActions)
+    }
+    func testPurgeAfterReviewRejectsLatePrivateSave() async throws {
+        let (model, service, store, _) = await fixture()
+        model.review(decision: .replace, projection: service.current.projection); model.approved = true
+        service.beforePrepare = { await store.purge() }
+        await model.apply(); XCTAssertTrue(service.sent.isEmpty)
+        let saved = try await store.read(); XCTAssertNil(saved.reviewActions)
+    }
+    func testChangedDraftOrStaleServerSnapshotCannotApplyOldApproval() async throws {
+        let (model, service, _, _) = await fixture()
+        model.review(decision: .replace, projection: service.current.projection); model.approved = true
+        model.cancelReview(); await model.apply(); XCTAssertTrue(service.sent.isEmpty)
+        model.review(decision: .replace, projection: service.current.projection); model.approved = true
+        service.current = HelperReviewData.current(revision: 2)
+        await model.apply(); XCTAssertTrue(service.sent.isEmpty); XCTAssertNil(model.reviewed); XCTAssertFalse(model.approved)
+    }
+    func testClearingUncertainRetryNeedsFreshAuthorizedStatus() async throws {
+        let (model, service, store, _) = await fixture()
+        model.review(decision: .replace, projection: service.current.projection); model.approved = true
+        service.failDelivery = true; await model.apply(); XCTAssertNotNil(model.pending)
+        service.failRead = true; await model.clearRetryAfterStatusReview()
+        let saved = try await store.read(); XCTAssertEqual(saved.reviewActions?.count, 1)
+        XCTAssertEqual(service.sent.count, 1)
+    }
+}
+
+@MainActor private final class HelperReviewScopeBox {
+    var value: HouseholdHelperReviewScope? = .init(generation: UUID(), subject: "reviewer", householdID: HelperReviewData.household,
+        memberID: HelperReviewData.member, shopID: HelperReviewData.shop)
+}
+private actor HelperReviewMemoryStore: HelperReviewPersisting {
+    var state = LifecyclePendingState(); var epoch = UUID()
+    let failSave: Bool; var failRemove: Bool
+    init(failSave: Bool = false, failRemove: Bool = false) { self.failSave = failSave; self.failRemove = failRemove }
+    func read() throws -> LifecyclePendingState { state }
+    func reviewEpoch() -> UUID { epoch }
+    func saveReviewAction(_ intent: HelperReviewIntent, expectedEpoch: UUID) throws {
+        guard expectedEpoch == epoch else { throw ClientError.cancelled }
+        if failSave { throw ClientError.transport }; state.reviewActions = [intent]
+    }
+    func removeReviewAction(id: String) throws {
+        if failRemove { throw ClientError.transport }; state.reviewActions?.removeAll { $0.id == id }
+    }
+    func allowRemoval() { failRemove = false }
+    func purge() { epoch = UUID(); state = .init() }
+}
+@MainActor private final class HelperReviewFakeService: HelperReviewServing {
+    var current = HelperReviewData.current()
+    let store: HelperReviewMemoryStore
+    var beforePrepare: (() async -> Void)?
+    var failDelivery = false; var failRead = false
+    var sent: [HelperReviewIntent] = []; var preparations = 0; var wasPersistedBeforeSend = false
+    init(store: HelperReviewMemoryStore) { self.store = store }
+    func managedHelperProjection(grantID: String, shopID: String) async throws -> ManagedHelperProjection {
+        if failRead { throw ClientError.transport }; return current
+    }
+    func managedHelperProposal(grantID: String, proposalID: String, shopID: String) async throws -> HelperProposal { throw ClientError.configuration }
+    func prepareHelperReview(current: ManagedHelperProjection, proposal: HelperProposal?, decision: HelperReviewDecision, projection: HelperProjection?) async throws -> HelperReviewIntent {
+        preparations += 1
+        guard current == self.current else { throw ClientError.service(status: 409, code: "stale_base", correlationID: nil, retryAfter: nil) }
+        await beforePrepare?()
+        return try HelperReviewData.intent(current: current, projection: XCTUnwrap(projection))
+    }
+    func reconcileHelperReview(_ intent: HelperReviewIntent) async throws -> HelperReviewReceipt {
+        let saved = try await store.read(); wasPersistedBeforeSend = saved.reviewActions?.contains(intent) == true
+        sent.append(intent)
+        if failDelivery { throw ClientError.transport }
+        return HelperReviewData.decode(["mutationId": UUID().uuidString, "grantId": intent.grantID, "baseRevision": intent.baseRevision,
+            "revision": intent.baseRevision + 1, "status": "replaced", "asOf": "2026-11-03T00:00:00Z"])
+    }
+}
+private enum HelperReviewData {
+    static let household = "00000000-0000-4000-8000-000000000001", member = "00000000-0000-4000-8000-000000000002"
+    static let grant = "00000000-0000-4000-8000-000000000003", shop = "00000000-0000-4000-8000-000000000004"
+    static func decode<T: Decodable>(_ value: [String: Any]) -> T { try! JSONDecoder().decode(T.self, from: JSONSerialization.data(withJSONObject: value, options: [.sortedKeys])) }
+    static func current(revision: Int = 1) -> ManagedHelperProjection {
+        decode(["grantId": grant, "shopId": shop, "revision": revision, "asOf": "2026-11-03T00:00:00Z", "expiresAt": "2099-01-01T00:00:00Z", "mode": "edit",
+            "projection": ["shopLabel": "Cook", "language": "en", "items": [["label": "Rice", "amount": NSNull(), "unit": NSNull(), "action": "Warm rice"]]]])
+    }
+    static func intent(current: ManagedHelperProjection, projection: HelperProjection) throws -> HelperReviewIntent {
+        let id = UUID().uuidString.lowercased(), value = try JSONSerialization.jsonObject(with: JSONEncoder().encode(projection))
+        let bytes = try JSONSerialization.data(withJSONObject: ["clientKey": id, "baseRevision": current.revision, "projection": value], options: [.sortedKeys])
+        return decode(["id": id, "subject": "reviewer", "householdID": household, "memberID": member, "deviceID": "test-device", "grantID": grant, "shopID": shop,
+            "baseRevision": current.revision, "decision": "replace", "projection": value, "bytes": bytes.base64EncodedString()])
+    }
+}

@@ -229,6 +229,8 @@ struct HouseholdManagedViewsView: View {
                         if ["available", "active"].contains(view.status) {
                             if model.canShare, view.shopId == model.scope?.shopId {
                                 NavigationLink(ht("Review suggestions")) { HouseholdHelperProposalsView(model: model, grantID: view.id) }
+                                NavigationLink(ht("Review and replace shared instructions")) { HouseholdHelperReviewView(lifecycle: model, grantID: view.id) }
+                                    .accessibilityIdentifier("helperReview.openReplacement")
                             }
                             Button(ht("Revoke scoped access"), role: .destructive) { revoking = view }
                         }
@@ -258,7 +260,10 @@ private struct HouseholdHelperProposalsView: View {
                             LabeledContent(ht("Received"), value: householdTime(proposal.createdAt))
                             LabeledContent(ht("Instruction revision reviewed"), value: proposal.baseRevision.formatted())
                             switch proposal.status {
-                            case "pending": Text(ht("Pending review"))
+                            case "pending":
+                                Text(ht("Pending review"))
+                                NavigationLink(ht("Review this suggestion")) { HouseholdHelperReviewView(lifecycle: model, grantID: grantID, proposalID: proposal.id) }
+                                    .accessibilityIdentifier("helperReview.openSuggestion")
                             case "reviewed": Text(ht("Suggestion reviewed"))
                             case "dismissed": Text(ht("Suggestion dismissed"))
                             default: Text(ht("Check current status"))
@@ -346,4 +351,154 @@ private func accessStatus(_ status: String) -> String {
     switch status { case "pending", "available": return ht("Waiting for the recipient")
     case "redeemed": return ht("Invitation redeemed"); case "active": return ht("Active access")
     case "revoked": return ht("Access revoked"); case "expired": return ht("Access expired"); default: return ht("Check current status") }
+}
+
+private struct HelperReviewDraft: Equatable {
+    var label: String
+    var language: String
+    var items: [HelperDraftItem]
+    init(_ projection: HelperProjection) {
+        label = projection.shopLabel; language = projection.language
+        items = projection.items.map { HelperDraftItem(label: $0.label, amount: $0.amount ?? "", unit: $0.unit ?? "", action: $0.action) }
+    }
+    func projection() throws -> HelperProjection {
+        try HelperProjection(shopLabel: label, language: language, items: items.map {
+            HelperInstruction(label: $0.label, amount: $0.amount.isEmpty ? nil : $0.amount,
+                              unit: $0.unit.isEmpty ? nil : $0.unit, action: $0.action)
+        })
+    }
+}
+
+private struct HouseholdHelperReviewView: View {
+    @ObservedObject var lifecycle: HouseholdLifecycleModel
+    @StateObject private var model: HouseholdHelperReviewModel
+    @State private var draft: HelperReviewDraft?
+    @State private var inputNotice: String?
+    @State private var clearRetry = false
+    @Environment(\.scenePhase) private var scenePhase
+    init(lifecycle: HouseholdLifecycleModel, grantID: String, proposalID: String? = nil) {
+        self.lifecycle = lifecycle
+        _model = StateObject(wrappedValue: lifecycle.helperReviewModel(grantID: grantID, proposalID: proposalID))
+    }
+    var body: some View {
+        Form {
+            if lifecycle.canShare {
+                Section {
+                    Text(ht("Review helper instructions"))
+                    Text(ht("A suggestion never changes shared instructions automatically. Review the complete replacement; shopping basket changes remain separate."))
+                    Button(ht("Refresh current shared status")) { Task { await model.load() } }.disabled(model.busy)
+                }
+                if model.authorized, let current = model.current {
+                    Section(ht("Current shared instructions")) {
+                        LabeledContent(ht("Instruction revision reviewed"), value: current.revision.formatted())
+                        LabeledContent(ht("Access expires"), value: householdTime(current.expiresAt))
+                        projection(current.projection)
+                    }
+                    if let proposal = model.proposal {
+                        Section(ht("Suggestion")) {
+                            Text(proposal.correction).textSelection(.enabled)
+                            LabeledContent(ht("Instruction revision reviewed"), value: proposal.baseRevision.formatted())
+                            LabeledContent(ht("Suggestion revision"), value: proposal.proposalRevision.formatted())
+                            Text(proposal.status == "pending" ? ht("Pending review") : proposal.status == "reviewed" ? ht("Suggestion reviewed") : ht("Suggestion dismissed"))
+                            if proposal.baseRevision != current.revision {
+                                Text(ht("This suggestion refers to an earlier instruction revision. Compare it with the current instructions before deciding."))
+                            }
+                        }
+                    }
+                    if let pending = model.pending {
+                        Section(ht("Reviewed action awaiting reconciliation")) {
+                            Text(pending.decision == .dismiss ? ht("Dismiss this suggestion") : ht("Replace shared instructions"))
+                            LabeledContent(ht("Instruction revision reviewed"), value: pending.baseRevision.formatted())
+                            if let id = pending.proposalID { LabeledContent(ht("Suggestion reference"), value: String(id.suffix(8))) }
+                            if let value = pending.projection { projection(value) }
+                            Text(ht("Retry keeps the same reviewed fields, revision and action identity. It does not create a second action."))
+                            Button(ht("Retry and reconcile this exact action")) { Task { await model.retryAndReconcile() } }
+                                .disabled(model.busy).accessibilityIdentifier("helperReview.retry")
+                            Button(ht("Review status and clear local retry"), role: .destructive) { clearRetry = true }.disabled(model.busy)
+                        }
+                    } else if model.receipt != nil {
+                        Section { Text(ht("The reviewed action was confirmed. The shopping basket was not changed.")) }
+                    } else if let reviewed = model.reviewed {
+                        Section(ht("Final shopper review")) {
+                            Text(reviewed.decision == .dismiss ? ht("Dismiss this suggestion") : ht("Replace shared instructions"))
+                            if let value = reviewed.projection { projection(value) }
+                            else { Text(ht("Dismissal closes this suggestion without changing the current instructions.")) }
+                            Toggle(ht("I reviewed this exact action for this recipient"), isOn: $model.approved)
+                            Button(ht("Apply reviewed helper action")) { Task { await model.apply() } }
+                                .disabled(!model.canApply).accessibilityIdentifier("helperReview.apply")
+                            Button(ht("Continue editing")) { model.cancelReview() }.disabled(model.busy)
+                        }
+                    } else if model.canReview, draft != nil {
+                        editor
+                        Section {
+                            Button(ht("Review complete replacement")) {
+                                do { model.review(decision: .replace, projection: try draft?.projection()); inputNotice = nil }
+                                catch { inputNotice = ht("Check the shared name, language and every instruction field before reviewing.") }
+                            }.accessibilityIdentifier("helperReview.replace")
+                            if model.proposalID != nil {
+                                Button(ht("Review dismissal")) { model.review(decision: .dismiss, projection: nil) }
+                                    .accessibilityIdentifier("helperReview.dismiss")
+                            }
+                            if let inputNotice { Text(inputNotice) }
+                        }
+                    }
+                }
+                if let notice = model.notice { Section { Text(notice).accessibilityIdentifier("helperReview.notice") } }
+            } else { Text(ht("Shopper access required")) }
+        }
+        .navigationTitle(ht("Review helper instructions"))
+        .task { await model.load() }
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(250))
+                guard !Task.isCancelled else { return }
+                model.enforceRuntime()
+                if !model.authorized && !model.busy { draft = nil }
+            }
+        }
+        .onChange(of: model.current) { _, value in draft = value.map { HelperReviewDraft($0.projection) }; inputNotice = nil }
+        .onChange(of: draft) { _, _ in model.cancelReview() }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .background { model.invalidate(); draft = nil }
+            if phase == .active { Task { await model.load() } }
+        }
+        .onDisappear { model.invalidate(); draft = nil }
+        .confirmationDialog(ht("Clear only this local retry record?"), isPresented: $clearRetry, titleVisibility: .visible) {
+            Button(ht("Refresh status and clear retry"), role: .destructive) { Task { await model.clearRetryAfterStatusReview() } }
+        } message: {
+            Text(ht("The app will refresh shared status first. Clearing a retry does not undo an action already received. Use exact retry to confirm the original result."))
+        }
+    }
+    @ViewBuilder private var editor: some View {
+        Section(ht("Editable replacement instructions")) {
+            TextField(ht("Name shown for this shop"), text: Binding(get: { draft?.label ?? "" }, set: { draft?.label = $0 }))
+            Picker(ht("Instruction language"), selection: Binding(get: { draft?.language ?? "en" }, set: { draft?.language = $0 })) {
+                Text(ht("English")).tag("en"); Text(ht("Spanish")).tag("es")
+            }
+            Text(ht("Only the fields reviewed here will be shared. Existing budgets, receipts and private notes are not included."))
+        }
+        ForEach(draft?.items ?? []) { item in
+            Section(ht("Instruction")) {
+                TextField(ht("Item"), text: field(item, \.label))
+                TextField(ht("Amount, optional"), text: field(item, \.amount))
+                TextField(ht("Unit, optional"), text: field(item, \.unit))
+                TextField(ht("What the cook should do"), text: field(item, \.action), axis: .vertical)
+                Button(ht("Remove instruction"), role: .destructive) { draft?.items.removeAll { $0.id == item.id } }
+            }
+        }
+        Section {
+            Button(ht("Add an instruction")) { draft?.items.append(.init()) }.disabled((draft?.items.count ?? 200) >= 200)
+        }
+    }
+    private func field(_ item: HelperDraftItem, _ path: WritableKeyPath<HelperDraftItem, String>) -> Binding<String> {
+        Binding(get: { draft?.items.first { $0.id == item.id }?[keyPath: path] ?? "" }, set: { value in
+            guard var current = draft, let index = current.items.firstIndex(where: { $0.id == item.id }) else { return }
+            current.items[index][keyPath: path] = value; draft = current
+        })
+    }
+    @ViewBuilder private func projection(_ value: HelperProjection) -> some View {
+        Text(value.shopLabel).font(.headline)
+        Text(value.language == "es" ? ht("Spanish") : ht("English"))
+        ForEach(Array(value.items.enumerated()), id: \.offset) { _, item in helperInstruction(item) }
+    }
 }

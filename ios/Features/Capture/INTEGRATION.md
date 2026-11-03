@@ -58,3 +58,6 @@ Recipe OCR is a bounded bilingual suggestion parser, followed by editable title/
 Foreground tombstone reconciliation and Records deletion both call the media cleanup from `DeviceSurfacesComposition.eraseLedgerWorkspace` / `erasePickupRecord`. Retirement markers survive restart and reject late saves. Cleanup failures propagate so the durable deletion journal retries. A failed/uncertain recipe save retains its source sidecar for exact retry or workspace erasure, never deletes potentially committed evidence.
 
 Host/SDK integration evidence is recorded separately. No physical-device, simulator UI, VoiceOver, permission-denial, low-light capture, or human Spanish acceptance is implied by host tests.
+
+
+Barcode compatibility: use the current Vision detector first. If it errors or finds no valid codes, make at most one supported revision-2 pass using each stage's supported CPU device. This addresses the iOS 27 simulator inference-context failure reproduced with generated QR images. Cancellation is checked between passes; both results remain untrusted identifiers requiring manual matching. The test retains its exact payload assertion. This simulator evidence does not certify physical camera conditions.

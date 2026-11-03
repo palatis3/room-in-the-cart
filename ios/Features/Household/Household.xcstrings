@@ -6120,6 +6120,567 @@
           }
         }
       }
+    },
+    "A suggestion never changes shared instructions automatically. Review the complete replacement; shopping basket changes remain separate.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A suggestion never changes shared instructions automatically. Review the complete replacement; shopping basket changes remain separate."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una sugerencia nunca cambia las instrucciones compartidas automáticamente. Revisa el reemplazo completo; los cambios en la canasta se hacen por separado."
+          }
+        }
+      }
+    },
+    "Apply reviewed helper action": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apply reviewed helper action"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aplicar la acción revisada"
+          }
+        }
+      }
+    },
+    "Check the shared name, language and every instruction field before reviewing.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the shared name, language and every instruction field before reviewing."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verifica el nombre compartido, el idioma y todos los campos de las instrucciones antes de revisarlos."
+          }
+        }
+      }
+    },
+    "Clear only this local retry record?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear only this local retry record?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Borrar solo este registro local de reintento?"
+          }
+        }
+      }
+    },
+    "Continue editing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue editing"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seguir editando"
+          }
+        }
+      }
+    },
+    "Current shared instructions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current shared instructions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instrucciones compartidas actuales"
+          }
+        }
+      }
+    },
+    "Dismiss this suggestion": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dismiss this suggestion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descartar esta sugerencia"
+          }
+        }
+      }
+    },
+    "Dismissal closes this suggestion without changing the current instructions.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dismissal closes this suggestion without changing the current instructions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descartar cierra esta sugerencia sin cambiar las instrucciones actuales."
+          }
+        }
+      }
+    },
+    "Editable replacement instructions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editable replacement instructions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instrucciones de reemplazo editables"
+          }
+        }
+      }
+    },
+    "Final shopper review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Final shopper review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisión final de quien hace la compra"
+          }
+        }
+      }
+    },
+    "I reviewed this exact action for this recipient": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed this exact action for this recipient"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé esta acción exacta para esta persona destinataria"
+          }
+        }
+      }
+    },
+    "Refresh current shared status": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh current shared status"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar el estado compartido actual"
+          }
+        }
+      }
+    },
+    "Refresh status and clear retry": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh status and clear retry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar el estado y borrar el reintento"
+          }
+        }
+      }
+    },
+    "Replace shared instructions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace shared instructions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reemplazar las instrucciones compartidas"
+          }
+        }
+      }
+    },
+    "Retry and reconcile this exact action": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry and reconcile this exact action"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar y confirmar esta misma acción"
+          }
+        }
+      }
+    },
+    "Retry keeps the same reviewed fields, revision and action identity. It does not create a second action.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry keeps the same reviewed fields, revision and action identity. It does not create a second action."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El reintento conserva los mismos campos revisados, la misma revisión y la identidad de la acción. No crea una segunda acción."
+          }
+        }
+      }
+    },
+    "Review and replace shared instructions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review and replace shared instructions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar y reemplazar las instrucciones compartidas"
+          }
+        }
+      }
+    },
+    "Review complete replacement": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review complete replacement"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar el reemplazo completo"
+          }
+        }
+      }
+    },
+    "Review dismissal": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review dismissal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar el descarte"
+          }
+        }
+      }
+    },
+    "Review helper instructions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review helper instructions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar las instrucciones para la persona ayudante"
+          }
+        }
+      }
+    },
+    "Review status and clear local retry": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review status and clear local retry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar el estado y borrar el reintento local"
+          }
+        }
+      }
+    },
+    "Review this suggestion": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review this suggestion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar esta sugerencia"
+          }
+        }
+      }
+    },
+    "Reviewed action awaiting reconciliation": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed action awaiting reconciliation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acción revisada pendiente de confirmación"
+          }
+        }
+      }
+    },
+    "Suggestion reference": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggestion reference"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referencia de la sugerencia"
+          }
+        }
+      }
+    },
+    "Suggestion revision": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggestion revision"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisión de la sugerencia"
+          }
+        }
+      }
+    },
+    "The app will refresh shared status first. Clearing a retry does not undo an action already received. Use exact retry to confirm the original result.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The app will refresh shared status first. Clearing a retry does not undo an action already received. Use exact retry to confirm the original result."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La app actualizará primero el estado compartido. Borrar un reintento no deshace una acción ya recibida. Reintenta la misma acción para confirmar el resultado original."
+          }
+        }
+      }
+    },
+    "The current instructions or suggestion changed. Refresh and review again; an existing retry keeps its original action.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The current instructions or suggestion changed. Refresh and review again; an existing retry keeps its original action."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las instrucciones actuales o la sugerencia cambiaron. Actualiza y vuelve a revisar; un reintento existente conserva su acción original."
+          }
+        }
+      }
+    },
+    "The local retry was cleared after refreshing shared status. This does not undo a shared action.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The local retry was cleared after refreshing shared status. This does not undo a shared action."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se borró el reintento local después de actualizar el estado compartido. Esto no deshace una acción compartida."
+          }
+        }
+      }
+    },
+    "The result is not confirmed. Retry and reconcile the same reviewed action before starting another.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The result is not confirmed. Retry and reconcile the same reviewed action before starting another."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El resultado no está confirmado. Reintenta y confirma la misma acción revisada antes de empezar otra."
+          }
+        }
+      }
+    },
+    "The reviewed action was confirmed. The shopping basket was not changed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The reviewed action was confirmed. The shopping basket was not changed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La acción revisada fue confirmada. La canasta de compras no cambió."
+          }
+        }
+      }
+    },
+    "The shared action was confirmed. Retry to finish clearing its local retry record.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The shared action was confirmed. Retry to finish clearing its local retry record."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La acción compartida fue confirmada. Reintenta para terminar de borrar su registro local de reintento."
+          }
+        }
+      }
+    },
+    "This shared view is no longer available to the current shopper.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This shared view is no longer available to the current shopper."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta vista compartida ya no está disponible para quien hace la compra actualmente."
+          }
+        }
+      }
+    },
+    "This suggestion refers to an earlier instruction revision. Compare it with the current instructions before deciding.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This suggestion refers to an earlier instruction revision. Compare it with the current instructions before deciding."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta sugerencia se refiere a una revisión anterior de las instrucciones. Compárala con las instrucciones actuales antes de decidir."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
