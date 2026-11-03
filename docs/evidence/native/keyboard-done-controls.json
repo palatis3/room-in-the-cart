@@ -1,0 +1,25 @@
+{
+  "screens": [
+    "Pack comparison",
+    "Dinner ingredient supply review"
+  ],
+  "scope": "Tested focus, entry, dismissal and saving from normal workflows. Both devices completed the Shop/comparison accessibility audit. The iOS 27 run also checked comparison saving at the largest text size.",
+  "runs": [
+    {
+      "result": "Passed",
+      "passedTests": 3,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "bundle": "KeyboardReview27"
+    },
+    {
+      "result": "Passed",
+      "passedTests": 2,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "bundle": "KeyboardReviewSE"
+    }
+  ]
+}

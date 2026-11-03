@@ -21,6 +21,19 @@ struct PrimaryAction: ButtonStyle {
 }
 
 extension View {
+    func keyboardDoneAction(visible: Bool, title: String, dismiss: @escaping () -> Void) -> some View {
+        safeAreaInset(edge: .bottom, spacing: 0) {
+            if visible {
+                HStack {
+                    Spacer()
+                    Button(title, action: dismiss)
+                        .font(.body.weight(.semibold)).frame(minHeight: 44)
+                }
+                .padding(.horizontal).background(.bar)
+            }
+        }
+    }
+
     /// Navigation transitions can briefly propose an empty viewport.
     func fittingViewport(_ size: CGSize) -> some View {
         frame(width: size.width.isFinite ? max(0, size.width) : nil,

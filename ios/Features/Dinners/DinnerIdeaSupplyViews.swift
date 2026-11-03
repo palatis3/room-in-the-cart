@@ -128,10 +128,10 @@ private struct IdeaSupplyEditor: View {
                 if let error { Text(error).foregroundStyle(.red) }
                 Button(dinnerText("Use these reviewed details")) { apply() }.accessibilityIdentifier("ideaSupplyConfirm")
             }
+            .keyboardDoneAction(visible: field != nil, title: dinnerText("Done")) { field = nil }
             .navigationTitle(dinnerText("Review ingredient supply"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button(dinnerText("Cancel")) { dismiss() } }
-                ToolbarItemGroup(placement: .keyboard) { Spacer(); Button(dinnerText("Done")) { field = nil } }
             }
         }
     }

@@ -38,11 +38,8 @@ struct ComparisonView: View {
                     editToolbar
                 }
             }
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                Button(tr("Done")) { inputFocused = nil }
-            }
         }
+        .keyboardDoneAction(visible: inputFocused != nil, title: tr("Done")) { inputFocused = nil }
         .onAppear { if reviewing { model.compare() } }
     }
 
