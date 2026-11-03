@@ -1,0 +1,30 @@
+{
+  "feature": "S27 entered store quotes and explicit local pickup adoption",
+  "verified": "2026-11-03",
+  "device": "iPhone SE (2nd generation), iOS Simulator 17.0",
+  "resultBundle": ".build/S27EnteredAcceptance.xcresult",
+  "tests": {
+    "totalTestCount": 2,
+    "passedTests": 2,
+    "failedTests": 0,
+    "skippedTests": 0
+  },
+  "journeys": [
+    "S05 → S27 through a newly created Free pickup and imported wraps. Entered both quotes and their terms in the ordinary app. Unknown travel cash gave a $3.00 break-even. Merchandise $36/$32, checkout $38/$35, travel $0/$4, total $38/$39, and 18 additional minutes appeared separately.",
+    "Saved reviewed comparison before S17, verified the second store’s exact branch and slot, cancelled and then explicitly applied. Relaunch retained East branch and the dated comparison. The stale proof could not adopt again.",
+    "Fresh ordinary Dinners entry with unknown prices and availability. The comparison remained conditional after saving and its adoption control was disabled."
+  ],
+  "screenshots": [
+    "docs/evidence/native/entered-store-trip-differences.png",
+    "docs/evidence/native/entered-store-trip-break-even.png"
+  ],
+  "attachments": {
+    "S27-reopened-adopted-branch-and-dated-comparison": ".build/S27EnteredAcceptanceAttachments/304933BD-23D1-4439-8316-B97D57D5D5AE.png",
+    "S27-complete-store-differences": ".build/S27EnteredAcceptanceAttachments/30E7BA70-7B73-4A12-814B-F4F78F4C25A6.png",
+    "S27-unknown-trip-break-even": ".build/S27EnteredAcceptanceAttachments/B51BD390-7D8C-4530-BF43-676A03C93A64.png",
+    "S27-saved-unknown-availability-and-prices": ".build/S27EnteredAcceptanceAttachments/E8FB93AD-21F5-4153-B935-8C71EBDAD07B.png"
+  },
+  "limits": [
+    "Local US-English Simulator UI using an isolated test workspace and shopper-entered store facts. Spanish catalog keys and format arguments passed structural verification."
+  ]
+}

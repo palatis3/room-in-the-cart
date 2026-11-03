@@ -3,6 +3,97 @@ import CoreDomain
 @testable import RoomInTheCart
 
 final class LedgerCheckoutAdapterTests: XCTestCase {
+    func testGuestCheckoutReviewRequiresSameLedgerBasketAndBranch() throws {
+        let shop = try wrapShop()
+        let source = try LedgerCheckoutAdapter.review(shop: shop, workspaceRevision: 1, previous: nil)
+        let context = source.context
+        let quote = CheckoutQuote(scope: .wholeCheckout, context: context, pricing: .inclusiveTotal(.exact(.init(minorUnits: 500))))
+        let basket = try BasketPlan(id: shop.id, revisionID: UUID(), lines: source.lines, createdAt: Date())
+        var journey = PickupJourney(id: shop.id, savedAt: Date())
+        journey.basket = basket; journey.ledgerSourceRevisionID = shop.revisionID; journey.ledgerBasis = shop.basis
+        journey.quotedRevisionID = basket.current.id; journey.quote = quote; journey.context = context
+        XCTAssertEqual(journey.reviewedGuestQuote(for: shop, selections: []), quote)
+        journey.quotedRevisionID = UUID()
+        XCTAssertNil(journey.reviewedGuestQuote(for: shop, selections: []))
+        journey.quotedRevisionID = basket.current.id; journey.ledgerSourceRevisionID = UUID()
+        XCTAssertNil(journey.reviewedGuestQuote(for: shop, selections: []))
+        journey.ledgerSourceRevisionID = shop.revisionID
+        let other = CheckoutContext(storeID: "Other", branchID: "Other", mode: context.mode, slot: context.slot, commitmentsID: shop.id, observedAt: Date(), source: "Quote")
+        journey.context = other; journey.quote = .init(scope: quote.scope, context: other, pricing: quote.pricing)
+        XCTAssertNil(journey.reviewedGuestQuote(for: shop, selections: []))
+    }
+
+    @MainActor func testGuestApplyCarriesFiveBoundPeppersThroughPackAndCheckoutWithoutChangingReportedPurchase() async throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let ledger = LedgerModel(databaseURL: directory.appendingPathComponent("ledger.sqlite"))
+        let pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"))
+        await ledger.open(); await pickup.load()
+        let workspaceID = try XCTUnwrap(ledger.sourceWorkspaceID)
+        let now = Date()
+        var shop = ShoppingLedger(title: "Pickup", basis: basis())
+        let family = ServingGroup(name: "Dinner", servings: try Rational(3))
+        let lunch = ServingGroup(name: "Lunch", servings: .one, isProtected: true)
+        let occurrence = try shop.chooseMeal(.init(title: "Rice", servings: try Rational(4),
+            ingredients: [.init(name: "Peppers", quantity: quantity(8))], servingGroups: [family, lunch]))
+        let source = try XCTUnwrap(shop.contributions.first)
+        let auth = DinnerAccessContext(scope: .local(workspaceID: workspaceID), actorID: "adult", shopID: shop.id, assignedShopperID: "adult",
+            canPlan: true, canReadBudget: true, hasPaidTools: true, roleRevision: 1,
+            verifiedAt: now.addingTimeInterval(-1), validUntil: now.addingTimeInterval(3600))
+        let conversion = UnitBasis(sourceUnit: .gram, targetUnit: .count, targetAmountPerSourceUnit: try Rational(1,100), sourceNote: "100 g per pepper")
+        let boundLunch = DinnerPortionBinding(occurrenceID: occurrence, contributionID: source.id, groupID: lunch.id,
+            quantity: Quantity(amount: try Rational(500), unit: .gram, originalLiteral: "500g", confirmedConversion: conversion), servings: .one)
+        var planning = DinnerPlanningState()
+        try planning.setPortionBindings([.init(occurrenceID: occurrence, contributionID: source.id, groupID: family.id, quantity: quantity(3), servings: family.servings),
+            boundLunch], for: occurrence, ledger: shop, access: auth, at: now)
+        _ = await ledger.change(key: "seed-portions") { $0.shops = [shop]; $0.selectedShopID = shop.id; $0.dinnerPlanning = planning }
+        let model = DinnerFeatureModel(store: ledger, access: { _ in auth }, phase: { _ in pickup.journey?.basket?.phase ?? .draft })
+        let pack = PackOffer(id: "eight", label: "8 peppers", usableQuantity: quantity(8), price: .init(minorUnits: 240))
+        let other = PackOffer(id: "single", label: "1 pepper", usableQuantity: quantity(1), price: .init(minorUnits: 60))
+        let before = try LedgerPackReview.prepare(ledger: ledger, shopID: shop.id, lineID: source.lineID, offerA: pack, offerB: other, itemCap: nil, at: now, source: "Package")
+        XCTAssertEqual(before.requirement.protectedQuantity.amount, try Rational(5))
+        let saved = try await before.save(offerID: pack.id, ledger: ledger)
+        XCTAssertTrue(saved)
+        XCTAssertTrue(model.previewGuests(occurrenceID: occurrence, servings: [family.id: try Rational(4)]))
+        model.cancelPreview()
+        XCTAssertEqual(ledger.shop?.revisionID, shop.revisionID)
+        XCTAssertTrue(model.previewGuests(occurrenceID: occurrence, servings: [family.id: try Rational(4)]))
+        let applied = await model.applyPreview()
+        XCTAssertTrue(applied)
+        XCTAssertEqual(ledger.workspace.dinnerPlanning.portionBindings.first(where: { $0.id == boundLunch.id }), boundLunch)
+        XCTAssertNil(try ledger.workspace.currentPackSelection(shopID: shop.id, lineID: source.lineID, workspaceID: workspaceID))
+        let after = try LedgerPackReview.prepare(ledger: ledger, shopID: shop.id, lineID: source.lineID, offerA: pack, offerB: other, itemCap: nil, at: now, source: "Package")
+        XCTAssertEqual(after.requirement.quantity.amount, try Rational(9)); XCTAssertEqual(after.requirement.protectedQuantity.amount, try Rational(5))
+        XCTAssertEqual(after.result.offerA.packsToBuy, 2)
+        let resaved = try await after.save(offerID: pack.id, ledger: ledger)
+        XCTAssertTrue(resaved)
+        func review() throws -> LedgerCheckoutReview {
+            try LedgerCheckoutAdapter.review(shop: XCTUnwrap(ledger.shop), workspaceRevision: ledger.revision, previous: pickup.journey,
+                packSelections: ledger.workspace.packSelections, workspaceID: workspaceID, bindings: ledger.workspace.dinnerPlanning.portionBindings)
+        }
+        let reviewed = try review()
+        XCTAssertEqual(reviewed.lines.first?.quantity.amount, try Rational(16))
+        XCTAssertEqual(reviewed.needs.first(where: { $0.priority == .protected })?.amount.amount, try Rational(5))
+        XCTAssertEqual(reviewed.needs.first(where: { $0.priority == .required })?.amount.amount, try Rational(4))
+        let staged = try await LedgerCheckoutAdapter.apply(reviewed, ledger: ledger, pickup: pickup); XCTAssertTrue(staged)
+        let quoted = await pickup.setQuote(.init(scope: .wholeCheckout, context: reviewed.context, pricing: .inclusiveTotal(.exact(.init(minorUnits: 480)))), cap: nil)
+        XCTAssertTrue(quoted)
+        let frozen = await pickup.freeze(); XCTAssertTrue(frozen)
+        let placed = await pickup.reportPlaced(); XCTAssertTrue(placed)
+        let reported = try XCTUnwrap(pickup.journey)
+        XCTAssertTrue(model.previewGuests(occurrenceID: occurrence, servings: [family.id: try Rational(5)]))
+        XCTAssertTrue(model.preview?.needsPurchaseAmendment == true); XCTAssertFalse(model.canApply)
+        do { _ = try await LedgerCheckoutAdapter.apply(review(), ledger: ledger, pickup: pickup); XCTFail("Reported purchase was editable") }
+        catch { XCTAssertEqual(error as? LedgerCheckoutError, .placedOrder) }
+        XCTAssertEqual(pickup.journey, reported)
+        // A later quantity without a compatible unit must never fall back to a ration of servings.
+        var stale = try XCTUnwrap(ledger.shop)
+        try stale.updateContribution(contributionID: source.id, quantity: Quantity(amount: .one, unit: .liter, originalLiteral: "1 L"), notes: "")
+        XCTAssertThrowsError(try LedgerPackRequirement.review(shop: stale, lineID: source.lineID, bindings: ledger.workspace.dinnerPlanning.portionBindings))
+        XCTAssertThrowsError(try LedgerCheckoutAdapter.review(shop: stale, workspaceRevision: ledger.revision, previous: reported, bindings: ledger.workspace.dinnerPlanning.portionBindings))
+        XCTAssertEqual(pickup.journey, reported)
+    }
+
     func testTwelveExistingWrapsProjectSixFourTwoExactlyOnce() throws {
         let shop = try wrapShop()
         let review = try LedgerCheckoutAdapter.review(shop: shop, workspaceRevision: 1, previous: nil)

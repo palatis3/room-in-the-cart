@@ -194,11 +194,65 @@ final class DinnerPlanningTests: XCTestCase {
         XCTAssertEqual(quantity.amount, try Rational(9)); XCTAssertEqual(preview.projectedLedger.mealOccurrences.first?.servingGroups.last, lunchGroup)
         let packA = PackOffer(id: "a", label: "Eight", usableQuantity: try q(8), price: Money(minorUnits: 240))
         let packB = PackOffer(id: "b", label: "Eight", usableQuantity: try q(8), price: Money(minorUnits: 240))
-        XCTAssertEqual(try PackComparison.evaluate(.init(itemName: "wraps", needed: quantity, offerA: packA, offerB: packB)).offerA.packsToBuy, 2)
+        var workspace = LedgerWorkspace(shops: [ledger], selectedShopID: ledger.id, dinnerPlanning: state)
+        let line = try XCTUnwrap(ledger.lines.first)
+        let requirement = try LedgerPackRequirement.review(shop: ledger, lineID: line.id)
+        let selection = try LedgerPackSelection(workspaceID: workspaceID, shop: ledger, lineID: line.id,
+            request: .init(itemName: line.name, needed: requirement.quantity, protectedAmount: requirement.protectedQuantity, offerA: packA, offerB: packB),
+            selectedOfferID: packA.id, at: now, source: "Package quote")
+        try workspace.recordPackSelection(selection, workspaceID: workspaceID)
+        let context = CheckoutContext(storeID: "Store", branchID: "Main", mode: .pickup, slot: "Friday", commitmentsID: ledger.id, observedAt: now, source: "Quote")
+        let zero = CostEvidence.exact(Money(minorUnits: 0))
+        let fee = CheckoutFee(id: "small-order", rule: .waivedAt(threshold: Money(minorUnits: 400), belowThreshold: .exact(Money(minorUnits: 150)), basis: .eligibleItemsAfterEligibleDiscounts))
+        func impact(tax: CostEvidence, oldCost: Int64 = 240, complete: Bool = true, fees: [CheckoutFee]? = nil) throws -> DinnerGuestImpact {
+            let quote = CheckoutQuote(scope: .wholeCheckout, context: context, pricing: .components(
+                lines: [.init(id: line.id, name: line.name, cost: .exact(Money(minorUnits: oldCost)))], lineSetComplete: complete,
+                fees: fees ?? [fee], discounts: [], tax: tax, deposits: zero))
+            return try preview.guestImpact(workspace: workspace, workspaceID: workspaceID, quote: quote)
+        }
+        let result = try impact(tax: zero)
+        XCTAssertEqual(result.lines.first?.before, 1); XCTAssertEqual(result.lines.first?.after, 2)
+        XCTAssertEqual(result.beforeFees?.exact?.minorUnits, 150); XCTAssertEqual(result.afterFees?.exact?.minorUnits, 0)
+        XCTAssertEqual(result.beforeCheckout?.total.exact?.minorUnits, 390); XCTAssertEqual(result.afterCheckout?.total.exact?.minorUnits, 480)
+        XCTAssertNil(try impact(tax: .unknown(reason: "retailer tax")).afterCheckout?.total.exact)
+        XCTAssertNil(try impact(tax: zero, oldCost: 275).afterCheckout?.total.exact)
+        XCTAssertNil(try impact(tax: zero, complete: false).afterCheckout?.total.exact)
+        let unknownFees = try impact(tax: zero, fees: [.init(id: "fee", rule: .fixed(.unknown(reason: "retailer fee")))])
+        XCTAssertNil(unknownFees.afterFees?.exact); XCTAssertNil(unknownFees.afterCheckout?.total.exact)
+        let inclusive = try preview.guestImpact(workspace: workspace, workspaceID: workspaceID,
+            quote: .init(scope: .wholeCheckout, context: context, pricing: .inclusiveTotal(.exact(Money(minorUnits: 390)))))
+        XCTAssertEqual(inclusive.beforeCheckout?.total.exact?.minorUnits, 390); XCTAssertNil(inclusive.afterCheckout)
+        XCTAssertThrowsError(try preview.guestImpact(workspace: workspace, workspaceID: UUID(), quote: nil))
+        XCTAssertEqual(workspace.shops, [ledger]); XCTAssertEqual(workspace.dinnerPlanning.portionBindings, state.portionBindings)
+        var missing = workspace; missing.packSelections = []
+        let unresolved = try preview.guestImpact(workspace: missing, workspaceID: workspaceID, quote: nil)
+        XCTAssertNil(unresolved.lines.first?.after); XCTAssertNil(unresolved.afterCheckout)
+        try missing.shops[0].addManualLine(name: "New item", quantity: q(1))
+        XCTAssertThrowsError(try preview.guestImpact(workspace: missing, workspaceID: workspaceID, quote: nil))
         XCTAssertThrowsError(try DinnerPlanningEngine.previewGuests(occurrenceID: occurrence, servingsByGroup: [lunchGroup.id: try Rational(2)],
             ledger: ledger, state: state, access: access(ledger), phase: .draft, at: now))
         XCTAssertEqual(ledger.contributions.first?.quantity?.amount, try Rational(8))
     }
+    func testFreeManualReductionFromTwelveToFourKeepsOnePackAndPrivateBudgetHidden() throws {
+        var ledger = ShoppingLedger()
+        let occurrenceID = try ledger.chooseMeal(meal(quantity: 12), at: now)
+        let source = try XCTUnwrap(ledger.contributions.first)
+        var workspace = LedgerWorkspace(shops: [ledger], selectedShopID: ledger.id)
+        let need = try LedgerPackRequirement.review(shop: ledger, lineID: source.lineID)
+        let pack = PackOffer(id: "dozen", label: "Dozen", usableQuantity: try q(12), price: Money(minorUnits: 399))
+        let other = PackOffer(id: "single", label: "Single", usableQuantity: try q(1), price: Money(minorUnits: 100))
+        let selected = try LedgerPackSelection(workspaceID: workspaceID, shop: ledger, lineID: source.lineID,
+            request: .init(itemName: need.name, needed: need.quantity, protectedAmount: need.protectedQuantity, offerA: pack, offerB: other),
+            selectedOfferID: pack.id, at: now, source: "Entered package")
+        try workspace.recordPackSelection(selected, workspaceID: workspaceID)
+        let change = DinnerLedgerChange.adjust(.init(occurrenceID: occurrenceID, servings: .one, groups: [], quantities: [.init(contributionID: source.id, quantity: try q(4))]))
+        let preview = try DinnerPlanningEngine.preview(changes: [change], tool: .manual, ledger: ledger, state: workspace.dinnerPlanning,
+            access: access(ledger, paid: false, budget: false), phase: .draft, at: now)
+        let review = try preview.guestImpact(workspace: workspace, workspaceID: workspaceID, quote: nil)
+        XCTAssertEqual(review.lines.first?.before, 1); XCTAssertEqual(review.lines.first?.after, 1)
+        XCTAssertNil(review.lines.first?.beforeCost); XCTAssertNil(review.lines.first?.afterCost); XCTAssertNil(review.beforeCheckout)
+    }
+
     func testUnboundNamedPortionsRequireReviewAndIsolatedPreviewCannotApply() throws {
         var ledger = ShoppingLedger(), state = DinnerPlanningState()
         let occurrence = try ledger.chooseMeal(meal(), at: now)

@@ -128,9 +128,14 @@ public enum CheckoutEngine {
     public static let roundingPolicy = "USD-cents-exact; inclusive-fee-threshold"
 
     public static func evaluate(_ quote: CheckoutQuote, cap: CheckoutCap? = nil) throws -> CheckoutResult {
+        try evaluateWithFees(quote, cap: cap).result
+    }
+
+    static func evaluateWithFees(_ quote: CheckoutQuote, cap: CheckoutCap? = nil) throws -> (result: CheckoutResult, fees: CheckoutAmount?) {
         try validate(quote.context)
         var issues: [CheckoutUncertainty] = []
         let total: Interval
+        var feeAmount: CheckoutAmount?
         switch quote.pricing {
         case let .inclusiveTotal(evidence):
             total = try interval(evidence, component: "inclusiveTotal", issues: &issues)
@@ -183,6 +188,7 @@ public enum CheckoutEngine {
                 }
                 charges = try charges.adding(amount)
             }
+            feeAmount = CheckoutAmount(lowerBound: Money(minorUnits: charges.lower), upperBound: charges.upper.map { Money(minorUnits: $0) })
             let taxAmount = try interval(tax, component: "tax", issues: &issues)
             let depositAmount = try interval(deposits, component: "deposits", issues: &issues)
             total = try goods.subtractingDiscount(allDiscounts).adding(charges).adding(taxAmount).adding(depositAmount)
@@ -197,9 +203,9 @@ public enum CheckoutEngine {
                 assessment = .over(minimumCheckout: Money(minorUnits: total.lower), minimumOverage: Money(minorUnits: total.lower - cap.amount.minorUnits))
             } else { assessment = .unresolved }
         } else { assessment = .notProvided }
-        return CheckoutResult(scope: quote.scope,
+        return (CheckoutResult(scope: quote.scope,
                               total: CheckoutAmount(lowerBound: Money(minorUnits: total.lower), upperBound: total.upper.map { Money(minorUnits: $0) }),
-                              uncertainties: issues, cap: assessment)
+                              uncertainties: issues, cap: assessment), feeAmount)
     }
 
     public static func compare(before: CheckoutQuote, after: CheckoutQuote, cap: CheckoutCap? = nil) throws -> CheckoutComparison {

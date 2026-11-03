@@ -7219,6 +7219,230 @@
           }
         }
       }
+    },
+    "Incremental trip cash range: %@ to %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incremental trip cash range: %@ to %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gasto adicional del viaje: entre %@ y %@"
+          }
+        }
+      }
+    },
+    "Incremental trip cash: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incremental trip cash: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gasto adicional del viaje: %@"
+          }
+        }
+      }
+    },
+    "Checkout plus trip cash, second minus first: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checkout plus trip cash, second minus first: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total de la compra más el gasto del viaje, segunda tienda menos primera: %@"
+          }
+        }
+      }
+    },
+    "This saved comparison uses an earlier pickup revision. Review the store options again to change the current pickup.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This saved comparison uses an earlier pickup revision. Review the store options again to change the current pickup."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta comparación guardada corresponde a una versión anterior de la recogida. Revisa otra vez las opciones de tienda para cambiar la recogida actual."
+          }
+        }
+      }
+    },
+    "Edit quotes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit quotes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar cotizaciones"
+          }
+        }
+      }
+    },
+    "Current pickup branch: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current pickup branch: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sucursal de la recogida actual: %@"
+          }
+        }
+      }
+    },
+    "Package and checkout effects": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Package and checkout effects"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambios en los paquetes y el total"
+          }
+        }
+      }
+    },
+    "Whole packages: %@ → %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whole packages: %@ → %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquetes enteros: %@ → %@"
+          }
+        }
+      }
+    },
+    "Item cost: %@ → %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item cost: %@ → %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Costo del artículo: %@ → %@"
+          }
+        }
+      }
+    },
+    "Review a package for this item to calculate the change.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review a package for this item to calculate the change."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa un paquete de este artículo para calcular el cambio."
+          }
+        }
+      }
+    },
+    "Pickup fees: %@ → %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pickup fees: %@ → %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargos de recogida: %@ → %@"
+          }
+        }
+      }
+    },
+    "Whole pickup: %@ → %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whole pickup: %@ → %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total de la recogida: %@ → %@"
+          }
+        }
+      }
+    },
+    "Estimate uses the same entered checkout terms. Review current package prices and charges at checkout.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estimate uses the same entered checkout terms. Review current package prices and charges at checkout."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El cálculo usa las mismas condiciones que ingresaste. Revisa los precios y cargos vigentes al pagar."
+          }
+        }
+      }
+    },
+    "Reopen the current dinner and review its package and checkout terms.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reopen the current dinner and review its package and checkout terms."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a abrir la cena actual para revisar sus paquetes y las condiciones de pago."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

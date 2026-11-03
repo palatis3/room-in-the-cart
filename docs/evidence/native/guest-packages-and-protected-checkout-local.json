@@ -1,0 +1,37 @@
+{
+  "routes": [
+    "P03",
+    "S16",
+    "S17",
+    "S04",
+    "S05"
+  ],
+  "execution": "2026-11-03",
+  "device": "iPhone SE (2nd generation), iOS 17.0 Simulator",
+  "resultBundle": ".build/P03GuestAcceptance.xcresult",
+  "sameBuildRetry": ".build/P03SpanishSheetRetry.xcresult",
+  "runnerNote": "The suite passed 44 of 45 on first attempt. XCTest lost its testmanagerd connection while launching the Spanish group replacement case. That case passed in isolation with the same binary.",
+  "counts": {
+    "nativeAndUI": 45,
+    "native": 40,
+    "ui": 5,
+    "coreDomain": 156,
+    "failures": 0
+  },
+  "walkthrough": [
+    "The English and US Spanish paid journeys edit the dinner from three to four family portions while retaining one named lunch. The reviewed ingredient grows from eight to nine peppers. One eight-pack becomes two at $2.40 each. The entered $1.50 fee below $4 is waived. Whole pickup moves from $3.90 to $4.80. Cancel reopens with three family portions. Explicit Apply reopens with four.",
+    "English and Spanish guest previews without reviewed pack or checkout evidence show an unresolved effect. The wider suite also covers group replacement, saved protected lunch and the pairing sheet at maximum text size."
+  ],
+  "domainAndIntegration": [
+    "A free manual 12-to-4 reduction still buys one twelve-pack. An exact saved unit price never substitutes for an unknown tax, fee, mismatching quoted item price, incomplete basket or an inclusive-only repricing. An actor without budget access gets no price.",
+    "The normal dinner model, SQLite ledger, package selector and checkout adapter preserve a 500 g lunch binding explicitly converted to five peppers. S17 commits one adjustment. S04 re-reviews 9 peppers and selects 2 eight-packs. S05 retains 4 dinner and 5 lunch peppers with 16 purchased. Incompatible stale units block review. A reported purchase stays byte-for-value equal after a proposed change and rejected checkout apply.",
+    "The checkout estimator requires matching local shop, basis, basket and package evidence. Existing unbound meal records retain proportional group allocation."
+  ],
+  "limits": [
+    "Retailer facts and the named adult subscription seat are local fixtures. The checkout is an estimate under the entered terms. No live retailer charge, Apple billing or physical-device VoiceOver session was exercised."
+  ],
+  "attachments": {
+    "en": "docs/evidence/native/guest-package-checkout-en.png",
+    "es": "docs/evidence/native/guest-package-checkout-es.png"
+  }
+}

@@ -158,10 +158,18 @@ struct DinnerPreviewView: View {
                         }.accessibilityElement(children: .combine).accessibilityIdentifier("dinnerPreviewNeed-\(source.id)")
                     }
                 }
+                if preview.reviewsGuestPurchases {
+                    DinnerGuestPurchaseReview(model: model, preview: preview)
+                }
                 if model.budgetVisible, let basis = preview.budgetBasis,
                    preview.proposal.changes.contains(where: { if case .adoptBasis = $0 { return true }; return false }) {
                     Section(dinnerText("Reviewed store basis")) {
-                        Text(basis.branch); Text(basis.timeZoneIdentifier)
+                        Text(basis.branch)
+                        if let slot = basis.slot {
+                            Text(dinnerFormat("Store slot: %@",slot.formatted(date: .abbreviated,time: .shortened)))
+                                .accessibilityIdentifier("quoteAdoptionSlot")
+                        }
+                        Text(basis.timeZoneIdentifier)
                         Text(dinnerText("Changing store facts invalidates the current quote. The reviewed comparison remains in history."))
                     }
                 }

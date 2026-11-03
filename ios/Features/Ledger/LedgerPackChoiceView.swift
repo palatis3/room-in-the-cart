@@ -44,7 +44,7 @@ struct LedgerPackChoiceView: View {
                 Button(ledgerText("Keep editing")) { self.review = nil; validation = nil }
             } else {
                 if let shop = model.workspace.shops.first(where: { $0.id == shopID }),
-                   let requirement = try? LedgerPackRequirement.review(shop: shop, lineID: lineID) {
+                   let requirement = try? LedgerPackRequirement.review(shop: shop, lineID: lineID, bindings: model.workspace.dinnerPlanning.portionBindings) {
                     Section(ledgerText("Current ingredient need")) {
                         Text(requirement.name).font(.headline)
                         LabeledContent(ledgerText("Needed for this list"), value: ledgerQuantity(requirement.quantity))
@@ -87,7 +87,7 @@ struct LedgerPackChoiceView: View {
             .onAppear {
                 guard !initialized else { return }; initialized = true
                 if let shop = model.workspace.shops.first(where: { $0.id == shopID }),
-                   let requirement = try? LedgerPackRequirement.review(shop: shop, lineID: lineID) {
+                   let requirement = try? LedgerPackRequirement.review(shop: shop, lineID: lineID, bindings: model.workspace.dinnerPlanning.portionBindings) {
                     firstUnit = requirement.quantity.unit; secondUnit = requirement.quantity.unit
                 }
             }
@@ -122,6 +122,7 @@ struct LedgerPackChoiceView: View {
                 offerB: PackOffer(id: "b", label: secondLabel, usableQuantity: ComparisonModel.quantity(secondAmount, secondUnit), price: ComparisonModel.money(secondPrice)),
                 itemCap: ComparisonModel.money(cap), at: observedAt, source: source)
             focused = false; validation = nil
-        } catch { validation = ledgerText("Enter the pack labels, checked source and valid amounts. Unknown amounts stay blank.") }
+        } catch DinnerPlanningError.reviewRequired { validation = dinnerText("Review the current ingredient portions") }
+        catch { validation = ledgerText("Enter the pack labels, checked source and valid amounts. Unknown amounts stay blank.") }
     }
 }

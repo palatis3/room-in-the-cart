@@ -23,8 +23,8 @@ public struct LedgerPackSelection: Codable, Equatable, Sendable, Identifiable {
     public let source: String
 
     public init(id: UUID = UUID(), workspaceID: UUID, shop: ShoppingLedger, lineID: UUID,
-                request: ComparisonRequest, selectedOfferID: String, at: Date, source: String) throws {
-        let requirement = try LedgerPackRequirement.review(shop: shop, lineID: lineID)
+                request: ComparisonRequest, selectedOfferID: String, at: Date, source: String, bindings: [DinnerPortionBinding] = []) throws {
+        let requirement = try LedgerPackRequirement.review(shop: shop, lineID: lineID, bindings: bindings)
         guard request.itemName == requirement.name, request.needed == requirement.quantity,
               request.protectedAmount == requirement.protectedQuantity, request.confirmedAtHome == nil else { throw LedgerPackError.staleSource }
         let comparison = try PackComparison.evaluate(request)
@@ -63,11 +63,11 @@ public struct LedgerPackSelection: Codable, Equatable, Sendable, Identifiable {
               shop.revisions.contains(where: { $0.id == shopRevisionID && $0.basisRevision == basisRevision }) else { throw LedgerPackError.invalidEvidence }
     }
 
-    public func isCurrent(in shop: ShoppingLedger, workspaceID: UUID) throws -> Bool {
+    public func isCurrent(in shop: ShoppingLedger, workspaceID: UUID, bindings: [DinnerPortionBinding] = []) throws -> Bool {
         try validateReference(in: shop)
         guard sourceWorkspaceID == workspaceID, shop.revisionID == shopRevisionID,
               shop.basisRevision == basisRevision else { return false }
-        guard let requirement = try? LedgerPackRequirement.review(shop: shop, lineID: lineID) else { return false }
+        guard let requirement = try? LedgerPackRequirement.review(shop: shop, lineID: lineID, bindings: bindings) else { return false }
         return request.itemName == requirement.name && request.needed == requirement.quantity && request.protectedAmount == requirement.protectedQuantity
     }
 
@@ -83,7 +83,7 @@ public struct LedgerPackRequirement: Equatable, Sendable {
     /// This is a partition inside quantity, never additional demand.
     public let protectedQuantity: Quantity
 
-    public static func review(shop: ShoppingLedger, lineID: UUID) throws -> LedgerPackRequirement {
+    public static func review(shop: ShoppingLedger, lineID: UUID, bindings: [DinnerPortionBinding] = []) throws -> LedgerPackRequirement {
         try shop.validate()
         guard let line = shop.lines.first(where: { $0.id == lineID }), !line.isTrashed, !line.isHandled else { throw LedgerPackError.unavailableLine }
         guard let quantity = try shop.quantity(forLineID: lineID), quantity.amount > .zero else { throw LedgerPackError.missingQuantity }
@@ -94,8 +94,10 @@ public struct LedgerPackRequirement: Equatable, Sendable {
             case .protectedNeed: protected = try protected.adding(amount)
             case .meal(let occurrenceID):
                 guard let meal = shop.mealOccurrences.first(where: { $0.id == occurrenceID && $0.removedAt == nil }) else { throw LedgerPackError.invalidEvidence }
+                let portions = try LedgerMealPortions.review(meal: meal, contribution: contribution, in: shop, unit: quantity.unit, bindings: bindings)
                 for group in meal.servingGroups where group.isProtected {
-                    protected = try protected.adding(amount.multiplied(by: group.servings.divided(by: meal.servings)))
+                    guard let part = portions.groups[group.id] else { throw LedgerPackError.invalidEvidence }
+                    protected = try protected.adding(part)
                 }
             default: break
             }
@@ -113,7 +115,7 @@ extension LedgerWorkspace {
             return false
         }
         guard let shop = shops.first(where: { $0.id == selection.shopID }),
-              try selection.isCurrent(in: shop, workspaceID: workspaceID) else { throw LedgerPackError.staleSource }
+              try selection.isCurrent(in: shop, workspaceID: workspaceID, bindings: dinnerPlanning.portionBindings) else { throw LedgerPackError.staleSource }
         var candidate = self
         candidate.packSelections.append(selection)
         try candidate.validate()
@@ -124,7 +126,7 @@ extension LedgerWorkspace {
     public func currentPackSelection(shopID: UUID, lineID: UUID, workspaceID: UUID) throws -> LedgerPackSelection? {
         guard let shop = shops.first(where: { $0.id == shopID }) else { throw LedgerPackError.unavailableLine }
         for selection in packSelections.reversed() where selection.shopID == shopID && selection.lineID == lineID {
-            if try selection.isCurrent(in: shop, workspaceID: workspaceID) { return selection }
+            if try selection.isCurrent(in: shop, workspaceID: workspaceID, bindings: dinnerPlanning.portionBindings) { return selection }
         }
         return nil
     }

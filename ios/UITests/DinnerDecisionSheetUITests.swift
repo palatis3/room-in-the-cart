@@ -6,6 +6,39 @@ final class DinnerDecisionSheetUITests: XCTestCase {
     func testEnglishPaidGroupReplacementAndGuestCancellation() { exercise("en") }
     func testSpanishPaidGroupReplacementAndGuestCancellation() { exercise("es") }
 
+    func testEnglishGuestPackageBoundaryCheckoutAndCancel() { guestBoundary("en") }
+    func testSpanishGuestPackageBoundaryCheckoutAndCancel() { guestBoundary("es") }
+
+    private func guestBoundary(_ language: String) {
+        continueAfterFailure = false
+        app.launchArguments = ["--ui-testing", "--ui-testing-guest-boundary", "-AppleLanguages", "(\(language))", "-AppleLocale", language == "es" ? "es_US" : "en_US"]
+        app.launch()
+        let meal = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'dinnerOccurrence-' AND label CONTAINS 'Arroz'")).firstMatch
+        tap(meal)
+        let guests = app.buttons["dinnerGuests"]
+        tap(guests)
+        let servings = app.textFields["dinnerGuestServings"]
+        tap(servings)
+        servings.typeText(XCUIKeyboardKey.delete.rawValue + "4")
+        tap(app.buttons["dinnerGuestPreview"])
+        let pack = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'guestPackImpact-'")).firstMatch
+        reveal(pack)
+        XCTAssertTrue(pack.label.contains(language == "es" ? "Paquetes enteros: 1 → 2" : "Whole packages: 1 → 2"), pack.label)
+        let fee = app.staticTexts["guestFeeImpact"], total = app.staticTexts["guestCheckoutImpact"]
+        reveal(fee); XCTAssertTrue(fee.label.contains("1.50") && fee.label.contains("0.00"), fee.label)
+        reveal(total); XCTAssertTrue(total.label.contains("3.90") && total.label.contains("4.80"), total.label)
+        capture("S16-S17-whole-pack-and-fee-" + language)
+        tap(app.buttons["dinnerCancelPreview"])
+        tap(guests); reveal(servings)
+        XCTAssertEqual(servings.value as? String, "3")
+        tap(servings); servings.typeText(XCUIKeyboardKey.delete.rawValue + "4")
+        tap(app.buttons["dinnerGuestPreview"])
+        tap(app.buttons["dinnerApply"])
+        tap(guests); reveal(servings)
+        XCTAssertEqual(servings.value as? String, "4")
+        XCTAssertTrue(app.staticTexts["Almuerzo"].exists)
+    }
+
     func testLargestTypePairingSheetReturnsToItsInitiatingControl() {
         continueAfterFailure = false
         app.launchArguments = ["--ui-testing", "-AppleLanguages", "(en)", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
@@ -44,6 +77,12 @@ final class DinnerDecisionSheetUITests: XCTestCase {
         reveal(ricePreview)
         XCTAssertTrue(ricePreview.label.contains(language == "es" ? "Porciones: 23" : "Servings: 23"),ricePreview.label)
         XCTAssertTrue(ricePreview.label.contains("Almuerzo"),ricePreview.label)
+        let missingPack = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'guestPackImpact-'")).firstMatch
+        reveal(missingPack)
+        XCTAssertTrue(missingPack.label.contains(language == "es" ? "Revisa un paquete" : "Review a package"), missingPack.label)
+        let missingTotal = app.staticTexts["guestCheckoutImpact"]
+        reveal(missingTotal)
+        XCTAssertTrue(missingTotal.label.contains(language == "es" ? "Sin resolver" : "Unresolved"), missingTotal.label)
         capture("S16-S17-" + language)
         tap(app.buttons["dinnerCancelPreview"])
         XCTAssertTrue(guests.waitForExistence(timeout: 5) && guests.isHittable)

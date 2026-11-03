@@ -42,7 +42,7 @@ struct LedgerCheckoutReview {
 /// which part is already within a typed total; they never create a second need.
 enum LedgerCheckoutAdapter {
     static func review(shop: ShoppingLedger, workspaceRevision: Int64, previous: PickupJourney?,
-                       packSelections: [LedgerPackSelection] = [], workspaceID: UUID? = nil) throws -> LedgerCheckoutReview {
+                       packSelections: [LedgerPackSelection] = [], workspaceID: UUID? = nil, bindings: [DinnerPortionBinding] = []) throws -> LedgerCheckoutReview {
         try shop.validate()
         let activeLines = shop.lines.filter { !$0.isTrashed && !$0.isHandled }
         guard !activeLines.isEmpty else { throw LedgerCheckoutError.emptyList }
@@ -50,7 +50,7 @@ enum LedgerCheckoutAdapter {
         var selectedPacks: [UUID: LedgerPackSelection] = [:]
         for selection in packSelections where selection.shopID == shop.id {
             try selection.validateReference(in: shop)
-            if let workspaceID, try selection.isCurrent(in: shop, workspaceID: workspaceID) { selectedPacks[selection.lineID] = selection }
+            if let workspaceID, try selection.isCurrent(in: shop, workspaceID: workspaceID, bindings: bindings) { selectedPacks[selection.lineID] = selection }
         }
         let priorPackLineIDs = Set(previous?.ledgerPackSelections.map(\.lineID) ?? [])
         let lines = try activeLines.map { line -> BasketLine in
@@ -77,18 +77,16 @@ enum LedgerCheckoutAdapter {
                     details.append(PickupNeedDetail(id: contribution.id, mealName: purpose, exclusions: contribution.exclusions, scheduledDay: nil, leadTimeMinutes: nil, completedSteps: []))
                 case let .meal(occurrenceID):
                     guard let meal = shop.mealOccurrences.first(where: { $0.id == occurrenceID && $0.removedAt == nil }) else { throw LedgerCheckoutError.staleSource }
-                    var usedServings = Rational.zero
+                    let portions = try LedgerMealPortions.review(meal: meal, contribution: contribution, in: shop, unit: line.quantity.unit, bindings: bindings)
                     for group in meal.servingGroups {
-                        usedServings = try usedServings.adding(group.servings)
-                        guard usedServings <= meal.servings else { throw LedgerCheckoutError.ambiguousServingGroups }
-                        let portion = try amount.multiplied(by: group.servings.divided(by: meal.servings))
+                        guard let portion = portions.groups[group.id] else { throw LedgerCheckoutError.ambiguousServingGroups }
+                        guard portion > .zero else { continue }
                         let id = compositeID(contribution.id, group.id)
                         needs.append(AllocationNeed(id: id, orderLineID: line.id, name: "\(meal.title) · \(group.name)", amount: Quantity(amount: portion, unit: line.quantity.unit, originalLiteral: quantity.originalLiteral), priority: group.isProtected ? .protected : .required))
                         details.append(PickupNeedDetail(id: id, mealName: meal.title, exclusions: contribution.exclusions, scheduledDay: meal.scheduledDay, leadTimeMinutes: meal.leadTimeMinutes, completedSteps: meal.completedSteps, sourceContributionID: contribution.id))
                     }
-                    let remainingServings = try meal.servings.subtracting(usedServings)
-                    if remainingServings > .zero {
-                        let portion = try amount.multiplied(by: remainingServings.divided(by: meal.servings))
+                    let portion = portions.unassigned
+                    if portion > .zero {
                         needs.append(AllocationNeed(id: contribution.id, orderLineID: line.id, name: meal.title, amount: Quantity(amount: portion, unit: line.quantity.unit, originalLiteral: quantity.originalLiteral), priority: .required))
                         details.append(PickupNeedDetail(id: contribution.id, mealName: meal.title, exclusions: contribution.exclusions, scheduledDay: meal.scheduledDay, leadTimeMinutes: meal.leadTimeMinutes, completedSteps: meal.completedSteps, sourceContributionID: contribution.id))
                     }
@@ -266,7 +264,7 @@ struct LedgerCheckoutEntry: View {
         await pickup.load()
         guard let shop = ledger.shop else { return }
         do {
-            let value = try LedgerCheckoutAdapter.review(shop: shop, workspaceRevision: ledger.revision, previous: pickup.journeys.first { $0.id == shop.id }, packSelections: ledger.workspace.packSelections, workspaceID: ledger.sourceWorkspaceID)
+            let value = try LedgerCheckoutAdapter.review(shop: shop, workspaceRevision: ledger.revision, previous: pickup.journeys.first { $0.id == shop.id }, packSelections: ledger.workspace.packSelections, workspaceID: ledger.sourceWorkspaceID, bindings: ledger.workspace.dinnerPlanning.portionBindings)
             if !value.needsApplication { pickup.selectedID = shop.id; opened = true }
             else if pickup.journeys.first(where: { $0.id == shop.id })?.basket?.phase == .reportedPlaced {
                 error = pTr("This order was reported placed. Its original lines and terms remain locked; review retailer-confirmed amendments separately.")

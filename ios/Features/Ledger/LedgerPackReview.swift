@@ -5,6 +5,7 @@ struct LedgerPackReview {
     let operationID: UUID
     let sourceWorkspaceID: UUID
     let workspaceRevision: Int64
+    let bindings: [DinnerPortionBinding]
     let sourceShop: ShoppingLedger
     let lineID: UUID
     let requirement: LedgerPackRequirement
@@ -19,17 +20,17 @@ struct LedgerPackReview {
         guard ledger.ready, !ledger.saving, !ledger.hasPendingSave,
               let workspaceID = ledger.sourceWorkspaceID,
               let shop = ledger.workspace.shops.first(where: { $0.id == shopID }) else { throw LedgerPackError.staleSource }
-        let requirement = try LedgerPackRequirement.review(shop: shop, lineID: lineID)
+        let requirement = try LedgerPackRequirement.review(shop: shop, lineID: lineID, bindings: ledger.workspace.dinnerPlanning.portionBindings)
         let request = ComparisonRequest(itemName: requirement.name, needed: requirement.quantity,
             protectedAmount: requirement.protectedQuantity, offerA: offerA, offerB: offerB, itemCap: itemCap)
         return LedgerPackReview(operationID: UUID(), sourceWorkspaceID: workspaceID, workspaceRevision: ledger.revision,
-            sourceShop: shop, lineID: lineID, requirement: requirement, request: request,
+            bindings: ledger.workspace.dinnerPlanning.portionBindings, sourceShop: shop, lineID: lineID, requirement: requirement, request: request,
             result: try PackComparison.evaluate(request), reviewedAt: at, source: source)
     }
 
     @MainActor func save(offerID: String, ledger: LedgerModel) async throws -> Bool {
         let selection = try LedgerPackSelection(id: operationID, workspaceID: sourceWorkspaceID,
-            shop: sourceShop, lineID: lineID, request: request, selectedOfferID: offerID, at: reviewedAt, source: source)
+            shop: sourceShop, lineID: lineID, request: request, selectedOfferID: offerID, at: reviewedAt, source: source, bindings: bindings)
         guard ledger.ready, !ledger.saving, !ledger.hasPendingSave, ledger.sourceWorkspaceID == sourceWorkspaceID else { throw LedgerPackError.staleSource }
         if let existing = ledger.workspace.packSelections.first(where: { $0.id == operationID }) {
             guard existing == selection else { throw LedgerPackError.operationConflict }

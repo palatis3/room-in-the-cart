@@ -13,19 +13,30 @@ import CoreDomain
         var shop = ShoppingLedger(id: shopID, title: "Mercado", basis: .init(branch: "Main"))
         var state = DinnerPlanningState()
         let auth = DinnerDecisionUIFixture.access(shopID, workspace: sourceWorkspaceID!, now: now)
-        let family = ServingGroup(name: "Cena", servings: try Rational(2))
+        let boundary = ProcessInfo.processInfo.arguments.contains("--ui-testing-guest-boundary")
+        let family = ServingGroup(name: "Cena", servings: try Rational(boundary ? 3 : 2))
         let lunch = ServingGroup(name: "Almuerzo", servings: .one, isProtected: true)
         func quantity(_ n: Int64) throws -> Quantity { try Quantity(amount: Rational(n), unit: .count, originalLiteral: String(n)) }
-        let rice = MealTemplate(title: "Arroz", servings: try Rational(3), ingredients: [.init(name: "Peppers",quantity: try quantity(6))], servingGroups: [family,lunch])
+        let rice = MealTemplate(title: "Arroz", servings: try Rational(boundary ? 4 : 3), ingredients: [.init(name: "Peppers",quantity: try quantity(boundary ? 8 : 6))], servingGroups: [family,lunch])
         let tacos = MealTemplate(title: "Tacos", servings: family.servings, ingredients: [.init(name: "Peppers",quantity: try quantity(4))])
         for template in [rice,tacos] { try state.accept(.init(id: UUID(), template: template, acceptedAt: now),access: auth,at: now) }
         let meal = try shop.chooseMeal(rice,at: now)
         let id = shop.mealOccurrences[0].ingredientContributionIDs[0]
         try state.setPortionBindings([
-            .init(occurrenceID: meal, contributionID: id, groupID: family.id, quantity: try quantity(1), servings: family.servings),
+            .init(occurrenceID: meal, contributionID: id, groupID: family.id, quantity: try quantity(boundary ? 3 : 1), servings: family.servings),
             .init(occurrenceID: meal, contributionID: id, groupID: lunch.id, quantity: try quantity(5), servings: lunch.servings)
         ],for: meal,ledger: shop,access: auth,at: now)
         workspace = LedgerWorkspace(shops: [shop],selectedShopID: shop.id,dinnerPlanning: state)
+        if boundary {
+            let lineID = shop.lines[0].id
+            let need = try LedgerPackRequirement.review(shop: shop, lineID: lineID, bindings: state.portionBindings)
+            let offer = PackOffer(id: "eight", label: "8", usableQuantity: try quantity(8), price: Money(minorUnits: 240))
+            let other = PackOffer(id: "single", label: "1", usableQuantity: try quantity(1), price: Money(minorUnits: 90))
+            let selection = try LedgerPackSelection(workspaceID: sourceWorkspaceID!, shop: shop, lineID: lineID,
+                request: .init(itemName: need.name, needed: need.quantity, protectedAmount: need.protectedQuantity, offerA: offer, offerB: other),
+                selectedOfferID: offer.id, at: now, source: "Local fixture", bindings: state.portionBindings)
+            try workspace.recordPackSelection(selection, workspaceID: sourceWorkspaceID!)
+        }
     }
     func change(key: String, _ edit: (inout LedgerWorkspace) throws -> Void) async -> Bool {
         do { var next = workspace; try edit(&next); try next.validate(); workspace = next; return true }
@@ -42,6 +53,18 @@ import CoreDomain
             seats: [.init(userID: "shopper", displayName: "Sam", isAdult: true)])
         return DinnerAccessContext(scope: .local(workspaceID: workspace),actorID: "shopper",shopID: shopID,assignedShopperID: "shopper",
             canPlan: true,canReadBudget: true,hasPaidTools: seat.hasPaidAccess(for: "shopper",now: now),roleRevision: 1,verifiedAt: start,validUntil: until)
+    }
+    static func prepareCheckout(_ model: DinnerFeatureModel, pickup: PickupModel) async {
+        guard let shop = model.shop, let selection = model.workspace.packSelections.first, let quantity = selection.purchasedQuantity else { return }
+        let cost = CostEvidence.exact(Money(minorUnits: 240))
+        let context = CheckoutContext(storeID: "Main", branchID: "Main", mode: .pickup, slot: "Friday", commitmentsID: shop.id, observedAt: Date(), source: "Local fixture")
+        let line = BasketLine(id: selection.lineID, name: selection.request.itemName, quantity: quantity, expectedCost: cost)
+        guard await pickup.start(from: [line], shopID: shop.id, context: context, ledgerBasis: shop.basis,
+                                 ledgerSourceRevisionID: shop.revisionID, ledgerPackSelections: [selection]) else { return }
+        let zero = CostEvidence.exact(Money(minorUnits: 0))
+        let fee = CheckoutFee(id: "fee", rule: .waivedAt(threshold: Money(minorUnits: 400), belowThreshold: .exact(Money(minorUnits: 150)), basis: .eligibleItemsBeforeDiscounts))
+        _ = await pickup.setQuote(CheckoutQuote(scope: .wholeCheckout, context: context, pricing: .components(
+            lines: [.init(id: line.id, name: line.name, cost: cost)], lineSetComplete: true, fees: [fee], discounts: [], tax: zero, deposits: zero)), cap: nil)
     }
     static func seed(_ draft: inout DinnerScenarioDraft, shop: ShoppingLedger, state: DinnerPlanningState) throws -> DinnerLibraryPairings? {
         draft.meals = try DinnerLibraryPairings.scheduledMeals(shop: shop,state: state)
@@ -73,6 +96,7 @@ import CoreDomain
             if let model {
                 NavigationStack { DinnerWorkspaceView(model: model,startPickup: {}) { EmptyView() } }
                     .environmentObject(pickup)
+                    .task { await DinnerDecisionUIFixture.prepareCheckout(model, pickup: pickup) }
             }
         }
     }
