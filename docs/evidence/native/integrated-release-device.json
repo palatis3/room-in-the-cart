@@ -1,0 +1,18 @@
+{
+  "sourceCheckpoint": "32798da7814a900135994e2f4b6c4744bea9af81",
+  "target": "generic/platform=iOS",
+  "configuration": "Release",
+  "codeSigningAllowed": false,
+  "bundleIdentifier": "dev.roominthecart.app",
+  "minimumOS": "17.0",
+  "executableSHA256": "c70908cc28d924c40960bf357c0c9acc231eb22b95cf24e00fb1a51d4665a060",
+  "extensions": [
+    "RoomInTheCartShare.appex",
+    "RoomInTheCartWidget.appex"
+  ],
+  "checks": [
+    "Release build succeeded",
+    "Compiled icon, privacy manifest, localized camera/microphone/speech purpose strings and environment configuration passed scripts/check_built_app.py"
+  ],
+  "distribution": "Unsigned device build. No TestFlight or App Store upload."
+}
