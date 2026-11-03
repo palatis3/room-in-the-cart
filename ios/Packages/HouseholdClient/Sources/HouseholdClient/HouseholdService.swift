@@ -13,6 +13,7 @@ public actor HouseholdService {
     private var selectedShopID: UUID?
     private var selectedGrantID: String?
     private var generation = UUID()
+    private var childAdoptionBinding: ChildInvitationBinding?
     public init(configuration: ServiceConfiguration, auth: AdultAuth, deviceVault: any RefreshTokenVault,
                 transport: HTTPTransport = .init()) {
         self.configuration = configuration; self.auth = auth; self.deviceVault = deviceVault; self.transport = transport
@@ -20,7 +21,7 @@ public actor HouseholdService {
     public func enroll(householdID: String, grantID: String? = nil) async throws -> HouseholdBootstrap {
         guard UUID(uuidString: householdID) != nil else { throw ClientError.configuration }
         if let grantID, UUID(uuidString: grantID) == nil { throw ClientError.configuration }
-        generation = UUID(); enrollment = nil; self.householdID = nil; subject = nil; memberID = nil
+        generation = UUID(); enrollment = nil; self.householdID = nil; subject = nil; memberID = nil; childAdoptionBinding = nil
         selectedGrantID = grantID; selectedShopID = nil
         let start = generation
         let access = try await auth.access()
@@ -116,9 +117,17 @@ public actor HouseholdService {
         if let selectedShopID {
             guard value.grantId == nil, value.shopId.flatMap(UUID.init(uuidString:)) == selectedShopID else { throw ClientError.accessEnded }
         }
+        if let childBinding = childAdoptionBinding {
+            let fresh = try await auth.childInvitationAccess()
+            guard generation == start else { throw ClientError.cancelled }
+            guard fresh.binding == childBinding, value.household.id == householdID, value.memberId == memberID,
+                  value.role == "contributor", value.capabilities == ["own_requests"], value.grantId == nil,
+                  value.canSelectShop != true else { throw ClientError.accessEnded }
+        }
         memberID = value.memberId
         if let enrollment, let householdID, let subject {
-            let stored = StoredEnrollment(householdID: householdID, subject: subject, device: enrollment, grantID: selectedGrantID, shopID: selectedShopID)
+            let stored = StoredEnrollment(householdID: householdID, subject: subject, device: enrollment, grantID: selectedGrantID, shopID: selectedShopID,
+                                          childMemberID: childAdoptionBinding == nil ? nil : memberID, childBinding: childAdoptionBinding)
             try deviceVault.write(String(decoding: encoded(stored), as: UTF8.self))
         }
         return value
@@ -160,6 +169,87 @@ public actor HouseholdService {
               assignment.adults.contains(where: { $0.id == assignment.shopperId }) else { throw ClientError.invalidResponse }
         return assignment
     }
+    /// Restore only a previously validated child credential. Missing or mismatched records never fall back to device registration.
+    public func resumeChildEnrollment(expectedAccess: ChildInvitationAccess) async throws -> HouseholdBootstrap {
+        try expectedAccess.validate()
+        guard let saved = try deviceVault.read() else { throw ClientError.sessionNeeded }
+        guard let record = try? JSONDecoder().decode(StoredEnrollment.self, from: Data(saved.utf8)),
+              record.childBinding == expectedAccess.binding, record.subject == expectedAccess.subject,
+              let childMemberID = record.childMemberID, GuardianValidation.ids([childMemberID]),
+              record.grantID == nil, record.shopID == nil else { throw ClientError.accessEnded }
+        let receipt = ChildEnrollmentReceipt(householdId: record.householdID, memberId: childMemberID, role: "contributor",
+                                             deviceId: record.device.deviceId, deviceToken: record.device.deviceToken)
+        return try await adoptChildEnrollment(receipt: receipt, expectedAccess: expectedAccess)
+    }
+
+    /// Adopt only the service credential returned by child finish, in a separate child service/device vault.
+    /// The candidate remains private until the live session and server own-request bootstrap both validate.
+    public func adoptChildEnrollment(receipt: ChildEnrollmentReceipt, expectedAccess: ChildInvitationAccess) async throws -> HouseholdBootstrap {
+        try receipt.validate(householdID: receipt.householdId); try expectedAccess.validate()
+        guard GuardianSecret.isCanonical(receipt.deviceToken) else { throw ClientError.invalidResponse }
+        let empty = enrollment == nil && householdID == nil && subject == nil && memberID == nil && selectedGrantID == nil && selectedShopID == nil
+        let sameChild = childAdoptionBinding == expectedAccess.binding && householdID == receipt.householdId && subject == expectedAccess.subject &&
+            memberID == receipt.memberId && enrollment?.deviceId == receipt.deviceId && enrollment?.deviceToken == receipt.deviceToken &&
+            selectedGrantID == nil && selectedShopID == nil
+        guard empty || sameChild else { throw ClientError.accessEnded }
+        let start = generation; let saved = try deviceVault.read()
+        if let saved {
+            guard let record = try? JSONDecoder().decode(StoredEnrollment.self, from: Data(saved.utf8)),
+                  record.householdID == receipt.householdId, record.subject == expectedAccess.subject,
+                  record.device.deviceId == receipt.deviceId, record.device.deviceToken == receipt.deviceToken,
+                  record.grantID == nil, record.shopID == nil else { throw ClientError.accessEnded }
+        }
+        let current = try await auth.childInvitationAccess()
+        guard start == generation else { throw ClientError.cancelled }
+        guard current.binding == expectedAccess.binding else { throw ClientError.accessEnded }
+        var req = request(base: configuration.baseURL, path: "v1/households/\(receipt.householdId)/bootstrap",
+                          method: "GET", token: current.accessToken)
+        req.setValue(receipt.deviceToken, forHTTPHeaderField: "X-Device-Token")
+        req.setValue(receipt.householdId, forHTTPHeaderField: "X-Household-ID")
+        let value: HouseholdBootstrap = try await transport.json(req)
+        guard start == generation else { throw ClientError.cancelled }
+        let fresh = try await auth.childInvitationAccess()
+        guard start == generation else { throw ClientError.cancelled }
+        guard fresh.binding == expectedAccess.binding else { throw ClientError.accessEnded }
+        guard value.enrolled, value.household.id == receipt.householdId, value.memberId == receipt.memberId,
+              value.role == "contributor", value.grantId == nil, value.capabilities == ["own_requests"],
+              value.canSelectShop != true,
+              value.shopId.map({ UUID(uuidString: $0) != nil }) ?? true else { throw ClientError.invalidResponse }
+        guard try deviceVault.read() == saved else { throw ClientError.cancelled }
+        let device = DeviceEnrollment(deviceId: receipt.deviceId, deviceToken: receipt.deviceToken)
+        let stored = StoredEnrollment(householdID: receipt.householdId, subject: fresh.subject, device: device, grantID: nil, shopID: nil,
+                                      childMemberID: receipt.memberId, childBinding: fresh.binding)
+        try deviceVault.write(String(decoding: encoded(stored), as: UTF8.self))
+        enrollment = device; householdID = receipt.householdId; subject = fresh.subject; memberID = receipt.memberId
+        childAdoptionBinding = fresh.binding
+        return value
+    }
+
+    // Guardian actions retain their reviewed actor/device scope. The service additionally enforces the exact live provider session.
+    func guardianContext() throws -> GuardianActorBinding {
+        guard selectedGrantID == nil, let subject, let householdID, let memberID, let enrollment else { throw ClientError.accessEnded }
+        return .init(subject: subject, householdID: householdID, memberID: memberID, deviceID: enrollment.deviceId)
+    }
+    func guardianAuthorize(binding: GuardianActorBinding) async throws {
+        let start = generation
+        guard binding == (try guardianContext()) else { throw ClientError.accessEnded }
+        let access = try await auth.access()
+        guard start == generation, binding == (try guardianContext()) else { throw ClientError.cancelled }
+        guard access.identity.subject == binding.subject else { await clearScope(); throw ClientError.accessEnded }
+    }
+    func guardianRequest<T: Decodable & Sendable>(binding: GuardianActorBinding? = nil, path: String,
+                                                 method: String = "GET", body: Data? = nil, query: [URLQueryItem] = []) async throws -> T {
+        let start = generation; let actor = try guardianContext()
+        if let binding, binding != actor { throw ClientError.accessEnded }
+        try await guardianAuthorize(binding: actor)
+        guard start == generation else { throw ClientError.cancelled }
+        let value: T = try await perform(path, method: method, body: body, query: query)
+        guard start == generation, actor == (try guardianContext()) else { throw ClientError.cancelled }
+        try await guardianAuthorize(binding: actor)
+        guard start == generation else { throw ClientError.cancelled }
+        return value
+    }
+
     func measurementRequest<T: Decodable & Sendable>(path: String, method: String = "GET", body: Data? = nil) async throws -> T {
         guard selectedGrantID == nil else { throw ClientError.accessEnded }
         return try await perform(path, method: method, body: body)
@@ -779,7 +869,7 @@ public actor HouseholdService {
     }
 
     public func clearScope() async {
-        generation = UUID(); enrollment = nil; householdID = nil; subject = nil; memberID = nil; selectedGrantID = nil; selectedShopID = nil
+        generation = UUID(); enrollment = nil; householdID = nil; subject = nil; memberID = nil; selectedGrantID = nil; selectedShopID = nil; childAdoptionBinding = nil
         try? deviceVault.clear()
     }
     private func perform<T: Decodable & Sendable>(_ path: String, method: String, body: Data? = nil,
@@ -849,7 +939,11 @@ public actor OperationOutbox {
     }
 }
 
-private struct StoredEnrollment: Codable { let householdID: String; let subject: String; let device: DeviceEnrollment; let grantID: String?; let shopID: UUID? }
+private struct StoredEnrollment: Codable {
+    let householdID: String; let subject: String; let device: DeviceEnrollment; let grantID: String?; let shopID: UUID?
+    var childMemberID: String? = nil
+    var childBinding: ChildInvitationBinding? = nil
+}
 
 extension HouseholdService {
     public func familyDecision(shopID: UUID, id: UUID) async throws -> FamilyDecisionRecord {

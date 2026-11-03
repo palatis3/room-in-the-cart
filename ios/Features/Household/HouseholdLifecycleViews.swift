@@ -50,6 +50,13 @@ struct HouseholdPeopleView: View {
     var body: some View {
         Form {
             if model.canAdminister {
+                if model.canReviewDevices {
+                    Section {
+                        NavigationLink(DeviceManagementCopy.text("Household devices")) {
+                            if let devices = model.makeDevicesModel() { HouseholdDevicesView(model: devices) }
+                        }.accessibilityIdentifier("household.devices.entry")
+                    }
+                }
                 Section(ht("People")) {
                     Button(ht("Refresh people")) { Task { await model.loadMembers() } }
                     ForEach(model.members) { member in
@@ -288,7 +295,6 @@ struct HouseholdGuardianView: View {
         Form {
             if model.scope != nil, !model.isHelper {
                 Section {
-                    Text(ht("Child enrollment is unavailable until verified guardian consent is connected."))
                     Text(ht("Only consents covered by your verified guardian relationships appear here."))
                     Button(ht("Refresh guardian controls")) { Task { await model.loadConsents() } }
                 }

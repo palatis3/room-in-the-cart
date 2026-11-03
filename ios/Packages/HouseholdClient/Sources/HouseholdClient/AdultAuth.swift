@@ -31,6 +31,13 @@ public actor AdultAuth {
                 transport: HTTPTransport = .init(), now: @escaping @Sendable () -> Date = { Date() }) {
         config = configuration; self.vault = vault; self.transport = transport; self.now = now
     }
+    /// Local continuity only, after this actor's authenticated provider /user verification. Server admission remains mandatory.
+    public func childInvitationAccess() async throws -> ChildInvitationAccess {
+        let start = generation
+        let value = try await access()
+        guard start == generation else { throw ClientError.cancelled }
+        return try .verifiedProjection(value, expectedIssuer: config.projectURL.appendingPathComponent("auth/v1").absoluteString)
+    }
     public func requestEmailCode(email: String) async throws {
         struct Body: Encodable { let email: String; let create_user: Bool }
         _ = try await transport.send(authRequest("otp", body: try encoded(Body(email: email, create_user: true))))

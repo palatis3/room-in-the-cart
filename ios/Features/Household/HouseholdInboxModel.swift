@@ -28,13 +28,15 @@ enum ShopperDelivery: Equatable {
     @Published private(set) var pending: PendingOperation?
     @Published private(set) var reviewedCurrentFacts = false
     @Published private(set) var packSelection: HouseholdRequestPackSelection?
-    @Published var choice: ShopperChoice = .deferRequest { didSet { invalidatePreview() } }
-    @Published var lineItem = "" { didSet { invalidatePreview() } }
-    @Published var packs = 1 { didSet { invalidatePreview() } }
-    @Published var price = "" { didSet { invalidatePreview() } }
-    @Published var feeEligible = true { didSet { invalidatePreview() } }
-    @Published var linkedLineID = "" { didSet { invalidatePreview() } }
-    @Published var promote = false { didSet { invalidatePreview(preservePackSelection: true) } }
+    // Text-field blur and control refreshes may commit their existing value.
+    // Only an actual fact change invalidates an in-flight or reviewed decision.
+    @Published var choice: ShopperChoice = .deferRequest { didSet { if oldValue != choice { invalidatePreview() } } }
+    @Published var lineItem = "" { didSet { if oldValue != lineItem { invalidatePreview() } } }
+    @Published var packs = 1 { didSet { if oldValue != packs { invalidatePreview() } } }
+    @Published var price = "" { didSet { if oldValue != price { invalidatePreview() } } }
+    @Published var feeEligible = true { didSet { if oldValue != feeEligible { invalidatePreview() } } }
+    @Published var linkedLineID = "" { didSet { if oldValue != linkedLineID { invalidatePreview() } } }
+    @Published var promote = false { didSet { if oldValue != promote { invalidatePreview(preservePackSelection: true) } } }
     @Published var clarification = ""
     @Published var acceptOverage = false
     @Published var acceptUnknown = false

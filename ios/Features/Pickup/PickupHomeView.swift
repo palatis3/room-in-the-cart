@@ -10,6 +10,7 @@ struct PickupHomeView: View {
     var body: some View {
         List {
             PickupSaveStatus(model: model)
+            PickupStockBasisNotice(model: model)
             if let value = model.journey {
                 Section(pTr("This pickup")) {
                     Text(value.savedAt, format: .dateTime.month().day().year().hour().minute())
@@ -18,7 +19,9 @@ struct PickupHomeView: View {
                     }
                     if let basket = value.basket {
                         Text(pTr(basket.phase == .reportedPlaced ? "Placement reported · original order locked" : basket.phase == .frozen ? "Frozen · placement unconfirmed" : "Draft · no order placed"))
-                        if basket.phase != .reportedPlaced {
+                        if value.isAtHomeOnlyPlan {
+                            NavigationLink(ledgerText("Use-at-home plan")) { LedgerAtHomePlanView(model: model) }
+                        } else if basket.phase != .reportedPlaced {
                             NavigationLink(pTr("Review whole checkout")) { PickupCheckoutView(model: model) }
                             NavigationLink(pTr("Prepare retailer handoff")) { PickupHandoffView(model: model) }
                         }
@@ -62,6 +65,22 @@ struct PickupHomeView: View {
         .modifier(PickupNextShopRoute(model: model, requested: $nextShopRequested) { nextShopFocused = true })
         .task { await model.load() }
         .disabled(model.saving)
+    }
+}
+
+struct PickupStockBasisNotice: View {
+    @ObservedObject var model: PickupModel
+    @Environment(\.pickupLedger) private var ledger
+    var body: some View {
+        if !model.hasCurrentBasketStockBasis {
+            Section {
+                Text(ledgerText("Confirmed stock changed. Review ingredient needs and whole packs before continuing checkout."))
+                    .foregroundStyle(Theme.warning).accessibilityIdentifier("pickupStockBasisStale")
+                if let ledger {
+                    NavigationLink(ledgerText("Review ingredient and purchase needs")) { LedgerHomeView(model: ledger) }
+                }
+            }
+        }
     }
 }
 
@@ -157,6 +176,7 @@ struct PickupCheckoutView: View {
         Form {
             PickupSaveStatus(model: model)
             CheckoutQuotesContextLink(pickup: model)
+            PickupStockBasisNotice(model: model)
             Section(pTr("Retailer preview · source and time")) {
                 TextField(pTr("Store"), text: $store)
                 TextField(pTr("Branch"), text: $branch)
@@ -191,6 +211,7 @@ struct PickupCheckoutView: View {
                     PickupEvidenceField(title: "Deposits and other charges", amount: $deposits)
                 }
                 Button(pTr("Save and evaluate checkout")) { saveQuote() }.buttonStyle(.borderedProminent)
+                    .disabled(!model.hasCurrentBasketStockBasis)
                 if let formError { Text(formError).foregroundStyle(.red) }
                 if let result = model.result, let id = model.journey?.id {
                     NavigationLink(pTr("Check price by weight")) { PickupWeightReview(model: model, shopID: id) }
@@ -291,16 +312,20 @@ struct PickupHandoffView: View {
     var body: some View {
         Form {
             PickupSaveStatus(model: model)
+            PickupStockBasisNotice(model: model)
             Text(pTr("Freeze the reviewed revision before leaving the app. Copying or sharing does not place an order."))
             Button(pTr("Freeze reviewed basket")) { Task { await model.freeze() } }.disabled(model.result == nil || model.frozenSnapshot != nil)
             if let text = model.frozenText() {
                 Section(pTr("Dated snapshot")) { Text(text).textSelection(.enabled) }
                 Button(pTr("Copy dated list")) { Task {
-                    guard await model.recordHandoff(.copyAttempted) else { return }
+                    guard await model.recordHandoff(.copyAttempted), model.hasCurrentBasketStockBasis,
+                          model.frozenText() == text else { return }
                     UIPasteboard.general.string = text
                     await model.recordHandoff(.copied)
-                } }
-                Button(pTr("Share dated list")) { Task { if await model.recordHandoff(.shareOpened) { sharing = true } } }
+                } }.disabled(!model.hasCurrentBasketStockBasis)
+                Button(pTr("Share dated list")) { Task {
+                    if await model.recordHandoff(.shareOpened), model.hasCurrentBasketStockBasis { sharing = true }
+                } }.disabled(!model.hasCurrentBasketStockBasis)
                 if let snapshot = model.frozenSnapshot {
                     PickupRecipientSection(model: model, channel: .retailer, versionID: snapshot.id,
                                            language: Locale.current.language.languageCode?.identifier == "es" ? "es-US" : "en-US")
@@ -308,12 +333,19 @@ struct PickupHandoffView: View {
                 }
                 TextField(pTr("Retailer website (https://…)"), text: $retailerURL).keyboardType(.URL).textInputAutocapitalization(.never)
                 Button(pTr("Open retailer website")) { Task {
+                    guard model.hasCurrentBasketStockBasis else { return }
                     guard let url = URL(string: retailerURL), url.scheme == "https", url.host != nil else { model.error = pTr("Enter a valid https retailer address."); return }
                     if await UIApplication.shared.open(url) { await model.recordHandoff(.retailerOpened, destination: url.host) }
                     else { model.error = pTr("Could not open the retailer. Placement remains unconfirmed.") }
-                } }
+                } }.disabled(!model.hasCurrentBasketStockBasis)
                 Button(pTr("I placed this order")) { Task { await model.reportPlaced() } }.buttonStyle(.borderedProminent)
-                    .disabled(model.journey?.basket?.phase == .reportedPlaced)
+                    .disabled(model.journey?.basket?.phase == .reportedPlaced || !model.hasCurrentBasketStockBasis)
+                if !model.hasCurrentBasketStockBasis, model.journey?.basket?.phase != .reportedPlaced {
+                    Text(ledgerText("The frozen order keeps its original quantities. Reporting an order you already placed does not confirm that the changed food supply covers every meal."))
+                    Button(ledgerText("I already placed this original order with the retailer")) {
+                        Task { await model.reportPlaced(acknowledgingChangedStock: true) }
+                    }.accessibilityIdentifier("pickupReportOriginalOrderAfterStockChange")
+                }
                 if model.journey?.basket?.phase != .reportedPlaced {
                     Button(pTr("Reopen draft and recheck prices")) { Task { await model.reopenDraft() } }
                 }
@@ -325,9 +357,11 @@ struct PickupHandoffView: View {
         }.navigationTitle(pTr("Retailer handoff"))
         .disabled(model.saving)
         .sheet(isPresented: $sharing) {
+            if model.hasCurrentBasketStockBasis {
             PickupActivitySheet(text: model.frozenText() ?? "") { completed, destination in
                 Task { await model.recordHandoff(completed ? .shareCompleted : .shareCancelled, destination: destination) }
             }
+            } else { Text(ledgerText("Confirmed stock changed. Review ingredient needs and whole packs before continuing checkout.")) }
         }
     }
 }

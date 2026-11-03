@@ -5089,6 +5089,454 @@
           }
         }
       }
+    },
+    "All list needs are covered by confirmed food at home. Save the plan, then review instructions for the cook.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All list needs are covered by confirmed food at home. Save the plan, then review instructions for the cook."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todas las necesidades de la lista están cubiertas con comida confirmada en casa. Guarda el plan y luego revisa las instrucciones para quien cocina."
+          }
+        }
+      }
+    },
+    "Confirmed at home for this need: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed at home for this need: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmado en casa para esta necesidad: %@"
+          }
+        }
+      }
+    },
+    "Confirmed food allocated to this need": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed food allocated to this need"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comida confirmada asignada a esta necesidad"
+          }
+        }
+      }
+    },
+    "Confirmed food at home": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed food at home"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comida confirmada en casa"
+          }
+        }
+      }
+    },
+    "Confirmed food no longer covers every need. Review the current allocation and purchase needs again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed food no longer covers every need. Review the current allocation and purchase needs again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La comida confirmada ya no cubre todas las necesidades. Revisa de nuevo la asignación actual y lo que hace falta comprar."
+          }
+        }
+      }
+    },
+    "Food reserved for other needs is excluded. This choice must be reviewed again if the batch or pickup changes.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food reserved for other needs is excluded. This choice must be reviewed again if the batch or pickup changes."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se excluye la comida reservada para otras necesidades. Revisa esta elección de nuevo si cambia el lote o la compra."
+          }
+        }
+      }
+    },
+    "Keep every meal and protected portion. This decision adds no purchased item or item charge.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep every meal and protected portion. This decision adds no purchased item or item charge."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conserva todas las comidas y porciones protegidas. Esta decisión no añade ningún artículo comprado ni cargo por artículo."
+          }
+        }
+      }
+    },
+    "Meal needs kept in this plan": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal needs kept in this plan"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Necesidades de comida conservadas en este plan"
+          }
+        }
+      }
+    },
+    "No retailer order was created. Meal needs and protected portions stay recorded.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No retailer order was created. Meal needs and protected portions stay recorded."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se creó ningún pedido en la tienda. Las necesidades de comida y porciones protegidas siguen registradas."
+          }
+        }
+      }
+    },
+    "Only confirmed food matched to this list and its current pickup allocation can reduce the purchase.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only confirmed food matched to this list and its current pickup allocation can reduce the purchase."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo la comida confirmada vinculada a esta lista y a su asignación actual puede reducir lo que se compra."
+          }
+        }
+      }
+    },
+    "Review ingredient and purchase needs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review ingredient and purchase needs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar ingredientes y necesidades de compra"
+          }
+        }
+      }
+    },
+    "Review use-at-home plan": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review use-at-home plan"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar el plan para usar comida en casa"
+          }
+        }
+      }
+    },
+    "Reviewed pantry or freezer allocation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed pantry or freezer allocation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asignación de despensa o congelador revisada"
+          }
+        }
+      }
+    },
+    "Save use-at-home plan": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save use-at-home plan"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar el plan para usar comida en casa"
+          }
+        }
+      }
+    },
+    "The earlier pack choice needs a new review because the list or confirmed stock changed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The earlier pack choice needs a new review because the list or confirmed stock changed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hay que revisar de nuevo la elección anterior de paquetes porque cambió la lista o la comida confirmada."
+          }
+        }
+      }
+    },
+    "The list or confirmed stock changed. Review the current checkout copy and allocation, then review packs again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The list or confirmed stock changed. Review the current checkout copy and allocation, then review packs again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambió la lista o la comida confirmada. Revisa la copia actual para pagar y la asignación; luego revisa de nuevo los paquetes."
+          }
+        }
+      }
+    },
+    "Use confirmed food at home · no purchase needed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use confirmed food at home · no purchase needed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar comida confirmada en casa · no hace falta comprar"
+          }
+        }
+      }
+    },
+    "Use confirmed food for this need": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use confirmed food for this need"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar comida confirmada para esta necesidad"
+          }
+        }
+      }
+    },
+    "Use-at-home choice saved for review.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use-at-home choice saved for review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elección de usar comida en casa guardada para revisión."
+          }
+        }
+      }
+    },
+    "Use-at-home plan": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use-at-home plan"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan para usar comida en casa"
+          }
+        }
+      }
+    },
+    "Confirmed stock changed. Review ingredient needs and whole packs before continuing checkout.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed stock changed. Review ingredient needs and whole packs before continuing checkout."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambió la comida confirmada. Revisa los ingredientes necesarios y los paquetes enteros antes de continuar con el pago."
+          }
+        }
+      }
+    },
+    "Confirmed stock changed. If you already placed this frozen order with the retailer, record that original order explicitly.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed stock changed. If you already placed this frozen order with the retailer, record that original order explicitly."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambió la comida confirmada. Si ya hiciste este pedido congelado en la tienda, registra ese pedido original de forma explícita."
+          }
+        }
+      }
+    },
+    "The frozen order keeps its original quantities. Reporting an order you already placed does not confirm that the changed food supply covers every meal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The frozen order keeps its original quantities. Reporting an order you already placed does not confirm that the changed food supply covers every meal."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El pedido congelado conserva sus cantidades originales. Informar que ya hiciste un pedido no confirma que la comida disponible después del cambio cubra todas las comidas."
+          }
+        }
+      }
+    },
+    "I already placed this original order with the retailer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I already placed this original order with the retailer"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya hice este pedido original en la tienda"
+          }
+        }
+      }
+    },
+    "Your ingredient needs are unchanged. Open Review checkout to save the use-at-home plan. This does not place a retailer order.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your ingredient needs are unchanged. Open Review checkout to save the use-at-home plan. This does not place a retailer order."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las necesidades de ingredientes no han cambiado. Abre Revisar pago para guardar el plan de usar comida en casa. Esto no hace ningún pedido en la tienda."
+          }
+        }
+      }
+    },
+    "Review the earlier pack choice again before changing this checkout.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the earlier pack choice again before changing this checkout."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa de nuevo la elección anterior de paquetes antes de cambiar esta compra."
+          }
+        }
+      }
+    },
+    "Earlier pack choices need a new review. Their purchased quantities and prices have not been reused.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Earlier pack choices need a new review. Their purchased quantities and prices have not been reused."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las elecciones anteriores de paquetes necesitan una nueva revisión. No se han reutilizado sus cantidades de compra ni sus precios."
+          }
+        }
+      }
+    },
+    "Review whole packs for %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review whole packs for %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar paquetes enteros para %@"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

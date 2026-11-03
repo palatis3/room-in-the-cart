@@ -21,27 +21,39 @@ enum PickupCookProjection {
         formatter.locale = Locale(identifier: language); formatter.timeZone = timeZone
         formatter.dateStyle = .full; formatter.timeStyle = .short
         var pieces: [HandoffPiece] = []
-        for need in value.urgent {
+        // Mirror the allocator's current demand set, including pre-placement plans and
+        // stock-only protected reservations. Urgent metadata enriches the same need ID.
+        let demands = value.physicalStockNeeds
+        var renderedIDs = Set<UUID>()
+        for need in value.urgent where renderedIDs.insert(need.id).inserted {
             let name = "\(need.meal): \(need.food)"
+            let demand = demands.first { $0.id == need.id }
+            let coverage = allocation?.demands.first { $0.id == need.id }
+            var lines = [name, "\(pCook("Required", language: language)): \(pQuantity(demand?.amount ?? need.required, language: language))"]
+            if demand?.priority == .protected { lines.append(pCook("set aside first", language: language)) }
+            lines += coverageLines(coverage, language: language)
+            if need.carriedFromID == nil {
+                lines.append("\(pCook("Initially observed available", language: language)): \(pQuantity(need.available, language: language)) · \(formatter.string(from: need.confirmedAt))")
+            } else if coverage?.allocated == nil || coverage?.allocated == .zero {
+                lines.append(pCook("Reconfirmation required", language: language))
+            }
+            lines.append(need.due.map { "\(pCook("Needed by", language: language)): \(formatter.string(from: $0))" } ?? pCook("Deadline unknown", language: language))
             let warning = pCook("Open need: review before cooking.", language: language)
-            var lines = [name, "\(pCook("Required", language: language)): \(pQuantity(need.required, language: language)); \(pCook("Confirmed available", language: language)): \(need.carriedFromID == nil ? pQuantity(need.available, language: language) : (pCook("Reconfirmation required", language: language)))", need.due.map { "\(pCook("Needed by", language: language)): \(formatter.string(from: $0))" } ?? pCook("Deadline unknown", language: language)]
-            if !need.resolved { lines.append(warning) }
-            pieces.append(.init(key: "urgent/\(need.id)", text: lines.joined(separator: "\n\n"), unresolved: need.resolved ? nil : "\(name) · \(warning)"))
+            let unresolved = !need.resolved || coverage?.shortfall != .zero || coverage?.issues.isEmpty == false
+            if unresolved { lines.append(warning) }
+            pieces.append(.init(key: "urgent/\(need.id)", text: lines.joined(separator: "\n\n"), unresolved: unresolved ? "\(name) · \(warning)" : nil))
         }
-        for need in value.needs {
+        for need in demands where renderedIDs.insert(need.id).inserted {
             var lines = ["\(need.name): \(pQuantity(need.amount, language: language))\(need.priority == .protected ? (" — " + pCook("set aside first", language: language)) : "")"]
             let coverage = allocation?.demands.first { $0.id == need.id }
-            if let coverage, let amount = coverage.allocated {
-                let quantity = Quantity(amount: amount, unit: coverage.unit, originalLiteral: "")
-                lines.append("\(pCook("Allocated", language: language)): \(pQuantity(quantity, language: language))")
-            }
+            lines += coverageLines(coverage, language: language)
             let warning = pCook("Short or unverified amount. Review.", language: language)
-            let unresolved = coverage?.shortfall != .zero
+            let unresolved = coverage?.shortfall != .zero || coverage?.issues.isEmpty == false
             if unresolved { lines.append(warning) }
             pieces.append(.init(key: "need/\(need.id)", text: lines.joined(separator: "\n\n"), unresolved: unresolved ? "\(need.name) · \(warning)" : nil))
         }
         var renderedDetails: [UUID: Set<String>] = [:]
-        for detail in value.needDetails where value.needs.contains(where: { $0.id == detail.id }) {
+        for detail in value.needDetails where renderedIDs.contains(detail.id) {
             // Lunch and dinner allocations can share the same original ingredient instructions.
             let sourceID = detail.sourceContributionID ?? detail.id
             var lines: [String] = []
@@ -59,6 +71,12 @@ enum PickupCookProjection {
             pieces.append(.init(key: "repair/\(repair.id)", text: "\(repair.instruction)\n\(timing)", unresolved: repair.timingConfirmed ? nil : "\(repair.instruction) · \(timing)"))
         }
         return pieces
+    }
+    private static func coverageLines(_ coverage: StockDemandCoverage?, language: String) -> [String] {
+        let unresolved = pCook("Unresolved", language: language)
+        let allocated = coverage.flatMap { coverage in coverage.allocated.map { pQuantity($0, unit: coverage.unit, language: language) } } ?? unresolved
+        let shortfall = coverage.flatMap { coverage in coverage.shortfall.map { pQuantity($0, unit: coverage.unit, language: language) } } ?? unresolved
+        return ["\(pCook("Allocated", language: language)): \(allocated)", "\(pCook("Still short", language: language)): \(shortfall)"]
     }
     static func budgetText(_ result: CheckoutResult, language: String) -> String {
         if let exact = result.total.exact { return pMoney(exact) }

@@ -1,12 +1,27 @@
 import importlib.util
+import contextlib
+import io
 import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 spec=importlib.util.spec_from_file_location('checker',Path(__file__).with_name('check_localization.py'))
 c=importlib.util.module_from_spec(spec); spec.loader.exec_module(c)
 
 class LocalizationTests(unittest.TestCase):
+    def test_snapshot_inside_build_folder_keeps_its_catalogs(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder)/'.build/snapshot'
+            feature=root/'ios/Features'; feature.mkdir(parents=True)
+            (feature/'View.swift').write_text('Text(tr("Hello"))')
+            catalog={'sourceLanguage':'en','strings':{'Hello':{'localizations':{lang:{'stringUnit':{'state':'translated','value':value}} for lang,value in [('en','Hello'),('es','Hola')]}}}}
+            (feature/'Localizable.xcstrings').write_text(json.dumps(catalog))
+            dependency=root/'ios/Packages/Example/.build'; dependency.mkdir(parents=True)
+            (dependency/'Ignored.xcstrings').write_text('not a catalog')
+            output=io.StringIO()
+            with patch.object(c,'ROOT',root),contextlib.redirect_stdout(output):c.main()
+            self.assertIn('1 catalogs, 1 en/es entries, 1 literal source keys',output.getvalue())
     def test_nested_interpolation_first_argument(self):
         value=r'"\(pTr("Received")): \(count)", systemImage: "checkmark")'
         self.assertEqual(c.first_argument(value,0),r'"\(pTr("Received")): \(count)"')

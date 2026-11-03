@@ -1,0 +1,2102 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "A child invitation requires the child's own live authenticated session from an approved guardian setup. This app cannot create or substitute an adult account for that session.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A child invitation requires the child's own live authenticated session from an approved guardian setup. This app cannot create or substitute an adult account for that session."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una invitación para un menor requiere su propia sesión autenticada activa, procedente de una configuración de tutor aprobada. Esta app no puede crear ni sustituir esa sesión por una cuenta de adulto."
+          }
+        }
+      }
+    },
+    "Adulthood verification is complete. Review the current notice and make a separate permission decision.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adulthood verification is complete. Review the current notice and make a separate permission decision."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La verificación de mayoría de edad está completa. Revisa el aviso actual y toma una decisión de permiso por separado."
+          }
+        }
+      }
+    },
+    "Adulthood verification needed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adulthood verification needed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se necesita verificar la mayoría de edad"
+          }
+        }
+      }
+    },
+    "Adulthood verified; permission still needed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adulthood verified; permission still needed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mayoría de edad verificada; aún se necesita permiso"
+          }
+        }
+      }
+    },
+    "An exact action is saved on this device. Check its status before starting a different action.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An exact action is saved on this device. Check its status before starting a different action."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hay una acción exacta guardada en este dispositivo. Consulta su estado antes de iniciar una acción diferente."
+          }
+        }
+      }
+    },
+    "Ask your guardian to keep the invitation private and check setup status. Online requests stay unavailable until verification, permission, and device pairing are complete.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask your guardian to keep the invitation private and check setup status. Online requests stay unavailable until verification, permission, and device pairing are complete."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pide a tu tutor que mantenga la invitación privada y consulte la configuración. Las solicitudes en línea no están disponibles hasta completar la verificación, el permiso y la vinculación del dispositivo."
+          }
+        }
+      }
+    },
+    "Begin a new child setup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Begin a new child setup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar una nueva configuración para un menor"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar"
+          }
+        }
+      }
+    },
+    "Cancel this child setup?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel this child setup?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Cancelar esta configuración para el menor?"
+          }
+        }
+      }
+    },
+    "Cancel this setup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel this setup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar esta configuración"
+          }
+        }
+      }
+    },
+    "Cancellation ends this pending setup. An active child's permission is withdrawn through current permissions.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancellation ends this pending setup. An active child's permission is withdrawn through current permissions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cancelación termina esta configuración pendiente. El permiso activo de un menor se retira desde los permisos actuales."
+          }
+        }
+      }
+    },
+    "Check child access again": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check child access again"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a comprobar el acceso del menor"
+          }
+        }
+      }
+    },
+    "Check current setup status": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check current setup status"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consultar el estado actual de configuración"
+          }
+        }
+      }
+    },
+    "Check guardian confirmation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check guardian confirmation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consultar la confirmación del tutor"
+          }
+        }
+      }
+    },
+    "Check status, then clear local retry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check status, then clear local retry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consultar el estado y borrar el reintento local"
+          }
+        }
+      }
+    },
+    "Check the email approved by your guardian for the sign-in code. No adult account is used here.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the email approved by your guardian for the sign-in code. No adult account is used here."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Busca el código de inicio de sesión en el correo electrónico aprobado por tu tutor. Aquí no se usa ninguna cuenta de adulto."
+          }
+        }
+      }
+    },
+    "Checking child setup…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking child setup…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comprobando la configuración para el menor…"
+          }
+        }
+      }
+    },
+    "Checking guardian setup…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking guardian setup…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comprobando la configuración del tutor…"
+          }
+        }
+      }
+    },
+    "Child access could not be reopened. Adult work remains locked. You can remove this child session from the device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Child access could not be reopened. Adult work remains locked. You can remove this child session from the device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo restablecer el acceso del menor. Las funciones de adulto siguen bloqueadas. Puedes eliminar esta sesión del menor del dispositivo."
+          }
+        }
+      }
+    },
+    "Child access was removed from this device. Remote device revocation could not be confirmed; ask your guardian to review active permission.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Child access was removed from this device. Remote device revocation could not be confirmed; ask your guardian to review active permission."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se eliminó el acceso del menor de este dispositivo. No se pudo confirmar la revocación remota del acceso de este dispositivo; pide a tu tutor que revise el permiso activo."
+          }
+        }
+      }
+    },
+    "Child access was removed from this device. Remote sign-out could not be confirmed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Child access was removed from this device. Remote sign-out could not be confirmed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se eliminó el acceso del menor de este dispositivo. No se pudo confirmar el cierre de sesión remoto."
+          }
+        }
+      }
+    },
+    "Child cleanup could not be confirmed. Adult work remains locked. Unlock this device and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Child cleanup could not be confirmed. Adult work remains locked. Unlock this device and try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo confirmar la eliminación de los datos de sesión del menor. Las funciones de adulto siguen bloqueadas. Desbloquea este dispositivo e inténtalo de nuevo."
+          }
+        }
+      }
+    },
+    "Child device confirmed; finish on that device": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Child device confirmed; finish on that device"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dispositivo del menor confirmado; termina en ese dispositivo"
+          }
+        }
+      }
+    },
+    "Child device is waiting for your confirmation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Child device is waiting for your confirmation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El dispositivo del menor espera tu confirmación"
+          }
+        }
+      }
+    },
+    "Child invitation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Child invitation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invitación para el menor"
+          }
+        }
+      }
+    },
+    "Child invitation code": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Child invitation code"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Código de invitación para el menor"
+          }
+        }
+      }
+    },
+    "Child setup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Child setup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configuración para el menor"
+          }
+        }
+      }
+    },
+    "Child setup is unavailable until the verification service and current notices are approved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Child setup is unavailable until the verification service and current notices are approved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La configuración para menores no está disponible hasta que se aprueben el servicio de verificación y los avisos actuales."
+          }
+        }
+      }
+    },
+    "Child sign-in": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Child sign-in"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicio de sesión para el menor"
+          }
+        }
+      }
+    },
+    "Child sign-in is not available yet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Child sign-in is not available yet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El inicio de sesión para menores aún no está disponible"
+          }
+        }
+      }
+    },
+    "Child sign-in is unavailable until the covered email service and current notices are approved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Child sign-in is unavailable until the covered email service and current notices are approved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El inicio de sesión para menores no está disponible hasta que se aprueben el servicio de correo electrónico previsto y los avisos actuales."
+          }
+        }
+      }
+    },
+    "Child sign-in is unavailable until the covered email service is configured. Your saved action has not been replaced.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Child sign-in is unavailable until the covered email service is configured. Your saved action has not been replaced."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El inicio de sesión para menores no está disponible hasta que se configure el servicio de correo electrónico previsto. Tu acción guardada no se ha reemplazado."
+          }
+        }
+      }
+    },
+    "Child's country or region code": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Child's country or region code"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Código de país o región del menor"
+          }
+        }
+      }
+    },
+    "Child's exact sign-in email": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Child's exact sign-in email"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correo electrónico exacto para el inicio de sesión del menor"
+          }
+        }
+      }
+    },
+    "Child's household alias": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Child's household alias"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alias del menor en el hogar"
+          }
+        }
+      }
+    },
+    "Children can send and see only their own requests. Verification of adulthood, guardian permission, and device confirmation are separate steps.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Children can send and see only their own requests. Verification of adulthood, guardian permission, and device confirmation are separate steps."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los menores solo pueden enviar y ver sus propias solicitudes. La verificación de mayoría de edad, el permiso del tutor y la confirmación del dispositivo son pasos separados."
+          }
+        }
+      }
+    },
+    "Clear this local retry?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear this local retry?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Borrar este reintento local?"
+          }
+        }
+      }
+    },
+    "Clearing a local retry does not cancel setup or withdraw permission already saved by the household service.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clearing a local retry does not cancel setup or withdraw permission already saved by the household service."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrar un reintento local no cancela la configuración ni retira un permiso ya guardado por el servicio del hogar."
+          }
+        }
+      }
+    },
+    "Code on the child's device": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code on the child's device"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Código en el dispositivo del menor"
+          }
+        }
+      }
+    },
+    "Complete the verification provider's process, then refresh status. A browser return does not confirm verification.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Complete the verification provider's process, then refresh status. A browser return does not confirm verification."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completa el proceso del proveedor y luego actualiza el estado. Volver del navegador no confirma la verificación."
+          }
+        }
+      }
+    },
+    "Confirm this child's device": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm this child's device"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar el dispositivo de este menor"
+          }
+        }
+      }
+    },
+    "Create a child invitation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create a child invitation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crear una invitación para el menor"
+          }
+        }
+      }
+    },
+    "Create a child setup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create a child setup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crear una configuración para el menor"
+          }
+        }
+      }
+    },
+    "Current guardian notice": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current guardian notice"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aviso actual para el tutor"
+          }
+        }
+      }
+    },
+    "Email sign-in code": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Email sign-in code"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Código de inicio de sesión por correo electrónico"
+          }
+        }
+      }
+    },
+    "English": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "English"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inglés"
+          }
+        }
+      }
+    },
+    "Exact email approved by your guardian": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exact email approved by your guardian"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correo electrónico exacto aprobado por tu tutor"
+          }
+        }
+      }
+    },
+    "Expires": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expires"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vence"
+          }
+        }
+      }
+    },
+    "Finish child setup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finish child setup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminar la configuración para el menor"
+          }
+        }
+      }
+    },
+    "Grant permission": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grant permission"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conceder permiso"
+          }
+        }
+      }
+    },
+    "Guardian access must be checked again. Unlock your household account.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardian access must be checked again. Unlock your household account."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es necesario comprobar de nuevo el acceso del tutor. Desbloquea tu cuenta del hogar."
+          }
+        }
+      }
+    },
+    "Guardian controls": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardian controls"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Controles del tutor"
+          }
+        }
+      }
+    },
+    "Guardian-approved invitation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardian-approved invitation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invitación aprobada por tu tutor"
+          }
+        }
+      }
+    },
+    "I am this child's parent or legal guardian": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I am this child's parent or legal guardian"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Soy el padre, la madre o el tutor legal de este menor"
+          }
+        }
+      }
+    },
+    "I finished sharing; continue to pairing": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I finished sharing; continue to pairing"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya terminé de compartir; continuar con la vinculación"
+          }
+        }
+      }
+    },
+    "I grant this child permission for their own requests under this notice": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I grant this child permission for their own requests under this notice"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Concedo a este menor permiso para sus propias solicitudes según este aviso"
+          }
+        }
+      }
+    },
+    "I reviewed this current notice": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed this current notice"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "He revisado este aviso actual"
+          }
+        }
+      }
+    },
+    "Invitation from your guardian": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invitation from your guardian"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invitación de tu tutor"
+          }
+        }
+      }
+    },
+    "Leave child space": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave child space"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salir del espacio del menor"
+          }
+        }
+      }
+    },
+    "Local retry cleared after checking status. A setup or permission already saved by the service is unchanged.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Local retry cleared after checking status. A setup or permission already saved by the service is unchanged."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se borró el reintento local tras consultar el estado. La configuración o el permiso ya guardado por el servicio no cambia."
+          }
+        }
+      }
+    },
+    "My requests": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My requests"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mis solicitudes"
+          }
+        }
+      }
+    },
+    "Notice language": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notice language"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idioma del aviso"
+          }
+        }
+      }
+    },
+    "Notice version": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notice version"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versión del aviso"
+          }
+        }
+      }
+    },
+    "Only your own requests and their status appear here. The shopper decides what goes into the basket.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only your own requests and their status appear here. The shopper decides what goes into the basket."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aquí solo aparecen tus propias solicitudes y su estado. La persona encargada de las compras decide qué va en la cesta."
+          }
+        }
+      }
+    },
+    "Own-request access is active": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Own-request access is active"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El acceso a las solicitudes propias está activo"
+          }
+        }
+      }
+    },
+    "Permission covers this child's own requests. It does not provide basket or budget access.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permission covers this child's own requests. It does not provide basket or budget access."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El permiso cubre las solicitudes propias de este menor. No da acceso a la cesta ni al presupuesto."
+          }
+        }
+      }
+    },
+    "Permission recorded; child invitation needed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permission recorded; child invitation needed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permiso registrado; se necesita una invitación para el menor"
+          }
+        }
+      }
+    },
+    "Permission was withdrawn. Local setup retry cleanup needs attention.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permission was withdrawn. Local setup retry cleanup needs attention."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se retiró el permiso. Es necesario revisar la eliminación del reintento local de configuración."
+          }
+        }
+      }
+    },
+    "Permission withdrawn": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permission withdrawn"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permiso retirado"
+          }
+        }
+      }
+    },
+    "Read the pairing code displayed on the intended child's device. Confirm that exact code here before access can activate.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read the pairing code displayed on the intended child's device. Confirm that exact code here before access can activate."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lee el código de vinculación que aparece en el dispositivo del menor indicado. Confirma ese código exacto aquí antes de que se pueda activar el acceso."
+          }
+        }
+      }
+    },
+    "Refresh my requests": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh my requests"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar mis solicitudes"
+          }
+        }
+      }
+    },
+    "Refresh notice and setup status": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh notice and setup status"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar el aviso y el estado de configuración"
+          }
+        }
+      }
+    },
+    "Remove child session and return to locked adult access": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove child session and return to locked adult access"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar la sesión del menor y volver al acceso de adulto bloqueado"
+          }
+        }
+      }
+    },
+    "Remove saved setup secrets?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove saved setup secrets?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Eliminar los secretos de configuración guardados?"
+          }
+        }
+      }
+    },
+    "Remove setup secrets from this device": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove setup secrets from this device"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar secretos de configuración de este dispositivo"
+          }
+        }
+      }
+    },
+    "Remove this child session from the device?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this child session from the device?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Eliminar esta sesión del menor del dispositivo?"
+          }
+        }
+      }
+    },
+    "Request adult verification": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request adult verification"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicitar verificación de mayoría de edad"
+          }
+        }
+      }
+    },
+    "Request adulthood verification using the confirmed email on your current account. Verification alone does not give permission.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request adulthood verification using the confirmed email on your current account. Verification alone does not give permission."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicita la verificación de mayoría de edad con el correo confirmado de tu cuenta actual. La verificación por sí sola no concede permiso."
+          }
+        }
+      }
+    },
+    "Request the child sign-in code": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request the child sign-in code"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicitar el código de inicio de sesión del menor"
+          }
+        }
+      }
+    },
+    "Resume the same saved setup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resume the same saved setup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reanudar la misma configuración guardada"
+          }
+        }
+      }
+    },
+    "Resume the same saved sign-in": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resume the same saved sign-in"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reanudar el mismo inicio de sesión guardado"
+          }
+        }
+      }
+    },
+    "Resume the same saved sign-in. An uncertain request must not send a new email.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resume the same saved sign-in. An uncertain request must not send a new email."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reanuda el mismo inicio de sesión guardado. Si el resultado de una solicitud es incierto, no se debe enviar otro correo electrónico."
+          }
+        }
+      }
+    },
+    "Resume this same saved invitation to check its current status.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resume this same saved invitation to check its current status."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reanuda esta misma invitación guardada para consultar su estado actual."
+          }
+        }
+      }
+    },
+    "Retry the same setup action": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry the same setup action"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar la misma acción de configuración"
+          }
+        }
+      }
+    },
+    "Review or withdraw current permissions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review or withdraw current permissions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar o retirar los permisos actuales"
+          }
+        }
+      }
+    },
+    "Review this exact email before granting permission. The child may sign in only with this email after permission is recorded.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review this exact email before granting permission. The child may sign in only with this email after permission is recorded."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa este correo electrónico exacto antes de conceder permiso. Una vez registrado el permiso, el menor solo podrá iniciar sesión con este correo electrónico."
+          }
+        }
+      }
+    },
+    "Saved child access could not be checked. Adult work remains locked.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved child access could not be checked. Adult work remains locked."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo comprobar el acceso guardado del menor. Las funciones de adulto siguen bloqueadas."
+          }
+        }
+      }
+    },
+    "Saved child setup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved child setup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configuración para el menor guardada"
+          }
+        }
+      }
+    },
+    "Saved child sign-in": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved child sign-in"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicio de sesión del menor guardado"
+          }
+        }
+      }
+    },
+    "Saved setup action": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved setup action"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acción de configuración guardada"
+          }
+        }
+      }
+    },
+    "Selected setup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected setup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configuración seleccionada"
+          }
+        }
+      }
+    },
+    "Setup cancelled": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setup cancelled"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configuración cancelada"
+          }
+        }
+      }
+    },
+    "Setup changed. Refresh and review the current notice and status before a new action.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setup changed. Refresh and review the current notice and status before a new action."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La configuración cambió. Actualiza y revisa el aviso y el estado actuales antes de una nueva acción."
+          }
+        }
+      }
+    },
+    "Setup expired": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setup expired"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configuración vencida"
+          }
+        }
+      }
+    },
+    "Setup secrets were removed from this device. Your guardian must cancel pending setup or withdraw any active permission.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setup secrets were removed from this device. Your guardian must cancel pending setup or withdraw any active permission."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se eliminaron los secretos de configuración de este dispositivo. Tu tutor debe cancelar la configuración pendiente o retirar cualquier permiso activo."
+          }
+        }
+      }
+    },
+    "Setup status confirmed by the household service.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setup status confirmed by the household service."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servicio del hogar confirmó el estado de configuración."
+          }
+        }
+      }
+    },
+    "Share child invitation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share child invitation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartir invitación para el menor"
+          }
+        }
+      }
+    },
+    "Share this invitation with the intended child's device. Keep it private.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share this invitation with the intended child's device. Keep it private."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparte esta invitación con el dispositivo del menor indicado. Mantenla privada."
+          }
+        }
+      }
+    },
+    "Show it on this device to your guardian. An invitation alone does not activate access.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show it on this device to your guardian. An invitation alone does not activate access."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Muéstraselo a tu tutor en este dispositivo. Una invitación por sí sola no activa el acceso."
+          }
+        }
+      }
+    },
+    "Show this code to your guardian": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show this code to your guardian"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Muestra este código a tu tutor"
+          }
+        }
+      }
+    },
+    "Spanish": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spanish"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Español"
+          }
+        }
+      }
+    },
+    "The child must use their own approved sign-in. Do not enter an adult account on the child's device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The child must use their own approved sign-in. Do not enter an adult account on the child's device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El menor debe usar su propio inicio de sesión aprobado. No introduzcas una cuenta de adulto en el dispositivo del menor."
+          }
+        }
+      }
+    },
+    "The child sign-in result is not confirmed. Resume this exact saved action. Do not request another email.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The child sign-in result is not confirmed. Resume this exact saved action. Do not request another email."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El resultado del inicio de sesión del menor no está confirmado. Reanuda esta misma acción guardada. No solicites otro correo electrónico."
+          }
+        }
+      }
+    },
+    "The household service confirms active own-request access. Use current permissions to withdraw it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The household service confirms active own-request access. Use current permissions to withdraw it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servicio del hogar confirma el acceso activo a las solicitudes propias. Usa los permisos actuales para retirarlo."
+          }
+        }
+      }
+    },
+    "The result is not confirmed. Retry this same saved invitation or finish action.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The result is not confirmed. Retry this same saved invitation or finish action."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El resultado no está confirmado. Reintenta esta misma invitación o acción de finalización guardada."
+          }
+        }
+      }
+    },
+    "The service could not confirm this setup action. Keep the exact retry and check status.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The service could not confirm this setup action. Keep the exact retry and check status."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servicio no pudo confirmar esta acción de configuración. Conserva el reintento exacto y consulta el estado."
+          }
+        }
+      }
+    },
+    "The verification request is uncertain. Refresh status or wait for the verified result. A new verification email cannot be requested from this setup.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The verification request is uncertain. Refresh status or wait for the verified result. A new verification email cannot be requested from this setup."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La solicitud de verificación es incierta. Actualiza el estado o espera el resultado verificado. No se puede solicitar otro correo de verificación desde esta configuración."
+          }
+        }
+      }
+    },
+    "This child setup has ended. Ask your guardian for a new setup.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This child setup has ended. Ask your guardian for a new setup."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta configuración para menores terminó. Pide a tu tutor una nueva configuración."
+          }
+        }
+      }
+    },
+    "This child sign-in must be checked again. Resume its saved action, or ask your guardian for a new setup.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This child sign-in must be checked again. Resume its saved action, or ask your guardian for a new setup."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es necesario comprobar de nuevo este inicio de sesión del menor. Reanuda su acción guardada o pide a tu tutor una nueva configuración."
+          }
+        }
+      }
+    },
+    "This device could not save the child privacy boundary. Adult work remains locked.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This device could not save the child privacy boundary. Adult work remains locked."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este dispositivo no pudo guardar la separación que protege la privacidad del menor. Las funciones de adulto siguen bloqueadas."
+          }
+        }
+      }
+    },
+    "This device was confirmed. The child can finish setup in their own authenticated session.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This device was confirmed. The child can finish setup in their own authenticated session."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se confirmó este dispositivo. El menor puede terminar la configuración en su propia sesión autenticada."
+          }
+        }
+      }
+    },
+    "This is your declaration. The verification provider checks adulthood and does not independently establish your relationship to the child.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is your declaration. The verification provider checks adulthood and does not independently establish your relationship to the child."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta es tu declaración. El proveedor verifica la mayoría de edad y no establece de forma independiente tu relación con el menor."
+          }
+        }
+      }
+    },
+    "This removes only this device's saved retry. Your guardian must cancel pending setup or withdraw any active permission.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This removes only this device's saved retry. Your guardian must cancel pending setup or withdraw any active permission."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esto solo elimina el reintento guardado de este dispositivo. Tu tutor debe cancelar la configuración pendiente o retirar cualquier permiso activo."
+          }
+        }
+      }
+    },
+    "This signs the child out on this device. Adult groceries, meals and costs stay locked and require device-owner authentication.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This signs the child out on this device. Adult groceries, meals and costs stay locked and require device-owner authentication."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esto cierra la sesión del menor en este dispositivo. Las compras de alimentos, las comidas y los costos de la persona adulta siguen bloqueados y requieren la autenticación del propietario del dispositivo."
+          }
+        }
+      }
+    },
+    "This space is for your own requests. Your guardian must confirm this device before access can begin.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This space is for your own requests. Your guardian must confirm this device before access can begin."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este espacio es para tus propias solicitudes. Tu tutor debe confirmar este dispositivo antes de que pueda comenzar el acceso."
+          }
+        }
+      }
+    },
+    "Unlock this device to remove its saved setup secrets.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock this device to remove its saved setup secrets."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desbloquea este dispositivo para eliminar sus secretos de configuración guardados."
+          }
+        }
+      }
+    },
+    "Use a child invitation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use a child invitation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar una invitación para un menor"
+          }
+        }
+      }
+    },
+    "Use only the email your guardian approved for this invitation. This child sign-in is separate from any adult account on the device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use only the email your guardian approved for this invitation. This child sign-in is separate from any adult account on the device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usa solo el correo electrónico que tu tutor aprobó para esta invitación. Este inicio de sesión del menor es independiente de cualquier cuenta de adulto en el dispositivo."
+          }
+        }
+      }
+    },
+    "Use this invitation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use this invitation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar esta invitación"
+          }
+        }
+      }
+    },
+    "Verification result is not confirmed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verification result is not confirmed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El resultado de verificación no está confirmado"
+          }
+        }
+      }
+    },
+    "Verify child code and continue": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verify child code and continue"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verificar el código del menor y continuar"
+          }
+        }
+      }
+    },
+    "Verify the child sign-in code": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verify the child sign-in code"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verificar el código de inicio de sesión del menor"
+          }
+        }
+      }
+    },
+    "Wait before retrying. Check current setup status after several attempts.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wait before retrying. Check current setup status after several attempts."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Espera antes de reintentar. Después de varios intentos, consulta el estado actual de configuración."
+          }
+        }
+      }
+    },
+    "Waiting for verified adulthood result": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting for verified adulthood result"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esperando el resultado verificado de mayoría de edad"
+          }
+        }
+      }
+    },
+    "Waiting for your guardian to confirm the code on this device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting for your guardian to confirm the code on this device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esperando a que tu tutor confirme el código de este dispositivo."
+          }
+        }
+      }
+    },
+    "Your child access is being checked. Adult work remains locked.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your child access is being checked. Adult work remains locked."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se está comprobando tu acceso de menor. Las funciones de adulto siguen bloqueadas."
+          }
+        }
+      }
+    },
+    "Your child session or invitation has ended. Ask your guardian for a new setup.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your child session or invitation has ended. Ask your guardian for a new setup."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu sesión de menor o invitación terminó. Pide a tu tutor una nueva configuración."
+          }
+        }
+      }
+    },
+    "Your child setups": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your child setups"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus configuraciones para menores"
+          }
+        }
+      }
+    },
+    "Your guardian confirmed this device. Finish setup to open your own requests.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your guardian confirmed this device. Finish setup to open your own requests."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu tutor confirmó este dispositivo. Termina la configuración para abrir tus propias solicitudes."
+          }
+        }
+      }
+    },
+    "Your guardian's invitation is approved for this sign-in. Continue to show the pairing code on this device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your guardian's invitation is approved for this sign-in. Continue to show the pairing code on this device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La invitación de tu tutor está aprobada para este inicio de sesión. Continúa para mostrar el código de vinculación en este dispositivo."
+          }
+        }
+      }
+    },
+    "Your own-request access was confirmed by the household service.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your own-request access was confirmed by the household service."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servicio del hogar confirmó tu acceso a tus propias solicitudes."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

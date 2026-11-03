@@ -1,0 +1,43 @@
+{
+  "source": "/Users/palatis/Room in the Cart/.build/IntegratedCandidateSource-20261103T221055Z",
+  "sourceSHA256": "09641e332160fe27749dbab61c744ac7f149ebc7a0c9802f68409bafadf859f4",
+  "recordedAtUTC": "2026-11-03T22:18:26.746945+00:00",
+  "nativeModels": {
+    "tests": 518,
+    "passed": 518,
+    "failed": 0,
+    "skipped": 0,
+    "durationSeconds": 13.446
+  },
+  "ordinaryUI": {
+    "status": "in progress, not accepted",
+    "resultBundle": ".build/IntegratedCandidate-20261103.xcresult",
+    "log": ".build/IntegratedCandidate-20261103.log",
+    "observedFailure": "Free freezer-batch regression still chose old purpose label Dinner; current stock picker displays matching food Wraps. Source-only test correction prepared; rerun pending."
+  },
+  "binaryIdentities": [
+    {
+      "path": ".build/IntegratedCandidateDD-20261103/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart",
+      "bytes": 40496,
+      "sha256": "b3bbafd62b02252846559ae7b083c32f8d85f127b159d0ae84b6a292f517800d"
+    },
+    {
+      "path": ".build/IntegratedCandidateDD-20261103/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart.debug.dylib",
+      "bytes": 50505792,
+      "sha256": "ee0d59dfb27b0b3cfd15bdf8ce8afab0fffd933d5b8023f3e05a46e421d17844"
+    },
+    {
+      "path": ".build/IntegratedCandidateDD-20261103/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/RoomInTheCartTests",
+      "bytes": 12185840,
+      "sha256": "bd7f90333411bcf46ee48eaf84cebb841b64925c390eecb4ab33b13a09c466ce"
+    }
+  ],
+  "localization": {
+    "catalogs": 18,
+    "entries": 3676,
+    "literalKeys": 3517,
+    "runtimeCompositionsExcluded": 113,
+    "passed": true
+  },
+  "scope": "All native functional gap implementations compile and model tests pass. Screen acceptance, final whole-source comparisons, current Release/ordinary preview, full001\u2013023 backend+wire+restore, and external release gates remain. No release-complete claim."
+}

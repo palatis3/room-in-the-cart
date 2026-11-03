@@ -17,7 +17,8 @@ TABLES = {'tr': 'Localizable', 'message': 'Localizable',
           'ht': 'Household', 'recordsText': 'Records', 'pTr': 'Pickup', 'pCook': 'Pickup',
           'captureText': 'Capture', 'dinnerText': 'Dinners', 'dinnerFormat': 'Dinners',
           'SurfaceCopy.text': 'DeviceSurfaces', 'HistoryCopy.text': 'History', 'fd': 'History', 'PlacementCopy.text': 'Placement',
-          'helpText': 'Help', 'StoreQuoteCopy.text': 'StoreQuotes'}
+          'helpText': 'Help', 'StoreQuoteCopy.text': 'StoreQuotes', 'GuardianCopy.text': 'Guardian',
+          'DeviceManagementCopy.text': 'DeviceManagement', 'requestDuplicateText': 'RequestDuplicates'}
 UI_CALLS = {'Text', 'Label', 'Button', 'Toggle', 'Section', 'Picker',
             'NavigationLink', 'ContentUnavailableView'}
 STRING = re.compile(r'"(?:\\.|[^"\\])*"')
@@ -182,14 +183,14 @@ def main():
     catalogs = {}
     errors = []
     for path in sorted((ROOT / 'ios').rglob('*.xcstrings')):
-        if '.build' in path.parts:
+        if '.build' in path.relative_to(ROOT).parts:
             continue
         try:
             assert path.stem not in catalogs, f'Duplicate catalog table: {path.stem}'
             catalogs[path.stem] = check_catalog(path)
         except (AssertionError, ValueError, KeyError) as error:
             errors.append(str(error))
-    keys, dynamic, runtime_strings = source_keys()
+    keys, dynamic, runtime_strings = source_keys(ROOT)
     for table, required in sorted(keys.items()):
         for key in sorted(required - catalogs.get(table, {}).keys()):
             errors.append(f'{table}.xcstrings missing source key: {key!r}')

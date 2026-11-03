@@ -46,6 +46,13 @@ private struct PickupBatchReview: View {
     let lot: ConfirmedStockLot
     let carrying: Bool
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var access: WorkspaceAccess
+    @EnvironmentObject private var household: HouseholdModel
+    @Environment(\.scenePhase) private var scenePhase
+    @FocusState private var amountFocused: Bool
+    @AccessibilityFocusState private var previewFocused: Bool
+    @State private var review: PickupStockLotReview?
+    @State private var effectsConfirmed = false
     @State private var amount = ""
     @State private var foodID: UUID?
     @State private var observedAt = Date()
@@ -90,28 +97,92 @@ private struct PickupBatchReview: View {
                     if carrying || lot.id == lot.foodID {
                         Picker(pTr("Reviewed matching food need"), selection: $foodID) {
                             Text(pTr("Keep unassigned until a meal is reviewed")).tag(UUID?.none)
-                            ForEach(model.journey?.stockNeeds ?? []) { Text($0.name).tag(Optional($0.foodID)) }
-                            ForEach(model.journey?.basket?.current.lines ?? []) { Text($0.name).tag(Optional($0.id)) }
+                            ForEach(model.journey?.reviewedStockMatches ?? []) { Text($0.name).tag(Optional($0.id)) }
                         }
                     }
-                    TextField(pTr("Confirmed usable amount"), text: $amount).keyboardType(.decimalPad)
+                    TextField(pTr("Confirmed usable amount"), text: $amount).keyboardType(.decimalPad).focused($amountFocused)
+                        .accessibilityIdentifier("stockReview.amount")
                     Text(pTr(lot.usable.unit.rawValue))
                     DatePicker(pTr("Batch observed at"), selection: $observedAt, in: ...Date())
                     Toggle(pTr("Use this batch first"), isOn: $useFirst)
                     Toggle(pTr("I reviewed identity, exclusions and usable quantity"), isOn: $checked)
-                    Button(pTr("Save reviewed batch")) { save() }
-                        .disabled(!checked || amount.isEmpty || model.saving)
+                        .accessibilityIdentifier("stockReview.identityChecked")
+                    Button(pTr("Preview batch effects")) { preview() }
+                        .disabled(!checked || amount.isEmpty || model.saving || model.hasPendingSave || currentScope == nil)
+                        .accessibilityIdentifier("stockReview.preview")
+                }
+            }
+            if let review {
+                Section {
+                    Text(pTr("Review dependent meals")).font(.headline).accessibilityAddTraits(.isHeader)
+                        .accessibilityFocused($previewFocused)
+                    Text("\(pTr("Confirmed usable amount")): \(pQuantity(review.lot.usable))")
+                    Text(review.lot.confirmedAt.formatted())
+                    if review.lot.useFirst == true { Text(pTr("Use this batch first")) }
+                    if review.meals.isEmpty { Text(pTr("No reviewed meal depends on this batch.")) }
+                    ForEach(review.meals) { effect in
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(effect.need.name).font(.headline)
+                            if effect.need.priority == .protected { Text(pTr("set aside first")) }
+                            Text("\(pTr("Required")): \(pQuantity(effect.need.amount))")
+                            Text("\(pTr("Before this change")): \(coverage(effect.before))")
+                            Text("\(pTr("After this change")): \(coverage(effect.after))")
+                            Text("\(pTr("Allocation change")): \(delta(effect.before?.allocated, effect.after?.allocated, unit: effect.after?.unit ?? effect.need.amount.unit))")
+                            Text("\(pTr("Shortfall change")): \(delta(effect.before?.shortfall, effect.after?.shortfall, unit: effect.after?.unit ?? effect.need.amount.unit))")
+                        }.accessibilityElement(children: .combine)
+                            .accessibilityIdentifier("stockReview.meal." + effect.id.uuidString)
+                    }
+                    if !model.isCurrentStockLotReview(review, scope: currentScope) {
+                        Text(pTr("The batch or meal commitments changed. Review the effects again before saving."))
+                            .accessibilityIdentifier("stockReview.stale")
+                    }
+                    Toggle(pTr("I reviewed the effects on every dependent meal"), isOn: $effectsConfirmed)
+                        .accessibilityIdentifier("stockReview.effectsChecked")
+                    Button(pTr("Save reviewed batch")) {
+                        Task {
+                            if await model.applyStockLotReview(review, scope: currentScope, confirmed: effectsConfirmed) { dismiss() }
+                        }
+                    }.disabled(!effectsConfirmed || !model.isCurrentStockLotReview(review, scope: currentScope))
+                        .accessibilityIdentifier("stockReview.apply")
+                    Button(pTr("Cancel batch preview"), role: .cancel) { cancelPreview() }
+                        .disabled(model.saving).accessibilityIdentifier("stockReview.cancel")
                 }
             }
         }.navigationTitle(pTr("Batch details"))
-            .onChange(of: amount) { _, _ in checked = false }
-            .onChange(of: foodID) { _, _ in checked = false }
-            .onChange(of: observedAt) { _, _ in checked = false }
-            .onChange(of: useFirst) { _, _ in checked = false }
+            .onChange(of: amount) { _, _ in checked = false; cancelPreview() }
+            .onChange(of: foodID) { _, _ in checked = false; cancelPreview() }
+            .onChange(of: observedAt) { _, _ in checked = false; cancelPreview() }
+            .onChange(of: useFirst) { _, _ in checked = false; cancelPreview() }
+            .onChange(of: currentScope) { _, _ in effectsConfirmed = false }
+            .onChange(of: model.journey?.revision) { _, _ in effectsConfirmed = false }
+            .onChange(of: scenePhase) { _, phase in if phase != .active { cancelPreview() } }
             .scrollDismissesKeyboard(.interactively)
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    if amountFocused { Spacer(); Button(tr("Done")) { amountFocused = false } }
+                }
+            }
     }
 
-    private func save() {
+    private var currentScope: PickupStockReviewScope? {
+        guard scenePhase == .active, access.unlocked, !household.locked, let workspaceID = model.sourceWorkspaceID else { return nil }
+        if let projection = household.projection {
+            guard household.identity != nil, projection.enrolled, ["shopper", "organizer"].contains(projection.role) else { return nil }
+        } else if household.identity != nil { return nil }
+        return .init(workspaceID: workspaceID, localActorID: access.localActorID, accountSubject: household.identity?.subject,
+            householdID: household.projection?.household.id, memberID: household.projection?.memberId, role: household.projection?.role)
+    }
+    private func cancelPreview() { review = nil; effectsConfirmed = false }
+    private func coverage(_ value: StockDemandCoverage?) -> String {
+        let allocated = value.flatMap { value in value.allocated.map { pQuantity($0, unit: value.unit) } } ?? pTr("Unresolved")
+        let short = value.flatMap { value in value.shortfall.map { pQuantity($0, unit: value.unit) } } ?? pTr("Unresolved")
+        return "\(pTr("Allocated")): \(allocated) · \(pTr("Still short")): \(short)"
+    }
+    private func delta(_ before: Rational?, _ after: Rational?, unit: UnitOfMeasure) -> String {
+        guard let before, let after, let amount = try? max(before, after).subtracting(min(before, after)) else { return pTr("Unresolved") }
+        return (after == before ? "" : (after > before ? "+" : "−")) + pQuantity(amount, unit: unit)
+    }
+    private func preview() {
         do {
             let target = carrying || lot.id == lot.foodID ? foodID ?? lot.id : lot.foodID
             guard let quantity = try ComparisonModel.quantity(amount, lot.usable.unit) else {
@@ -119,11 +190,15 @@ private struct PickupBatchReview: View {
             }
             let updated = ConfirmedStockLot(id: lot.id, foodID: target, name: lot.name, usable: quantity,
                                             confirmedAt: observedAt, source: lot.source, useFirst: useFirst)
-            Task {
-                if await model.saveStockLot(updated, in: journeyID, replacing: carrying ? nil : lot,
-                                            carriedFrom: carrying ? lot : nil) { dismiss() }
-            }
-        } catch { model.error = pTr("Check the confirmed food amounts and matching units.") }
+            guard let scope = currentScope else { throw PickupStockReviewError.stale }
+            amountFocused = false
+            review = try model.previewStockLot(updated, in: journeyID, replacing: carrying ? nil : lot,
+                carriedFrom: carrying ? lot : nil, scope: scope)
+            effectsConfirmed = false; previewFocused = true
+        } catch {
+            model.error = pTr((error as? PickupStockReviewError) == .stale
+                ? "Review the saved batch again before changing it." : "Check the confirmed food amounts and matching units.")
+        }
     }
 }
 
@@ -150,13 +225,12 @@ struct PickupNewStockSection: View {
     var body: some View {
         Section(pTr("Confirm pantry or freezer food")) {
             if let ingredientID,
-               let line = model.journey?.basket?.current.lines.first(where: { $0.id == ingredientID }) {
-                LabeledContent(pTr("Reviewed matching food need"), value: line.name)
+               let match = model.journey?.reviewedStockMatches.first(where: { $0.id == ingredientID }) {
+                LabeledContent(pTr("Reviewed matching food need"), value: match.name)
             } else {
                 Picker(pTr("Reviewed matching food need"), selection: $stockFoodID) {
                     Text(pTr("Keep unassigned until a meal is reviewed")).tag(UUID?.none)
-                    ForEach(model.journey?.stockNeeds ?? []) { Text($0.name).tag(Optional($0.foodID)) }
-                    ForEach(model.journey?.basket?.current.lines ?? []) { Text($0.name).tag(Optional($0.id)) }
+                    ForEach(model.journey?.reviewedStockMatches ?? []) { Text($0.name).tag(Optional($0.id)) }
                 }
             }
             TextField(pTr("Actual food or freezer batch"), text: $stockName).focused($field, equals: .stockName)
@@ -191,7 +265,7 @@ struct PickupNewStockSection: View {
             guard !stockName.isEmpty, let quantity = try ComparisonModel.quantity(stockAmount, stockUnit) else { throw CocoaError(.validationMissingMandatoryProperty) }
             let journeyID = model.journey?.id ?? newJourneyID
             let startsWorkspace = model.journey == nil
-            let lot = ConfirmedStockLot(id: stockID, foodID: stockFoodID ?? stockID, name: stockName, usable: quantity,
+            let lot = ConfirmedStockLot(id: stockID, foodID: ingredientID ?? stockFoodID ?? stockID, name: stockName, usable: quantity,
                                         confirmedAt: stockObservedAt, source: stockSource, useFirst: useFirst)
             Task {
                 if await model.saveStockLot(lot, in: journeyID, createIfEmpty: startsWorkspace) {

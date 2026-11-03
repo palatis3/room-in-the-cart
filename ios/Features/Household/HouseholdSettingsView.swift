@@ -69,7 +69,12 @@ struct HouseholdSettingsView: View {
                             if lifecycle.isHelper { NavigationLink(ht("Cook instructions")) { HouseholdHelperView(model: lifecycle) } }
                             if lifecycle.canAdminister { NavigationLink(ht("People and invitations")) { HouseholdPeopleView(model: lifecycle) } }
                             if lifecycle.canShare || lifecycle.canAdminister { NavigationLink(ht("Manage shared views")) { HouseholdManagedViewsView(model: lifecycle) } }
-                            if !lifecycle.isHelper { NavigationLink(ht("Guardian controls")) { HouseholdGuardianView(model: lifecycle) } }
+                            if !lifecycle.isHelper { NavigationLink(ht("Guardian controls")) { GuardianControlsEntry(household: model, lifecycle: lifecycle) } }
+                            if lifecycle.canReviewDevices {
+                                NavigationLink(DeviceManagementCopy.text("Household devices")) {
+                                    if let devices = lifecycle.makeDevicesModel() { HouseholdDevicesView(model: devices) }
+                                }.accessibilityIdentifier("household.devices.settingsEntry")
+                            }
                         }
                     }
                     if projection.capabilities.contains("own_requests"), projection.shopId != nil || !model.requests.isEmpty {
@@ -147,6 +152,9 @@ struct HouseholdSettingsView: View {
                     NavigationLink(PlacementCopy.text("Shared placement reports")) { PlacementRecordsEntryView(household: model) }
                         .accessibilityIdentifier("household.placementReports")
                 }
+            }
+            Section {
+                GuardianChildEntryButton(household: model)
             }
             if let notice = model.notice { Section { Text(notice).accessibilityIdentifier("household.notice") } }
             if model.busy { ProgressView(ht("Checking service…")) }

@@ -1,6 +1,26 @@
-# Room in the Cart restart checkpoint
+# Room in the Cart current handoff
 
-This checkpoint prepares for a Codex restart to refresh browser access. The complete app remains the objective. Passing earlier snapshots do not certify the latest untested source. Read this file and the linked readiness manifests before resuming.
+The complete production app remains the objective. The resumed status below supersedes the preserved historical pre-restart inventory. Passing earlier snapshots do not certify later source changes.
+
+## Resumed work after the restart
+
+Browser access now works. The owner signed in to Epic, created the Room In The Cart organization and personally accepted KWS Developer Terms. The authenticated official API specification is readable; [verified protocol references](../service/KWS-CONTRACT-REFERENCES.md) record the exact token, send-email and webhook contracts. The observed Test service origin is `https://api.kidswebservices.com`. No Test publication, credential copying, verification email or remote deployment has been performed by the agent.
+
+F07 recovery source and evidence are committed in **0224fa4**: 33 package tests, 77 focused native tests and one actual SE/iOS 17 screen journey passed. Source and screenshots are in [F07 evidence](evidence/native/f07-recovered-20261103/evidence.json). This fixes the stale-open/deletion race and new recovered-store photo capture/reexport/cleanup. **73a64d0** follows with count-neutral English/Spanish wording; the Records catalog compiled, while a whole-tree catalog scan caught still-in-progress Guardian keys. The F07 screen evidence predates that wording-only follow-up.
+
+Guardian backend is committed in **f5e8aeb**. Its final local snapshot passed **29 guardian/provider/HTTP/PostgreSQL checks, 50 existing application regressions, 15 operations checks, and 67 unit tests**; one separate billing PostgreSQL fixture was skipped in the unit command. [Exact source and TAP manifest](evidence/b11/guardian-enrollment-20261103/manifest.json). Independent review passed its earlier 28-case snapshot plus direct SQL privilege checks and both erasure/finalization race orderings; [review evidence](evidence/b11/guardian-authority-review/validation-summary.json) records hashes and limits. App-role proof writes are denied, trusted verification has a distinct verifier-only pool, child OTP is bound to the guardian-approved email and invitation, and consent/pairing/current organizer authorization remain separate. No live provider or hosted acceptance is implied. SMTP remains explicitly deferred.
+
+Lumpy owns current guardian client/native/web completion, E01/N04/E09 screen acceptance, civil dates, Android and the approved local deletion journal implementation. He reports two passing civil-date UI cases covering 64 rendered labels across four US time zones, both DST boundaries and English/Spanish, and E09 2/2; retrieve the exact final manifests before closing those gates. E01/N04 focused reruns are in progress. Migration **022** is reserved for his local journal, with full 001–022 combined restore/drill still required. No remote erasure/deployment is authorized. [Staging preparation plan](STAGING-UPDATE-PLAN.md) is a draft, not an execution approval.
+
+Root has installed child-first launch/root hooks, scene/URL/sheet guards, an explicit observed child-root switch, adult-unlock store opening, cold-widget clearing, the guarded guardian fixture dispatcher, and two additional privacy tests. Swift parsing, generated-project checks and whitespace checks pass; the combined native build remains pending dedicated-lane stability. Localization now passes **16 catalogs / 3,582 en/es entries** with matching format arguments; human language review remains separate.
+
+The current requirements review found five additional local UI/flow gaps plus a confirmed-stock purchase integration gap. Implementations now exist for protected-meal request context (S24), bounded duplicate comparison across pages (S23), scoped enrolled-device management and session fencing (S21/023), stock-correction dependent-meal preview (E06), fresh current-allocation cook/readback (D12/N03), and stock-aware durable pack/noPurchase review with stale checkout guards (D05). [Point-in-time gap review](evidence/b11/current-launch-gap-review.md) preserves the actual findings. The ordinary integrated candidate **compiled and passed 518/518 native models** on 17e. [Exact source/binary checkpoint](evidence/native/integrated-candidate-20261103/checkpoint.json) pins468inputs. Actual ordinary/UI fixture acceptance is still running; do not call these requirements fully accepted from model tests.
+
+Initial guardian UI was1/8 with478/478 models passing; Lumpy owns the SE diagnosis/rerun. Initial S23/S24 source passed12models and1existing pack UI, with4new UI failures. S23 fixes only bounded fixture evidence text, modal scroll targeting and AX marker placement. S24 exposed a real model defect: identical field assignments invalidated reviewed/in-flight previews; seven equality guards and two model regressions now pass in the518-test candidate. Repeated screen verification remains required. Root currently owns17e; Lumpy ownsSE. Preserve the user's regular17 preview.
+
+Journal022 is installed locally with reviewed source and compatibility fixtures for the real fsynced writer. Backend auth now retains the exact signed AMR method with its timestamp, rejects malformed nonstring methods, and keeps separate OTP proof (16focused passes). Device023 narrows application device UPDATE to revoked_at; legitimate worker erasure still passes. S21's owner tests passed11PG/HTTP+5client+7host cases on001–021+023, explicitly excluding022. Root changed fixture-role setup to read-only checks: no new LOGIN/password/membership changes. The six journal compatibility candidates were hash-verified before installation, and the focused guardian harness now applies all current migrations rather than its historical021 cap. The current service unit run passes220 with one documented billing-PG skip. Full001–023 application/wire/restore and production-durable journal runtime remain pending.
+
+Root owns Git staging/commits and final integration. Completed root lanes remain available for precise follow-ups; Lumpy coordinates guardian UI, journal/restore, web, Android and durable-runtime preparation. Latest catalog check passes18catalogs/3,676en-es entries; human review is separate. No hosted deployment, KWS Test publication, real email or provider deletion has occurred.
 
 ## Product and owner decisions
 
@@ -8,10 +28,14 @@ This checkpoint prepares for a Codex restart to refresh browser access. The comp
 - Business operator: **Venture House Group LLC**. Support: **hello@roominthecart.com**. Both are implemented in native/public source and canonical `config/public-contact.json`. No mailbox delivery or policy approval is implied.
 - The user authorizes as many **gpt-6.1-sol / xhigh** agents as needed and wants Dot/Lumpy as second in command. Old one-agent/Astra restrictions are superseded.
 - Apple membership and SMTP setup are explicitly deferred. Apple account is `terranceciszek@gmail.com`; only a Personal Team was available. Do not repeatedly prompt for these deferred items.
-- The user selected preparing **Epic Kids Web Services** integration. Creating an external account, accepting terms, sending real verification emails and activating child networking have not occurred. The exact KWS API/signature contract is still needed; do not invent it.
+- The user selected preparing **Epic Kids Web Services** integration, signed in, created its organization and personally accepted its terms. Exact official protocol is documented and implemented locally. The agent has not published Test configuration, provisioned credentials, sent real verification emails or activated child networking.
 - Earlier authorization for backend 009–010 covered local installation, not deployment or enabling provider deletion. No newer staging migrations or deployment were performed during this resumed work.
 
-## Saved and verified
+## Historical pre-restart verification
+
+The remaining sections preserve the prior checkpoint. Use the resumed status above for superseding source, test, browser and device status.
+
+### Saved and verified
 
 Last backend checkpoint before this handoff: `ae00e3b`, following `fd3aa49` and `dbf9b41`.
 
@@ -24,7 +48,7 @@ Last backend checkpoint before this handoff: `ae00e3b`, following `fd3aa49` and 
 - Latest frozen web source passed **74/74** and production build. `.build/final-web-source` and `.build/final-web-source-hashes.json` identify it. Configuration tests 9/9. Latest project generation and catalog check passed, 15 catalogs / 3,451 en/es entries; human review remains separate.
 - An unsigned arm64 Release archive and ordinary simulator app previously compiled successfully. They predate the newest operator metadata and final source changes: `.build/RoomInTheCart-IntegratedReview.xcarchive`, `.build/WorkflowPreviewDD`. Rebuild and verify before calling them current.
 
-## Work saved for the next session
+### Work that was pending before restart
 
 1. **Recovered-store photo capture/export/cleanup.** `archive_media` installed typed per-attachment `captureNamespace` support and v1.2 only when needed. Imported mappings remain inert; actually opened app-owned stores mint lookup/cleanup scopes. Original provenance and physical UUIDs are preserved. The package passes **32/32**, while app namespace source has only parse/whitespace checks. [Photo recovery checkpoint](evidence/native/photo-recovery-checkpoint.md) names the missing regression and a stale registry-row/open interleaving that must be fixed/tested before acceptance. `RecordsRecoveryCapture.swift`, Records composition/media/model and RecordArchive changes need full native compile and SE screen rerun. Earlier photo-recovery UI passed before this namespace work; final preview layout still needs visual recheck.
 2. **Recipe-library and correction Settings screens.** Prepared guarded fixture/tests, not compiled or executed. [Readiness manifest](evidence/native/library-privacy-screen-preparation.json) has exact selectors, dependencies, expected results and launch flags. It covers duplicates/skips/cancel/corrupt preservation/apply/whole-batch undo, named correction removal/last-entry result/opt-out and offline Help. Dispatcher hooks are installed.
@@ -37,10 +61,10 @@ Last backend checkpoint before this handoff: `ae00e3b`, following `fd3aa49` and 
 ## Connections, devices and safety
 
 - Lumpy: host `durable`, chat `01a1a16c-b875-7274-84d4-bca79df7d0d8`. User explicitly authorizes coordination. Use compact `wait_threads` snapshots and his newest cursor. Do not create a replacement chat.
-- Root CUA still returned `Local browser use is disabled in Work settings` after the user said enabled, a kernel reset and inventory check. Lumpy reports an enabled in-app browser and is attempting bounded official KWS documentation reads. Do not use native-browser automation to bypass a disabled surface. Retry normal inventory after Codex restart.
+- Browser access now works after restart. Root inspected the authenticated official KWS API and the Test portal. Keys remain masked and Test publication has not occurred.
 - Staging Supabase `uwjxrotnocxxomqdetzk`, org `ybzztipzreurtjtjhmbo`; Vercel `https://room-in-the-cart-staging.vercel.app`, project `prj_MsdHyy06CKCuFeAvoOCpnJRQ1vGa`, team `team_zkjaW5rtwPK9URZDeSoybwXB`. Vercel CLI login works. Supabase/Vercel plugins were absent from this session; installation suggestions were shown, not confirmed.
 - Read-only verified-TLS staging catalog confirmed 30 tables and no newer meal-idea/quote-grant/measurement tables. [Evidence](evidence/staging-catalog-readonly-20261103.json). The original owner-local runtime configuration remains in ignored `.tools/staging-runtime.json`; use programmatically without printing credentials. Vercel env pull masks its database secret. The temporary pulled environment was deleted.
 - Local PostgreSQL 17 runs at Unix socket `/tmp`, port 55432; admin `palatis`, fixture runtime `ritc_test_runtime`. Keep fixtures disposable and use separate non-owner runtime/worker roles. Never use staging for integration fixtures.
-- 17e `2BE8542F-00D9-48B7-BCDE-8AB169497969` and SE17 `65B8A2FE-51FE-44A5-A9C7-F2524E33179B` are released by root lanes. Lumpy owns E03 `E03D2CFA-6E83-4783-840C-8E50981F527B` and his Android AVD. Regular iPhone17 `5FDE1E82-1FF7-4556-9C14-0746F6295944` is the user's preview; never reset or use it for tests.
+- Lumpy currently owns 17e `2BE8542F-00D9-48B7-BCDE-8AB169497969` for screen acceptance and his Android AVD. SE17 `65B8A2FE-51FE-44A5-A9C7-F2524E33179B` was released after F07; coordinate before use. E03 `E03D2CFA-6E83-4783-840C-8E50981F527B` belongs to Lumpy diagnostic work. Regular iPhone17 `5FDE1E82-1FF7-4556-9C14-0746F6295944` is the user's preview; never reset or use it for tests.
 - Use immutable Products clones before test runs; avoid more than two heavy builds simultaneously. Preserve failing diagnostics and scope any XCTest logging accommodations honestly. Do not kill another lane's processes or devices.
 - No Git remote is configured. All repository work is local. Keep credentials, signing keys and actual personal data out of commits and evidence.

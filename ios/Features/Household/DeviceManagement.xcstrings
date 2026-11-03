@@ -1,0 +1,390 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "%@ · reference %@. This ends this enrollment's online reads, queued writes and web access. Other devices and household membership stay active.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · reference %@. This ends this enrollment's online reads, queued writes and web access. Other devices and household membership stay active."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · referencia %@. Esto termina las lecturas en línea, los cambios pendientes y el acceso web de este registro. Los otros dispositivos y la membresía del hogar siguen activos."
+          }
+        }
+      }
+    },
+    "A person may have several enrollments on one phone or browser. Use the enrollment date and reference to choose the access to end.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A person may have several enrollments on one phone or browser. Use the enrollment date and reference to choose the access to end."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una persona puede tener varios registros en un teléfono o navegador. Usa la fecha y la referencia para elegir el acceso que deseas terminar."
+          }
+        }
+      }
+    },
+    "A saved device action belongs to another account or household. Return to that account to reconcile it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A saved device action belongs to another account or household. Return to that account to reconcile it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una acción guardada de dispositivo pertenece a otra cuenta u hogar. Vuelve a esa cuenta para confirmar el resultado."
+          }
+        }
+      }
+    },
+    "Access revoked": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Access revoked"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acceso revocado"
+          }
+        }
+      }
+    },
+    "Active enrollment": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active enrollment"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registro activo"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar"
+          }
+        }
+      }
+    },
+    "Checking device access": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking device access"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comprobando el acceso de dispositivos"
+          }
+        }
+      }
+    },
+    "Device access was revoked. Refresh devices to review current access.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Device access was revoked. Refresh devices to review current access."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se revocó el acceso del dispositivo. Actualiza los dispositivos para revisar el acceso actual."
+          }
+        }
+      }
+    },
+    "Device action awaiting confirmation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Device action awaiting confirmation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acción de dispositivo pendiente de confirmación"
+          }
+        }
+      }
+    },
+    "Device reference": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Device reference"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referencia del dispositivo"
+          }
+        }
+      }
+    },
+    "Devices could not be loaded or the action could not be saved. Try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Devices could not be loaded or the action could not be saved. Try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron cargar los dispositivos o guardar la acción. Inténtalo de nuevo."
+          }
+        }
+      }
+    },
+    "Devices for children under your verified guardianship.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Devices for children under your verified guardianship."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dispositivos de menores bajo tu tutela verificada."
+          }
+        }
+      }
+    },
+    "Enrolled": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enrolled"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registrado"
+          }
+        }
+      }
+    },
+    "Enrolled access for this household. Each reference identifies one enrollment.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enrolled access for this household. Each reference identifies one enrollment."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acceso registrado de este hogar. Cada referencia identifica un registro."
+          }
+        }
+      }
+    },
+    "Household devices": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household devices"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dispositivos del hogar"
+          }
+        }
+      }
+    },
+    "More devices": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More devices"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Más dispositivos"
+          }
+        }
+      }
+    },
+    "Refresh devices": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh devices"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar dispositivos"
+          }
+        }
+      }
+    },
+    "Retry the same revocation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry the same revocation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar la misma revocación"
+          }
+        }
+      }
+    },
+    "Return to household settings to review current access.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Return to household settings to review current access."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a los ajustes del hogar para revisar el acceso actual."
+          }
+        }
+      }
+    },
+    "Revoke this device": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revoke this device"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revocar este dispositivo"
+          }
+        }
+      }
+    },
+    "Revoke this enrolled device?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revoke this enrolled device?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Revocar este dispositivo registrado?"
+          }
+        }
+      }
+    },
+    "The result is not confirmed. Retry the same device action to confirm whether access ended.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The result is not confirmed. Retry the same device action to confirm whether access ended."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El resultado no está confirmado. Reintenta la misma acción para confirmar si terminó el acceso."
+          }
+        }
+      }
+    },
+    "These devices are no longer available to this account. Refresh current access.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These devices are no longer available to this account. Refresh current access."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estos dispositivos ya no están disponibles para esta cuenta. Actualiza el acceso actual."
+          }
+        }
+      }
+    },
+    "This device. Use Sign out in household settings to end this enrollment.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This device. Use Sign out in household settings to end this enrollment."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este dispositivo. Usa Cerrar sesión en los ajustes del hogar para terminar este registro."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

@@ -12233,6 +12233,134 @@
           }
         }
       }
+    },
+    "Protected meal commitments": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protected meal commitments"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compromisos de comidas con porciones reservadas"
+          }
+        }
+      }
+    },
+    "Meal commitments are unavailable. Check the meal plan before deciding.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal commitments are unavailable. Check the meal plan before deciding."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los compromisos de comidas no están disponibles. Revisa el plan de comidas antes de decidir."
+          }
+        }
+      }
+    },
+    "No meal commitments are recorded for this shop.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No meal commitments are recorded for this shop."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay compromisos de comidas registrados para esta compra."
+          }
+        }
+      }
+    },
+    "No protected portions are recorded for this shop.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No protected portions are recorded for this shop."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay porciones reservadas registradas para esta compra."
+          }
+        }
+      }
+    },
+    "Other meals in this shop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other meals in this shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otras comidas de esta compra"
+          }
+        }
+      }
+    },
+    "Check usable food separately; this review does not confirm meal coverage.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check usable food separately; this review does not confirm meal coverage."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa por separado los alimentos utilizables; esta revisión no confirma que alcancen para las comidas."
+          }
+        }
+      }
+    },
+    "Meal day unknown": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal day unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha de la comida desconocida"
+          }
+        }
+      }
+    },
+    "Checkout calculation details": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checkout calculation details"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detalles del cálculo del total a pagar"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

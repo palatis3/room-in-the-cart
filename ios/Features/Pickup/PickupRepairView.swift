@@ -181,7 +181,17 @@ struct PickupRepairView: View {
         do {
             guard let line = model.journey?.pickup?.orderLines.first(where: { $0.id == lineID }), !purpose.isEmpty, let quantity = try ComparisonModel.quantity(amount, line.ordered.unit) else { throw CocoaError(.validationMissingMandatoryProperty) }
             let need = AllocationNeed(id: UUID(), orderLineID: line.id, name: purpose, amount: quantity, priority: priority)
-            Task { if await model.change({ value in value.needs.append(need); _ = try value.pickup?.allocate(value.needs) }) { purpose = ""; amount = "" } }
+            Task {
+                if await model.change({ value in
+                    value.needs.append(need)
+                    if let pickup = value.pickup {
+                        // Stock-only commitments remain in physicalStockNeeds; receipt
+                        // allocation checks only food that was actually ordered.
+                        let actualLineIDs = Set(pickup.orderLines.map(\.id))
+                        _ = try pickup.allocate(value.needs.filter { actualLineIDs.contains($0.orderLineID) })
+                    }
+                }) { purpose = ""; amount = "" }
+            }
         } catch { model.error = pTr("Choose the food, purpose and a valid quantity.") }
     }
     private func saveRepair() {

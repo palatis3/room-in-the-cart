@@ -21,18 +21,27 @@ func sharedMealDate(_ day: String) -> Date? {
     return date
 }
 
+func sharedMealDayText(_ day: String, locale: Locale) -> String? {
+    guard let date = sharedMealDate(day) else { return nil }
+    return date.formatted(Date.FormatStyle(date: .long, time: .omitted, locale: locale,
+        calendar: mealCalendar(), timeZone: mealCalendar().timeZone))
+}
+
 private func mealKind(_ kind: String) -> String {
     switch kind { case "lunch": return ht("Lunch"); case "side": return ht("Side"); default: return ht("Dinner") }
 }
 
 struct SharedMealFacts: View {
     let meal: SharedMeal
+    @Environment(\.locale) private var locale
     var body: some View {
         VStack(alignment: .leading) {
             Text(meal.title).font(.headline)
             Text(mealKind(meal.kind))
-            if let date = sharedMealDate(meal.day) {
-                Text(date, format: Date.FormatStyle(date: .long, time: .omitted, timeZone: mealCalendar().timeZone))
+            if let day = sharedMealDayText(meal.day, locale: locale) {
+                // Date-aware Text resolves its format against the view's time zone again.
+                // Resolve this civil day first so an environment override cannot move it.
+                Text(verbatim: day).accessibilityIdentifier("shared-meal-civil-date")
             }
             LabeledContent(ht("Portions"), value: meal.portions.formatted())
             if meal.protected { Label(ht("Protected portions"), systemImage: "lock") }

@@ -13,6 +13,7 @@ import DeviceSurfaces
     @StateObject private var membership = MembershipCoordinator()
     @StateObject private var surfaces = DeviceSurfacesComposition()
     @StateObject private var navigation = NavigationRestorationModel()
+    @StateObject private var guardianChild = GuardianChildCoordinator()
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("appearance") private var appearance = "system"
     init() {
@@ -30,17 +31,25 @@ import DeviceSurfaces
                 .environmentObject(ledger).environmentObject(pickup)
                 .environmentObject(household).environmentObject(access)
                 .environmentObject(membership).environmentObject(surfaces).environmentObject(navigation)
+                .environmentObject(guardianChild)
+                .environment(\.guardianChildCoordinator, guardianChild)
                 .tint(Theme.action)
                 .preferredColorScheme(appearance == "dark" ? .dark : appearance == "light" ? .light : nil)
                 .task {
+                    if guardianChild.presented {
+                        guardianChild.enforcePrivacyBoundary(adult: household, access: access, surfaces: surfaces)
+                    } else if !access.unlocked { surfaces.background() }
                     navigation.bind(app: model, ledger: ledger, household: household, access: access)
                     membership.bind(to: household)
                     surfaces.bind(ledger: ledger, pickup: pickup, household: household, access: access)
-                    await model.open(); await ledger.open(); await pickup.load()
-                    await surfaces.foreground()
+                    if guardianChild.presented { await guardianChild.resume() }
+                    else { await openAdultWorkspace() }
                 }
-                .onOpenURL { navigation.preferIncomingLink(); surfaces.handle(url: $0) }
-                .sheet(item: Binding(get: { scenePhase == .active ? surfaces.destination : nil },
+                .onOpenURL {
+                    guard !guardianChild.presented else { return }
+                    navigation.preferIncomingLink(); surfaces.handle(url: $0)
+                }
+                .sheet(item: Binding(get: { scenePhase == .active && !guardianChild.presented ? surfaces.destination : nil },
                                      set: { surfaces.destination = $0 })) { destination in
                     NavigationStack {
                         DeviceSurfacesDestination(composition: surfaces, destination: destination,
@@ -58,11 +67,42 @@ import DeviceSurfaces
                     if id != nil { access.protect() }
                     surfaces.scopeChanged()
                 }
+                .onChange(of: guardianChild.presented) { _, childActive in
+                    if childActive {
+                        navigation.suspend()
+                        guardianChild.enforcePrivacyBoundary(adult: household, access: access, surfaces: surfaces)
+                    }
+                }
+                .onChange(of: access.unlocked) { _, unlocked in
+                    if unlocked && !guardianChild.presented { Task { await openAdultWorkspace() } }
+                }
                 .onChange(of: scenePhase) { _, phase in
-                    if phase == .background { navigation.suspend(); surfaces.background(); access.background(); household.lock() }
-                    if phase == .active { navigation.resume(); membership.foreground(); Task { await surfaces.foreground() } }
+                    if phase == .background {
+                        guardianChild.suspend()
+                        navigation.suspend(); surfaces.background(); access.background(); household.lock()
+                    }
+                    if phase == .active {
+                        if guardianChild.presented {
+                            guardianChild.enforcePrivacyBoundary(adult: household, access: access, surfaces: surfaces)
+                            Task { await guardianChild.resume() }
+                        } else {
+                            navigation.resume(); membership.foreground()
+                            Task { await openAdultWorkspace() }
+                        }
+                    }
                 }
         }
+    }
+    @MainActor private func openAdultWorkspace() async {
+        guard !guardianChild.presented, access.unlocked else { return }
+        if !model.ready { await model.open() }
+        guard !guardianChild.presented, access.unlocked else { return }
+        if !ledger.ready { await ledger.open() }
+        guard !guardianChild.presented, access.unlocked else { return }
+        if !pickup.ready { await pickup.load() }
+        guard !guardianChild.presented, access.unlocked else { return }
+        navigation.resume()
+        await surfaces.foreground()
     }
 }
 
@@ -72,7 +112,13 @@ struct RootView: View {
     @EnvironmentObject private var ledger: LedgerModel
     @EnvironmentObject private var household: HouseholdModel
     @EnvironmentObject private var access: WorkspaceAccess
+    @Environment(\.guardianChildCoordinator) private var guardianChild
     var body: some View {
+        if let guardianChild {
+            GuardianBoundaryRoot(coordinator: guardianChild) { adultRoot }
+        } else { adultRoot }
+    }
+    @ViewBuilder private var adultRoot: some View {
         if let role = household.projection?.role, !["shopper", "organizer"].contains(role) {
             NavigationStack { HouseholdSettingsView(model: household) }
         } else if !access.unlocked {
@@ -80,6 +126,15 @@ struct RootView: View {
         } else { tabs }
     }
     private var tabs: some View { RestorableAdultTabs() }
+}
+
+private struct GuardianBoundaryRoot<AdultRoot: View>: View {
+    @ObservedObject var coordinator: GuardianChildCoordinator
+    let adultRoot: () -> AdultRoot
+    var body: some View {
+        if coordinator.presented { GuardianChildRootView(coordinator: coordinator) }
+        else { adultRoot() }
+    }
 }
 
 struct ShopView: View {

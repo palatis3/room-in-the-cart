@@ -19,6 +19,14 @@ import HouseholdClient
         #endif
     }
     @ViewBuilder private var otherFixtureContent: some View {
+        #if STOCK_REVIEW_UI_FIXTURE
+        if ProcessInfo.processInfo.arguments.contains("--stock-review-fixture") { StockReviewUIFixtureRoot() }
+        else { standardFixtureContent }
+        #else
+        standardFixtureContent
+        #endif
+    }
+    @ViewBuilder private var standardFixtureContent: some View {
         if ProcessInfo.processInfo.arguments.contains("--shared-meal-fixture") { S17SharedMealFixtureRoot() }
         else if ProcessInfo.processInfo.arguments.contains("--shared-store-quotes-fixture") { S27StoreQuotesFixtureRoot() }
         else if ProcessInfo.processInfo.arguments.contains("--records-media-fixture") { RecordsMediaUIFixtureRoot() }
@@ -28,6 +36,9 @@ import HouseholdClient
         else if ProcessInfo.processInfo.arguments.contains("--history-grant-read-fixture") { H09HistoryGrantFixtureRoot() }
         else if ProcessInfo.processInfo.arguments.contains("--shared-idea-fixture") { S26SharedMealIdeaFixtureRoot() }
         else if ProcessInfo.processInfo.arguments.contains("--request-pack-fixture") { S24RequestPackFixtureRoot() }
+        else if ProcessInfo.processInfo.arguments.contains("--request-duplicates-fixture") { S23DuplicateRequestFixtureRoot() }
+        else if ProcessInfo.processInfo.arguments.contains("--household-devices-fixture") { HouseholdDevicesFixtureRoot() }
+        else if ProcessInfo.processInfo.arguments.contains("--guardian-enrollment-fixture") { GuardianEnrollmentFixtureRoot() }
         else { ContributorRequestUIFixtureRoot() }
     }
 }

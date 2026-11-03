@@ -104,6 +104,15 @@ import DeviceSurfaces
     func foreground() async { active = true; await sourceDidChange() }
     func background() {
         active = false; nonce = UUID(); entries = []; draft = nil; destination = nil; pendingURL = nil; pendingHandle = nil
+        // A cold child/locked launch may never open the adult stores. Resolve
+        // only the widget file so a prior process's shortcut is still cleared.
+        if projection == nil {
+            if runtime.isUITesting {
+                projection = try? runtime.makeWidget { throw SurfaceError.unconfigured }
+            } else if let widgetDirectory = try? IOSSurfaceContainers.directory(groupKey: SurfaceInfo.widgetGroupKey, bundle: bundle) {
+                projection = try? WidgetProjectionFile(directory: widgetDirectory)
+            }
+        }
         // A locked snapshot is generic even if the containing process is then suspended.
         try? projection?.clear(now: clock()); runtime.performSystemEffect { WidgetCenter.shared.reloadTimelines(ofKind: "RoomInTheCartCapture") }
     }
@@ -225,12 +234,19 @@ import DeviceSurfaces
         } catch { message = SurfaceCopy.text("Selected text could not be removed. Try again.") }
     }
     func handle(url: URL) {
-        guard ledger != nil, ledger?.ready == true, pickup?.ready == true else { pendingURL = url; return }
-        Task {
-            await foreground()
-            do { guard let urls else { throw SurfaceError.unconfigured }; if let handle = try urls.parse(url) { await open(handle) } else { openCapture() } }
-            catch { destination = .unavailable(UUID()) }
-        }
+        do {
+            // Generic capture is also an own-request entry for a contributor.
+            // Parsing its public scheme must not require private stores to open.
+            if urls == nil { urls = try IOSSurfaceContainers.urls(bundle: bundle) }
+            guard let urls else { throw SurfaceError.unconfigured }
+            guard let handle = try urls.parse(url) else {
+                Task { await foreground(); openCapture() }
+                return
+            }
+            guard privateAuthorized else { destination = .unavailable(UUID()); return }
+            guard ledger?.ready == true, pickup?.ready == true else { pendingURL = url; return }
+            Task { await foreground(); await open(handle) }
+        } catch { destination = .unavailable(UUID()) }
     }
     func openCapture() {
         if privateAuthorized { destination = .capture(UUID()) }

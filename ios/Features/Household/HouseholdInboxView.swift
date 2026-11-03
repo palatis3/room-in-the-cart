@@ -26,23 +26,23 @@ struct ShopperInboxContent: View {
                         .foregroundStyle(.secondary)
                 }
                 Section(ht("Requests for this shop")) {
-                    ForEach(model.requests) { request in
-                        Button {
-                            lastRequestID = request.id; decisionRequest = request
-                        } label: {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text(request.originalItem).font(.headline)
-                                if let alias = request.authorAlias { Text(alias).font(.subheadline) }
-                                if let quantity = request.ownQuantity { Text(quantity) }
-                                Text(shopperRequestStatus(request)).foregroundStyle(.secondary)
-                                Text(householdTime(request.receivedAt)).font(.caption)
-                                if model.hasPossibleDuplicate(request) {
-                                    Text(ht("Other requests use this name. Check whether one pack covers them.")).font(.caption)
+                    ForEach(model.duplicateRequestGroups) { group in
+                        if group.hasPossibleDuplicates { RequestDuplicateGroupHeading(group: group) }
+                        ForEach(group.requests) { request in
+                            Button {
+                                lastRequestID = request.id; decisionRequest = request
+                            } label: {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text(request.originalItem).font(.headline)
+                                    if let alias = request.authorAlias { Text(alias).font(.subheadline) }
+                                    if let quantity = request.ownQuantity { Text(quantity) }
+                                    Text(shopperRequestStatus(request)).foregroundStyle(.secondary)
+                                    Text(householdTime(request.receivedAt)).font(.caption)
                                 }
-                            }
-                        }.disabled(model.busy || model.pending != nil)
-                            .accessibilityIdentifier("household.request.\(request.id)")
-                            .accessibilityFocused($focusedRequest, equals: request.id)
+                            }.disabled(model.busy || model.pending != nil)
+                                .accessibilityIdentifier("household.request.\(request.id)")
+                                .accessibilityFocused($focusedRequest, equals: request.id)
+                        }
                     }
                     if model.requests.isEmpty, !model.busy { Text(ht("No requests are available in this shop.")) }
                     if model.nextCursor != nil { Button(ht("Load more requests")) { Task { await model.load(more: true) } }.disabled(model.busy) }
@@ -77,6 +77,7 @@ struct HouseholdRequestDecisionView: View {
                         LabeledContent(ht("Received"), value: householdTime(selected.receivedAt))
                         if let clarification = selected.clarification { Text(clarification) }
                     }
+                    RequestDuplicateComparisonSection(model: model, requestID: request.id)
                     if model.pending == nil, let shop = model.shop {
                         if !model.availableChoices.isEmpty {
                             Section(ht("Choose an outcome")) {
@@ -86,11 +87,12 @@ struct HouseholdRequestDecisionView: View {
                                 if model.choice == .add {
                                     HouseholdRequestPackReviewView(model: model)
                                     if let selection = model.packSelection { HouseholdChosenPackSummary(selection: selection) }
-                                    TextField(ht("Pack or item name"), text: $model.lineItem)
+                                    TextField(ht("Pack or item name"), text: $model.lineItem).accessibilityIdentifier("household.decision.item")
                                     Stepper(value: $model.packs, in: 1...10_000) {
                                         LabeledContent(ht("Whole packs"), value: model.packs.formatted())
                                     }
                                     TextField(ht("Price per pack in USD, blank if unknown"), text: $model.price).keyboardType(.decimalPad)
+                                        .accessibilityIdentifier("household.decision.price")
                                     Toggle(ht("Counts toward the retailer fee threshold"), isOn: $model.feeEligible)
                                 }
                                 if model.choice == .link {
@@ -113,26 +115,48 @@ struct HouseholdRequestDecisionView: View {
                             Section(ht("Review before applying")) {
                                 Text(model.choice.title).font(.headline)
                                 if let selection = model.packSelection { HouseholdChosenPackSummary(selection: selection) }
-                                LabeledContent(ht("Shop revision"), value: shop.shopRevision.formatted())
-                                LabeledContent(ht("Quote recorded"), value: householdTime(shop.quote.observedAt))
-                                LabeledContent(ht("Quote expires"), value: householdTime(shop.quote.expiresAt))
-                                LabeledContent(ht("Cap"), value: householdMoney(shop.quote.capMinor, currency: shop.quote.currency))
-                                LabeledContent(ht("Cap scope"), value: householdScope(shop.quote.capScope))
-                                DisclosureGroup(ht("Included charges and discounts")) {
-                                    if shop.quote.fee.kind == "fixed" {
-                                        LabeledContent(ht("Retailer fee"), value: householdMoney(shop.quote.fee.amountMinor, currency: shop.quote.currency))
-                                    } else {
-                                        LabeledContent(ht("Fee threshold"), value: householdMoney(shop.quote.fee.thresholdMinor, currency: shop.quote.currency))
-                                        LabeledContent(ht("Fee below threshold"), value: householdMoney(shop.quote.fee.belowMinor, currency: shop.quote.currency))
-                                        LabeledContent(ht("Fee at or above threshold"), value: householdMoney(shop.quote.fee.aboveMinor, currency: shop.quote.currency))
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text(ht("After this decision")).font(.headline)
+                                    LabeledContent(ht("Expected total"), value: householdMoney(preview.after.totalMinor, currency: preview.after.currency))
+                                        .accessibilityElement(children: .combine)
+                                        .accessibilityIdentifier("household.decision.after-total")
+                                    if preview.after.status == "overCap" {
+                                        LabeledContent(ht("Over cap"), value: householdMoney(preview.after.overCapMinor, currency: preview.after.currency))
+                                            .accessibilityElement(children: .combine)
+                                            .accessibilityIdentifier("household.decision.over-cap")
                                     }
-                                    LabeledContent(ht("Tax"), value: householdMoney(shop.quote.taxesMinor, currency: shop.quote.currency))
-                                    LabeledContent(ht("Deposits"), value: householdMoney(shop.quote.depositsMinor, currency: shop.quote.currency))
-                                    LabeledContent(ht("Discounts"), value: householdMoney(shop.quote.discountsMinor, currency: shop.quote.currency))
+                                    if preview.after.status == "unresolved" { Text(ht("Missing facts prevent a confirmed budget result.")) }
+                                    if preview.after.status == "scopeMismatch" { Text(ht("The cap and total cover different scopes.")) }
+                                    LabeledContent(ht("Scope"), value: householdScope(preview.after.scope))
+                                    LabeledContent(ht("Before this decision"), value: householdMoney(preview.before.totalMinor, currency: preview.before.currency))
+                                        .accessibilityElement(children: .combine)
+                                        .accessibilityIdentifier("household.decision.before-total")
+                                    LabeledContent(ht("Cost change"), value: householdMoney(preview.changeMinor, currency: preview.after.currency))
+                                    LabeledContent(ht("Cap"), value: householdMoney(shop.quote.capMinor, currency: shop.quote.currency))
+                                    LabeledContent(ht("Cap scope"), value: householdScope(shop.quote.capScope))
+                                    if let context = model.requestMealContext { HouseholdRequestMealContextView(context: context) }
                                 }
-                                ShopperBudgetView(title: ht("Before this decision"), value: preview.before)
-                                ShopperBudgetView(title: ht("After this decision"), value: preview.after)
-                                LabeledContent(ht("Cost change"), value: householdMoney(preview.changeMinor, currency: preview.after.currency))
+                                .monospacedDigit()
+                                .accessibilityIdentifier("household.decision.context")
+                                DisclosureGroup(ht("Checkout calculation details")) {
+                                    LabeledContent(ht("Shop revision"), value: shop.shopRevision.formatted())
+                                    LabeledContent(ht("Quote recorded"), value: householdTime(shop.quote.observedAt))
+                                    LabeledContent(ht("Quote expires"), value: householdTime(shop.quote.expiresAt))
+                                    DisclosureGroup(ht("Included charges and discounts")) {
+                                        if shop.quote.fee.kind == "fixed" {
+                                            LabeledContent(ht("Retailer fee"), value: householdMoney(shop.quote.fee.amountMinor, currency: shop.quote.currency))
+                                        } else {
+                                            LabeledContent(ht("Fee threshold"), value: householdMoney(shop.quote.fee.thresholdMinor, currency: shop.quote.currency))
+                                            LabeledContent(ht("Fee below threshold"), value: householdMoney(shop.quote.fee.belowMinor, currency: shop.quote.currency))
+                                            LabeledContent(ht("Fee at or above threshold"), value: householdMoney(shop.quote.fee.aboveMinor, currency: shop.quote.currency))
+                                        }
+                                        LabeledContent(ht("Tax"), value: householdMoney(shop.quote.taxesMinor, currency: shop.quote.currency))
+                                        LabeledContent(ht("Deposits"), value: householdMoney(shop.quote.depositsMinor, currency: shop.quote.currency))
+                                        LabeledContent(ht("Discounts"), value: householdMoney(shop.quote.discountsMinor, currency: shop.quote.currency))
+                                    }
+                                    ShopperBudgetView(title: ht("Before this decision"), value: preview.before)
+                                    ShopperBudgetView(title: ht("After this decision"), value: preview.after)
+                                }
                                 LabeledContent(ht("Preview expires"), value: householdTime(preview.expiresAt))
                                 if preview.requiresOverageAcceptance { Toggle(ht("I accept the displayed overage"), isOn: $model.acceptOverage).accessibilityIdentifier("household.decision.overage") }
                                 if preview.requiresUnknownAcceptance { Toggle(ht("I understand the total or its scope is unresolved"), isOn: $model.acceptUnknown) }
@@ -156,6 +180,7 @@ struct HouseholdRequestDecisionView: View {
                 if model.busy { ProgressView(ht("Checking service…")) }
             } else { Text(ht("Shopper access has ended. Return to household settings.")) }
         }
+        .scrollDismissesKeyboard(.immediately)
         .disabled(model.busy)
         .navigationTitle(ht("Review request"))
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ht("Cancel")) { model.cancelReview(); dismiss() }.accessibilityIdentifier("household.decision.cancel") } }

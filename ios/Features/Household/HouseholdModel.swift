@@ -26,6 +26,7 @@ import HouseholdClient
     @Published var forNextShop = false
     @Published var keepLocalPrivate = false
     let configured: Bool
+    let guardianChildOnly: Bool
     let emailOTPEnabled: Bool
     private(set) var serviceURL: URL?
     var onScopeChange: (() -> Void)?
@@ -39,6 +40,8 @@ import HouseholdClient
     private let lifecycleStore: LifecycleIntentStore
     private let historyStore: HistoryPendingStore
     private let quotePendingStore: StoreQuotesPendingStore
+    let guardianIntentStore: GuardianIntentStore
+    private let deviceRevocationStore: DeviceRevocationStore
     private let placementStore: PlacementPendingStore
     @Published private(set) var placementEvidenceUnlocked = false
     @Published private(set) var placementEvidenceNotice: String?
@@ -50,7 +53,8 @@ import HouseholdClient
     private var contributorEnrollmentRevision = UUID()
     private var contributorDeviceID: String?
 
-    init(bundle: Bundle = .main, auth: AdultAuth? = nil, service: HouseholdService? = nil, outboxURL: URL? = nil, deletionVault: (any RefreshTokenVault)? = nil, exitVault: (any RefreshTokenVault)? = nil) {
+    init(bundle: Bundle = .main, auth: AdultAuth? = nil, service: HouseholdService? = nil, outboxURL: URL? = nil, deletionVault: (any RefreshTokenVault)? = nil, exitVault: (any RefreshTokenVault)? = nil, guardianVault: (any RefreshTokenVault)? = nil, guardianChildOnly: Bool = false) {
+        self.guardianChildOnly = guardianChildOnly
         let otpSetting = bundle.object(forInfoDictionaryKey: "RITCEmailOTPEnabled")
         emailOTPEnabled = (auth != nil && service != nil) || (otpSetting as? String == "YES") || (otpSetting as? Bool == true)
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
@@ -62,6 +66,9 @@ import HouseholdClient
         historyStore = HistoryPendingStore(url: queueURL.deletingPathExtension().appendingPathExtension("history.json"))
         placementStore = PlacementPendingStore(url: queueURL.deletingPathExtension().appendingPathExtension("placement.json"))
         quotePendingStore = StoreQuotesPendingStore(url: queueURL.deletingPathExtension().appendingPathExtension("store-quotes.json"))
+        deviceRevocationStore = DeviceRevocationStore(url: queueURL.deletingPathExtension().appendingPathExtension("devices.json"))
+        let guardianNamespace = (bundle.bundleIdentifier ?? "RoomInTheCart") + (guardianChildOnly ? ".covered-child.guardian." : ".guardian.") + (bundle.object(forInfoDictionaryKey: "HouseholdServiceURL") as? String ?? "injected")
+        guardianIntentStore = GuardianIntentStore(vault: guardianVault ?? KeychainRefreshTokenVault(service: guardianNamespace, account: "guardian-exact-intents"))
         if let auth, let service {
             self.auth = auth; self.service = service; configured = true
             householdExit = HouseholdExitModel(service: service, vault: exitVault ?? KeychainRefreshTokenVault(service: "RoomInTheCart.injected", account: "household-exits"))
@@ -90,7 +97,7 @@ import HouseholdClient
         configured = true
     }
     func sendCode() async {
-        guard emailOTPEnabled else { notice = ht("Email sign-in is not ready yet. Your private shopping tools work without an account."); return }
+        guard !guardianChildOnly, emailOTPEnabled else { notice = ht("Email sign-in is not ready yet. Your private shopping tools work without an account."); return }
         guard let auth, !busy else { return }
         busy = true; notice = nil; defer { busy = false }
         let start = generation
@@ -100,7 +107,7 @@ import HouseholdClient
         catch { await show(error, start: start) }
     }
     func verifyCode() async {
-        guard emailOTPEnabled else { notice = ht("Email sign-in is not ready yet. Your private shopping tools work without an account."); return }
+        guard !guardianChildOnly, emailOTPEnabled else { notice = ht("Email sign-in is not ready yet. Your private shopping tools work without an account."); return }
         guard let auth, let service, !busy else { return }
         busy = true; notice = nil; defer { busy = false }
         let start = generation
@@ -117,7 +124,7 @@ import HouseholdClient
     }
     /// Explicit consent keeps local data private. There is deliberately no automatic local import.
     func join(_ workspace: WorkspaceList.Workspace) async {
-        guard keepLocalPrivate, let service, !busy, !locked else { return }
+        guard !guardianChildOnly, keepLocalPrivate, let service, !busy, !locked else { return }
         onScopeChange?()
         clearProjection()
         busy = true; notice = nil; defer { busy = false }
@@ -130,6 +137,7 @@ import HouseholdClient
     }
     private func finishEnrollment(_ value: HouseholdBootstrap, start: UUID) async throws {
         contributorEnrollmentRevision = UUID()
+        try validateGuardianChildProjection(value)
         guard let service else { throw ClientError.configuration }
             projection = value
             contributorDeviceID = try? await service.requestReviewDeviceID(bootstrap: value)
@@ -160,7 +168,7 @@ import HouseholdClient
         guard let service else { return }
         lifecycle?.clear()
         let start = generation
-        lifecycle = HouseholdLifecycleModel(subject: identity.subject, service: service, store: lifecycleStore) { [weak self] receipt in
+        lifecycle = HouseholdLifecycleModel(subject: identity.subject, service: service, store: lifecycleStore, deviceStore: deviceRevocationStore) { [weak self] receipt in
             guard let self, self.identity?.subject == identity.subject, !self.locked, !self.busy else { throw ClientError.sessionNeeded }
             self.busy = true; defer { self.busy = false }
             self.onScopeChange?(); self.clearProjection()
@@ -170,6 +178,11 @@ import HouseholdClient
             try await self.finishEnrollment(value, start: current)
         } onAccessEnded: { [weak self] in
             await self?.show(ClientError.accessEnded, start: start)
+        }
+        lifecycle?.onGuardianWithdrawal = { [weak self] in
+            guard let self, let scope = self.guardianRuntimeScope else { throw ClientError.cancelled }
+            try await self.guardianIntentStore.purge(householdID: scope.householdID, subject: scope.subject)
+            try await self.deviceRevocationStore.purge(householdID: scope.householdID, subject: scope.subject)
         }
     }
     func selectShop(_ id: UUID?) async {
@@ -194,6 +207,7 @@ import HouseholdClient
         do {
             let fresh = try await service.bootstrap()
             guard start == generation, let prior = projection else { return }
+            try validateGuardianChildProjection(fresh)
             let scopeChanged = prior.household.id != fresh.household.id || prior.memberId != fresh.memberId ||
                 prior.role != fresh.role || prior.shopId != fresh.shopId || prior.grantId != fresh.grantId ||
                 Set(prior.capabilities) != Set(fresh.capabilities)
@@ -339,7 +353,7 @@ import HouseholdClient
     /// Scene transitions hide protected projections; returning requires OS owner authentication and fresh authorization.
     func lock() {
         placementEvidenceUnlocked = false
-        if let identity, let scope = projection, scope.enrolled, scope.grantId == nil,
+        if !guardianChildOnly, let identity, let scope = projection, scope.enrolled, scope.grantId == nil,
            ["organizer", "shopper", "contributor"].contains(scope.role) {
             placementEvidenceIdentity = (identity.subject, scope.household.id, scope.memberId)
         }
@@ -348,7 +362,7 @@ import HouseholdClient
         clearProjection(preservePlacementEvidence: true); lifecycle?.clear(); lifecycle = nil; workspaces = []; code = ""; notice = nil
     }
     func unlock() async {
-        guard let auth, let service, !busy else { return }
+        guard !guardianChildOnly, let auth, let service, !busy else { return }
         busy = true; defer { busy = false }; let start = generation
         let context = LAContext(); var error: NSError?
         guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
@@ -389,6 +403,8 @@ import HouseholdClient
         do { try await historyStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
         do { try await placementStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
         do { try await quotePendingStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
+        do { try await guardianIntentStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
+        do { try await deviceRevocationStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
         guard start == generation, self.identity?.subject == subject, !locked else { return }
         do {
             let list = try await service.workspaces()
@@ -435,6 +451,8 @@ import HouseholdClient
         do { try await historyStore.purge() } catch { failed = true }
         do { try await placementStore.purge() } catch { failed = true }
         do { try await quotePendingStore.purge() } catch { failed = true }
+        do { try await guardianIntentStore.purge() } catch { failed = true }
+        do { try await deviceRevocationStore.purge() } catch { failed = true }
         do {
             if alreadyRevoked { try await auth?.clearLocalSession() }
             else { try await auth?.signOut(allDevices: allDevices) }
@@ -442,7 +460,7 @@ import HouseholdClient
         notice = failed ? ht("Signed out on this phone. Remote sign-out or local cleanup could not be confirmed.") : nil
     }
     func adultAccessToken() async throws -> String {
-        guard let auth, identity != nil, let projection, !["helper", "editor"].contains(projection.role), !locked else { throw ClientError.sessionNeeded }
+        guard !guardianChildOnly, let auth, identity != nil, let projection, !["helper", "editor"].contains(projection.role), !locked else { throw ClientError.sessionNeeded }
         let start = generation
         let access = try await auth.access()
         guard start == generation, !locked else { throw ClientError.cancelled }
@@ -462,6 +480,49 @@ import HouseholdClient
         shopperInbox?.clear(); shopperInbox = nil; sharedShop?.clear(); sharedShop = nil
         projection = nil; contributorDeviceID = nil; requests = []; nextRequestCursor = nil; pending = nil
         delivery = .localDraft; attempts = 0; retryAfter = .distantPast; cancelEdit()
+    }
+    private func validateGuardianChildProjection(_ value: HouseholdBootstrap) throws {
+        guard guardianChildOnly else { return }
+        guard value.enrolled, value.role == "contributor", value.grantId == nil,
+              value.capabilities == ["own_requests"], value.canSelectShop != true,
+              value.selectionRequired != true else { throw ClientError.accessEnded }
+    }
+    /// Dedicated child composition only: this adopts the exact server-issued credential without calling generic enrollment.
+    func adoptGuardianChildEnrollment(receipt: ChildEnrollmentReceipt, expectedAccess: ChildInvitationAccess) async throws {
+        guard guardianChildOnly, let auth, let service, !busy else { throw ClientError.configuration }
+        busy = true; defer { busy = false }; let start = generation
+        let access = try await auth.childInvitationAccess()
+        guard start == generation, access.issuer == expectedAccess.issuer, access.subject == expectedAccess.subject,
+              access.sessionID == expectedAccess.sessionID else { throw ClientError.accessEnded }
+        let value = try await service.adoptChildEnrollment(receipt: receipt, expectedAccess: access)
+        let account = try await auth.access()
+        guard start == generation, account.identity.subject == access.subject else { throw ClientError.cancelled }
+        try validateGuardianChildProjection(value)
+        identity = account.identity; locked = false
+        try await finishEnrollment(value, start: start)
+    }
+    /// Cold launch/foreground may reuse only a saved child credential with a matching server-validated session.
+    func resumeGuardianChildSession(expectedAccess: ChildInvitationAccess) async throws {
+        guard guardianChildOnly, let auth, let service, !busy else { throw ClientError.configuration }
+        busy = true; defer { busy = false }; let start = generation
+        let value = try await service.resumeChildEnrollment(expectedAccess: expectedAccess)
+        let account = try await auth.access()
+        guard start == generation, account.identity.subject == expectedAccess.subject else { throw ClientError.cancelled }
+        try validateGuardianChildProjection(value)
+        identity = account.identity; locked = false
+        try await finishEnrollment(value, start: start)
+    }
+    func endGuardianChildSession() async -> Bool {
+        guard guardianChildOnly else { return false }
+        await finishSignOut(allDevices: false, alreadyRevoked: true)
+        return notice == nil
+    }
+    /// A display/runtime boundary only. The service verifies the actual guardian relationship and live provider session.
+    var guardianRuntimeScope: GuardianRuntimeScope? {
+        guard !guardianChildOnly, let identity, let projection, projection.enrolled, projection.grantId == nil, !locked,
+              !["helper", "editor"].contains(projection.role) else { return nil }
+        return .init(subject: identity.subject, householdID: projection.household.id, memberID: projection.memberId,
+                     generation: generation, enrollmentRevision: contributorEnrollmentRevision)
     }
     var canReviewHouseholdRequests: Bool {
         guard let projection, !locked, projection.role == "shopper", projection.shopId != nil else { return false }
@@ -512,6 +573,10 @@ import HouseholdClient
             do { try await placementStore.purge() }
             catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
             do { try await quotePendingStore.purge() }
+            catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
+            do { try await guardianIntentStore.purge() }
+            catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
+            do { try await deviceRevocationStore.purge() }
             catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
         case .service(let status, _, _, _) where status == 409:
             notice = ht("This request needs review against the current household state. It has not been applied again.")

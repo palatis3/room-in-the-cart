@@ -234,7 +234,7 @@ struct HistoryEntryView: View {
                         .disabled(model.busy).frame(minHeight: 44)
                     Button(HistoryCopy.text("Review period totals")) { Task { await model.openPeriod(period.periodId, analyze: true) } }
                         .disabled(model.busy).frame(minHeight: 44).accessibilityIdentifier("history.analyzePeriod")
-                }
+                }.buttonStyle(.borderless)
             }
             if model.periodCursor != nil {
                 Button(HistoryCopy.text("Load more periods")) { Task { await model.loadPeriods(more: true) } }

@@ -35,12 +35,12 @@ struct LedgerIngredientView: View {
                     if !line.notes.isEmpty { Text(line.notes) }
                     if !line.aisle.isEmpty { Text(line.aisle) }
                     NavigationLink(ledgerText("Staple for future pickups")) { StapleApprovalView(ledger: model, shop: shop, line: line) }
-                    if pickup.journeys.contains(where: { $0.id == shopID && $0.basket?.current.lines.contains(where: { $0.id == lineID }) == true }) {
+                    if pickup.journeys.contains(where: { $0.id == shopID && ($0.basket?.current.lines.contains(where: { $0.id == lineID }) == true || $0.plannedNeeds.contains(where: { $0.orderLineID == lineID })) }) {
                         NavigationLink(pTr("Confirm pantry or freezer food")) {
                             Form {
                                 PickupSaveStatus(model: pickup)
                                 if let current = pickup.journey, current.id == shopID,
-                                   current.basket?.current.lines.contains(where: { $0.id == lineID }) == true {
+                                   (current.basket?.current.lines.contains(where: { $0.id == lineID }) == true || current.plannedNeeds.contains(where: { $0.orderLineID == lineID })) {
                                     if current.closedAt == nil { PickupNewStockSection(model: pickup, ingredientID: lineID) }
                                     PickupSavedStockSection(model: pickup, journey: current, onlyFoodID: lineID)
                                 }
@@ -52,11 +52,13 @@ struct LedgerIngredientView: View {
                         .disabled(model.saving || model.hasPendingSave)
                     if !line.isTrashed && !line.isHandled {
                         if let workspaceID = model.sourceWorkspaceID,
-                           let selection = try? model.workspace.currentPackSelection(shopID: shopID, lineID: lineID, workspaceID: workspaceID) {
-                            Text(ledgerFormat("Reviewed pack choice: %@", selection.selectedOfferID == selection.request.offerA.id ? selection.request.offerA.label : selection.request.offerB.label))
-                            if let cost = selection.selectedResult.totalCost { Text(ledgerFormat("Item cost: %@", moneyText(cost))) }
+                           let selection = currentSelection(shop: shop, workspaceID: workspaceID) {
+                            if selection.isNoPurchase { Text(ledgerText("Use confirmed food at home · no purchase needed")) }
+                            else { Text(ledgerFormat("Reviewed pack choice: %@", selection.selectedOfferID == selection.request.offerA.id ? selection.request.offerA.label : selection.request.offerB.label)) }
+                            if let stock = selection.request.confirmedAtHome { Text(ledgerFormat("Confirmed at home for this need: %@", ledgerQuantity(stock))) }
+                            if !selection.isNoPurchase, let cost = selection.selectedResult.totalCost { Text(ledgerFormat("Item cost: %@", moneyText(cost))) }
                         } else if model.workspace.packSelections.contains(where: { $0.shopID == shopID && $0.lineID == lineID }) {
-                            Text(ledgerText("The earlier pack choice needs a new review because this list changed."))
+                            Text(ledgerText("Review the earlier pack choice again before changing this checkout."))
                         }
                         Button(ledgerText("Choose whole packs for this item")) { sheet = .packs }
                             .disabled(model.saving || model.hasPendingSave).accessibilityIdentifier("ledgerPackChoice")
@@ -130,6 +132,14 @@ struct LedgerIngredientView: View {
                 }
             }
             .onChange(of: model.error) { _, value in if value != nil { focus = .status } }
+    }
+    private func currentSelection(shop: ShoppingLedger, workspaceID: UUID) -> LedgerPackSelection? {
+        model.workspace.packSelections.reversed().first { selection in
+            selection.shopID == shopID && selection.lineID == lineID &&
+            (try? LedgerPackStockReview.isCurrent(selection, shop: shop, workspaceID: workspaceID,
+                journey: pickup.journeys.first { $0.id == shopID }, pickupWorkspaceID: pickup.sourceWorkspaceID,
+                bindings: model.workspace.dinnerPlanning.portionBindings)) == true
+        }
     }
     private func sourceLabel(_ contribution: LedgerContribution, shop: ShoppingLedger) -> String {
         switch contribution.source {

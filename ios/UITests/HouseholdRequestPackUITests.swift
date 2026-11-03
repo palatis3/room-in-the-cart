@@ -9,8 +9,65 @@ import XCTest
         app = XCUIApplication(bundleIdentifier: "dev.roominthecart.app.debug")
     }
     override func tearDownWithError() throws {
-        if testRun?.failureCount ?? 0 > 0 { capture("S24-request-pack-failure") }
+        if testRun?.failureCount ?? 0 > 0 {
+            capture("S24-request-pack-failure")
+            let hierarchy = XCTAttachment(string: app.debugDescription)
+            hierarchy.name = "S24-failure-accessibility-hierarchy"; hierarchy.lifetime = .keepAlways; add(hierarchy)
+            let diagnostics = element("fixture.s24.preview-diagnostics")
+            let snapshot = XCTAttachment(string: diagnostics.exists ? diagnostics.label : "S24 fixture diagnostics unavailable")
+            snapshot.name = "S24-failure-preview-diagnostics"; snapshot.lifetime = .keepAlways; add(snapshot)
+        }
         app.terminate()
+    }
+    func testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite() {
+        openCerealReview()
+        let sam = element("household.decision.meal.88888888-8888-4888-8888-888888888888")
+        let mia = element("household.decision.meal.99999999-9999-4999-8999-999999999999")
+        // Require one actual viewport with both current/proposed checkout and
+        // the two named commitments, rather than finding each after scrolling.
+        let context = [element("household.decision.after-total"), element("household.decision.over-cap"), element("household.decision.before-total"), sam, mia]
+        revealTogether(context)
+        for target in context {
+            XCTAssertTrue(target.exists && target.isHittable, target.debugDescription)
+        }
+        XCTAssertTrue(element("household.decision.before-total").label.contains("$37.20"))
+        XCTAssertTrue(element("household.decision.after-total").label.contains("$40.69"))
+        XCTAssertTrue(element("household.decision.over-cap").label.contains("$2.69"))
+        XCTAssertTrue(sam.label.contains("Sam’s wrap lunch") && sam.label.contains("Protected portions") && sam.label.contains("1"))
+        XCTAssertTrue(mia.label.contains("Mia’s wrap lunch") && mia.label.contains("Protected portions") && mia.label.contains("1"))
+        capture("S24-cereal-checkout-with-two-named-protected-lunches")
+        tap(element("household.decision.cancel"))
+        let request = element("household.request.44444444-4444-4444-8444-444444444444")
+        XCTAssertTrue(request.waitForExistence(timeout: 5)); XCTAssertTrue(request.label.contains("Received, waiting for review"))
+        XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 0")
+        XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 0")
+        tap(element("fixture.s24.end-access"))
+        XCTAssertTrue(app.staticTexts["Shopper access has ended. Return to household settings."].waitForExistence(timeout: 10))
+        XCTAssertFalse(request.exists); XCTAssertFalse(sam.exists); XCTAssertFalse(mia.exists)
+        XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 0")
+        capture("S24-shopper-access-ended-clears-private-context")
+    }
+    func testUnavailableMealFactsRemainUnknownInRequestDecision() {
+        openCerealReview(extraArguments: ["--request-meals-unknown"])
+        let unknown = element("household.decision.meals.unknown")
+        reveal(unknown)
+        XCTAssertTrue(unknown.label.contains("Meal commitments are unavailable"))
+        XCTAssertFalse(element("household.decision.meal.88888888-8888-4888-8888-888888888888").exists)
+        XCTAssertFalse(element("household.decision.meal.99999999-9999-4999-8999-999999999999").exists)
+        capture("S24-unavailable-meal-commitments-stay-unknown")
+        tap(element("household.decision.cancel"))
+        XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 0")
+        XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 0")
+    }
+    private func openCerealReview(extraArguments: [String] = []) {
+        app.launchArguments = ["--ui-testing", "--request-pack-fixture", "--request-meal-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"] + extraArguments
+        app.launch()
+        let request = element("household.request.44444444-4444-4444-8444-444444444444")
+        XCTAssertTrue(request.waitForExistence(timeout: 20)); tap(request)
+        tap(element("household.decision.choice")); tap(app.buttons["Add packs to this shop"])
+        fill("3.49", into: "household.decision.price", replacing: true)
+        tap(element("household.decision.review"))
+        XCTAssertTrue(element("household.decision.after-total").waitForExistence(timeout: 10))
     }
     func testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite() {
         app.launchArguments = ["--ui-testing", "--request-pack-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
@@ -88,6 +145,16 @@ import XCTest
         }
         XCTAssertTrue(target.exists && target.isHittable, "Missing actionable UI element: \(target.debugDescription)")
     }
+    private func revealTogether(_ targets: [XCUIElement]) {
+        guard let first = targets.first, let last = targets.last else { return }
+        reveal(last)
+        for _ in 0..<16 {
+            if targets.allSatisfy({ $0.exists && $0.isHittable }) { return }
+            // Fine positioning avoids a whole-cell scroll hiding the first
+            // amount after the second lunch becomes visible.
+            scrollContent(upward: first.exists && first.isHittable, amount: 0.12)
+        }
+    }
     private func scrollableArea() -> CGRect {
         let bounds = app.frame
         let keyboardTop = app.keyboards.allElementsBoundByIndex.filter { $0.exists }.map { $0.frame.minY }.min() ?? bounds.maxY
@@ -96,11 +163,11 @@ import XCTest
         let bottom = min(bounds.maxY - 100, keyboardTop - 16)
         return CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))
     }
-    private func scrollContent(upward: Bool) {
+    private func scrollContent(upward: Bool, amount: CGFloat = 0.6) {
         // Whole-app swipes can start on the software keyboard. Drag only in
         // the observed unobscured content, and still require real hittability.
         let area = scrollableArea(), bounds = app.frame
-        let high = area.minY + area.height * 0.2, low = area.minY + area.height * 0.8
+        let high = area.midY - area.height * amount / 2, low = area.midY + area.height * amount / 2
         let origin = app.coordinate(withNormalizedOffset: .zero)
         let start = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: (upward ? low : high) - bounds.minY))
         let end = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: (upward ? high : low) - bounds.minY))

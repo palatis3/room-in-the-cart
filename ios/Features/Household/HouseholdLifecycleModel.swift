@@ -29,8 +29,10 @@ import HouseholdClient
     @Published var expiryHours = 24
     @Published var correction = ""
     let subject: String
+    var onGuardianWithdrawal: (@MainActor () async throws -> Void)?
     private let service: HouseholdService
     private let store: LifecycleIntentStore
+    private let deviceStore: DeviceRevocationStore?
     private let onEnrolled: @MainActor (MembershipReceipt) async throws -> Void
     private let onAccessEnded: @MainActor () async -> Void
     private var generation = UUID()
@@ -38,15 +40,31 @@ import HouseholdClient
     private var retryAfter = Date.distantPast
     private var attempts = 0
 
-    init(subject: String, service: HouseholdService, store: LifecycleIntentStore,
+    init(subject: String, service: HouseholdService, store: LifecycleIntentStore, deviceStore: DeviceRevocationStore? = nil,
          onEnrolled: @escaping @MainActor (MembershipReceipt) async throws -> Void,
          onAccessEnded: @escaping @MainActor () async -> Void) {
-        self.subject = subject; self.service = service; self.store = store
+        self.subject = subject; self.service = service; self.store = store; self.deviceStore = deviceStore
         self.onEnrolled = onEnrolled; self.onAccessEnded = onAccessEnded
     }
     var isHelper: Bool { scope?.grantId != nil && ["helper", "editor"].contains(scope?.role ?? "") }
     var canAdminister: Bool { !isHelper && scope?.capabilities.contains("household_admin") == true }
     var canShare: Bool { !isHelper && scope?.role == "shopper" && scope?.shopId != nil }
+    var canReviewDevices: Bool {
+        deviceStore != nil && !isHelper && scope?.grantId == nil && ["organizer", "shopper", "contributor"].contains(scope?.role ?? "")
+    }
+    func makeDevicesModel() -> HouseholdDevicesModel? {
+        guard canReviewDevices, let scope, let deviceStore else { return nil }
+        let start = scopeGeneration
+        let context = DeviceManagementScope(subject: subject, householdID: scope.household.id, memberID: scope.memberId, generation: start)
+        return HouseholdDevicesModel(scope: context, service: service, store: deviceStore, runtime: { [weak self] in
+            guard let self, self.scopeGeneration == start, self.canReviewDevices,
+                  self.scope?.household.id == context.householdID, self.scope?.memberId == context.memberID else { return nil }
+            return context
+        }, accessEnded: { [weak self] in
+            guard let self, self.scopeGeneration == start else { return }
+            await self.handle(ClientError.accessEnded)
+        })
+    }
     func setScope(_ value: HouseholdBootstrap) { clearScope(); scope = value }
     func clearScope() {
         scopeGeneration = UUID(); scope = nil; members = []; invitations = []; managedViews = []; managementReviewed = false
@@ -275,6 +293,11 @@ import HouseholdClient
             guard start == scopeGeneration else { return }
             guard result.revoked, result.consentId == consent.id else { throw ClientError.invalidResponse }
             consents.removeAll { $0.id == consent.id }
+            do { try await onGuardianWithdrawal?() } catch {
+                guard start == scopeGeneration else { return }
+                notice = GuardianCopy.text("Permission was withdrawn. Local setup retry cleanup needs attention."); return
+            }
+            guard start == scopeGeneration else { return }
             notice = ht("Consent was withdrawn. The child's current online access has ended.")
         } catch { if start == scopeGeneration { await handle(error) } }
     }

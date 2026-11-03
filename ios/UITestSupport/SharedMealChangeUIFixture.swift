@@ -127,7 +127,12 @@ struct S17SharedMealFixtureRoot: View {
     @State private var directSeed = ProcessInfo.processInfo.arguments.contains("--shopper-meal-seed")
     @State private var directShopReview = false
     private var seed: SharedMealChangeSeed { .init(localOccurrenceID: UUID(uuidString:"88888888-8888-4888-8888-888888888888")!, title:"Fixture guest soup",portions:6,planning:.init(groups:[],ingredients:[])) }
-    var body: some View {
+    @ViewBuilder var body: some View {
+        if ProcessInfo.processInfo.arguments.contains("--shared-meal-civil-date-fixture") {
+            SharedMealCivilDateFixtureRoot()
+        } else { sharedMealContent }
+    }
+    private var sharedMealContent: some View {
         VStack {
             Text("Fixture shared proposals: \(state.proposals)").accessibilityIdentifier("fixture.s17.proposals")
             Text("Fixture shared applications: \(state.applications)").accessibilityIdentifier("fixture.s17.applications")
@@ -143,6 +148,30 @@ struct S17SharedMealFixtureRoot: View {
             } else if let failure = state.failure { Text(failure).accessibilityIdentifier("fixture.failure") }
             else { ProgressView("Opening isolated shared meal fixture") }
         }.task { await state.start() }
+    }
+}
+
+/// Exercises the production facts view under the same environment override as a real screen.
+/// Entered civil days remain unchanged; no service, account, or persisted fixture is needed.
+private struct SharedMealCivilDateFixtureRoot: View {
+    private let days = ["2026-03-07", "2026-03-08", "2026-03-09", "2026-10-31",
+        "2026-11-01", "2026-11-02", "2026-11-03", "2026-11-05"]
+    @State private var index = 0
+    private var zone: TimeZone {
+        let args = ProcessInfo.processInfo.arguments
+        guard let flag = args.firstIndex(of: "--shared-meal-civil-date-zone"), flag + 1 < args.count,
+              let zone = TimeZone(identifier: args[flag + 1]) else { return .gmt }
+        return zone
+    }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text(verbatim: zone.identifier).accessibilityIdentifier("fixture.civil-date.zone")
+            Text(verbatim: days[index]).accessibilityIdentifier("fixture.civil-date.wire-day")
+            SharedMealFacts(meal: SharedMeal(title: "Civil date fixture", day: days[index],
+                kind: "dinner", portions: 4, protected: false))
+            Button("Next civil day") { index = (index + 1) % days.count }
+                .accessibilityIdentifier("fixture.civil-date.next")
+        }.padding().environment(\.timeZone, zone)
     }
 }
 #endif

@@ -127,7 +127,7 @@ extension PickupModel {
     func isCurrent(_ copy: HandoffCopy) -> Bool {
         guard let value = journey, value.id == copy.shopID, !saving, !hasPendingSave,
               handoffCopy(channel: copy.channel, versionID: copy.versionID, language: copy.language) == copy else { return false }
-        if copy.channel == .retailer { return frozenSnapshot?.id == copy.versionID }
+        if copy.channel == .retailer { return hasCurrentBasketStockBasis && frozenSnapshot?.id == copy.versionID }
         guard let note = value.notes.last, note.id == copy.versionID, let review = note.reviewedHandoff,
               let zone = TimeZone(identifier: review.timeZoneID) else { return false }
         let pieces = PickupCookProjection.pieces(journey: value, allocation: allocation, language: note.language, timeZone: zone)

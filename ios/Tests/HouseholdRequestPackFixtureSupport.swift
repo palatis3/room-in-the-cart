@@ -18,13 +18,27 @@ final class S24FixtureServer: @unchecked Sendable {
     private var recordedLines: [[String: Any]] = []
     private var receipts: [String: [String: Any]] = [:]
     private var count = 0
+    private var previews = 0
     private var revision = 1
     func advanceSource() { lock.lock(); defer { lock.unlock() }; revision += 1 }
+    private var accessRevoked = false
+    func revokeAccess() { lock.lock(); defer { lock.unlock() }; accessRevoked = true }
     let includeExistingLine: Bool
-    init(includeExistingLine: Bool = false) { self.includeExistingLine = includeExistingLine }
+    let cerealScenario: Bool
+    let includeMealFacts: Bool
+    init(includeExistingLine: Bool = false, cerealScenario: Bool = false, includeMealFacts: Bool = true) {
+        self.includeExistingLine = includeExistingLine; self.cerealScenario = cerealScenario; self.includeMealFacts = includeMealFacts
+    }
+    static let protectedLunches: [[String: Any]] = [
+        ["occurrenceId":"88888888-8888-4888-8888-888888888888", "revision":1,
+         "meal":["title":"Sam’s wrap lunch", "day":"2026-11-04", "kind":"lunch", "portions":1, "protected":true]],
+        ["occurrenceId":"99999999-9999-4999-8999-999999999999", "revision":1,
+         "meal":["title":"Mia’s wrap lunch", "day":"2026-11-05", "kind":"lunch", "portions":1, "protected":true]]
+    ]
     var changed: ((Int, Int) -> Void)?
     var previewBody: [String: Any]? { lock.lock(); defer { lock.unlock() }; return recordedPreview }
     var commandCount: Int { lock.lock(); defer { lock.unlock() }; return count }
+    var previewCount: Int { lock.lock(); defer { lock.unlock() }; return previews }
     var lineCount: Int { lock.lock(); defer { lock.unlock() }; return recordedLines.count }
     func respond(_ request: URLRequest) throws -> (Int, Data) {
         lock.lock(); defer { lock.unlock() }
@@ -41,21 +55,28 @@ final class S24FixtureServer: @unchecked Sendable {
         if path == "/auth/v1/user" { return try json(["id":"fixture-adult","email_confirmed_at":"date"]) }
         if path.hasSuffix("/devices") { return try json(["deviceId":"fixture-device","deviceToken":"fixture-device-token"]) }
         if path.hasSuffix("/bootstrap") { return try json(["household":["id":Self.household,"label":"Fixture"],"memberId":Self.member,"role":"shopper","shopId":Self.shop,"enrolled":true,"queueConsent":false,"capabilities":["shopper_inbox","request_preview","shopper_commands"]]) }
-        let requestRow: [String: Any] = ["requestId":Self.requestID,"shopId":Self.shop,"revision":recordedLines.isEmpty ? 1 : 2,"originalItem":"Wraps for lunch","ownQuantity":"8 wraps","authoredAt":"2026-11-03T00:00:00Z","receivedAt":"2026-11-03T00:00:01Z","route":"current","status":recordedLines.isEmpty ? "pending" : "added","ownActionAllowed":recordedLines.isEmpty,"authorAlias":"Sam"]
+        let requestRow: [String: Any] = ["requestId":Self.requestID,"shopId":Self.shop,"revision":recordedLines.isEmpty ? 1 : 2,"originalItem":cerealScenario ? "Brown rice cereal" : "Wraps for lunch","ownQuantity":cerealScenario ? "1 box" : "8 wraps","authoredAt":"2026-11-03T00:00:00Z","receivedAt":"2026-11-03T00:00:01Z","route":"current","status":recordedLines.isEmpty ? "pending" : "added","ownActionAllowed":recordedLines.isEmpty,"authorAlias":"Sam"]
         if path.hasSuffix("/inbox") { return try json(["requests":[requestRow],"nextCursor":NSNull()]) }
         if path.hasSuffix("/shops/" + Self.shop) {
-            let quote = try ShopperQuote(scope: "wholeCheckout", complete: true, capMinor: 500, capScope: "wholeCheckout", fee: .fixed(0), taxesMinor: 0, depositsMinor: 0, discountsMinor: 0, observedAt: Date().addingTimeInterval(-60), expiresAt: Date().addingTimeInterval(3600))
+            if accessRevoked { return (403, Data()) }
+            let quote = try ShopperQuote(scope: "wholeCheckout", complete: true, capMinor: cerealScenario ? 3800 : 500, capScope: "wholeCheckout", fee: .fixed(0), taxesMinor: 0, depositsMinor: 0, discountsMinor: 0, observedAt: Date().addingTimeInterval(-60), expiresAt: Date().addingTimeInterval(3600))
             let data = try JSONSerialization.jsonObject(with: JSONEncoder().encode(quote))
-            return try json(["shopId":Self.shop,"shopRevision":revision + (recordedLines.isEmpty ? 0 : 1),"authorityEpoch":1,"phase":"draft","quote":data,"lines":recordedLines + (includeExistingLine ? [["lineId":"77777777-7777-4777-8777-777777777777","originalItem":"Existing wraps","packs":1,"unitPriceMinor":0,"feeEligible":true]] : [])])
+            var shop: [String: Any] = ["shopId":Self.shop,"shopRevision":revision + (recordedLines.isEmpty ? 0 : 1),"authorityEpoch":1,"phase":"draft","quote":data,"lines":recordedLines + (cerealScenario ? [["lineId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","originalItem":"Original pickup items","packs":1,"unitPriceMinor":3720,"feeEligible":true]] : []) + (includeExistingLine ? [["lineId":"77777777-7777-4777-8777-777777777777","originalItem":"Existing wraps","packs":1,"unitPriceMinor":0,"feeEligible":true]] : [])]
+            if includeMealFacts { shop["meals"] = Self.protectedLunches }
+            return try json(shop)
         }
         if path.hasSuffix("/previews") {
+            previews += 1
             recordedPreview = input
             let decision = input["decision"] as? [String: Any] ?? [:]
             let line = decision["line"] as? [String: Any]
             let unit = line?["unitPriceMinor"] as? Int
-            let total: Int? = decision["choice"] as? String == "add" ? unit.map { $0 * (line?["packs"] as? Int ?? 1) } : 0
-            func budget(_ amount: Int?) -> [String: Any] { ["currency":"USD","totalMinor":amount as Any? ?? NSNull(),"overCapMinor":amount.map { max(0,$0-500) } as Any? ?? NSNull(),"headroomMinor":amount.map { max(0,500-$0) } as Any? ?? NSNull(),"status":amount.map { $0 > 500 ? "overCap" : "withinCap" } ?? "unresolved","scope":"wholeCheckout","missing":amount == nil ? ["line_price"] : [],"lowerBoundMinor":amount ?? 0,"upperBoundMinor":amount as Any? ?? NSNull(),"wholeCheckoutWithinCap":amount.map { $0 <= 500 } ?? false] }
-            return try json(["previewId":"55555555-5555-4555-8555-555555555555","expiresAt":"2099-01-01T00:00:00Z","shopRevision":revision,"authorityEpoch":1,"requestRevision":1,"choice":decision["choice"]!,"before":budget(0),"after":budget(total),"changeMinor":total as Any? ?? NSNull(),"requiresOverageAcceptance":total.map { $0 > 500 } ?? false,"requiresUnknownAcceptance":total == nil])
+            let before = cerealScenario ? 3720 : 0
+            let cap = cerealScenario ? 3800 : 500
+            let change: Int? = decision["choice"] as? String == "add" ? unit.map { $0 * (line?["packs"] as? Int ?? 1) } : 0
+            let total = change.map { before + $0 }
+            func budget(_ amount: Int?) -> [String: Any] { ["currency":"USD","totalMinor":amount as Any? ?? NSNull(),"overCapMinor":amount.map { max(0,$0-cap) } as Any? ?? NSNull(),"headroomMinor":amount.map { max(0,cap-$0) } as Any? ?? NSNull(),"status":amount.map { $0 > cap ? "overCap" : "withinCap" } ?? "unresolved","scope":"wholeCheckout","missing":amount == nil ? ["line_price"] : [],"lowerBoundMinor":amount ?? before,"upperBoundMinor":amount as Any? ?? NSNull(),"wholeCheckoutWithinCap":amount.map { $0 <= cap } ?? false] }
+            return try json(["previewId":"55555555-5555-4555-8555-555555555555","expiresAt":"2099-01-01T00:00:00Z","shopRevision":revision,"authorityEpoch":1,"requestRevision":1,"choice":decision["choice"]!,"before":budget(before),"after":budget(total),"changeMinor":change as Any? ?? NSNull(),"requiresOverageAcceptance":total.map { $0 > cap } ?? false,"requiresUnknownAcceptance":total == nil])
         }
         if path.hasSuffix("/replay-windows") { return try json(["id":"66666666-6666-4666-8666-666666666666","expiresAt":"2099-01-01T00:00:00Z"]) }
         if path.hasSuffix("/commands"), let key = input["clientKey"] as? String {
@@ -71,9 +92,14 @@ final class S24FixtureServer: @unchecked Sendable {
 }
 final class S24FixtureProtocol: URLProtocol, @unchecked Sendable {
     static var server: S24FixtureServer?
+    static var intercept: ((S24FixtureProtocol) -> Bool)?
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
     override func startLoading() {
+        if Self.intercept?(self) == true { return }
+        finishResponse()
+    }
+    func finishResponse() {
         do {
             guard let server = Self.server else { throw URLError(.unsupportedURL) }
             let (status,data) = try server.respond(request)

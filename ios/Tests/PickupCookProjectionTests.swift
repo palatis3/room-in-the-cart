@@ -13,6 +13,7 @@ final class PickupCookProjectionTests: XCTestCase {
         journey.revision = 4
         journey.needs = [AllocationNeed(id: dinner, orderLineID: food, name: "Tacos", amount: quantity(6), priority: .required),
                          AllocationNeed(id: lunch, orderLineID: food, name: "Lunch", amount: quantity(2), priority: .protected)]
+        journey.plannedNeeds = journey.needs
         journey.needDetails = [.init(id: dinner, mealName: "Tacos", exclusions: ["sin ajo", "Original Wraps™"], scheduledDay: nil,
                                     leadTimeMinutes: 25, completedSteps: ["Beans already soaked"])]
         journey.repairs = [.init(id: UUID(), needID: dinner, instruction: "Use the confirmed beans; keep lunch separate.", createdAt: now,
@@ -81,6 +82,7 @@ final class PickupCookProjectionTests: XCTestCase {
         let food = UUID(), need = UUID()
         var journey = PickupJourney(id: UUID(), savedAt: now)
         journey.needs = [.init(id: need, orderLineID: food, name: "Original lunch", amount: quantity(2), priority: .protected)]
+        journey.plannedNeeds = journey.needs
         let usable = Quantity(amount: try Rational(3, 2), unit: .count, originalLiteral: "one and a half wraps")
         let allocation = try ConfirmedStockAllocator.allocate(lots: [.init(id: UUID(), foodID: food, name: "Wraps", usable: usable, confirmedAt: now)],
             needs: [.init(id: need, foodID: food, name: "Original lunch", amount: quantity(2), priority: .protected)])
@@ -128,6 +130,73 @@ final class PickupCookProjectionTests: XCTestCase {
         XCTAssertFalse(value.localizedCaseInsensitiveContains("acknowledg"))
         XCTAssertNil(PickupCookReadbackBinding(journey: journey, allocation: nil, result: nil, language: "en-US", includeBudget: false,
             text: journey.notes[0].text, context: context(), at: now, timeZone: utc))
+    }
+    func testCurrentDemandSetIncludesPreplacementPlanAndStockOnlyProtectedCommitmentsOnce() throws {
+        let food = UUID(), dinner = UUID(), lunch = UUID()
+        var journey = PickupJourney(id: UUID(), savedAt: now)
+        journey.plannedNeeds = [.init(id: dinner, orderLineID: food, name: "Planned dinner", amount: quantity(4), priority: .required)]
+        journey.urgent = [.init(id: food, food: "Wraps", meal: "Urgent dinner", required: quantity(2),
+            available: quantity(0), due: nil, confirmedAt: now)]
+        journey.stockNeeds = [.init(id: food, foodID: food, name: "Urgent dinner", amount: quantity(2), priority: .required),
+            .init(id: lunch, foodID: food, name: "Stock-only lunch", amount: quantity(1), priority: .protected)]
+        journey.stockLots = [.init(id: UUID(), foodID: food, name: "Counted wraps", usable: quantity(3), confirmedAt: now)]
+        journey.needDetails = [.init(id: dinner, mealName: "Planned dinner", exclusions: ["no sesame"], scheduledDay: nil,
+                                    leadTimeMinutes: nil, completedSteps: [])]
+        let allocation = try journey.carryoverAllocation()
+        let pieces = PickupCookProjection.pieces(journey: journey, allocation: allocation, language: "en-US", timeZone: utc)
+        XCTAssertEqual(pieces.filter { $0.key.hasPrefix("need/") || $0.key.hasPrefix("urgent/") }.count, 3)
+        let planned = try XCTUnwrap(pieces.first { $0.key == "need/\(dinner)" })
+        XCTAssertTrue(planned.text.contains("Planned dinner: 4 units"), planned.text)
+        XCTAssertTrue(planned.text.contains("Allocated: 2 units"), planned.text)
+        XCTAssertTrue(planned.text.contains("Still short: 2 units"), planned.text)
+        let urgent = try XCTUnwrap(pieces.first { $0.key == "urgent/\(food)" })
+        XCTAssertTrue(urgent.text.contains("Allocated: 0 units"), urgent.text)
+        XCTAssertTrue(urgent.text.contains("Still short: 2 units"), urgent.text)
+        XCTAssertFalse(pieces.contains { $0.key == "need/\(food)" })
+        let protected = try XCTUnwrap(pieces.first { $0.key == "need/\(lunch)" })
+        XCTAssertTrue(protected.text.contains("Stock-only lunch: 1 unit — set aside first"), protected.text)
+        XCTAssertTrue(protected.text.contains("Allocated: 1 unit"), protected.text)
+        XCTAssertTrue(protected.text.contains("Still short: 0 units"), protected.text)
+        XCTAssertTrue(pieces.contains { $0.text.contains("no sesame") })
+    }
+    func testUnknownCurrentAllocationNeverTreatsInitialObservationAsCurrentSupply() throws {
+        let food = UUID()
+        var journey = PickupJourney(id: UUID(), savedAt: now)
+        journey.urgent = [.init(id: food, food: "Wraps", meal: "Dinner", required: quantity(4), available: quantity(3), due: nil, confirmedAt: now)]
+        let value = text(journey, nil)
+        XCTAssertTrue(value.contains("Allocated: Unresolved"), value)
+        XCTAssertTrue(value.contains("Still short: Unresolved"), value)
+        XCTAssertTrue(value.contains("Initially observed available: 3 units"), value)
+        XCTAssertFalse(value.contains("Confirmed available: 3"), value)
+        XCTAssertTrue(value.contains("Open need: review before cooking."), value)
+    }
+    func testStockOnlyCarryoverUsesPinnedCoverageWithoutBorrowingAnotherBatch() throws {
+        let food = UUID(), carryover = UUID(), pinnedBatch = UUID(), otherBatch = UUID()
+        var journey = PickupJourney(id: UUID(), savedAt: now)
+        journey.stockNeeds = [.init(id: carryover, foodID: food, name: "Confirmed carryover dinner", amount: quantity(3), priority: .required)]
+        journey.stockLots = [.init(id: pinnedBatch, foodID: food, name: "Reserved batch", usable: quantity(1), confirmedAt: now),
+                             .init(id: otherBatch, foodID: food, name: "Other batch", usable: quantity(10), confirmedAt: now)]
+        let allocation = try ConfirmedCarryoverAllocator.allocate(lots: journey.stockLots, needs: journey.stockNeeds,
+            reservations: [.init(needID: carryover, lotID: pinnedBatch)])
+        let value = text(journey, allocation)
+        XCTAssertTrue(value.contains("Confirmed carryover dinner: 3 units"), value)
+        XCTAssertTrue(value.contains("Allocated: 1 unit"), value)
+        XCTAssertTrue(value.contains("Still short: 2 units"), value)
+        XCTAssertTrue(value.contains("Short or unverified amount. Review."), value)
+        XCTAssertFalse(value.contains("Allocated: 3 units"), value)
+    }
+    func testPlacedInstructionUsesCurrentNeedsRatherThanOutdatedPreplacementPlan() throws {
+        let food = UUID(), current = UUID(), obsolete = UUID()
+        var journey = PickupJourney(id: UUID(), savedAt: now)
+        journey.pickup = try PickupLedger(orderID: UUID(), orderLines: [.init(id: food, branchID: "Branch", name: "Wraps", ordered: quantity(4))])
+        journey.plannedNeeds = [.init(id: obsolete, orderLineID: food, name: "Old planned dinner", amount: quantity(4), priority: .required)]
+        journey.needs = [.init(id: current, orderLineID: food, name: "Current dinner", amount: quantity(2), priority: .required)]
+        journey.stockLots = [.init(id: UUID(), foodID: food, name: "Counted batch", usable: quantity(1), confirmedAt: now)]
+        let value = text(journey, try journey.carryoverAllocation())
+        XCTAssertTrue(value.contains("Current dinner: 2 units"), value)
+        XCTAssertTrue(value.contains("Allocated: 1 unit"), value)
+        XCTAssertTrue(value.contains("Still short: 1 unit"), value)
+        XCTAssertFalse(value.contains("Old planned dinner"), value)
     }
     func testBindingRequiresUnlockedPermittedRuntimeScopeAndCleanSaveState() throws {
         let (journey, allocation) = try fixture()

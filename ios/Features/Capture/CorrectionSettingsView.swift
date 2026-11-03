@@ -118,6 +118,8 @@ import SwiftUI
                         confirmDisable = false
                         perform(.disable)
                     }
+                    Button(captureText("Cancel")) { confirmDisable = false }
+                        .accessibilityIdentifier("corrections.cancelDisable")
                 } message: {
                     Text(captureText("This deletes remembered spellings for this private workspace and selected language. Other languages and previously saved records stay as they are."))
                 }
