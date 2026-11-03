@@ -122,6 +122,25 @@ extension HouseholdClientTests {
         let shops = try await service.historyOwnedShops(); XCTAssertEqual(shops.shops.first?.phase, "closed")
         XCTAssertEqual(paths.count, 5)
     }
+    func testReadableHistoryShopDiscoveryUsesContributorSessionAndValidatesSeparateCursor() async throws {
+        let auth = try auth(); let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
+        let ids = (1...50).map { String(format: "00000000-0000-4000-9000-%012d", $0) }
+        var malformed = false
+        MockURLProtocol.handler = { request in
+            if let response = try self.historyFixtureResponse(request) { return response }
+            XCTAssertTrue(request.url!.path.hasSuffix("/history-readable-shops"))
+            if malformed { return (200, try encoded(HistoryReadableShopPage(shopIds: [self.historyShop, self.historyShop], nextCursor: nil))) }
+            let cursor = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)?.queryItems?.first(where: { $0.name == "cursor" })?.value
+            if let cursor { XCTAssertEqual(cursor, ids.last); return (200, try encoded(HistoryReadableShopPage(shopIds: [self.historyShop], nextCursor: nil))) }
+            return (200, try encoded(HistoryReadableShopPage(shopIds: ids, nextCursor: ids.last)))
+        }
+        _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456"); _ = try await service.enroll(householdID: household)
+        let first = try await service.historyReadableShops(); XCTAssertEqual(first.shopIds, ids)
+        let second = try await service.historyReadableShops(cursor: first.nextCursor); XCTAssertEqual(second.shopIds, [historyShop]); XCTAssertNil(second.nextCursor)
+        malformed = true
+        do { _ = try await service.historyReadableShops(); XCTFail("Duplicate read scopes accepted") }
+        catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
+    }
     func testHistoryObservationRetryKeepsOriginalBytesAndStopsAfterSourceAuthorityLoss() async throws {
         let auth = try auth(); let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
         let observation = try historyObservation(); var bodies: [Data] = []; var denied = false

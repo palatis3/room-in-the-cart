@@ -1,0 +1,65 @@
+{
+  "recordedAt": "2026-11-03T18:37:18.226551+00:00",
+  "scope": "E09 current explicit shop budget-grant reads and Free saved-reference discovery; local service/client/model evidence only",
+  "behavior": [
+    "Read grants require active adult, enabled grant and current shop authority epoch; selected shop narrows scope",
+    "Financial, observation, retirement and period mutations remain shopper-only, including original receipt replay after transfer",
+    "Separate Free readable-shop discovery populates remembered observation references; owned mutation picker unchanged",
+    "Individual source reads recheck access; period envelope remains private to owner and omitted on any inaccessible source"
+  ],
+  "checks": [
+    {
+      "kind": "TypeScript compile",
+      "command": "npm run build",
+      "result": "passed"
+    },
+    {
+      "kind": "real loopback HTTP plus PostgreSQL",
+      "command": "node --test tests/history.integration.mjs",
+      "passed": 11,
+      "failed": 0,
+      "skipped": 0,
+      "database": "isolated ritc_e09_budget_access, Unix /tmp socket; all current migrations; fictional identity and Apple fixtures"
+    },
+    {
+      "kind": "Swift package transport tests on macOS",
+      "command": "swift test --filter History",
+      "passed": 9,
+      "failed": 0
+    },
+    {
+      "kind": "isolated macOS feature-model harness",
+      "directory": "/tmp/ritc-e09-model",
+      "command": "swift test",
+      "passed": 19,
+      "failed": 0,
+      "scope": "Current HistoryFeatureModel, HistoryDrafts and HistoryFlowTests copied to a dedicated module. Established isolated HistoryPendingStore fixture omits unrelated FamilyDecision/SharedMeal fields. This is not an iOS target or UI run."
+    },
+    {
+      "kind": "git diff --check",
+      "result": "passed for owned paths"
+    },
+    {
+      "kind": "localization",
+      "result": "History new en/es key has no reported issue; full tree checker temporarily reports fourteen concurrent Records/media missing keys; archive_media notified"
+    }
+  ],
+  "remainingAcceptance": [
+    "Full current iOS target and visible grant-only Free saved-record flow",
+    "Human US Spanish review",
+    "Real provider/StoreKit and mixed-device acceptance remain separate gates"
+  ],
+  "fileSha256": {
+    "service/src/history.ts": "42149af4a8373ca04f4ffd5cbfc48621a96a0864406a4cbf7e62d50d40635921",
+    "service/tests/history.integration.mjs": "2eea88c7954fda189a89e4198674395361464d63aba80f686a92ca9958e8be76",
+    "ios/Features/History/HistoryFeatureModel.swift": "a0e2e4cc08c65d49f32c9a5c6012a1f8a16763ee6999a22016f879114cd16644",
+    "ios/Features/History/HistoryViews.swift": "adf3cfbeb415c1436d6beff6ccb441c3e04e88b1c543a5b32f60da04a9586cad",
+    "ios/Features/History/History.xcstrings": "36dc866c4512d21568444e74d34d7ed10f4b8b086f280307a90e6fddc3fa30c6",
+    "ios/Tests/HistoryFlowTests.swift": "8835696c4c77e531229192185c48635b6083d84c9895a3e6e60f1c3bb6578118",
+    "ios/Packages/HouseholdClient/Sources/HouseholdClient/HistoryContracts.swift": "2f7418657c62e632ad2e722a40983be191c12a4e6233d001bfbae441ebce08d0",
+    "ios/Packages/HouseholdClient/Sources/HouseholdClient/HouseholdService.swift": "c0764473175dd34670c2108f2ffce05c4a9c8fb117745b6abf0802c97eb7dcf9",
+    "ios/Packages/HouseholdClient/Tests/HouseholdClientTests/HistoryClientTests.swift": "3e5ca8e4498fa4733fe8b19757e83217649e388652b88aff5ae2f4a3c5b32497",
+    "shared/contracts/history-v1.d.ts": "bd488e2782023f2cf23117324f42a9385dc166916f66c98e93ef27377816a051"
+  },
+  "compiledHistorySha256": "a56ce85c9259beaef35c467f80e95c13b710c161131baf3ebf60aee7ce7bc96a"
+}

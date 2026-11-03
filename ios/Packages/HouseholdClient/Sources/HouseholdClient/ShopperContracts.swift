@@ -60,8 +60,11 @@ public struct ShopperQuote: Codable, Equatable, Sendable {
     }
 }
 public struct ShopperShopCandidate: Codable, Equatable, Sendable {
+    public let reviewedStoreBasisRevision: Int?
     public let quote: ShopperQuote; public let lines: [ShopperBasketLine]
-    public init(quote: ShopperQuote, lines: [ShopperBasketLine]) throws {
+    public init(quote: ShopperQuote, lines: [ShopperBasketLine], reviewedStoreBasisRevision: Int? = nil) throws {
+        guard reviewedStoreBasisRevision.map({ $0 > 0 }) ?? true else { throw ClientError.configuration }
+        self.reviewedStoreBasisRevision = reviewedStoreBasisRevision
         guard lines.count <= 200, Set(lines.map(\.lineId)).count == lines.count,
               lines.allSatisfy({ UUID(uuidString: $0.lineId) != nil && !$0.originalItem.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
                   $0.originalItem.count <= 240 && (1...10_000).contains($0.packs) && ($0.unitPriceMinor.map { (0...1_000_000_000).contains($0) } ?? true) }) else { throw ClientError.configuration }
@@ -105,6 +108,8 @@ public struct SharedMealEdit: Equatable, Sendable {
     }
 }
 public struct ShopperShop: Codable, Equatable, Sendable {
+    public var storeBasisRevision: Int? = nil
+    public var storeReviewRequired: Bool? = nil
     public let shopId: String; public let shopRevision: Int; public let authorityEpoch: Int; public let phase: String
     public let meals: [SharedMealOccurrence]?
     public let quote: ShopperQuote; public let lines: [ShopperBasketLine]; public let frozenRevision: Int?; public let placedRevision: Int?

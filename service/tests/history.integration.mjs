@@ -25,6 +25,89 @@ async function fixture(){const owner=await actor(),created=ok(await call(owner,'
 const entry=(kind,amountMinor,extra={})=>({id:randomUUID(),evidenceKey:randomUUID(),kind,amountMinor,currency:'USD',occurredAt:new Date().toISOString(),creditId:null,chargeEvidenceKey:null,holdEvidenceKey:null,sourceText:'Fictional entered evidence',...extra});
 const observation=shopId=>({id:randomUUID(),shopId,itemName:'Cereal original',packLabel:'3 × 12 oz',usablePack:{amount:{numerator:36,denominator:1},unit:'ounce',originalLiteral:'36 oz'},price:{kind:'bounded',lowerMinor:500,upperMinor:700,reason:'Member offer not confirmed'},currency:'USD',store:'Store original',branch:'Branch original',channel:'warehouse',mode:'inStore',eligibility:'Membership not confirmed',observedAt:new Date().toISOString(),sourceText:'Original source text',sourceLocale:'es-US'});
 const period=(ids)=>({id:randomUUID(),title:'Private pay-period title',startsAt:new Date(Date.now()-86400000).toISOString(),endsAt:new Date(Date.now()+86400000).toISOString(),timeZoneId:'America/Los_Angeles',currency:'USD',shopBudgetMinor:50000,alreadyExcludedReserveMinor:99999,shopIds:ids,reservations:[{id:randomUUID(),originalText:'Future plan secret',amountMinor:5000,plannedAt:new Date().toISOString(),state:{kind:'reserved'}}],reviewedCompleteAt:null});
+async function joinAdult(f,alias='Budget reader'){
+ const adult=await actor(),invite=ok(await call(f.owner,f.base+'/invites','POST',{kind:'adult_contributor'}));
+ adult.id=ok(await call(adult,'/v1/invites/redeem','POST',{token:invite.token,intent:'join',adultAttestation:true,alias})).memberId;
+ await enroll(adult,f.h);return adult;
+}
+async function budgetGrant(f,shopper,member,{shopId=f.shopId,enabled=true,targetRevision=0,shopRevision=1,authorityEpoch=1}={}){
+ return ok(await call(shopper,f.base+`/shops/${shopId}/store-quotes/grants`,'POST',{
+  operationId:randomUUID(),shopRevision,authorityEpoch,grantRevision:0,adultId:member.id,enabled,targetRevision}));
+}
+
+test('explicit current budget grants allow history reads without allowing financial or price mutations',async()=>{
+ const f=await fixture();await f.paid();const reader=await joinAdult(f),state=ok(await call(f.owner,f.base+'/entitlements'));
+ ok(await call(f.owner,f.base+'/billing/seats','PUT',{revision:state.revision,userIDs:[f.owner.id,reader.id]}));
+ const charge=entry('postedCharge',4000);await f.financial(charge);const o=observation(f.shopId);
+ ok(await call(f.owner,f.base+'/price-observations','POST',{clientKey:randomUUID(),observation:o}));
+ const financial=f.base+`/shops/${f.shopId}/financial-evidence`;
+ assert.equal((await call(reader,financial)).status,404);
+ assert.equal((await call(reader,f.base+'/price-observations/'+o.id)).status,404);
+ await budgetGrant(f,f.owner,reader);
+ assert.deepEqual(ok(await call(reader,f.base+'/history-readable-shops')),{shopIds:[f.shopId],nextCursor:null});
+ assert.deepEqual(ok(await call(reader,f.base+'/shops?scope=owned')).shops,[]);
+ assert.equal(ok(await call(reader,financial)).entries[0].id,charge.id);
+ assert.deepEqual(ok(await call(reader,f.base+'/price-observations/'+o.id)).observation,o);
+ assert.deepEqual(ok(await call(reader,f.base+'/price-observations')).observations,[o]);
+ assert.deepEqual(ok(await call(reader,f.base+'/budget-history','POST',{shopIds:[f.shopId,randomUUID()]})).permitted.shops.map(s=>s.shopId),[f.shopId]);
+ const sourceVersion=ok(await call(reader,financial)).sourceVersion;
+ assert.equal((await call(reader,financial,'POST',{clientKey:randomUUID(),sourceVersion,entry:entry('postedTopUp',100)})).status,404);
+ assert.equal((await call(reader,f.base+'/price-observations','POST',{clientKey:randomUUID(),observation:observation(f.shopId)})).status,404);
+ assert.equal((await call(reader,f.base+`/shops/${f.shopId}/financial-reviews`,'POST',{clientKey:randomUUID(),sourceVersion,allEvidenceEntered:false,closeShop:true})).status,404);
+ assert.equal((await call(reader,f.base+`/shops/${f.shopId}/history-retire`,'POST',{clientKey:randomUUID(),sourceVersion,confirm:true})).status,404);
+ assert.equal((await call(reader,f.base+'/budget-periods','POST',{clientKey:randomUUID(),baseRevision:0,period:period([f.shopId])})).status,404);
+ const other=await f.shop(90000),headers={'X-Shop-ID':other};
+ assert.equal((await call(reader,financial,'GET',undefined,headers)).status,404);
+ assert.deepEqual(ok(await call(reader,f.base+'/budget-history','POST',{shopIds:[f.shopId]},headers)).permitted.shops,[]);
+ await budgetGrant(f,f.owner,reader,{enabled:false,targetRevision:1});
+ assert.deepEqual(ok(await call(reader,f.base+'/history-readable-shops')),{shopIds:[],nextCursor:null});
+ assert.equal((await call(reader,f.base+'/history-readable-shops?cursor='+f.shopId)).status,404);
+ assert.equal((await call(reader,financial)).status,404);
+ assert.equal((await call(reader,f.base+'/price-observations/'+o.id)).status,404);
+ assert.deepEqual(ok(await call(reader,f.base+'/price-observations')).observations,[]);
+ assert.equal((await call(reader,f.base+'/price-observations?cursor='+o.id)).status,404);
+ await budgetGrant(f,f.owner,reader,{targetRevision:2});
+ const replacement=await joinAdult(f,'Replacement shopper');
+ ok(await call(f.owner,f.base+'/commands','POST',{v:1,replayWindow:f.owner.window,clientKey:randomUUID(),shopId:f.shopId,kind:'shop.transferAuthority',base:{shopRevision:1,authorityEpoch:1},body:{newShopperId:replacement.id}}));
+ assert.equal((await call(reader,financial)).status,404);
+ assert.deepEqual(ok(await call(reader,f.base+'/price-observations')).observations,[]);
+});
+
+test('Free readable-shop discovery pages only current permitted sources and preserves selected-shop scope',async()=>{
+ const f=await fixture(),ids=[f.shopId];
+ for(let n=0;n<51;n++)ids.push(await f.shop());
+ const first=ok(await call(f.owner,f.base+'/history-readable-shops'));
+ assert.equal(first.shopIds.length,50);assert.equal(first.nextCursor,first.shopIds.at(-1));
+ const second=ok(await call(f.owner,f.base+'/history-readable-shops?cursor='+first.nextCursor));
+ assert.equal(second.shopIds.length,2);assert.equal(second.nextCursor,null);
+ assert.deepEqual([...first.shopIds,...second.shopIds].sort(),ids.sort());
+ assert.equal((await call(f.owner,f.base+'/history-readable-shops?cursor='+randomUUID())).status,404);
+ const selected=ok(await call(f.owner,f.base+'/history-readable-shops','GET',undefined,{'X-Shop-ID':f.shopId}));
+ assert.deepEqual(selected,{shopIds:[f.shopId],nextCursor:null});
+ const otherCursor=ids.find(id=>id!==f.shopId);
+ assert.equal((await call(f.owner,f.base+'/history-readable-shops?cursor='+otherCursor,'GET',undefined,{'X-Shop-ID':f.shopId})).status,404);
+ ok(await call(f.owner,f.base+`/shops/${f.shopId}/history-retire`,'POST',{clientKey:randomUUID(),sourceVersion:await f.version(),confirm:true}));
+ assert.deepEqual(ok(await call(f.owner,f.base+'/history-readable-shops','GET',undefined,{'X-Shop-ID':f.shopId})),{shopIds:[],nextCursor:null});
+ const foreign=await fixture();assert.notEqual((await call(foreign.owner,f.base+'/history-readable-shops')).status,200);
+});
+
+test('a saved period regains full read scope through an explicit grant and loses all envelope signals on revocation',async()=>{
+ const f=await fixture();await f.paid();const second=await f.shop(20000),p=period([f.shopId,second]);
+ const input={clientKey:randomUUID(),baseRevision:0,period:p};ok(await call(f.owner,f.base+'/budget-periods','POST',input));
+ const shopper=await joinAdult(f,'Second shop shopper');
+ ok(await call(f.owner,f.base+'/commands','POST',{v:1,replayWindow:f.owner.window,clientKey:randomUUID(),shopId:second,kind:'shop.transferAuthority',base:{shopRevision:1,authorityEpoch:1},body:{newShopperId:shopper.id}}));
+ const path=f.base+'/budget-periods/'+p.id,partial=ok(await call(f.owner,path));
+ assert.deepEqual(Object.keys(partial),['permitted']);
+ await budgetGrant(f,shopper,f.owner,{shopId:second,shopRevision:1,authorityEpoch:2});
+ const full=ok(await call(f.owner,path));assert.equal(full.period.id,p.id);assert.equal(full.remaining.maximumMinor,15000);
+ assert.deepEqual(ok(await call(f.owner,path+'/record')).period,p);
+ assert.equal((await call(f.owner,f.base+'/budget-periods','POST',input)).status,404,'a read grant must not replay a former shopper write');
+ await budgetGrant(f,shopper,f.owner,{shopId:second,enabled:false,targetRevision:1,shopRevision:1,authorityEpoch:2});
+ assert.deepEqual(ok(await call(f.owner,path)),partial);
+ assert.equal((await call(f.owner,path+'/record')).status,404);
+ for(const secret of [second,p.title,'Future plan secret','50000','99999','remaining','reservations'])assert.equal(JSON.stringify(partial).includes(secret),false,secret);
+ assert.deepEqual(ok(await call(f.owner,f.base+'/budget-history','POST',{shopIds:[f.shopId,second,randomUUID()]})),partial);
+});
 
 test('Free manual evidence and saved observations remain accessible while paid history is gated',async()=>{
  const f=await fixture(),charge=entry('postedCharge',4000),recorded=await f.financial(charge);assert.equal(recorded.result.evidenceSource,'shopper_reported');assert.deepEqual(ok(await call(f.owner,f.base+`/shops/${f.shopId}/financial-evidence`,'POST',recorded.input)),recorded.result);

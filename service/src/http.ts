@@ -11,6 +11,8 @@ import {PriceBudgetHistory} from './history.js';
 import {observationWriteSchema,financialAppendSchema,financialReviewSchema,historyRetireSchema,periodWriteSchema,budgetQuerySchema} from './history-contracts.js';
 import {SharedMealChanges,sharedMealChangeSchema,sharedMealDismissSchema} from './shared-meal-changes.js';
 import {SharedMealIdeas,sharedIdeaWriteSchema} from './shared-meal-ideas.js';
+import { SharedStoreQuotes } from './shared-store-quotes.js';
+import { HouseholdMeasurement } from './measurement.js';
 import {MealMoves,grantChange,moveRequest,dismissMove} from './meal-moves.js';
 import {HelperReview} from './helper-review.js';
 import {PlacementReports} from './placement-reports.js';
@@ -35,6 +37,8 @@ export function createHTTPServer(options:HTTPOptions) {
   const mealMoves = new MealMoves(repository,options.billing);
   const mealIdeas = new SharedMealIdeas(repository,mealMoves);
   const mealChanges = new SharedMealChanges(repository,mealMoves);
+  const storeQuotes = new SharedStoreQuotes(repository);
+  const measurement = new HouseholdMeasurement(repository);
   const placementReports = new PlacementReports(repository);
   const limits=new Map<string,{count:number;until:number}>();
   return createServer(async(req,res)=>{
@@ -159,7 +163,7 @@ export function createHTTPServer(options:HTTPOptions) {
         z.object({}).strict().parse(await body(req));
         send(201,await repository.enroll(householdId,auth.identity));return;
       }
-      const payload=method==='POST'||method==='PUT'?await body(req):undefined;
+      const payload=method==='POST'||method==='PUT'||(method==='DELETE'&&/\/measurement-feedback$/.test(path))?await body(req):undefined;
       const ownPlacement=/^\/shops\/([^/]+)\/placement-reports\/mine\/([^/]+)$/.exec(path);
       const placementCommand=path==='/commands'&&method==='POST'&&typeof payload==='object'&&payload!==null&&'kind' in payload&&(payload.kind==='shop.reportPlaced'||payload.kind==='shop.reconcileReport')?parseCommand(payload):undefined;
       const placementRead=method==='GET'?/^\/shops\/([^/]+)\/placement-reports(?:\/[^/]+)?$/.exec(path):null;
@@ -214,6 +218,14 @@ export function createHTTPServer(options:HTTPOptions) {
           if(!managedView[2]&&method==='GET')return helperReview.current(ctx,grantId);
           if(!managedView[2]&&method==='PUT')return lifecycle.updateView(ctx,grantId,viewUpdateSchema.parse(payload));
         }
+        if (path === '/measurement/status' && method === 'GET') return measurement.status(ctx);
+        if (path === '/measurement/consent' && method === 'POST') return measurement.consent(ctx, payload);
+        if (path === '/measurement/withdraw' && method === 'POST') return measurement.withdraw(ctx, payload);
+        if (path === '/history-readable-shops' && method === 'GET') {
+          const cursor = url.searchParams.get('cursor');
+          if (cursor) uuid.parse(cursor);
+          return history.readableShops(ctx, cursor);
+        }
         if(path==='/bootstrap'&&method==='GET')return repository.bootstrap(ctx);
         if(path==='/replay-windows'&&method==='POST'){z.object({}).strict().parse(payload);return repository.window(ctx);}
         if(path==='/requests/mine'&&method==='GET') {
@@ -224,6 +236,21 @@ export function createHTTPServer(options:HTTPOptions) {
         const shopMatch=/^\/shops\/([^/]+)(.*)$/.exec(path);
         if(shopMatch) {
           const shopId=uuid.parse(shopMatch[1]),tail=shopMatch[2];
+          if (tail === '/measurement-feedback') {
+            if (method === 'GET') return measurement.read(ctx, shopId);
+            if (method === 'POST') return measurement.feedback(ctx, shopId, payload);
+            if (method === 'DELETE') return measurement.removeFeedback(ctx, shopId, payload);
+          }
+          if (tail === '/store-quotes' && method === 'GET') {
+            const cursor = url.searchParams.get('cursor');
+            if (cursor) uuid.parse(cursor);
+            return storeQuotes.read(ctx, shopId, cursor);
+          }
+          const storeQuoteAction = /^\/store-quotes\/(grants|pairs|proposals|adoptions)$/.exec(tail ?? '');
+          if (storeQuoteAction && method === 'POST') {
+            const actions = { grants: 'grant', pairs: 'pairs', proposals: 'proposals', adoptions: 'adoptions' } as const;
+            return storeQuotes.change(ctx, shopId, actions[storeQuoteAction[1] as keyof typeof actions], payload);
+          }
           if(tail==='/decisions'&&method==='POST')return decisions.create(ctx,shopId.toLowerCase(),payload);
           const decisionRoute=/^\/decisions\/([^/]+)(?:\/(outcome|promote))?$/.exec(tail??'');
           if(decisionRoute){

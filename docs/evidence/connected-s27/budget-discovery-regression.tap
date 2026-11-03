@@ -1,0 +1,15 @@
+TAP version 13
+# Subtest: unselected budget discovery finds an oldest third shop despite a separate cook link
+ok 1 - unselected budget discovery finds an oldest third shop despite a separate cook link
+  ---
+  duration_ms: 252.226625
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 487.34575

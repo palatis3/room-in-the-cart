@@ -18,5 +18,6 @@ export interface PeriodReceipt{periodId:UUID;revision:number;saved:true}
 export type PeriodResponse={permitted:PermittedSubtotal}|{periodId:UUID;revision:number;period:BudgetPeriod;permitted:PermittedSubtotal;futureReservedMinor:number;remaining:{minimumMinor:number|null;maximumMinor:number};reconciledEnteredPeriod:boolean};
 export interface ObservationWrite{clientKey:UUID;observation:PriceObservation}
 export interface PriceObservationPage{observations:PriceObservation[];nextCursor:UUID|null}
+export interface HistoryReadableShopPage{shopIds:UUID[];nextCursor:UUID|null}
 export interface BudgetPeriodPage{periods:{periodId:UUID;revision:number;updatedAt:string}[];nextCursor:UUID|null}
 export interface SavedBudgetPeriod{periodId:UUID;revision:number;period:BudgetPeriod}

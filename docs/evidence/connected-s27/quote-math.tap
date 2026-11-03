@@ -1,0 +1,60 @@
+TAP version 13
+# Subtest: separates item, checkout, incremental trip and elapsed time
+ok 1 - separates item, checkout, incremental trip and elapsed time
+  ---
+  duration_ms: 0.431584
+  ...
+# Subtest: unknown travel keeps the winner open and yields a conditional break-even
+ok 2 - unknown travel keeps the winner open and yields a conditional break-even
+  ---
+  duration_ms: 0.05575
+  ...
+# Subtest: unreviewed charges leave checkout and winner unknown
+ok 3 - unreviewed charges leave checkout and winner unknown
+  ---
+  duration_ms: 0.078625
+  ...
+# Subtest: unavailable or unknown availability gives no winner
+ok 4 - unavailable or unknown availability gives no winner
+  ---
+  duration_ms: 0.051375
+  ...
+# Subtest: unmatched quantities and multistore packages are incomparable
+ok 5 - unmatched quantities and multistore packages are incomparable
+  ---
+  duration_ms: 0.096
+  ...
+# Subtest: ties and missing minutes remain explicit
+ok 6 - ties and missing minutes remain explicit
+  ---
+  duration_ms: 0.037166
+  ...
+# Subtest: each cap uses its own scope and excludes incremental travel
+ok 7 - each cap uses its own scope and excludes incremental travel
+  ---
+  duration_ms: 0.290834
+  ...
+# Subtest: missing fee does not resolve a whole-checkout cap while a known item scope stays explicit
+ok 8 - missing fee does not resolve a whole-checkout cap while a known item scope stays explicit
+  ---
+  duration_ms: 0.042333
+  ...
+# Subtest: unknown eligibility preserves conditional deltas but withholds winner and break-even
+ok 9 - unknown eligibility preserves conditional deltas but withholds winner and break-even
+  ---
+  duration_ms: 0.175958
+  ...
+# Subtest: either option can have extra travel and cents stay exact at the accepted bound
+ok 10 - either option can have extra travel and cents stay exact at the accepted bound
+  ---
+  duration_ms: 0.230083
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 81.004542

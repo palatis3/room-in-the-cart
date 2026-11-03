@@ -1,0 +1,38 @@
+{
+  "baseline": "b0cbcd7",
+  "native": {
+    "result": "Passed",
+    "passedTests": 438,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "runtimeWarnings": []
+  },
+  "nativeResultBundle": ".build/ResumedReviewedNative.xcresult",
+  "nativeScope": "Production SwiftUI app and all native model tests, including recovered media edits, navigation readiness, scoped optional feedback, budget quote models, history read grants and contextual reminder identity. Separate screen suites remain in progress.",
+  "service": {
+    "integratedDatabaseSuite": {
+      "passed": 137,
+      "failed": 0,
+      "skipped": 0,
+      "migrations": "001–019",
+      "log": ".build/resumed-full-wire.log"
+    },
+    "storeQuoteReviewedEdges": {
+      "passed": 15,
+      "scope": "Dedicated HTTP/PostgreSQL/native wire suite, including oldest budget-granted shop with an independent cook scope. The dedicated suite overlaps the integrated suite and is reported separately.",
+      "evidence": "connected-s27/README.md"
+    }
+  },
+  "web": {
+    "passed": 72,
+    "failed": 0,
+    "skipped": 0,
+    "log": ".build/resumed-web-final-tests.log",
+    "productionBuild": ".build/resumed-web-final-build.log"
+  },
+  "remaining": [
+    "Connected quote and contextual reminder/navigation screen acceptance is in progress.",
+    "Public policy/terms/operator contact are owner inputs; page source is built locally and has not been published.",
+    "Paid Apple membership, actual SMTP setup, human Spanish review and physical-device/distribution checks remain separately pending."
+  ]
+}

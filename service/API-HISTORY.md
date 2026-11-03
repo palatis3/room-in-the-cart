@@ -4,7 +4,9 @@ Local service implementation. Migration 012 follows migrations 009–011. Wire D
 
 ## Authority and Free records
 
-Every route authenticates the fixed issuer/signed subject, live exact provider session, current household membership and enrolled device. Selected-helper contexts are rejected. Current adult shopper authority is checked independently for each shop; organizer status, paid seats, imported documents and client-supplied IDs cannot grant budget access. `X-Shop-ID` further narrows the scope when present.
+Every route authenticates the fixed issuer/signed subject, live exact provider session, current household membership and enrolled device. Selected-helper contexts are rejected. Reads independently require either the current adult shopper or an enabled `shop_budget_grant` for that adult and the shop's current authority epoch. A shopper transfer invalidates the former epoch's grants. Organizer status, paid seats, meal-planning access, imported documents and client-supplied IDs cannot grant budget access. `X-Shop-ID` further narrows the scope when present.
+
+All financial, observation and period mutations still require current shopper authority for every affected shop. A read grant cannot append evidence, close or reconcile a shop, retire history, save a period, or replay a write made before losing shopper authority. Period ownership remains private: a budget grant permits reading an owner's saved period only when that owner has current read access to every source; it does not grant another adult access to the owner's period record.
 
 Paid history, period planning and financial reconciliation refresh the existing Apple-backed named-seat entitlement on each call. Missing provider configuration returns `billing_unavailable`; lapse, seat removal or invalid status returns `membership_inactive`. They do not erase the saved raw records. Free remains able to record/read its currently authorized manual evidence, read a single saved observation, discover its own saved period IDs, read a saved period record when every source remains authorized, and explicitly close an app shop without claiming a financial reconciliation.
 
@@ -16,7 +18,8 @@ All `{h}` paths are `/v1/households/{h}`. POST mutations require the existing br
 
 | Route | Input | Result |
 |---|---|---|
-| `GET /shops/{s}/financial-evidence?cursor={entryId}` | — | `FinancialPage`, at most 50 entries and the current `SourceVersion`. Free/current shopper. |
+| `GET /history-readable-shops?cursor={shopId}` | — | `{shopIds:UUID[],nextCursor}`. Free discovery of at most 50 current budget-readable, nonretired sources. Only permitted IDs are returned, with selected-shop narrowing. A revoked, foreign or out-of-scope cursor is rejected. It does not change `GET /shops?scope=owned`, which still supplies the shopper-only mutation picker. |
+| `GET /shops/{s}/financial-evidence?cursor={entryId}` | — | `FinancialPage`, at most 50 entries and the current `SourceVersion`. Free/current budget reader. |
 | `POST /shops/{s}/financial-evidence` | `FinancialAppend` | `FinancialAppendReceipt`. Free/manual evidence. |
 | `POST /shops/{s}/financial-reviews` | `FinancialReview` | `FinancialReviewReceipt`. `allEvidenceEntered:true` requires paid tools; closing alone is Free. |
 | `POST /shops/{s}/history-retire` | `{clientKey,sourceVersion,confirm:true}` | `{shopId,retired:true}`; removes this source from history analysis without pretending the source data was erased. |

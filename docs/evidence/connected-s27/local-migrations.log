@@ -1,0 +1,22 @@
+                 version
+------------------------------------------
+ 001_household_requests.sql
+ 002_apple_billing.sql
+ 003_web_session.sql
+ 004_household_lock.sql
+ 005_session_and_policy_hardening.sql
+ 006_household_lifecycle.sql
+ 007_selected_helper_session.sql
+ 008_browser_email_auth.sql
+ 009_auth_maintenance.sql
+ 010_account_lifecycle.sql
+ 011_helper_review_and_shop_selection.sql
+ 012_price_budget_history.sql
+ 013_shared_meal_occurrences.sql
+ 014_shared_meal_moves.sql
+ 015_family_decisions.sql
+ 016_shared_meal_changes.sql
+ 017_shared_meal_ideas.sql
+ 018_shared_store_quotes.sql
+ 019_optional_measurement.sql
+(19 rows)

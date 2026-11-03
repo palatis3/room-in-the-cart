@@ -160,6 +160,29 @@ public actor HouseholdService {
               assignment.adults.contains(where: { $0.id == assignment.shopperId }) else { throw ClientError.invalidResponse }
         return assignment
     }
+    func measurementRequest<T: Decodable & Sendable>(path: String, method: String = "GET", body: Data? = nil) async throws -> T {
+        guard selectedGrantID == nil else { throw ClientError.accessEnded }
+        return try await perform(path, method: method, body: body)
+    }
+
+    func storeQuoteContext(shopID: UUID) throws -> StoreQuoteContext {
+        guard selectedGrantID == nil, selectedShopID == nil || selectedShopID == shopID,
+              let subject, let householdID, let memberID, let enrollment else {
+            throw ClientError.accessEnded
+        }
+        return StoreQuoteContext(subject: subject, householdID: householdID,
+                                 memberID: memberID, deviceID: enrollment.deviceId)
+    }
+
+    func storeQuoteRequest<T: Decodable & Sendable>(shopID: UUID, suffix: String = "", method: String = "GET",
+                                                   body: Data? = nil, cursor: UUID? = nil) async throws -> T {
+        _ = try storeQuoteContext(shopID: shopID)
+        let query = cursor.map { [URLQueryItem(name: "cursor", value: $0.uuidString.lowercased())] } ?? []
+        return try await perform("shops/\(shopID.uuidString.lowercased())/store-quotes" + suffix,
+                                 method: method, body: body, query: query,
+                                 reportingShopID: shopID.uuidString.lowercased())
+    }
+
     public func mealPlan(shopID: UUID) async throws -> SharedMealPlan {
         let plan: SharedMealPlan = try await perform("shops/\(shopID.uuidString.lowercased())/meal-plan", method: "GET")
         guard plan.shopId == shopID, plan.meals.count <= 100, plan.proposals.count <= 100 else { throw ClientError.invalidResponse }
@@ -527,7 +550,8 @@ public actor HouseholdService {
             throw error
         }
     }
-    // These routes independently verify current adult/shopper ownership and paid seats where required.
+    // These routes independently verify current budget read scope, shopper-only
+    // mutations and paid seats where required.
     // Historical shops need not be the bootstrap's currently active shop.
     private func historyContext() async throws {
         guard selectedGrantID == nil else { throw ClientError.accessEnded }
@@ -559,6 +583,11 @@ public actor HouseholdService {
         let page: HistoryOwnedShopPage = try await historyRead("shops", query: query)
         try validateHistoryPage(ids: page.shops.map(\.shopId), next: page.nextCursor, cursor: cursor, limit: 50)
         guard page.shops.allSatisfy({ $0.role == "shopper" && ["draft", "frozen", "placed", "closed"].contains($0.phase) && $0.revision > 0 && $0.authorityEpoch > 0 && HistoryValidation.date($0.createdAt) != nil }) else { throw ClientError.invalidResponse }
+        return page
+    }
+    public func historyReadableShops(cursor: String? = nil) async throws -> HistoryReadableShopPage {
+        let page: HistoryReadableShopPage = try await historyRead("history-readable-shops", query: historyCursor(cursor))
+        try validateHistoryPage(ids: page.shopIds, next: page.nextCursor, cursor: cursor, limit: 50)
         return page
     }
     public func priceObservations(cursor: String? = nil) async throws -> HistoryPriceObservationPage {

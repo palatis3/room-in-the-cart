@@ -196,6 +196,12 @@ public struct HistoryPermittedSubtotal: Codable, Equatable, Sendable {
               try projectedCommitment == HistoryValidation.rangeSum(shops.map(\.projectedCommitment)) else { throw ClientError.invalidResponse }
     }
 }
+/// Current read scope only; it does not identify writable shops or disclose a
+/// funding amount, title, household member or inaccessible-source count.
+public struct HistoryReadableShopPage: Codable, Equatable, Sendable {
+    public let shopIds: [String]; public let nextCursor: String?
+    public init(shopIds: [String], nextCursor: String?) { self.shopIds = shopIds; self.nextCursor = nextCursor }
+}
 public struct HistoryPriceObservationPage: Codable, Equatable, Sendable {
     public let observations: [HistoryPriceObservation]; public let nextCursor: String?
     public init(observations: [HistoryPriceObservation], nextCursor: String?) { self.observations = observations; self.nextCursor = nextCursor }

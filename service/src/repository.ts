@@ -10,7 +10,7 @@ import { checkout } from './checkout.js';
 export interface AuthContext { identity:VerifiedIdentity; deviceToken?:string; trustedDeviceId?:string;viewGrantId?:string;selectedShopId?:string;historicalReportShopId?:string }
 export interface Member { member_id:string; kind:'adult'|'child'; organizer:boolean; can_contribute:boolean; alias:string; state:string }
 export interface Context { db:Transaction; householdId:string; member:Member; deviceId:string; now:Date;viewGrantId?:string;selectedShopId?:string }
-export interface Shop { household_id:string;shop_id:string;shopper_id:string;authority_epoch:number;revision:number;phase:string;quote:QuoteBasis;frozen_revision:number|null;placed_revision:number|null }
+export interface Shop { household_id:string;shop_id:string;shopper_id:string;authority_epoch:number;revision:number;phase:string;quote:QuoteBasis;frozen_revision:number|null;placed_revision:number|null;store_basis_revision?:number|null;store_review_required?:boolean }
 interface RequestRow { request_id:string;author_id:string;shop_id:string;original_item:string;own_quantity:string|null;revision:number;authored_at:Date;received_at:Date;route:'current'|'next';status:OwnRequest['status'];clarification:string|null;followup_to:string|null }
 const editable=(r:RequestRow)=>r.status==='pending'||r.status==='clarified';
 export function ownRequest(r:RequestRow):OwnRequest {
@@ -74,7 +74,7 @@ export class HouseholdRepository {
         if(!grant.rowCount)throw accessEnded();
       }
       if(auth.viewGrantId&&auth.selectedShopId)throw unavailable();
-      if(auth.selectedShopId){const selected=await db.query("SELECT 1 FROM ritc.shop WHERE household_id=$1 AND shop_id=$2 AND ((shopper_id=$3 AND $4='adult') OR (phase<>'closed' AND $5::boolean))",[householdId,auth.selectedShopId,member.member_id,member.kind,member.can_contribute||member.organizer]);if(!selected.rowCount){
+      if(auth.selectedShopId){const selected=await db.query("SELECT 1 FROM ritc.shop s WHERE s.household_id=$1 AND s.shop_id=$2 AND ((s.shopper_id=$3 AND $4='adult') OR (s.phase<>'closed' AND $5::boolean) OR ($4='adult' AND EXISTS(SELECT 1 FROM ritc.shop_budget_grant g WHERE g.household_id=s.household_id AND g.shop_id=s.shop_id AND g.member_id=$3 AND g.enabled AND g.authority_epoch=s.authority_epoch)))",[householdId,auth.selectedShopId,member.member_id,member.kind,member.can_contribute||member.organizer]);if(!selected.rowCount){
         // HTTP supplies this marker only for placement-report routes; each still applies its reporter/current-shopper check.
         const historical=auth.historicalReportShopId===auth.selectedShopId&&member.kind==='adult'&&!auth.viewGrantId
           ? await db.query('SELECT 1 FROM ritc.shop_authority WHERE household_id=$1 AND shop_id=$2 AND member_id=$3 LIMIT 1',[householdId,auth.selectedShopId,member.member_id]) : null;
@@ -113,27 +113,44 @@ export class HouseholdRepository {
   }
   async bootstrap(ctx:Context) {
     const house=(await ctx.db.query('SELECT label FROM ritc.household WHERE household_id=$1',[ctx.householdId])).rows[0];
-    const candidates=(await ctx.db.query<{shop_id:string;shopper_id:string}>(`SELECT shop_id,shopper_id FROM ritc.shop WHERE household_id=$1 AND ($2::uuid IS NOT NULL AND shop_id=$2 OR $2::uuid IS NULL AND phase<>'closed') AND (shopper_id=$3 OR $4::boolean) ORDER BY created_at DESC,shop_id LIMIT 2`,[ctx.householdId,ctx.selectedShopId??null,ctx.member.member_id,ctx.member.can_contribute||ctx.member.organizer])).rows;
+    const candidates = (await ctx.db.query<{shop_id:string;shopper_id:string;budget_access:boolean}>(`
+      SELECT s.shop_id,s.shopper_id,
+        ($5::boolean AND EXISTS(SELECT 1 FROM ritc.shop_budget_grant g
+          WHERE g.household_id=s.household_id AND g.shop_id=s.shop_id AND g.member_id=$3
+          AND g.enabled AND g.authority_epoch=s.authority_epoch)) AS budget_access
+      FROM ritc.shop s WHERE s.household_id=$1
+      AND ($2::uuid IS NOT NULL AND s.shop_id=$2 OR $2::uuid IS NULL AND s.phase<>'closed')
+      AND (s.shopper_id=$3 OR $4::boolean OR ($5::boolean AND EXISTS(
+        SELECT 1 FROM ritc.shop_budget_grant g WHERE g.household_id=s.household_id AND g.shop_id=s.shop_id
+        AND g.member_id=$3 AND g.enabled AND g.authority_epoch=s.authority_epoch)))
+      ORDER BY s.created_at DESC,s.shop_id LIMIT 2`,
+      [ctx.householdId,ctx.selectedShopId??null,ctx.member.member_id,
+       ctx.member.can_contribute||ctx.member.organizer,ctx.member.kind==='adult'&&!ctx.viewGrantId])).rows;
     const shop=ctx.selectedShopId?candidates[0]:candidates.length===1?candidates[0]:undefined;
     if(ctx.selectedShopId&&!shop)throw accessEnded();
     const helper=(await ctx.db.query(`SELECT g.grant_id,g.shop_id,g.mode FROM ritc.view_grant g JOIN ritc.member creator ON creator.household_id=g.household_id AND creator.member_id=g.created_by
       WHERE g.household_id=$1 AND g.recipient_id=$2 AND g.revoked_at IS NULL AND g.expires_at>$3 AND creator.state='active' AND ($4::uuid IS NULL OR g.grant_id=$4) ORDER BY g.as_of DESC,g.grant_id LIMIT 1`,[ctx.householdId,ctx.member.member_id,ctx.now,ctx.viewGrantId??null])).rows[0];
     if(ctx.viewGrantId&&!helper)throw accessEnded();
     const isShopper=!ctx.viewGrantId&&ctx.member.kind==='adult'&&shop?.shopper_id===ctx.member.member_id;
-    const helperRole=!ctx.selectedShopId&&!isShopper&&!ctx.member.organizer&&helper;
+    const hasBudgetAccess = !ctx.viewGrantId && ctx.member.kind === 'adult' &&
+      ((await ctx.db.query(`SELECT 1 FROM ritc.shop_budget_grant g
+        JOIN ritc.shop s USING(household_id,shop_id,authority_epoch)
+        WHERE g.household_id=$1 AND g.member_id=$2 AND g.enabled AND s.phase<>'closed' LIMIT 1`,
+        [ctx.householdId,ctx.member.member_id])).rowCount ?? 0) > 0;
+    const helperRole=!ctx.selectedShopId&&!isShopper&&!ctx.member.organizer&&!hasBudgetAccess&&helper;
     const planning = !ctx.viewGrantId && !helperRole && !isShopper && shop && ctx.member.kind==='adult' &&
       (await ctx.db.query(`SELECT 1 FROM ritc.meal_planner p JOIN ritc.shop s USING(household_id,shop_id,authority_epoch)
        WHERE p.household_id=$1 AND p.shop_id=$2 AND p.planner_id=$3 AND s.phase<>'closed'`,[ctx.householdId,shop.shop_id,ctx.member.member_id])).rowCount;
     return{household:{id:ctx.householdId,label:house.label as string},memberId:ctx.member.member_id,
-      canSelectShop:!helperRole&&!ctx.viewGrantId&&ctx.member.kind==='adult'&&(ctx.member.can_contribute||ctx.member.organizer||isShopper),
+      canSelectShop:!helperRole&&!ctx.viewGrantId&&ctx.member.kind==='adult'&&(ctx.member.can_contribute||ctx.member.organizer||isShopper||hasBudgetAccess),
       selectionRequired:!helperRole&&!ctx.viewGrantId&&!ctx.selectedShopId&&candidates.length>1,role:isShopper?'shopper':ctx.member.organizer?'organizer':helperRole?(helper.mode==='edit'?'editor':'helper'):'contributor',shopId:helperRole?helper.shop_id:shop?.shop_id??null,...(helperRole?{grantId:helper.grant_id}:{}),enrolled:true,queueConsent:false,
-      capabilities:[...(planning?['meal_proposals']:[]),...(ctx.member.can_contribute?['own_requests']:[]),...(isShopper?['shopper_inbox','request_preview','shopper_commands']:[]),...(ctx.member.organizer?['household_admin']:[]),...(helperRole?['helper_view',...(helper.mode==='edit'?['helper_propose']:[])]:[])]};
+      capabilities:[...(!helperRole&&!ctx.viewGrantId&&(isShopper||shop?.budget_access)?['store_quotes']:[]),...(planning?['meal_proposals']:[]),...(ctx.member.can_contribute?['own_requests']:[]),...(isShopper?['shopper_inbox','request_preview','shopper_commands']:[]),...(ctx.member.organizer?['household_admin']:[]),...(helperRole?['helper_view',...(helper.mode==='edit'?['helper_propose']:[])]:[])]};
   }
   async shops(ctx:Context,scope:'active'|'owned',after:string|null){
     if(ctx.viewGrantId||ctx.member.kind!=='adult')throw unavailable();
     let cursor:string|undefined;
-    if(after){const record=(await ctx.db.query("SELECT created_at::text AS created_at FROM ritc.shop WHERE household_id=$1 AND shop_id=$2 AND ($3='active' AND phase<>'closed' AND (shopper_id=$4 OR $5::boolean) OR $3='owned' AND shopper_id=$4)",[ctx.householdId,after,scope,ctx.member.member_id,ctx.member.can_contribute||ctx.member.organizer])).rows[0];if(!record)throw unavailable();cursor=record.created_at;}
-    const rows=(await ctx.db.query("SELECT shop_id,shopper_id,created_at,phase,revision,authority_epoch FROM ritc.shop WHERE household_id=$1 AND ($2='active' AND phase<>'closed' AND (shopper_id=$3 OR $6::boolean) OR $2='owned' AND shopper_id=$3) AND ($4::timestamptz IS NULL OR (created_at,shop_id)<($4,$5::uuid)) ORDER BY created_at DESC,shop_id DESC LIMIT 51",[ctx.householdId,scope,ctx.member.member_id,cursor??null,after,ctx.member.can_contribute||ctx.member.organizer])).rows;
+    if(after){const record=(await ctx.db.query("SELECT created_at::text AS created_at FROM ritc.shop WHERE household_id=$1 AND shop_id=$2 AND ($3='active' AND phase<>'closed' AND (shopper_id=$4 OR $5::boolean OR EXISTS(SELECT 1 FROM ritc.shop_budget_grant g WHERE g.household_id=ritc.shop.household_id AND g.shop_id=ritc.shop.shop_id AND g.member_id=$4 AND g.enabled AND g.authority_epoch=ritc.shop.authority_epoch)) OR $3='owned' AND shopper_id=$4)",[ctx.householdId,after,scope,ctx.member.member_id,ctx.member.can_contribute||ctx.member.organizer])).rows[0];if(!record)throw unavailable();cursor=record.created_at;}
+    const rows=(await ctx.db.query("SELECT shop_id,shopper_id,created_at,phase,revision,authority_epoch FROM ritc.shop WHERE household_id=$1 AND ($2='active' AND phase<>'closed' AND (shopper_id=$3 OR $6::boolean OR EXISTS(SELECT 1 FROM ritc.shop_budget_grant g WHERE g.household_id=ritc.shop.household_id AND g.shop_id=ritc.shop.shop_id AND g.member_id=$3 AND g.enabled AND g.authority_epoch=ritc.shop.authority_epoch)) OR $2='owned' AND shopper_id=$3) AND ($4::timestamptz IS NULL OR (created_at,shop_id)<($4,$5::uuid)) ORDER BY created_at DESC,shop_id DESC LIMIT 51",[ctx.householdId,scope,ctx.member.member_id,cursor??null,after,ctx.member.can_contribute||ctx.member.organizer])).rows;
     return{shops:rows.slice(0,50).map(s=>({shopId:s.shop_id,createdAt:s.created_at.toISOString(),phase:s.phase,role:s.shopper_id===ctx.member.member_id?'shopper':'contributor',...(s.shopper_id===ctx.member.member_id?{revision:s.revision,authorityEpoch:s.authority_epoch}:{})})),nextCursor:rows.length>50?rows[49].shop_id:null};
   }
   async requests(ctx:Context,after:string|null,shopId?:string) {
@@ -185,7 +202,7 @@ export class HouseholdRepository {
   }
   async adultShop(ctx:Context,shopId:string) {
     const s=await this.shop(ctx,shopId);this.requireShopper(ctx,s);
-    return{shopId:s.shop_id,shopRevision:s.revision,authorityEpoch:s.authority_epoch,phase:s.phase,quote:s.quote,meals:await this.meals(ctx,shopId),lines:await this.lines(ctx,shopId),frozenRevision:s.frozen_revision,placedRevision:s.placed_revision};
+    return{shopId:s.shop_id,shopRevision:s.revision,authorityEpoch:s.authority_epoch,phase:s.phase,quote:s.quote,meals:await this.meals(ctx,shopId),lines:await this.lines(ctx,shopId),frozenRevision:s.frozen_revision,placedRevision:s.placed_revision,storeBasisRevision:s.store_basis_revision??null,storeReviewRequired:s.store_review_required??false};
   }
   private async snapshot(ctx:Context,shopId:string,operationId:string,purpose:string) {
     const shop=await this.shop(ctx,shopId),lines=await this.lines(ctx,shopId);
@@ -355,12 +372,27 @@ export class HouseholdRepository {
         await ctx.db.query('INSERT INTO ritc.shared_meal_revision(household_id,shop_id,occurrence_id,revision,actor_id,meal) VALUES($1,$2,$3,$4,$5,$6)',
           [ctx.householdId,shop.shop_id,occurrenceId,shop.revision+1,ctx.member.member_id,meal]);
       }
+      const reviewingStore = b.reviewedStoreBasisRevision !== undefined;
+      if (reviewingStore && b.reviewedStoreBasisRevision !== shop.store_basis_revision) {
+        throw new ServiceError(409,'store_review_required','Review prices and charges for the current selected store.');
+      }
+      // Partial pricing remains useful draft work. A matching store review token
+      // clears the freeze guard only once every cost is known and still current.
+      const completedStoreReview = reviewingStore && b.quote.complete &&
+        checkout(b.lines,b.quote).totalMinor !== null && Date.parse(b.quote.expiresAt) > ctx.now.getTime();
       await this.setLines(ctx,shop.shop_id,b.lines);
       await ctx.db.query('UPDATE ritc.shop SET quote=$3,revision=revision+1 WHERE household_id=$1 AND shop_id=$2',[ctx.householdId,shop.shop_id,b.quote]);
+      if (completedStoreReview) {
+        await ctx.db.query('UPDATE ritc.shop SET store_review_required=false WHERE household_id=$1 AND shop_id=$2',
+          [ctx.householdId,shop.shop_id]);
+      }
       await this.snapshot(ctx,shop.shop_id,operationId,'patch');return this.receipt(ctx,c,operationId,'patched');
     }
     if(c.kind==='shop.freeze') {
       this.requireDraft(shop);
+      if (shop.store_review_required) {
+        throw new ServiceError(409,'store_review_required','Review current item prices and charges after changing stores.');
+      }
       await ctx.db.query("UPDATE ritc.shop SET phase='frozen',revision=revision+1,frozen_revision=revision+1 WHERE household_id=$1 AND shop_id=$2",[ctx.householdId,shop.shop_id]);
       await this.snapshot(ctx,shop.shop_id,operationId,'freeze');return this.receipt(ctx,c,operationId,'frozen');
     }
