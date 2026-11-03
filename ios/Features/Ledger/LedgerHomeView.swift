@@ -218,29 +218,33 @@ struct LedgerHistoryView: View {
         Section(ledgerText(title)) {
             if lines.isEmpty { Text(ledgerText("Nothing here yet.")).foregroundStyle(Theme.secondary) }
             ForEach(lines.sorted { $0.originalOrder < $1.originalOrder }, id: \.id) { line in
-                VStack(alignment: .leading, spacing: 8) {
-                    NavigationLink(line.name) { LedgerIngredientView(model: model, shopID: shopID, lineID: line.id) }
-                    if let who = line.handledBy { Text(ledgerFormat("Handled by %@", who)) }
-                    if let date = line.trashedAt ?? line.handledAt ?? line.checkedAt {
-                        Text(date.formatted(date: .complete, time: .shortened)).font(.footnote)
-                    }
-                    let canRestore = kind != 2 || !(shop?.contributions(forLineID: line.id).isEmpty ?? true)
-                    if !canRestore {
-                        Text(ledgerText("All sources for this item were removed. Add a new item if you need it again."))
-                            .font(.footnote).foregroundStyle(Theme.secondary)
-                    }
-                    Button(ledgerText(kind == 2 ? "Restore" : "Reopen")) {
-                        Task {
-                            _ = await model.editShop(key: "restore-\(line.id)", shopID: shopID) { ledger in
-                                if kind == 2 { try ledger.restore(lineID: line.id) }
-                                else if kind == 1 { try ledger.reopen(lineID: line.id) }
-                                else { try ledger.setChecked(lineID: line.id, checked: false) }
-                            }
-                            focus = .result
+                let canRestore = kind != 2 || !(shop?.contributions(forLineID: line.id).isEmpty ?? true)
+                NavigationLink {
+                    LedgerIngredientView(model: model, shopID: shopID, lineID: line.id)
+                } label: {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(line.name)
+                        if let who = line.handledBy { Text(ledgerFormat("Handled by %@", who)) }
+                        if let date = line.trashedAt ?? line.handledAt ?? line.checkedAt {
+                            Text(date.formatted(date: .complete, time: .shortened)).font(.footnote)
                         }
-                    }.disabled(model.saving || model.hasPendingSave || !canRestore).frame(minHeight: 44)
-                        .accessibilityLabel(ledgerFormat(kind == 2 ? "Restore %@" : "Reopen %@", line.name))
-                }.padding(.vertical, 5)
+                        if !canRestore {
+                            Text(ledgerText("All sources for this item were removed. Add a new item if you need it again."))
+                                .font(.footnote).foregroundStyle(Theme.secondary)
+                        }
+                    }.padding(.vertical, 5)
+                }
+                Button(ledgerText(kind == 2 ? "Restore" : "Reopen")) {
+                    Task {
+                        _ = await model.editShop(key: "restore-\(line.id)", shopID: shopID) { ledger in
+                            if kind == 2 { try ledger.restore(lineID: line.id) }
+                            else if kind == 1 { try ledger.reopen(lineID: line.id) }
+                            else { try ledger.setChecked(lineID: line.id, checked: false) }
+                        }
+                        focus = .result
+                    }
+                }.disabled(model.saving || model.hasPendingSave || !canRestore).frame(minHeight: 44)
+                    .accessibilityLabel(ledgerFormat(kind == 2 ? "Restore %@" : "Reopen %@", line.name))
             }
         }
     }

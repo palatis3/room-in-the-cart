@@ -32,9 +32,15 @@ struct LedgerImportView: View {
                     }
                 }
                 Section {
-                    ForEach(preview.lines.indices, id: \.self) { index in
-                        let row = preview.lines[index]
-                        LedgerImportRowView(line: Binding(get: { self.preview!.lines[index] }, set: { self.preview!.lines[index] = $0 }),
+                    let rows = Binding<[StagedImportLine]>(get: {
+                        guard let current = self.preview, current.id == preview.id else { return [] }
+                        return current.lines
+                    }, set: { updated in
+                        guard self.preview?.id == preview.id else { return }
+                        self.preview?.lines = updated
+                    })
+                    ForEach(preview.lines) { row in
+                        LedgerImportRowView(line: captureDraftBinding(row, in: rows),
                                             matches: matches(for: row, preview: preview),
                                             choice: Binding(get: { choices[row.id] ?? "" }, set: { setChoice($0, for: row) }),
                                             onEdited: { refreshMatches(changedID: row.id) })
@@ -62,7 +68,7 @@ struct LedgerImportView: View {
                         Button(captureText("Edit captured fields")) { showCapture = true }
                             .disabled(model.saving || model.hasPendingSave || !captureAuthorized)
                     } else {
-                        Button(ledgerText("Edit original text")) { self.preview = nil; choices = [:] }
+                        Button(ledgerText("Edit original text")) { self.preview = nil; choices = [:]; importID = UUID() }
                             .disabled(model.saving || model.hasPendingSave)
                     }
                 }
@@ -163,15 +169,16 @@ struct LedgerImportView: View {
         return saved + staged
     }
     private func setChoice(_ value: String, for row: StagedImportLine) {
+        guard let preview, preview.lines.contains(where: { $0.id == row.id }) else { return }
         choices[row.id] = value
-        if value != "new", let preview {
+        if value != "new" {
             for other in preview.lines where choices[other.id]?.hasSuffix(":\(row.proposedLineID)") == true {
                 choices[other.id] = ""
             }
         }
     }
     private func refreshMatches(changedID: UUID) {
-        guard let shop, let preview else { return }
+        guard let shop, let preview, preview.lines.contains(where: { $0.id == changedID }) else { return }
         if preview.lines.contains(where: { $0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) {
             choices[changedID] = ""
             return

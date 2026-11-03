@@ -182,6 +182,42 @@ import XCTest
         assertText("Thursday lunch")
     }
 
+    func testStagedListCanReturnToOriginalAndMergeADuplicateAfterRestart() throws {
+        launch(reset: true)
+        tap(element("openPickupList"))
+        tap(element("ledgerStartShop"))
+        fill("Saturday market", into: "ledgerShopName")
+        tap(element("ledgerCreateShop"))
+        tap(element("ledgerImport"))
+        fill("2 wraps", into: "ledgerImportText")
+        tap(element("ledgerReviewImport"))
+        tap(app.buttons["Edit original text"])
+        XCTAssertEqual(element("ledgerImportText").value as? String, "2 wraps")
+        tap(element("ledgerReviewImport"))
+        tap(element("ledgerCommitImport"))
+        let line = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "ledgerInspect-")).firstMatch
+        reveal(line)
+        let id = line.identifier
+        restart()
+        tap(element("openPickupList"))
+        reveal(element(id))
+        tap(element("ledgerImport"))
+        fill("2 wraps", into: "ledgerImportText")
+        tap(element("ledgerReviewImport"))
+        XCTAssertFalse(element("ledgerCommitImport").isEnabled)
+        tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "How to add this line")).firstMatch)
+        tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Merge same need")).firstMatch)
+        tap(element("ledgerCommitImport"))
+        reveal(element(id))
+        XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "ledgerInspect-")).count, 1)
+        tap(element(id.replacingOccurrences(of: "ledgerInspect-", with: "ledgerCheck-")))
+        tap(app.buttons["Recently checked, Handled and Trash"])
+        tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Reopen ")).firstMatch)
+        XCTAssertTrue(app.navigationBars["List history"].exists)
+        tap(app.buttons["Done"])
+        reveal(element(id))
+    }
+
     private func launch(reset: Bool) {
         app.launchArguments = ["--ui-testing", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         if reset { app.launchArguments.append("--reset-test-workspace") }
