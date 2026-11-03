@@ -6,6 +6,7 @@ import { HouseholdRepository,type AuthContext } from './repository.js';
 import { BillingService,billingVerifySchema,billingSeatsSchema,billingNotificationSchema } from './billing/service.js';
 import { ServiceError,accessEnded,invalid } from './errors.js';
 import {BrowserAuthService,emailStartSchema,emailVerifySchema,type BrowserIdentity} from './browser-auth.js';
+import {DecisionHistory} from './decision-history.js';
 import {PriceBudgetHistory} from './history.js';
 import {observationWriteSchema,financialAppendSchema,financialReviewSchema,historyRetireSchema,periodWriteSchema,budgetQuerySchema} from './history-contracts.js';
 import {MealMoves,grantChange,moveRequest,dismissMove} from './meal-moves.js';
@@ -28,6 +29,7 @@ function cookie(req:IncomingMessage,name='ritc_session'):string|null {
 export function createHTTPServer(options:HTTPOptions) {
   const repository=options.repository,verifier=options.verifier??new DenyIdentityVerifier();
   const lifecycle=new HouseholdLifecycle(repository),helperReview=new HelperReview(lifecycle),history=new PriceBudgetHistory(repository,options.billing);
+  const decisions = new DecisionHistory(options.billing);
   const mealMoves = new MealMoves(repository,options.billing);
   const placementReports = new PlacementReports(repository);
   const limits=new Map<string,{count:number;until:number}>();
@@ -177,6 +179,7 @@ export function createHTTPServer(options:HTTPOptions) {
         if(path==='/guardian/enrollment'&&method==='POST')throw new ServiceError(503,'consent_unavailable','Child enrollment is unavailable until verified guardian consent is configured.');
         const consentMatch=/^\/guardian\/consents\/([^/]+)\/revoke$/.exec(path);
         if(consentMatch&&method==='POST'){z.object({}).strict().parse(payload);return lifecycle.revokeConsent(ctx,uuid.parse(consentMatch[1]));}
+        if(path==='/decisions'&&method==='GET')return decisions.list(ctx,url.searchParams);
         if(path==='/price-observations'&&method==='POST')return history.observe(ctx,observationWriteSchema.parse(payload));
         if(path==='/price-observations'&&method==='GET'){const cursor=url.searchParams.get('cursor');if(cursor)uuid.parse(cursor);return history.observations(ctx,cursor);}
         const observation=/^\/price-observations\/([^/]+)$/.exec(path);
@@ -216,6 +219,13 @@ export function createHTTPServer(options:HTTPOptions) {
         const shopMatch=/^\/shops\/([^/]+)(.*)$/.exec(path);
         if(shopMatch) {
           const shopId=uuid.parse(shopMatch[1]),tail=shopMatch[2];
+          if(tail==='/decisions'&&method==='POST')return decisions.create(ctx,shopId.toLowerCase(),payload);
+          const decisionRoute=/^\/decisions\/([^/]+)(?:\/(outcome|promote))?$/.exec(tail??'');
+          if(decisionRoute){
+            const id=uuid.parse(decisionRoute[1]).toLowerCase(),action=decisionRoute[2];
+            if(!action&&method==='GET')return decisions.read(ctx,shopId.toLowerCase(),id);
+            if((action==='outcome'||action==='promote')&&method==='POST')return decisions.update(ctx,shopId.toLowerCase(),id,action,payload);
+          }
           if(tail==='/placement-reports'&&method==='GET'){const cursor=url.searchParams.get('cursor');if(cursor)uuid.parse(cursor);return placementReports.pending(ctx,shopId,cursor);}
           if(tail==='/placement-reports/current-shop'&&method==='GET')return placementReports.currentShop(ctx,shopId);
           const placementDetail=/^\/placement-reports\/([^/]+)$/.exec(tail??'');
