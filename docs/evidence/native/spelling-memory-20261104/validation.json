@@ -87,6 +87,14 @@
     "failures": 0,
     "scope": "Ordinary Debug target. Eight spelling store, eleven contributor request and seven account deletion tests passed. The current enrolled member and selected language bind the spelling review. Changing the review or locking access rejects the stale scope. Separate member, account, language and private-workspace storage survives unrelated deletion. A blocked local account purge can be retried after sign-out and the account marker rejects stale writes.",
     "compiledDebug": "Executable, assets, privacy, environment and embedded extensions passed verification.",
+    "archive": {
+      "sourceCommit": "1ee83aa7b6822c83c0fdc615aa6bffb129679123",
+      "path": ".build/ContributorSpelling20261104/RoomInTheCart-ContributorSpelling.xcarchive",
+      "executableSHA256": "6bd63e23553fc192305a63b68ad6478d7da7cb12af9957e979306efe79b3ef3a",
+      "executableUUID": "05506B28-7B20-304C-84AA-97654D0EC9A3",
+      "result": "Unsigned arm64 Release archive passed executable, asset, privacy, environment and embedded extension verification.",
+      "strictDistributionMetadataResult": "Release metadata is incomplete: HouseholdSubscriptionProductID, PrivacyPolicyURL, TermsOfUseURL, SupportURL"
+    },
     "firstPhotosRun": {
       "result": ".build/ContributorSpelling20261104/Photos.xcresult",
       "harnessSHA256": "a8b9c40f89ad454f2d8eaef7a1987f80a408cf98f0cd8f92d20eb75250c6996d",
