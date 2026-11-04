@@ -47,6 +47,28 @@ class AppConfigurationTests(unittest.TestCase):
             with self.subTest(value=value):
                 self.assertFalse(valid_page_url(value))
 
+    def test_https_pages_reject_nonpublic_hosts_and_ambiguous_url_syntax(self):
+        for value in (
+            "https://127.0.0.1/help", "https://127.1/help", "https://[::1]/help", "https://10.0.0.4/privacy",
+            "https://[::ffff:127.0.0.1]/help", "https://224.0.0.1/help", "https://staging.local/support",
+            "https://example.com./privacy", "https://router.home.arpa/support", "https://intranet/support",
+            "https://grocery-app.com:99999/support", "https://grocery-app.com:0/support", "https://grocery-app.com:/support",
+            "https://grocery-app.com/te\nrms", "https://grocery-app.com\\bad/support", "https://grocery-app.com/te\u202erms",
+            "https://[2606:4700::1111]garbage/support", "https://grocery-app..com/support",
+            "https://[fec0::1]/help", "https://[4000::1]/help", "https://[3fff::1]/help",
+            "https://192.0.0.8/help", "https://192.88.99.2/help", "https://[64:ff9b::7f00:1]/help",
+        ):
+            with self.subTest(value=value):
+                self.assertFalse(valid_page_url(value))
+        for value in (
+            "HTTPS://support.grocery-app.com.:8443/es/help?language=es#account",
+            "https://ayúda.grocery-app.com/privacidad", "https://[2606:4700::1111]/support",
+            "https://8.8.8.8/help", "https://[::ffff:8.8.8.8]/help",
+            "https://192.0.0.9/help", "https://[2001:3::1]/help", "https://[64:ff9b::808:808]/help",
+        ):
+            with self.subTest(value=value):
+                self.assertTrue(valid_page_url(value))
+
     def test_user_supplied_public_contact_reaches_all_environments_without_staging_fallback(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
@@ -94,6 +116,9 @@ class AppConfigurationTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "SupportURL"):
                 require_release_metadata(info)
             info["SupportURL"] = "https://support.invalid"
+            with self.assertRaisesRegex(ValueError, "SupportURL"):
+                require_release_metadata(info)
+            info["SupportURL"] = "https://127.0.0.1/support"
             with self.assertRaisesRegex(ValueError, "SupportURL"):
                 require_release_metadata(info)
 

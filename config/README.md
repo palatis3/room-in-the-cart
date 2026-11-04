@@ -12,12 +12,12 @@
 | `householdSubscriptionProductID` | `HouseholdSubscriptionProductID` | Permanent Apple product ID for the signed app and service environment |
 | `privacyPolicyURL` | `PrivacyPolicyURL` | Operator-approved public HTTPS privacy policy |
 | `termsOfUseURL` | `TermsOfUseURL` | Operator-approved public HTTPS purchase/use terms |
-| `supportURL` | `SupportURL` | Optional operator-owned public HTTPS support page |
+| `supportURL` | `SupportURL` | Operator-owned public HTTPS support page for distribution |
 | `supportEmail` | `SupportEmail` | Bare support address; defaults to the supplied address in `public-contact.json` |
 | `operatorName` | `OperatorName` | Supplied business name, Venture House Group LLC; literal text without control/format characters |
 | `helpURL` | `HelpURL` | Optional public HTTPS help page; native help works offline |
 
-Page URLs reject credentials, unresolved variables and test/example hosts. Empty values stay visibly unavailable. The build also records `RITCBuildEnvironment` for the reviewed support summary. Existing staging `/help`, `/privacy`, `/terms` and `/support` routes returned 404 on 2026-11-03, so they have not been configured as working pages. No support email or public policy is invented by the app.
+Page URLs reject credentials, unresolved variables, malformed ports, private addresses and special-use hosts. Empty values stay visibly unavailable. The build also records `RITCBuildEnvironment` for the reviewed support summary. Existing staging `/help`, `/privacy`, `/terms` and `/support` routes returned 404 on 2026-11-03, so they have not been configured as working pages. No support email or public policy is invented by the app. [IANA special-use names](https://www.iana.org/assignments/special-use-domain-names), [IPv4 address registry](https://www.iana.org/assignments/iana-ipv4-special-registry), [IPv6 address registry](https://www.iana.org/assignments/iana-ipv6-special-registry)
 
 The source now includes bilingual public information pages for those four paths in `web/src/public-pages*`, with the supplied operator business Venture House Group LLC and `mailto:hello@roominthecart.com` contact in `web/src/public-site-configuration.ts`. Operator names reject control/format characters, line separators, unresolved variables, surrounding whitespace and more than 300 UTF-8 bytes. Both native and public contact validators reject whitespace, headers, query/fragment and percent-encoded payloads. The contact opens an email composer without sending. Mailbox delivery has not been tested. The pages are built/tested locally and explicitly disclose unfinished operator policy/terms, retention and human-language review. Publishing those sources and approving the release pages remain separate owner steps; their existence in source does not make a configured native URL operational.
 

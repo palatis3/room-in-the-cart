@@ -1,4 +1,5 @@
 """Public native build configuration. Never read deployment secrets here."""
+import ipaddress
 import json
 import re
 import unicodedata
@@ -18,6 +19,19 @@ PUBLIC_SETTINGS = (
 )
 PAGE_KEYS = {"privacyPolicyURL", "termsOfUseURL", "supportURL", "helpURL"}
 RELEASE_METADATA = ("HouseholdSubscriptionProductID", "PrivacyPolicyURL", "TermsOfUseURL", "SupportURL")
+NONPUBLIC_PAGE_DOMAINS = ("alt", "arpa", "example", "example.com", "example.net", "example.org",
+                          "internal", "invalid", "local", "localhost", "onion", "test")
+IPV4_PROTOCOL_ADDRESSES = ipaddress.ip_network("192.0.0.0/24")
+IPV4_PUBLIC_EXCEPTIONS = {ipaddress.ip_address("192.0.0.9"), ipaddress.ip_address("192.0.0.10")}
+IPV4_RETIRED_RELAY = ipaddress.ip_network("192.88.99.0/24")
+IPV6_PUBLIC_UNICAST = ipaddress.ip_network("2000::/3")
+IPV6_PROTOCOL_ADDRESSES = ipaddress.ip_network("2001::/23")
+IPV6_PUBLIC_EXCEPTIONS = tuple(map(ipaddress.ip_network, (
+    "2001:1::1/128", "2001:1::2/128", "2001:1::3/128", "2001:3::/32", "2001:4:112::/48",
+    "2001:20::/28", "2001:30::/28",
+)))
+IPV6_SPECIAL_NONPUBLIC = tuple(map(ipaddress.ip_network, ("2002::/16", "3fff::/20")))
+IPV6_TRANSLATION_PREFIX = ipaddress.ip_network("64:ff9b::/96")
 
 
 def valid_operator_name(value):
@@ -35,18 +49,46 @@ def valid_support_email(value):
     return len(local) <= 64 and not local.endswith(".") and ".." not in local and all(len(label) <= 63 for label in domain.split("."))
 
 
+def valid_page_address(address):
+    # macOS system Python and CI can have different ipaddress registry data.
+    if isinstance(address, ipaddress.IPv6Address):
+        if address.ipv4_mapped is not None:
+            address = address.ipv4_mapped
+        elif address in IPV6_TRANSLATION_PREFIX:
+            address = ipaddress.IPv4Address(int(address) & 0xffffffff)
+        else:
+            if address in IPV6_PROTOCOL_ADDRESSES:
+                return any(address in network for network in IPV6_PUBLIC_EXCEPTIONS)
+            return (address in IPV6_PUBLIC_UNICAST and address.is_global
+                    and not any(address in network for network in IPV6_SPECIAL_NONPUBLIC))
+    if address in IPV4_PROTOCOL_ADDRESSES:
+        return address in IPV4_PUBLIC_EXCEPTIONS
+    return address.is_global and not address.is_multicast and address not in IPV4_RETIRED_RELAY
+
+
 def valid_page_url(value):
-    if not isinstance(value, str) or not value or value != value.strip() or "$(" in value:
+    if not isinstance(value, str) or not value or "$(" in value or "\\" in value:
+        return False
+    if any(char.isspace() or unicodedata.category(char) in ("Cc", "Cf") for char in value):
         return False
     try:
         url = urlsplit(value)
-        host = (url.hostname or "").lower()
-        reserved = ("example.com", "example.org", "example.net")
-        return (url.scheme.lower() == "https" and bool(host) and url.username is None and url.password is None
-                and host != "localhost" and not host.endswith((".invalid", ".test"))
-                and not any(host == domain or host.endswith("." + domain) for domain in reserved))
+        if url.scheme != "https" or url.username is not None or url.password is not None:
+            return False
+        if not re.fullmatch(r"(?:\[[0-9a-fA-F:.]+\]|[^:\[\]]+)(?::[0-9]+)?", url.netloc) or url.port == 0:
+            return False
+        host = (url.hostname or "").encode("idna").decode("ascii").lower().removesuffix(".")
     except ValueError:
         return False
+    if any(host == domain or host.endswith("." + domain) for domain in NONPUBLIC_PAGE_DOMAINS):
+        return False
+    try:
+        address = ipaddress.ip_address(host)
+    except ValueError:
+        labels = host.split(".")
+        return (len(labels) > 1 and len(host) <= 253 and labels[-1][:1].isalpha()
+                and all(re.fullmatch(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?", label) for label in labels))
+    return valid_page_address(address)
 
 
 def load_configuration(root, name):
