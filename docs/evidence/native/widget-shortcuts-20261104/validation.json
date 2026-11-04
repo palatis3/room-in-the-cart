@@ -1,5 +1,29 @@
 {
   "assignment": "Foundation 2.1 E07 widget and App Intent acceptance",
+  "retained_route_follow_up": {
+    "baseline_source_commit": "1ee83aa7b6822c83c0fdc615aa6bffb129679123",
+    "integrated_source_commit": "f1975f05c15d7f10c8d47a587b3deecde09e391a",
+    "reviewed_patch_sha256": "17130abfe39a0866f0136861f39e142096e224def09d5c03b87b89fb93888c92",
+    "integrated_patch_sha256": "eaf595a91eb47a5ccd4c4efda08925e6b53f4452b961511d0962ac8ae0c0dc80",
+    "readback_directory": ".build/IntegratedCaptureWidget20261104/retained-route-readback",
+    "readback_manifest_sha256": "2af510582b433944ebf75a3c4d39014ff72171003d1ccbfa340a950797c084d0",
+    "warm_baseline": "Opening the saved A URL and accepting the iOS prompt switched selection from B to A. The ledger revision advanced from 3 to 4 and both shop payloads stayed byte-identical.",
+    "warm_fixed": "The retained A URL showed the unavailable entry. The current B URL opened B’s saved list. B stayed selected, the revision stayed at 6, and the entire workspace hash matched before and after both probes.",
+    "cold_fixed": "Both saved URLs opened Shop after termination. The selected pickup, revision and workspace hash were preserved. Direct cold navigation to the current list remains open.",
+    "integrated_models": {
+      "result": ".build/IntegratedCaptureWidget20261104/IntegratedModels.xcresult",
+      "device": "iPhone 17e, iOS 27.0 (24A434)",
+      "passed": 49,
+      "failed": 0,
+      "skipped": 0,
+      "regressions": [
+        "testRetainedWidgetRouteCannotOpenPreviouslySelectedShop",
+        "testResolvedWidgetDestinationDoesNotReselectAfterPickupChanges"
+      ]
+    },
+    "compiled_debug_sha256": "d7c5065db9a36bd25161dd3077833d4537833698fdd1fa0c747a6aca2e2e453f",
+    "remaining": ["System Home Screen tap on the guard build", "Direct cold current-link navigation", "Physical signed-device and lock-state checks"]
+  },
   "source_commit": "1733323237867ae09966b50425c3f0a2cbeab069",
   "product_source_unchanged": true,
   "test_only_changes": [
