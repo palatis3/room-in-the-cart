@@ -2857,6 +2857,38 @@
         }
       }
     },
+    "Done": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listo"
+          }
+        }
+      }
+    },
+    "Turning off photo processing discards text from the photo and edits to it. Your earlier typed or pasted text returns.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turning off photo processing discards text from the photo and edits to it. Your earlier typed or pasted text returns."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al desactivar el procesamiento de fotos, se descarta el texto de la foto y cualquier edición que hayas hecho. Se recupera el texto que escribiste o pegaste antes."
+          }
+        }
+      }
+    },
     "The app does not upload photos or source text. Choosing an iCloud photo may download it through Apple. You can continue by typing without enabling photos.": {
       "extractionState": "manual",
       "localizations": {

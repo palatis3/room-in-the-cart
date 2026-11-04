@@ -222,6 +222,32 @@ final class RecipeCaptureAdapterTests: XCTestCase {
         let target = CaptureTarget(workspaceID: UUID(), containerID: UUID(), objectID: UUID(), revision: 0, kind: .packageReference)
         XCTAssertNil(try model.reviewed(target: target, label: "Rice", barcode: nil).imageJPEG)
     }
+    func testRevokingAcceptedPhotosRestoresTheEarlierTypedOrPastedDraft() async throws {
+        let data = try image()
+        let scanned = ScannedSource(originalText: "Recognized package wording", uncertainLines: [],
+            originalImageData: data, referenceJPEG: data, barcodes: [])
+        for source in [CaptureSource.typed, .paste] {
+            let model = ScanModel(service: FixedScan(source: scanned))
+            if source == .paste { model.paste(["Original pasted wording"]) }
+            model.text = "Reviewed manual draft"
+            for _ in 0..<2 {
+                model.stage(data)
+                let deadline = ContinuousClock.now + .seconds(2)
+                while model.candidate == nil, ContinuousClock.now < deadline { await Task.yield() }
+                _ = try XCTUnwrap(model.candidate)
+                model.acceptCandidate()
+                model.text = "Edited photo wording"
+            }
+
+            model.revokePhotoConsent()
+
+            XCTAssertNil(model.accepted)
+            XCTAssertNil(model.candidate)
+            XCTAssertEqual(model.source, source)
+            XCTAssertEqual(model.text, "Reviewed manual draft")
+            XCTAssertEqual(model.originalText, source == .paste ? "Original pasted wording" : "Reviewed manual draft")
+        }
+    }
     func testLatePhotoCompletionCannotRestoreClosedSource() async throws {
         let service = HeldScan(), model = ScanModel(text: "Keep typed", service: service)
         model.stage(try image())
@@ -233,6 +259,10 @@ final class RecipeCaptureAdapterTests: XCTestCase {
         for _ in 0..<20 { await Task.yield() }
         XCTAssertTrue(model.closed); XCTAssertNil(model.candidate); XCTAssertNil(model.accepted); XCTAssertTrue(model.text.isEmpty)
     }
+}
+private struct FixedScan: LocalScanService {
+    let source: ScannedSource
+    func scan(_ data: Data) async throws -> ScannedSource { source }
 }
 private actor HeldScan: LocalScanService {
     private var continuation: CheckedContinuation<ScannedSource, Error>?

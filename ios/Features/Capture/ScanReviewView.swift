@@ -26,6 +26,7 @@ import CoreDomain
     @State private var ingredients: [CaptureLineDraft] = []
     @State private var reviewingIngredients = false
     @State private var error: String?
+    @FocusState private var sourceEditorFocused: Bool
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
 
@@ -58,6 +59,8 @@ import CoreDomain
                 }
                 Section(captureText("Editable source text")) {
                     TextEditor(text: $model.text).frame(minHeight: 150).accessibilityLabel(captureText("Editable source text"))
+                        .accessibilityIdentifier("scan.sourceEditor")
+                        .focused($sourceEditorFocused)
                         .disabled(model.busy || loadingPhoto)
                     if let source = model.accepted {
                         DisclosureGroup(captureText("Compare with the original")) {
@@ -82,6 +85,9 @@ import CoreDomain
             if let failure = model.failure { Section { Text(failureText(failure)) } }
         }
         .scrollDismissesKeyboard(.interactively)
+        .keyboardDoneAction(visible: sourceEditorFocused, title: captureText("Done"), identifier: "scan.sourceDone") {
+            sourceEditorFocused = false
+        }
         .navigationTitle(captureText("Photo and scan review"))
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button(captureText("Cancel")) { close(); dismiss() } } }
         .fullScreenCover(isPresented: $showCamera) {
@@ -100,7 +106,9 @@ import CoreDomain
             if !allowed {
                 permissionGeneration = UUID(); requestingCamera = false; showCamera = false
                 photoTask?.cancel(); photoTask = nil; photo = nil; loadingPhoto = false
-                model.revokePhotoConsent(); resetDerived()
+                let acceptedPhoto = model.accepted != nil
+                model.revokePhotoConsent()
+                if acceptedPhoto { resetDerived() }
             }
         }
         .onChange(of: model.text) { _, _ in receiptLines = nil; matchedProduct = false }
@@ -125,6 +133,8 @@ import CoreDomain
             Text(captureText("You can always type. A photo or scan never confirms a price, payment, arrival or safe ingredient."))
             Toggle(captureText("Allow on-device photo processing for this review"), isOn: $localPhotoConsent)
                 .accessibilityIdentifier("scan.localConsent")
+            Text(captureText("Turning off photo processing discards text from the photo and edits to it. Your earlier typed or pasted text returns."))
+                .font(.footnote)
             Text(captureText("The app does not upload photos or source text. Choosing an iCloud photo may download it through Apple. You can continue by typing without enabling photos."))
                 .font(.footnote)
             Button(captureText("Take a photo for review")) { requestCamera() }.disabled(!canReview || !localPhotoConsent)

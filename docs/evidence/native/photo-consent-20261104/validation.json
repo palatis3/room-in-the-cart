@@ -1,0 +1,70 @@
+{
+  "baseCommit": "0ab46f2",
+  "toolchain": "Xcode 27.1 (27A9275)",
+  "sourceSHA256": {
+    "ios/Features/Capture/ScanModel.swift": "1c2803a8192a57fc0271a7a36e873901bf1b2beefdbaea431309f3fa3790a39a",
+    "ios/Features/Capture/ScanReviewView.swift": "11c279890155b6d9f6488fb12bb64def7700f88d7fc7d3741a6024a5205262ec",
+    "ios/Features/Capture/Capture.xcstrings": "4f1c4e0bf1a4506bfa1182d58502d8a975e779d3d0929676c8e40491799efa52",
+    "ios/Tests/ScanTests.swift": "f2a870b85c604f8f5c638fc0f4c46afbc0d4f4c44e94608d85b094ec50e1e10d"
+  },
+  "beforeFix": {
+    "result": ".build/PhotoConsent20261104/Red.xcresult",
+    "failed": 1,
+    "finding": "After accepting two photo candidates, revocation retained edited photo wording as typed text and lost earlier pasted attribution."
+  },
+  "models": {
+    "result": ".build/PhotoConsent20261104/ModelsFinal.xcresult",
+    "os": "iOS 27.0",
+    "passed": 536,
+    "failed": 0
+  },
+  "minimumSimulator": {
+    "result": ".build/PhotoConsent20261104/Minimum.xcresult",
+    "device": "iPhone SE, iOS 17.0 (21A328)",
+    "passed": 20,
+    "failed": 0,
+    "scope": "Scan, recipe adapter and media store cases on the same model implementation before the Done UI change."
+  },
+  "systemPhotos": {
+    "device": "iPhone 17e, iOS 27.0 (24A434)",
+    "fixtureSHA256": "168a8d3755612047d9720900cb7298403055e4d9c41c9b26636bfd7b2d17cd14",
+    "fixture": "Fictional dark-background bilingual package image, loaded with simctl addmedia.",
+    "harnessSHA256": "62280a420bf61b844f8eef4e23cc7028683280623d0aece0f0eabbfd50f87fb5",
+    "result": ".build/ActualPhotoReview20261104/PhotoSystemAsset.xcresult",
+    "log": ".build/ActualPhotoReview20261104/photo-system-asset.log",
+    "passed": 1,
+    "failed": 0,
+    "seconds": 152.708,
+    "earlierAttempts": [
+      {
+        "result": ".build/ActualPhotoReview20261104/PhotoSystem.xcresult",
+        "failure": "The test selected the section heading instead of the text editor."
+      },
+      {
+        "result": ".build/ActualPhotoReview20261104/PhotoSystemRerun.xcresult",
+        "failure": "The keyboard remained visible and the test tapped the Photos grid group."
+      },
+      {
+        "result": ".build/ActualPhotoReview20261104/PhotoSystemFinal.xcresult",
+        "failure": "Done dismissed the keyboard. The Photos grid group still selected the wrong asset."
+      }
+    ],
+    "checks": "Photo selection starts disabled. Done dismisses the typing keyboard. The selected bilingual package is staged and recognized on-device. Turning consent off restores typed notes. A second selection needs explicit manual match and review before save. The image and original wording reopen after relaunch.",
+    "persisted": {
+      "references": 1,
+      "jpegWidth": 1964,
+      "jpegHeight": 2500,
+      "jpegBytes": 199370,
+      "ledgerHeadRevision": 2,
+      "lineQuantity": "2 Wraps"
+    }
+  },
+  "archive": {
+    "path": ".build/PhotoConsent20261104/RoomInTheCart-PhotoConsentFinal.xcarchive",
+    "binaryUUID": "2DC1994B-810A-31E2-9511-6809F4279EC1",
+    "executableSHA256": "472622f7408e614b3f01dcaff4cb4adaf01aa3f28bf3424ef5cefe6747b115a9",
+    "builtAppMetadataCheck": "passed",
+    "signed": false
+  },
+  "scope": "Real system Photos picker and app package OCR on a simulator. The saved photo is private reference evidence. The pickup retains its two-wrap demand despite the twelve-wrap package and printed price. Physical camera and receipt and recipe photo journeys remain separate."
+}

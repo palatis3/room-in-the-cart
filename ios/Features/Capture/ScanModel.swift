@@ -10,6 +10,7 @@ import Combine
     @Published private(set) var failure: ScanFailure?
     @Published private(set) var source: CaptureSource = .typed
     private var pastedOriginal: String?
+    private var draftBeforePhoto: (text: String, source: CaptureSource, pastedOriginal: String?)?
     var originalText: String { accepted?.originalText ?? pastedOriginal ?? text }
     let id: UUID
     let capturedAt: Date
@@ -41,10 +42,12 @@ import Combine
         guard !closed, !busy else { return }
         let value = values.joined(separator: "\n")
         do { try ScanLimits.text(value) } catch { failure = .tooLarge; return }
+        draftBeforePhoto = nil
         pastedOriginal = value; accepted = nil; candidate = nil; source = .paste; text = value
     }
     func acceptCandidate() {
         guard !closed, !busy, let candidate else { return }
+        if draftBeforePhoto == nil { draftBeforePhoto = (text, source, pastedOriginal) }
         accepted = candidate; source = .photoOCR; pastedOriginal = nil; text = candidate.originalText; self.candidate = nil; failure = nil
     }
     func discardCandidate() { guard !busy else { return }; candidate = nil }
@@ -62,10 +65,13 @@ import Combine
     func revokePhotoConsent() {
         generation = UUID(); task?.cancel(); task = nil; busy = false
         candidate = nil; accepted = nil; failure = nil; confirmed = false
-        if source == .photoOCR { source = .typed }
+        if let before = draftBeforePhoto {
+            text = before.text; source = before.source; pastedOriginal = before.pastedOriginal
+            draftBeforePhoto = nil
+        }
     }
     func close() {
         closed = true; generation = UUID(); task?.cancel(); task = nil; busy = false
-        candidate = nil; accepted = nil; pastedOriginal = nil; text = ""; confirmed = false
+        candidate = nil; accepted = nil; pastedOriginal = nil; draftBeforePhoto = nil; text = ""; confirmed = false
     }
 }
