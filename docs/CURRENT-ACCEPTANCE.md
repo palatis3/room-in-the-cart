@@ -63,6 +63,7 @@ Results belong to their own immutable source and binary identities. Do not add t
 | ORDINARY-20261104 | [Frozen ordinary run and focused rerun](evidence/native/ordinary-20261104/validation.json) | The older frozen build passed 526 model and 33 UI cases. Its four UI failures remain recorded. Current focused runs passed both keyboard cases, saved offer, and the Records deletion Cancel case. A combined run on the current build remains a separate gate. |
 | MINIMUM-OS-20261104 | [Current iOS 17 simulator validation](evidence/native/minimum-os-current-20261104/validation.json) | Seven iPhone SE UI cases passed, including both stock routes, English and Spanish save/reopen, dark appearance at the largest text size, complete saved details above the tabs, and the unfiltered Shop and comparison accessibility audit. The later Records alert change and physical assistive testing have separate scopes. |
 | RECORDS-CANCEL | [Records deletion validation](evidence/native/records-cancel-20261104/validation.json) | The current alert gives Cancel and Delete distinct reachable actions. Both focused cases pass. Cancel retains the record through owner-file preview, discard and restart. Explicit deletion survives restart. The updated unsigned Release archive also passed metadata checks. |
+| HANDOFF-VERSION | [Handoff version validation](evidence/native/handoff-version-20261104/validation.json) | All 530 model cases pass. The iOS 27 iPhone 17e and iOS 17 iPhone SE share-sheet cases retain the exact frozen unplaced basket and cancellation through relaunch. The first SE automation attempt stopped before share. The unsigned Release archive passes metadata checks. |
 
 ## Launch requirement traceability
 
@@ -78,10 +79,10 @@ Results belong to their own immutable source and binary identities. Do not add t
 | D06 | Equivalent checkout repricing, unknowns and explicit overage; checkout/request models; N526, B175, REQUEST-UI. | Verify configured deployed household and final hardware task. |
 | D07 | Required/flexible/undecided needs, explicit deferral/handled disposition; checkout/next shop; N526, ORDINARY. | Final contextual reminder/next-trip hardware task. |
 | D08 | Base-bound previews, apply-once, compensating undo and locked-order proposals; N526, B175, PLANNING. | Cross-device current-grant race and final UI candidate. |
-| D09 | Frozen dated retailer handoff, action receipts and separate placed report; placement/pickup; N526, B175. | Real OS share/open cancellation and retailer roundtrip. |
+| D09 | Frozen dated retailer handoff, action receipts and separate placed report; placement/pickup; N526, B175, HANDOFF-VERSION. | Physical iPhone share/open and retailer roundtrip. |
 | D10 | Reopen exact saved offer, per-dish acceptance/yield and joint charges/cutoff review; offer editor/evaluator; N526 and scoped S07 UI. | Physical deadline/offline/retailer note task. |
 | D11 | Idempotent split receipt fragments, usable correction and protected allocation; pickup domain/model; N526, ORDINARY, STOCK. | Physical receipt/partial/wrong/late item capture and final UI regression. |
-| D12 | Complete dated text from all current physical needs, current allocated/short amounts and historical initial observation labels; cook projection; N526, STOCK. | Human cook task on Android and real share/readback. |
+| D12 | Complete dated text from all current physical needs, current allocated/short amounts and historical initial observation labels; cook projection; N526, STOCK, HANDOFF-VERSION. | Human cook task on Android and physical share/readback. |
 | D13 | Fresh next-shop identity, selected carryovers/handled omission, reusable dinner link and cleared stale prices; N526, ORDINARY. | Current final new-trip/relaunch journey. |
 | D14 | Atomic SQLite records/revisions, pending saves and restart paths; N526, F07, ORDINARY. | Interrupted real-device sync/storage and accessible recovery. |
 | D15 | Scoped exports, correction, deletion/undo, account exit/erasure and isolated recovery; N526, F07, RESTORE, B175. | Production provider erasure/policy/durable journal and system Files delivery. |
@@ -134,7 +135,7 @@ All 27 have current source entries. “Pending” below concerns current screen 
 | S03 Facts | List/checkout → `LedgerFactsView` sheet. | N526; final cap/slot/cancel task. |
 | S04 Ingredient | List/meal → `LedgerIngredientView`; pack sheet and matching stock. Standalone `ComparisonView`. | ORDINARY stock pack/no-purchase cases; final promoted artifacts. |
 | S05 Checkout | Shop/list → `LedgerCheckoutEntry` → `PickupCheckoutView`; contextual quote entry. | ORDINARY, QUOTES; unknown/stock stale review. |
-| S06 Retailer handoff | Pickup → `PickupHandoffView`; connected `PlacementRecordsEntryView`. | N526/B175; actual external share/open. |
+| S06 Retailer handoff | Pickup → `PickupHandoffView`; connected `PlacementRecordsEntryView`. | N526, B175, HANDOFF-VERSION. Physical external open and retailer return remain. |
 | S07 Offer | Pickup or Shop resume → `PickupOfferView` / editor sheet. | Scoped S07 UI; physical cutoff. |
 | S08 Arrivals/urgent | Pickup → `PickupArrivalView`; Shop → `UrgentRepairView`. | ORDINARY/STOCK; physical receipt. |
 | S09 Repair | Arrival/urgent/pickup → `PickupRepairView`, fallback review. | STOCK; actual household food task. |

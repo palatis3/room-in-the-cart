@@ -26,7 +26,7 @@ struct RecipientSend: Codable, Equatable {
     var acknowledgedAt: Date?
 }
 
-struct HandoffCopy: Equatable {
+struct HandoffCopy: Equatable, Identifiable {
     let shopID: UUID
     let channel: HandoffChannel
     let versionID: UUID
@@ -35,6 +35,7 @@ struct HandoffCopy: Equatable {
     let fullText: String
     let pieces: [HandoffPiece]?
     let needsPrivateReview: Bool
+    var id: UUID { versionID }
     var heading: String { "\(pCook("Revision", language: language)) \(revision)" }
 
     static func retailer(_ snapshot: HandoffSnapshot, text: String, language: String) -> Self {

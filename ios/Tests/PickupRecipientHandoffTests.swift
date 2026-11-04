@@ -26,6 +26,59 @@ final class PickupRecipientHandoffTests: XCTestCase {
         XCTAssertNil(HandoffCorrection.review(current: edited, prior: prior, paid: true, destinationConfirmed: true, privateWordingConfirmed: false))
         XCTAssertEqual(HandoffCorrection.review(current: edited, prior: prior, paid: true, destinationConfirmed: true, privateWordingConfirmed: true),.full(edited.fullText))
     }
+    @MainActor func testSystemHandoffResultsKeepTheirOriginalVersionsAfterPickupChanges() async throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let model = PickupModel(databaseURL: url)
+        let quantity = Quantity(amount: try Rational(1), unit: .count, originalLiteral: "1")
+        let line = BasketLine(id: UUID(), name: "Beans", quantity: quantity, expectedCost: .exact(.zero))
+
+        func freeze(_ pickupID: UUID) async throws -> HandoffSnapshot {
+            let context = CheckoutContext(storeID: "Store", branchID: "Branch", mode: .pickup, slot: "Evening",
+                                          commitmentsID: pickupID, observedAt: Date(), source: "Reviewed checkout")
+            let quote = CheckoutQuote(scope: .wholeCheckout, context: context, pricing: .inclusiveTotal(.exact(.zero)))
+            let started = await model.start(from: [line], shopID: pickupID, context: context)
+            let quoted = await model.setQuote(quote, cap: nil)
+            let frozen = await model.freeze()
+            XCTAssertTrue(started && quoted && frozen)
+            return try XCTUnwrap(model.frozenSnapshot)
+        }
+
+        let first = try await freeze(shopID)
+        let note = PickupCookNote(id: UUID(), text: "Save the beans for soup", language: "en-US", createdAt: Date(), revision: 1)
+        let saved = await model.change { $0.notes.append(note) }
+        XCTAssertTrue(saved)
+        let copy = try XCTUnwrap(model.handoffCopy(channel: .cook, versionID: note.id, language: "en-US"))
+        let retailerOpened = await model.recordHandoff(.shareOpened, snapshot: first)
+        let cookOpened = await model.recordCookShare(.shareOpened, copy: copy)
+        XCTAssertTrue(retailerOpened && cookOpened)
+        let reopened = await model.reopenDraft()
+        XCTAssertTrue(reopened)
+        let replacement = try await freeze(shopID)
+        XCTAssertNotEqual(first.id, replacement.id)
+        let stale = await model.recordHandoff(.shareOpened, snapshot: first)
+        XCTAssertFalse(stale)
+        let other = try await freeze(UUID())
+
+        let cancelled = await model.recordHandoff(.shareCancelled, snapshot: first)
+        let completed = await model.recordCookShare(.shareCompleted, copy: copy, destination: "fixture share destination")
+        XCTAssertTrue(cancelled && completed)
+        XCTAssertEqual(model.selectedID, other.basketID)
+        XCTAssertEqual(model.frozenSnapshot, other)
+        XCTAssertTrue(model.journey?.cookShareEvents.isEmpty == true)
+
+        let restored = PickupModel(databaseURL: url)
+        await restored.load()
+        let pickup = try XCTUnwrap(restored.journeys.first { $0.id == shopID })
+        let basket = try XCTUnwrap(pickup.basket)
+        XCTAssertEqual(basket.handoffActions.filter { $0.kind == .shareCancelled }.map(\.snapshotID), [first.id])
+        XCTAssertTrue(basket.placements.isEmpty)
+        XCTAssertEqual(basket.current.id, replacement.revision.id)
+        XCTAssertEqual(pickup.cookShareEvents.map(\.noteID), [note.id, note.id])
+        XCTAssertEqual(pickup.cookShareEvents.map(\.action), [.shareOpened, .shareCompleted])
+        XCTAssertNil(pickup.lastSend(.cook, recipient: "fixture share destination"))
+    }
+
     @MainActor func testSentAndAcknowledgedSurviveRestartAndEraseWithPickup() async throws {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: url) }

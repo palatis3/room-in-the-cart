@@ -26,6 +26,8 @@ The minimum iOS 17.0 iPhone SE run passed seven UI cases. The unfiltered accessi
 
 The Records deletion alert now exposes a distinct Cancel action. The two current cases verify cancel and owner-file preview/discard with the original comparison preserved through restart, plus durable removal after explicit confirmation. The updated unsigned Release archive compiled and passed metadata checks. [Records deletion validation](evidence/native/records-cancel-20261104/validation.json)
 
+System handoff results now follow the exact frozen retailer basket or saved cook note through a pickup change. All 530 native model tests passed. The system share-sheet case passed on iPhone 17e and iPhone SE after the small-screen rerun brought Apply into view. Both retained the cancellation and the frozen unplaced basket through relaunch. The unsigned Release archive passed bundled metadata checks. [Handoff version validation](evidence/native/handoff-version-20261104/validation.json)
+
 ## Previous checkpoint — November 4, quarantine restore window
 
 Migration 029 and the restore operator verify a complete signed archive window before recording its plan in quarantine. Each segment waits for the previous segment's local erasure receipts. The gate checks the entire staged window, and the tool refuses a quarantine that application logins can access.

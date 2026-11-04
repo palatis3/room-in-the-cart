@@ -303,7 +303,8 @@ struct PickupActivitySheet: UIViewControllerRepresentable {
 }
 struct PickupHandoffView: View {
     @ObservedObject var model: PickupModel
-    @State private var sharing = false
+    @EnvironmentObject private var access: WorkspaceAccess
+    @State private var sharing: HandoffSnapshot?
     @State private var retailerURL = ""
     var body: some View {
         Form {
@@ -311,27 +312,28 @@ struct PickupHandoffView: View {
             PickupStockBasisNotice(model: model)
             Text(pTr("Freeze the reviewed revision before leaving the app. Copying or sharing does not place an order."))
             Button(pTr("Freeze reviewed basket")) { Task { await model.freeze() } }.disabled(model.result == nil || model.frozenSnapshot != nil)
-            if let text = model.frozenText() {
+            if let snapshot = model.frozenSnapshot {
+                let text = PickupModel.datedRetailerText(snapshot)
                 Section(pTr("Dated snapshot")) { Text(text).textSelection(.enabled) }
                 Button(pTr("Copy dated list")) { Task {
-                    guard await model.recordHandoff(.copyAttempted), model.hasCurrentBasketStockBasis,
-                          model.frozenText() == text else { return }
+                    guard await model.recordHandoff(.copyAttempted, snapshot: snapshot), access.unlocked,
+                          model.hasCurrentBasketStockBasis, model.frozenSnapshot?.id == snapshot.id else { return }
                     UIPasteboard.general.string = text
-                    await model.recordHandoff(.copied)
+                    await model.recordHandoff(.copied, snapshot: snapshot)
                 } }.disabled(!model.hasCurrentBasketStockBasis)
                 Button(pTr("Share dated list")) { Task {
-                    if await model.recordHandoff(.shareOpened), model.hasCurrentBasketStockBasis { sharing = true }
+                    guard await model.recordHandoff(.shareOpened, snapshot: snapshot), access.unlocked,
+                          model.hasCurrentBasketStockBasis, model.frozenSnapshot?.id == snapshot.id else { return }
+                    sharing = snapshot
                 } }.disabled(!model.hasCurrentBasketStockBasis)
-                if let snapshot = model.frozenSnapshot {
-                    PickupRecipientSection(model: model, channel: .retailer, versionID: snapshot.id,
-                                           language: Locale.current.language.languageCode?.identifier == "es" ? "es-US" : "en-US")
-                        .id(snapshot.id)
-                }
+                PickupRecipientSection(model: model, channel: .retailer, versionID: snapshot.id,
+                                       language: Locale.current.language.languageCode?.identifier == "es" ? "es-US" : "en-US")
+                    .id(snapshot.id)
                 TextField(pTr("Retailer website (https://…)"), text: $retailerURL).keyboardType(.URL).textInputAutocapitalization(.never)
                 Button(pTr("Open retailer website")) { Task {
-                    guard model.hasCurrentBasketStockBasis else { return }
+                    guard access.unlocked, model.hasCurrentBasketStockBasis, model.frozenSnapshot?.id == snapshot.id else { return }
                     guard let url = URL(string: retailerURL), url.scheme == "https", url.host != nil else { model.error = pTr("Enter a valid https retailer address."); return }
-                    if await UIApplication.shared.open(url) { await model.recordHandoff(.retailerOpened, destination: url.host) }
+                    if await UIApplication.shared.open(url) { await model.recordHandoff(.retailerOpened, snapshot: snapshot, destination: url.host) }
                     else { model.error = pTr("Could not open the retailer. Placement remains unconfirmed.") }
                 } }.disabled(!model.hasCurrentBasketStockBasis)
                 Button(pTr("I placed this order")) { Task { await model.reportPlaced() } }.buttonStyle(.borderedProminent)
@@ -352,12 +354,10 @@ struct PickupHandoffView: View {
             }
         }.navigationTitle(pTr("Retailer handoff"))
         .disabled(model.saving)
-        .sheet(isPresented: $sharing) {
-            if model.hasCurrentBasketStockBasis {
-            PickupActivitySheet(text: model.frozenText() ?? "") { completed, destination in
-                Task { await model.recordHandoff(completed ? .shareCompleted : .shareCancelled, destination: destination) }
+        .sheet(item: $sharing) { snapshot in
+            PickupActivitySheet(text: PickupModel.datedRetailerText(snapshot)) { completed, destination in
+                Task { await model.recordHandoff(completed ? .shareCompleted : .shareCancelled, snapshot: snapshot, destination: destination) }
             }
-            } else { Text(ledgerText("Confirmed stock changed. Review ingredient needs and whole packs before continuing checkout.")) }
         }
     }
 }

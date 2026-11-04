@@ -219,7 +219,7 @@ struct PickupCookView: View {
     @State private var noteID: UUID?
     @State private var draftID = UUID()
     @State private var editingSavedID: UUID?
-    @State private var sharing = false
+    @State private var sharing: HandoffCopy?
     var body: some View {
         Form {
             PickupSaveStatus(model: model)
@@ -238,14 +238,15 @@ struct PickupCookView: View {
                 }
             }
             Button(pTr("Save dated copy")) { Task { await saveNote() } }.disabled(text.isEmpty)
-            if noteID != nil {
+            if let noteID {
                 Button(pTr("Share saved dated copy")) { Task {
-                    if await recordShare(.shareOpened, destination: nil) { sharing = true }
+                    guard let copy = model.handoffCopy(channel: .cook, versionID: noteID, language: language),
+                          await model.recordCookShare(.shareOpened, copy: copy), access.unlocked,
+                          model.journey?.id == copy.shopID, self.noteID == copy.versionID else { return }
+                    sharing = copy
                 } }
-                if let noteID {
-                    PickupRecipientSection(model: model, channel: .cook, versionID: noteID, language: language)
-                        .id(noteID)
-                }
+                PickupRecipientSection(model: model, channel: .cook, versionID: noteID, language: language)
+                    .id(noteID)
             }
             Section(pTr("Saved cook notes")) {
                 ForEach(model.journey?.notes ?? []) { note in
@@ -271,9 +272,9 @@ struct PickupCookView: View {
             .onChange(of: model.journey?.revision) { _, _ in readback = nil }
             .onChange(of: readbackContext) { _, _ in readback = nil }
             .onChange(of: scenePhase) { _, phase in if phase != .active { readback = nil } }
-            .sheet(isPresented: $sharing) {
-                PickupActivitySheet(text: model.journey?.notes.first(where: { $0.id == noteID })?.text ?? "") { completed, destination in
-                    Task { await recordShare(completed ? .shareCompleted : .shareCancelled, destination: destination) }
+            .sheet(item: $sharing) { copy in
+                PickupActivitySheet(text: copy.fullText) { completed, destination in
+                    Task { await model.recordCookShare(completed ? .shareCompleted : .shareCancelled, copy: copy, destination: destination) }
                 }
             }
     }
@@ -304,10 +305,6 @@ struct PickupCookView: View {
         noteID = nil
         readback = PickupCookReadbackBinding(journey: value, allocation: model.allocation, result: model.result,
             language: language, includeBudget: includeBudget, text: text, context: readbackContext, at: at, timeZone: timeZone)
-    }
-    @discardableResult private func recordShare(_ action: HandoffActionKind, destination: String?) async -> Bool {
-        guard let noteID else { return false }
-        return await model.change { value in value.cookShareEvents.append(PickupCookShareEvent(id: UUID(), noteID: noteID, occurredAt: Date(), action: action, destination: destination)) }
     }
     private func sourceReview(_ value: PickupJourney, zone: TimeZone, custom: Bool) -> CookHandoffReview {
         CookHandoffReview(pieces: PickupCookProjection.pieces(journey: value, allocation: model.allocation, language: language, timeZone: zone),

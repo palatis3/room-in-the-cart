@@ -13,6 +13,49 @@ import XCTest
         app.terminate()
     }
 
+    func testCancellingSystemShareKeepsTheFrozenPickupUnplaced() {
+        launch(reset: true)
+        openShoppingList()
+        tap(element("ledgerStartShop"))
+        fill("Test market pickup", into: "ledgerShopName")
+        tap(element("ledgerCreateShop"))
+        tap(element("ledgerImport"))
+        fill("2 Wraps", into: "ledgerImportText")
+        tap(element("ledgerReviewImport"))
+        tap(element("ledgerCommitImport"))
+        shopRoot()
+        tap(app.buttons["Review checkout"])
+        tap(app.buttons["Continue to checkout review"])
+        let apply = app.buttons["Apply reviewed checkout copy"]
+        reveal(apply)
+        if apply.frame.midY > scrollableArea().maxY { scrollContent(upward: true) }
+        tap(apply)
+        tap(app.buttons["Review whole checkout"])
+        fill("Test market", into: "Store", replacing: true)
+        fill("Main branch", into: "Branch", replacing: true)
+        fill("Tuesday 5 PM", into: "Pickup or delivery slot", replacing: true)
+        fill("Test checkout", into: "Source of these prices", replacing: true)
+        enableSwitch("Retailer total already includes all charges")
+        fill("3.00", into: "Inclusive total")
+        tap(app.buttons["Save and evaluate checkout"])
+        back(to: "Prepare retailer handoff")
+        tap(app.buttons["Prepare retailer handoff"])
+        tap(app.buttons["Freeze reviewed basket"])
+        tap(app.buttons["Share dated list"])
+        let close = app.buttons.matching(NSPredicate(format: "label IN %@", ["Close", "Cancel"])).firstMatch
+        XCTAssertTrue(close.waitForExistence(timeout: 15), app.debugDescription)
+        close.tap()
+        assertText("Share cancelled")
+        restart()
+        shopRoot()
+        tap(app.buttons["Pickup, repairs and handoffs"])
+        assertText("Frozen · placement unconfirmed")
+        tap(app.buttons["Prepare retailer handoff"])
+        assertText("Wraps")
+        assertText("Share cancelled")
+        capture("Retailer-share-cancelled-unplaced-after-relaunch")
+    }
+
     func testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop() throws {
         launch(reset: true)
         tap(element("settings"))

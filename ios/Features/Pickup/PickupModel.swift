@@ -250,6 +250,7 @@ struct PickupPersistenceLocation {
         let value: PickupJourney
         let payload: Data
         let requiredRevisions: [UUID: Int64]
+        let selectsPickup: Bool
     }
     private var pending: Pending?
     // Ephemeral review receipts allow an exact double tap to succeed without another write.
@@ -374,7 +375,7 @@ struct PickupPersistenceLocation {
             return await save(value)
         } catch { self.error = pTr("Check the amounts and units. Your saved pickup has not changed."); return false }
     }
-    @discardableResult private func save(_ value: PickupJourney, reviewing source: UUID? = nil) async -> Bool {
+    @discardableResult private func save(_ value: PickupJourney, reviewing source: UUID? = nil, selecting: Bool = true) async -> Bool {
         guard ready, !saving, pending == nil else { return false }
         do {
             var candidate = value; candidate.savedAt = clock()
@@ -388,7 +389,7 @@ struct PickupPersistenceLocation {
                 guard let revision = storeRevisions[source] else { throw PickupModelError.missing }
                 revisions[source] = revision
             }
-            pending = Pending(value: candidate, payload: try encoder.encode(candidate), requiredRevisions: revisions)
+            pending = Pending(value: candidate, payload: try encoder.encode(candidate), requiredRevisions: revisions, selectsPickup: selecting)
             hasPendingSave = true
             return await retrySave()
         } catch { self.error = pTr("Could not prepare this change. Your saved pickup has not changed."); return false }
@@ -401,7 +402,8 @@ struct PickupPersistenceLocation {
                                              savedAt: pending.value.savedAt, requiring: pending.requiredRevisions)
             storeRevisions[saved.id] = saved.revision
             journeys.removeAll { $0.id == pending.value.id }; journeys.insert(pending.value, at: 0)
-            selectedID = pending.value.id; self.pending = nil; hasPendingSave = false; error = nil; return true
+            if pending.selectsPickup { selectedID = pending.value.id }
+            self.pending = nil; hasPendingSave = false; error = nil; return true
         } catch ComparisonStoreError.staleRevision, ComparisonStoreError.erased {
             self.pending = nil; hasPendingSave = false; ready = false
             journeys = []; storeRevisions = [:]
@@ -482,21 +484,36 @@ struct PickupPersistenceLocation {
         guard let basket = journey?.basket else { return nil }
         return basket.snapshots.last { $0.revision.id == basket.current.id }
     }
-    func frozenText() -> String? {
-        frozenSnapshot.map(Self.datedRetailerText)
-    }
     static func datedRetailerText(_ snapshot: HandoffSnapshot) -> String {
         "\(pTr("Reviewed pickup")) · \(snapshot.createdAt.formatted())\n\(pTr("Revision")) \(snapshot.revision.number)\n" + snapshot.revision.lines.map { "\($0.name) — \(pQuantity($0.quantity))" }.joined(separator: "\n")
     }
-    @discardableResult func recordHandoff(_ kind: HandoffActionKind, destination: String? = nil) async -> Bool {
-        if [.prepared, .copyAttempted, .shareOpened].contains(kind), !hasCurrentBasketStockBasis {
-            error = ledgerText("Confirmed stock changed. Review ingredient needs and whole packs before continuing checkout."); return false
+    @discardableResult func recordHandoff(_ kind: HandoffActionKind, snapshot: HandoffSnapshot? = nil, destination: String? = nil) async -> Bool {
+        guard let snapshot = snapshot ?? frozenSnapshot,
+              var value = journeys.first(where: { $0.id == snapshot.basketID }),
+              var basket = value.basket, basket.snapshots.contains(snapshot) else { return false }
+        if [.prepared, .copyAttempted, .shareOpened].contains(kind) {
+            guard frozenSnapshot?.id == snapshot.id else { return false }
+            guard hasCurrentBasketStockBasis else {
+                error = ledgerText("Confirmed stock changed. Review ingredient needs and whole packs before continuing checkout.")
+                return false
+            }
         }
-        guard let snapshot = frozenSnapshot else { return false }
-        return await change { value in
-            guard var basket = value.basket else { throw PickupModelError.missing }
-            try basket.recordHandoff(HandoffAction(id: UUID(), snapshotID: snapshot.id, kind: kind, occurredAt: clock(), destination: destination)); value.basket = basket
+        do {
+            try basket.recordHandoff(HandoffAction(id: UUID(), snapshotID: snapshot.id, kind: kind, occurredAt: clock(), destination: destination))
+            value.basket = basket
+            return await save(value, selecting: false)
+        } catch {
+            self.error = pTr("Could not prepare this change. Your saved pickup has not changed.")
+            return false
         }
+    }
+    @discardableResult func recordCookShare(_ kind: HandoffActionKind, copy: HandoffCopy, destination: String? = nil) async -> Bool {
+        guard copy.channel == .cook, var value = journeys.first(where: { $0.id == copy.shopID }),
+              let note = value.notes.first(where: { $0.id == copy.versionID }),
+              HandoffCopy.cook(note, shopID: value.id) == copy else { return false }
+        if kind == .shareOpened, copy.shopID != selectedID { return false }
+        value.cookShareEvents.append(PickupCookShareEvent(id: UUID(), noteID: note.id, occurredAt: clock(), action: kind, destination: destination))
+        return await save(value, selecting: false)
     }
     @discardableResult func reportPlaced(acknowledgingChangedStock: Bool = false) async -> Bool {
         if journey?.basket?.phase == .reportedPlaced { return true }

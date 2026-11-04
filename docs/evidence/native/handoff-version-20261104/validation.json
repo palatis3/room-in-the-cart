@@ -1,0 +1,40 @@
+{
+  "baseCommit": "8d6b34487b2039259bfacaa3b3573c8725846b67",
+  "sourceSHA256": {
+    "ios/Features/Pickup/PickupHomeView.swift": "e1c2409c8e1e0ba89bef37c8b10f7d92edd3c6d2ae4df081af2480ff2a8048d9",
+    "ios/Features/Pickup/PickupModel.swift": "ba06ba63b903de6b4098507c68eb026fd4bd3e2d0ae1c2d6dd5130f740157ee9",
+    "ios/Features/Pickup/PickupRecipientHandoff.swift": "1ee89a845f1f65ae2b235cd2b8a63ee97fbb039ed0ca8f5c43599f5d8778b9d4",
+    "ios/Features/Pickup/PickupRepairView.swift": "d4b8a536f441a3009eae1a95e7e98316ed941cb1909ec1ded104a5ad0587feef",
+    "ios/Tests/PickupRecipientHandoffTests.swift": "1b18e9327979986e35a4b20b1c504913ec89a305171c4c96950f42947cc5dfd8",
+    "ios/UITests/FreeJourneyUITests.swift": "fc0c42a72d92f771d898d7e8e6fc64f6495dff8603e7ec199a90bfd95b9eaff6"
+  },
+  "toolchain": "Xcode 27.1 (27A9275)",
+  "debugAppExecutableSHA256": "8299340067f917d682c080b17eee76d1e44cc2edb0907e8717f0c182befb14f2",
+  "currentSimulator": {
+    "device": "iPhone 17e, iOS 27.0 (24A434)",
+    "result": ".build/HandoffVersion20261104/HandoffVersion.xcresult",
+    "modelTestsPassed": 530,
+    "uiTestsPassed": 1,
+    "failed": 0,
+    "uiSeconds": 117.169,
+    "uiSourceSHA256BeforeMinimumOSScrollAdjustment": "1e22ecf81c72529243cd14f37c8069daf321c92528e6ce2bb0c0ce95b1e57cac",
+    "runtimeWarning": "Invalid frame dimension (negative or non-finite) when opening Whole checkout. Also observed in the older frozen regression."
+  },
+  "minimumSimulator": {
+    "device": "iPhone SE (2nd generation), iOS 17.0 (21A328)",
+    "initialResult": ".build/HandoffVersion20261104/HandoffMinimumOS.xcresult",
+    "initialFailure": "The test did not advance past the tap on Apply reviewed checkout copy. The fixture had zero saved pickups. The rerun brings the button into the unobscured content viewport before tapping.",
+    "result": ".build/HandoffVersion20261104/HandoffMinimumOSRerun.xcresult",
+    "uiTestsPassed": 1,
+    "failed": 0,
+    "uiSeconds": 83.467
+  },
+  "archive": {
+    "path": ".build/HandoffVersion20261104/RoomInTheCart-HandoffVersion.xcarchive",
+    "binaryUUID": "9BB5422C-9BA6-3EF2-9DBB-22097E34D77C",
+    "executableSHA256": "602e5d97d4e1534047107e3fa32d0f147511e92a652f05ff9a9427f0d0171ad4",
+    "builtAppMetadataCheck": "passed",
+    "signed": false
+  },
+  "scope": "The model regression verifies durable attribution to the original frozen basket and cook note after a revision and active pickup change. Both simulator journeys cancel the system share sheet and find the frozen unplaced list and its cancellation receipt after relaunch. Physical sharing, retailer return and a combined suite on this revision remain separate gates."
+}
