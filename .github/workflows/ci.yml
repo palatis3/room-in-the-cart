@@ -22,8 +22,8 @@ jobs:
       matrix:
         package: [web, service]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version-file: .node-version
           cache: npm
@@ -54,8 +54,8 @@ jobs:
       BILLING_TEST_ADMIN_DATABASE_URL: postgresql://postgres:fixture-only@127.0.0.1:5432/ritc_test
       BILLING_TEST_DATABASE_URL: postgresql://ritc_runtime:fixture-only@127.0.0.1:5432/ritc_test
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version-file: .node-version
           cache: npm
@@ -103,7 +103,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Validate workflow syntax and expression references
         shell: bash
         run: |
@@ -136,7 +136,7 @@ jobs:
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Test Swift packages and collect coverage
         run: |
           set -o pipefail
@@ -145,7 +145,7 @@ jobs:
             package="$(dirname "$manifest")"
             swift test --package-path "$package" --enable-code-coverage 2>&1 | tee ".build/package-results/$(basename "$package").log"
           done
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: swift-package-results-${{ github.run_attempt }}
@@ -165,7 +165,7 @@ jobs:
       DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
       REQUIRE_RELEASE_METADATA: ${{ inputs.require_release_metadata }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Initialize Swift security analysis
         uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
         with:
@@ -198,7 +198,7 @@ jobs:
           category: /language:swift
       - name: Retain Release compilation log
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: iphone-release-build-log-${{ github.run_attempt }}
           path: .build/ReleaseBuild.log
@@ -214,7 +214,7 @@ jobs:
       test_products_artifact: ${{ steps.upload.outputs['artifact-id'] }}
       test_matrix: ${{ steps.plan.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Record toolchain and select iPhone
         run: |
           xcodebuild -version
@@ -244,7 +244,7 @@ jobs:
         run: |
           cp .build/test-enumeration.json .build/test-plan/
           tar -czf "$RUNNER_TEMP/iphone-test-products.tar.gz" -C .build/DerivedData/Build Products -C "$GITHUB_WORKSPACE/.build" test-plan
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         id: upload
         with:
           name: iphone-test-products-${{ github.run_attempt }}
@@ -265,8 +265,8 @@ jobs:
       TEST_SHARD: ${{ matrix.shard }}
       EXPECTED_TEST_COUNT: ${{ matrix.expected_count }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           artifact-ids: ${{ needs.ios-build.outputs.test_products_artifact }}
           path: .build/download
@@ -288,7 +288,7 @@ jobs:
         run: bash scripts/run_ios_test_shard.sh
       - name: Retain result bundles, screenshots, logs and timing
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: iphone-results-${{ matrix.shard }}-${{ github.run_attempt }}
           include-hidden-files: true

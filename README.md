@@ -62,6 +62,8 @@ The **Security checks** workflow scans TypeScript/JavaScript and GitHub Actions 
 
 Use **Pre-release regression checks** on the candidate branch before an App Store submission or update. It runs the ordinary checks together with the additional suites below. Its final gate rejects failures, cancellations, skipped prerequisite jobs, missing performance baselines, incomplete CodeQL language coverage for the exact commit, serious open source findings, and high/critical vulnerabilities anywhere in the dependency lockfiles. The compiled Release app must also have production support/policy URLs and an Apple subscription product ID. The branch must still point to that candidate when the gate finishes. This workflow does not sign or upload an app.
 
+Third-party workflow actions are pinned to full commit hashes. Dependabot checks Actions and both npm projects weekly, groups minor/patch updates and limits open version-update pull requests. Updates still require review and CI; there is no automatic merge. Security alerts are separate from this weekly version-update schedule. [GitHub dependency updates](https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference)
+
 The additional workflows also run on pull requests that change their workflow or selection/measurement scripts, so changes to the checks themselves get hosted validation before merging. Performance pull-request checks enforce approved baselines; only an explicit manual calibration run can omit them. All these macOS jobs share the same five-runner limit.
 
 | Additional lane | What it checks | Execution |

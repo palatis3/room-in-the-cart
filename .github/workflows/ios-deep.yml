@@ -22,7 +22,7 @@ jobs:
       DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
       SANITIZER: ${{ matrix.sanitizer }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Check package tests for memory errors or data races
         shell: bash
         run: |
@@ -32,7 +32,7 @@ jobs:
             package="$(dirname "$manifest")"
             swift test --package-path "$package" --sanitize="$SANITIZER" 2>&1 | tee ".build/sanitizer-results/$(basename "$package").log"
           done
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: swift-${{ matrix.sanitizer }}-${{ github.run_attempt }}
@@ -54,7 +54,7 @@ jobs:
       DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
       STOREKIT_CONFIGURATION: ${{ matrix.configuration }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Select iPhone
         run: xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
       - name: Run purchase, restore, renewal and revocation scenarios
@@ -73,7 +73,7 @@ jobs:
             CODE_SIGN_IDENTITY=- test 2>&1 | tee .build/StoreKit.log
           xcrun xcresulttool get test-results summary --path .build/StoreKit.xcresult --compact > .build/storekit-summary.json
           python3 -c 'import json, os; from pathlib import Path; s=json.loads(Path(".build/storekit-summary.json").read_text()); assert s["totalTestCount"] == 15 and s["passedTests"] == s["totalTestCount"] and s["skippedTests"] == 0 and s["result"] == "Passed" and {c["testPlanConfiguration"]["configurationName"] for c in s["devicesAndConfigurations"]} == {os.environ["STOREKIT_CONFIGURATION"]}, s'
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: storekit-${{ matrix.locale }}-${{ github.run_attempt }}

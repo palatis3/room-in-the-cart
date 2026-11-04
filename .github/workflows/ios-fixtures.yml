@@ -26,7 +26,7 @@ jobs:
     outputs:
       test_matrix: ${{ steps.plan.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Validate fixture coverage and plan serial test classes
         id: plan
         run: |
@@ -45,7 +45,7 @@ jobs:
     outputs:
       artifact: ${{ steps.upload.outputs.artifact-id }}
     steps: &fixture-build-steps
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Record Xcode and select an iPhone simulator
         run: |
           xcodebuild -version
@@ -76,7 +76,7 @@ jobs:
           cp .build/test-enumeration.json .build/test-plan/
           tar -czf "$RUNNER_TEMP/iphone-fixture-products.tar.gz" \
             -C .build/DerivedData/Build Products -C "$GITHUB_WORKSPACE/.build" test-plan
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         id: upload
         with:
           name: iphone-fixture-products-${{ env.FIXTURE_PROFILE }}-${{ github.run_attempt }}
@@ -86,7 +86,7 @@ jobs:
           if-no-files-found: error
       - name: Retain fixture discovery diagnostics on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: iphone-fixture-discovery-${{ env.FIXTURE_PROFILE }}-${{ github.run_attempt }}
           include-hidden-files: true
@@ -121,8 +121,8 @@ jobs:
       FIXTURE_PROFILE: ${{ matrix.profile }}
       TEST_SHARD: ${{ matrix.shard }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           artifact-ids: ${{ matrix.profile == 'contributor' && needs.build-contributor.outputs.artifact || needs.build-dinner.outputs.artifact }}
           path: .build/download
@@ -169,7 +169,7 @@ jobs:
           bash scripts/run_ios_test_shard.sh
       - name: Retain fixture results and timing
         if: always() && matrix.shard != 'RecordsMediaUITests'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: iphone-fixture-results-${{ matrix.shard }}-${{ github.run_attempt }}
           include-hidden-files: true
@@ -182,7 +182,7 @@ jobs:
           if-no-files-found: ignore
       - name: Retain Records media result counts and timing
         if: always() && matrix.shard == 'RecordsMediaUITests'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: iphone-fixture-results-${{ matrix.shard }}-${{ github.run_attempt }}
           include-hidden-files: true

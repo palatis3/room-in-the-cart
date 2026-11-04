@@ -44,7 +44,7 @@ jobs:
       artifact: ${{ steps.upload.outputs['artifact-id'] }}
       test_matrix: ${{ steps.plan.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Check performance evidence validation
         run: python3 scripts/test_check_ios_performance.py
       - name: Record Xcode and select an iPhone simulator
@@ -72,7 +72,7 @@ jobs:
         run: |
           python3 scripts/check_built_app.py .build/DerivedData/Build/Products/Release-iphonesimulator/RoomInTheCart.app --configuration Release
           tar -czf "$RUNNER_TEMP/iphone-performance-products.tar.gz" -C .build/DerivedData/Build Products
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         id: upload
         with:
           name: iphone-performance-products-${{ github.run_attempt }}
@@ -82,7 +82,7 @@ jobs:
           if-no-files-found: error
       - name: Retain Release build log
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: iphone-performance-build-log-${{ github.run_attempt }}
           path: .build/PerformanceBuild.log
@@ -105,8 +105,8 @@ jobs:
       ENFORCE_BASELINES: ${{ github.event_name == 'pull_request' || inputs.enforce_baselines }}
       FIXTURE: ios/UITests/Fixtures/ReleaseLedger500.txt
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           artifact-ids: ${{ needs.performance-build.outputs.artifact }}
           path: .build/download
@@ -172,7 +172,7 @@ jobs:
           python3 scripts/check_ios_performance.py "${args[@]}"
       - name: Retain Release performance evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: iphone-performance-${{ matrix.case }}-${{ github.run_attempt }}
           path: .build/performance/
