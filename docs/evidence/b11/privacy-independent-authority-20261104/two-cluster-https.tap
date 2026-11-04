@@ -1,0 +1,40 @@
+TAP version 13
+# Subtest: the two runtime roles cannot replace, delete, or impersonate retained records and admissions
+ok 1 - the two runtime roles cannot replace, delete, or impersonate retained records and admissions
+  ---
+  duration_ms: 78.473875
+  ...
+# Subtest: one claim wins across independent clients and cannot be removed by a different attempt or deployment scope
+ok 2 - one claim wins across independent clients and cannot be removed by a different attempt or deployment scope
+  ---
+  duration_ms: 14.635209
+  ...
+# Subtest: immutable create checks bytes, CAS rejects forks, and admitted retry returns the original signed receipt
+ok 3 - immutable create checks bytes, CAS rejects forks, and admitted retry returns the original signed receipt
+  ---
+  duration_ms: 26.241791
+  ...
+# Subtest: progress without the original admitted acceptance is rejected before any record is stored
+ok 4 - progress without the original admitted acceptance is rejected before any record is stored
+  ---
+  duration_ms: 7.596666
+  ...
+# Subtest: app and worker recover one request through a restarted HTTPS authority on a separate PostgreSQL cluster
+ok 5 - app and worker recover one request through a restarted HTTPS authority on a separate PostgreSQL cluster
+  ---
+  duration_ms: 1118.93625
+  ...
+# Subtest: crash restart preserves exact admitted versions, claims, and expired reservations
+ok 6 - crash restart preserves exact admitted versions, claims, and expired reservations
+  ---
+  duration_ms: 692.786708
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2588.809083

@@ -1,0 +1,510 @@
+{
+  "baseCommit": "cd559db",
+  "aggregateSHA256": "7c81826f5563465ee070cb836cbd63bad599ae5a790649b505930ce36c4c5a23",
+  "files": [
+    {
+      "path": "service/.env.example",
+      "sha256": "38e5ba5844cd94ca4b62fffc3448cdc6c2a3bddf21e271e32ba0cf1e6a5c8590"
+    },
+    {
+      "path": "service/journal-authority/001_checkpoint.sql",
+      "sha256": "d77fd5e79cca67266c9ec57a56302c5a67b552dbc11bafeb44aa0ec777abb06f"
+    },
+    {
+      "path": "service/migrations/001_household_requests.sql",
+      "sha256": "e919302e353eae03f5cf63425ad82924c3c6315321b8b4b07e1253185e79ef5b"
+    },
+    {
+      "path": "service/migrations/002_apple_billing.sql",
+      "sha256": "2f819c06c49f47e32c0093c636bacdfd95ad299ed159337b39041d173385ca6e"
+    },
+    {
+      "path": "service/migrations/003_web_session.sql",
+      "sha256": "dd2b9967be0364bf313afba035e8a60fec948a94aa1cf182e9fea14e269888cb"
+    },
+    {
+      "path": "service/migrations/004_household_lock.sql",
+      "sha256": "65fef08a239f4ea122133c335d56918e9d2ef2c4455418f36e18b6442a473250"
+    },
+    {
+      "path": "service/migrations/005_session_and_policy_hardening.sql",
+      "sha256": "3504fec9398d40cad639aa50c931d7cbe6b585e7cf2dc5059f227b3e87727d45"
+    },
+    {
+      "path": "service/migrations/006_household_lifecycle.sql",
+      "sha256": "7f293a0b681627cccb2d5bdc943eb3ea5c6e1436b063857f4a33f981cced296c"
+    },
+    {
+      "path": "service/migrations/007_selected_helper_session.sql",
+      "sha256": "422f3b0cafc482adb3708689c11bbbab1d026aac69555a8dafcbd3a525f2fca5"
+    },
+    {
+      "path": "service/migrations/008_browser_email_auth.sql",
+      "sha256": "5ad8c46d4146e1ce980e4f8809afa00512b9ed6ae6e41fd76637e0d86a713e1e"
+    },
+    {
+      "path": "service/migrations/009_auth_maintenance.sql",
+      "sha256": "b4e33a77bc0a9576a763062e8f3dddf00c019ecbe5464ad300b1e5fa0e872b6e"
+    },
+    {
+      "path": "service/migrations/010_account_lifecycle.sql",
+      "sha256": "e35ebbc6a2d1fcc3f7d03420542eb4ce588c3708e8bb31fcfc3ec0cc283daa22"
+    },
+    {
+      "path": "service/migrations/011_helper_review_and_shop_selection.sql",
+      "sha256": "23457cac7c614eb8794ec0268641cd1130558ce8d8c576c4ce8bd994253d07b9"
+    },
+    {
+      "path": "service/migrations/012_price_budget_history.sql",
+      "sha256": "dad295084f43a58cd15f58524575e98df66a77bdb0a17bd0f9555b3eac05c5c2"
+    },
+    {
+      "path": "service/migrations/013_shared_meal_occurrences.sql",
+      "sha256": "f574ff8a6b73f0959c622053b9ebd3408d05629d653709a40d631cc58259e1d5"
+    },
+    {
+      "path": "service/migrations/014_shared_meal_moves.sql",
+      "sha256": "2673ea349e6a7cd4df823e4128e4059533049b46071b03a1a1dc90a0d6e90a95"
+    },
+    {
+      "path": "service/migrations/015_family_decisions.sql",
+      "sha256": "c9779d5c19bcbb2e2bc5b3f4ffe0793e459375892d9616d5c0db2ac82686def1"
+    },
+    {
+      "path": "service/migrations/016_shared_meal_changes.sql",
+      "sha256": "362138035995832cc6b1bbffb6e9c0528ee2576945a908a14db03104355da6b0"
+    },
+    {
+      "path": "service/migrations/017_shared_meal_ideas.sql",
+      "sha256": "fe61e6528a38cc9c6c4315587d12ee540ea624422a8e89f8933f05e75addab63"
+    },
+    {
+      "path": "service/migrations/018_shared_store_quotes.sql",
+      "sha256": "ad18c9602e2f3c16d30f1f504ed833995bd2d09231ec405d50c7db592622b849"
+    },
+    {
+      "path": "service/migrations/019_optional_measurement.sql",
+      "sha256": "11cf0700dd146331a6997cca80b011a04fc8028c403745dd9e6b1d8121e959a2"
+    },
+    {
+      "path": "service/migrations/020_operations_health.sql",
+      "sha256": "daa858b576a969c5c8297a87ed88deeb4cda5c24a0b9f588f5a3429e92a0c2e7"
+    },
+    {
+      "path": "service/migrations/021_guardian_enrollment.sql",
+      "sha256": "73e33d596776a1874aeb4715b16abed3f18829d1415ed6b0dd2799e356df4c04"
+    },
+    {
+      "path": "service/migrations/022_privacy_journal.sql",
+      "sha256": "d64716764dd1e9b1131c7aab53faa1e67cf518875011271452ee0120d4ead5cb"
+    },
+    {
+      "path": "service/migrations/023_device_enrollment_fence.sql",
+      "sha256": "16f737590b2d90c6ae2942b2e4983d1455f42077d477382320773b15a6629b5d"
+    },
+    {
+      "path": "service/migrations/024_privacy_journal_source.sql",
+      "sha256": "98733f9b4a8fd8c7f7804d9be2c42a2d8a351f931a4ee820b62540c48b270185"
+    },
+    {
+      "path": "service/package-lock.json",
+      "sha256": "ca1179584c49cf291a45bf19ca3c30cd3ce08aece0e69bfd73db932da640542d"
+    },
+    {
+      "path": "service/package.json",
+      "sha256": "1ae270edf862179971e73661293828bc7a68c3a10c6ef6e9679d801ff7d8421b"
+    },
+    {
+      "path": "service/scripts/journal-authority.mjs",
+      "sha256": "4ca2a3d32c7b91166c76c281dd0293ea0ee1afb99f9f5252697a2012729c630e"
+    },
+    {
+      "path": "service/scripts/migrate.mjs",
+      "sha256": "b4fdd5bcbb40a4f6414be7190474e2d0fbfa15b1d2cb1daec78205f8c5d08766"
+    },
+    {
+      "path": "service/scripts/privacy-journal.mjs",
+      "sha256": "0bfa557d63e7870328cd2849506bd29f39cd293ffee1e30831ca79ef7b704f7f"
+    },
+    {
+      "path": "service/scripts/test-database.mjs",
+      "sha256": "6f18608fa9725e6c69159d5570bbb76ccf652c2f9cf54c7f04d0ba203935b724"
+    },
+    {
+      "path": "service/scripts/test-guardian.mjs",
+      "sha256": "1b20e33b6f10a11c9e883be9ec98ad06d79f968edf304c0af682efdc55c4c9d3"
+    },
+    {
+      "path": "service/scripts/test-operations.mjs",
+      "sha256": "dd68bf93fd9fe34ccd8bda7bf9df82cd6cc58c9822522a3c9c25617d21a0522f"
+    },
+    {
+      "path": "service/scripts/test-privacy-journal-pg-source.mjs",
+      "sha256": "8f300e91d4278568000f36c652a30019420ec1c34adfe4912eb002b8fdf78790"
+    },
+    {
+      "path": "service/src/auth.ts",
+      "sha256": "1ada4617b38cae94985a7ee39ec4b973f38737f7e96111e1f00d837c40b4538e"
+    },
+    {
+      "path": "service/src/billing/apple.ts",
+      "sha256": "6a35a15b2fcced63285f5d1317190ee79ad124ea8f3491e49ddd98ad734c085b"
+    },
+    {
+      "path": "service/src/billing/domain.ts",
+      "sha256": "2a3b0304f1ed665d31ee997abf97d46dfc5d8e1dc950c643a1f4f5b5070c2413"
+    },
+    {
+      "path": "service/src/billing/service.ts",
+      "sha256": "7199f1e540aa4da3159a8d6d216af0063467ceb764faeb176e8774039b1e820f"
+    },
+    {
+      "path": "service/src/billing/tests/domain.test.mjs",
+      "sha256": "0e4d4e60dda4244c753c4a95c53b54166e6bfce827d45d4bf75bfb027e6b935a"
+    },
+    {
+      "path": "service/src/billing/tests/postgres.test.mjs",
+      "sha256": "8ba82f33b65d373a3975a87db17cb2cbfbc10d87e9131e395f3e0fab57a2958b"
+    },
+    {
+      "path": "service/src/billing/tests/signatures.test.mjs",
+      "sha256": "23d746d5038a30b6cb3a30272b6394f212d684945d4fee5cd231ddecadbf3264"
+    },
+    {
+      "path": "service/src/browser-auth.ts",
+      "sha256": "d9f5aa471c84993d6242aff0423857d0148dbcd83c1faf1dd694d1561cf66683"
+    },
+    {
+      "path": "service/src/checkout.ts",
+      "sha256": "5ddaa0733d67cd78f30f6e51c1a8280a5881349d5146e9a4dd50fd5d5e41cec4"
+    },
+    {
+      "path": "service/src/contracts.ts",
+      "sha256": "3f8c8a525ef1610438111a2cea030a94ea6bc9007b7d740d0525c2616183443c"
+    },
+    {
+      "path": "service/src/database.ts",
+      "sha256": "b197cbf8fbfb03ae7e62dd9cf5d807dd4f31e566c47bb57266f6fceb50b6baaa"
+    },
+    {
+      "path": "service/src/decision-history.ts",
+      "sha256": "b6757241e26df5994dc31938538d1730fcfd42a55d2866c9a356e9d9d8bfc9b1"
+    },
+    {
+      "path": "service/src/device-management.ts",
+      "sha256": "835833b5c1ab2917457296a8a5ae6fc0564fe54d8d3b96965a53942ea304300c"
+    },
+    {
+      "path": "service/src/errors.ts",
+      "sha256": "67d27af1f5afd51dcd9107f67b8ab06c3f788e03985800ba94f1beedf8f2d01d"
+    },
+    {
+      "path": "service/src/guardian-policy.ts",
+      "sha256": "e321da45a8a641175a4ab523cf1a0cfb12c1fda89e68dc627e1d348c866baacf"
+    },
+    {
+      "path": "service/src/guardian-provider.ts",
+      "sha256": "aae0f453f2d2a3c8dae8aa87f5e6cdfadb19d79850a48224ed4106be58614321"
+    },
+    {
+      "path": "service/src/guardian-runtime.ts",
+      "sha256": "9dc4ac5b871aa919ee52aaaed14aacc8af8dbb8ccecfbaaadb31b768529de41d"
+    },
+    {
+      "path": "service/src/guardian.ts",
+      "sha256": "d63b964e1fae757c9267c475f0eeb3f2a8655f67d666538548596f542c28eb28"
+    },
+    {
+      "path": "service/src/helper-review.ts",
+      "sha256": "87dc99103daf19027f0940be4e3dfba90f825d00b38d8b1ceb5400f8879161ca"
+    },
+    {
+      "path": "service/src/history-contracts.ts",
+      "sha256": "9d57eb3135afd7efc59e2d9fac4879a9e54816b2f461883d4304b87298f01b3d"
+    },
+    {
+      "path": "service/src/history-math.ts",
+      "sha256": "30e8b460b0811d7f97673e504458748f01585a394ff775cec0557bfbaad7ca62"
+    },
+    {
+      "path": "service/src/history.ts",
+      "sha256": "42149af4a8373ca04f4ffd5cbfc48621a96a0864406a4cbf7e62d50d40635921"
+    },
+    {
+      "path": "service/src/http.ts",
+      "sha256": "26271ee8b3a87272c7e5f7246d4954700e9b2fe9adfea1142762907fd46fd559"
+    },
+    {
+      "path": "service/src/lifecycle.ts",
+      "sha256": "3719a3e86525975fdfd893e4d334649ee4efb9f2878da75ce3889a8e398581da"
+    },
+    {
+      "path": "service/src/main.ts",
+      "sha256": "acc36f5f15788dda99ddd8ecf0a116304dad6d03a2f1bbd38ec453d7acf21790"
+    },
+    {
+      "path": "service/src/maintenance.ts",
+      "sha256": "1ffea12f283b688ff5286ea0163df9c8956d408f919299daa9413a1145eeb1f8"
+    },
+    {
+      "path": "service/src/meal-moves.ts",
+      "sha256": "33bc4a1a9cf1d4b198489d7f2f65caf38ad6470d579d6fdc71610aa79a8b8a1c"
+    },
+    {
+      "path": "service/src/measurement.ts",
+      "sha256": "821619917a5b7f071788f12176609d99db08c68e822fbbb2860c1916902e6dad"
+    },
+    {
+      "path": "service/src/operations-cli.ts",
+      "sha256": "a49d73d9d4affa99443601cb0be0b76affb9e393097ff5e5b0d60d1419632a8e"
+    },
+    {
+      "path": "service/src/operations-http.ts",
+      "sha256": "327c382f0f57132e8ba3d8add721d36cb3ccd46946134ecdf03d24835477d36e"
+    },
+    {
+      "path": "service/src/operations-runtime.ts",
+      "sha256": "a94ab12148516bd5ed4817d214bdc91fe3d6c212c36009fee0457397cf8c6de5"
+    },
+    {
+      "path": "service/src/placement-reports.ts",
+      "sha256": "a516f6c7e8e8d2a9044a28cff69286e94c283d2979f677f6586b4cd3e1407a0d"
+    },
+    {
+      "path": "service/src/privacy-call.ts",
+      "sha256": "d2ba18823baa11e6357c0072e862f747b6a5987ed17388a5ad88ebf6c8dbc09d"
+    },
+    {
+      "path": "service/src/privacy-journal-durable-contract.ts",
+      "sha256": "ef188e894ab4f1a0afd03d28d25924b55d387f04640c9a6205c9c2f22b6c6729"
+    },
+    {
+      "path": "service/src/privacy-journal-durable.ts",
+      "sha256": "fe3539aa735f964b0b8cad233a4a5577a9e60dea7033b8b3f4e5aac04210aef8"
+    },
+    {
+      "path": "service/src/privacy-journal-https.ts",
+      "sha256": "d5aa319020d2360c14073eb4df248d20035d542985b32dc6a102760d01e96bb7"
+    },
+    {
+      "path": "service/src/privacy-journal-pg-authority.ts",
+      "sha256": "1e047423263c160180a5453a43d0d5264c16a43a28443e0767944c53e30b3b18"
+    },
+    {
+      "path": "service/src/privacy-journal-pg-source.ts",
+      "sha256": "286a3cde6bb711b38dc9f0473d23c96e28fdaae6e4c4ed1222ffc150723337a6"
+    },
+    {
+      "path": "service/src/privacy-journal.ts",
+      "sha256": "ee21dcbd7907d011f12d53ad1fa0557480d00be9a95c3b87ef366bca6755dcef"
+    },
+    {
+      "path": "service/src/privacy.ts",
+      "sha256": "b88d93e165ce91ef897691aa188e5c954487a426c639b0974d039c399fcfe6a3"
+    },
+    {
+      "path": "service/src/repository.ts",
+      "sha256": "0d18c353c4a0c6cdf136f7a4b3968923be7835ecbd27b076dfa8a58c37eb9828"
+    },
+    {
+      "path": "service/src/request-pack-evidence.ts",
+      "sha256": "131138e3a21b60de396cd546723bafdecb1ca9f4b4473a8db5b77f177b90659f"
+    },
+    {
+      "path": "service/src/runtime.ts",
+      "sha256": "fcbd5dfe3df32d7d425eab61fa5b977a895168712a1802ee65b46b46c592422b"
+    },
+    {
+      "path": "service/src/shared-meal-changes.ts",
+      "sha256": "81d72b00c731ecb7ed841f71caeabf2d2438b9fb3ac06674861c3cb69e28a467"
+    },
+    {
+      "path": "service/src/shared-meal-ideas.ts",
+      "sha256": "a436b8b3c8050d03490a954424b06cb060a678a838ad009044a51be31da8bf3c"
+    },
+    {
+      "path": "service/src/shared-meal-planning.ts",
+      "sha256": "c1da848a8db729e1287aeaf3bb8675c0ed27af6cc871bd75b3057fcc6ac0e49c"
+    },
+    {
+      "path": "service/src/shared-store-quotes.ts",
+      "sha256": "7450a807f8055e2db397c8fafe7cc1db294c1551af22ce0f34ad44b15b3ab3ba"
+    },
+    {
+      "path": "service/tests/auth-boundary.test.mjs",
+      "sha256": "beec88295e49941dda12f4d058b6451fda0a878d483020978410be06aca32938"
+    },
+    {
+      "path": "service/tests/auth-journal-attestation.test.mjs",
+      "sha256": "fe1a5e2f581fa15cac20b961f16bde97f483e395a5d25c052db07ee65a7149c3"
+    },
+    {
+      "path": "service/tests/browser-auth.integration.mjs",
+      "sha256": "a16b23e82f09febc4ace54f81d8c16535e7c35b7db05a15ae775516eef4bd696"
+    },
+    {
+      "path": "service/tests/browser-provider.test.mjs",
+      "sha256": "b2dab511ed644f5b69070d84af69d62cd3299f66786bd0435902a010db51e11b"
+    },
+    {
+      "path": "service/tests/checkout.test.mjs",
+      "sha256": "c70f898a713fcb913370e9b9b07ce994d206a42612a78c39bb5377a71e254d6d"
+    },
+    {
+      "path": "service/tests/decision-history.integration.mjs",
+      "sha256": "833df23499e44c41329592fafbe863fe55a21f90886c44d6e5f024261c7b7a85"
+    },
+    {
+      "path": "service/tests/device-management.integration.mjs",
+      "sha256": "c684652270bb590f8daa970d0d1a1866b0ed45fdaf2404da05c40823f0a202cf"
+    },
+    {
+      "path": "service/tests/durable-authority-fixture.mjs",
+      "sha256": "8a099d730e18ef5ab1937242b8a95b832be1f917cd1c3206b50a6e0a08e581ea"
+    },
+    {
+      "path": "service/tests/durable-independent-fixture.mjs",
+      "sha256": "97aa56a0e66ab131bc6370386503971ffcdecd8a2e75e2a9ed84256107a7b8c4"
+    },
+    {
+      "path": "service/tests/guardian-provider.test.mjs",
+      "sha256": "687a2b5ce9475654b2cdb742609ca18af26929652e28b20ddb459ae38fe2af0e"
+    },
+    {
+      "path": "service/tests/guardian.integration.mjs",
+      "sha256": "ce39652d33fc8dfa56cfcff226a86b834fd4b336e89691f749d73c803d4beb80"
+    },
+    {
+      "path": "service/tests/helper-review.integration.mjs",
+      "sha256": "54a03acbd1c802f2769f93e731749345d7db62d6a2410174490bc7656bb30f39"
+    },
+    {
+      "path": "service/tests/history-math.test.mjs",
+      "sha256": "8cc64aff750ef85a799dd261e4a1a767fe4406108261b503fcd5d4b783151478"
+    },
+    {
+      "path": "service/tests/history.integration.mjs",
+      "sha256": "2eea88c7954fda189a89e4198674395361464d63aba80f686a92ca9958e8be76"
+    },
+    {
+      "path": "service/tests/maintenance.operations.mjs",
+      "sha256": "77a62703fdca6d0303955d5c6d26197accb3f69cee7e99bb828bf92a28179fd7"
+    },
+    {
+      "path": "service/tests/measurement.integration.mjs",
+      "sha256": "40a48ba4d1d1f8900546d924e5c86ea34c9184260c42a268550951ef4c753325"
+    },
+    {
+      "path": "service/tests/measurement.test.mjs",
+      "sha256": "fa06b37e2d135e1cd31b09548d0850cebb393795798a61f7c48b6b135c774fa8"
+    },
+    {
+      "path": "service/tests/native-wire.mjs",
+      "sha256": "8234d15eb6290f99943d73457619b3b8a4767aae6fa3ac91275826e7dd86c681"
+    },
+    {
+      "path": "service/tests/operations.test.mjs",
+      "sha256": "a3f4141f13d0ad58b519cdbed4d51b6b49e374a6c514a0f95ce79648895a91d9"
+    },
+    {
+      "path": "service/tests/privacy-call.test.mjs",
+      "sha256": "2d47a3dfc909ae70ff97344bf43f081db996cd1283cad515856121033989205c"
+    },
+    {
+      "path": "service/tests/privacy-journal-cancellation.test.mjs",
+      "sha256": "477aa812bf4a020f165315350cd3599300cb20dde7164b1c0c7584ef2b88e302"
+    },
+    {
+      "path": "service/tests/privacy-journal-durable.test.mjs",
+      "sha256": "e3d70403de7fef019ae3a365a71949c5a1f9e1196da52528f7f659c9a8b618a4"
+    },
+    {
+      "path": "service/tests/privacy-journal-fixture.mjs",
+      "sha256": "c8cb0f33315eb06eaa6e529873419cabb4eed7064982595e4b8f8a03e78ea2bb"
+    },
+    {
+      "path": "service/tests/privacy-journal-io.test.mjs",
+      "sha256": "438d538895d565d83eec4645d2bf33e7fac86b0ccd53b6a1be1a7d6f622bf36f"
+    },
+    {
+      "path": "service/tests/privacy-journal-pg-authority.postgres.mjs",
+      "sha256": "8e351a51eb9384f3251691042f6c8747809e747b26e4f58e55259f38eb88eeb7"
+    },
+    {
+      "path": "service/tests/privacy-journal-pg-source.postgres.mjs",
+      "sha256": "ffd783edcb1bb04cfb63bb6f1a813844a849acb3727950edb44a87a3794ccd68"
+    },
+    {
+      "path": "service/tests/privacy-journal-semantics.test.mjs",
+      "sha256": "eb0bb9b38abbc251bbbbcf278a404cad8d6e28b5dd607163592083cdd5edf547"
+    },
+    {
+      "path": "service/tests/privacy-journal-writer.test.mjs",
+      "sha256": "4a2383ba0a7f5272446c7c843a4a9fc33c1a7cae117ea0a0152f53b70f000b62"
+    },
+    {
+      "path": "service/tests/privacy-journal.test.mjs",
+      "sha256": "9f07698743e34c5d830f3fcfc42215ae57a043b185fcfe7c33e60a9df1ef381b"
+    },
+    {
+      "path": "service/tests/privacy-provider.test.mjs",
+      "sha256": "2d52a94179a74866fd558afeaef276e1e0c268ca8d18482755c79158541cc195"
+    },
+    {
+      "path": "service/tests/privacy.integration.mjs",
+      "sha256": "74c744005354e9060c98642954944f2930449fa15129643aebc7b6beb0629e17"
+    },
+    {
+      "path": "service/tests/request-pack-evidence.test.mjs",
+      "sha256": "606481cafc9b7183ecac212301f249203cac4c658fb83d5c7392100c06b2a352"
+    },
+    {
+      "path": "service/tests/runtime-privacy.integration.mjs",
+      "sha256": "e26171a20c3502934521d7f8b50ffb173ee2bc98e3432ca5f6e8ad9204410225"
+    },
+    {
+      "path": "service/tests/runtime.operations.mjs",
+      "sha256": "272ce05f73459e4320f3855cbfe17df124c47d9829eb9f49f200bba1d450f4fc"
+    },
+    {
+      "path": "service/tests/runtime.test.mjs",
+      "sha256": "0d00f7197de5007bb9fe00b331843c01a326ffad5f69daf6179defd9c5c51483"
+    },
+    {
+      "path": "service/tests/service.integration.mjs",
+      "sha256": "f1a6c8263845f013d9a4651cfd8bddacc2c395a40fbe5bad498001862114018c"
+    },
+    {
+      "path": "service/tests/shared-meal-changes.integration.mjs",
+      "sha256": "c0f10f15d5a17b4f5dbbe75ec42b90ff9b570886d7999d4585f0c6d9b323fb84"
+    },
+    {
+      "path": "service/tests/shared-meal-ideas.integration.mjs",
+      "sha256": "1f13a1e9e031fc4e78d10d5087fe8be205adeae65a9b8718c4d38038c3d5553b"
+    },
+    {
+      "path": "service/tests/shared-meal-ideas.test.mjs",
+      "sha256": "1e69ab3e8beaba1c415ee48abfee264bec474cb22f88f314a3a6b3cdde29fbfe"
+    },
+    {
+      "path": "service/tests/shared-meal-native-wire.mjs",
+      "sha256": "c035663a5c38f17a9ab36fae3c361d4d1215431f8e152f9d56a4e81b9fb2050d"
+    },
+    {
+      "path": "service/tests/shared-store-quotes-math.test.mjs",
+      "sha256": "1d555aa8e8a7cb1a4ffada1be6f0e2fd52e26b6d48ab08b466e2cfe214c8f2ce"
+    },
+    {
+      "path": "service/tests/shared-store-quotes-native-wire.mjs",
+      "sha256": "965f25b4eb9b7f717c562581aee67cd176fe432403e4db06baea2bb319b0d3f5"
+    },
+    {
+      "path": "service/tests/shared-store-quotes.integration.mjs",
+      "sha256": "c436116bf710400607b46ec8a4fa16f1cdfd9fb49251c58bb7051d93e6767e2d"
+    },
+    {
+      "path": "service/tsconfig.json",
+      "sha256": "af93987394f772829050871e984e908a33ed31c875f2ac9d2d63186f3b0e8d96"
+    }
+  ]
+}

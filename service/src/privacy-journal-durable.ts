@@ -18,17 +18,17 @@ const pinsSchema=z.object({lineage:uuid,schemaDigest:hash,configurationId:identi
 const payloadSchema=z.object({version:z.literal(1),eventId:uuid,lineage:uuid,schemaDigest:hash,configurationId:identifier.max(100),jobId:uuid,kind:z.enum(['acceptance','target_erased','source_completed','source_pending']),data:z.record(z.string(),z.unknown())}).strict();
 const eventSchema=z.object({eventId:uuid,payloadDigest:hash,payload:payloadSchema}).strict();
 const headSchema=z.object({version:z.literal(1),lineage:uuid,schemaDigest:hash,configurationId:identifier.max(100),seq:safe.max(MAX_RECORDS),hash,fenced:z.boolean()}).strict();
-const admittedSchema=z.object({head:headSchema,generation:safe.min(1),authorityRevision:safe,mode:z.enum(['active','pending','blocked','recovery','sealed']),pendingOperation:hash.nullable(),totalBytes:safe.max(MAX_BYTES)}).strict();
-const identitySchema=z.object({seq:safe.min(1).max(MAX_RECORDS),previousHash:hash,recordHash:hash,byteLength:safe.min(1).max(MAX_BYTES),eventId:uuid,payloadDigest:hash,jobId:uuid,transition:z.enum(['intent','commit','rollback'])}).strict();
-const storedSchema=z.object({objectKey:identifier,immutableVersion:identifier,recordHash:hash,byteLength:safe.min(1).max(MAX_BYTES)}).strict();
-const ticketSchema=z.object({operationId:hash,generation:safe.min(1),expected:admittedSchema,record:identitySchema,objectKey:identifier,authorityExpiresAtUnixMs:safe.min(1)}).strict();
-const receiptSchema=z.object({version:z.literal(1),domain:z.literal('ritc-privacy-journal-admission-v1'),scopeDigest:hash,authorityKeyId:identifier.max(100),operationId:hash,admitted:admittedSchema,record:identitySchema,stored:storedSchema,authoritySignature:signature}).strict();
-const inspectionSchema=z.discriminatedUnion('state',[
+export const admittedSchema=z.object({head:headSchema,generation:safe.min(1),authorityRevision:safe,mode:z.enum(['active','pending','blocked','recovery','sealed']),pendingOperation:hash.nullable(),totalBytes:safe.max(MAX_BYTES)}).strict();
+export const identitySchema=z.object({seq:safe.min(1).max(MAX_RECORDS),previousHash:hash,recordHash:hash,byteLength:safe.min(1).max(MAX_BYTES),eventId:uuid,payloadDigest:hash,jobId:uuid,transition:z.enum(['intent','commit','rollback'])}).strict();
+export const storedSchema=z.object({objectKey:identifier,immutableVersion:identifier,recordHash:hash,byteLength:safe.min(1).max(MAX_BYTES)}).strict();
+export const ticketSchema=z.object({operationId:hash,generation:safe.min(1),expected:admittedSchema,record:identitySchema,objectKey:identifier,authorityExpiresAtUnixMs:safe.min(1)}).strict();
+export const receiptSchema=z.object({version:z.literal(1),domain:z.literal('ritc-privacy-journal-admission-v1'),scopeDigest:hash,authorityKeyId:identifier.max(100),operationId:hash,admitted:admittedSchema,record:identitySchema,stored:storedSchema,authoritySignature:signature}).strict();
+export const inspectionSchema=z.discriminatedUnion('state',[
  z.object({state:z.literal('absent'),operationId:hash}).strict(),
  z.object({state:z.enum(['pending','blocked']),operationId:hash,ticket:ticketSchema}).strict(),
  z.object({state:z.literal('admitted'),operationId:hash,receipt:receiptSchema}).strict(),
 ]);
-const recordSchema=z.object({version:z.literal(1),keyId:identifier.max(100),seq:safe.min(1).max(MAX_RECORDS),previousHash:hash,kind:z.enum(['intent','commit','rollback']),event:eventSchema,signature}).strict();
+export const recordSchema=z.object({version:z.literal(1),keyId:identifier.max(100),seq:safe.min(1).max(MAX_RECORDS),previousHash:hash,kind:z.enum(['intent','commit','rollback']),event:eventSchema,signature}).strict();
 const originSchema=z.object({lineage:uuid,schemaDigest:hash,configurationId:identifier.max(100),sourceIdentity:identifier,fenced:z.boolean()}).strict();
 const claimSchema=z.object({scopeDigest:hash,eventId:uuid,transition:z.enum(['intent','commit']),claimId:identifier}).strict();
 

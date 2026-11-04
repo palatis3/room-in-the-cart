@@ -16,6 +16,8 @@ An explicitly configured worker first claims committed events that still need ac
 
 The dedicated observer fixture requires the existing reviewed local fixture roles and PostgreSQL on `/tmp:55432`. Build the service, then run `TEST_JOURNAL_OBSERVER_ROLE=ritc_guardian_test_verifier node scripts/test-privacy-journal-pg-source.mjs` from `service`. It applies migrations to two disposable databases and removes them on exit. Local SQL and observer coverage uses synthetic keys and simulated remote authority, storage and provider behavior. See the [local test record](../docs/evidence/b11/privacy-observer-worker-20261104/validation.json).
 
+The independently hosted service implementation uses a dedicated PostgreSQL database and the scoped HTTPS protocol. Its acceptance test runs the existing app and worker on a separate source cluster and checks exact SQL acknowledgement against the retained receipts. See the [authority service and provisioning inputs](journal-authority/README.md).
+
 ## Local writer
 
 `createLocalPrivacyJournal` in `src/privacy-journal.ts` takes a dedicated fixed owner source pool, pinned lineage/schema/configuration ID/key ID, owner-only key file, owner-only journal directory and a separate checkpoint path. The request service still uses its non-owner application pool. The local synthetic harness is explicitly a trusted owner/signer process. Neither application nor maintenance roles receive raw journal/ack/plan/receipt rights or private helper execution. No supported CLI signs JSON or accepts a target list.

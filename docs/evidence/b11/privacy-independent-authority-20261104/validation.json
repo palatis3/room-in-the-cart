@@ -1,0 +1,39 @@
+{
+  "sourceSHA256": "7c81826f5563465ee070cb836cbd63bad599ae5a790649b505930ce36c4c5a23",
+  "sourceFiles": 126,
+  "runtime": {
+    "Node": "22.14.0",
+    "PostgreSQL": "17.11"
+  },
+  "serviceBuild": "passed",
+  "authority": {
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "artifact": "two-cluster-https.tap",
+    "sha256": "1bc16d9180a01f0ecdfebaaf914130eba357d905c604bbcc7d94a04404817872"
+  },
+  "serviceUnits": {
+    "passed": 344,
+    "failed": 0,
+    "skipped": 1,
+    "localArtifact": ".build/PrivacyAuthority-verified-unit-20261104.tap",
+    "sha256": "1b6fc5dee09f603d2fa751c3c6345161c0fc3f20a25ae03c53f10c56b0d746b1",
+    "skip": "Optional billing PostgreSQL fixture, covered in the preceding integration checkpoint."
+  },
+  "cases": [
+    "Distinct roles and effective grants including column ACL drift",
+    "One claim across clients and deployment scopes",
+    "Conditional immutable exact bytes, fork rejection and stable signed receipts",
+    "Progress blocked without admitted acceptance",
+    "Actual application and worker across separate PostgreSQL clusters and a restarted HTTPS service",
+    "Immediate PostgreSQL shutdown and restart preserves bytes, admission, claim and expired reservation"
+  ],
+  "limits": [
+    "Disposable separate clusters on one host, synthetic provider, test certificates and fixture keys.",
+    "Runtime has independent HTTPS and restricted SQL capabilities. No hosted deployment, external key provisioning, production erasure, operator recovery, or disaster restore proof.",
+    "Authority and immutable objects share one independent PostgreSQL primary under distinct runtime roles. Its deployment must have a failure and restore domain separate from the app database.",
+    "The initial startup ACL probe used a schema-qualified name visible only to the checkpoint role. The corrected probe checks relation OIDs without granting record-role schema access."
+  ],
+  "reproduce": "From service, npm run build, then TEST_POSTGRES_BIN=/path/to/postgres/bin node --test tests/privacy-journal-pg-authority.postgres.mjs."
+}

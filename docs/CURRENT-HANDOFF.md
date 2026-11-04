@@ -4,6 +4,16 @@ The complete production app remains the objective. The current checkpoint below 
 
 ## Current checkpoint — November 4
 
+The independent deletion journal now has a runnable HTTPS service. It stores exact record versions, the signed admission history and unresolved attempts in a PostgreSQL database outside the app database. The app uses a scoped HTTPS credential and its writer key. The checkpoint service has a separate signing key, and PostgreSQL separates checkpoint and record permissions.
+
+Six dedicated cases passed with two disposable PostgreSQL 17.11 clusters. The actual app service committed a request and lost the acknowledgement step. After the HTTPS authority process restarted, the worker recovered the request, called the fixture provider once and stored acknowledgements that matched the independently persisted receipts. An immediate database stop and restart separately preserved admitted bytes, a claim and a blocked expired reservation. See the [test evidence](evidence/b11/privacy-independent-authority-20261104/validation.json) and [service runbook](../service/journal-authority/README.md).
+
+Next, implement operator fencing and resolution for uncertain attempts. Exercise export and restore from the independent checkpoint against a quarantined source backup. Runtime activation, hosted key and database provisioning, source observer ACLs and real provider verification remain open. The current authority database is an implementation choice with separate logins for its record store and checkpoint service. The fixture proves process and database crash recovery on one host. The hosted failure domain and backup policy require review.
+
+Dot coordination remains pending. The previous Lumpy chat was unavailable and the connector rejected two delivery attempts to the existing `Offer main workflow help` chat. The user was asked for Lumpy’s current link while implementation continued.
+
+## Previous checkpoint — November 4
+
 Migration 024 and the private PostgreSQL observer from Lumpy’s saved proposal are installed in the local repository. An acknowledgement now compares the persisted winner after a concurrent write, so conflicting receipts cannot both succeed. The worker shares one deadline across SQL, provider and journal work. It can recover a lost acceptance or completion acknowledgement under a lease that permits reconciliation alone. A later run can finish an interrupted pending job without asking the user to submit a new request.
 
 The [local test record](evidence/b11/privacy-observer-worker-20261104/validation.json) pins 298 inputs and records 178 application, HTTP, PostgreSQL and Swift/web wire passes, 13 real PostgreSQL observer passes, 15 operations passes and 344 unit passes. The optional unit skip for billing PostgreSQL is covered by the shared suite. The composition test uses real PostgreSQL with simulated durable storage, checkpoint authority, uncertainty and provider behavior. Lumpy’s previous chat ID could not be reached on this turn, so the integration used his archived patch and evidence.
