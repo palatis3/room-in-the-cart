@@ -126,11 +126,11 @@ import RecordArchive
         guard !busy else { return }
         busy = true; review = nil; reviewAuthorization = nil; recipeReport = nil; error = nil
         defer { busy = false }
-        let scoped = url.startAccessingSecurityScopedResource()
-        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
         do {
             let authorize = try authorization()
-            let data = try RecoveryRegistry.boundedRead(url)
+            let data = try await RecordsFileDocument.readPickedBytes(at: url)
+            try Task.checkCancellation()
+            try requireAuthorization(authorize)
             try ArchiveCodec.preflight(data)
             if recipes {
                 let existing = try await registry.refreshList().compactMap { record -> ImportedRecipe? in

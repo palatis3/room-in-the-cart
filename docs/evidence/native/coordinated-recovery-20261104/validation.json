@@ -1,0 +1,50 @@
+{
+  "baseCommit": "5459135af3466cde281659d5d6943881630d675f",
+  "toolchain": "Xcode 27.1 (27A9275)",
+  "sourceSHA256": {
+    "ios/Features/Records/RecordsFileDocument.swift": "59b899bd7622e12c98c4c34473fea505fb0bdb5f3d243682ec5bba210625c8ca",
+    "ios/Features/Records/RecordsToolsModel.swift": "907271d92938333b195c47aa1ea869bed80546c1b4f782c7f18c111927c32101",
+    "ios/Tests/RecordsAdapterTests.swift": "8f21958ca5a79071cdea5b289f742446537d284965e2164465d6b593e1d100d5"
+  },
+  "reference": "https://developer.apple.com/documentation/foundation/improving-performance-and-stability-when-accessing-the-file-system",
+  "beforeFix": {
+    "result": ".build/CoordinatedRecovery20261104/Red.xcresult",
+    "failed": 1,
+    "finding": "Record validation ran once after access was no longer current, before the existing later authorization check."
+  },
+  "models": {
+    "result": ".build/CoordinatedRecovery20261104/Models.xcresult",
+    "os": "iOS 27.0",
+    "passed": 535,
+    "failed": 0
+  },
+  "minimumSimulator": {
+    "result": ".build/CoordinatedRecovery20261104/Minimum.xcresult",
+    "device": "iPhone SE, iOS 17.0 (21A328)",
+    "passed": 34,
+    "failed": 0,
+    "scope": "Records adapter, recovery capture and media cases."
+  },
+  "systemFiles": {
+    "device": "iPhone 17e, iOS 27.0 (24A434)",
+    "initialResult": ".build/SystemRecipePicker20261104/RecoveryRoundTrip.xcresult",
+    "initialFailure": "The exporter opened in Downloads. The test looked for a Cancel button while the SDK reported a Cancel accessibility element of another type.",
+    "result": ".build/SystemRecipePicker20261104/RecoveryCoordinated.xcresult",
+    "log": ".build/SystemRecipePicker20261104/recovery-coordinated.log",
+    "passed": 1,
+    "failed": 0,
+    "seconds": 276.753,
+    "fixtureSHA256": "a2b751d8880f169ef64a3a11dade71a863b5f0f8ae5c5c7e9e09425601c53771",
+    "fixtureBytes": 4713,
+    "fixtureEnvelope": "Format 1 AES-256-GCM container with no plaintext source title.",
+    "scope": "The app exported a fictional comparison through the actual system exporter. The actual system picker reopened the same file for preview. Cancelling left the original and no new copy. Explicit import then restored a separate copy, and both original and recovered copy were present after relaunch."
+  },
+  "archive": {
+    "path": ".build/CoordinatedRecovery20261104/RoomInTheCart-CoordinatedRecovery.xcarchive",
+    "binaryUUID": "A2A5D5ED-A022-3DF7-A42B-F97FED383D03",
+    "executableSHA256": "511e4fbdd16f4b865e5fecb4885691e013eabef229079ac5779e09acd52d180c",
+    "builtAppMetadataCheck": "passed",
+    "signed": false
+  },
+  "scope": "Coordinated bounded read on a background operation queue, followed by a fresh authorization check before parsing or validating external contents. The simulator covers the local provider. Physical, iCloud, third-party provider, and actual photo-library verification remain separate."
+}

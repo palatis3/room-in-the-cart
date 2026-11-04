@@ -125,6 +125,29 @@ final class RecordsAdapterTests: XCTestCase {
         XCTAssertNotNil(model.error)
         XCTAssertEqual(try Data(contentsOf: directory.appendingPathComponent("manifest.json")), before)
     }
+    @MainActor func testFileImportRechecksAccessBeforeValidatingExternalContents() async throws {
+        let directory = try temporaryDirectory()
+        let registry = try RecoveryRegistry(url: directory.appendingPathComponent("manifest.json"))
+        let archive = try ArchiveCodec.make(records: [comparison()], kind: .personalRecovery,
+            origin: "fixture", revision: "external")
+        let file = directory.appendingPathComponent("external.json")
+        try ArchiveCodec.encode(archive).write(to: file)
+
+        var checks = 0
+        var validations = 0
+        let model = RecordsToolsModel(registry: registry, snapshot: { [] },
+            validateNativePayload: { _ in validations += 1 }, openRecovered: { _ in }, beginAuthorization: {
+                { checks += 1; return checks == 1 }
+            })
+        await model.importFile(file, recipes: false)
+
+        XCTAssertEqual(validations, 0)
+        XCTAssertNil(model.review)
+        XCTAssertEqual(model.error, .unavailable)
+        let saved = try await registry.refreshList()
+        XCTAssertTrue(saved.isEmpty)
+    }
+
     @MainActor func testRecipeImportWithOnlyDuplicatesAndSkippedRowsPublishesANewOutcome() async throws {
         let directory = try temporaryDirectory()
         let registryURL = directory.appendingPathComponent("manifest.json")

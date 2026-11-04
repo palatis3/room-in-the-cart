@@ -21,6 +21,24 @@ struct RecordsFileDocument: FileDocument {
         kind = configuration.contentType == .plainText ? .text : configuration.contentType == .roomHelper ? .helper : .recovery
     }
     func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper { FileWrapper(regularFileWithContents: data) }
+
+    static func readPickedBytes(at url: URL) async throws -> Data {
+        guard url.isFileURL else { throw ArchiveError.unavailable }
+        let scoped = url.startAccessingSecurityScopedResource()
+        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+        let intent = NSFileAccessIntent.readingIntent(with: url, options: .withoutChanges)
+        let queue = OperationQueue()
+        queue.qualityOfService = .userInitiated
+        return try await withCheckedThrowingContinuation { continuation in
+            NSFileCoordinator().coordinate(with: [intent], queue: queue) { error in
+                guard error == nil else {
+                    continuation.resume(throwing: ArchiveError.unavailable)
+                    return
+                }
+                continuation.resume(with: Result { try RecoveryRegistry.boundedRead(intent.url) })
+            }
+        }
+    }
 }
 
 struct RecordsShareFile: Transferable {
