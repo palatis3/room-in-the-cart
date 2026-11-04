@@ -200,6 +200,7 @@ jobs:
         shell: bash
         timeout-minutes: 92
         run: |
+          set -o pipefail
           test_runs=(.build/DerivedData/Build/Products/RoomInTheCart_iphonesimulator*.xctestrun)
           test "${#test_runs[@]}" -eq 1
           test -f "${test_runs[0]}"
@@ -223,13 +224,28 @@ jobs:
           for suite in "${planning_suites[@]}"; do
             selectors+=("-${mode}-testing:RoomInTheCartUITests/$suite")
           done
-          xcodebuild -xctestrun "${test_runs[0]}" \
-            -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
-            -resultBundlePath .build/UITests.xcresult \
-            -parallel-testing-enabled NO -test-timeouts-enabled YES \
-            -default-test-execution-time-allowance 720 -maximum-test-execution-time-allowance 900 \
-            -collect-test-diagnostics never "${selectors[@]}" test-without-building \
-            2>&1 | tee .build/UITests.log
+          run_journeys() {
+            local result_bundle="$1" log="$2"
+            xcodebuild -xctestrun "${test_runs[0]}" \
+              -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
+              -resultBundlePath "$result_bundle" \
+              -parallel-testing-enabled NO -test-timeouts-enabled YES \
+              -default-test-execution-time-allowance 720 -maximum-test-execution-time-allowance 900 \
+              -collect-test-diagnostics never "${selectors[@]}" test-without-building \
+              2>&1 | tee "$log"
+          }
+          if run_journeys .build/UITests.xcresult .build/UITests.log; then
+            exit 0
+          fi
+          # A killed runner before connection never executed a journey.
+          if ! grep -Fq 'Test crashed with signal kill before establishing connection.' .build/UITests.log ||
+             grep -Eq '^Test Case .* started\.' .build/UITests.log; then
+            exit 1
+          fi
+          echo 'Retrying once after the XCTest runner was killed before connection.'
+          xcrun simctl shutdown "$SIMULATOR_ID" || true
+          xcrun simctl bootstatus "$SIMULATOR_ID" -b
+          run_journeys .build/UITests-retry.xcresult .build/UITests-retry.log
       - name: Upload iPhone journey test evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -238,5 +254,7 @@ jobs:
           path: |
             .build/UITests.xcresult
             .build/UITests.log
+            .build/UITests-retry.xcresult
+            .build/UITests-retry.log
           retention-days: 7
           if-no-files-found: ignore

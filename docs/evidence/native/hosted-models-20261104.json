@@ -27,7 +27,12 @@
       "log": ".build/HostedProducts41898379149/planning-pickup-results/UITests.log",
       "log_sha256": "6d0564acd2efdbdf1e0e32e221a98bc917d2f26d08ada21098655a37d0f7f1b8",
       "summary_sha256": "e5cf35d106a136639bf594ee892850350cce4ff13e8ee7ff168b5ea0b11260ec",
-      "follow_up": "The workflow now waits for the simulator to finish booting before launching XCTest. The exact bootstatus command reached Finished on a shut-down local iPhone simulator. Hosted retest remains open."
+      "follow_up": "The workflow waits for the simulator to finish booting before launching XCTest. It restarts the simulator and retries once after the recorded pre-connection signal kill, provided no case started. The original and retry logs and result bundles are retained separately. The exact bootstatus command reached Finished on a shut-down local iPhone simulator. Hosted retest remains open.",
+      "retry_shell_validation": {
+        "workflow_step_sha256": "a63ee7088854837e81c21e799511223eb4f5547de65d07518e1a6cf4df35c6ef",
+        "log_sha256": "6df7f414d6e7dd8e6eb979ab8a12853b469ca42a00f8594aac8944917718af7a",
+        "scope": "The YAML-parsed Bash step was exercised with simulator and Xcode command stand-ins and the exact hosted failure log. Six cases passed. A direct pass ran once. A pre-connection kill rebooted and retried. A failed assertion and a kill after case start did not retry. A repeated kill and a failed simulator boot surfaced failure. The retry kept the original test selectors."
+      }
     },
     "scope": "Both actual hosted consumers restored the same artifact. The planning and pickup consumer failed during XCTest startup. The comparison and context consumer was still running."
   }
