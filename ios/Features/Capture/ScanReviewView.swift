@@ -3,6 +3,8 @@ import PhotosUI
 import CoreDomain
 
 @MainActor struct ScanReviewView: View {
+    private enum InputField: Hashable { case sourceText, manualCode }
+
     let kind: ScanKind
     let target: CaptureTarget
     let authorize: () -> Bool
@@ -26,7 +28,7 @@ import CoreDomain
     @State private var ingredients: [CaptureLineDraft] = []
     @State private var reviewingIngredients = false
     @State private var error: String?
-    @FocusState private var sourceEditorFocused: Bool
+    @FocusState private var focusedField: InputField?
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
 
@@ -60,7 +62,7 @@ import CoreDomain
                 Section(captureText("Editable source text")) {
                     TextEditor(text: $model.text).frame(minHeight: 150).accessibilityLabel(captureText("Editable source text"))
                         .accessibilityIdentifier("scan.sourceEditor")
-                        .focused($sourceEditorFocused)
+                        .focused($focusedField, equals: .sourceText)
                         .disabled(model.busy || loadingPhoto)
                     if let source = model.accepted {
                         DisclosureGroup(captureText("Compare with the original")) {
@@ -85,8 +87,8 @@ import CoreDomain
             if let failure = model.failure { Section { Text(failureText(failure)) } }
         }
         .scrollDismissesKeyboard(.interactively)
-        .keyboardDoneAction(visible: sourceEditorFocused, title: captureText("Done"), identifier: "scan.sourceDone") {
-            sourceEditorFocused = false
+        .keyboardDoneAction(visible: focusedField != nil, title: captureText("Done"), identifier: "scan.sourceDone") {
+            focusedField = nil
         }
         .navigationTitle(captureText("Photo and scan review"))
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button(captureText("Cancel")) { close(); dismiss() } } }
@@ -113,8 +115,14 @@ import CoreDomain
         }
         .onChange(of: model.text) { _, _ in receiptLines = nil; matchedProduct = false }
         .onChange(of: label) { _, _ in model.confirmed = false; matchedProduct = false }
-        .onChange(of: barcodeID) { _, _ in model.confirmed = false; matchedProduct = false }
-        .onChange(of: manualCode) { _, _ in model.confirmed = false; matchedProduct = false }
+        .onChange(of: barcodeID) { _, selection in
+            if selection != nil { manualCode = "" }
+            model.confirmed = false; matchedProduct = false
+        }
+        .onChange(of: manualCode) { _, _ in
+            if !trimmedManualCode.isEmpty { barcodeID = nil }
+            model.confirmed = false; matchedProduct = false
+        }
         .onChange(of: receiptLines) { _, _ in model.confirmed = false }
         .onChange(of: scenePhase) { _, phase in if phase == .background { close(); dismiss() } }
         .task(id: correctionScope) { await corrections.bind(correctionScope) }
@@ -158,12 +166,19 @@ import CoreDomain
                     ForEach(codes) { Text($0.value).tag(Optional($0.id)) }
                 }
             }
-            TextField(captureText("Code typed from the package, optional"), text: $manualCode).textInputAutocapitalization(.never).autocorrectionDisabled()
+            TextField(captureText("Code typed from the package, optional"), text: $manualCode)
+                .textInputAutocapitalization(.never).autocorrectionDisabled()
+                .accessibilityIdentifier("scan.manualCode")
+                .focused($focusedField, equals: .manualCode)
+            if kind == .barcode {
+                Text(captureText("Choose a detected code or type the code from the package before saving."))
+            }
             Text(captureText("No product catalog is queried. Unknown codes need your manual match. A matching name or code does not verify ingredients, allergens or a price."))
             Toggle(captureText("I matched this source to the displayed product myself."), isOn: $matchedProduct)
             Toggle(captureText("I reviewed the source and want to keep this reference."), isOn: $model.confirmed)
             Button(captureText("Continue with reviewed reference")) { finishEvidence() }
-                .disabled(!canReview || !matchedProduct || !model.confirmed || label.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .disabled(!canReview || !matchedProduct || !model.confirmed ||
+                    (kind == .barcode && reviewedBarcode == nil) || label.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 .accessibilityIdentifier("scan.reference.review")
         }
     }
@@ -234,12 +249,16 @@ import CoreDomain
         guard authorize() else { return }
         do {
             guard (kind == .receipt && target.kind == .receiptEvidence) || ((kind == .packageReference || kind == .barcode) && target.kind == .packageReference) else { throw ScanFailure.stale }
-            let typedCode = manualCode.trimmingCharacters(in: .whitespacesAndNewlines)
-            let barcode = typedCode.isEmpty ? model.accepted?.barcodes.first { $0.id == barcodeID } : CapturedBarcode(symbology: "manual", value: typedCode)
+            let barcode = reviewedBarcode
             if kind == .barcode, barcode == nil { throw ScanFailure.needsReview }
             let record = try model.reviewed(target: target, label: label, barcode: barcode, receiptLines: receiptLines ?? [])
             onReviewed(.evidence(record)); dismiss()
         } catch { self.error = captureText("Check the source, choose or type a code when scanning, and confirm the manual match. Nothing has been saved.") }
+    }
+    private var trimmedManualCode: String { manualCode.trimmingCharacters(in: .whitespacesAndNewlines) }
+    private var reviewedBarcode: CapturedBarcode? {
+        if !trimmedManualCode.isEmpty { return CapturedBarcode(symbology: "manual", value: trimmedManualCode) }
+        return model.accepted?.barcodes.first { $0.id == barcodeID }
     }
     private func recipeField(_ path: WritableKeyPath<RecipeCaptureDraft, String>) -> Binding<String> {
         Binding(get: { recipe?[keyPath: path] ?? "" }, set: { recipe?[keyPath: path] = $0 })

@@ -472,6 +472,38 @@ import XCTest
         }
     }
 
+    func testTypedBarcodeNeedsACodeAndFreshMatchConfirmation() {
+        launch(reset: true)
+        openShoppingList()
+        tap(element("ledgerStartShop"))
+        fill("Barcode review pickup", into: "ledgerShopName")
+        tap(element("ledgerCreateShop"))
+        tap(element("ledgerImport"))
+        fill("2 Wraps", into: "ledgerImportText")
+        tap(element("ledgerReviewImport"))
+        tap(element("ledgerCommitImport"))
+        openShoppingList()
+        tap(app.buttons["Inspect Wraps"])
+        tap(element("ledger.scanReferences"))
+        tap(app.buttons["Scan a code and match it manually"])
+
+        let matched = "I matched this source to the displayed product myself."
+        let reviewed = "I reviewed the source and want to keep this reference."
+        let save = app.buttons["scan.reference.review"]
+        enableSwitch(matched)
+        enableSwitch(reviewed)
+        reveal(save)
+        XCTAssertFalse(save.isEnabled)
+
+        fill("SUPPLIER-TEST-2", into: "scan.manualCode", requireDone: true)
+        reveal(save)
+        XCTAssertFalse(save.isEnabled)
+        enableSwitch(matched)
+        enableSwitch(reviewed)
+        tap(save)
+        assertText("Manually matched code: SUPPLIER-TEST-2")
+    }
+
     func testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval() {
         reviewAndApprovePattern(spanish: true)
     }

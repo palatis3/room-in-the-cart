@@ -1,0 +1,51 @@
+{
+  "baseCommit": "edbdadc",
+  "toolchain": "Xcode 27.1 (27A9275)",
+  "sourceSHA256": {
+    "ios/Features/Capture/ScanReviewView.swift": "41a96fb7d433c5324a7bd99fa66069230447337a16b4406a957b954d235adc1b",
+    "ios/Features/Capture/Capture.xcstrings": "825a53526815acb15da4e88ae3e6485a8d75101b65b02cc8af35fe3f4a4da513",
+    "ios/UITests/FreeJourneyUITests.swift": "f9773f8d1c8fd3fe9337e8d685bf4d9a10404e035fba4ebb217dd0619c48e6e2"
+  },
+  "beforeFix": {
+    "result": ".build/BarcodeSystem20261104/BarcodeBefore.xcresult",
+    "passed": 0,
+    "failed": 1,
+    "finding": "The real picker recognized the code. The Continue button became enabled after the two confirmations even though the detected code was still unselected."
+  },
+  "systemPhotos": {
+    "result": ".build/BarcodeSystem20261104/BarcodeFinal.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "log": ".build/BarcodeSystem20261104/barcode-final.log",
+    "device": "iPhone 17e, iOS 27.0 (24A434)",
+    "fixture": "Fictional bilingual package JPEG with Code 128 generated using Core Image and loaded via simctl addmedia.",
+    "fixtureSHA256": "864c2c046e045e2b575f2e819bae3b95aea64f8230ae6283dc09e145c0aed3d0",
+    "harnessSHA256": "f573487b521e753f9a07d25bddc44b75da6a4375f56a004c0c77cac7b1773139",
+    "seconds": 141.236,
+    "checks": "A detected code requires explicit selection and match confirmation. Choosing it clears the competing typed value. The other reference uses a typed code and photo consent remains off. Both reopen after relaunch alongside the original wording and the saved reduced photo."
+  },
+  "minimumSimulator": {
+    "result": ".build/BarcodeSystem20261104/Minimum.xcresult",
+    "log": ".build/BarcodeSystem20261104/minimum.log",
+    "device": "iPhone SE, iOS 17.0 (21A328)",
+    "typedCase": "testTypedBarcodeNeedsACodeAndFreshMatchConfirmation",
+    "seconds": 34.665,
+    "modelTests": 536,
+    "modelFailures": 0
+  },
+  "persisted": {
+    "references": 2,
+    "photoReferences": 1,
+    "ledgerHeadRevision": 2,
+    "ordered": "2 Wraps",
+    "checkoutRecords": 0
+  },
+  "archive": {
+    "path": ".build/BarcodeSystem20261104/RoomInTheCart-BarcodeReview.xcarchive",
+    "binaryUUID": "40CB7477-A67E-3356-9BD4-BC1F708CE6DD",
+    "executableSHA256": "beb34bb9d8175ecd9b88b1ebf69a3bc608120a8540d1cafdbff1aeeaf2d11dec",
+    "builtAppMetadataCheck": "passed",
+    "signed": false
+  },
+  "scope": "Real system Photos selection and local recognition on a simulator. The barcode references convey neither product catalog identity nor price, ingredient safety, purchase or receipt facts. Physical camera and permission testing remain open."
+}

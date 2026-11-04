@@ -1,0 +1,44 @@
+{
+  "baseCommit": "edbdadc",
+  "toolchain": "Xcode 27.1 (27A9275)",
+  "sourceSHA256": {
+    "ios/UITests/ContextualReminderUITests.swift": "b6d761b68345278e6c1bd70ffe9884b55f2b7d6bc7655a070ae37cab8f2ee7ff"
+  },
+  "ios27": {
+    "result": ".build/ReminderLogging20261104/Unmuted27.xcresult",
+    "passed": 2,
+    "failed": 0,
+    "log": ".build/ReminderLogging20261104/unmuted27.log",
+    "device": "iPhone 17e, iOS 27.0 (24A434)",
+    "cases": {
+      "testNextShopDeferralRequestsReminderOnlyAfterExplicitScheduleAndCanCancel": 144.088,
+      "testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending": 217.687
+    },
+    "animationNotificationTimeouts": 0
+  },
+  "ios17": {
+    "result": ".build/BarcodeSystem20261104/Minimum.xcresult",
+    "log": ".build/BarcodeSystem20261104/minimum.log",
+    "device": "iPhone SE, iOS 17.0 (21A328)",
+    "cases": {
+      "testNextShopDeferralRequestsReminderOnlyAfterExplicitScheduleAndCanCancel": 92.805,
+      "testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending": 88.653
+    },
+    "scope": "The earlier app-process logging workaround remains active on iOS 17."
+  },
+  "comparison": {
+    "frozenCombined": ".build/MembershipDelivery20261104/ReminderRerun.xcresult",
+    "savedOfferSeconds": 1431.757,
+    "animationNotificationTimeouts": 22,
+    "notes": "Earlier and current runs differed in source, test order or simulator workload. The shorter run does not establish the timeout cause.",
+    "activeFrozenSuite": {
+      "commit": "c6ca046d565d16066587e90a6f126380b0d08777",
+      "log": ".build/NativeCheckpoint20261104-c6ca046/ordinary.log",
+      "nextShopSeconds": 3591.639,
+      "nextShopAnimationNotificationTimeouts": 58,
+      "savedOfferSeconds": 137.009,
+      "scope": "Both contextual reminder cases passed in the older frozen run. The full result was still in progress when these cases were recorded."
+    }
+  },
+  "scope": "Test-only logging configuration. Both UI cases still exercise explicit review, denied schedule under the isolated adapter, cancellation, and preservation of the original deferral or offer. Physical notification permission and delivery remain open."
+}

@@ -2394,6 +2394,23 @@
         }
       }
     },
+    "Choose a detected code or type the code from the package before saving.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a detected code or type the code from the package before saving."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige un código detectado o escribe el código del empaque antes de guardar."
+          }
+        }
+      }
+    },
     "No product catalog is queried. Unknown codes need your manual match. A matching name or code does not verify ingredients, allergens or a price.": {
       "localizations": {
         "en": {

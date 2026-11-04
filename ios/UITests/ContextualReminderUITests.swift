@@ -122,7 +122,9 @@ import XCTest
         // Xcode's newer snapshot instrumentation floods iOS 17 unified logging
         // and crashes inside its logging-quarantine callback. Preserve XCTest
         // action/assertion logs while suppressing this app-process log transport.
-        app.launchEnvironment["OS_ACTIVITY_MODE"] = "disable"
+        if ProcessInfo.processInfo.operatingSystemVersion.majorVersion == 17 {
+            app.launchEnvironment["OS_ACTIVITY_MODE"] = "disable"
+        }
         app.launchArguments = ["--ui-testing", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         if reset { app.launchArguments.append("--reset-test-workspace") }
         app.launch()
