@@ -30,11 +30,14 @@ struct DeviceSurfacesEntry: View {
                         NavigationLink(SurfaceCopy.text("Local reminders")) { SurfaceReminderList(composition: composition) }
                     }
                     if let message = composition.message { Text(message) }
-                    Button(SurfaceCopy.text("Try again")) { Task { await composition.foreground() } }
+                    Button(SurfaceCopy.text("Try again")) { Task { await composition.sourceDidChange() } }
                 }.disabled(composition.busy)
             } else { SurfaceUnavailableView() }
         }.navigationTitle(SurfaceCopy.text("Device shortcuts"))
-            .task { await composition.foreground(); if selectedShop == nil { selectedShop = composition.shops.first?.id } }
+            .task {
+                await composition.sourceDidChange()
+                if selectedShop == nil { selectedShop = composition.shops.first?.id }
+            }
             .sheet(item: $composition.draft) { _ in NavigationStack { SurfaceImportReview(composition: composition) } }
     }
 }

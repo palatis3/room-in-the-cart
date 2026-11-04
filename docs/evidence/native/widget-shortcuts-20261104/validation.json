@@ -1,5 +1,16 @@
 {
   "assignment": "Foundation 2.1 E07 widget and App Intent acceptance",
+  "shortcut_screen_refresh": {
+    "source_sha256": "95d98da7c2c13219cb3648301145458e0626f97e62ae6fb1b9ceb12519b253ab",
+    "device": "iPhone 17e, iOS 27.0 (24A434)",
+    "bundle_verification": ".build/DeviceShortcutsRefresh20261104/build-verification.log",
+    "result": ".build/DeviceShortcutsRefresh20261104/ShortcutsNavigation.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "test_seconds": 20.841,
+    "runtime_warnings": [],
+    "scope": "Opening the Device Shortcuts screen or retrying its refresh reconciles the current scene state. The ordinary UI case verified the Shop entry touch target and returned to Shop. The separate ready URL tests cover the route and widget publication races."
+  },
   "cold_presentation_follow_up": {
     "candidate_source_digest": "fb82ed0db232d07f32d76ecc4a269a23aec4322d6e942a901efd4b185f2f2156",
     "reviewed_patch_sha256": "af7fd25260a3341f7369ab7a16795efedb4ebfd0cfd15d12c0616f585b587a6a",

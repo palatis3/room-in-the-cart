@@ -54,5 +54,27 @@
       "fully visible Save button"
     ]
   },
-  "scope": "Simulator UI at minimum iOS. Current keyboard changes are included. The later Records alert change and human physical VoiceOver and Switch Control are separate."
+  "scope": "Simulator UI at minimum iOS. Current keyboard changes are included. The later Records alert change and human physical VoiceOver and Switch Control are separate.",
+  "splitCIModelTarget": {
+    "sourceCommit": "e631e1c2d89d95a42307d90f08cb371b9f7c5f0b",
+    "workflowCommit": "d732e1a",
+    "result": ".build/NativeSplitCI20261104/ModelTests.xcresult",
+    "passed": 556,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": [],
+    "scope": "The new project-and-scheme test-without-building command ran the complete ordinary native model target on iOS 17. The dedicated StoreKit scenarios remain excluded by the ordinary scheme. GitHub runner execution for the revised workflow is separate."
+  },
+  "largestComparisonIOS27": {
+    "sourceCommit": "e631e1c2d89d95a42307d90f08cb371b9f7c5f0b",
+    "device": "iPhone 17e, iOS 27.0 (24A434)",
+    "result": ".build/NativeMinimumColdCapture20261104/LargestComparison27.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "testSeconds": 156.846,
+    "runtimeWarnings": [],
+    "scope": "The focused dark-mode largest-text run scrolled both option headers, the complete source note and Save into view. It saved the comparison and read the complete confirmation and date above the tabs. The older cedbae0 full invocation independently timed out on this case.",
+    "sourceNoteCaptureSHA256": "58263e525a014f8724095d3714242a114db9d3b05b8991b11c47ef834a9b1c43",
+    "savedDetailsCaptureSHA256": "05665931e964ac8c2895cc3f485e2308e448c91e0724d6ed611306b15664134d"
+  }
 }
