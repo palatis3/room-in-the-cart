@@ -99,10 +99,13 @@ final class ReleasePerformanceUITests: XCTestCase {
         let list = app.collectionViews.firstMatch
         let top = list.staticTexts["Saved on this iPhone"].firstMatch
         XCTAssertTrue(list.waitForExistence(timeout: 10))
-        let metrics: [any XCTMetric] = [
+        var metrics: [any XCTMetric] = [
             XCTOSSignpostMetric.scrollingAndDecelerationMetric,
             XCTMemoryMetric(application: app),
         ]
+        if #available(iOS 26.0, *) {
+            metrics.append(XCTHitchMetric(application: app))
+        }
         var restingY: CGFloat?
         measure(metrics: metrics, options: measurementOptions()) {
             // Reset before each iteration. XCTest waits for the swipe to settle.
@@ -161,7 +164,12 @@ final class ReleasePerformanceUITests: XCTestCase {
             if review.exists && review.isHittable { break }
             formBottom.press(forDuration: 0.05, thenDragTo: formMiddle, withVelocity: .slow, thenHoldForDuration: 0)
         }
-        XCTAssertTrue(review.exists && review.isHittable && review.isEnabled)
+        // On newer runtimes the editor can expand to fit the entire fixture.
+        for _ in 0..<32 {
+            if review.exists && review.isHittable { break }
+            form.swipeUp(velocity: 6_000)
+        }
+        XCTAssertTrue(review.exists && review.isHittable && review.isEnabled, "Reach Review list after the pasted editor")
         review.tap()
         let commit = element("ledgerCommitImport")
         for _ in 0..<120 {
