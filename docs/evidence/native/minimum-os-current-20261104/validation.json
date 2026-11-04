@@ -76,5 +76,33 @@
     "scope": "The focused dark-mode largest-text run scrolled both option headers, the complete source note and Save into view. It saved the comparison and read the complete confirmation and date above the tabs. The older cedbae0 full invocation independently timed out on this case.",
     "sourceNoteCaptureSHA256": "58263e525a014f8724095d3714242a114db9d3b05b8991b11c47ef834a9b1c43",
     "savedDetailsCaptureSHA256": "05665931e964ac8c2895cc3f485e2308e448c91e0724d6ed611306b15664134d"
+  },
+  "latestIntegratedAccessibility": {
+    "testSourceSHA256": "7d9e7240a8c7ec11f0067b76e7122c4c3ad4f12fa998b4b2f08e1cbdf056ee34",
+    "minimumOS": {
+      "sourceCommit": "286fd92c46ef76e56d83d36385d66cb5a18a4ddd",
+      "device": "iPhone SE, iOS 17.0 (21A328)",
+      "resultBundle": ".build/FreeJourneyWeekEntry20261104/MinimumOSAccessibilityLatest.xcresult",
+      "log": ".build/FreeJourneyWeekEntry20261104/minimum-os-accessibility-latest.log",
+      "logSHA256": "85f21b88a2ce0e746ed82769540231bfaa48acef9757984d8d887d4cdc9ba408",
+      "appDebugDylibSHA256": "c81664fceb5b3a9df3ae36a0074514badbaceb467b5e8b51243a6c08dafc86df",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": [],
+      "caseSeconds": {"testAutomatedAccessibilityAuditOnShopAndKnownResults": 53.948, "testLargestDynamicTypeAndDarkAppearanceComparisonSmoke": 77.192},
+      "scope": "Unfiltered audit of five captured Shop and comparison viewports and a separate largest-text dark-mode comparison flow. Default app logging was active."
+    },
+    "currentOS": {
+      "sourceCommit": "08e1e0b6eb16a80c908d5bb9e0a2fd953edd91c6",
+      "device": "iPhone 17e, iOS 27.0 (24A434)",
+      "caseLog": ".build/WidgetLifecycleFinal20261104/accessibility-audit-case.log",
+      "caseLogSHA256": "d7d7f96e48b7f0cd0d9387ceba1fe54225ef535abc884bd8a91e63c0ecddd1bd",
+      "case": "testAutomatedAccessibilityAuditOnShopAndKnownResults",
+      "passed": 1,
+      "caseSeconds": 508.841,
+      "scope": "The individual unfiltered audit passed all five viewports. The enclosing ordinary suite was still running. XCTest recorded repeated animation-idle waits."
+    },
+    "remaining": "Physical VoiceOver and Switch Control, and accessibility acceptance for the other routes."
   }
 }
