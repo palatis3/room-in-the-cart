@@ -64,6 +64,13 @@ import XCTest
     }
 
     func testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop() throws {
+        func verifyChosenDinnerInWeek() {
+            dinnerRoot()
+            openMealWeek()
+            let occurrence = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
+                                                               "dinnerOccurrence-", "Wrap dinner")).firstMatch
+            reveal(occurrence)
+        }
         launch(reset: true)
         tap(element("settings"))
         let consent = app.switches["Offer optional feedback after a pickup"]
@@ -94,12 +101,12 @@ import XCTest
         tap(app.buttons["Done"])
         tap(element("ledgerChooseTemplate"))
         tap(element("dinnerApply"))
-        dinnerRoot()
+        verifyChosenDinnerInWeek()
         assertText("Unscheduled")
         capture("Free-dinner-and-protected-lunch")
         restart()
         tap(app.tabBars.buttons["Dinners"])
-        assertText("Wrap dinner")
+        verifyChosenDinnerInWeek()
         assertText("Unscheduled")
 
         shopRoot()
@@ -209,12 +216,11 @@ import XCTest
         tap(element("dinnerLibrary"))
         tap(element("ledgerChooseTemplate"))
         tap(element("dinnerApply"))
-        dinnerRoot()
-        assertText("Wrap dinner")
+        verifyChosenDinnerInWeek()
         capture("Free-one-dinner-reused-for-next-shop")
         restart()
         tap(app.tabBars.buttons["Dinners"])
-        assertText("Wrap dinner")
+        verifyChosenDinnerInWeek()
         assertText("Next shop")
         tap(app.tabBars.buttons["Records"])
         tap(app.buttons["Family decision history"])
