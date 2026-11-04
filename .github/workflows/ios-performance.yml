@@ -6,6 +6,8 @@ on:
       - '.github/workflows/ios-performance.yml'
       - 'scripts/check_ios_performance.py'
       - 'scripts/test_check_ios_performance.py'
+      - 'scripts/plan_ios_performance_tests.py'
+      - 'scripts/test_plan_ios_performance_tests.py'
       - 'scripts/ios_performance_baselines.json'
       - 'ios/UITests/ReleasePerformanceUITests.swift'
       - 'ios/UITests/Fixtures/ReleaseLedger500.txt'
@@ -36,10 +38,11 @@ env:
 jobs:
   performance-build:
     name: Build optimized iPhone test products
-    runs-on: macos-15-intel
+    runs-on: macos-15
     timeout-minutes: 35
     outputs:
       artifact: ${{ steps.upload.outputs['artifact-id'] }}
+      test_matrix: ${{ steps.plan.outputs.matrix }}
     steps:
       - uses: actions/checkout@v4
       - name: Check performance evidence validation
@@ -54,10 +57,17 @@ jobs:
           mkdir -p .build
           xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart-Performance \
             -configuration Release -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
-            -parallel-testing-enabled NO -derivedDataPath .build/DerivedData \
+            -parallel-testing-enabled NO -jobs 2 -derivedDataPath .build/DerivedData \
             -enableCodeCoverage NO -enableAddressSanitizer NO -enableThreadSanitizer NO \
             -enableUndefinedBehaviorSanitizer NO CODE_SIGN_IDENTITY=- build-for-testing \
             2>&1 | tee .build/PerformanceBuild.log
+      - name: Check the compiled XCTest inventory and plan performance jobs
+        id: plan
+        run: |
+          products=.build/DerivedData/Build/Products/Release-iphonesimulator
+          executable="$products/RoomInTheCartUITests-Runner.app/PlugIns/RoomInTheCartUITests.xctest/RoomInTheCartUITests"
+          matrix=$(python3 scripts/plan_ios_performance_tests.py "$executable")
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
       - name: Verify and package Release test products
         run: |
           python3 scripts/check_built_app.py .build/DerivedData/Build/Products/Release-iphonesimulator/RoomInTheCart.app --configuration Release
@@ -83,22 +93,15 @@ jobs:
   performance-tests:
     name: Release performance (${{ matrix.case }})
     needs: performance-build
-    runs-on: macos-15-intel
+    runs-on: macos-15
     timeout-minutes: 40
     strategy:
       fail-fast: false
       max-parallel: 3
-      matrix:
-        include:
-          - case: launch
-            method: testColdLaunchPerformance
-          - case: rendered
-            method: testRenderedFiveHundredItemPickup
-          - case: scroll
-            method: testScrollingPerformanceOnFiveHundredItemPickup
+      matrix: ${{ fromJSON(needs.performance-build.outputs.test_matrix) }}
     env:
       PERFORMANCE_CASE: ${{ matrix.case }}
-      TEST_METHOD: ${{ matrix.method }}
+      TEST_SELECTOR: ${{ matrix.selector }}
       ENFORCE_BASELINES: ${{ github.event_name == 'pull_request' || inputs.enforce_baselines }}
       FIXTURE: ios/UITests/Fixtures/ReleaseLedger500.txt
     steps:
@@ -113,7 +116,7 @@ jobs:
           mkdir -p .build/DerivedData/Build .build/performance
           tar -xzf .build/download/iphone-performance-products.tar.gz -C .build/DerivedData/Build
           xcodebuild -version | tee .build/performance/toolchain.txt
-          printf '%s\n' "RoomInTheCartUITests/ReleasePerformanceUITests/$TEST_METHOD" > .build/performance/selector.txt
+          printf '%s\n' "$TEST_SELECTOR" > .build/performance/selector.txt
       - name: Select an iPhone simulator
         run: xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
       - name: Boot and verify a fresh Release installation

@@ -38,7 +38,7 @@ jobs:
   build-contributor:
     name: Build contributor, stock and carryover fixtures
     needs: fixture-plan
-    runs-on: macos-15-intel
+    runs-on: macos-15
     timeout-minutes: 35
     env:
       FIXTURE_PROFILE: contributor
@@ -56,7 +56,7 @@ jobs:
           conditions=$(python3 scripts/plan_ios_fixture_tests.py conditions "$FIXTURE_PROFILE")
           xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart \
             -configuration Debug -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
-            -parallel-testing-enabled NO -derivedDataPath .build/DerivedData \
+            -parallel-testing-enabled NO -jobs 2 -derivedDataPath .build/DerivedData \
             CODE_SIGN_IDENTITY=- "SWIFT_ACTIVE_COMPILATION_CONDITIONS=$conditions" build-for-testing
       - name: Enumerate compiled tests and package fixture products
         shell: bash
@@ -86,7 +86,7 @@ jobs:
   build-dinner:
     name: Build dinner decision fixture
     needs: fixture-plan
-    runs-on: macos-15-intel
+    runs-on: macos-15
     timeout-minutes: 35
     env:
       FIXTURE_PROFILE: dinner
@@ -97,7 +97,7 @@ jobs:
   fixture-tests:
     name: Fixture (${{ matrix.shard }})
     needs: [fixture-plan, build-contributor, build-dinner]
-    runs-on: macos-15-intel
+    runs-on: macos-15
     timeout-minutes: 55
     strategy:
       fail-fast: false

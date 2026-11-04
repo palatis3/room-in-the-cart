@@ -120,12 +120,13 @@ jobs:
           python3 scripts/generate_xcode_project.py --check
           python3 scripts/test_plan_ios_tests.py
           python3 scripts/test_plan_ios_fixture_tests.py
+          python3 scripts/test_plan_ios_performance_tests.py
           python3 scripts/test_check_ios_test_results.py
           python3 scripts/test_check_release_code_scanning.py
           python3 scripts/test_check_ios_performance.py
           bash -n scripts/run_ios_test_shard.sh
   swift-packages:
-    runs-on: macos-15-intel
+    runs-on: macos-15
     timeout-minutes: 25
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
@@ -149,7 +150,7 @@ jobs:
             ios/Packages/**/.build/**/codecov/*.json
           retention-days: 7
   ios-release:
-    runs-on: macos-15-intel
+    runs-on: macos-15
     timeout-minutes: 45
     permissions:
       contents: read
@@ -173,7 +174,7 @@ jobs:
           # https://docs.github.com/en/code-security/tutorials/customize-code-scanning/prepare-code-for-analysis
           xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart-Release \
             -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' \
-            -derivedDataPath .build/ReleaseDerivedData ARCHS=arm64 \
+            -jobs 2 -derivedDataPath .build/ReleaseDerivedData ARCHS=arm64 \
             CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
             COMPILATION_CACHE_ENABLE_CACHING=NO SWIFT_ENABLE_COMPILE_CACHE=NO \
             SWIFT_USE_INTEGRATED_DRIVER=NO build 2>&1 | tee .build/ReleaseBuild.log
@@ -193,7 +194,7 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
   ios-build:
-    runs-on: macos-15-intel
+    runs-on: macos-15
     timeout-minutes: 35
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
@@ -211,7 +212,7 @@ jobs:
         run: >-
           xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart
           -configuration Debug -destination "platform=iOS Simulator,id=$SIMULATOR_ID"
-          -derivedDataPath .build/DerivedData CODE_SIGN_IDENTITY=- build-for-testing
+          -jobs 2 -derivedDataPath .build/DerivedData CODE_SIGN_IDENTITY=- build-for-testing
       - name: Verify the compiled simulator app
         run: python3 scripts/check_built_app.py .build/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app --configuration Debug
       - name: Discover compiled tests and balance UI groups
@@ -241,7 +242,7 @@ jobs:
           if-no-files-found: error
   ios-tests:
     needs: ios-build
-    runs-on: macos-15-intel
+    runs-on: macos-15
     timeout-minutes: 55
     strategy:
       fail-fast: false
