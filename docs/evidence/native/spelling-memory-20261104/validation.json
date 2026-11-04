@@ -106,6 +106,29 @@
         "storedRuleCount": 0,
         "payloadSHA256": "922237378266aeb3f015ef5061d8b8465c28ad06326e2c183fb1eb99a165b37c"
       }
+    },
+    "optOutFollowUp": {
+      "result": ".build/ContributorSpelling20261104/PhotosOptOut.xcresult",
+      "harnessSHA256": "825fa63a21aedc9bc92cae3d008f46581f72c0e4d1223944dad5708ab7fa764b",
+      "uiPasses": 1,
+      "failures": 0,
+      "testDurationSeconds": 160.421,
+      "scope": "The same app source and a second fictional membership captured the actual photo, opted in and explicitly stored a rule. Cancel kept the rule. The confirmed native alert turned off memory, removed the rule and left the fixture with zero submitted requests.",
+      "fileReadback": {
+        "selectedProfileFilesAfterOptOut": 0,
+        "priorProfileFileUnchanged": true,
+        "priorProfilePayloadSHA256": "922237378266aeb3f015ef5061d8b8465c28ad06326e2c183fb1eb99a165b37c"
+      },
+      "captures": {
+        "cancelKeptRule": {
+          "path": ".build/ContributorSpelling20261104/opt-out-attachments/C72E538F-04D2-4C95-AB46-329DAB11AEBE.png",
+          "sha256": "4e041c26a72c409d1ad7feab9f7c883159a69f0cf936cbb33e8f8d2ba3e1e215"
+        },
+        "confirmedOptOut": {
+          "path": ".build/ContributorSpelling20261104/opt-out-attachments/6E2C51E4-892C-45DC-BE91-B35783258CCC.png",
+          "sha256": "8d14b11682174c0c84d36414625a5ee70acc2c9f6e2c0ee22d6ec98287a2ca5b"
+        }
+      }
     }
   },
   "otherAttempts": [
@@ -142,6 +165,6 @@
   },
   "remaining": [
     "Physical VoiceOver focus and device testing.",
-    "Connected contributor opt-out confirmation on the simulator, bilingual device acceptance and a live enrolled household."
+    "Bilingual contributor device acceptance and a live enrolled household."
   ]
 }
