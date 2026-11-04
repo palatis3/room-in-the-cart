@@ -2,11 +2,44 @@ import SwiftUI
 import CoreDomain
 
 @MainActor struct StructuredCaptureReviewView: View {
+    enum Context {
+        case list, request, recipe
+
+        var copy: (destination: String, action: String, changed: String, mismatch: String, next: String) {
+            switch self {
+            case .list:
+                return (
+                    "Destination wording does not change where this list goes. Choose the displayed list explicitly, or cancel and open the intended list.",
+                    "Continue to list review",
+                    "This workspace changed. Close capture and review the current list.",
+                    "Confirm the displayed destination for every item, or cancel and choose another list.",
+                    "The next screen reviews duplicates before adding the reviewed list. Capture does not verify a price, receipt, food safety or arrival."
+                )
+            case .request:
+                return (
+                    "Destination wording does not change where this request goes. Confirm the displayed household destination, or cancel and open the intended household.",
+                    "Continue to request review",
+                    "This household or request changed. Close capture and review the current request.",
+                    "Confirm the displayed request destination, or cancel and choose the intended household.",
+                    "The next screen previews your own request before sending. Only the shopper can change the basket; capture does not verify price, food safety or arrival."
+                )
+            case .recipe:
+                return (
+                    "These ingredients belong to this recipe. Confirm the displayed recipe destination before continuing.",
+                    "Review recipe draft",
+                    "This workspace changed. Close capture and open the current recipe review.",
+                    "Confirm this recipe as the destination for every ingredient before continuing.",
+                    "The next screen previews the editable recipe. Saving it leaves this pickup unchanged."
+                )
+            }
+        }
+    }
+
     @Binding var lines: [CaptureLineDraft]
     @ObservedObject var corrections: CaptureCorrectionsModel
     let destination: String
     let source: CaptureSource
-    var requestMode: Bool = false
+    let context: Context
     let originalText: String
     let imageData: Data?
     let authorize: () -> Bool
@@ -15,6 +48,7 @@ import CoreDomain
     @State private var validationMessage: String?
 
     var body: some View {
+        let copy = context.copy
         Section(captureText("Original wording and source")) {
             Text(originalText).textSelection(.enabled)
             if let imageData, let image = UIImage(data: imageData) {
@@ -22,7 +56,7 @@ import CoreDomain
                     .accessibilityLabel(captureText("Selected source photo"))
             }
             Text(captureText("Actual destination") + ": " + destination).font(.headline)
-            Text(captureText(requestMode ? "Destination wording does not change where this request goes. Confirm the displayed household destination, or cancel and open the intended household." : "Destination wording does not change where this list goes. Choose the displayed list explicitly, or cancel and open the intended list."))
+            Text(captureText(copy.destination))
         }
         ForEach(lines) { snapshot in
             let placeholder = CaptureLineDraft(id: snapshot.id, proposedLineID: snapshot.proposedLineID,
@@ -48,30 +82,33 @@ import CoreDomain
                         }
                     }
                 }
-                if corrections.failed { Text(captureText("Spelling memory is unavailable. Your reviewed list is still usable.")) }
+                if corrections.failed {
+                    Text(captureText(context == .recipe ? "Spelling memory is unavailable. Your reviewed ingredients are still usable." :
+                        "Spelling memory is unavailable. Your reviewed list is still usable."))
+                }
             }
         }
         Section {
             if let validationMessage { Text(captureText(validationMessage)).accessibilityIdentifier("capture.structured.error") }
-            Button(captureText(requestMode ? "Continue to request review" : "Continue to list review")) {
-                guard authorize() else { validationMessage = requestMode ? "This household or request changed. Close capture and review the current request." : "This workspace changed. Close capture and review the current list."; return }
+            Button(captureText(copy.action)) {
+                guard authorize() else { validationMessage = copy.changed; return }
                 do {
                     let reviewed = try lines.compactMap { try $0.reviewed(expectedDestination: destination) }
                     guard !reviewed.isEmpty else { throw StructuredCaptureFailure.reviewRequired }
-                    if requestMode, reviewed.count != 1 {
+                    if context == .request, reviewed.count != 1 {
                         validationMessage = "Keep exactly one reviewed item for this request. Skip other lines or cancel; nothing has been sent."
                         return
                     }
                     onContinue(reviewed)
                 } catch StructuredCaptureFailure.destinationMismatch {
-                    validationMessage = requestMode ? "Confirm the displayed request destination, or cancel and choose the intended household." : "Confirm the displayed destination for every item, or cancel and choose another list."
+                    validationMessage = copy.mismatch
                 } catch {
                     validationMessage = "Review each item. Use a positive amount or leave it explicitly unknown; pack counts must be whole numbers."
                 }
             }.disabled(!authorize() || lines.isEmpty || !lines.contains(where: { !$0.skip }) || !lines.allSatisfy { $0.skip || $0.confirmed })
                 .accessibilityIdentifier("capture.continue")
             Button(captureText("Back to captured words"), action: onBack)
-            Text(captureText(requestMode ? "The next screen previews your own request before sending. Only the shopper can change the basket; capture does not verify price, food safety or arrival." : "The next screen reviews duplicates before adding the reviewed list. Capture does not verify a price, receipt, food safety or arrival."))
+            Text(captureText(copy.next))
                 .font(.footnote)
         }
     }

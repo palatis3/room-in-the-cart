@@ -358,6 +358,108 @@
         }
       }
     },
+    "These ingredients belong to this recipe. Confirm the displayed recipe destination before continuing.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These ingredients belong to this recipe. Confirm the displayed recipe destination before continuing."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estos ingredientes pertenecen a esta receta. Confirma la receta que se muestra antes de continuar."
+          }
+        }
+      }
+    },
+    "Review recipe draft": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review recipe draft"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar el borrador de la receta"
+          }
+        }
+      }
+    },
+    "This workspace changed. Close capture and open the current recipe review.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This workspace changed. Close capture and open the current recipe review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este espacio de trabajo cambió. Cierra la captura y abre la revisión de la receta actual."
+          }
+        }
+      }
+    },
+    "Confirm this recipe as the destination for every ingredient before continuing.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm this recipe as the destination for every ingredient before continuing."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirma que todos los ingredientes pertenecen a esta receta antes de continuar."
+          }
+        }
+      }
+    },
+    "The next screen previews the editable recipe. Saving it leaves this pickup unchanged.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The next screen previews the editable recipe. Saving it leaves this pickup unchanged."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La siguiente pantalla muestra una vista previa de la receta editable. Guardarla no cambia esta compra."
+          }
+        }
+      }
+    },
+    "Spelling memory is unavailable. Your reviewed ingredients are still usable.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spelling memory is unavailable. Your reviewed ingredients are still usable."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La memoria ortográfica no está disponible. Puedes seguir usando los ingredientes revisados."
+          }
+        }
+      }
+    },
     "Continue to list review": {
       "extractionState": "manual",
       "localizations": {

@@ -1,0 +1,76 @@
+{
+  "baseCommit": "def1f3e",
+  "toolchain": "Xcode 27.1 (27A9275)",
+  "sourceSHA256": {
+    "ios/Features/Capture/Capture.xcstrings": "2990f7b22037e4f6d84112baeca7a6d867f3651842889844e0da086bcf2551b2",
+    "ios/Features/Capture/CaptureAppEntries.swift": "8c17f36b699efa4ff8181f748dbfe95cb91aa86fc6ddfd372ba4830b6af82f9f",
+    "ios/Features/Capture/CaptureReviewView.swift": "689e8dd9aaa00d1c728975f82dbc95d9d6d979af03aabfe6bfd05012da2435cc",
+    "ios/Features/Capture/ScanReviewView.swift": "f02fa2ef5c4d895954ef86977857b413a6edd2c48ddc05373736c0b0f07255db",
+    "ios/Features/Capture/StructuredCaptureReviewView.swift": "8359d4c9a2402e9ab031183560df342ecb8b53cbefad57e0be8a8951a1dbd8f8",
+    "ios/Features/Dinners/DinnerEditors.swift": "7074227d5f4ad8b13e1b3a39874b7b7713d2629436a1e24b6f44ddca94816b95",
+    "ios/UITests/FreeJourneyUITests.swift": "f22e2970a16ee7c4afb6b2675ff34823d23fd79a2f331509582ad46775bfbfde"
+  },
+  "models": {
+    "result": ".build/RecipePhoto20261104/ModelsRows.xcresult",
+    "passed": 536,
+    "failed": 0,
+    "os": "iOS 27.0"
+  },
+  "firstOpenAndCancel": {
+    "result": ".build/ActualPhotoReview20261104/RecipeSystemRows.xcresult",
+    "case": "testRecipeCaptureOpensOnFirstAttemptAndReopensAfterCancel",
+    "passed": 1,
+    "seconds": 29.853,
+    "checks": "Both presentations contained the source controls. Each started without photo consent and enabled the picker only after consent. Cancel closed each presentation.",
+    "scope": "The separate end-to-end recipe case in this bundle reached the persisted photo and text, then failed because the test selected the wrong Back control."
+  },
+  "systemPhotos": {
+    "result": ".build/ActualPhotoReview20261104/RecipeSystemFinal.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "log": ".build/ActualPhotoReview20261104/recipe-system-final.log",
+    "device": "iPhone 17e, iOS 27.0 (24A434)",
+    "fixture": "Fictional Spanish recipe image loaded into system Photos using simctl addmedia.",
+    "fixtureSHA256": "d7c2c3582f4d0c6a5f12fc263abbf0096fcc6c9af21a76b3d136cec7ba001fdc",
+    "harnessSHA256": "bc24e29da7be77e008f8f4fc0bca87db96a9ff14b26d8e03a98200f99deeef05",
+    "seconds": 81.855,
+    "checks": "The real picker staged the photo, OCR populated the title and servings, explicit ingredient review opened the recipe preview, and explicit acceptance saved one editable candidate. After relaunch the library source link opened the original words and reduced photo. Only a separate Choose action opened the dinner-application preview, which was cancelled.",
+    "persisted": {
+      "acceptedRecipes": 1,
+      "servings": 4,
+      "chosenDinners": 0,
+      "groceryLines": 0,
+      "sourcePhotos": 1
+    },
+    "earlierAttempts": [
+      {
+        "result": ".build/ActualPhotoReview20261104/RecipeSystem.xcresult",
+        "finding": "The first recipe capture opened a blank sheet."
+      },
+      {
+        "result": ".build/ActualPhotoReview20261104/RecipeSystemFixed.xcresult",
+        "finding": "The sheet opened, but the photo and paste controls were disabled after consent."
+      },
+      {
+        "result": ".build/ActualPhotoReview20261104/RecipeSystemSession.xcresult",
+        "finding": "The photo saved correctly. The library source tap opened the dinner-application preview."
+      },
+      {
+        "result": ".build/ActualPhotoReview20261104/RecipeSystemIndependent.xcresult",
+        "finding": "An interim button-style adjustment left the navigation links sharing the row. The source tap opened the reusable dinner editor."
+      },
+      {
+        "result": ".build/ActualPhotoReview20261104/RecipeSystemRows.xcresult",
+        "finding": "Distinct rows opened the source photo and wording. The harness failed at its return to the library before checking the separate Choose action."
+      }
+    ]
+  },
+  "archive": {
+    "path": ".build/RecipePhoto20261104/RoomInTheCart-RecipeRows.xcarchive",
+    "binaryUUID": "EAD1A3CD-2BD1-39A8-A2DB-E041E41E7AFD",
+    "executableSHA256": "c3ab85c7347d3b95834bfe305eac44eb282bfa08c48f19ad7f1d0a58b9f8aeeb",
+    "builtAppMetadataCheck": "passed",
+    "signed": false
+  },
+  "scope": "Simulator Photos selection and on-device OCR using a synthetic source. Physical camera, human language review, and complete release regression are separate gates."
+}

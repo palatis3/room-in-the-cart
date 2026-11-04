@@ -220,21 +220,26 @@ struct DinnerLibraryView: View {
             Section(dinnerText("Accepted dinners")) {
                 if model.state.acceptedDinners.isEmpty { Text(dinnerText("No accepted dinners yet.")) }
                 ForEach(model.state.acceptedDinners) { dinner in
+                    let isFreeReusable = model.state.freeReusableDinnerID == dinner.id
                     VStack(alignment: .leading, spacing: 8) {
                         Text(dinner.template.title).font(.headline)
                         Text(dinnerFormat("Servings: %@", dinner.template.servings.description))
-                        if let evidence = dinner.template.sourceEvidence {
-                            NavigationLink(captureText("Original recipe source")) { RecipeSourceReview(model: model, templateID: dinner.template.id, evidence: evidence) }
-                        }
                         if dinner.acceptedFallback { Text(dinnerText("Accepted fallback")) }
-                        if model.state.freeReusableDinnerID == dinner.id { Text(dinnerText("Your Free reusable dinner")) }
-                        else { Button(dinnerText("Use as Free reusable dinner")) { Task { _ = await model.selectFree(dinner.id) } } }
-                        Button(dinnerText("Choose for this pickup")) { showPreview = model.choose(dinner, day: nil) }
-                            .disabled(!model.paid && model.state.freeReusableDinnerID != dinner.id).accessibilityIdentifier("ledgerChooseTemplate")
-                        NavigationLink(dinnerText("Review as a new dinner version")) {
-                            DinnerTemplateEditor(model: model, purpose: .reusable, initial: dinner.template)
-                        }
+                        if isFreeReusable { Text(dinnerText("Your Free reusable dinner")) }
                     }.padding(.vertical, 6)
+                    if let evidence = dinner.template.sourceEvidence {
+                        NavigationLink(captureText("Original recipe source")) {
+                            RecipeSourceReview(model: model, templateID: dinner.template.id, evidence: evidence)
+                        }
+                    }
+                    if !isFreeReusable {
+                        Button(dinnerText("Use as Free reusable dinner")) { Task { _ = await model.selectFree(dinner.id) } }
+                    }
+                    Button(dinnerText("Choose for this pickup")) { showPreview = model.choose(dinner, day: nil) }
+                        .disabled(!model.paid && !isFreeReusable).accessibilityIdentifier("ledgerChooseTemplate")
+                    NavigationLink(dinnerText("Review as a new dinner version")) {
+                        DinnerTemplateEditor(model: model, purpose: .reusable, initial: dinner.template)
+                    }
                 }
             }
             if !model.workspace.mealTemplates.isEmpty {

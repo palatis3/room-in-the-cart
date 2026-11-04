@@ -46,7 +46,7 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
         Form {
             if reviewingFields {
                 StructuredCaptureReviewView(lines: $structuredLines, corrections: corrections, destination: destination,
-                    source: model.acceptedEvidence?.source ?? .typed, requestMode: requestMode, originalText: model.acceptedEvidence?.text ?? model.text,
+                    source: model.acceptedEvidence?.source ?? .typed, context: requestMode ? .request : .list, originalText: model.acceptedEvidence?.text ?? model.text,
                     imageData: model.acceptedEvidence?.previewImageData ?? model.acceptedEvidence?.sourceImageData,
                     authorize: authorize, onBack: { reviewingFields = false }) { lines in
                         guard authorize(), let capture = model.reviewed(lines: lines, fieldDrafts: structuredLines) else { return }

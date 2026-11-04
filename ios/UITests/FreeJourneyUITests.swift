@@ -448,6 +448,30 @@ import XCTest
     func testFirstPickupCanStartFromDinnersAndReviewAnEditablePattern() {
         reviewAndApprovePattern(spanish: false)
     }
+
+    func testRecipeCaptureOpensOnFirstAttemptAndReopensAfterCancel() {
+        launch(reset: true)
+        tap(app.tabBars.buttons["Dinners"])
+        tap(element("dinnerStartPickup"))
+        fill("Recipe review pickup", into: "ledgerShopName")
+        tap(element("ledgerCreateShop"))
+        tap(element("dinner.scanRecipe"))
+
+        let start = element("dinner.beginRecipeReview")
+        let review = app.navigationBars["Photo and scan review"]
+        for _ in 0..<2 {
+            tap(start)
+            XCTAssertTrue(review.waitForExistence(timeout: 8))
+            let picker = app.buttons["Choose one photo for review"]
+            reveal(picker)
+            XCTAssertFalse(picker.isEnabled)
+            enableSwitch("Allow on-device photo processing for this review")
+            XCTAssertTrue(picker.isEnabled)
+            tap(app.buttons["Cancel"])
+            XCTAssertTrue(review.waitForNonExistence(timeout: 8))
+        }
+    }
+
     func testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval() {
         reviewAndApprovePattern(spanish: true)
     }

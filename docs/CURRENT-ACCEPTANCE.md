@@ -77,6 +77,7 @@ Results belong to their own immutable source and binary identities. Do not add t
 | RECOVERY-FILES | [Coordinated recovery validation](evidence/native/coordinated-recovery-20261104/validation.json) | Records coordinates external reads on a background queue and checks authorization again before validation. The actual iOS 27 exporter and picker round trip saved an encrypted backup, cancelled review, then restored a separate copy and preserved the original through relaunch. All 535 current models, 34 iOS 17 recovery tests and the unsigned Release metadata checks passed. |
 | PHOTO-CONSENT | [System photo validation](evidence/native/photo-consent-20261104/validation.json) | The real iOS 27 Photos picker staged a bilingual package photo. Done dismissed the typing keyboard. Turning off photo consent restored the earlier typed draft. A second selection required explicit review, and one reduced reference survived relaunch while the ledger kept two wraps. All 536 models, 20 focused iOS 17 capture cases and the unsigned Release metadata checks passed. |
 | RECEIPT-PHOTOS | [Receipt photo validation](evidence/native/receipt-photos-20261104/validation.json) | The iOS 27 Photos picker delivered an ambiguous bilingual receipt. Explicit evidence review saved the unclear-amount note and original wording. The reference reopened after relaunch. The two ordered wraps, zero payment entries and zero arrival records remained unchanged. |
+| RECIPE-PHOTOS | [Recipe photo validation](evidence/native/recipe-photos-20261104/validation.json) | The capture sheet opened on first use and after Cancel. The iOS 27 Photos picker staged a Spanish recipe, and explicit review saved one candidate with four servings and zero grocery lines or chosen dinners. Original photo and wording reopened after relaunch. The separate Choose action opened a cancellable preview. All 536 model cases and unsigned Release metadata checks passed. |
 | RECIPE-ADOPTION | [Recipe adoption validation](evidence/native/recipe-adoption-20261104/validation.json) | On iOS 17 and iOS 27, enter recipe servings and an ingredient amount from Records, dismiss each keyboard, then choose the reviewed dinner explicitly. SQLite confirms one new ledger revision with the original recipe and existing pickup items preserved. The file selection uses the guarded fixture. |
 
 ## Launch requirement traceability
@@ -119,7 +120,7 @@ Results belong to their own immutable source and binary identities. Do not add t
 | P07 | Private/shared decision history, observed/unknown outcome and explicit promotion; N526, B175. | Final household history task with real paid seat. |
 | P08 | Actual localized StoreKit offer, two named adult seats, restore/manage and lapse preservation; N526, B175, MEMBERSHIP-DELIVERY. | Actual Apple configuration/purchase/renewal/refund/second device. |
 | E01 | Recipe JSON-LD adapter, original source, duplicates/skips, preview, whole-batch undo and explicit dinner choice; N526, F07, LIBRARY, RECIPE-ADOPTION, RECIPE-FILES. | Physical file providers and human recipe-library task. |
-| E02 | Optional reviewed photo/OCR/barcode/receipt capture and typed path; N526, F07, PHOTO-CONSENT, RECEIPT-PHOTOS. | Physical low-light bilingual camera, barcode and denial tasks. Recipe photo verification has a separate scope. |
+| E02 | Optional reviewed photo/OCR/barcode/receipt capture and typed path; N526, F07, PHOTO-CONSENT, RECEIPT-PHOTOS, RECIPE-PHOTOS. | Physical low-light bilingual camera, barcode and denial tasks. |
 | E03 | Authenticated one-shop helper projection/editor proposals with expiry/revoke; N526, B175, WEB. | Deployed iPhone/Android grant and stale-cache task. |
 | E04 | Bilingual catalogs/help/billing/handoff and original text preservation; N526, LIBRARY, GUARDIAN-UI. | Human US-Spanish review and both-direction cook/billing task. |
 | E06 | Dated/use-first batches, explicit identity, carryover, multi-meal preview and stock-bound purchase review; N526, STOCK, ORDINARY, FREE-BATCH. | Physical multi-meal stock observation and final build diagnostic review. |
@@ -131,7 +132,7 @@ Results belong to their own immutable source and binary identities. Do not add t
 | N02 | Structured typed/speech review of item/count/unit/pack/purpose/destination; native contributor and ledger routes; N526. | Physical on-device speech/negation/locale and retry task. |
 | N03 | Exact current cook projection, pause/stop/repeat and VoiceOver arbitration model; N526, STOCK. | Physical playback and assistive speech interruption. |
 | N04 | Device/profile/locale-scoped reviewed spelling memory, forget/opt-out without rewriting history; N526, LIBRARY. | Human correction/readback and physical focus. |
-| N05 | Optional recipe source plus independent editable original data; N526, LIBRARY, RECIPE-ADOPTION. | Broken-site original/weekly allocation human task. |
+| N05 | Optional recipe source plus independent editable original data; N526, LIBRARY, RECIPE-ADOPTION, RECIPE-PHOTOS. | Broken-site original/weekly allocation human task. |
 | N06 | Source/revision/projection/conflict comparison and separate recovery; N526, F07. | Real Files cancel/corrupt/reimport and lifecycle task. |
 | N07 | Spoken/typed guest proposal uses the same identified group planner and review; N526, PLANNING. | Physical speech and current-grant apply/amendment task. |
 | A01 | Adult meal week/list, full civil dates, stable occurrence identity and protected lunches; N526, LIBRARY, PLANNING. | Deployed cross-device week and physical accessibility. |
@@ -157,7 +158,7 @@ All 27 have current source entries. “Pending” below concerns current screen 
 | S11 Closeout | Pickup → `PickupSettlementView`; separate feedback. | ORDINARY/MEASUREMENT; real evidence. |
 | S12 Next shop | Pickup/closeout → selection sheet → new draft/list/reusable-dinner entry. | ORDINARY; final hardware/new-trip task. |
 | S13 Dinners | Dinners → `DinnerPlanningEntry`; shared-plan route for authorized adult. | PLANNING; deployed grant. |
-| S14 Library | Dinners/next shop → `DinnerLibraryView` / editor; Records library import. | LIBRARY; actual document picker. |
+| S14 Library | Dinners/next shop → `DinnerLibraryView` / editor; Records library import. | LIBRARY, RECIPE-FILES, RECIPE-PHOTOS. |
 | S15 Pairing | Dinners → `DinnerScenarioEditor` decision sheet/library comparison. | PLANNING; real accepted-library task. |
 | S16 Guests | Meal → `DinnerGuestsView`, guest capture review. | PLANNING; physical speech. |
 | S17 Apply | Dinner decision sheet / shared proposal → shopper `HouseholdShopView`. | PLANNING/B175; final shared candidate. |

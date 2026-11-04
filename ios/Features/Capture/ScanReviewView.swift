@@ -40,7 +40,7 @@ import CoreDomain
         Form {
             if reviewingIngredients {
                 StructuredCaptureReviewView(lines: $ingredients, corrections: corrections,
-                    destination: captureText("This recipe"), source: model.source, originalText: model.originalText,
+                    destination: captureText("This recipe"), source: model.source, context: .recipe, originalText: model.originalText,
                     imageData: model.accepted?.originalImageData, authorize: authorize,
                     onBack: { reviewingIngredients = false }, onContinue: finishRecipe)
             } else if recipe != nil {
