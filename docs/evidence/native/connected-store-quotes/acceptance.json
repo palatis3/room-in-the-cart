@@ -96,5 +96,22 @@
   },
   "finalSourceScope": "Prior main/stale, final-layout retry and Spanish passes are retained with their exact scope above. Only the final required-label case was rerun after the narrow financial/time/grant label change; no full final five-case suite claimed.",
   "fullFinalSuiteClaimed": false,
+  "localCheckoutFollowUp": {
+    "test": "ContextualNavigationUITests/testEnteredStoreQuotesKeepTripCostsSeparateAndAdoptOnlyReviewedSavedProof",
+    "broadRun": {
+      "sourceCommit": "cedbae0fcdac543675842799844fa3bbb086bb92",
+      "simulator": "iPhone 17e, iOS 27.0",
+      "log": ".build/NativeCheckpoint20261104-cedbae0/ordinary.log",
+      "outcome": "Exceeded the 720-second execution allowance after repeated XCTest animation-idle waits in the first store form."
+    },
+    "focusedRun": {
+      "sourceCommit": "297490c248d5e48308888514907353bb73e5b240",
+      "simulator": "iPhone SE, iOS 17.0 (21A328)",
+      "xcode": "27.1 (27A9275)",
+      "bundle": ".build/QuoteRegression20261104/Quote17.xcresult",
+      "testDurationSeconds": 195.373,
+      "outcome": "1 passed, 0 failed. The ordinary local checkout flow entered both quotes, kept checkout and trip cash separate, saved the reviewed proof, adopted it explicitly and verified persistence after relaunch."
+    }
+  },
   "simulatorReleased": "iPhone17e shut down after all runner work completed; only this reserved device was changed."
 }
