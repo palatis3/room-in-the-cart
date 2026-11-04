@@ -70,7 +70,17 @@ import DeviceSurfaces
     func bind(ledger: LedgerModel, pickup: PickupModel, household: HouseholdModel, access: WorkspaceAccess) {
         guard self.ledger == nil else { return }
         self.ledger = ledger; self.pickup = pickup; self.household = household; self.access = access
-        for publisher in [ledger.objectWillChange.eraseToAnyPublisher(), pickup.objectWillChange.eraseToAnyPublisher(), household.objectWillChange.eraseToAnyPublisher(), access.objectWillChange.eraseToAnyPublisher()] {
+        func changes<Value: Equatable>(_ values: some Publisher<Value, Never>) -> AnyPublisher<Void, Never> {
+            values.removeDuplicates().dropFirst().map { _ in () }.eraseToAnyPublisher()
+        }
+        // Reconcile committed ledger state and transitions that gate it. Typing
+        // in list search and changing form errors have no device-surface effect.
+        let ledgerChanges = Publishers.MergeMany(
+            changes(ledger.$ready), changes(ledger.$saving), changes(ledger.$hasPendingSave),
+            changes(ledger.$hasPendingLedgerDeletion), changes(ledger.$sourceWorkspaceID),
+            changes(ledger.$revision), changes(ledger.$workspace.map(\.selectedShopID))
+        ).eraseToAnyPublisher()
+        for publisher in [ledgerChanges, pickup.objectWillChange.eraseToAnyPublisher(), household.objectWillChange.eraseToAnyPublisher(), access.objectWillChange.eraseToAnyPublisher()] {
             publisher.receive(on: RunLoop.main).sink { [weak self] in Task { @MainActor in await self?.sourceDidChange() } }.store(in: &subscriptions)
         }
         SurfaceCaptureRequests.shared.$pending.filter { $0 }.receive(on: RunLoop.main).sink { [weak self] _ in self?.openCapture() }.store(in: &subscriptions)

@@ -1,0 +1,34 @@
+{
+  "baseCommit": "b17458afbd116a8030aac4cff87337bbd579c7cf",
+  "toolchain": "Xcode 27.1 (27A9275)",
+  "sourceSHA256": {
+    "ios/App/DeviceSurfacesComposition.swift": "7c64e9f22f8fb8e5a27baaecbf81eec3c5d27ea0b9221e5526bcd9b29f5c0ba5",
+    "ios/Tests/NativeCompositionStartupTest.swift": "1b506660458f0920b03170cf4de42ec1ed3384ba1c7f5567d839c8126905c962"
+  },
+  "beforeFix": {
+    "result": ".build/LedgerSurfacePerformance20261104/Red.xcresult",
+    "failed": 1,
+    "finding": "Twenty search updates and a form-error update in a 500-line pickup caused a widget rewrite before any new durable change."
+  },
+  "currentSimulator": {
+    "result": ".build/LedgerSurfacePerformance20261104/Models.xcresult",
+    "os": "iOS 27.0",
+    "passed": 533,
+    "failed": 0
+  },
+  "minimumSimulator": {
+    "result": ".build/LedgerSurfacePerformance20261104/Minimum.xcresult",
+    "device": "iPhone SE, iOS 17.0 (21A328)",
+    "modelPassed": 2,
+    "reminderUIPassed": 2,
+    "failed": 0
+  },
+  "archive": {
+    "path": ".build/LedgerSurfacePerformance20261104/RoomInTheCart-LedgerSurfaces.xcarchive",
+    "binaryUUID": "F873D688-59DB-304C-8B3C-54E39F5CAB0B",
+    "executableSHA256": "230e0a1b4ffefc296e5b7d4f57cbfd6cf896d9886a80c249539f8aa85fe4e113",
+    "builtAppMetadataCheck": "passed",
+    "signed": false
+  },
+  "scope": "The bound app coordinator keeps the existing widget file through search and form errors. Checking a line refreshes the existing route, starting a new pickup changes the route, and backgrounding clears it. The tests use isolated app stores with denied notification scheduling. Rendered typing latency, OS widget reload timing and physical-device performance remain separate."
+}

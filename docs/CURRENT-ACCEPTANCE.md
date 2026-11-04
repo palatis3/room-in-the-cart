@@ -71,6 +71,7 @@ Results belong to their own immutable source and binary identities. Do not add t
 | MEMBERSHIP-DELIVERY | [Purchase recovery validation](evidence/native/membership-delivery-20261104/validation.json) | Subscribe checks for unfinished Apple transactions before starting a new purchase. All 532 model cases and 30 local StoreKit executions on iOS 17 passed. Five of six focused iOS 27 executions passed, and the timed-out English case passed on its isolated rerun. The unsigned Release archive passed metadata checks. |
 | SHARE-CANCELLATION | [System share validation](evidence/native/share-cancellation-20261104/validation.json) | The failed combined-run screenshot shows Apple's share sheet remained open. The updated UI test verifies dismissal before reading history. All three iOS 27 repetitions and the iOS 17 case found the cancellation and frozen unplaced basket after relaunch. |
 | REMINDER-VIEWPORT | [Reminder UI validation](evidence/native/reminder-viewport-20261104/validation.json) | The test measures the visible viewport from one accessibility snapshot to avoid querying disappearing navigation bars. Both cases passed together on iOS 27. XCTest animation waits extended the saved-offer case, which also passed in an isolated run. The saved offer stayed pending when the unscheduled reminder closed. |
+| LEDGER-SURFACES | [Shopping list surface validation](evidence/native/ledger-surfaces-20261104/validation.json) | Search and form errors in a 500-line pickup leave the widget file alone. A saved checkoff refreshes the existing route, a new pickup changes it, and backgrounding clears it. All 533 models passed on iOS 27. Two coordinator cases and both reminder UI cases passed on iOS 17. The unsigned Release archive passed metadata checks. |
 | RECIPE-ADOPTION | [Recipe adoption validation](evidence/native/recipe-adoption-20261104/validation.json) | On iOS 17 and iOS 27, enter recipe servings and an ingredient amount from Records, dismiss each keyboard, then choose the reviewed dinner explicitly. SQLite confirms one new ledger revision with the original recipe and existing pickup items preserved. The file selection uses the guarded fixture. |
 
 ## Launch requirement traceability
@@ -139,7 +140,7 @@ All 27 have current source entries. “Pending” below concerns current screen 
 | Route | Actual entry / current source | Evidence or next screen gate |
 |---|---|---|
 | S01 Shop | `RestorableAdultTabs` → `ShopView`; active pickup, quick packs, urgent repair, contextual inbox. | ORDINARY; final current root regression. |
-| S02 List | Shop → `LedgerHomeView`; staged import/history/sort/print. | ORDINARY; physical shared text/dictation/print. |
+| S02 List | Shop → `LedgerHomeView`; staged import/history/sort/print. | ORDINARY and LEDGER-SURFACES; physical shared text/dictation/print and measured device latency. |
 | S03 Facts | List/checkout → `LedgerFactsView` sheet. | N526; final cap/slot/cancel task. |
 | S04 Ingredient | List/meal → `LedgerIngredientView`; pack sheet and matching stock. Standalone `ComparisonView`. | ORDINARY stock pack/no-purchase cases; final promoted artifacts. |
 | S05 Checkout | Shop/list → `LedgerCheckoutEntry` → `PickupCheckoutView`; contextual quote entry. | ORDINARY, QUOTES; unknown/stock stale review. |

@@ -4,6 +4,79 @@ import DeviceSurfaces
 
 #if DEBUG
 @MainActor final class DeviceSurfacesCompositionStartupTests: XCTestCase {
+    func testLargeListSearchLeavesWidgetAloneAndCommittedChangesRefreshIt() async throws {
+        let base = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: base) }
+        let privateDirectory = base.appendingPathComponent("isolated-surfaces")
+        var now = Date(timeIntervalSince1970: 1_793_664_000)
+        let ledger = LedgerModel(databaseURL: base.appendingPathComponent("ledger.sqlite"))
+        await ledger.open()
+        let started = await ledger.startShop(title: "Fictional pickup")
+        XCTAssertTrue(started)
+        let shop = try XCTUnwrap(ledger.shop)
+        let source = (0..<500).map { "Fixture arroz item \($0)" }.joined(separator: "\n")
+        let preview = try shop.stageImport(text: source, source: .paste)
+        let imported = await ledger.editShop(key: "surface-performance-import", shopID: shop.id) {
+            try $0.commitImport(preview)
+        }
+        XCTAssertTrue(imported)
+        let savedShop = try XCTUnwrap(ledger.shop)
+        XCTAssertEqual(savedShop.lines.count, 500)
+
+        let pickup = PickupModel(databaseURL: base.appendingPathComponent("pickup.sqlite"), launchArguments: [])
+        await pickup.load()
+        let bundle = Bundle(for: DeviceSurfacesCompositionStartupTests.self)
+        let household = HouseholdModel(bundle: bundle, outboxURL: base.appendingPathComponent("outbox.json"))
+        let suite = "SurfaceSearchTest." + UUID().uuidString
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let access = WorkspaceAccess(defaults: defaults)
+        let widget = try WidgetProjectionFile(directory: privateDirectory.appendingPathComponent("TestWidget"))
+        let composition = DeviceSurfacesComposition(directory: privateDirectory, bundle: bundle,
+            clock: { now }, launchArguments: ["--ui-testing"])
+        composition.bind(ledger: ledger, pickup: pickup, household: household, access: access)
+        let original = try await publishedWidget(widget, at: now)
+        let route = try XCTUnwrap(original.routeHandle)
+
+        now += 60
+        for index in 0..<20 {
+            ledger.search = "item \(480 + index)"
+            XCTAssertEqual(savedShop.search(ledger.search).count, 1)
+            try await Task.sleep(for: .milliseconds(25))
+        }
+        ledger.error = "Fictional form error"
+        try await Task.sleep(for: .milliseconds(100))
+        XCTAssertEqual(try widget.read(), original, "Search and form errors should leave the published shortcut alone.")
+
+        now += 60
+        let line = try XCTUnwrap(savedShop.lines.first)
+        let checked = await ledger.editShop(key: "surface-performance-check", shopID: shop.id) {
+            try $0.setChecked(lineID: line.id, checked: true)
+        }
+        XCTAssertTrue(checked)
+        let updated = try await publishedWidget(widget, at: now)
+        XCTAssertEqual(updated.routeHandle, route)
+
+        now += 60
+        let newPickup = await ledger.startShop(title: "Next fictional pickup")
+        XCTAssertTrue(newPickup)
+        let selected = try await publishedWidget(widget, at: now)
+        XCTAssertNotNil(selected.routeHandle)
+        XCTAssertNotEqual(selected.routeHandle, route)
+
+        composition.background()
+        XCTAssertNil(try widget.read().routeHandle)
+    }
+
+    private func publishedWidget(_ file: WidgetProjectionFile, at time: Date) async throws -> WidgetProjection {
+        let deadline = ContinuousClock.now + .seconds(5)
+        while ContinuousClock.now < deadline {
+            if let value = try? file.read(), value.writtenAt == time { return value }
+            try await Task.sleep(for: .milliseconds(20))
+        }
+        return try XCTUnwrap(nil, "The bound composition did not publish a widget for \(time).")
+    }
+
     func testBindingBeforePickupLoadPreservesDurablePickupSurfaceState() async throws {
         let base = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         let privateDirectory = base.appendingPathComponent("isolated-surfaces")
