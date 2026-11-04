@@ -1,0 +1,57 @@
+{
+  "sourceSHA256": "4828b874b07786c2ae298a7b861753842c6cddfa844dd946c0515268d1656e57",
+  "sourceFiles": 298,
+  "scope": "Local service build, migrations 001 through 024, real PostgreSQL app/worker/observer paths, Swift and web wire clients, and separately bounded operations",
+  "runs": {
+    "unit": {
+      "collected": 345,
+      "passed": 344,
+      "failed": 0,
+      "skipped": 1,
+      "artifact": "unit.tap",
+      "sha256": "3b723b29630bdbd54cd3db6bda9685d807ecb72feba24245f4bcf5fb6d1f79e6"
+    },
+    "shared-pg-wire": {
+      "collected": 178,
+      "passed": 178,
+      "failed": 0,
+      "skipped": 0,
+      "artifact": "shared-pg-wire.tap",
+      "sha256": "4fd6343fd1c767ef72b9d9cb7718783b074dac6bc69476a7c9b6934d3a35434f"
+    },
+    "observer-pg": {
+      "collected": 13,
+      "passed": 13,
+      "failed": 0,
+      "skipped": 0,
+      "artifact": "observer-pg.tap",
+      "sha256": "828d1b3e1dc388179af0ba53159ac48ea3fef0e440637ee0c9f0a8e468d709a1"
+    },
+    "operations-pg": {
+      "collected": 15,
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0,
+      "artifact": "operations-pg.tap",
+      "sha256": "aabbbb765528eb7ad73f3bf38f8f64aebb4c0b53617a93370f25a766c47f527b"
+    }
+  },
+  "billingSkip": "The optional separate billing PostgreSQL unit case is included without skip in the shared wire suite.",
+  "fixture": {
+    "sharedDatabase": "ritc_shared_20261104_e3de482b",
+    "sharedClientsAtExit": 0,
+    "observerDatabases": "Names and OIDs are retained in observer-pg.tap. Both removed with unchanged cluster role and membership snapshots.",
+    "operationsDatabase": "Created and removed in operations-pg.tap."
+  },
+  "changes": [
+    "Install the private committed-source adapter and migration 024 with no observer login, source registration, or wrapper grants.",
+    "Compare the persisted acknowledgement after any concurrent insertion resolves.",
+    "Bound worker SQL and provider/journal phases to one cancellation context. Recover committed unacknowledged acceptances and outcomes under leases that cannot erase or finish a job."
+  ],
+  "limits": [
+    "The composed observer test runs against real PostgreSQL with in-memory record, checkpoint and uncertainty services. Provider deletion uses a fixture callback.",
+    "The observer fixture applies separate ACL adjustments only to its disposable databases. Hosted observer provisioning and effective-ACL review remain open.",
+    "Default runtime remains cleanup-only. Hosted migration and real provider activation remain pending. The connected staging MCP denied read access.",
+    "The first combined suite had one test assertion mismatch about the expected SQL rejection. Its local log remains in .build/PrivacyRecovery-PG-wire-20261104.tap. The final source explicitly asserts the rejection and the unchanged job."
+  ]
+}

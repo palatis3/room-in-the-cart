@@ -6,7 +6,7 @@ export interface MaintenanceResult {
  expiredQueued:number; emailsCleared:number; authPurged:number; rateBucketsPurged:number;
  logoutCompleted:number; logoutRetryScheduled:number; logoutExpiredUnconfirmed:number; leaseLost:number;
 }
-export async function assertWorkerRole(pool:Database){
+export async function assertWorkerRole(pool:Pick<Database,'query'>){
  const row=(await pool.query(`SELECT r.rolsuper,r.rolbypassrls,pg_has_role(current_user,'ritc_worker','USAGE') AS worker,
  pg_has_role(session_user,'ritc_app','MEMBER') AS application, current_user<>session_user AS switched_role,
  (EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='ritc' AND pg_has_role(session_user,c.relowner,'MEMBER'))
@@ -15,9 +15,6 @@ export async function assertWorkerRole(pool:Database){
  if(!row?.worker||row.rolsuper||row.rolbypassrls||row.owns_tables||row.application||row.switched_role)throw new Error('Maintenance requires the separate non-owner, non-bypass worker role');
 }
 
-export async function workerQuery(pool:Database,text:string,values:unknown[]=[]){
- const db=await pool.connect();try{await db.query('BEGIN');await db.query("SET LOCAL statement_timeout='10s'; SET LOCAL lock_timeout='2s'");const result=await db.query(text,values);await db.query('COMMIT');return result;}catch(error){await db.query('ROLLBACK');throw error;}finally{db.release();}
-}
 export class AuthMaintenance {
  private readonly key:Buffer|null;
  constructor(private readonly pool:Database,private readonly options:{encryptionKey?:string;provider?:Pick<EmailOTPProvider,'logout'>}){

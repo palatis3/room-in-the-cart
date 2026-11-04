@@ -8,6 +8,14 @@ Deletion acceptance now requires `provider`, numeric `policy`, and an injected `
 
 Source target, retry and completion transitions create immutable outbox records. `PrivacyMaintenance.run` requires the same port, acknowledges target progress before a provider call and completion before reporting success. SQL hides complete/provider-complete and blocks cleanup while required records remain unacknowledged. `cleanup()` remains usable without a journal and cannot claim/erase a pending job. Replay jobs are excluded from ordinary claim/finish.
 
+## Private observer and worker recovery
+
+Migration 024 adds a private observer bound to a registered source, database, lineage and login. Its SQL wrappers check effective privileges before reading exact committed events. The Node adapter verifies the independent authority receipt before sending an acknowledgement. Migration 024 creates the interface. Provisioning the login, reviewing its effective privileges and registering the source are separate owner steps.
+
+An explicitly configured worker first claims committed events that still need acknowledgement, including events from completed jobs. The reconciliation lease expires after 30 seconds and grants no authority to erase or finish a job. The worker uses one absolute deadline for the run. Acknowledging an existing outcome preserves its original record identity. A lost response to a dispatched commit can leave an uncertain result for the next recovery attempt.
+
+The dedicated observer fixture requires the existing reviewed local fixture roles and PostgreSQL on `/tmp:55432`. Build the service, then run `TEST_JOURNAL_OBSERVER_ROLE=ritc_guardian_test_verifier node scripts/test-privacy-journal-pg-source.mjs` from `service`. It applies migrations to two disposable databases and removes them on exit. Local SQL and observer coverage uses synthetic keys and simulated remote authority, storage and provider behavior. See the [local test record](../docs/evidence/b11/privacy-observer-worker-20261104/validation.json).
+
 ## Local writer
 
 `createLocalPrivacyJournal` in `src/privacy-journal.ts` takes a dedicated fixed owner source pool, pinned lineage/schema/configuration ID/key ID, owner-only key file, owner-only journal directory and a separate checkpoint path. The request service still uses its non-owner application pool. The local synthetic harness is explicitly a trusted owner/signer process. Neither application nor maintenance roles receive raw journal/ack/plan/receipt rights or private helper execution. No supported CLI signs JSON or accepts a target list.

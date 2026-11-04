@@ -101,6 +101,73 @@ test('foreign household and child identifiers cannot broaden deletion scope',asy
  const a=await fresh(),b=await fresh();let input=request([disposition(a.h,{organizer:'archive'}),disposition(b.h,{organizer:'archive'})]);assert.equal((await call(a.owner,'/v1/privacy/deletions','POST',input)).status,404);
  input=request([disposition(a.h,{organizer:'archive',eraseChildProfiles:[randomUUID()]})]);assert.equal((await call(a.owner,'/v1/privacy/deletions','POST',input)).data.error.code,'guardian_disposition_required');assert.equal((await call(b.owner,'/v1/me/workspaces')).status,200);assert.equal((await call(a.owner,'/v1/me/workspaces')).status,200);
 });
+test('worker abort during the provider call leaves the original lease and receipt recoverable',async()=>{
+ const account=await actor(),input=request([]);
+ ok(await call(account,'/v1/privacy/deletions','POST',input),202);
+ const cancellation=new AbortController(),attempts=[];
+ const interrupted=new PrivacyMaintenance(worker,{journal:journal.port,provider:{
+  assertAvailable:async()=>{},
+  deleteAccount:async(subject,context)=>{
+   attempts.push({subject,context});
+   cancellation.abort();
+   context.signal.throwIfAborted();
+  },
+ }});
+ await assert.rejects(interrupted.run({batchSize:1,signal:cancellation.signal}),error=>error.code==='deletion_unavailable');
+ assert.equal(attempts.length,1);
+ assert.equal(attempts[0].subject,account.subject);
+ assert.equal(attempts[0].context.signal.aborted,true);
+ const job=(await admin.query('SELECT state,lease_id,provider_erased_at FROM ritc.privacy_job WHERE job_id=$1',[input.clientKey])).rows[0];
+ assert.equal(job.state,'processing');
+ assert.ok(job.lease_id);
+ assert.equal(job.provider_erased_at,null);
+ assert.equal((await admin.query("SELECT 1 FROM ritc.privacy_journal_outbox WHERE job_id=$1 AND kind IN ('source_pending','source_completed')",[input.clientKey])).rowCount,0);
+ assert.equal(ok(await status(input)).status,'pending');
+ await admin.query("UPDATE ritc.privacy_job SET lease_until=clock_timestamp()-interval '1 second' WHERE job_id=$1",[input.clientKey]);
+ assert.equal((await maintenance.run({batchSize:1})).completed,1);
+ assert.equal(ok(await status(input)).status,'complete');
+});
+test('worker recovers an accepted request whose committed event was never acknowledged',async()=>{
+ const account=await actor(),input=request([]),identity=await verifier.verify(account.token);
+ const interrupted=new PrivacyService(repo,{provider,policy:{receiptRetentionDays:1,erasureMarkerRetentionDays:2,verifiedBackupRetentionDays:1},journal:{
+  ...journal.port,afterCommit:async()=>{throw Error('Synthetic loss after acceptance commit');},
+ }});
+ await assert.rejects(interrupted.request(identity,input),/Synthetic loss/);
+ const claim='SELECT ritc.privacy_claim_reconciliation($1) AS job_id';
+ await assert.rejects(runtime.query(claim,[randomUUID()]),{code:'42501'});
+ const lease=randomUUID();
+ const claims=await Promise.all([worker.query(claim,[lease]),worker.query(claim,[lease])]);
+ assert.deepEqual(claims.map(value=>value.rows[0].job_id).filter(Boolean),[input.clientKey]);
+ assert.equal((await worker.query('SELECT ritc.privacy_erase_target($1,$2) AS erased',[input.clientKey,lease])).rows[0].erased,false);
+ await assert.rejects(worker.query('SELECT ritc.privacy_finish($1,$2,true,NULL)',[input.clientKey,lease]),/journal_pending/);
+ assert.equal((await worker.query("SELECT ritc.privacy_finish($1,$2,false,'storage_unavailable') AS committed",[input.clientKey,lease])).rows[0].committed,false);
+ const providerBefore=providerCalls;
+ assert.equal((await maintenance.run({batchSize:1})).completed,0);
+ assert.equal(providerCalls,providerBefore);
+ await admin.query("UPDATE ritc.privacy_job SET lease_until=clock_timestamp()-interval '1 second' WHERE job_id=$1",[input.clientKey]);
+ assert.equal((await maintenance.run({batchSize:1})).completed,1);
+ assert.equal(providerCalls,providerBefore+1);
+ assert.equal(ok(await status(input)).status,'complete');
+});
+test('worker recovers a lost completion acknowledgement without deleting the account again',async()=>{
+ const account=await actor(),input=request([]);
+ ok(await call(account,'/v1/privacy/deletions','POST',input),202);
+ const interrupted=new PrivacyMaintenance(worker,{provider,journal:{...journal.port,
+  acknowledgeJob:async(jobId,context)=>{
+   const completed=(await admin.query("SELECT 1 FROM ritc.privacy_job WHERE job_id=$1 AND state='complete'",[jobId])).rowCount;
+   if(completed)throw Error('Synthetic loss after completion commit');
+   await journal.port.acknowledgeJob(jobId,context);
+  },
+ }});
+ const providerBefore=providerCalls;
+ await assert.rejects(interrupted.run({batchSize:1}),/Synthetic loss/);
+ assert.equal(providerCalls,providerBefore+1);
+ const pending=(await admin.query("SELECT count(*)::int AS n FROM ritc.privacy_journal_outbox e WHERE e.job_id=$1 AND e.kind='source_completed' AND NOT EXISTS(SELECT 1 FROM ritc.privacy_journal_ack a WHERE a.event_id=e.event_id)",[input.clientKey])).rows[0].n;
+ assert.equal(pending,1);
+ assert.equal((await maintenance.run({batchSize:1})).completed,0);
+ assert.equal(providerCalls,providerBefore+1);
+ assert.equal(ok(await status(input)).status,'complete');
+});
 test('deletion waits for an authorized identity transaction then closes enrollment and requires an actual worker lease',async()=>{
  const f=await fresh(),identity=await verifier.verify(f.owner.token),db=await runtime.connect(),input=request([disposition(f.h,{organizer:'archive'})]);
  await db.query('BEGIN');await repo.assertIdentityAllowed(db,identity.issuer,identity.subject);let finished=false;const deletion=call(f.owner,'/v1/privacy/deletions','POST',input).then(r=>{finished=true;return r;});

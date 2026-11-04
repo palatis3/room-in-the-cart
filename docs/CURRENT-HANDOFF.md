@@ -2,7 +2,15 @@
 
 The complete production app remains the objective. The current checkpoint below supersedes the earlier resumed and pre-restart inventories. Passing earlier snapshots do not certify later source changes. Use the [current 52-requirement / 27-route map](CURRENT-ACCEPTANCE.md) for implementation and remaining acceptance.
 
-## Safe pause checkpoint — November 3 local / November 4 UTC
+## Current checkpoint — November 4
+
+Migration 024 and the private PostgreSQL observer from Lumpy’s saved proposal are installed in the local repository. An acknowledgement now compares the persisted winner after a concurrent write, so conflicting receipts cannot both succeed. The worker shares one deadline across SQL, provider and journal work. It can recover a lost acceptance or completion acknowledgement under a lease that permits reconciliation alone. A later run can finish an interrupted pending job without asking the user to submit a new request.
+
+The [local test record](evidence/b11/privacy-observer-worker-20261104/validation.json) pins 298 inputs and records 178 application, HTTP, PostgreSQL and Swift/web wire passes, 13 real PostgreSQL observer passes, 15 operations passes and 344 unit passes. The optional unit skip for billing PostgreSQL is covered by the shared suite. The composition test uses real PostgreSQL with simulated durable storage, checkpoint authority, uncertainty and provider behavior. Lumpy’s previous chat ID could not be reached on this turn, so the integration used his archived patch and evidence.
+
+The next backend milestone is the separately operated record store, checkpoint authority and persistent uncertainty service, followed by operator recovery and an independent restore drill. Production observer credentials and ACLs still need review. Staging access through the Supabase connector was denied, and the last verified hosted registry remains the earlier observation through 008. Apple membership and SMTP remain deferred. The native preview stays at the compiled build documented below.
+
+## Earlier safe pause checkpoint — November 3 local / November 4 UTC
 
 The user requested winding down because credits are running low. Current bounded implementation and verification are finished; no new milestone, deployment or test run should start until the user resumes. Root is saving this checkpoint locally and pausing the production goal. Lumpy is idle with his workers finished, and no owned test/build process remains. No Git remote is configured.
 

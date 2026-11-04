@@ -7,7 +7,7 @@ import {acceptedEvent,assertCanonicalRecord,canonical,checkCall,clone,digest,gat
 // Test-only backing state models independently authenticated CAS and immutable
 // object versions. Its state is shared by every constructed real adapter. This
 // deliberately does not establish a remote provider's production durability.
-export function fixture() {
+export function fixture(originPins={}) {
   const writer=keys(), authorityKeys=keys();
   const pins={
     lineage:randomUUID(),schemaDigest:'b'.repeat(64),configurationId:'actual-option-a-local-fixture',
@@ -15,6 +15,7 @@ export function fixture() {
     sourceIdentity:'fixture-fixed-source-v1',recordStoreIdentity:'fixture-record-store-v1',recordNamespace:'fixture-namespace-v1',
     checkpointAuthority:'fixture-checkpoint-v1',deploymentPrincipal:'fixture-deployment-v1',
     authorityKeyId:'fixture-authority-v1',authorityPublicKeyFingerprint:authorityKeys.fingerprint,
+    ...originPins,
   };
   const fixedPins=clone(pins), scopeDigest=digest({version:1,...fixedPins});
   const origin={lineage:pins.lineage,schemaDigest:pins.schemaDigest,configurationId:pins.configurationId};
