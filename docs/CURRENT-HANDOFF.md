@@ -6,7 +6,7 @@ The complete production app remains the objective. The current checkpoint below 
 
 The authenticated Supabase dashboard confirmed exactly eight applied migration checksums and no scheduled backup. The [pinned staging candidate](evidence/b11/staging-upgrade-20261104/candidate.json) includes the exact 21 pending migrations and a local upgrade from a populated 008 baseline. It preserved household data, existing device access and tenant boundaries. The pre-upgrade dump restored into a separate database. The hosted backup remains the rollout gate.
 
-The frozen ordinary iPhone 17e run finished with 526 model passes, 33 UI passes and four UI failures. The two stock cases now pass on the updated keyboard forms. The saved-offer case passed its separate current rerun in 480 seconds, including preserving the saved response after canceling an edit. The remaining frozen failure reached the Records deletion confirmation but could not find Cancel. Both finished test simulators were shut down, and the existing preview was preserved. [Run results](evidence/native/ordinary-20261104/validation.json)
+The frozen ordinary iPhone 17e run finished with 526 model passes, 33 UI passes and four UI failures. Separate current runs passed both stock cases, saved offer and Records deletion Cancel. The saved-offer rerun took 480 seconds and preserved the saved response after canceling an edit. The existing preview simulator was preserved. [Frozen and saved-offer results](evidence/native/ordinary-20261104/validation.json)
 
 The rebuilt unsigned Release archive now declares the required reason for private recovery-file metadata checks. The compiled app and both extensions passed local metadata verification. The exported Xcode report has seven linked data types and tracking marked No on each. [Archive validation](evidence/native/privacy-archive-20261104/validation.json)
 
@@ -21,6 +21,10 @@ Native contributor requests now save after a transport failure before send if th
 The list and stock entry forms now expose Done during keyboard entry. Both previously blocked stock-to-checkout cases pass in the updated app, including persistence after restart and the no-retailer-order branch. The related freezer-repair UI case and all 529 model tests passed. The updated unsigned Release archive also passed metadata checks. [Keyboard validation](evidence/native/stock-keyboard-20261104/validation.json)
 
 The App Store draft has six visually reviewed screenshot candidates from the prior ordinary Release configuration on iPhone 17. The English and Spanish sets show both pack results and the saved record. [Capture manifest](app-store/screenshots/manifest.json)
+
+The minimum iOS 17.0 iPhone SE run passed seven UI cases. The unfiltered accessibility audit passed across its five Shop and comparison viewports, and the Spanish, largest-text, dark and confirmed-stock journeys passed. This build includes the keyboard changes and precedes the Records alert change. [Minimum OS validation](evidence/native/minimum-os-current-20261104/validation.json)
+
+The Records deletion alert now exposes a distinct Cancel action. The two current cases verify cancel and owner-file preview/discard with the original comparison preserved through restart, plus durable removal after explicit confirmation. The updated unsigned Release archive compiled and passed metadata checks. [Records deletion validation](evidence/native/records-cancel-20261104/validation.json)
 
 ## Previous checkpoint — November 4, quarantine restore window
 

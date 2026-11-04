@@ -24,7 +24,7 @@
       {
         "test": "RoomInTheCartUITests/testOwnerExportReviewAndCancelledDeletionPreserveComparisonAfterRestart()",
         "firstFailureLine": "failed - Could not reveal \"Cancel\" Button",
-        "followup": "Open. Cancel was absent from the test query after the deletion confirmation appeared."
+        "followup": "Current cancel and owner-export rerun passed. See records-cancel-20261104/validation.json."
       },
       {
         "test": "PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart()",

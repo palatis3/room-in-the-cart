@@ -51,8 +51,12 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Data and recovery"].waitForExistence(timeout: 5))
 
         tap(app.buttons["Delete this source"])
-        XCTAssertTrue(app.buttons["Delete from this iPhone"].waitForExistence(timeout: 5))
-        tap(app.buttons["Cancel"])
+        let confirmation = app.alerts[title]
+        XCTAssertTrue(confirmation.buttons["Delete from this iPhone"].waitForExistence(timeout: 5))
+        let cancel = confirmation.buttons["Cancel"]
+        XCTAssertTrue(cancel.isHittable, "A destructive confirmation must offer an explicit, reachable Cancel action")
+        screenshot("Local-deletion-confirmation-with-cancel")
+        cancel.tap()
         XCTAssertTrue(app.switches[title].exists, "Cancelling deletion must retain the source")
         tap(app.buttons["Select all readable records"])
 

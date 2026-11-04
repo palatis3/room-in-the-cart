@@ -1,0 +1,49 @@
+{
+  "recordedAtUTC": "2026-11-04T10:28:51.271869+00:00",
+  "sourceBaseCommit": "87e9a95230e17e2c94f48b5199bbd9ff735a57bd",
+  "sourceSHA256": {
+    "ios/Features/Records/RecordsToolsView.swift": "ce97f1e17db8efbfc78de398c8eb7a05cb04dfa5f8b68c3c5dfbb37a22c94812",
+    "ios/UITests/RoomInTheCartUITests.swift": "7d9e7240a8c7ec11f0067b76e7122c4c3ad4f12fa998b4b2f08e1cbdf056ee34"
+  },
+  "priorResult": ".build/NativeAcceptance-20261104/Ordinary.xcresult",
+  "priorPopover": "The 59-second frame of the failed test recording shows the named record and a single destructive button.",
+  "screenshotSHA256": {
+    "prior-popover.png": "d3284a81810f26b22bf74c546ddaccffbc04ba0ed9e1702dcc89873247e23588",
+    "current-alert.png": "ec688880d7026d8ddd19ec235246e42d3c64df6d3415cef94392a03df8aa3513"
+  },
+  "current": {
+    "resultBundle": ".build/RecordsCancel20261104/RecordsCancel.xcresult",
+    "device": {
+      "architecture": "arm64",
+      "deviceId": "6002E6CC-3391-4F26-A1E8-5258860E239C",
+      "deviceName": "RITC Contributor Offline 20261104",
+      "modelName": "iPhone 17e",
+      "osBuildNumber": "24A434",
+      "osVersion": "27.0",
+      "platform": "iOS Simulator"
+    },
+    "passed": 2,
+    "cases": [
+      {
+        "test": "testConfirmedComparisonDeletionSurvivesRestart",
+        "seconds": 121.008
+      },
+      {
+        "test": "testOwnerExportReviewAndCancelledDeletionPreserveComparisonAfterRestart",
+        "seconds": 105.722
+      }
+    ],
+    "observed": [
+      "The deletion alert showed both actions. Cancel preserved the named record.",
+      "The selected owner file was previewed and discarded. Restart recovered the same comparison.",
+      "Explicitly confirmed deletion remained deleted after restart."
+    ]
+  },
+  "release": {
+    "archive": ".build/RecordsCancel20261104/RoomInTheCart-RecordsCancel.xcarchive",
+    "binarySHA256": "22786c23cb15f576a512da686e990f5c46fbb06851067a4213e64fe573a3a14d",
+    "metadata": "pass",
+    "signing": "disabled"
+  },
+  "scope": "Focused simulator UI with fictional local records and unsigned iPhoneOS archive."
+}

@@ -1,0 +1,58 @@
+{
+  "recordedAtUTC": "2026-11-04T10:27:14.476855+00:00",
+  "sourceCommit": "e4ed3ca7989491337e8cefc8df9d1da03e61771b",
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "6A3B5146-103C-4B01-9206-AAA2CEF2D7CE",
+    "deviceName": "RITC Minimum OS 20261104",
+    "modelName": "iPhone SE",
+    "osBuildNumber": "21A328",
+    "osVersion": "17.0",
+    "platform": "iOS Simulator"
+  },
+  "resultBundle": ".build/MinimumOSCurrent20261104/MinimumOS.xcresult",
+  "configuration": "Debug ordinary iPhone app with isolated UI workspace",
+  "passed": 7,
+  "failed": 0,
+  "cases": [
+    {
+      "case": "testFullyCoveredSavesUseAtHomePlanWithoutPurchasedItemOrRetailerOrder",
+      "seconds": 86.666
+    },
+    {
+      "case": "testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack",
+      "seconds": 148.703
+    },
+    {
+      "case": "testAutomatedAccessibilityAuditOnShopAndKnownResults",
+      "seconds": 73.109
+    },
+    {
+      "case": "testKnownComparisonSavesAndReopensWithItemOnlyLimit",
+      "seconds": 68.97
+    },
+    {
+      "case": "testLargestDynamicTypeAndDarkAppearanceComparisonSmoke",
+      "seconds": 87.18
+    },
+    {
+      "case": "testLargestTextSourceAndSavedDetailsAreFullyReadableAboveTabs",
+      "seconds": 140.567
+    },
+    {
+      "case": "testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer",
+      "seconds": 73.337
+    }
+  ],
+  "accessibilityAudit": {
+    "filters": null,
+    "viewports": [
+      "Shop at launch",
+      "fully visible repair shortcut",
+      "initial pack result",
+      "scrolled result",
+      "fully visible Save button"
+    ]
+  },
+  "scope": "Simulator UI at minimum iOS. Current keyboard changes are included. The later Records alert change and human physical VoiceOver and Switch Control are separate."
+}

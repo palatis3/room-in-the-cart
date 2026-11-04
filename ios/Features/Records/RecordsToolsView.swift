@@ -109,18 +109,16 @@ struct RecordsToolsView: View {
             showManualRecipe = false
             Task { await model.stageManualRecipe(recipe) }
         } }
-        .confirmationDialog(deletion?.title ?? "", isPresented: Binding(get: { deletion != nil }, set: { if !$0 { deletion = nil } }), titleVisibility: .visible) {
-            if let deletion {
-                Button(recordsText("Delete from this iPhone"), role: .destructive) {
-                    Task {
-                        if let record = deletion.source { await model.deleteCurrentRecord(record) }
-                        if let scope = deletion.recovered { await model.deleteRecovered(scope) }
-                    }
-                    self.deletion = nil
+        .alert(deletion?.title ?? "", isPresented: Binding(get: { deletion != nil }, set: { if !$0 { deletion = nil } }), presenting: deletion) { deletion in
+            Button(recordsText("Cancel"), role: .cancel) { self.deletion = nil }
+            Button(recordsText("Delete from this iPhone"), role: .destructive) {
+                Task {
+                    if let record = deletion.source { await model.deleteCurrentRecord(record) }
+                    if let scope = deletion.recovered { await model.deleteRecovered(scope) }
                 }
+                self.deletion = nil
             }
-            Button(recordsText("Cancel"), role: .cancel) { deletion = nil }
-        } message: {
+        } message: { _ in
             Text(recordsText(model.recoveredDeletionAllowsUndo ? "Only the named local source or recovered copies are removed. Other records and copies already shared remain. Recovered-copy deletion can be undone during this app session." : "The named local source or recovered copies and their separate workspaces will be permanently deleted. This cannot be undone. Other records and files already shared remain."))
         }
     }
