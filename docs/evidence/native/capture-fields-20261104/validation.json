@@ -74,6 +74,7 @@
   },
   "spanishLargeTextReviewStart": {
     "device": "iPhone SE, iOS 17.0 (21A328)",
+    "sourceCommit": "0db6fad",
     "result": ".build/CaptureFieldReview20261104/SpanishLarge17ReviewStart.xcresult",
     "sourceSHA256": {
       "ios/Features/Capture/CaptureReviewView.swift": "9918b6755f28d5a9a3a8357fc77f0657ae9f3e12302ff052057db63813966b23",
@@ -91,7 +92,26 @@
       ".build/CaptureFieldReview20261104/spanish-large17-review-start-attachments/AF74423C-1635-4FDE-87D8-9B8C006049BA.png": "9eb114f6eade187fa138d295d60c5b6c11e4eebbeda9d763be89ac3f11f1d71b"
     },
     "ordinaryDebugVerificationLog": ".build/CaptureFieldReview20261104/review-start-ordinary-verification.log",
-    "ordinaryDebugExecutableSHA256": "7349d28e18b496eb259694256d8f981197911618555e49ac334038bd682de2d0"
+    "ordinaryDebugExecutableSHA256": "7349d28e18b496eb259694256d8f981197911618555e49ac334038bd682de2d0",
+    "ordinaryDebugTests": {
+      "device": "iPhone 17e, iOS 27.0 (24A434)",
+      "result": ".build/CaptureFieldReview20261104/OrdinaryReviewStart27.xcresult",
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": [],
+      "scope": "Fourteen structured capture model tests and two shopping-list UI journeys passed. The UI covered reopening a cancelled capture and returning to the original draft before merging a duplicate across restart."
+    },
+    "committedRegression": {
+      "result": ".build/CaptureFieldReview20261104/SpanishLarge17CommittedRegression.xcresult",
+      "testSourceSHA256": "772635407ef152aee0d57271a6b808c3c536b0bb052f4970791a3d61d4dd22d4",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": [],
+      "testSeconds": 131.683,
+      "scope": "The repository's guarded contributor UI test verified that the original Spanish wording is visible near the top of the viewport when the structured review opens."
+    }
   },
   "remaining": ["Human US Spanish copy review", "Improve unit picker wrapping at the largest accessibility text size", "Physical VoiceOver and Switch Control"]
 }
