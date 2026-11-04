@@ -25,7 +25,7 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
     @State private var photoTask: Task<Void, Never>?
     @AccessibilityFocusState private var reviewFocused: Bool
     @AccessibilityFocusState private var capturedTextFocused: Bool
-    @FocusState private var itemNameFocus: UUID?
+    @FocusState private var structuredFieldFocus: StructuredCaptureField?
 
     init(initialText: String = "", initialSource: CaptureSource = .typed, localeIdentifier: String = Locale.current.identifier,
          destination: String = captureText("This pickup"), requestMode: Bool = false, dismissOnReview: Bool = true, existingCapture: ReviewedCapture? = nil, correctionScope: CaptureCorrectionScope? = nil,
@@ -63,7 +63,7 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
         Form {
             if reviewingFields {
                 StructuredCaptureReviewView(lines: $structuredLines, corrections: corrections, correctionScope: correctionScope,
-                    itemNameFocus: $itemNameFocus, destination: destination,
+                    fieldFocus: $structuredFieldFocus, destination: destination,
                     source: model.acceptedEvidence?.source ?? .typed, context: requestMode ? .request : .list, originalText: model.acceptedEvidence?.text ?? model.text,
                     imageData: model.acceptedEvidence?.previewImageData ?? model.acceptedEvidence?.sourceImageData,
                     authorize: authorize, onBack: { reviewingFields = false }) { lines in
@@ -73,7 +73,8 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
             } else {
             Section {
                 Text(captureText(requestMode ? "Capture is optional. You can always type your request." : "Capture is optional. You can always type your list."))
-                Text(captureText("Speech and photo text recognition run on this iPhone. Nothing is added until you review the list."))
+                Text(captureText(requestMode ? "Speech and photo text recognition run on this iPhone. Review the request before sending." :
+                    "Speech and photo text recognition run on this iPhone. Nothing is added until you review the list."))
                     .font(.footnote).foregroundStyle(.secondary)
                 Text(captureText("Actual destination") + ": " + destination)
             }
@@ -91,7 +92,8 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
             Section(captureText(requestMode ? "Your editable request" : "Your editable list")) {
                 Text(captureText(requestMode ? "Review one request at a time. Check the item, amount, packs, purpose and exclusions; skip any other captured lines." : "One item per line. Check item names, amounts, units and any exclusions."))
                 TextEditor(text: $model.text).frame(minHeight: 180)
-                    .accessibilityLabel(captureText("List text to review")).accessibilityIdentifier("capture.editor")
+                    .accessibilityLabel(captureText(requestMode ? "Request text to review" : "List text to review"))
+                    .accessibilityIdentifier("capture.editor")
                     .accessibilityFocused($reviewFocused)
                     .disabled(model.busy || loadingPhoto || model.closed)
                 if let evidence = model.acceptedEvidence {
@@ -144,8 +146,8 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
         }
         .navigationTitle(captureText(requestMode ? "Capture a request" : "Capture a list"))
         .scrollDismissesKeyboard(.interactively)
-        .keyboardDoneAction(visible: itemNameFocus != nil, title: captureText("Done"), identifier: "capture.itemNameDone") {
-            itemNameFocus = nil
+        .keyboardDoneAction(visible: structuredFieldFocus != nil, title: captureText("Done"), identifier: "capture.itemNameDone") {
+            structuredFieldFocus = nil
         }
         .toolbar { ToolbarItem(placement: .cancellationAction) {
             Button(captureText("Cancel")) { close(); dismiss() }

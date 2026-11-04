@@ -1,6 +1,12 @@
 import SwiftUI
 import CoreDomain
 
+struct StructuredCaptureField: Hashable {
+    enum Control: Hashable { case name, amount, packCount, amountPerPack, purpose, destination, exclusions }
+    let lineID: UUID
+    let control: Control
+}
+
 @MainActor struct StructuredCaptureReviewView: View {
     enum Context {
         case list, request, recipe
@@ -38,7 +44,7 @@ import CoreDomain
     @Binding var lines: [CaptureLineDraft]
     @ObservedObject var corrections: CaptureCorrectionsModel
     let correctionScope: CaptureCorrectionScope?
-    let itemNameFocus: FocusState<UUID?>.Binding
+    let fieldFocus: FocusState<StructuredCaptureField?>.Binding
     let destination: String
     let source: CaptureSource
     let context: Context
@@ -73,7 +79,7 @@ import CoreDomain
                 originalText: "", originalName: "", name: "")
             let line = captureDraftBinding(placeholder, in: $lines)
             Section {
-                CaptureStructuredRow(line: line, corrections: corrections, itemNameFocus: itemNameFocus, destination: destination, source: source,
+                CaptureStructuredRow(line: line, corrections: corrections, fieldFocus: fieldFocus, destination: destination, source: source,
                     authorizeSpelling: { liveSpellingScope != nil && !spellingWorking }) { original, replacement in
                     changeSpellings { await corrections.remember(original: original, replacement: replacement) }
                 }
@@ -133,6 +139,7 @@ import CoreDomain
                         validationMessage = "Keep exactly one reviewed item for this request. Skip other lines or cancel; nothing has been sent."
                         return
                     }
+                    fieldFocus.wrappedValue = nil
                     onContinue(reviewed)
                 } catch StructuredCaptureFailure.destinationMismatch {
                     validationMessage = copy.mismatch
@@ -141,7 +148,7 @@ import CoreDomain
                 }
             }.disabled(!authorize() || lines.isEmpty || !lines.contains(where: { !$0.skip }) || !lines.allSatisfy { $0.skip || $0.confirmed })
                 .accessibilityIdentifier("capture.continue")
-            Button(captureText("Back to captured words"), action: onBack)
+            Button(captureText("Back to captured words")) { fieldFocus.wrappedValue = nil; onBack() }
             Text(captureText(copy.next))
                 .font(.footnote)
         }
@@ -165,7 +172,7 @@ import CoreDomain
 @MainActor private struct CaptureStructuredRow: View {
     @Binding var line: CaptureLineDraft
     @ObservedObject var corrections: CaptureCorrectionsModel
-    let itemNameFocus: FocusState<UUID?>.Binding
+    let fieldFocus: FocusState<StructuredCaptureField?>.Binding
     let destination: String
     let source: CaptureSource
     let authorizeSpelling: () -> Bool
@@ -175,32 +182,52 @@ import CoreDomain
             Text(line.originalText).font(.footnote).textSelection(.enabled)
             Toggle(captureText("Skip this captured line"), isOn: $line.skip)
             if !line.skip {
-                TextField(captureText("Item name"), text: field(\.name))
-                    .focused(itemNameFocus, equals: line.id)
-                    .submitLabel(.done)
-                    .onSubmit { itemNameFocus.wrappedValue = nil }
+                labeledField(captureText("Item name")) {
+                    TextField(captureText("Item name"), text: field(\.name))
+                        .focused(fieldFocus, equals: focus(.name))
+                        .submitLabel(.done)
+                        .onSubmit { fieldFocus.wrappedValue = nil }
+                }
                 if authorizeSpelling(), let suggestion = corrections.suggestion(for: line.originalName), line.name != suggestion.replacement {
                     Text(captureText("Remembered spelling to review") + ": " + suggestion.replacement)
                     Button {
                         guard authorizeSpelling() else { return }
                         line.name = suggestion.replacement
                         line.confirmed = false
-                        itemNameFocus.wrappedValue = nil
+                        fieldFocus.wrappedValue = nil
                     } label: {
                         Text(captureText("Use this spelling")).frame(minHeight: 44)
                     }.buttonStyle(.borderless)
                 }
-                TextField(captureText("Total amount, unknown if blank"), text: field(\.amount)).keyboardType(.numbersAndPunctuation)
+                quantityField(captureText("Total amount"), accessibilityTitle: captureText("Total amount, unknown if blank"),
+                    value: \.amount, control: .amount, keyboard: .numbersAndPunctuation)
                 unitPicker(captureText("Total unit"), value: \.unit)
-                TextField(captureText("Number of packs, unknown if blank"), text: field(\.packCount)).keyboardType(.numberPad)
-                TextField(captureText("Usable amount in each pack, unknown if blank"), text: field(\.amountPerPack)).keyboardType(.numbersAndPunctuation)
+                quantityField(captureText("Number of packs"), accessibilityTitle: captureText("Number of packs, unknown if blank"),
+                    value: \.packCount, control: .packCount, keyboard: .numberPad)
+                quantityField(captureText("Usable amount in each pack"), accessibilityTitle: captureText("Usable amount in each pack, unknown if blank"),
+                    value: \.amountPerPack, control: .amountPerPack, keyboard: .numbersAndPunctuation)
                 unitPicker(captureText("Unit in each pack"), value: \.packUnit)
                 Text(captureText("A pack count alone is not a usable amount. Unknown fields stay unknown; complete pack amounts are checked by the list planner."))
                     .font(.footnote)
-                TextField(captureText("Purpose or meal, unknown if blank"), text: field(\.purpose), axis: .vertical)
-                TextField(captureText("Destination wording"), text: field(\.destination), axis: .vertical)
+                labeledField(captureText("Purpose or meal")) {
+                    TextField(captureText("Purpose or meal, unknown if blank"), text: field(\.purpose), axis: .vertical)
+                        .accessibilityLabel(captureText("Purpose or meal, unknown if blank"))
+                        .accessibilityIdentifier("capture.field.purpose")
+                        .focused(fieldFocus, equals: focus(.purpose))
+                }
+                labeledField(captureText("Destination wording")) {
+                    TextField(captureText("Destination wording"), text: field(\.destination), axis: .vertical)
+                        .accessibilityLabel(captureText("Destination wording"))
+                        .accessibilityIdentifier("capture.field.destination")
+                        .focused(fieldFocus, equals: focus(.destination))
+                }
                 Button(captureText("Use the displayed destination")) { line.destination = destination; line.confirmed = false }
-                TextField(captureText("Exclusions, one per line"), text: field(\.exclusions), axis: .vertical)
+                labeledField(captureText("Exclusions")) {
+                    TextField(captureText("Exclusions, one per line"), text: field(\.exclusions), axis: .vertical)
+                        .accessibilityLabel(captureText("Exclusions, one per line"))
+                        .accessibilityIdentifier("capture.field.exclusions")
+                        .focused(fieldFocus, equals: focus(.exclusions))
+                }
                 if !line.warnings.isEmpty {
                     Label(captureText("Some wording, quantities, packs or destination were ambiguous. Compare every field with the original."), systemImage: "exclamationmark.triangle")
                 }
@@ -212,13 +239,33 @@ import CoreDomain
                    CaptureCorrectionStore.key(line.originalName) != CaptureCorrectionStore.key(line.name) {
                     Button {
                         rememberSpelling(line.originalName, line.name)
-                        itemNameFocus.wrappedValue = nil
+                        fieldFocus.wrappedValue = nil
                     } label: {
                         Text(captureText("Remember this corrected product spelling")).frame(minHeight: 44)
                     }.buttonStyle(.borderless)
                 }
                 Toggle(captureText("I reviewed this item, amounts, packs, purpose, destination and exclusions, including any unknowns."), isOn: $line.confirmed)
             }
+        }.onChange(of: line.skip) { _, skip in
+            if skip, fieldFocus.wrappedValue?.lineID == line.id { fieldFocus.wrappedValue = nil }
+        }
+    }
+    private func focus(_ control: StructuredCaptureField.Control) -> StructuredCaptureField {
+        StructuredCaptureField(lineID: line.id, control: control)
+    }
+    private func quantityField(_ title: String, accessibilityTitle: String, value: WritableKeyPath<CaptureLineDraft, String>,
+                               control: StructuredCaptureField.Control, keyboard: UIKeyboardType) -> some View {
+        labeledField(title) {
+            TextField(accessibilityTitle, text: field(value), prompt: Text(captureText("Unknown")))
+                .accessibilityLabel(accessibilityTitle)
+                .keyboardType(keyboard)
+                .focused(fieldFocus, equals: focus(control))
+        }
+    }
+    private func labeledField<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title).font(.caption).foregroundStyle(.secondary).accessibilityHidden(true)
+            content()
         }
     }
     private func field(_ path: WritableKeyPath<CaptureLineDraft, String>) -> Binding<String> {
