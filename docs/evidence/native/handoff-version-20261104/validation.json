@@ -29,6 +29,38 @@
     "failed": 0,
     "uiSeconds": 83.467
   },
+  "systemReduceMotion": {
+    "sourceCommit": "473894385bde5b3477bfc7df1f4e8554354516e5",
+    "configuration": "Ordinary arm64 Debug on an isolated iPhone SE (2nd generation), iOS 17.0 (21A328)",
+    "sourceReadback": "452 tracked iOS and configuration inputs matched the commit. The UI test file adds the scratch Settings probe and scopes the reopened handoff link to the Pickup collection.",
+    "appDebugDylibSHA256": "8022092764c17ae0173d8872819ea629866902b135f13c08519ae444f621934a",
+    "ordinaryTestSourceSHA256": "1c9221ea25df9454c07e6bedff9525b1699248153fc9b951855f990dd4fd6630",
+    "scratchTestSourceSHA256": "0fbca11c628213a26fcbee7c0b9e170cfab379f36b39f925ef7f62bcadd8a971",
+    "attempts": [
+      {
+        "result": ".build/MealWeekAccessibilityInline20261104/reduce-motion.xcresult",
+        "logSHA256": "af6f46dfd3852fa6b5192f9bf47fcbfd592d3fe32a0a774316c78d5a707fc5f9",
+        "finding": "The native Settings switch changed from off to on. The app cancelled the share and reopened the frozen, unplaced pickup. The test stopped at two matching handoff links in the retained Shop root and the active Pickup screen."
+      },
+      {
+        "result": ".build/MealWeekAccessibilityInline20261104/reduce-motion-reopened-pickup.xcresult",
+        "logSHA256": "b59fe9cfb5d4c3e14fb498d2a9cc2e608449154ffdf21d0ec9d2b2d0547203d2",
+        "finding": "Settings reopened on Motion with Reduce Motion still on. The scratch setup expected the Settings root and stopped before the app journey."
+      }
+    ],
+    "result": ".build/MealWeekAccessibilityInline20261104/reduce-motion-persisted-setting.xcresult",
+    "logSHA256": "605868046144fc3f0050dc5b548876ea7c551872c12b745432ac956ba987fe58",
+    "summarySHA256": "5599fb5d7f5da5d50ccaa67ca472e6233efd70267b10d99729f0b90cd3956369",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 74.979,
+    "captures": {
+      "enabledSetting": {"path": ".build/MealWeekAccessibilityInline20261104/reduce-motion-final-attachments/B0B752D2-848D-4FB5-BD46-78808F734127.png", "sha256": "e0f2db44dfacc304b267b4ec9d901ec8cc122a1161c45c7096b0eaaa7d140ae0"},
+      "savedCancellation": {"path": ".build/MealWeekAccessibilityInline20261104/reduce-motion-final-attachments/31136856-020B-40F7-AFC2-FE2DD7E55812.png", "sha256": "e6bdfb6bd3346d37a26a28e2cac92be94c82a72dcab7c58bd7f02a658f1f58ab"}
+    },
+    "scope": "The native Settings readback preceded the checkout and system share. After cancellation and relaunch, the Pickup screen showed Frozen · placement unconfirmed and the handoff displayed revision one, two wraps and the recorded cancellation. The scoped iOS 17 app logging accommodation was active. Physical transition timing, interaction cadence and assistive hardware remain open."
+  },
   "archive": {
     "path": ".build/HandoffVersion20261104/RoomInTheCart-HandoffVersion.xcarchive",
     "binaryUUID": "9BB5422C-9BA6-3EF2-9DBB-22097E34D77C",
