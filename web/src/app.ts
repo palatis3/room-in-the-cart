@@ -258,7 +258,20 @@ export class WebApp {
       base:{shopRevision:0,authorityEpoch:0,...(requestRevision!==undefined?{requestRevision}:{})},body};
   }
   private async send():Promise<void> {
-    const s=await this.reauthenticate(this.retryCommand??undefined);
+    let s:Session;
+    let offlineError:ApiError|null=null;
+    try {
+      s=await this.reauthenticate(this.retryCommand??undefined);
+    } catch(error) {
+      const cached=this.session;
+      if(!(error instanceof ApiError)||error.status!==0||!cached||!isContributorSession(cached)||
+         reviewScope(cached)!==this.reviewedScope||!cached.enrolled||!cached.queueConsent||!this.consent)throw error;
+      if(Date.parse(cached.replayWindow.expiresAt)<=Date.now()||
+         (this.retryCommand&&this.retryCommand.replayWindow!==cached.replayWindow.id))throw new ApiError('stale_replay_window',409);
+      // The last checked session can scope a local draft. Only a fresh session can send it.
+      s=cached;
+      offlineError=error;
+    }
     if(!this.retryCommand)this.retryCommand=this.draft.editing?
       this.makeCommand('request.edit',{requestId:this.draft.editing.requestId,originalItem:this.draft.item,ownQuantity:this.draft.amount||null},this.draft.editing.revision,this.draft.editing.shopId):
       this.makeCommand('request.send',{clientRequestId:crypto.randomUUID(),originalItem:this.draft.item,ownQuantity:this.draft.amount||null,authoredAt:new Date().toISOString(),route:this.draft.route,...(this.draft.followup?{followupTo:this.draft.followup}:{})},undefined,this.requests.find(r=>r.requestId===this.draft.followup)?.shopId??s.shopId??'');
@@ -266,11 +279,16 @@ export class WebApp {
     const p:Pending={id:command.clientKey,scope:scopeFor(s),command,createdAt:new Date().toISOString()};
     let persisted=false;
     if(this.consent&&s.queueConsent&&s.enrolled){try{await this.outbox.put(p,s,true);persisted=true;}catch{this.notice='Browser storage is unavailable. Requests will remain editable but will not be saved offline.';}}
+    if(offlineError){
+      if(!persisted)throw offlineError;
+      this.showQueued(p);
+      return;
+    }
     try{await this.api.command(s,command);}catch(error){
       this.uncertainSend=error instanceof ApiError && (error.status===0||error.status>=500);
 
       if(persisted && error instanceof ApiError && (error.status===0||error.status>=500||error.status===429)) {
-        this.pending=await this.outbox.list(scopeFor(s));this.notice='Waiting to send from this browser';this.draft=blank();this.retryCommand=null;this.uncertainSend=false;this.review=false;return;
+        this.showQueued(p);return;
       }
       if(persisted)await this.outbox.remove(p.id);throw error;
     }
@@ -279,6 +297,11 @@ export class WebApp {
     this.draft=blank();this.retryCommand=null;this.uncertainSend=false;this.review=false;this.notice=cleanupFailed?'Received by the shopper. A local pending copy remains; retry it to confirm and clear it.':'Received by the shopper.';
     // A successful command is received even if the subsequent refresh disconnects.
     try{await this.load();}catch(error){if(error instanceof ApiError&&(error.status===401||error.status===403))throw error;}
+  }
+  private showQueued(pending:Pending):void {
+    this.pending=[...this.pending.filter(item=>item.id!==pending.id),pending];
+    this.notice='Waiting to send from this browser';
+    this.draft=blank();this.retryCommand=null;this.uncertainSend=false;this.review=false;
   }
   private async retry(p:Pending):Promise<void>{
     const fresh=await this.api.session();

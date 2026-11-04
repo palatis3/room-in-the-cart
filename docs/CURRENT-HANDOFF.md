@@ -12,6 +12,8 @@ The rebuilt unsigned Release archive now declares the required reason for privat
 
 The latest authorized assignment to Lumpy's `Offer main workflow help` chat returned a delivery error. A status check showed the same idle turn. The assignment was to review the remaining Foundation 2.1 release gates and take the highest-priority locally actionable gap outside the native archive and iPhone suite.
 
+The companion web app now saves an opted-in request if the connection drops before the send-time session check. It uses the last checked contributor scope and an unexpired replay window for local storage. The original command still requires an explicit retry under fresh authorization. The compiled app's local browser run covered reload, receipt and revoked-access cleanup. [Offline queue validation](evidence/b11/web-offline-queue-20261104/validation.json)
+
 ## Previous checkpoint — November 4, quarantine restore window
 
 Migration 029 and the restore operator verify a complete signed archive window before recording its plan in quarantine. Each segment waits for the previous segment's local erasure receipts. The gate checks the entire staged window, and the tool refuses a quarantine that application logins can access.

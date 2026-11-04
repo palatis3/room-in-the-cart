@@ -1,0 +1,59 @@
+{
+  "recordedAtUTC": "2026-11-04T09:35:42.517046+00:00",
+  "baseCommit": "f00081b43e15c72dc30d8584e8371942a3284c40",
+  "sourceAndBundleSHA256": {
+    "web/src/app.ts": "d0162e99784056d3e86ab887ad8e77ced514055c23658fbb2800469f6aa52515",
+    "web/src/api.ts": "4f54087e3263b595a2cb542b7fe0062587c3b6407161f18d980d57b04c7302e7",
+    "web/src/outbox.ts": "537312c27115da18c32386bb6a4708d4576382af812a6b81a42d634760198073",
+    "web/tests/client.test.mjs": "07af9bc7a69258671752047a31ab99d71a75b7ab8b39383fe141ac62224d5712",
+    "web/package-lock.json": "99ba1ac81dc5d05df1dc18e97200ce9a23e550feeec1db021f191b08a1ff9856",
+    "web/public-build/assets/index-B0IO12eE.js": "d35fc0649e0c45d022e319d8cf8ca25b79806f53a2b54827b7e2886fba15292f"
+  },
+  "automated": {
+    "beforeFix": "The new offline-first regression failed because IndexedDB contained no pending command.",
+    "afterFix": "npm --prefix web test on Node 22.14.0",
+    "passed": 104,
+    "failed": 0,
+    "assertions": [
+      "Exact pending command recovered after reload and sent only on explicit retry",
+      "No outbox write without consent, with an expired replay window, or after a 403"
+    ]
+  },
+  "browser": {
+    "environment": "Desktop ChatGPT in-app browser, local compiled web bundle and synthetic HTTP fixture bound to loopback",
+    "transportFault": "Dropped the /v1/session socket before any mutation request",
+    "observations": [
+      "Opted in to browser storage and reviewed a fictional request while signed into a fictional household.",
+      "Send after disconnect showed the queued request. The fixture observed zero command POSTs.",
+      "Reload while disconnected hid the queued wording. An authorized refresh recovered the pending row with zero command POSTs.",
+      "Explicit retry returned one receipt and replaced the pending card with the received request and its entered quantity.",
+      "Queued a second fictional request while disconnected. Retry with a 403 cleared the private screen and did not post the command.",
+      "Fresh authorized reload recovered the prior received request and no pending record."
+    ],
+    "fixtureEvents": {
+      "sessionChecks": [
+        "online",
+        "offline",
+        "offline",
+        "offline",
+        "offline",
+        "online",
+        "online",
+        "online",
+        "offline",
+        "revoked",
+        "online"
+      ],
+      "commandDigests": [
+        {
+          "mode": "online",
+          "sha256": "25c1d07f19dedd9e8cf812971879a4876b681a36a3c889c25adb8b707b8972d6",
+          "window": "fixture-window",
+          "shopId": "shop-fixture"
+        }
+      ],
+      "receiptCount": 1
+    }
+  },
+  "scope": "Synthetic local browser and web client evidence for the B07/F08 request queue. Current iOS Safari and Android Chrome device journeys, real auth/household service, and field acceptance remain open."
+}

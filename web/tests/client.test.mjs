@@ -16,11 +16,11 @@ async function waitForIdle(root) {
   await new Promise(resolve=>setTimeout(resolve,5));
  }
 }
-const setup = async (api,language='en') => {
+const setup = async (api,language='en',outbox=new Outbox(new IDBFactory())) => {
  const dom=new JSDOM('<div id="app"></div>',{url:'https://food.example/invite'});
  Object.defineProperty(dom.window.navigator,'language',{value:language});
  const root=dom.window.document.getElementById('app');
- const app=new WebApp(root,api,new Outbox(new IDBFactory()));await app.start();return {dom,root,app};
+ const app=new WebApp(root,api,outbox);await app.start();return {dom,root,app};
 };
 const click=(root,label)=>{const b=[...root.querySelectorAll('button')].find(b=>b.textContent===label);assert.ok(b,`button ${label}`);b.click();};
 const type=(dom,id,value)=>{const input=dom.window.document.getElementById(id);assert.ok(input,id);input.value=value;input.dispatchEvent(new dom.window.Event('input',{bubbles:true}));};
@@ -71,6 +71,69 @@ test('explicitly consented disconnected request is durably queued, never labeled
  const consent=root.querySelector('input[type=checkbox]');consent.checked=true;consent.dispatchEvent(new dom.window.Event('change'));
  type(dom,'item','Rice');submit(root,dom);submit(root,dom);await waitForIdle(root);
  assert.match(root.textContent,/Waiting to send from this browser/);assert.doesNotMatch(root.textContent,/Received by the shopper/);
+});
+
+test('a request reviewed after disconnect survives reload and retries only after fresh authorization',async()=>{
+ const s={...session(),queueConsent:true},outbox=new Outbox(new IDBFactory()),sent=[];
+ let connected=true;
+ const api=fakeAPI({session:async()=>{
+  if(!connected)throw new ApiError('network',0);
+  return s;
+ },command:async(_session,body)=>{assert.equal(connected,true);sent.push(body);}});
+ const {root,dom}=await setup(api,'en',outbox);
+ connected=false;
+ const consent=root.querySelector('input[type=checkbox]');consent.checked=true;consent.dispatchEvent(new dom.window.Event('change'));
+ type(dom,'item','Rice');submit(root,dom);submit(root,dom);await waitForIdle(root);
+ const [pending]=await outbox.list(scopeFor(s));
+ assert.equal(pending?.command.body.originalItem,'Rice');
+ assert.match(root.textContent,/Waiting to send from this browser/);
+ assert.doesNotMatch(root.textContent,/Received by the shopper/);
+ assert.equal(sent.length,0);
+
+ const reloaded=await setup(api,'en',outbox);
+ assert.doesNotMatch(reloaded.root.textContent,/Rice/);
+ connected=true;await reloaded.app.start();
+ assert.match(reloaded.root.textContent,/Rice/);
+ assert.equal(sent.length,0);
+ click(reloaded.root,'Retry');await waitForIdle(reloaded.root);
+ assert.deepEqual(sent,[pending.command]);
+ assert.deepEqual(await outbox.list(scopeFor(s)),[]);
+ assert.match(reloaded.root.textContent,/Received by the shopper/);
+});
+
+test('offline queueing still requires consent and an unexpired replay window',async()=>{
+ for(const {consented,expiresAt} of [
+  {consented:false,expiresAt:'2099-01-01T00:00:00Z'},
+  {consented:true,expiresAt:'2000-01-01T00:00:00Z'},
+ ]){
+  const s={...session(),queueConsent:true,replayWindow:{id:'window-a',expiresAt}};
+  const outbox=new Outbox(new IDBFactory());
+  let connected=true;
+  const {root,dom}=await setup(fakeAPI({session:async()=>{
+   if(!connected)throw new ApiError('network',0);
+   return s;
+  },command:async()=>assert.fail('No offline request should be sent')}),'en',outbox);
+  connected=false;
+  const consent=root.querySelector('input[type=checkbox]');consent.checked=consented;consent.dispatchEvent(new dom.window.Event('change'));
+  type(dom,'item','Rice');submit(root,dom);submit(root,dom);await waitForIdle(root);
+  assert.deepEqual(await outbox.list(scopeFor(s)),[]);
+  assert.match(root.textContent,/Rice/);
+  assert.doesNotMatch(root.textContent,/Waiting to send from this browser|Received by the shopper/);
+ }
+});
+
+test('an explicit access refusal cannot queue against the earlier session',async()=>{
+ const s={...session(),queueConsent:true},outbox=new Outbox(new IDBFactory());
+ let revoked=false;
+ const {root,dom}=await setup(fakeAPI({session:async()=>{
+  if(revoked)throw new ApiError('access_ended',403);
+  return s;
+ },command:async()=>assert.fail('A revoked request must never be sent')}),'en',outbox);
+ const consent=root.querySelector('input[type=checkbox]');consent.checked=true;consent.dispatchEvent(new dom.window.Event('change'));
+ type(dom,'item','Private draft');submit(root,dom);revoked=true;submit(root,dom);await waitForIdle(root);
+ assert.deepEqual(await outbox.list(scopeFor(s)),[]);
+ assert.doesNotMatch(root.textContent,/Private draft|Waiting to send from this browser/);
+ assert.match(root.textContent,/Access has ended/);
 });
 
 test('pending edit carries request revision; withdrawal requires confirmation',async()=>{
