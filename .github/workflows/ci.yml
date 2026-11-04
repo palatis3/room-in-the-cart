@@ -93,7 +93,7 @@ jobs:
           OPERATIONS_TEST_ADMIN_DATABASE_URL: postgresql://postgres:fixture-only@127.0.0.1:5432/ritc_operations
           TEST_WORKER_DATABASE_URL: postgresql://ritc_test_worker:fixture-only@127.0.0.1:5432/ritc_operations
   ios:
-    runs-on: macos-15
+    runs-on: macos-15-intel
     timeout-minutes: 100
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
