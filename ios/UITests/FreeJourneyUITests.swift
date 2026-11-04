@@ -1,3 +1,4 @@
+import UIKit
 import XCTest
 
 /// Real visible entry, no seeded model data. Run only on the isolated DEBUG
@@ -9,8 +10,10 @@ import XCTest
         app = XCUIApplication(bundleIdentifier: "dev.roominthecart.app.debug")
     }
     override func tearDownWithError() throws {
-        if testRun?.failureCount ?? 0 > 0 { capture("Free-flow-failure") }
-        app.terminate()
+        if testRun?.failureCount ?? 0 > 0 {
+            captureSystemScreen("Free-flow-failure")
+        }
+        if app.state != .notRunning { app.terminate() }
     }
 
 #if DEBUG && NATIVE_MICROPHONE_PERMISSION_PROBE
@@ -101,6 +104,26 @@ import XCTest
 #endif
 
     func testCancellingSystemShareKeepsTheFrozenPickupUnplaced() {
+        exerciseRetailerShareCancellation()
+    }
+
+    func testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced() async throws {
+        let settings = XCUIApplication(bundleIdentifier: "com.apple.Preferences")
+        let control = try Self.reduceMotionSwitch(in: settings)
+        let original = try Self.switchValue(control)
+        addTeardownBlock {
+            try await FreeJourneyUITests.restoreReduceMotion(original)
+        }
+        try Self.setReduceMotion(true, using: control)
+        try await Self.requireRunnerReduceMotion(true)
+        captureSystemScreen("System Settings - Reduce Motion enabled")
+
+        avoidIOS17SnapshotLoggingCrash()
+        exerciseRetailerShareCancellation()
+        XCTAssertTrue(UIAccessibility.isReduceMotionEnabled, "Reduce Motion must stay enabled through relaunch")
+    }
+
+    private func exerciseRetailerShareCancellation() {
         launch(reset: true)
         openShoppingList()
         tap(element("ledgerStartShop"))
@@ -128,6 +151,10 @@ import XCTest
         back(to: "Prepare retailer handoff")
         tap(app.buttons["Prepare retailer handoff"])
         tap(app.buttons["Freeze reviewed basket"])
+        let snapshot = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Wraps — 2 units")).firstMatch
+        reveal(snapshot)
+        XCTAssertTrue(snapshot.exists && snapshot.isHittable, "Show the exact frozen snapshot before opening Share")
+        let frozenText = snapshot.label
         tap(app.buttons["Share dated list"])
         let close = app.buttons.matching(NSPredicate(format: "identifier == %@ OR label == %@", "header.closeButton", "Close")).firstMatch
         let closeReady = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND hittable == true"), object: close)
@@ -146,9 +173,60 @@ import XCTest
         XCTAssertTrue(app.navigationBars["Pickup"].waitForExistence(timeout: 8))
         assertText("Frozen · placement unconfirmed")
         tap(app.collectionViews.buttons["Prepare retailer handoff"])
-        assertText("Wraps")
+        reveal(snapshot)
+        XCTAssertEqual(snapshot.label, frozenText, "Cancellation must preserve the exact frozen snapshot")
         assertText("Share cancelled")
         capture("Retailer-share-cancelled-unplaced-after-relaunch")
+    }
+
+    private static func reduceMotionSwitch(in settings: XCUIApplication) throws -> XCUIElement {
+        settings.activate()
+        let control = settings.switches["Reduce Motion"]
+        if !control.waitForExistence(timeout: 3) {
+            let motion = settings.staticTexts["Motion"]
+            if !motion.exists {
+                let accessibility = settings.staticTexts["Accessibility"]
+                for _ in 0..<6 {
+                    if accessibility.exists && accessibility.isHittable { break }
+                    settings.swipeUp()
+                }
+                try XCTUnwrap(accessibility.exists && accessibility.isHittable ? accessibility : nil,
+                              "Find the native Accessibility settings").tap()
+            }
+            try XCTUnwrap(motion.waitForExistence(timeout: 8) && motion.isHittable ? motion : nil,
+                          "Find the native Motion settings").tap()
+        }
+        return try XCTUnwrap(control.waitForExistence(timeout: 8) ? control : nil, "Find the native Reduce Motion switch")
+    }
+
+    private static func switchValue(_ control: XCUIElement) throws -> Bool {
+        let value = control.value as? String ?? ""
+        return try XCTUnwrap(["0": false, "1": true][value],
+                             "Read the native Reduce Motion switch")
+    }
+
+    private static func setReduceMotion(_ enabled: Bool, using control: XCUIElement) throws {
+        if try switchValue(control) != enabled {
+            control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        }
+        let targetValue = enabled ? "1" : "0"
+        let settled = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", targetValue), object: control)
+        XCTAssertEqual(XCTWaiter.wait(for: [settled], timeout: 8), .completed, "Confirm native Reduce Motion switch state")
+    }
+
+    private static func requireRunnerReduceMotion(_ enabled: Bool) async throws {
+        for _ in 0..<30 {
+            if UIAccessibility.isReduceMotionEnabled == enabled { return }
+            try await Task.sleep(for: .milliseconds(100))
+        }
+        XCTAssertEqual(UIAccessibility.isReduceMotionEnabled, enabled, "Read the current OS preference from the XCTest runner")
+    }
+
+    private static func restoreReduceMotion(_ original: Bool) async throws {
+        let settings = XCUIApplication(bundleIdentifier: "com.apple.Preferences")
+        let control = try reduceMotionSwitch(in: settings)
+        try setReduceMotion(original, using: control)
+        try await requireRunnerReduceMotion(original)
     }
 
     func testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop() throws {
@@ -1057,5 +1135,11 @@ import XCTest
     private func capture(_ name: String) {
         let attachment = XCTAttachment(screenshot: app.screenshot())
         attachment.name = name; attachment.lifetime = .keepAlways; add(attachment)
+    }
+    private func captureSystemScreen(_ name: String) {
+        let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        add(attachment)
     }
 }
