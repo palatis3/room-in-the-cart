@@ -783,6 +783,22 @@
         }
       }
     },
+    "No new recipes were saved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No new recipes were saved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se guardaron recetas nuevas."
+          }
+        }
+      }
+    },
     "No recovered copies yet.": {
       "extractionState": "manual",
       "localizations": {
@@ -2296,6 +2312,23 @@
         }
       }
     },
+    "duplicate": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "duplicate"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "duplicada"
+          }
+        }
+      }
+    },
     "duplicates": {
       "extractionState": "manual",
       "localizations": {
@@ -2313,6 +2346,23 @@
         }
       }
     },
+    "recipe ready": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "recipe ready"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "receta lista"
+          }
+        }
+      }
+    },
     "recipes ready": {
       "extractionState": "manual",
       "localizations": {
@@ -2326,6 +2376,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "recetas listas"
+          }
+        }
+      }
+    },
+    "row skipped": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "row skipped"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "fila omitida"
           }
         }
       }

@@ -236,8 +236,8 @@ struct RecordsToolsView: View {
                 Text(recordsText("Saved at") + " " + Date(timeIntervalSince1970: Double(review.envelope.lastSavedAtMilliseconds) / 1000).formatted(date: .abbreviated, time: .shortened))
             }
             if let report = model.recipeReport {
-                Text("\(report.recipes.count) " + recordsText("recipes ready") + " · \(report.duplicateCount) " + recordsText("duplicates") + " · \(report.skippedRows) " + recordsText("rows skipped"))
-                if !report.unsupportedFields.isEmpty { Text(recordsText("Unsupported fields: ") + report.unsupportedFields.joined(separator: ", ")).font(.caption) }
+                Text(report.localizedSummary)
+                if let fields = report.localizedUnsupportedFields { Text(fields).font(.caption) }
             }
             ForEach(review.rows) { row in
                 Group {

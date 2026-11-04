@@ -137,12 +137,19 @@ import RecordArchive
                     guard record.record.kind == .recipe, let bytes = record.record.nativePayload else { return nil }
                     return try? JSONDecoder().decode(ImportedRecipe.self, from: bytes)
                 }
+                try requireAuthorization(authorize)
                 let report = try RecipeImporter.stage(data, existing: existing)
-                recipeReport = report
                 let records = try report.recipes.map { try $0.archiveRecord(origin: "recipe-library-v1", savedAt: Date(timeIntervalSince1970: 0)) }
-                if records.isEmpty { status = recordsText("These recipes are already saved."); return }
+                if records.isEmpty {
+                    recipeReport = report
+                    let message = recordsText(report.skippedRows == 0 ? "These recipes are already saved." : "No new recipes were saved.")
+                    publishOutcome([message, report.localizedSummary, report.localizedUnsupportedFields].compactMap { $0 }.joined(separator: "\n"))
+                    return
+                }
                 let envelope = try ArchiveCodec.make(records: records, kind: .personalRecovery, origin: "recipe-library-v1", revision: ArchiveCodec.digest(try ArchiveCodec.canonical(report.recipes)))
                 try await stage(envelope, authorize: authorize)
+                try requireAuthorization(authorize)
+                recipeReport = report
             } else {
                 let object = try JSONSerialization.jsonObject(with: data) as? [String: Any]
                 let envelope = object?["algorithm"] != nil ? try EncryptedArchive.open(data, key: recoveryKey) : try ArchiveCodec.decode(data)
@@ -309,3 +316,16 @@ import RecordArchive
 }
 
 func recordsText(_ key: String) -> String { String(localized: String.LocalizationValue(key), table: "Records") }
+
+extension RecipeImportReport {
+    var localizedSummary: String {
+        let ready = recordsText(recipes.count == 1 ? "recipe ready" : "recipes ready")
+        let duplicates = recordsText(duplicateCount == 1 ? "duplicate" : "duplicates")
+        let skipped = recordsText(skippedRows == 1 ? "row skipped" : "rows skipped")
+        return "\(recipes.count) \(ready) · \(duplicateCount) \(duplicates) · \(skippedRows) \(skipped)"
+    }
+    var localizedUnsupportedFields: String? {
+        guard !unsupportedFields.isEmpty else { return nil }
+        return recordsText("Unsupported fields: ") + unsupportedFields.joined(separator: ", ")
+    }
+}

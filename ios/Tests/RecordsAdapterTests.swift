@@ -125,6 +125,41 @@ final class RecordsAdapterTests: XCTestCase {
         XCTAssertNotNil(model.error)
         XCTAssertEqual(try Data(contentsOf: directory.appendingPathComponent("manifest.json")), before)
     }
+    @MainActor func testRecipeImportWithOnlyDuplicatesAndSkippedRowsPublishesANewOutcome() async throws {
+        let directory = try temporaryDirectory()
+        let registryURL = directory.appendingPathComponent("manifest.json")
+        let registry = try RecoveryRegistry(url: registryURL)
+        let model = RecordsToolsModel(registry: registry, snapshot: { [] }, validateNativePayload: { _ in }, openRecovered: { _ in })
+        let file = directory.appendingPathComponent("recipes.json")
+        try Data(#"""
+        {"@graph":[
+            {"@type":"Recipe","name":"Fictional rice","recipeIngredient":["2 cups rice"]},
+            {"@type":"Recipe","nutrition":{"calories":"not imported"}}
+        ]}
+        """#.utf8).write(to: file)
+
+        await model.importFile(file, recipes: true)
+        XCTAssertNotNil(model.review)
+        await model.applyReviewedImport()
+        let previousOutcome = try XCTUnwrap(model.actionOutcomeID)
+        let before = try Data(contentsOf: registryURL)
+
+        await model.importFile(file, recipes: true)
+
+        XCTAssertNil(model.review)
+        XCTAssertNil(model.error)
+        XCTAssertEqual(model.recipeReport?.duplicateCount, 1)
+        XCTAssertEqual(model.recipeReport?.skippedRows, 1)
+        XCTAssertEqual(model.recipeReport?.unsupportedFields, ["nutrition"])
+        XCTAssertEqual(model.status, [
+            recordsText("No new recipes were saved."),
+            "0 " + recordsText("recipes ready") + " · 1 " + recordsText("duplicate") + " · 1 " + recordsText("row skipped"),
+            recordsText("Unsupported fields: ") + "nutrition"
+        ].joined(separator: "\n"))
+        XCTAssertNotNil(model.actionOutcomeID)
+        XCTAssertNotEqual(model.actionOutcomeID, previousOutcome)
+        XCTAssertEqual(try Data(contentsOf: registryURL), before)
+    }
     @MainActor func testWholeLedgerErasurePurgesAllReviewedHistoryAndRecoveryOriginOnly() async throws {
         let directory = try temporaryDirectory(), url = directory.appendingPathComponent("ledger.sqlite")
         let model = LedgerModel(databaseURL: url)
