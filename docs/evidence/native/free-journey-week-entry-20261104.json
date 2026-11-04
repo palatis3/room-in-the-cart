@@ -16,5 +16,33 @@
   "failed": 0,
   "skipped": 0,
   "runtime_warnings": [],
-  "scope": "The UI opened the pushed meal week for all four saved-dinner checks and found the unscheduled dinner after restart. The journey also exercised pack review, placement, observed short fill, the cook note, settlement, next-shop dinner reuse after restart and saved repair history. The original broader invocation used the old root locator. This separate result establishes the corrected Free journey on one simulator."
+  "scope": "The UI opened the pushed meal week for all four saved-dinner checks and found the unscheduled dinner after restart. The journey also exercised pack review, placement, observed short fill, the cook note, settlement, next-shop dinner reuse after restart and saved repair history. The original broader invocation used the old root locator. This separate result establishes the corrected Free journey on iOS 27.",
+  "minimum_os": {
+    "device": "iPhone SE, iOS 17.0 (21A328), arm64 simulator",
+    "unmodified_logging": {
+      "result_bundle": ".build/FreeJourneyWeekEntry20261104/FreeJourneyWeekEntryMinimumOS.xcresult",
+      "log": ".build/FreeJourneyWeekEntry20261104/focused-minimum-os.log",
+      "log_sha256": "d87a899186e5141a7b7538553060df30359d6662a290b2f543ef072e3b192f36",
+      "crash_report": ".build/FreeJourneyWeekEntry20261104/minimum-os-snapshot-crash.ips",
+      "crash_report_sha256": "60c6c9a8870ef8ccec3db5426f4fc8257dcec7a7d66d86da3cfefd37d9ac9613",
+      "failed": 1,
+      "duration_seconds": 159.104,
+      "finding": "The target process received SIGSEGV after opening arrivals. The faulting stack runs through XCTAutomationSupport runtime_issue_os_log_fault_callback and __LIBTRACE_CLIENT_QUARANTINED_DUE_TO_HIGH_LOGGING_VOLUME__ during accessibility snapshot traversal. The app frames are its entry points below the framework run loop."
+    },
+    "rerun": {
+      "source_commit": "286fd92c46ef76e56d83d36385d66cb5a18a4ddd",
+      "test_source_sha256": "22cd13e963071907b6ea74ace3909cf9a28a9ee8801ba1a2a2754929a885d31f",
+      "result_bundle": ".build/FreeJourneyWeekEntry20261104/FreeJourneyWeekEntryMinimumOSRetry.xcresult",
+      "log": ".build/FreeJourneyWeekEntry20261104/focused-minimum-os-retry.log",
+      "log_sha256": "3fbe4d2926476715099d4e5a29d927ac7817528a424112f80b373c5d503a9fae",
+      "app_debug_dylib_sha256": "c81664fceb5b3a9df3ae36a0074514badbaceb467b5e8b51243a6c08dafc86df",
+      "unsigned_stub_sha256_before_and_after": "dd448b61db835edaea66b00ea473e91d28d95432e68dfc7d6aa95b399ad332d0",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "duration_seconds": 270.999,
+      "logging": "The test sets OS_ACTIVITY_MODE=disable on the iOS 17 app process and keeps XCTest action and assertion logs. This scope cannot establish an absence of app runtime warnings.",
+      "binary_readback": "The app implementation dylib was identical. Xcode re-signed the simulator launch stub, which triggered the wrapper's signed-byte comparison. Copies of the two stubs were identical after removing their signatures. XCTest's result bundle records one passing case."
+    }
+  }
 }
