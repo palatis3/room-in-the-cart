@@ -99,6 +99,18 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+      - name: Validate workflow syntax and expression references
+        shell: bash
+        run: |
+          lint_dir="$RUNNER_TEMP/actionlint"
+          mkdir -p "$lint_dir"
+          curl --fail --silent --show-error --location \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz \
+            --output "$lint_dir/actionlint.tar.gz"
+          echo '8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  actionlint.tar.gz' \
+            | (cd "$lint_dir" && sha256sum --check)
+          tar -xzf "$lint_dir/actionlint.tar.gz" -C "$lint_dir" actionlint
+          "$lint_dir/actionlint" -shellcheck='' -pyflakes='' .github/workflows/*.yml
       - name: Validate generated files, localization and CI test selection
         run: |
           python3 scripts/generate_theme.py --check
