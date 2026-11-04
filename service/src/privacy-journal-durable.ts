@@ -2,10 +2,11 @@ import {createHash,createPublicKey,randomBytes,sign,verify,type KeyObject} from 
 import {z} from 'zod';
 import {journalCanonical,journalHash,validatePrivacyRestoreEvents,type PrivacyJournalEvent} from './privacy-journal.js';
 import {MAX_JOURNAL_BYTES as MAX_BYTES,MAX_JOURNAL_RECORDS as MAX_RECORDS} from './privacy-journal-limits.js';
+import {ServiceError} from './errors.js';
 import type {
  AdmittedHead,AdmissionReceipt,AuthorityCall,
  DurableJournalPins,DurablePrivacyJournalConfiguration,DurablePrivacyJournalPort,
- JournalCall,JournalTransition,RecordIdentity,UncertaintyClaim,
+ JournalCall,JournalTransition,RecordIdentity,UncertaintyClaim,WorkerJournalKind,
 } from './privacy-journal-durable-contract.js';
 export type * from './privacy-journal-durable-contract.js';
 
@@ -22,7 +23,9 @@ const headSchema=z.object({version:z.literal(1),lineage:uuid,schemaDigest:hash,c
 export const admittedSchema=z.object({head:headSchema,generation:safe.min(1),authorityRevision:safe,mode:z.enum(['active','pending','blocked','recovery','sealed']),pendingOperation:hash.nullable(),totalBytes:safe.max(MAX_BYTES)}).strict();
 export const identitySchema=z.object({seq:safe.min(1).max(MAX_RECORDS),previousHash:hash,recordHash:hash,byteLength:safe.min(1).max(MAX_BYTES),eventId:uuid,payloadDigest:hash,jobId:uuid,transition:z.enum(['intent','commit','rollback'])}).strict();
 export const storedSchema=z.object({objectKey:identifier,immutableVersion:identifier,recordHash:hash,byteLength:safe.min(1).max(MAX_BYTES)}).strict();
-export const ticketSchema=z.object({operationId:hash,generation:safe.min(1),expected:admittedSchema,record:identitySchema,objectKey:identifier,authorityExpiresAtUnixMs:safe.min(1)}).strict();
+export const workerKindSchema=z.enum(['target_erased','source_pending','source_completed']);
+export const workerKindsSchema=z.array(workerKindSchema).min(1).max(3).refine(kinds=>new Set(kinds).size===kinds.length);
+export const ticketSchema=z.object({operationId:hash,generation:safe.min(1),expected:admittedSchema,record:identitySchema,objectKey:identifier,authorityExpiresAtUnixMs:safe.min(1),workerKind:workerKindSchema.optional()}).strict();
 export const receiptSchema=z.object({version:z.literal(1),domain:z.literal('ritc-privacy-journal-admission-v1'),scopeDigest:hash,authorityKeyId:identifier.max(100),operationId:hash,admitted:admittedSchema,record:identitySchema,stored:storedSchema,authoritySignature:signature}).strict();
 export const inspectionSchema=z.discriminatedUnion('state',[
  z.object({state:z.literal('absent'),operationId:hash}).strict(),
@@ -32,6 +35,9 @@ export const inspectionSchema=z.discriminatedUnion('state',[
 export const recordSchema=z.object({version:z.literal(1),keyId:identifier.max(100),seq:safe.min(1).max(MAX_RECORDS),previousHash:hash,kind:z.enum(['intent','commit','rollback']),event:eventSchema,signature}).strict();
 const originSchema=z.object({lineage:uuid,schemaDigest:hash,configurationId:identifier.max(100),sourceIdentity:identifier,fenced:z.boolean()}).strict();
 const claimSchema=z.object({scopeDigest:hash,eventId:uuid,transition:z.enum(['intent','commit']),claimId:identifier}).strict();
+class JournalCapacityUnavailable extends ServiceError {
+ constructor(){super(503,'deletion_unavailable','Account deletion is temporarily unavailable. Try again later.');}
+}
 
 /** SHA-256 of the exact Ed25519 public SPKI DER, independent of PEM formatting. */
 export function durableJournalPublicKeyFingerprint(key:KeyObject|string):string{
@@ -118,8 +124,8 @@ export function createDurablePrivacyJournal(configuration:DurablePrivacyJournalC
  // independently pin its actual endpoint, credentials and registered resource.
  const source={readOrigin:configuration.source.readOrigin.bind(configuration.source),readCommittedEvent:configuration.source.readCommittedEvent.bind(configuration.source),readCommittedAcceptance:configuration.source.readCommittedAcceptance.bind(configuration.source),listUnacknowledgedJobEvents:configuration.source.listUnacknowledgedJobEvents.bind(configuration.source),acknowledge:configuration.source.acknowledge.bind(configuration.source)};
  const records={putExact:configuration.records.putExact.bind(configuration.records),readExact:configuration.records.readExact.bind(configuration.records)};
- const authority={readCurrent:configuration.authority.readCurrent.bind(configuration.authority),inspectOperation:configuration.authority.inspectOperation.bind(configuration.authority),reserve:configuration.authority.reserve.bind(configuration.authority),publish:configuration.authority.publish.bind(configuration.authority)};
- const uncertainty={begin:configuration.uncertainty.begin.bind(configuration.uncertainty),complete:configuration.uncertainty.complete.bind(configuration.uncertainty)};
+ const authority={readCurrent:configuration.authority.readCurrent.bind(configuration.authority),inspectOperation:configuration.authority.inspectOperation.bind(configuration.authority),reserve:configuration.authority.reserve.bind(configuration.authority),publish:configuration.authority.publish.bind(configuration.authority),reserveWorkerCapacity:configuration.authority.reserveWorkerCapacity?.bind(configuration.authority)};
+ const uncertainty={begin:configuration.uncertainty.begin.bind(configuration.uncertainty),beginIntent:configuration.uncertainty.beginIntent?.bind(configuration.uncertainty),complete:configuration.uncertainty.complete.bind(configuration.uncertainty)};
  let poisoned=false;
  async function step<T>(call:JournalCall,work:()=>Promise<T>):Promise<T>{
   assertCall(call,now);const value=await work();assertCall(call,now);return value;
@@ -185,9 +191,10 @@ export function createDurablePrivacyJournal(configuration:DurablePrivacyJournalC
   const bytes=Buffer.from(journalCanonical(record)+'\n');
   if(head.head.seq>=MAX_RECORDS||head.totalBytes+bytes.length>MAX_BYTES)throw Error('Durable journal capacity reached');
   const identity:RecordIdentity=immutable({seq:record.seq,previousHash:record.previousHash,recordHash:journalHash(record),byteLength:bytes.length,eventId:value.eventId,payloadDigest:value.payloadDigest,jobId:value.payload.jobId,transition:kind});
-  const request=authorityCall(call),ticket=envelope(await step(call,()=>authority.reserve(head,identity,request)),ticketSchema,request);
+  const workerKind=value.payload.kind==='acceptance'?undefined:value.payload.kind;
+  const request=authorityCall(call),ticket=envelope(await step(call,()=>authority.reserve(head,identity,request,workerKind)),ticketSchema,request);
   equal(ticket.expected,head,'Reservation changed expected independent head');equal(ticket.record,identity,'Reservation changed record identity');
-  if(ticket.operationId!==durableJournalOperationId(scopeDigest,value.eventId,value.payloadDigest,kind)||ticket.generation!==head.generation||ticket.objectKey!==objectKey(scopeDigest,identity)||ticket.authorityExpiresAtUnixMs>=call.deadlineUnixMs||ticket.authorityExpiresAtUnixMs<=now())throw Error('Reservation scope, generation or deadline conflict');
+  if(ticket.operationId!==durableJournalOperationId(scopeDigest,value.eventId,value.payloadDigest,kind)||ticket.generation!==head.generation||ticket.objectKey!==objectKey(scopeDigest,identity)||ticket.authorityExpiresAtUnixMs>=call.deadlineUnixMs||ticket.authorityExpiresAtUnixMs<=now()||authority.reserveWorkerCapacity&&ticket.workerKind!==workerKind)throw Error('Reservation scope, generation or deadline conflict');
   const stored=immutable(storedSchema.parse(await step(call,()=>records.putExact(ticket,Buffer.from(bytes),call))));
   if(stored.objectKey!==ticket.objectKey||stored.recordHash!==identity.recordHash||stored.byteLength!==identity.byteLength)throw Error('Immutable storage result conflict');
   const exact=Buffer.from(await step(call,()=>records.readExact(stored,call)));
@@ -199,9 +206,14 @@ export function createDurablePrivacyJournal(configuration:DurablePrivacyJournalC
   if(proof.admitted.generation!==ticket.generation||proof.admitted.authorityRevision<=head.authorityRevision||proof.admitted.totalBytes!==head.totalBytes+bytes.length)throw Error('Publication generation, revision or byte coverage conflict');
   equal(proof.stored,stored,'Publication changed immutable storage version');return proof;
  }
- async function claim(eventId:string,transition:'intent'|'commit',call:JournalCall):Promise<UncertaintyClaim>{
+ async function claim(eventId:string,transition:'intent'|'commit',call:JournalCall,intent?:PrivacyJournalEvent):Promise<UncertaintyClaim>{
   const expected=Object.freeze({scopeDigest,eventId,transition});
-  const held=immutable(claimSchema.parse(await step(call,()=>uncertainty.begin(expected,call))));
+  const beginIntent=uncertainty.beginIntent;
+  const result=intent&&beginIntent?await step(call,()=>beginIntent(expected,Buffer.byteLength(journalCanonical({version:1,keyId:pins.keyId,
+   seq:MAX_RECORDS,previousHash:ZERO,kind:'intent',event:intent,signature:'A'.repeat(86)})+'\n'),call)):
+   await step(call,()=>uncertainty.begin(expected,call));
+  if(result===null&&intent&&beginIntent)throw new JournalCapacityUnavailable();
+  const held=immutable(claimSchema.parse(result));
   if(held.scopeDigest!==scopeDigest||held.eventId!==eventId||held.transition!==transition)throw Error('Durable uncertainty claim changed');return held;
  }
  async function complete(held:UncertaintyClaim,proof:AdmissionReceipt,call:JournalCall):Promise<void>{
@@ -229,16 +241,24 @@ export function createDurablePrivacyJournal(configuration:DurablePrivacyJournalC
  }
  async function guarded<T>(call:JournalCall,work:(owned:JournalCall)=>Promise<T>):Promise<T>{
   if(poisoned)throw Error('Durable journal requires explicit fenced reconciliation');
-  try{return await withOwnedCall(call,now,work);}catch(error){poisoned=true;throw error;}
+  try{return await withOwnedCall(call,now,work);}catch(error){if(!(error instanceof JournalCapacityUnavailable))poisoned=true;throw error;}
  }
  const port:DurablePrivacyJournalPort=Object.freeze({configurationId:pins.configurationId,
+  reserveWorkerCapacity(jobId:string,kinds:readonly WorkerJournalKind[],call:JournalCall):Promise<boolean>{
+   const id=uuid.parse(jobId),requested=workerKindsSchema.parse(kinds),reserve=authority.reserveWorkerCapacity;
+   if(!reserve)return Promise.reject(Error('Durable worker capacity is unavailable'));
+   return guarded(call,async owned=>{
+    await origin(owned);
+    return z.boolean().parse(await step(owned,()=>reserve(id,requested,owned)));
+   });
+  },
   beforeCommit(candidate:PrivacyJournalEvent,call:JournalCall):Promise<void>{
    // Snapshot and fully validate before first await: caller mutation cannot change
    // signed bytes while origin/head/storage I/O is pending.
    let value:PrivacyJournalEvent;
    try{value=event(candidate);if(value.payload.kind!=='acceptance')throw Error('Acceptance intent required');validatePrivacyRestoreEvents([value]);}
    catch(error){return Promise.reject(error);}
-   return guarded(call,async owned=>{const held=await claim(value.eventId,'intent',owned);await origin(owned);const proof=await append(value,'intent',owned);await covered(proof,owned);await complete(held,proof,owned);});
+   return guarded(call,async owned=>{const held=await claim(value.eventId,'intent',owned,value);await origin(owned);const proof=await append(value,'intent',owned);await covered(proof,owned);await complete(held,proof,owned);});
   },
   afterCommit(eventId:string,call:JournalCall):Promise<void>{
    try{uuid.parse(eventId);}catch(error){return Promise.reject(error);}

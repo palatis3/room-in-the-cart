@@ -4,6 +4,14 @@ The complete production app remains the objective. The current checkpoint below 
 
 ## Current checkpoint — November 4
 
+Migration 026 and authority schema 003 protect worker capacity. The durable worker reserves space before target erasure and before invoking the provider. The checkpoint keeps exact allowances across a restart and spends them only when it admits the matching outcome. Identical provider retries reuse the prior pending outcome. A new deletion request that cannot fit fails before opening an uncertainty claim.
+
+The [worker capacity tests](evidence/b11/privacy-worker-capacity-20261104/validation.json) show that an exhausted target or outcome budget leaves the step pending and the provider untouched. In a separate case the old job uses its final reserved slot after the new request is refused. The real HTTPS restart test preserves the completion allowance through provider failures and a lost completion observation, then recovers the exact completion without calling the provider again.
+
+Next prepare reviewed runtime composition and operational capacity alerts. The finite lineage still requires owner recovery and a capacity policy before service is exhausted. Hosted activation, backup and restore, and real provider verification remain release gates.
+
+## Previous checkpoint — November 4, restore capacity
+
 Migration 025 aligns the SQL restore projection with the 10,000-record, 32 MiB signed archive limit. PostgreSQL may add whitespace to the JSON representation, so the SQL transport ceiling is 64 MiB. Source capture, committed observation and restore retain the 1 MiB event limit. The independent authority now reserves enough capacity for either outcome of an admitted intent. One remaining slot or one missing byte prevents a new intent from being admitted, and another progress event cannot take the reserved slot.
 
 The current capacity drill verified a signed journal with 1,001 committed events and a restore projection above 16 MiB. PostgreSQL registered all 1,000 observations, 216,000 distinct retired purchase markers and 24 absent-target receipts. Invalid count and oversized individual payloads failed before creating a restore run. See the [capacity evidence](evidence/b11/privacy-journal-capacity-20261104/validation.json).

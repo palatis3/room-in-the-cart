@@ -70,6 +70,7 @@ export function fixture(originPins={}) {
     return changed;
   }
   const authority={
+    async reserveWorkerCapacity(_jobId,_kinds,call){checkCall(call);return true;},
     async readCurrent(call){
       checkCall(call);await enter('head',call);checkCall(call);
       if(faults.replayHead){assert(capturedHead);return copy(capturedHead);}
@@ -79,7 +80,7 @@ export function fixture(originPins={}) {
       checkCall(call);await enter('inspect',call);checkCall(call);
       const op=operations.get(id);return envelope(op?{...copy(op),operationId:id}:{state:'absent',operationId:id},call);
     },
-    async reserve(expected,identity,call){
+    async reserve(expected,identity,call,workerKind){
       checkCall(call);await enter('reserve',call);checkCall(call);
       const id=operationId(identity), prior=operations.get(id);
       if(prior?.state==='admitted')throw Error('Already admitted; inspect exact receipt');
@@ -87,7 +88,7 @@ export function fixture(originPins={}) {
       assert.equal(identity.seq,current.head.seq+1);assert.equal(identity.previousHash,current.head.hash);
       const existing=eventIndex.get(identity.eventId);
       if(existing){assert.equal(existing.digest,identity.payloadDigest);assert.equal(existing.jobId,identity.jobId);assert(!existing.transitions.has(identity.transition));}
-      const ticket={operationId:id,generation:current.generation,expected:copy(expected),record:copy(identity),objectKey:`${scopeDigest}/${identity.seq}/${identity.recordHash}`,authorityExpiresAtUnixMs:Math.min(call.deadlineUnixMs-10,Date.now()+3000)};
+      const ticket={operationId:id,generation:current.generation,expected:copy(expected),record:copy(identity),objectKey:`${scopeDigest}/${identity.seq}/${identity.recordHash}`,authorityExpiresAtUnixMs:Math.min(call.deadlineUnixMs-10,Date.now()+3000),...(workerKind?{workerKind}:{})};
       current={...current,mode:'pending',pendingOperation:id};operations.set(id,{state:'pending',ticket:copy(ticket)});mutations++;
       if(afterHooks.reserve)await afterHooks.reserve(call);
       if(faults.lostResponse==='reserve')throw Error('Fixture reserve response lost after durable CAS');

@@ -4,7 +4,7 @@ import {Agent,request} from 'node:https';
 import {z} from 'zod';
 import {PrivacyCall,privacyHTTPCall,privacyPhase} from './privacy-call.js';
 import {
- admittedSchema,durableJournalScopeDigest,identitySchema,inspectionSchema,receiptSchema,storedSchema,ticketSchema,
+ admittedSchema,durableJournalScopeDigest,identitySchema,inspectionSchema,receiptSchema,storedSchema,ticketSchema,workerKindSchema,workerKindsSchema,
 } from './privacy-journal-durable.js';
 import type {
  CheckpointAuthority,DurableJournalPins,DurableUncertaintyStore,ImmutableRecordTransport,JournalCall,
@@ -21,11 +21,13 @@ const claimSchema=operationSchema.extend({claimId:z.string().uuid()});
 const commandSchema=z.discriminatedUnion('action',[
  z.object({action:z.literal('current'),nonce:hash}).strict(),
  z.object({action:z.literal('inspect'),nonce:hash,id:hash}).strict(),
- z.object({action:z.literal('reserve'),nonce:hash,head:admittedSchema,record:identitySchema}).strict(),
+ z.object({action:z.literal('reserve'),nonce:hash,head:admittedSchema,record:identitySchema,workerKind:workerKindSchema.optional()}).strict(),
+ z.object({action:z.literal('worker_capacity'),jobId:z.string().uuid(),kinds:workerKindsSchema}).strict(),
  z.object({action:z.literal('publish'),nonce:hash,ticket:ticketSchema,stored:storedSchema}).strict(),
  z.object({action:z.literal('put'),ticket:ticketSchema,bytes:encoded}).strict(),
  z.object({action:z.literal('read'),stored:storedSchema}).strict(),
  z.object({action:z.literal('begin'),operation:operationSchema}).strict(),
+ z.object({action:z.literal('begin_intent'),operation:operationSchema,recordByteBound:z.number().int().min(1).max(maxRecordBytes)}).strict(),
  z.object({action:z.literal('complete'),claim:claimSchema,proof:receiptSchema}).strict(),
 ]);
 const envelopeSchema=z.object({version:z.literal(1),scopeDigest:hash,attemptId:z.string().min(1).max(100),
@@ -62,11 +64,19 @@ export function journalAuthorityHandler(configuration:Ports&{readonly pins:Durab
   switch(command.action){
    case 'current':return authority.readCurrent({...call,requestNonce:command.nonce});
    case 'inspect':return authority.inspectOperation(command.id,{...call,requestNonce:command.nonce});
-   case 'reserve':return authority.reserve(command.head,command.record,{...call,requestNonce:command.nonce});
+   case 'reserve':return authority.reserve(command.head,command.record,{...call,requestNonce:command.nonce},command.workerKind);
+   case 'worker_capacity':{
+    if(!authority.reserveWorkerCapacity)throw Error('Worker capacity unavailable');
+    return authority.reserveWorkerCapacity(command.jobId,command.kinds,call);
+   }
    case 'publish':return authority.publish(command.ticket,command.stored,{...call,requestNonce:command.nonce});
    case 'put':return records.putExact(command.ticket,bytes(command.bytes),call);
    case 'read':return Buffer.from(await records.readExact(command.stored,call)).toString('base64');
    case 'begin':return uncertainty.begin(command.operation,call);
+   case 'begin_intent':{
+    if(!uncertainty.beginIntent)throw Error('Intent capacity preflight unavailable');
+    return uncertainty.beginIntent(command.operation,command.recordByteBound,call);
+   }
    case 'complete':await uncertainty.complete(command.claim,command.proof,call);return null;
   }
  }
@@ -135,7 +145,8 @@ export function createHTTPSJournalAuthority(configuration:{readonly pins:Durable
  const authority:CheckpointAuthority={
   readCurrent:call=>send({action:'current',nonce:call.requestNonce},call,current),
   inspectOperation:(id,call)=>send({action:'inspect',nonce:call.requestNonce,id},call,inspect),
-  reserve:(head,record,call)=>send({action:'reserve',nonce:call.requestNonce,head,record},call,reserve),
+  reserve:(head,record,call,workerKind)=>send({action:'reserve',nonce:call.requestNonce,head,record,workerKind},call,reserve),
+  reserveWorkerCapacity:(jobId,kinds,call)=>send({action:'worker_capacity',jobId,kinds:[...kinds]},call,z.boolean()),
   publish:(ticket,stored,call)=>send({action:'publish',nonce:call.requestNonce,ticket,stored},call,receiptSchema),
  };
  const records:ImmutableRecordTransport={
@@ -147,6 +158,7 @@ export function createHTTPSJournalAuthority(configuration:{readonly pins:Durable
  };
  const uncertainty:DurableUncertaintyStore={
   begin:(operation,call)=>send({action:'begin',operation},call,claimSchema),
+  beginIntent:(operation,recordByteBound,call)=>send({action:'begin_intent',operation,recordByteBound},call,claimSchema.nullable()),
   async complete(claim,proof,call){await send({action:'complete',claim,proof},call,z.null());},
  };
  return Object.freeze({authority:Object.freeze(authority),records:Object.freeze(records),uncertainty:Object.freeze(uncertainty),

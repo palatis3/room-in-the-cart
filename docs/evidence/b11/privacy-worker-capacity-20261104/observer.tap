@@ -1,0 +1,80 @@
+Created disposable PostgreSQL fixture ritc_journal_pg_source_4e04ea4f00b647ccb046ad8fffe07086 (OID 189355).
+Created disposable PostgreSQL fixture ritc_journal_pg_wrong_d28622c2ec1041248f828ba293a7f779 (OID 191126).
+TAP version 13
+# Subtest: 024 uses fixed definer/search_path, PUBLIC/app/worker denied, observer raw journal and helper access denied
+ok 1 - 024 uses fixed definer/search_path, PUBLIC/app/worker denied, observer raw journal and helper access denied
+  ---
+  duration_ms: 26.222791
+  ...
+# Subtest: real committed visibility, exact original acceptance and deterministic bounded job list
+ok 2 - real committed visibility, exact original acceptance and deterministic bounded job list
+  ---
+  duration_ms: 101.124
+  ...
+# Subtest: SQL event reads reject oversized payload and persisted digest or envelope conflicts
+ok 3 - SQL event reads reject oversized payload and persisted digest or envelope conflicts
+  ---
+  duration_ms: 85.280542
+  ...
+# Subtest: SQL repeats exact source, origin and database pins and refuses SET ROLE or foreign login
+ok 4 - SQL repeats exact source, origin and database pins and refuses SET ROLE or foreign login
+  ---
+  duration_ms: 39.20425
+  ...
+# Subtest: every SQL wrapper rejects newly effective column/extra-function capabilities, including after a blocked checkout
+ok 5 - every SQL wrapper rejects newly effective column/extra-function capabilities, including after a blocked checkout
+  ---
+  duration_ms: 116.275
+  ...
+# Subtest: independently signed receipt is verified before any SQL: malformed/wrong event/job/digest/transition/head/scope/key rejected
+ok 6 - independently signed receipt is verified before any SQL: malformed/wrong event/job/digest/transition/head/scope/key rejected
+  ---
+  duration_ms: 61.562833
+  ...
+# Subtest: conflicting concurrent acknowledgement cannot report success after the original commits
+ok 7 - conflicting concurrent acknowledgement cannot report success after the original commits
+  ---
+  duration_ms: 63.516417
+  ...
+# Subtest: preaborted and expired calls start no backend or SQL; queued abort starts no later acknowledgement
+ok 8 - preaborted and expired calls start no backend or SQL; queued abort starts no later acknowledgement
+  ---
+  duration_ms: 145.303792
+  ...
+# Subtest: actual blocked read cancellation destroys connection; backend terminates within SQL timeout and a fresh call succeeds
+ok 9 - actual blocked read cancellation destroys connection; backend terminates within SQL timeout and a fresh call succeeds
+  ---
+  duration_ms: 852.113625
+  ...
+# Subtest: blocked acknowledgement abort rolls back: no late acknowledgement after unblock or actual statement timeout
+ok 10 - blocked acknowledgement abort rolls back: no late acknowledgement after unblock or actual statement timeout
+  ---
+  duration_ms: 162.073833
+  ...
+# Subtest: actual deadline bounds blocked SQL and leaves no acknowledgement or idle transaction
+ok 11 - actual deadline bounds blocked SQL and leaves no acknowledgement or idle transaction
+  ---
+  duration_ms: 458.100333
+  ...
+# Subtest: real COMMIT response loss reports uncertainty; late committed acknowledgement remains exact and retryable
+ok 12 - real COMMIT response loss reports uncertainty; late committed acknowledgement remains exact and retryable
+  ---
+  duration_ms: 779.169666
+  ...
+# Subtest: app and worker compose with the real observer and a synthetic durable authority
+ok 13 - app and worker compose with the real observer and a synthetic durable authority
+  ---
+  duration_ms: 781.571333
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3825.749083
+Removed disposable PostgreSQL fixture ritc_journal_pg_source_4e04ea4f00b647ccb046ad8fffe07086.
+Removed disposable PostgreSQL fixture ritc_journal_pg_wrong_d28622c2ec1041248f828ba293a7f779.
+Verified unchanged cluster roles and memberships; both disposable databases removed.

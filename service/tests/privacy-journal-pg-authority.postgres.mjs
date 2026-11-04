@@ -41,6 +41,7 @@ before(async()=>{
   GRANT ritc_checkpoint_runtime TO ${checkpointRole}; GRANT ritc_record_runtime TO ${objectRole}`);
  await owner.query(await readFile(new URL('../journal-authority/001_checkpoint.sql',import.meta.url),'utf8'));
  await owner.query(await readFile(new URL('../journal-authority/002_recovery.sql',import.meta.url),'utf8'));
+ await owner.query(await readFile(new URL('../journal-authority/003_worker_capacity.sql',import.meta.url),'utf8'));
  await owner.query('INSERT INTO ritc_records.store(identity) VALUES($1)',[storeIdentity]);
  const config=join(dir,'tls.cnf'),keyPath=join(dir,'tls.key'),certPath=join(dir,'tls.crt');
  await writeFile(config,'[req]\nprompt=no\ndistinguished_name=dn\nx509_extensions=ext\n[dn]\nCN=127.0.0.1\n[ext]\nbasicConstraints=critical,CA:TRUE\nsubjectAltName=IP:127.0.0.1\n');
@@ -261,7 +262,7 @@ test('checkpoint keeps count and byte capacity for the exact resolution of an ad
  }
 });
 
-test('app and worker recover one request through a restarted HTTPS authority on a separate PostgreSQL cluster',async()=>{
+test('worker allowances survive provider retry and lost completion observation across HTTPS authority restarts',async()=>{
  const source=await sourceCluster();
  const runtime=source.pool(source.runtime),worker=source.pool(source.worker);
  let server,remote,observer;
@@ -293,12 +294,20 @@ test('app and worker recover one request through a restarted HTTPS authority on 
   const subject=randomUUID(),sessionId=randomUUID(),issuer='https://durable.fixture.invalid';
   const identity={issuer,subject,sessionId,expiresAt:new Date(Date.now()+60_000),authenticatedAt:new Date(),authenticatedMethod:'otp'};
   await source.owner.query('INSERT INTO auth.sessions(id,user_id) VALUES($1,$2)',[sessionId,subject]);
-  const input={clientKey:randomUUID(),statusToken:randomBytes(32).toString('base64url'),confirm:true,households:[]};
+  const householdId=randomUUID(),memberId=randomUUID();
+  await source.owner.query("INSERT INTO ritc.household(household_id,label) VALUES($1,'Allowance fixture')",[householdId]);
+  await source.owner.query("INSERT INTO ritc.member(household_id,member_id,issuer,subject,alias,kind,state,organizer) VALUES($1,$2,$3,$4,'Allowance fixture','adult','active',true)",[householdId,memberId,issuer,subject]);
+  const input={clientKey:randomUUID(),statusToken:randomBytes(32).toString('base64url'),confirm:true,
+   households:[{householdId,organizer:'archive',shops:[],eraseChildProfiles:[]}]};
   const repo=new HouseholdRepository(runtime,{allowChildNetwork:false,noticeVersion:'fixture',sessionStatus:new SupabaseSessionVerifier(issuer)});
   const policy={receiptRetentionDays:1,erasureMarkerRetentionDays:2,verifiedBackupRetentionDays:1};
-  let deletionCalls=0;
+  let attempts=0,deletionCalls=0;
+  const allowances=async()=> (await owner.query('SELECT event_kind FROM ritc_checkpoint.worker_allowance WHERE lineage=$1 AND job_id=$2 ORDER BY event_kind',[r.f.pins.lineage,input.clientKey])).rows.map(row=>row.event_kind);
   const provider={assertAvailable:async()=>{},deleteAccount:async value=>{
-   assert.equal(value,subject);deletionCalls++;
+   assert.equal(value,subject);
+   assert.deepEqual(await allowances(),attempts===0?['source_completed','source_pending']:['source_completed']);
+   if(++attempts<=2)throw Error('Synthetic provider outage');
+   deletionCalls++;
    await source.owner.query('DELETE FROM auth.sessions WHERE id=$1 AND user_id=$2',[sessionId,subject]);
   }};
   const interrupted=new PrivacyService(repo,{policy,provider,journal:{...port,afterCommit:async()=>{throw Error('Synthetic interruption after app commit');}}});
@@ -311,19 +320,98 @@ test('app and worker recover one request through a restarted HTTPS authority on 
   assert.deepEqual((await remote.authority.readCurrent(nonce(time()))).value,intent);
   const {port:journal}=r.f.adapter({source:observer.source,...remote});
   const maintenance=new PrivacyMaintenance(worker,{provider,journal});
-  assert.equal((await maintenance.run({batchSize:1})).completed,1);
+  assert.equal((await maintenance.run({batchSize:1})).retryScheduled,1);
+  assert.equal(deletionCalls,0);
+  assert.deepEqual(await allowances(),['source_completed']);
+  assert.ok((await source.owner.query('SELECT erased_at FROM ritc.member WHERE member_id=$1',[memberId])).rows[0].erased_at);
+  const afterFirstFailure=(await remote.authority.readCurrent(nonce(time()))).value;
+  await source.owner.query("UPDATE ritc.privacy_job SET next_at=clock_timestamp()-interval '1 second' WHERE job_id=$1",[input.clientKey]);
+  assert.equal((await maintenance.run({batchSize:1})).retryScheduled,1);
+  assert.deepEqual(await allowances(),['source_completed']);
+  assert.deepEqual((await remote.authority.readCurrent(nonce(time()))).value,afterFirstFailure);
+  await source.owner.query("UPDATE ritc.privacy_job SET next_at=clock_timestamp()-interval '1 second' WHERE job_id=$1",[input.clientKey]);
+  const interruptedWorker=new PrivacyMaintenance(worker,{provider,journal:{...journal,acknowledgeJob:async(jobId,call)=>{
+   const state=(await source.owner.query('SELECT state FROM ritc.privacy_job WHERE job_id=$1',[jobId])).rows[0].state;
+   if(state==='complete')throw Error('Synthetic loss after completion commit');
+   return journal.acknowledgeJob(jobId,call);
+  }}});
+  await assert.rejects(interruptedWorker.run({batchSize:1}),/Synthetic loss after completion/);
   assert.equal(deletionCalls,1);
-  const service=new PrivacyService(repo,{provider,policy,journal});
+  assert.deepEqual(await allowances(),['source_completed']);
+  remote.close();await server.stop();server=await startAuthority(path);
+  remote=createHTTPSJournalAuthority({...configuration,origin:server.origin});
+  const {port:reopened}=r.f.adapter({source:observer.source,...remote});
+  assert.equal((await new PrivacyMaintenance(worker,{provider,journal:reopened}).run({batchSize:1})).completed,0);
+  assert.deepEqual(await allowances(),[]);
+  const service=new PrivacyService(repo,{provider,policy,journal:reopened});
   assert.equal((await service.status(input.clientKey,input.statusToken)).status,'complete');
-  assert.equal((await remote.authority.readCurrent(nonce(time()))).value.head.seq,3);
-  assert.equal((await maintenance.run({batchSize:1})).completed,0);
+  assert.equal((await remote.authority.readCurrent(nonce(time()))).value.head.seq,5);
+  assert.equal(attempts,3);
   assert.equal(deletionCalls,1);
   const rows=(await source.owner.query('SELECT a.head_seq::int AS seq,a.head_hash AS hash,e.kind FROM ritc.privacy_journal_outbox e JOIN ritc.privacy_journal_ack a USING(event_id) WHERE e.job_id=$1 ORDER BY a.head_seq',[input.clientKey])).rows;
   const admissions=(await owner.query("SELECT sequence AS seq,receipt->'record'->>'recordHash' AS hash,event_kind AS kind FROM ritc_checkpoint.admission WHERE lineage=$1 AND transition='commit' ORDER BY sequence",[r.f.pins.lineage])).rows;
   assert.deepEqual(rows,admissions);
-  assert.deepEqual(rows.map(row=>row.kind),['acceptance','source_completed']);
+  assert.deepEqual(rows.map(row=>row.kind),['acceptance','target_erased','source_pending','source_completed']);
  }finally{
   remote?.close();await server?.stop();await Promise.all([observer?.close(),runtime.end(),worker.end()]);await source.close();
+ }
+});
+
+test('worker defers at capacity and can spend a held final slot after a new request is refused',async()=>{
+ for(const {hasTarget,slots} of [{hasTarget:true,slots:0},{hasTarget:false,slots:1},{hasTarget:false,slots:2}]){
+  const source=await sourceCluster(),runtime=source.pool(source.runtime),worker=source.pool(source.worker);
+  let ports,observer;
+  try{
+   const {r}=await recoveryFixture(source),{pins}=r.f;
+   // Keep room for the acceptance intent and commit. Give the no-target case
+   // one spare slot so the two possible provider outcomes cannot be split.
+   const head={...r.head,head:{...r.head.head,seq:MAX_JOURNAL_RECORDS-2-slots,hash:'1'.repeat(64)},totalBytes:4096};
+   await owner.query('UPDATE ritc_checkpoint.origin SET head=$2 WHERE lineage=$1',[pins.lineage,head]);
+   ports=await r.open();
+   observer=createPostgresCommittedSource({pins,authorityPublicKey:r.f.authorityKeys.publicKey,...source.configuration});
+   const {port:journal}=r.f.adapter({source:observer.source,authority:ports.authority,records:ports.records,uncertainty:ports.uncertainty});
+   const subject=randomUUID(),sessionId=randomUUID(),issuer='https://capacity.fixture.invalid',householdId=randomUUID(),memberId=randomUUID();
+   const identity={issuer,subject,sessionId,expiresAt:new Date(Date.now()+60_000),authenticatedAt:new Date(),authenticatedMethod:'otp'};
+   await source.owner.query('INSERT INTO auth.sessions(id,user_id) VALUES($1,$2)',[sessionId,subject]);
+   if(hasTarget){
+    await source.owner.query("INSERT INTO ritc.household(household_id,label) VALUES($1,'Capacity fixture')",[householdId]);
+    await source.owner.query("INSERT INTO ritc.member(household_id,member_id,issuer,subject,alias,kind,state,organizer) VALUES($1,$2,$3,$4,'Preserve this member','adult','active',true)",[householdId,memberId,issuer,subject]);
+   }
+   const input={clientKey:randomUUID(),statusToken:randomBytes(32).toString('base64url'),confirm:true,
+    households:hasTarget?[{householdId,organizer:'archive',shops:[],eraseChildProfiles:[]}]:[]};
+   const repository=new HouseholdRepository(runtime,{allowChildNetwork:false,noticeVersion:'fixture',sessionStatus:new SupabaseSessionVerifier(issuer)});
+   const policy={receiptRetentionDays:1,erasureMarkerRetentionDays:2,verifiedBackupRetentionDays:1};
+   let attempts=0,deletions=0;
+   const provider={assertAvailable:async()=>{},deleteAccount:async()=>{
+    if(++attempts===1&&slots===2)throw Error('Synthetic provider outage');deletions++;
+   }};
+   const privacy=new PrivacyService(repository,{provider,policy,journal});
+   assert.equal((await privacy.request(identity,input)).status,'pending');
+   await assert.rejects(runtime.query('SELECT * FROM ritc.privacy_worker_journal_needs($1,$2)',[input.clientKey,randomUUID()]),{code:'42501'});
+   assert.equal((await worker.query('SELECT * FROM ritc.privacy_worker_journal_needs($1,$2)',[input.clientKey,randomUUID()])).rowCount,0);
+   const maintenance=new PrivacyMaintenance(worker,{provider,journal}),result=await maintenance.run({batchSize:1});
+   if(slots===2){
+    assert.equal(result.retryScheduled,1);assert.equal(deletions,0);
+    const allowance=(await owner.query('SELECT event_kind FROM ritc_checkpoint.worker_allowance WHERE lineage=$1',[pins.lineage])).rows;
+    assert.deepEqual(allowance,[{event_kind:'source_completed'}]);
+    const rejected={...identity,subject:randomUUID(),sessionId:randomUUID()},rejectedInput={...input,clientKey:randomUUID()};
+    await source.owner.query('INSERT INTO auth.sessions(id,user_id) VALUES($1,$2)',[rejected.sessionId,rejected.subject]);
+    await assert.rejects(privacy.request(rejected,rejectedInput),{code:'deletion_unavailable'});
+    assert.equal((await source.owner.query('SELECT 1 FROM ritc.privacy_job WHERE job_id=$1',[rejectedInput.clientKey])).rowCount,0);
+    assert.equal((await owner.query('SELECT claim FROM ritc_checkpoint.origin WHERE lineage=$1',[pins.lineage])).rows[0].claim,null);
+    await source.owner.query("UPDATE ritc.privacy_job SET next_at=clock_timestamp()-interval '1 second' WHERE job_id=$1",[input.clientKey]);
+    assert.equal((await maintenance.run({batchSize:1})).completed,1);
+    assert.equal(deletions,1);
+    assert.equal((await ports.authority.readCurrent(nonce(time()))).value.head.seq,MAX_JOURNAL_RECORDS);
+    assert.equal((await privacy.status(input.clientKey,input.statusToken)).status,'complete');
+    continue;
+   }
+   assert.equal(result.capacityDeferred,1);assert.equal(result.completed,0);assert.equal(deletions,0);
+   if(hasTarget)assert.deepEqual((await source.owner.query('SELECT alias,erased_at FROM ritc.member WHERE member_id=$1',[memberId])).rows[0],{alias:'Preserve this member',erased_at:null});
+   assert.deepEqual((await source.owner.query('SELECT kind FROM ritc.privacy_journal_outbox WHERE job_id=$1',[input.clientKey])).rows,[{kind:'acceptance'}]);
+   assert.equal((await owner.query('SELECT 1 FROM ritc_checkpoint.worker_allowance WHERE lineage=$1',[pins.lineage])).rowCount,0);
+   assert.equal((await privacy.status(input.clientKey,input.statusToken)).status,'pending');
+  }finally{await Promise.all([ports?.close(),observer?.close(),runtime.end(),worker.end()]);await source.close();}
  }
 });
 

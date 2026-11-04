@@ -1,0 +1,56 @@
+{
+  "sourceSHA256": "e644ed33e45fd6360ed318fb12e9d56add9d3c55e58f13f16c7678183f261278",
+  "sourceFiles": 311,
+  "baseCommit": "70b721f",
+  "migrations001To025ByteIdentical": true,
+  "documentationUpdatedAfterFreeze": [
+    "service/PRIVACY-JOURNAL.md"
+  ],
+  "builds": {
+    "service": "passed",
+    "web": "passed"
+  },
+  "runs": {
+    "workerCapacity": {
+      "passed": 11,
+      "failed": 0,
+      "skipped": 0,
+      "artifact": "workerCapacity.tap",
+      "sha256": "2acba9dccddebfd4f65d01291f64b06ba53fbaf57d903bc188542afadcdbc0cf"
+    },
+    "observer": {
+      "passed": 13,
+      "failed": 0,
+      "skipped": 0,
+      "artifact": "observer.tap",
+      "sha256": "f601e2fe44e3b188f1389250b737637cffe731a093924b67a0efb65d615f01f7"
+    },
+    "sharedWire": {
+      "passed": 178,
+      "failed": 0,
+      "skipped": 0,
+      "artifact": "sharedWire.tap",
+      "sha256": "9e18a69832cda932bac043754d534894bbb65d8fce13ab1ae481aa78a59afeae"
+    },
+    "unit": {
+      "passed": 344,
+      "failed": 0,
+      "skipped": 1,
+      "artifact": ".build/PrivacyWorkerCapacity-verified-unit-20261104.tap",
+      "sha256": "0e95a482f28fd32cb73cc912288ecbb47f645d1628387837b167da1240b010ae"
+    }
+  },
+  "unitSkip": "Optional standalone billing fixture is included in the shared real PostgreSQL suite.",
+  "tested": [
+    "Real source and HTTPS authority databases preserve distinct worker allowances across server restart.",
+    "The worker leaves a target intact and avoids provider deletion when the required allowance cannot fit. Outcome reservations are all or nothing.",
+    "An unchanged failed provider retry creates no new outbox event. A lost completion observation recovers from the durable allowance and original source commit without calling the provider again.",
+    "A new request refused at capacity rolls back its source acceptance and leaves no checkpoint claim. The existing worker spends its reserved final slot and completes.",
+    "The application role cannot call the worker probe, and a wrong worker lease returns no facts."
+  ],
+  "limits": [
+    "The near-capacity fixture seeds the checkpoint counters. The separate restart, archive and replay tests verify complete real histories.",
+    "The worker protects each irreversible step; a pending job can still wait at capacity. Hosted activation, operational alerts, a capacity lifecycle policy and real provider verification are separate requirements.",
+    "Default operations remain cleanup-only. Legacy local fixtures use their existing trusted writer. Hosted source and authority were not modified."
+  ]
+}

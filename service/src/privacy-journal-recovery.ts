@@ -71,7 +71,7 @@ async function assertOwner(db:Transaction,expected:DatabaseIdentity,schema:'ritc
 async function checkpointState(db:Transaction,lock:boolean,owner:DatabaseIdentity,pins:DurableJournalPins,scopeDigest:string){
  await assertOwner(db,owner,'ritc_checkpoint','origin');
  const installed=(await db.query(`SELECT to_regclass('ritc.privacy_journal_origin') IS NULL
-  AND to_regclass('ritc_checkpoint.recovery_seal') IS NOT NULL AND EXISTS(
+  AND to_regclass('ritc_checkpoint.recovery_seal') IS NOT NULL AND to_regclass('ritc_checkpoint.worker_allowance') IS NOT NULL AND EXISTS(
   SELECT 1 FROM pg_trigger WHERE tgrelid='ritc_checkpoint.origin'::regclass AND tgname='guard_origin_recovery'
   AND tgenabled IN ('O','A') AND tgfoid=to_regprocedure('ritc_checkpoint.guard_origin_recovery()')) AS ready`)).rows[0];
  if(!installed?.ready)throw Error('Checkpoint recovery schema is incomplete');
@@ -246,7 +246,7 @@ export function createIndependentRecovery(configuration:RecoveryConfiguration){
    if(claim?.claim.transition==='commit'&&!sourceById.has(claim.claim.eventId))throw Error('Uncertain commit is absent from the pinned source');
    if(pending){
     const live=sourceById.get(pending.record.eventId);
-    if(live&&(live.event.payloadDigest!==pending.record.payloadDigest||live.event.payload.jobId!==pending.record.jobId))throw Error('Pending reservation and fenced source disagree');
+    if(live&&(live.event.payloadDigest!==pending.record.payloadDigest||live.event.payload.jobId!==pending.record.jobId||pending.workerKind&&live.event.payload.kind!==pending.workerKind))throw Error('Pending reservation and fenced source disagree');
    }
    for(const {event,ack} of sourceRows)if(ack){
     const proof=proofs[ack.sequence-1];
@@ -283,6 +283,7 @@ export function createIndependentRecovery(configuration:RecoveryConfiguration){
    verifyIndependentRecovery(bytes,proof,pins,writer,authority);
    const references=await putTail(db,tail);
    await db.query('INSERT INTO ritc_checkpoint.recovery_seal(lineage,proof,tail_objects) VALUES($1,$2,$3)',[pins.lineage,proof,JSON.stringify(references)]);
+   await db.query('DELETE FROM ritc_checkpoint.worker_allowance WHERE lineage=$1',[pins.lineage]);
    await db.query('UPDATE ritc_checkpoint.origin SET head=$2,claim=NULL,pending=NULL WHERE lineage=$1',
     [pins.lineage,{...head,mode:'sealed',authorityRevision:head.authorityRevision+1,head:finalHead,pendingOperation:null,totalBytes:bytes.length}]);
    return {bytes,proof};

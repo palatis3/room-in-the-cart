@@ -3,15 +3,15 @@ import {z} from 'zod';
 import type {Database,Transaction} from './database.js';
 import {PrivacyCall,withPrivacyClient} from './privacy-call.js';
 import {journalCanonical,journalHash,validatePrivacyRestoreEvents} from './privacy-journal.js';
-import {MAX_JOURNAL_BYTES as maxBytes,MAX_JOURNAL_RECORDS as maxRecords,MAX_INTENT_RESOLUTION_OVERHEAD} from './privacy-journal-limits.js';
+import {MAX_JOURNAL_BYTES as maxBytes,MAX_JOURNAL_RECORDS as maxRecords,MAX_INTENT_RESOLUTION_OVERHEAD,WORKER_RECORD_BUDGET} from './privacy-journal-limits.js';
 import {
  admittedSchema,durableJournalOperationId,durableJournalPublicKeyFingerprint,durableJournalScopeDigest,
- identitySchema,recordSchema,storedSchema,ticketSchema,verifyDurableAdmissionReceipt,
+ identitySchema,recordSchema,storedSchema,ticketSchema,verifyDurableAdmissionReceipt,workerKindSchema,workerKindsSchema,
 } from './privacy-journal-durable.js';
 import type {
  AdmittedHead,AdmissionReceipt,AppendTicket,AuthorityCall,AuthorityEnvelope,CheckpointAuthority,
  DurableJournalPins,DurableUncertaintyStore,ImmutableRecordTransport,JournalCall,OperationInspection,
- RecordIdentity,StoredRecord,UncertaintyClaim,
+ RecordIdentity,StoredRecord,UncertaintyClaim,UncertaintyOperation,
 } from './privacy-journal-durable-contract.js';
 
 const hash=z.string().regex(/^[0-9a-f]{64}$/);
@@ -45,6 +45,8 @@ async function assertRuntime(pool:Database,role:'ritc_checkpoint_runtime'|'ritc_
   ) SELECT current_database() AS database,
    (SELECT oid::text FROM pg_database WHERE datname=current_database()) AS oid,
    (SELECT identity FROM ritc_records.store WHERE singleton) AS store_identity,
+   EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+    WHERE n.nspname='ritc_checkpoint' AND c.relname='worker_allowance') AS capacity_schema,
    current_user::text AS actor, (current_user=session_user AND r.rolcanlogin AND NOT r.rolsuper AND NOT r.rolbypassrls
     AND NOT r.rolcreaterole AND NOT r.rolcreatedb AND NOT r.rolreplication
     AND pg_has_role(current_user,$1,'USAGE')
@@ -91,7 +93,7 @@ export async function createPostgresJournalAuthority(configuration:PostgresJourn
   assertRuntime(checkpointPool,'ritc_checkpoint_runtime'),
   assertRuntime(recordPool,'ritc_record_runtime'),
  ]);
- if(checkpoint.actor===objects.actor||checkpoint.oid!==objects.oid||checkpoint.database!==objects.database||
+ if(!checkpoint.capacity_schema||!objects.capacity_schema||checkpoint.actor===objects.actor||checkpoint.oid!==objects.oid||checkpoint.database!==objects.database||
   checkpoint.store_identity!==pins.recordStoreIdentity||objects.store_identity!==pins.recordStoreIdentity)throw Error('Distinct journal roles on the registered authority database required');
 
  function envelope<T>(value:T,call:AuthorityCall):AuthorityEnvelope<T>{
@@ -146,6 +148,7 @@ export async function createPostgresJournalAuthority(configuration:PostgresJourn
  async function validateRecord(db:Transaction,bytes:Buffer,ticket:AppendTicket){
   const event=decodeRecord(bytes,ticket.record);
   if(event.payload.kind==='acceptance'){
+   if(ticket.workerKind)throw Error('Worker allowance cannot admit an acceptance');
    validatePrivacyRestoreEvents([event]);
    if(ticket.record.transition==='commit'){
     const intent=await admission(db,durableJournalOperationId(scopeDigest,event.eventId,event.payloadDigest,'intent'));
@@ -155,10 +158,20 @@ export async function createPostgresJournalAuthority(configuration:PostgresJourn
    if(ticket.record.transition!=='commit')throw Error('Progress must be a commit observation');
    const row=(await db.query("SELECT receipt FROM ritc_checkpoint.admission WHERE lineage=$1 AND job_id=$2 AND event_kind='acceptance' AND transition='commit'",[pins.lineage,event.payload.jobId])).rows[0];
    if(!row)throw Error('Progress lacks the original accepted authorization');
+   if(ticket.workerKind!==event.payload.kind)throw Error('Committed worker event does not match its capacity allowance');
    const receipt=verifyReceipt(row.receipt);
    validatePrivacyRestoreEvents([decodeRecord(await exactBytes(db,receipt.stored),receipt.record),event]);
   }
   return event;
+ }
+ async function reservedCapacity(db:Transaction){
+  const row=(await db.query(`SELECT count(*)::int AS count,COALESCE(sum(bytes),0)::text AS bytes FROM (
+   SELECT (i.receipt->'record'->>'byteLength')::int+$2::int AS bytes FROM ritc_checkpoint.admission i
+   WHERE i.lineage=$1 AND i.transition='intent' AND NOT EXISTS(SELECT 1 FROM ritc_checkpoint.admission c
+    WHERE c.lineage=i.lineage AND c.event_id=i.event_id AND c.transition='commit')
+   UNION ALL SELECT bytes FROM ritc_checkpoint.worker_allowance WHERE lineage=$1
+  ) reserved`,[pins.lineage,MAX_INTENT_RESOLUTION_OVERHEAD])).rows[0];
+  return {count:Number(row.count),bytes:Number(row.bytes)};
  }
  async function assertPending(db:Transaction,state:Origin,ticket:AppendTicket,call:JournalCall){
   assertHeld(state,ticket.record,call);
@@ -166,17 +179,33 @@ export async function createPostgresJournalAuthority(configuration:PostgresJourn
    state.head.generation!==ticket.generation||ticket.authorityExpiresAtUnixMs<=await databaseClock(db))throw Error('Journal reservation expired or changed');
  }
 
- const uncertainty:DurableUncertaintyStore={
-  async begin(input,call){
+ async function beginClaim(input:UncertaintyOperation,call:JournalCall,intentBound?:number){
    const operation=operationSchema.parse(input);
    if(operation.scopeDigest!==scopeDigest)throw Error('Journal uncertainty scope conflict');
+   if(intentBound!==undefined&&operation.transition!=='intent')throw Error('Intent capacity preflight requires an intent claim');
    return transaction(checkpointPool,call,async db=>{
     const state=await load(db,'write');assertActive(state);
     if(state.claim)throw Error('Outstanding journal uncertainty claim');
+    if(intentBound!==undefined){
+     const existing=await db.query("SELECT 1 FROM ritc_checkpoint.admission WHERE lineage=$1 AND event_id=$2 AND transition='intent'",[pins.lineage,operation.eventId]);
+     if(!existing.rowCount){
+      const reserved=await reservedCapacity(db);
+      if(state.head.head.seq+reserved.count+2>maxRecords||state.head.totalBytes+reserved.bytes+2*intentBound+MAX_INTENT_RESOLUTION_OVERHEAD>maxBytes)return null;
+     }
+    }
     const claim={...operation,claimId:randomUUID()};
     await db.query('UPDATE ritc_checkpoint.origin SET claim=$2 WHERE lineage=$1',[pins.lineage,{claim,attemptId:call.attemptId}]);
     return claim;
    });
+ }
+ const uncertainty:DurableUncertaintyStore={
+  async begin(input,call){
+   const claim=await beginClaim(input,call);
+   if(!claim)throw Error('Journal uncertainty claim unavailable');
+   return claim;
+  },
+  beginIntent(input,bound,call){
+   return beginClaim(input,call,z.number().int().min(1).max(maxBytes).parse(bound));
   },
   async complete(input,proof,call){
    const claim=claimSchema.parse(input),receipt=verifyReceipt(proof);
@@ -191,6 +220,22 @@ export async function createPostgresJournalAuthority(configuration:PostgresJourn
   },
  };
  const authority:CheckpointAuthority={
+  async reserveWorkerCapacity(jobInput,kindsInput,call){
+   const jobId=uuid.parse(jobInput),kinds=workerKindsSchema.parse(kindsInput);
+   return transaction(checkpointPool,call,async db=>{
+    const state=await load(db,'write');assertActive(state);
+    if(state.claim)throw Error('Outstanding journal uncertainty claim');
+    const rows=(await db.query("SELECT event_kind FROM ritc_checkpoint.admission WHERE lineage=$1 AND job_id=$2 AND transition='commit' AND event_kind IN ('acceptance','source_completed')",[pins.lineage,jobId])).rows;
+    if(!rows.some(row=>row.event_kind==='acceptance')||rows.some(row=>row.event_kind==='source_completed'))throw Error('Worker allowance requires an accepted unfinished job');
+    const existing=(await db.query('SELECT event_kind FROM ritc_checkpoint.worker_allowance WHERE lineage=$1 AND job_id=$2',[pins.lineage,jobId])).rows;
+    const needed=kinds.filter(kind=>!existing.some(row=>row.event_kind===kind));
+    if(!needed.length)return true;
+    const reserved=await reservedCapacity(db),bytes=needed.map(kind=>WORKER_RECORD_BUDGET[kind]);
+    if(state.head.head.seq+reserved.count+needed.length>maxRecords||state.head.totalBytes+reserved.bytes+bytes.reduce((total,size)=>total+size,0)>maxBytes)return false;
+    await db.query('INSERT INTO ritc_checkpoint.worker_allowance(lineage,job_id,event_kind,bytes) SELECT $1,$2,event_kind,bytes FROM unnest($3::text[],$4::int[]) a(event_kind,bytes)',[pins.lineage,jobId,needed,bytes]);
+    return true;
+   });
+  },
   async readCurrent(call){
    hash.parse(call.requestNonce);
    return transaction(checkpointPool,call,async db=>{
@@ -209,9 +254,11 @@ export async function createPostgresJournalAuthority(configuration:PostgresJourn
     return envelope(value,call);
    });
   },
-  async reserve(expectedInput,identityInput,call){
+  async reserve(expectedInput,identityInput,call,kindInput){
    const expected=admittedSchema.parse(expectedInput),record=identitySchema.parse(identityInput);hash.parse(call.requestNonce);
+   const workerKind=workerKindSchema.optional().parse(kindInput);
    if(record.transition==='rollback')throw Error('Ordinary journal writer cannot reserve rollback');
+   if(workerKind&&record.transition!=='commit')throw Error('Worker allowance requires a commit observation');
    return transaction(checkpointPool,call,async db=>{
     const state=await load(db,'write');assertActive(state);assertHeld(state,record,call);
     const head=state.head;
@@ -222,17 +269,20 @@ export async function createPostgresJournalAuthority(configuration:PostgresJourn
     if(previous.some(prior=>prior.payloadDigest!==record.payloadDigest||prior.jobId!==record.jobId||prior.transition!=='intent'||record.transition!=='commit'))throw Error('Journal event transition conflict');
     // Every admitted intent must still fit its commit or rollback even if this
     // process dies. A progress observation cannot consume a reserved slot.
-    const {count,bytes}=(await db.query(`SELECT count(*)::int AS count,COALESCE(sum((i.receipt->'record'->>'byteLength')::int+$2::int),0)::text AS bytes
-     FROM ritc_checkpoint.admission i WHERE i.lineage=$1 AND i.transition='intent'
-      AND NOT EXISTS(SELECT 1 FROM ritc_checkpoint.admission c WHERE c.lineage=i.lineage AND c.event_id=i.event_id AND c.transition='commit')`,
-     [pins.lineage,MAX_INTENT_RESOLUTION_OVERHEAD])).rows[0];
+    const {count,bytes}=await reservedCapacity(db);
+    let workerBytes=0;
+    if(workerKind){
+     const allowance=(await db.query('SELECT bytes FROM ritc_checkpoint.worker_allowance WHERE lineage=$1 AND job_id=$2 AND event_kind=$3',[pins.lineage,record.jobId,workerKind])).rows[0];
+     if(!allowance||allowance.bytes<record.byteLength)throw Error('Committed worker event exceeds its reserved capacity');
+     workerBytes=allowance.bytes;
+    }
     const resolved=previous[0],newIntent=record.transition==='intent';
-    const reserveCount=count+(newIntent?1:resolved?-1:0);
-    const reserveBytes=Number(bytes)+(newIntent?record.byteLength+MAX_INTENT_RESOLUTION_OVERHEAD:resolved?-(resolved.byteLength+MAX_INTENT_RESOLUTION_OVERHEAD):0);
+    const reserveCount=count+(newIntent?1:resolved?-1:0)-(workerKind?1:0);
+    const reserveBytes=bytes+(newIntent?record.byteLength+MAX_INTENT_RESOLUTION_OVERHEAD:resolved?-(resolved.byteLength+MAX_INTENT_RESOLUTION_OVERHEAD):0)-workerBytes;
     if(record.seq+reserveCount>maxRecords||head.totalBytes+record.byteLength+reserveBytes>maxBytes)throw Error('Journal capacity must cover intent resolution');
     const now=await databaseClock(db),authorityExpiresAtUnixMs=Math.min(now+3500,call.deadlineUnixMs-1);
     if(authorityExpiresAtUnixMs<=now)throw Error('Insufficient time for journal reservation');
-    const ticket={operationId,generation:head.generation,expected:head,record,objectKey:objectKey(record),authorityExpiresAtUnixMs};
+    const ticket={operationId,generation:head.generation,expected:head,record,objectKey:objectKey(record),authorityExpiresAtUnixMs,...(workerKind?{workerKind}:{})};
     await db.query('UPDATE ritc_checkpoint.origin SET head=$2,pending=$3 WHERE lineage=$1',
      [pins.lineage,{...head,mode:'pending',pendingOperation:operationId},ticket]);
     return envelope(ticket,call);
@@ -257,6 +307,12 @@ export async function createPostgresJournalAuthority(configuration:PostgresJourn
     const receipt:AdmissionReceipt={...body,authoritySignature:sign(null,Buffer.from(journalCanonical(body)),authorityPrivateKey).toString('base64url')};
     await db.query('INSERT INTO ritc_checkpoint.admission(lineage,operation_id,event_id,job_id,transition,event_kind,sequence,ticket,receipt) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)',
      [pins.lineage,ticket.operationId,record.eventId,record.jobId,record.transition,event.payload.kind,record.seq,ticket,receipt]);
+    if(ticket.workerKind){
+     const used=await db.query('DELETE FROM ritc_checkpoint.worker_allowance WHERE lineage=$1 AND job_id=$2 AND event_kind=$3 AND bytes>=$4',
+      [pins.lineage,record.jobId,ticket.workerKind,record.byteLength]);
+     if(used.rowCount!==1)throw Error('Committed worker capacity allowance changed');
+     if(ticket.workerKind==='source_completed')await db.query('DELETE FROM ritc_checkpoint.worker_allowance WHERE lineage=$1 AND job_id=$2',[pins.lineage,record.jobId]);
+    }
     const changed=await db.query('UPDATE ritc_checkpoint.origin SET head=$2,pending=NULL WHERE lineage=$1 AND floor(extract(epoch FROM clock_timestamp())*1000)<$3::bigint',
      [pins.lineage,admitted,ticket.authorityExpiresAtUnixMs]);
     if(changed.rowCount!==1)throw Error('Journal reservation expired before publication');

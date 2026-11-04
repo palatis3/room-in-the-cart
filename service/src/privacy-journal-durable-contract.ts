@@ -31,6 +31,7 @@ export interface RegisteredOrigin {
  readonly fenced:boolean;
 }
 export type JournalTransition='intent'|'commit'|'rollback';
+export type WorkerJournalKind='target_erased'|'source_pending'|'source_completed';
 export interface AdmittedHead {
  readonly head:PrivacyJournalHead;
  readonly generation:number;
@@ -57,6 +58,7 @@ export interface AppendTicket {
  readonly record:RecordIdentity;
  readonly objectKey:string;
  readonly authorityExpiresAtUnixMs:number;
+ readonly workerKind?:WorkerJournalKind|undefined;
 }
 export interface StoredRecord {
  readonly objectKey:string;
@@ -106,8 +108,9 @@ export interface ImmutableRecordTransport {
 export interface CheckpointAuthority {
  readCurrent(call:AuthorityCall):Promise<AuthorityEnvelope<AdmittedHead>>;
  inspectOperation(operationId:string,call:AuthorityCall):Promise<AuthorityEnvelope<OperationInspection>>;
- reserve(expected:AdmittedHead,record:RecordIdentity,call:AuthorityCall):Promise<AuthorityEnvelope<AppendTicket>>;
+ reserve(expected:AdmittedHead,record:RecordIdentity,call:AuthorityCall,workerKind?:WorkerJournalKind):Promise<AuthorityEnvelope<AppendTicket>>;
  publish(ticket:AppendTicket,stored:StoredRecord,call:AuthorityCall):Promise<AdmissionReceipt>;
+ reserveWorkerCapacity?(jobId:string,kinds:readonly WorkerJournalKind[],call:JournalCall):Promise<boolean>;
 }
 export interface UncertaintyOperation {
  readonly scopeDigest:string;
@@ -134,6 +137,8 @@ export interface UncertaintyClaim extends UncertaintyOperation {
  */
 export interface DurableUncertaintyStore {
  begin(operation:UncertaintyOperation,call:JournalCall):Promise<UncertaintyClaim>;
+ /** A null result is a capacity refusal. No claim was persisted. */
+ beginIntent?(operation:UncertaintyOperation,recordByteBound:number,call:JournalCall):Promise<UncertaintyClaim|null>;
  complete(claim:UncertaintyClaim,proof:AdmissionReceipt,call:JournalCall):Promise<void>;
 }
 /** Private committed observer. Implementations must never use the public app/worker role. */
@@ -156,6 +161,7 @@ export interface DurablePrivacyJournalPort {
  beforeCommit(candidate:PrivacyJournalEvent,call:JournalCall):Promise<void>;
  afterCommit(eventId:string,call:JournalCall):Promise<void>;
  acknowledgeJob(jobId:string,call:JournalCall):Promise<void>;
+ reserveWorkerCapacity(jobId:string,kinds:readonly WorkerJournalKind[],call:JournalCall):Promise<boolean>;
 }
 export interface DurablePrivacyJournalConfiguration {
  readonly pins:DurableJournalPins;

@@ -7,7 +7,7 @@ import {type Database,digest,tokenHash} from './database.js';
 import {ServiceError} from './errors.js';
 import {assertWorkerRole} from './maintenance.js';
 import type {PrivacyJournalPort} from './privacy-journal.js';
-import type {DurablePrivacyJournalPort,JournalCall} from './privacy-journal-durable-contract.js';
+import type {DurablePrivacyJournalPort,JournalCall,WorkerJournalKind} from './privacy-journal-durable-contract.js';
 import {PrivacyCall,privacyPhase,withPrivacyClient} from './privacy-call.js';
 const id=z.string().uuid(),secret=z.string().regex(/^[A-Za-z0-9_-]{43}$/);
 const shopChoice=z.discriminatedUnion('action',[
@@ -139,8 +139,15 @@ export class PrivacyMaintenance {
     await acknowledge(jobId);
     await privacyQuery(this.pool,call,'SELECT ritc.privacy_release_reconciliation($1,$2)',[jobId,lease]);
    }
-   const result={completed:0,retryScheduled:0,leaseLost:0,...await this.retireReceipts(call,batch)};
-   for(let i=0;i<batch;i++){
+   const result={completed:0,retryScheduled:0,leaseLost:0,capacityDeferred:0,...await this.retireReceipts(call,batch)};
+   const reserve='reserveWorkerCapacity' in journal?journal.reserveWorkerCapacity.bind(journal):undefined;
+   const needs=async(jobId:string,lease:string)=> (await privacyQuery(this.pool,call,'SELECT * FROM ritc.privacy_worker_journal_needs($1,$2)',[jobId,lease])).rows[0];
+   const capacity=async(jobId:string,kinds:readonly WorkerJournalKind[])=>{
+    if(!reserve||await privacyPhase(call,phase=>reserve(jobId,kinds,phase)))return true;
+    result.capacityDeferred++;
+    return false;
+   };
+   jobs:for(let i=0;i<batch;i++){
     const lease=randomUUID(),job=(await privacyQuery(this.pool,call,'SELECT * FROM ritc.privacy_claim($1)',[lease])).rows[0];
     if(!job)break;
     let deleted=false,failure:string|null=null;
@@ -149,19 +156,36 @@ export class PrivacyMaintenance {
      // At most 100 target profiles per leased run. Record each committed step
      // before taking another step or contacting the account provider.
      for(let n=0;n<100&&!erased;n++){
+      if(reserve){
+       const required=await needs(job.job_id,lease);
+       if(!required){result.leaseLost++;continue jobs;}
+       if(required.target_remaining&&!await capacity(job.job_id,['target_erased']))continue jobs;
+      }
       erased=(await privacyQuery(this.pool,call,'SELECT ritc.privacy_erase_target($1,$2) AS erased',[job.job_id,lease])).rows[0].erased;
       await acknowledge(job.job_id);
      }
      if(erased){
       await acknowledge(job.job_id);
       if(!provider)failure='provider_configuration';
-      else try{await privacyPhase(call,phase=>provider.deleteAccount(job.subject,phase),15_000);deleted=true;}
-      catch{failure='provider_unavailable';}
+      else{
+       if(reserve){
+        const required=await needs(job.job_id,lease);
+        if(!required){result.leaseLost++;continue jobs;}
+        if(!await capacity(job.job_id,required.pending_needed?['source_pending','source_completed']:['source_completed']))continue jobs;
+       }
+       try{await privacyPhase(call,phase=>provider.deleteAccount(job.subject,phase),15_000);deleted=true;}
+       catch{failure='provider_unavailable';}
+      }
      }
     }catch{failure='storage_unavailable';}
     // A cancelled worker must leave the lease for recovery, including if a
     // provider request or database COMMIT is already in flight.
     scope.check();
+    if(reserve&&!deleted){
+     const required=await needs(job.job_id,lease);
+     if(!required){result.leaseLost++;continue jobs;}
+     if(required.pending_needed&&!await capacity(job.job_id,['source_pending']))continue jobs;
+    }
     const committed=(await privacyQuery(this.pool,call,'SELECT ritc.privacy_finish($1,$2,$3,$4) AS committed',[job.job_id,lease,deleted,failure])).rows[0].committed;
     if(committed)await acknowledge(job.job_id);
     if(!committed)result.leaseLost++;
