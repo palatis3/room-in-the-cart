@@ -8,6 +8,7 @@ private enum LedgerHomeSheet: String, Identifiable {
 
 struct LedgerHomeView: View {
     @ObservedObject var model: LedgerModel
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var sheet: LedgerHomeSheet?
     private enum Focus: Hashable { case result, error, line(UUID) }
     @AccessibilityFocusState private var focus: Focus?
@@ -15,8 +16,20 @@ struct LedgerHomeView: View {
     var body: some View {
         VStack(spacing: 0) {
             if model.ready, let shop = model.shop {
-                controls(shop)
+                if !dynamicTypeSize.isAccessibilitySize { controls(shop) }
                 List {
+                    if dynamicTypeSize.isAccessibilitySize {
+                        Section {
+                            shopPicker(shop).buttonStyle(.borderless)
+                            listOptions(shop).buttonStyle(.borderless)
+                            Text(ledgerText("Search active items"))
+                                .fixedSize(horizontal: false, vertical: true)
+                                .listRowSeparator(.hidden, edges: .bottom)
+                                .accessibilityHidden(true)
+                            searchField.listRowSeparator(.hidden, edges: .top)
+                            importButton
+                        }
+                    }
                     Section {
                         LedgerSaveStatus(model: model)
                             .accessibilityFocused($focus, equals: model.error == nil ? .result : .error)
@@ -98,30 +111,64 @@ struct LedgerHomeView: View {
     private func controls(_ shop: ShoppingLedger) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .center) {
-                Menu {
-                    ForEach(model.workspace.shops, id: \.id) { item in
-                        Button(item.title) { Task { await model.selectShop(item.id) } }
-                    }
-                    Button(ledgerText("Start another pickup")) { sheet = .newShop }
-                } label: {
-                    Label(shop.title, systemImage: "chevron.down").font(.headline).frame(minHeight: 44)
-                }.disabled(model.saving || model.hasPendingSave).accessibilityIdentifier("ledgerShopPicker")
+                shopPicker(shop)
                 Spacer()
-                Menu {
-                    Button(ledgerText("List order and aisles")) { sheet = .layout }
-                    NavigationLink(ledgerText("Review prior staples")) { StapleRecallView(ledger: model, targetID: shop.id) }
-                    Button(ledgerText("Large-print list")) { sheet = .printList }
-                } label: {
-                    Label(ledgerText("List options"), systemImage: "ellipsis.circle").labelStyle(.iconOnly)
-                        .frame(minWidth: 44, minHeight: 44)
-                }.accessibilityIdentifier("ledgerListOptions")
+                listOptions(shop)
             }
-            TextField(ledgerText("Search active items"), text: $model.search)
-                .textFieldStyle(.roundedBorder).accessibilityIdentifier("ledgerSearch")
-            Button { sheet = .entry } label: { Label(ledgerText("Type or paste a list"), systemImage: "plus") }
-                .buttonStyle(PrimaryAction()).disabled(model.saving || model.hasPendingSave)
-                .accessibilityIdentifier("ledgerImport")
+            searchField
+            importButton
         }.padding(.horizontal).padding(.bottom, 10).background(Theme.canvas)
+    }
+
+    private func shopPicker(_ shop: ShoppingLedger) -> some View {
+        Menu {
+            ForEach(model.workspace.shops, id: \.id) { item in
+                Button(item.title) { Task { await model.selectShop(item.id) } }
+            }
+            Button(ledgerText("Start another pickup")) { sheet = .newShop }
+        } label: {
+            if dynamicTypeSize.isAccessibilitySize {
+                Label {
+                    Text(shop.title).multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                } icon: { Image(systemName: "chevron.down") }
+                .font(.headline).frame(minHeight: 44)
+            } else {
+                Label(shop.title, systemImage: "chevron.down").font(.headline).frame(minHeight: 44)
+            }
+        }.disabled(model.saving || model.hasPendingSave).accessibilityIdentifier("ledgerShopPicker")
+    }
+
+    private func listOptions(_ shop: ShoppingLedger) -> some View {
+        Menu {
+            Button(ledgerText("List order and aisles")) { sheet = .layout }
+            NavigationLink(ledgerText("Review prior staples")) { StapleRecallView(ledger: model, targetID: shop.id) }
+            Button(ledgerText("Large-print list")) { sheet = .printList }
+        } label: {
+            if dynamicTypeSize.isAccessibilitySize {
+                Text(ledgerText("List options")).frame(minHeight: 44)
+            } else {
+                Label(ledgerText("List options"), systemImage: "ellipsis.circle").labelStyle(.iconOnly)
+                    .frame(minWidth: 44, minHeight: 44)
+            }
+        }.accessibilityIdentifier("ledgerListOptions")
+    }
+
+    private var searchField: some View {
+        let title = ledgerText("Search active items")
+        return TextField(title, text: $model.search, prompt: dynamicTypeSize.isAccessibilitySize ? Text(verbatim: "") : nil)
+            .textFieldStyle(.roundedBorder).accessibilityLabel(title).accessibilityIdentifier("ledgerSearch")
+    }
+
+    private var importButton: some View {
+        Button { sheet = .entry } label: {
+            if dynamicTypeSize.isAccessibilitySize {
+                Text(ledgerText("Type or paste a list"))
+            } else {
+                Label(ledgerText("Type or paste a list"), systemImage: "plus")
+            }
+        }.buttonStyle(PrimaryAction()).disabled(model.saving || model.hasPendingSave)
+            .accessibilityIdentifier("ledgerImport")
     }
 
     private func factsSummary(_ shop: ShoppingLedger) -> some View {

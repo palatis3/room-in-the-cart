@@ -169,7 +169,7 @@ All 27 have current source entries. “Pending” below concerns current screen 
 | Route | Actual entry / current source | Evidence or next screen gate |
 |---|---|---|
 | S01 Shop | `RestorableAdultTabs` → `ShopView`; active pickup, quick packs, urgent repair, contextual inbox. | ORDINARY; final current root regression. |
-| S02 List | Shop → `LedgerHomeView`; staged import/history/sort/print. | ORDINARY, LEDGER-SURFACES, SYSTEM-SELECTED-TEXT and SYSTEM-PRINT; physical shared text, dictation, AirPrint and measured device latency. |
+| S02 List | Shop → `LedgerHomeView`; staged import/history/sort/print. | ORDINARY, SYSTEM-SELECTED-TEXT and SYSTEM-PRINT. The [Release list layout](evidence/native/ledger-surfaces-20261104/validation.json) passed standard text and largest system text in dark mode with increased contrast on iOS 17. The largest-text case reached the full title and add-list action, filtered a row and moved it to Recently checked. Physical assistive access, shared text, dictation, AirPrint and device latency remain open. |
 | S03 Facts | List/checkout → `LedgerFactsView` sheet. | N526; final cap/slot/cancel task. |
 | S04 Ingredient | List/meal → `LedgerIngredientView`; pack sheet and matching stock. Standalone `ComparisonView`. | ORDINARY stock pack/no-purchase cases; final promoted artifacts. |
 | S05 Checkout | Shop/list → `LedgerCheckoutEntry` → `PickupCheckoutView`; contextual quote entry. | ORDINARY, QUOTES; unknown/stock stale review. |

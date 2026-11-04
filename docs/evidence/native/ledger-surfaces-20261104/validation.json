@@ -30,5 +30,50 @@
     "builtAppMetadataCheck": "passed",
     "signed": false
   },
+  "accessibleShoppingList": {
+    "baseCommit": "8861fdfa1e67ac61783548b9ddc0ff57133ac60f",
+    "productSourceSHA256": "58e1e899edc8ccbc87ec2843a2ed33bb81b64cf74077a28dc35a4071600abf41",
+    "testHarnessSHA256": "4493b4fd0062ec5ba05508fab8493ee622304e05f3ffea569930736731ace269",
+    "configuration": "Ordinary arm64 Release on an iPhone SE (2nd generation), iOS 17.0 (21A328)",
+    "appExecutableSHA256": "fdaf5877bc4b60771f36035e5aab762068cec259985f63237083ebe90cd84672",
+    "bundleVerification": "Compiled Release iPhone app verified: executable, assets, privacy, environment, and embedded extensions.",
+    "before": {
+      "result": ".build/FirstInstallRelease20261104/LedgerLargestSystemText.xcresult",
+      "logSHA256": "11ce4b5bcf0a5995504a9d8e64fa6f631accd801f358d7346472fb0e01685ba8",
+      "capture": ".build/FirstInstallRelease20261104/ledger-largest-initial-attachments/606EFC39-536F-4FAC-99F0-4F6A3858CE9D.png",
+      "captureSHA256": "6672c667dcc90549a2063b7b6311a7c76fc6e12d88fc8067466bf9ee079c8fa6",
+      "finding": "The fixed header truncated the pickup title and the add-list label extended beyond its background. The filtered row was only partly visible when XCTest found both actions."
+    },
+    "intermediateResults": [
+      {"result": ".build/LedgerAccessibleLayout20261104/LedgerAccessibleLayout.xcresult", "logSHA256": "10c9d04c38f27f1af22f5e5a95c2fac6e8712f796240129915135b10e46a63ef", "finding": "Scrollable rows revealed the full pickup title, add-list action, filtered item and Recently checked entry."},
+      {"result": ".build/LedgerAccessibleLayout20261104/LedgerAccessibleFinal.xcresult", "logSHA256": "1931181a48f9e8f806eb0b8125222a9adba3892a6e4a059e91bf11b257fdf3cb", "finding": "When the wrapping label and field shared a row, the iOS 17 TextField element covered both. The center tap landed on the label and typing failed because nothing had keyboard focus."}
+    ],
+    "standardText": {
+      "result": ".build/LedgerAccessibleLayout20261104/LedgerStandardValidated.xcresult",
+      "logSHA256": "ecae72bda52fe00db27d4815a2a57df4c96b14491dbd4e7c740559440eb80eb4",
+      "summarySHA256": "6e4d7fd6632fb6804bd7f742d26b2a7768df1c86367b2c4b27d97fdc24b4ab44",
+      "passed": 1,
+      "seconds": 11.139,
+      "scope": "Search stayed above the list. List options opened the large-print view and Done returned to the shopping list."
+    },
+    "largestText": {
+      "result": ".build/LedgerAccessibleLayout20261104/LedgerAccessibleValidated.xcresult",
+      "logSHA256": "e2e81484502e0ccf0f4908e354073dabe4872214c2e44b04641a2f889206ded0",
+      "summarySHA256": "38b7432281f9c7c9e67e7be0514f19108fac81b3fd680a95ab3d8caff2d82e68",
+      "preferences": {"contentSize": "accessibility-extra-extra-extra-large", "appearance": "dark", "increaseContrast": "enabled"},
+      "preferencesSHA256": "569b30afd6cc4f3e1c05a066eb3149603c4aae807cca1a96b56cf4af1bf1ad31",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": [],
+      "seconds": 29.265,
+      "captures": {
+        "pickupTitle": {"path": ".build/LedgerAccessibleLayout20261104/validated-attachments/BC44F329-2F73-4245-A8B1-6D582E1720DB.png", "sha256": "0a4b5de4c7582512c7b74aaf9703ddd21f0d09307ebf70b6b42c75b7b8ed87e4"},
+        "addList": {"path": ".build/LedgerAccessibleLayout20261104/validated-attachments/9BDB13EC-EB59-454B-AC0C-E694D9291280.png", "sha256": "a7b351e7d9599c6b8f7b3c259e63d3e149c4cacc034730c1ce93d466b4f38223"},
+        "filteredRow": {"path": ".build/LedgerAccessibleLayout20261104/validated-attachments/4037F893-C70B-4EB1-B172-C0AFD4B394FA.png", "sha256": "c731ee86d67c19a1a08ce9157b32973e660bcd9577308582250cff573479252a"}
+      },
+      "scope": "The full pickup title and add-list action each scrolled into view. The separately labeled field received focus and Return dismissed its keyboard. The filtered item and its independent 44-point check target fit inside the visible list. Checking moved it to Recently checked. Simulator preferences were restored after the test. Physical assistive access remains open."
+    }
+  },
   "scope": "The bound app coordinator keeps the existing widget file through search and form errors. Checking a line refreshes the existing route, starting a new pickup changes the route, and backgrounding clears it. The tests use isolated app stores with denied notification scheduling. Rendered typing latency, OS widget reload timing and physical-device performance remain separate."
 }
