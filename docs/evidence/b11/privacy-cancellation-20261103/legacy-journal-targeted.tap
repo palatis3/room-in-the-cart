@@ -1,0 +1,771 @@
+TAP version 13
+# Subtest: actual writer checkpoints intent and commit before source acknowledgement, then fences exact head
+ok 1 - actual writer checkpoints intent and commit before source acknowledgement, then fences exact head
+  ---
+  duration_ms: 103.958292
+  ...
+# Subtest: authentic checkpointed chain reopens and new records extend its exact hash
+ok 2 - authentic checkpointed chain reopens and new records extend its exact hash
+  ---
+  duration_ms: 61.310542
+  ...
+# Subtest: startup rejects an invalid signature even when checkpoint was repinned to those bytes
+ok 3 - startup rejects an invalid signature even when checkpoint was repinned to those bytes
+  ---
+  duration_ms: 7.397459
+  ...
+# Subtest: startup rejects a validly signed fork against the original independent checkpoint
+ok 4 - startup rejects a validly signed fork against the original independent checkpoint
+  ---
+  duration_ms: 14.660083
+  ...
+# Subtest: startup rejects an authentic prefix whose independent checkpoint pins a later head
+ok 5 - startup rejects an authentic prefix whose independent checkpoint pins a later head
+  ---
+  duration_ms: 16.426041
+  ...
+# Subtest: an existing journal cannot acquire a new independent checkpoint on startup
+ok 6 - an existing journal cannot acquire a new independent checkpoint on startup
+  ---
+  duration_ms: 13.004709
+  ...
+# Subtest: startup binds every checkpoint origin field and rejects signed chain gaps
+    # Subtest: lineage
+    ok 1 - lineage
+      ---
+      duration_ms: 17.127167
+      ...
+    # Subtest: schemaDigest
+    ok 2 - schemaDigest
+      ---
+      duration_ms: 9.259542
+      ...
+    # Subtest: configurationId
+    ok 3 - configurationId
+      ---
+      duration_ms: 6.725542
+      ...
+    # Subtest: signed chain gap
+    ok 4 - signed chain gap
+      ---
+      duration_ms: 16.690417
+      ...
+    1..4
+ok 7 - startup binds every checkpoint origin field and rejects signed chain gaps
+  ---
+  duration_ms: 50.424917
+  ...
+# Subtest: startup rejects signed invalid event dependencies before any acknowledgement
+    # Subtest: commit_after_rollback
+    ok 1 - commit_after_rollback
+      ---
+      duration_ms: 10.067208
+      ...
+    # Subtest: commit_without_intent
+    ok 2 - commit_without_intent
+      ---
+      duration_ms: 9.997
+      ...
+    # Subtest: progress_without_acceptance
+    ok 3 - progress_without_acceptance
+      ---
+      duration_ms: 12.896625
+      ...
+    1..3
+ok 8 - startup rejects signed invalid event dependencies before any acknowledgement
+  ---
+  duration_ms: 33.198417
+  ...
+# Subtest: normal startup quarantines both committed and unresolved uncheckpointed tails
+    # Subtest: commit
+    ok 1 - commit
+      ---
+      duration_ms: 9.945792
+      ...
+    # Subtest: intent
+    ok 2 - intent
+      ---
+      duration_ms: 14.758208
+      ...
+    1..2
+ok 9 - normal startup quarantines both committed and unresolved uncheckpointed tails
+  ---
+  duration_ms: 24.924042
+  ...
+# Subtest: explicit recovery requires a fenced fixed source, while normal writes reject a fenced source
+    # Subtest: recovery with unfenced source
+    ok 1 - recovery with unfenced source
+      ---
+      duration_ms: 8.46275
+      ...
+    # Subtest: write with fenced source
+    ok 2 - write with fenced source
+      ---
+      duration_ms: 8.644875
+      ...
+    # Subtest: write with a fenced checkpoint
+    ok 3 - write with a fenced checkpoint
+      ---
+      duration_ms: 7.32775
+      ...
+    1..3
+ok 10 - explicit recovery requires a fenced fixed source, while normal writes reject a fenced source
+  ---
+  duration_ms: 24.843875
+  ...
+# Subtest: explicit recovery proves each uncheckpointed commit against fixed source before advancing head
+ok 11 - explicit recovery proves each uncheckpointed commit against fixed source before advancing head
+  ---
+  duration_ms: 42.3755
+  ...
+# Subtest: recovery rejects absent or conflicting fixed-source commits without repinning bytes
+    # Subtest: absent
+    ok 1 - absent
+      ---
+      duration_ms: 3.732208
+      ...
+    # Subtest: digest
+    ok 2 - digest
+      ---
+      duration_ms: 3.4515
+      ...
+    # Subtest: payload
+    ok 3 - payload
+      ---
+      duration_ms: 2.810667
+      ...
+    1..3
+ok 12 - recovery rejects absent or conflicting fixed-source commits without repinning bytes
+  ---
+  duration_ms: 10.280959
+  ...
+# Subtest: recovery cannot promote a rollback contradicted by committed fixed-source evidence
+ok 13 - recovery cannot promote a rollback contradicted by committed fixed-source evidence
+  ---
+  duration_ms: 2.985916
+  ...
+# Subtest: unresolved recovered intent stays unverifiable until fenced source proves rollback
+ok 14 - unresolved recovered intent stays unverifiable until fenced source proves rollback
+  ---
+  duration_ms: 65.202208
+  ...
+# Subtest: fenced recovery reconciles a matching durable acceptance intent with committed source
+ok 15 - fenced recovery reconciles a matching durable acceptance intent with committed source
+  ---
+  duration_ms: 88.872334
+  ...
+# Subtest: a terminal rollback cannot be reopened by either beforeCommit or afterCommit
+ok 16 - a terminal rollback cannot be reopened by either beforeCommit or afterCommit
+  ---
+  duration_ms: 22.5335
+  ...
+# Subtest: owner-only key, checkpoint, journal, and directory permissions are enforced
+    # Subtest: privateKeyPath
+    ok 1 - privateKeyPath
+      ---
+      duration_ms: 18.117167
+      ...
+    # Subtest: checkpointPath
+    ok 2 - checkpointPath
+      ---
+      duration_ms: 15.947167
+      ...
+    # Subtest: file
+    ok 3 - file
+      ---
+      duration_ms: 14.271166
+      ...
+    # Subtest: directory
+    ok 4 - directory
+      ---
+      duration_ms: 7.000708
+      ...
+    1..4
+ok 17 - owner-only key, checkpoint, journal, and directory permissions are enforced
+  ---
+  duration_ms: 55.940334
+  ...
+# Subtest: a second writer cannot take an existing lock and does not remove the first lock
+ok 18 - a second writer cannot take an existing lock and does not remove the first lock
+  ---
+  duration_ms: 60.651584
+  ...
+# Subtest: canonical serialization sorts object keys, preserves arrays, and has a stable SHA-256
+ok 19 - canonical serialization sorts object keys, preserves arrays, and has a stable SHA-256
+  ---
+  duration_ms: 0.559458
+  ...
+# Subtest: complete signed authorization/progress chain yields only committed events and exact raw bundle digest
+ok 20 - complete signed authorization/progress chain yields only committed events and exact raw bundle digest
+  ---
+  duration_ms: 4.960541
+  ...
+# Subtest: resolved rollback contributes no committed authorization or progress
+ok 21 - resolved rollback contributes no committed authorization or progress
+  ---
+  duration_ms: 1.294041
+  ...
+# Subtest: noncanonical NDJSON spelling and duplicate keys are rejected before use
+    # Subtest: leading whitespace
+    ok 1 - leading whitespace
+      ---
+      duration_ms: 0.28275
+      ...
+    # Subtest: trailing whitespace
+    ok 2 - trailing whitespace
+      ---
+      duration_ms: 0.111417
+      ...
+    # Subtest: unsorted keys
+    ok 3 - unsorted keys
+      ---
+      duration_ms: 0.139834
+      ...
+    # Subtest: duplicate outer key
+    ok 4 - duplicate outer key
+      ---
+      duration_ms: 0.102667
+      ...
+    # Subtest: duplicate event key
+    ok 5 - duplicate event key
+      ---
+      duration_ms: 0.284541
+      ...
+    # Subtest: duplicate payload key
+    ok 6 - duplicate payload key
+      ---
+      duration_ms: 0.365125
+      ...
+    # Subtest: duplicate data key
+    ok 7 - duplicate data key
+      ---
+      duration_ms: 0.2365
+      ...
+    # Subtest: Unicode escape alias
+    ok 8 - Unicode escape alias
+      ---
+      duration_ms: 0.112625
+      ...
+    1..8
+ok 22 - noncanonical NDJSON spelling and duplicate keys are rejected before use
+  ---
+  duration_ms: 2.278458
+  ...
+# Subtest: unknown fields in signed protocol envelopes and pinned heads fail closed
+    # Subtest: record
+    ok 1 - record
+      ---
+      duration_ms: 0.527125
+      ...
+    # Subtest: event
+    ok 2 - event
+      ---
+      duration_ms: 0.2135
+      ...
+    # Subtest: payload
+    ok 3 - payload
+      ---
+      duration_ms: 0.209833
+      ...
+    # Subtest: head
+    ok 4 - head
+      ---
+      duration_ms: 0.178875
+      ...
+    1..4
+ok 23 - unknown fields in signed protocol envelopes and pinned heads fail closed
+  ---
+  duration_ms: 1.265583
+  ...
+# Subtest: signed event ID and payload digest conflicts are rejected
+    # Subtest: envelope eventId differs
+    ok 1 - envelope eventId differs
+      ---
+      duration_ms: 0.208041
+      ...
+    # Subtest: payloadDigest differs
+    ok 2 - payloadDigest differs
+      ---
+      duration_ms: 0.18875
+      ...
+    1..2
+ok 24 - signed event ID and payload digest conflicts are rejected
+  ---
+  duration_ms: 0.462292
+  ...
+# Subtest: a rehashed payload with an old signature remains unauthorized
+ok 25 - a rehashed payload with an old signature remains unauthorized
+  ---
+  duration_ms: 0.361916
+  ...
+# Subtest: pinned signing key and key ID are independent required checks
+    # Subtest: valid signature by unpinned Ed25519 key
+    ok 1 - valid signature by unpinned Ed25519 key
+      ---
+      duration_ms: 0.267834
+      ...
+    # Subtest: wrong configured public key
+    ok 2 - wrong configured public key
+      ---
+      duration_ms: 0.198917
+      ...
+    # Subtest: signed unknown key ID
+    ok 3 - signed unknown key ID
+      ---
+      duration_ms: 0.242166
+      ...
+    # Subtest: wrong pinned key ID
+    ok 4 - wrong pinned key ID
+      ---
+      duration_ms: 0.476958
+      ...
+    # Subtest: non-Ed25519 key type
+    ok 5 - non-Ed25519 key type
+      ---
+      duration_ms: 1.070666
+      ...
+    1..5
+ok 26 - pinned signing key and key ID are independent required checks
+  ---
+  duration_ms: 2.478042
+  ...
+# Subtest: interior removal, reorder, duplication, sequence gaps, and bad links fail
+    # Subtest: remove interior
+    ok 1 - remove interior
+      ---
+      duration_ms: 0.21075
+      ...
+    # Subtest: reorder interior
+    ok 2 - reorder interior
+      ---
+      duration_ms: 0.18325
+      ...
+    # Subtest: duplicate interior
+    ok 3 - duplicate interior
+      ---
+      duration_ms: 0.257917
+      ...
+    # Subtest: signed sequence gap
+    ok 4 - signed sequence gap
+      ---
+      duration_ms: 0.230542
+      ...
+    # Subtest: signed wrong previousHash
+    ok 5 - signed wrong previousHash
+      ---
+      duration_ms: 0.258458
+      ...
+    1..5
+ok 27 - interior removal, reorder, duplication, sequence gaps, and bad links fail
+  ---
+  duration_ms: 1.404584
+  ...
+# Subtest: an authentic earlier prefix is valid only for its own head and cannot satisfy the final pinned head
+ok 28 - an authentic earlier prefix is valid only for its own head and cannot satisfy the final pinned head
+  ---
+  duration_ms: 1.318458
+  ...
+# Subtest: a completely signed competing branch cannot satisfy the independently pinned final head
+ok 29 - a completely signed competing branch cannot satisfy the independently pinned final head
+  ---
+  duration_ms: 0.812125
+  ...
+# Subtest: unresolved intent and invalid commit/rollback dependencies never authorize events
+    # Subtest: unresolved intent
+    ok 1 - unresolved intent
+      ---
+      duration_ms: 0.190333
+      ...
+    # Subtest: acceptance without intent
+    ok 2 - acceptance without intent
+      ---
+      duration_ms: 0.183916
+      ...
+    # Subtest: rollback without intent
+    ok 3 - rollback without intent
+      ---
+      duration_ms: 0.205958
+      ...
+    # Subtest: rollback digest changed
+    ok 4 - rollback digest changed
+      ---
+      duration_ms: 0.302708
+      ...
+    # Subtest: commit after rollback
+    ok 5 - commit after rollback
+      ---
+      duration_ms: 0.399291
+      ...
+    # Subtest: rollback after commit
+    ok 6 - rollback after commit
+      ---
+      duration_ms: 0.377083
+      ...
+    # Subtest: new intent after rollback
+    ok 7 - new intent after rollback
+      ---
+      duration_ms: 0.8475
+      ...
+    # Subtest: commit digest changed
+    ok 8 - commit digest changed
+      ---
+      duration_ms: 0.419375
+      ...
+    1..8
+ok 30 - unresolved intent and invalid commit/rollback dependencies never authorize events
+  ---
+  duration_ms: 3.137875
+  ...
+# Subtest: duplicate intents, commits, and accepted jobs fail even with correct signatures and head
+    # Subtest: intent
+    ok 1 - intent
+      ---
+      duration_ms: 0.3005
+      ...
+    # Subtest: commit
+    ok 2 - commit
+      ---
+      duration_ms: 0.390917
+      ...
+    # Subtest: accepted job
+    ok 3 - accepted job
+      ---
+      duration_ms: 0.485958
+      ...
+    1..3
+ok 31 - duplicate intents, commits, and accepted jobs fail even with correct signatures and head
+  ---
+  duration_ms: 1.267916
+  ...
+# Subtest: every progress kind requires preceding committed acceptance of its exact job
+    # Subtest: target_erased has no acceptance
+    ok 1 - target_erased has no acceptance
+      ---
+      duration_ms: 0.2005
+      ...
+    # Subtest: target_erased precedes later acceptance
+    ok 2 - target_erased precedes later acceptance
+      ---
+      duration_ms: 0.262916
+      ...
+    # Subtest: target_erased has another job acceptance
+    ok 3 - target_erased has another job acceptance
+      ---
+      duration_ms: 0.385708
+      ...
+    # Subtest: source_pending has no acceptance
+    ok 4 - source_pending has no acceptance
+      ---
+      duration_ms: 0.178083
+      ...
+    # Subtest: source_pending precedes later acceptance
+    ok 5 - source_pending precedes later acceptance
+      ---
+      duration_ms: 0.253958
+      ...
+    # Subtest: source_pending has another job acceptance
+    ok 6 - source_pending has another job acceptance
+      ---
+      duration_ms: 0.3855
+      ...
+    # Subtest: source_completed has no acceptance
+    ok 7 - source_completed has no acceptance
+      ---
+      duration_ms: 0.18325
+      ...
+    # Subtest: source_completed precedes later acceptance
+    ok 8 - source_completed precedes later acceptance
+      ---
+      duration_ms: 0.251625
+      ...
+    # Subtest: source_completed has another job acceptance
+    ok 9 - source_completed has another job acceptance
+      ---
+      duration_ms: 0.396791
+      ...
+    1..9
+ok 32 - every progress kind requires preceding committed acceptance of its exact job
+  ---
+  duration_ms: 2.674417
+  ...
+# Subtest: rolled-back acceptance does not authorize subsequent progress
+ok 33 - rolled-back acceptance does not authorize subsequent progress
+  ---
+  duration_ms: 0.56175
+  ...
+# Subtest: terminal rollback prevents reopening progress events that otherwise need no intent
+    # Subtest: target_erased
+    ok 1 - target_erased
+      ---
+      duration_ms: 0.652334
+      ...
+    # Subtest: source_pending
+    ok 2 - source_pending
+      ---
+      duration_ms: 0.620959
+      ...
+    # Subtest: source_completed
+    ok 3 - source_completed
+      ---
+      duration_ms: 0.727083
+      ...
+    1..3
+ok 34 - terminal rollback prevents reopening progress events that otherwise need no intent
+  ---
+  duration_ms: 2.110917
+  ...
+# Subtest: all pinned origin fields bind both head and every signed payload
+    # Subtest: lineage head/config mismatch
+    ok 1 - lineage head/config mismatch
+      ---
+      duration_ms: 0.05075
+      ...
+    # Subtest: lineage payload/config mismatch
+    ok 2 - lineage payload/config mismatch
+      ---
+      duration_ms: 0.109833
+      ...
+    # Subtest: schemaDigest head/config mismatch
+    ok 3 - schemaDigest head/config mismatch
+      ---
+      duration_ms: 0.0295
+      ...
+    # Subtest: schemaDigest payload/config mismatch
+    ok 4 - schemaDigest payload/config mismatch
+      ---
+      duration_ms: 0.108291
+      ...
+    # Subtest: configurationId head/config mismatch
+    ok 5 - configurationId head/config mismatch
+      ---
+      duration_ms: 0.025333
+      ...
+    # Subtest: configurationId payload/config mismatch
+    ok 6 - configurationId payload/config mismatch
+      ---
+      duration_ms: 0.088333
+      ...
+    1..6
+ok 35 - all pinned origin fields bind both head and every signed payload
+  ---
+  duration_ms: 0.6495
+  ...
+# Subtest: unfenced, missing, future-version, wrong sequence, or wrong hash heads fail
+    # Subtest: unfenced
+    ok 1 - unfenced
+      ---
+      duration_ms: 0.038084
+      ...
+    # Subtest: missing
+    ok 2 - missing
+      ---
+      duration_ms: 0.117917
+      ...
+    # Subtest: future version
+    ok 3 - future version
+      ---
+      duration_ms: 0.051042
+      ...
+    # Subtest: sequence
+    ok 4 - sequence
+      ---
+      duration_ms: 0.256667
+      ...
+    # Subtest: hash
+    ok 5 - hash
+      ---
+      duration_ms: 0.219125
+      ...
+    1..5
+ok 36 - unfenced, missing, future-version, wrong sequence, or wrong hash heads fail
+  ---
+  duration_ms: 0.866458
+  ...
+# Subtest: empty, oversized, or over-count bundles fail within fixed limits
+    # Subtest: empty
+    ok 1 - empty
+      ---
+      duration_ms: 0.058084
+      ...
+    # Subtest: more than 32 MiB
+    ok 2 - more than 32 MiB
+      ---
+      duration_ms: 1.887
+      ...
+    # Subtest: more than 10,000 records
+    ok 3 - more than 10,000 records
+      ---
+      duration_ms: 0.565542
+      ...
+    1..3
+ok 37 - empty, oversized, or over-count bundles fail within fixed limits
+  ---
+  duration_ms: 2.676834
+  ...
+# Subtest: truncation, ambiguous line framing, BOM, and incomplete JSON fail
+    # Subtest: missing final LF
+    ok 1 - missing final LF
+      ---
+      duration_ms: 0.049875
+      ...
+    # Subtest: partial final record with LF
+    ok 2 - partial final record with LF
+      ---
+      duration_ms: 0.192375
+      ...
+    # Subtest: missing complete suffix
+    ok 3 - missing complete suffix
+      ---
+      duration_ms: 0.150666
+      ...
+    # Subtest: internal blank line
+    ok 4 - internal blank line
+      ---
+      duration_ms: 0.1465
+      ...
+    # Subtest: CRLF
+    ok 5 - CRLF
+      ---
+      duration_ms: 0.0755
+      ...
+    # Subtest: extra terminal LF
+    ok 6 - extra terminal LF
+      ---
+      duration_ms: 0.222667
+      ...
+    # Subtest: UTF-8 BOM
+    ok 7 - UTF-8 BOM
+      ---
+      duration_ms: 0.028375
+      ...
+    1..7
+ok 38 - truncation, ambiguous line framing, BOM, and incomplete JSON fail
+  ---
+  duration_ms: 1.196958
+  ...
+# Subtest: malformed UTF-8 must not normalize into an authentic signed bundle
+ok 39 - malformed UTF-8 must not normalize into an authentic signed bundle
+  ---
+  duration_ms: 1.392708
+  ...
+# Subtest: signature base64url is a unique canonical encoding, including unused final bits
+ok 40 - signature base64url is a unique canonical encoding, including unused final bits
+  ---
+  duration_ms: 0.405583
+  ...
+# Subtest: legacy one-argument writer and owner fence still produce a verifiable durable journal
+ok 41 - legacy one-argument writer and owner fence still produce a verifiable durable journal
+  ---
+  duration_ms: 117.141625
+  ...
+# Subtest: already ended caller operations dispatch no SQL or filesystem mutation and do not poison a healthy writer
+    # Subtest: beforeCommit:abort
+    ok 1 - beforeCommit:abort
+      ---
+      duration_ms: 51.922333
+      ...
+    # Subtest: beforeCommit:deadline
+    ok 2 - beforeCommit:deadline
+      ---
+      duration_ms: 33.815
+      ...
+    # Subtest: afterCommit:abort
+    ok 3 - afterCommit:abort
+      ---
+      duration_ms: 39.7385
+      ...
+    # Subtest: afterCommit:deadline
+    ok 4 - afterCommit:deadline
+      ---
+      duration_ms: 32.474708
+      ...
+    # Subtest: acknowledgeJob:abort
+    ok 5 - acknowledgeJob:abort
+      ---
+      duration_ms: 32.688583
+      ...
+    # Subtest: acknowledgeJob:deadline
+    ok 6 - acknowledgeJob:deadline
+      ---
+      duration_ms: 33.975833
+      ...
+    1..6
+ok 42 - already ended caller operations dispatch no SQL or filesystem mutation and do not poison a healthy writer
+  ---
+  duration_ms: 225.278541
+  ...
+# Subtest: queueing cannot refresh an absolute deadline, including caller context mutation while queued
+ok 43 - queueing cannot refresh an absolute deadline, including caller context mutation while queued
+  ---
+  duration_ms: 133.615167
+  ...
+# Subtest: queued cancellation stays bound to the original signal and dispatches no later job lookup
+ok 44 - queued cancellation stays bound to the original signal and dispatches no later job lookup
+  ---
+  duration_ms: 98.904916
+  ...
+# Subtest: abort during committed-source read prevents append and allows a safe exact retry after read settles
+ok 45 - abort during committed-source read prevents append and allows a safe exact retry after read settles
+  ---
+  duration_ms: 62.068542
+  ...
+# Subtest: connection arriving after abort is released unused rather than dispatching the queued source read
+ok 46 - connection arriving after abort is released unused rather than dispatching the queued source read
+  ---
+  duration_ms: 72.336666
+  ...
+# Subtest: aborted acknowledgement connection acquisition never dispatches SQL even after durable commit/head
+ok 47 - aborted acknowledgement connection acquisition never dispatches SQL even after durable commit/head
+  ---
+  duration_ms: 68.302958
+  ...
+# Subtest: issued fsync can finish after abort/deadline, but cannot dispatch checkpoint/COMMIT or permit a fresh writer
+    # Subtest: abort
+    ok 1 - abort
+      ---
+      duration_ms: 63.904333
+      ...
+    # Subtest: deadline
+    ok 2 - deadline
+      ---
+      duration_ms: 115.180834
+      ...
+    1..2
+ok 48 - issued fsync can finish after abort/deadline, but cannot dispatch checkpoint/COMMIT or permit a fresh writer
+  ---
+  duration_ms: 179.759042
+  ...
+# Subtest: cancellation injected before first append side effect leaves writer usable without a tail
+ok 49 - cancellation injected before first append side effect leaves writer usable without a tail
+  ---
+  duration_ms: 36.571875
+  ...
+# Subtest: cancellation after synced intent and before checkpoint poisons tail and never claims COMMIT
+ok 50 - cancellation after synced intent and before checkpoint poisons tail and never claims COMMIT
+  ---
+  duration_ms: 23.865166
+  ...
+# Subtest: acknowledgement already dispatched with durable commit/head may finish late, without a false successful caller result
+ok 51 - acknowledgement already dispatched with durable commit/head may finish late, without a false successful caller result
+  ---
+  duration_ms: 50.714959
+  ...
+# Subtest: job reconciliation stops before another event after an already-dispatched acknowledgement aborts
+ok 52 - job reconciliation stops before another event after an already-dispatched acknowledgement aborts
+  ---
+  duration_ms: 93.843375
+  ...
+# Subtest: only an omitted legacy context opts out; malformed explicit contexts cannot bypass admission
+ok 53 - only an omitted legacy context opts out; malformed explicit contexts cannot bypass admission
+  ---
+  duration_ms: 34.701334
+  ...
+1..53
+# tests 148
+# suites 0
+# pass 148
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1266.167958

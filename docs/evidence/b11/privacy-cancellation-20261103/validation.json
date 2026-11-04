@@ -1,0 +1,70 @@
+{
+  "recordedAtUTC": "2026-11-04T00:02:04.989503+00:00",
+  "sourceSHA256": "c2c25b2d80e131d85b57390a5401e9fc1b56ba5ee89dfaf92423c0f1320cd9f9",
+  "sourceFiles": 294,
+  "installedChanges": [
+    "Server-owned absolute15s privacy-call context and5s journal/provider phases; no deadline renewal.",
+    "HTTP premature-response-close cancels; normal body completion does not. Privacy auth awaits stop continuation when cancelled.",
+    "Application PG lease discarded on abort; late-acquired unused lease released; no concurrent queued or escaped-lease SQL.",
+    "Pre-COMMIT admission check; ambiguous already-issued COMMIT starts no later observation; original receipt remains recovery path.",
+    "Provider fetch receives actual abortsignal; reviewed request input/retention snapshotted.",
+    "Legacy local journal optional context, queue expiry, supported FS abort checks and no new ACK dispatch after abort; uncertain tails poison writer."
+  ],
+  "validation": {
+    "fullUnits": {
+      "collected": 345,
+      "passed": 344,
+      "failed": 0,
+      "skipped": 1,
+      "skip": "Separate optional billing-PG case; real billing PG covered in175sharedcases."
+    },
+    "initialFocused": {
+      "passed": 27,
+      "failed": 0,
+      "scope": "Initial11new caller cases+existingIO/semantic tests; later3auth-disconnect cases included in fullunits."
+    },
+    "legacyIsolated": {
+      "passed": 148,
+      "failed": 0,
+      "scope": "21newlocalcancellationcases+127existingwriter/verifiercases."
+    },
+    "sharedPGWire": {
+      "passed": 175,
+      "failed": 0,
+      "skipped": 0,
+      "schema": "001\u2013023",
+      "remainingFixtureClients": 0
+    }
+  },
+  "review": "Independent root child review found auth-await omission; root fixedwithinCall and added3actualHTTPdisconnect-during-auth regressions beforefullunits/sharedPG. No further critical issue reported.",
+  "limits": [
+    "Newapplicationlease/continuationnegativecases usecontrolledclients; actualPGsharedsuite verifiesnormalSQL/HTTP/Swift/webflows, not every cancellation fault.",
+    "Generic JWT/BFF authI/O retains its own existingtimeouts; handlerstopswaiting but these APIs are not newly abort-aware.",
+    "Already-issued fsync or SQL COMMIT can complete afterabort; no forcedundo guarantee.",
+    "PrivacyMaintenance.run globalcaller-cancellation integration remains a next task; defaultprocessing/runtimeproviderdeletion stays off.",
+    "No024migration, scratchPGobservercandidate, hostedconfiguration/provider/remote-storageactivation applied.",
+    "Earlierfullrestore/guardian/nativeproof remains separately scoped; no newwhole-release acceptance claimed."
+  ],
+  "artifacts": [
+    {
+      "file": "full-unit.tap",
+      "sha256": "6e0d8419d952cae074446c488b250206f2cd24c4dba94146d84d0e5bbf2e8cc5"
+    },
+    {
+      "file": "initial-focused.tap",
+      "sha256": "4a9ede75824869345291b8150638e8ef0d61386490063ecbd932e4f49e89efe0"
+    },
+    {
+      "file": "shared-pg-wire.tap",
+      "sha256": "b3901ff40cc923bd56afaf7ced231933c8fbd9a5a12f6aa33e435073e62ca325"
+    },
+    {
+      "file": "shared-pg-fixture.json",
+      "sha256": "af0364115cebe7da1a19bfbf2ab83963184ba273a5fff35ef71f2898377b0651"
+    },
+    {
+      "file": "legacy-journal-targeted.tap",
+      "sha256": "242a673e6e233e13ad2c1d6c688b164019c93a15f43dd82a3bb5efaf4f999488"
+    }
+  ]
+}

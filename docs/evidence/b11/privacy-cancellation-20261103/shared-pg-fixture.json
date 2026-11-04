@@ -1,0 +1,13 @@
+{
+  "source": "/Users/palatis/Room in the Cart/.build/CancellationSource-20261104T000010Z",
+  "database": "ritc_shared_20261103_a5748e37",
+  "host": "/tmp",
+  "port": 55432,
+  "roles": [
+    "ritc_test_runtime",
+    "ritc_test_worker",
+    "ritc_guardian_test_verifier"
+  ],
+  "negativeVerifierRole": "ritc_guardian_combined_worker",
+  "scope": "New local fixture database only; no role/password/membership or unrelated database changes."
+}

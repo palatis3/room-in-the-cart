@@ -1,0 +1,27 @@
+{
+  "node": "v22.14.0",
+  "pgPackage": "8.23.1",
+  "server": {
+    "version": "PostgreSQL 17.11 on aarch64-apple-darwin27.2.0, compiled by Apple clang version 21.0.0 (clang-2100.3.34.2), 64-bit",
+    "version_number": "170011"
+  },
+  "observer": {
+    "oid": "67144",
+    "rolname": "ritc_guardian_test_verifier",
+    "rolsuper": false,
+    "rolinherit": true,
+    "rolcreaterole": false,
+    "rolcreatedb": false,
+    "rolcanlogin": true,
+    "rolreplication": false,
+    "rolbypassrls": false
+  },
+  "memberships": [
+    {
+      "role": "ritc_guardian_verifier"
+    }
+  ],
+  "remainingDisposableDatabases": [],
+  "completedDatabaseNamesAndOids": "unrecorded: runner generated names and removed both databases before metadata was archived",
+  "roleSnapshots": "runner confirmed all nonsecret role flags and memberships identical before and after run"
+}

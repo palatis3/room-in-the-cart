@@ -1,0 +1,115 @@
+{
+  "status": "Archived scratch proposal only; not installed, applied, activated or deployed.",
+  "source": "/Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-pg-source",
+  "baselineCommit": "8d607950a64a38a05293f8343ba59b49a2261000",
+  "files": [
+    {
+      "path": "DB-LOCAL-TEST-PLAN.md",
+      "sha256": "41597e632d3bcc0394cca4dcb7ac555ceb033b40a64d53eed70d628519cc20b1",
+      "bytes": 3513
+    },
+    {
+      "path": "MANIFEST.json",
+      "sha256": "02612153496d91c90067108bf2203baeb04821e7c1187716798edd5016e57dca",
+      "bytes": 1851
+    },
+    {
+      "path": "README.md",
+      "sha256": "f61b12113d0144815cb679b70b7126d1659cf287b91045e75f4c87b7a6e9f74a",
+      "bytes": 3447
+    },
+    {
+      "path": "baseline-source-manifest.json",
+      "sha256": "d576055707bd7183b2aa59843fe7bd6aaef414710923ce00fc97af54e97235c8",
+      "bytes": 16190
+    },
+    {
+      "path": "evidence/POSTGRES-SOURCE-HANDOFF.md",
+      "sha256": "18db0eec1ef07d2ece310b5204896da0a989e1b0f597afbc23283c00bc696ade",
+      "bytes": 4823
+    },
+    {
+      "path": "evidence/postgres-runtime-observations.json",
+      "sha256": "8971d3f82ad905afcd303662f98fe56b149607244b192d8269eb95afdf0cf3f6",
+      "bytes": 854
+    },
+    {
+      "path": "evidence/postgres-source-diagnose.tap",
+      "sha256": "d97a5aafd83decabd48c5d986822a662085f32709fecfc07e091e36f98dffa06",
+      "bytes": 1568
+    },
+    {
+      "path": "evidence/postgres-source-first.tap",
+      "sha256": "2649d5f1bae382d10215802e4f4d74b878c274416e34f3e436f9d15a669d5974",
+      "bytes": 6509
+    },
+    {
+      "path": "evidence/postgres-source-second.tap",
+      "sha256": "6fa344de1a96315abd8e986f5aa0438b7cc40871115408514773d3d220ef367e",
+      "bytes": 3063
+    },
+    {
+      "path": "evidence/second-candidate-sha256.txt",
+      "sha256": "8114026cc69247151dc288ea9de5a77141072b5c18b37f1a2492d72ba465de18",
+      "bytes": 570
+    },
+    {
+      "path": "postgres-source-candidate.patch",
+      "sha256": "88a27c12f83ddbf3f379c8133f8fba3a19856a04be6633836a8531762deacf90",
+      "bytes": 64081
+    },
+    {
+      "path": "review/CALLER-HOOK-PROPOSAL.md",
+      "sha256": "3c830c20d0d5ba03d916001868e40c093560402d8a68deb9888b36112a00e14d",
+      "bytes": 3518
+    },
+    {
+      "path": "review/CANCELLATION-SEMANTICS.md",
+      "sha256": "0c7eef54730b3914aa1e8d329cd1494a8475ecec134a36cf476577c6204752ed",
+      "bytes": 2095
+    },
+    {
+      "path": "review/INDEPENDENT-REVIEW.md",
+      "sha256": "0e64f2fb5ad13f55ed413cde6ec83c414e7727a50643faaac4301da3d1885a78",
+      "bytes": 9064
+    },
+    {
+      "path": "review/ROLE-PLAN.md",
+      "sha256": "6793174ed0fb38bc7ba16afeb10943d6ed56a8d4c15377a377fe255206c2056e",
+      "bytes": 3813
+    },
+    {
+      "path": "service/dist/privacy-journal-pg-source.js",
+      "sha256": "bd4a7436e1a0184ee201eb0b9fbc5fbc8db2593620cbfbdd0b1747cc58054fcb",
+      "bytes": 22461
+    },
+    {
+      "path": "service/migrations/024_privacy_journal_source.sql",
+      "sha256": "cba685feb94dd472069dc0435b17cabc570376eded8994c9536b7c6af2ab26eb",
+      "bytes": 11238
+    },
+    {
+      "path": "service/scripts/test-privacy-journal-pg-source.mjs",
+      "sha256": "ee0aee0742296b4c305617352ea9ca6baacff12592f12e8014d06b2860e9fb7c",
+      "bytes": 6534
+    },
+    {
+      "path": "service/src/privacy-journal-pg-source.ts",
+      "sha256": "286a3cde6bb711b38dc9f0473d23c96e28fdaae6e4c4ed1222ffc150723337a6",
+      "bytes": 21772
+    },
+    {
+      "path": "service/tests/privacy-journal-pg-source.integration.mjs",
+      "sha256": "148ce970bc50ca0bbe9076332dd6637513c15a8e52df143c5db55879eceda07e",
+      "bytes": 23528
+    },
+    {
+      "path": "shared-contracts-baseline.json",
+      "sha256": "57590d97a554b3136b6b5a6ed356ac447a547fa7ddc4735c7da5ce687b013099",
+      "bytes": 1012
+    }
+  ],
+  "validationAttribution": "Lumpy reports strict compile, independent review and 11/11 actual local PostgreSQL cases. Root verified candidate hashes and archived evidence; root did not rerun or complete combined integration review.",
+  "databaseCleanup": "Lumpy reports both owned disposable databases removed and unchanged existing role/membership snapshots. Exact generated database names/OIDs were not retained.",
+  "nextStep": "Review the four-file candidate against the current caller-cancellation source before any local installation. Migration024 remains uninstalled. Worker-wide cancellation and remote storage/checkpoint authority remain open."
+}

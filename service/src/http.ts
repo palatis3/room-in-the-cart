@@ -19,6 +19,7 @@ import {PlacementReports} from './placement-reports.js';
 import {HouseholdLifecycle} from './lifecycle.js';
 import {HouseholdDeviceManagement,deviceRevocationSchema} from './device-management.js';
 import {PrivacyService,deletionSchema,exitSchema} from './privacy.js';
+import {privacyHTTPCall,type PrivacyCall} from './privacy-call.js';
 import {GuardianEnrollmentService,guardianCreateSchema,guardianActionSchema,guardianConsentSchema,guardianInvitationSchema,guardianConfirmSchema,childClaimSchema,childFinishSchema,childAuthStartSchema,childNativeStartSchema,childNativeAdmitSchema} from './guardian.js';
 import {viewReplacementSchema,proposalResolutionSchema,householdCreateSchema,inviteCreateSchema,inviteRedeemSchema,viewCreateSchema,viewUpdateSchema,proposalSchema,revocationSchema, parseCommand,previewSchema,uuid } from './contracts.js';
 export interface HTTPOptions { repository:HouseholdRepository; verifier?:IdentityVerifier; webOrigin?:string; maxRequestsPerMinute?:number; billing?:BillingService; browserAuth?:BrowserAuthService; privacy?:PrivacyService; guardian?:GuardianEnrollmentService; clientAddress?:(request:IncomingMessage)=>string|undefined }
@@ -53,9 +54,12 @@ export function createHTTPServer(options:HTTPOptions) {
     res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');
     res.setHeader('Content-Security-Policy',"default-src 'none'; frame-ancestors 'none'");
     res.setHeader('X-Request-ID',correlationId);res.setHeader('Vary','Origin');
-    const send=(status:number,value:unknown)=>{res.statusCode=status;res.end(JSON.stringify(value));};
+    const send=(status:number,value:unknown)=>{if(res.destroyed||res.writableEnded)return;res.statusCode=status;res.end(JSON.stringify(value));};
+    let privacyCall:PrivacyCall|undefined;
+    const withinCall=<T>(work:()=>Promise<T>):Promise<T>=>privacyCall?privacyCall.run(work):work();
     try {
       const method=req.method??'GET',url=new URL(req.url??'/','https://service.invalid');
+      if(url.pathname.startsWith('/v1/privacy/')||method==='POST'&&/^\/v1\/households\/[^/]+\/exit$/.test(url.pathname))privacyCall=privacyHTTPCall(req,res,correlationId);
       if(req.headers.origin&&req.headers.origin!==options.webOrigin)throw new ServiceError(403,'origin_denied','Use the configured application origin.');
       if(url.pathname==='/health'&&method==='GET'){send(200,{service:'room-in-the-cart',status:'running'});return;}
       const ip=options.clientAddress?options.clientAddress(req):req.socket.remoteAddress;
@@ -72,7 +76,7 @@ export function createHTTPServer(options:HTTPOptions) {
       if(privacyStatus&&method==='GET'){
         if(!options.privacy)throw new ServiceError(503,'deletion_unavailable','Account deletion is not configured.');
         const token=z.string().regex(/^[A-Za-z0-9_-]{43}$/).parse(req.headers['x-deletion-token']);
-        send(200,await options.privacy.status(uuid.parse(privacyStatus[1]),token));return;
+        send(200,await options.privacy.status(uuid.parse(privacyStatus[1]),token,privacyCall!.call));return;
       }
       const browserCookie=cookie(req,'__Host-ritc_auth');
       const setAuthCookie=(value:string,maxAge:number)=>`__Host-ritc_auth=${value}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${maxAge}`;
@@ -105,11 +109,11 @@ export function createHTTPServer(options:HTTPOptions) {
       if(authorization) {
         const match=/^Bearer ([A-Za-z0-9_.-]+)$/.exec(authorization);
         if(!match)throw new ServiceError(401,'session_needed','Authenticate again.');
-        const identity=await verifier.verify(match[1]!);
+        const identity=await withinCall(()=>verifier.verify(match[1]!));
         auth={identity,...(typeof req.headers['x-device-token']==='string'?{deviceToken:req.headers['x-device-token']}:{}),...(req.headers['x-view-grant-id']!==undefined?{viewGrantId:uuid.parse(req.headers['x-view-grant-id'])}:{}),...(req.headers['x-shop-id']!==undefined?{selectedShopId:uuid.parse(req.headers['x-shop-id'])}:{})};
       }else {
-        if(browserCookie&&options.browserAuth){try{browserIdentity=await options.browserAuth.authenticate(browserCookie);auth={identity:browserIdentity.identity};}catch(error){if(!(error instanceof ServiceError)||error.code!=='session_needed')throw error; if(url.pathname!=='/v1/session'||method!=='GET')throw error;}}
-        const value=cookie(req);if(value){session=await repository.webIdentity(value,browserIdentity?.identity);auth=session.auth;}
+        if(browserCookie&&options.browserAuth){try{browserIdentity=await withinCall(()=>options.browserAuth!.authenticate(browserCookie));auth={identity:browserIdentity.identity};}catch(error){if(!(error instanceof ServiceError)||error.code!=='session_needed')throw error; if(url.pathname!=='/v1/session'||method!=='GET')throw error;}}
+        const value=cookie(req);if(value){session=await withinCall(()=>repository.webIdentity(value,browserIdentity?.identity));auth=session.auth;}
       }
       if(method==='GET'&&url.pathname==='/v1/session'&&!session){send(200,{authenticated:false});return;}
       if(url.pathname==='/v1/child-invitations/session'&&method==='GET'){send(200,await guardian.childSession(browserIdentity?.identity,browserIdentity&&options.browserAuth?await options.browserAuth.childBinding(browserIdentity.cookie):undefined));return;}
@@ -137,9 +141,10 @@ export function createHTTPServer(options:HTTPOptions) {
       }
       if(url.pathname.startsWith('/v1/privacy/')){
         if(!options.privacy)throw new ServiceError(503,'deletion_unavailable','Account deletion is not configured.');
-        if(url.pathname==='/v1/privacy/deletion-preview'&&method==='GET'){send(200,await options.privacy.preview(auth.identity));return;}
+        if(url.pathname==='/v1/privacy/deletion-preview'&&method==='GET'){send(200,await options.privacy.preview(auth.identity,privacyCall!.call));return;}
         if(url.pathname==='/v1/privacy/deletions'&&method==='POST'){
-          const result=await options.privacy.request(auth.identity,deletionSchema.parse(await body(req)));
+          const input=deletionSchema.parse(await privacyCall!.run(()=>body(req)));
+          const result=await options.privacy.request(auth.identity,input,privacyCall!.call);
           res.setHeader('Set-Cookie',[clearScope,setAuthCookie('',0)]);send(202,result);return;
         }
       }
@@ -172,7 +177,8 @@ export function createHTTPServer(options:HTTPOptions) {
       if(session&&session.householdId!==householdId)throw accessEnded();
       if(path==='/exit'&&method==='POST'){
         if(!options.privacy)throw new ServiceError(503,'deletion_unavailable','Account lifecycle is not configured.');
-        const result=await options.privacy.leave(auth.identity,householdId,exitSchema.parse(await body(req)));
+        const input=exitSchema.parse(await privacyCall!.run(()=>body(req)));
+        const result=await options.privacy.leave(auth.identity,householdId,input,privacyCall!.call);
         if(session)res.setHeader('Set-Cookie',clearScope);send(200,result);return;
       }
       if(path==='/devices'&&method==='POST') {
@@ -316,8 +322,8 @@ export function createHTTPServer(options:HTTPOptions) {
       else if(error instanceof z.ZodError)safe=invalid();
       else if(error&&typeof error==='object'&&'code'in error&&error.code==='23505')safe=new ServiceError(409,'identity_conflict','Refresh current records before retrying.');
       else if(error&&typeof error==='object'&&'code'in error&&['23503','23514'].includes(String(error.code)))safe=new ServiceError(422,'invalid_candidate','Review linked records and required values.');
-      else {safe=new ServiceError(503,'storage_unavailable','Keep your draft and retry the same operation key.');res.setHeader('Retry-After','1');}
+      else {safe=new ServiceError(503,'storage_unavailable','Keep your draft and retry the same operation key.');if(!res.destroyed&&!res.headersSent)res.setHeader('Retry-After','1');}
       send(safe.status,{error:{code:safe.code,correlationId,recovery:safe.recovery}});
-    }
+    } finally {privacyCall?.dispose();}
   });
 }

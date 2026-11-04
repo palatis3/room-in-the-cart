@@ -1,0 +1,672 @@
+--- /dev/null
++++ b/service/src/privacy-journal-pg-source.ts
+@@ -0,0 +1,240 @@
++import {createHash,createPublicKey,type KeyObject} from 'node:crypto';
++import {createRequire} from 'node:module';
++import {Pool,type PoolClient,type PoolConfig} from 'pg';
++import {z} from 'zod';
++import {journalHash,validatePrivacyRestoreEvents,type PrivacyJournalEvent} from './privacy-journal.js';
++import {durableJournalPublicKeyFingerprint,durableJournalScopeDigest,verifyDurableAdmissionReceipt} from './privacy-journal-durable.js';
++import type {AdmissionReceipt,DurableJournalPins,FixedCommittedSource,JournalCall,RegisteredOrigin} from './privacy-journal-durable-contract.js';
++
++const MAX_EVENTS=10000,MAX_EVENT_BYTES=1048576,MAX_TIMER=2147483647;
++const hash=z.string().regex(/^[0-9a-f]{64}$/);
++const uuid=z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
++const identifier=z.string().min(1).max(63).regex(/^[^\x00-\x1f\x7f]+$/);
++const oid=z.string().regex(/^[1-9][0-9]{0,9}$/).refine(v=>Number(v)<=4294967295);
++const connectionSchema=z.object({host:z.string().min(1).max(300).regex(/^[^\x00-\x1f\x7f]+$/),port:z.number().int().min(1).max(65535),database:identifier,user:identifier,password:z.string().max(16384).optional(),tls:z.object({ca:z.string().min(1).max(262144),servername:identifier}).strict().optional()}).strict();
++const eventSchema=z.object({eventId:uuid,payloadDigest:hash,payload:z.object({version:z.literal(1),eventId:uuid,lineage:uuid,schemaDigest:hash,configurationId:z.string().min(1).max(100),jobId:uuid,kind:z.enum(['acceptance','target_erased','source_completed','source_pending']),data:z.record(z.string(),z.unknown())}).strict()}).strict();
++const bindingSchema=z.object({sourceIdentity:z.string().min(1).max(300),databaseName:identifier,databaseOid:oid,observerRole:identifier,ownerRole:identifier,lineage:uuid,schemaDigest:hash,configurationId:z.string().min(1).max(100),fenced:z.boolean()}).strict();
++const catalogSchema=z.object({databaseName:identifier,databaseOid:oid,sessionRole:identifier,currentRole:identifier,roleOid:oid,roleCanLogin:z.boolean(),dangerousReachableRole:z.boolean(),ownsUserObject:z.boolean(),databaseCreate:z.boolean(),databaseTemporary:z.boolean(),databaseConnect:z.boolean(),schemaCreate:z.boolean(),sourceSchemaUsage:z.boolean(),rawRelationPrivilege:z.boolean(),extraFunctionExecute:z.boolean(),functionsValid:z.boolean()}).strict();
++
++export interface PostgresCommittedSourceConfiguration {
++ readonly pins:DurableJournalPins;
++ readonly authorityPublicKey:KeyObject|string;
++ /** Fully specified endpoint. No connection string, PG* fallback, SET ROLE or injected client. */
++ readonly connection:{readonly host:string;readonly port:number;readonly database:string;readonly user:string;readonly password?:string;readonly tls?:{readonly ca:string;readonly servername:string}};
++ readonly databaseOid:string;
++ readonly observerRoleOid:string;
++ readonly ownerRole:string;
++ readonly ownerRoleOid:string;
++ readonly applicationName:string;
++ readonly maxConnections?:number;
++}
++
++/** A failed COMMIT response never proves that a previously issued ack rolled back. */
++export class PostgresCommittedSourceCallError extends Error {
++ readonly acknowledgementMayHaveCommitted:boolean;
++ readonly sqlDispatched:boolean;
++ constructor(message:string,sqlDispatched:boolean,acknowledgementMayHaveCommitted:boolean,cause:unknown){
++  super(message,{cause});this.name='PostgresCommittedSourceCallError';
++  this.sqlDispatched=sqlDispatched;this.acknowledgementMayHaveCommitted=acknowledgementMayHaveCommitted;
++ }
++}
++
++const signatures=Object.freeze([
++ 'ritc.privacy_journal_source_binding(text,uuid,text,text,oid)',
++ 'ritc.privacy_journal_source_event(text,uuid,text,text,oid,uuid)',
++ 'ritc.privacy_journal_source_acceptance(text,uuid,text,text,oid,uuid)',
++ 'ritc.privacy_journal_source_unacknowledged(text,uuid,text,text,oid,uuid,integer)',
++ 'ritc.privacy_journal_source_acknowledge(text,uuid,text,text,oid,uuid,text,bigint,text)',
++]);
++
++// Effective privileges are checked, including column grants and inherited groups.
++// A harmless group is allowed; a reachable privileged/app/worker/owner role is not.
++const CATALOG_SQL=`WITH actor AS (
++ SELECT * FROM pg_catalog.pg_roles WHERE rolname=session_user
++), expected AS (
++ SELECT pg_catalog.to_regprocedure(signature)::oid AS oid FROM pg_catalog.unnest($1::text[]) signature
++), user_schema AS (
++ SELECT * FROM pg_catalog.pg_namespace WHERE nspname !~ '^pg_' AND nspname<>'information_schema'
++)
++SELECT pg_catalog.jsonb_build_object(
++ 'databaseName',pg_catalog.current_database(),
++ 'databaseOid',(SELECT oid::text FROM pg_catalog.pg_database WHERE datname=pg_catalog.current_database()),
++ 'sessionRole',session_user,'currentRole',current_user,'roleOid',a.oid::text,'roleCanLogin',a.rolcanlogin,
++ 'dangerousReachableRole',EXISTS(SELECT 1 FROM pg_catalog.pg_roles r WHERE pg_catalog.pg_has_role(a.oid,r.oid,'MEMBER') AND
++  (r.rolsuper OR r.rolbypassrls OR r.rolcreatedb OR r.rolcreaterole OR r.rolreplication OR r.oid=$2::oid OR r.rolname IN('ritc_app','ritc_worker'))),
++ 'ownsUserObject',EXISTS(SELECT 1 FROM user_schema n WHERE pg_catalog.pg_has_role(a.oid,n.nspowner,'MEMBER'))
++  OR EXISTS(SELECT 1 FROM pg_catalog.pg_class r JOIN user_schema n ON n.oid=r.relnamespace WHERE pg_catalog.pg_has_role(a.oid,r.relowner,'MEMBER'))
++  OR EXISTS(SELECT 1 FROM pg_catalog.pg_proc p JOIN user_schema n ON n.oid=p.pronamespace WHERE pg_catalog.pg_has_role(a.oid,p.proowner,'MEMBER')),
++ 'databaseCreate',pg_catalog.has_database_privilege(a.oid,pg_catalog.current_database(),'CREATE'),
++ 'databaseTemporary',pg_catalog.has_database_privilege(a.oid,pg_catalog.current_database(),'TEMPORARY'),
++ 'databaseConnect',pg_catalog.has_database_privilege(a.oid,pg_catalog.current_database(),'CONNECT'),
++ 'schemaCreate',EXISTS(SELECT 1 FROM user_schema n WHERE pg_catalog.has_schema_privilege(a.oid,n.oid,'CREATE')),
++ 'sourceSchemaUsage',pg_catalog.has_schema_privilege(a.oid,'ritc','USAGE'),
++ 'rawRelationPrivilege',EXISTS(SELECT 1 FROM pg_catalog.pg_class r JOIN user_schema n ON n.oid=r.relnamespace WHERE
++  (r.relkind IN('r','p','v','m','f') AND (pg_catalog.has_table_privilege(a.oid,r.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER')
++   OR pg_catalog.has_any_column_privilege(a.oid,r.oid,'SELECT,INSERT,UPDATE,REFERENCES')))
++  OR (r.relkind='S' AND pg_catalog.has_sequence_privilege(a.oid,r.oid,'USAGE,SELECT,UPDATE'))),
++ 'extraFunctionExecute',EXISTS(SELECT 1 FROM pg_catalog.pg_proc p JOIN user_schema n ON n.oid=p.pronamespace
++  WHERE pg_catalog.has_function_privilege(a.oid,p.oid,'EXECUTE') AND NOT EXISTS(SELECT 1 FROM expected e WHERE e.oid=p.oid)),
++ 'functionsValid',(SELECT count(*)=5 AND pg_catalog.bool_and(p.oid IS NOT NULL AND p.prosecdef AND p.proowner=$2::oid
++  AND pg_catalog.pg_get_userbyid(p.proowner)=$3::text AND p.proconfig=ARRAY['search_path=pg_catalog']::text[]
++  AND pg_catalog.has_function_privilege(a.oid,p.oid,'EXECUTE')
++  AND NOT pg_catalog.has_function_privilege('ritc_app',p.oid,'EXECUTE')
++  AND NOT pg_catalog.has_function_privilege('ritc_worker',p.oid,'EXECUTE')
++  AND NOT EXISTS(SELECT 1 FROM pg_catalog.aclexplode(COALESCE(p.proacl,pg_catalog.acldefault('f',p.proowner))) acl
++   WHERE acl.grantee=0 AND acl.privilege_type='EXECUTE')) FROM expected e LEFT JOIN pg_catalog.pg_proc p ON p.oid=e.oid)
++)::text AS value FROM actor a`;
++
++function freeze<T>(value:T):T{if(value&&typeof value==='object'){for(const child of Object.values(value))freeze(child);Object.freeze(value);}return value;}
++function assertCall(call:JournalCall):void{
++ if(!call||typeof call.attemptId!=='string'||call.attemptId.length<1||call.attemptId.length>100||!Number.isSafeInteger(call.deadlineUnixMs)||!(call.signal instanceof AbortSignal))throw Error('Call-owned journal deadline and AbortSignal required');
++ call.signal.throwIfAborted();if(Date.now()>=call.deadlineUnixMs)throw Error('Journal source deadline exceeded');
++}
++function jsonResult(rows:readonly Record<string,unknown>[],maxBytes:number):unknown{
++ if(rows.length!==1||!rows[0]||Object.keys(rows[0]).length!==1||typeof rows[0].value!=='string'||Buffer.byteLength(rows[0].value,'utf8')>maxBytes)throw Error('Committed source result shape or size conflict');
++ return JSON.parse(rows[0].value);
++}
++
++/**
++ * Uncomposed private source capability. It owns actual pg8 connections, and never
++ * relies on query.signal or query_timeout to cancel PostgreSQL work. No app or
++ * worker role receives raw table access or an unauthenticated acknowledgement API.
++ */
++export function createPostgresCommittedSource(input:PostgresCommittedSourceConfiguration):{readonly source:FixedCommittedSource;close():Promise<void>}{
++ if(process.env.NODE_PG_FORCE_NATIVE)throw Error('Pure JavaScript PostgreSQL driver required');
++ // pg's package entry point may bind Pool to a different Client. Supplying our
++ // private, exact JS Client keeps the reviewed socket-destruction semantics.
++ const JavaScriptClient=createRequire(import.meta.url)('pg/lib/client.js') as typeof import('pg').Client;
++ const pins=freeze(structuredClone(input.pins));durableJournalScopeDigest(pins);
++ const connection=freeze(connectionSchema.parse(input.connection));
++ if(!connection.tls&&!connection.host.startsWith('/')&&!['localhost','127.0.0.1','::1'].includes(connection.host))throw Error('Verified pinned TLS required for a remote committed source');
++ const databaseOid=oid.parse(input.databaseOid),observerRoleOid=oid.parse(input.observerRoleOid),ownerRole=identifier.parse(input.ownerRole),ownerRoleOid=oid.parse(input.ownerRoleOid);
++ const applicationName=identifier.parse(input.applicationName),maxConnections=z.number().int().min(1).max(4).parse(input.maxConnections??1);
++ if(connection.user===ownerRole||observerRoleOid===ownerRoleOid||['ritc_app','ritc_worker'].includes(connection.user))throw Error('Separate committed observer role required');
++ let authorityPublicKey:KeyObject;
++ if(typeof input.authorityPublicKey==='string'){
++  if(!/^-----BEGIN PUBLIC KEY-----\r?\n(?:[A-Za-z0-9+/=]+\r?\n)+-----END PUBLIC KEY-----\r?\n?$/.test(input.authorityPublicKey))throw Error('Public authority SPKI PEM required');
++  authorityPublicKey=createPublicKey(input.authorityPublicKey);
++ }else{if(input.authorityPublicKey.type!=='public')throw Error('Public authority key required');authorityPublicKey=input.authorityPublicKey;}
++ if(durableJournalPublicKeyFingerprint(authorityPublicKey)!==pins.authorityPublicKeyFingerprint||pins.authorityPublicKeyFingerprint===pins.publicKeyFingerprint)throw Error('Independent committed-source authority key conflict');
++ // Truthy fixed values also suppress pg's PGOPTIONS/PGREPLICATION/PGPASSWORD
++ // environment fallback (an empty password string alone does not do that).
++ const poolConfiguration:PoolConfig&{Client:typeof import('pg').Client;pipeline:false;binary:false;sslnegotiation:'postgres';replication:'false'}={Client:JavaScriptClient,host:connection.host,port:connection.port,database:connection.database,user:connection.user,password:()=>connection.password??'',ssl:connection.tls?{ca:connection.tls.ca,servername:connection.tls.servername,rejectUnauthorized:true}:false,sslnegotiation:'postgres',replication:'false',options:'-c search_path=pg_catalog',client_encoding:'UTF8',application_name:applicationName,max:maxConnections,connectionTimeoutMillis:5000,statement_timeout:5000,lock_timeout:5000,idle_in_transaction_session_timeout:5000,idleTimeoutMillis:1000,allowExitOnIdle:true,pipeline:false,binary:false};
++ const pool=new Pool(poolConfiguration);
++ // pg removes idle errored connections before emitting. No credential-bearing log.
++ pool.on('error',()=>{});
++ const common=Object.freeze([pins.sourceIdentity,pins.lineage,pins.schemaDigest,pins.configurationId,databaseOid]);
++ let closed=false;
++ const activeCalls=new Set<(reason:unknown)=>void>();
++
++ interface Session {query(text:string,values?:readonly unknown[],beforeDispatch?:()=>void):Promise<readonly Record<string,unknown>[]>;commit():Promise<void>}
++ async function transaction<T>(original:JournalCall,acknowledgement:boolean,work:(session:Session)=>Promise<T>):Promise<T>{
++  assertCall(original);if(closed)throw Error('Committed source is closed');
++  const call=Object.freeze({attemptId:original.attemptId,deadlineUnixMs:original.deadlineUnixMs,signal:original.signal});
++  let client:PoolClient|undefined,released=false,finished=false,abortReason:unknown,sqlDispatched=false,ackCommitDispatched=false;
++  const comment=`/* ritc-journal-source:${createHash('sha256').update(call.attemptId).digest('hex')} */ `;
++  const failure=(reason:unknown)=>new PostgresCommittedSourceCallError('Committed source call failed',sqlDispatched,ackCommitDispatched,reason);
++  const release=(destroy:boolean)=>{if(client&&!released){released=true;client.release(destroy);}};
++  let rejectCancelled!:(error:Error)=>void;
++  const cancelled=new Promise<never>((_,reject)=>{rejectCancelled=reject;});
++  const abort=(reason:unknown)=>{
++   if(finished||abortReason!==undefined)return;
++   abortReason=reason??Error('Journal source call aborted');
++   // In the fixed non-pipeline pg8 client, release(true) removes the client and
++   // client.end() destroys its active socket. No later COMMIT is ever queued.
++   release(true);rejectCancelled(failure(abortReason));
++  };
++  const onAbort=()=>abort(call.signal.reason);
++  activeCalls.add(abort);
++  call.signal.addEventListener('abort',onAbort,{once:true});
++  // Long deadlines re-arm; timers above the Node limit must never fire early.
++  let timer:ReturnType<typeof setTimeout>;
++  const arm=()=>{timer=setTimeout(()=>{if(Date.now()>=call.deadlineUnixMs)abort(Error('Journal source deadline exceeded'));else arm();},Math.min(MAX_TIMER,Math.max(1,call.deadlineUnixMs-Date.now())));};
++  arm();
++  const assertLive=()=>{assertCall(call);if(abortReason!==undefined)throw abortReason;if(closed)throw Error('Committed source is closed');};
++  const dispatch=async(text:string,values:readonly unknown[]=[],commit=false)=>{
++   // There is no await or callback between the final call check and real pg I/O.
++   assertLive();if(!client||released)throw Error('Committed source connection unavailable');
++   sqlDispatched=true;if(commit&&acknowledgement)ackCommitDispatched=true;
++   const queryConfiguration={text:comment+text,values:[...values],binary:false};
++   const result=await client.query<Record<string,unknown>>(queryConfiguration);
++   assertLive();return result.rows;
++  };
++  const budget=async()=>{
++   assertLive();const remaining=Math.max(1,Math.min(MAX_TIMER,call.deadlineUnixMs-Date.now()));
++   await dispatch("SELECT pg_catalog.set_config('statement_timeout',$1,true),pg_catalog.set_config('lock_timeout',$1,true),pg_catalog.set_config('idle_in_transaction_session_timeout',$1,true)",[String(remaining)]);
++  };
++  const run=(async()=>{
++   // pg does not cancel pool.connect. If cancellation wins, its eventual acquired
++   // connection is destroyed here without issuing even BEGIN or a catalog read.
++   const acquired=await pool.connect();
++   if(abortReason!==undefined||call.signal.aborted||Date.now()>=call.deadlineUnixMs||closed){acquired.release(true);assertLive();throw Error('Committed source call expired while waiting for pool');}
++   client=acquired;assertLive();
++   await dispatch('BEGIN');
++   await budget();
++   await dispatch("SELECT pg_catalog.set_config('search_path','pg_catalog',true)");
++   const catalog=catalogSchema.parse(jsonResult(await dispatch(CATALOG_SQL,[signatures,ownerRoleOid,ownerRole]),8192));
++   if(catalog.databaseName!==connection.database||catalog.databaseOid!==databaseOid||catalog.sessionRole!==connection.user||catalog.currentRole!==connection.user||catalog.roleOid!==observerRoleOid||!catalog.roleCanLogin||catalog.dangerousReachableRole||catalog.ownsUserObject||catalog.databaseCreate||catalog.databaseTemporary||!catalog.databaseConnect||catalog.schemaCreate||!catalog.sourceSchemaUsage||catalog.rawRelationPrivilege||catalog.extraFunctionExecute||!catalog.functionsValid)throw Error('Restricted committed-source role or database capability conflict');
++   await budget();
++   const binding=bindingSchema.parse(jsonResult(await dispatch('SELECT ritc.privacy_journal_source_binding($1,$2,$3,$4,$5)::text AS value',common),8192));
++   if(binding.sourceIdentity!==pins.sourceIdentity||binding.databaseName!==connection.database||binding.databaseOid!==databaseOid||binding.observerRole!==connection.user||binding.ownerRole!==ownerRole||binding.lineage!==pins.lineage||binding.schemaDigest!==pins.schemaDigest||binding.configurationId!==pins.configurationId||binding.fenced)throw Error('Fixed committed-source origin binding conflict');
++   const session:Session={
++    async query(text,values,beforeDispatch){await budget();beforeDispatch?.();return dispatch(text,values);},
++    async commit(){await budget();await dispatch('COMMIT',[],true);},
++   };
++   const value=await work(session);await session.commit();return value;
++  })();
++  try{return await Promise.race([run,cancelled]);}
++  catch(error){release(true);if(error instanceof PostgresCommittedSourceCallError)throw error;throw failure(error);}
++  finally{finished=true;activeCalls.delete(abort);clearTimeout(timer!);call.signal.removeEventListener('abort',onAbort);release(abortReason!==undefined);}
++ }
++
++ function event(input:unknown):PrivacyJournalEvent{
++  const value=eventSchema.parse(input);
++  if(value.eventId!==value.payload.eventId||value.payloadDigest!==journalHash(value.payload)||value.payload.lineage!==pins.lineage||value.payload.schemaDigest!==pins.schemaDigest||value.payload.configurationId!==pins.configurationId)throw Error('Committed source event digest or origin conflict');
++  return freeze(value);
++ }
++ async function committedEvent(session:Session,eventId:string):Promise<PrivacyJournalEvent>{
++  const value=event(jsonResult(await session.query('SELECT ritc.privacy_journal_source_event($1,$2,$3,$4,$5,$6)::text AS value',[...common,eventId]),MAX_EVENT_BYTES+8192));
++  if(value.eventId!==eventId)throw Error('Exact committed event binding conflict');return value;
++ }
++ async function committedAcceptance(session:Session,jobId:string):Promise<PrivacyJournalEvent>{
++  const value=event(jsonResult(await session.query('SELECT ritc.privacy_journal_source_acceptance($1,$2,$3,$4,$5,$6)::text AS value',[...common,jobId]),MAX_EVENT_BYTES+8192));
++  if(value.payload.kind!=='acceptance'||value.payload.jobId!==jobId)throw Error('Original committed acceptance binding conflict');
++  validatePrivacyRestoreEvents([value]);return value;
++ }
++ function receipt(input:unknown,eventId:string,digest:string,seq:number,recordHash:string):AdmissionReceipt{
++  const proof=verifyDurableAdmissionReceipt(input,pins,authorityPublicKey);
++  if(proof.record.transition!=='commit'||proof.record.eventId!==eventId||proof.record.payloadDigest!==digest||proof.record.seq!==seq||proof.record.recordHash!==recordHash)throw Error('Committed-source acknowledgement receipt binding conflict');return proof;
++ }
++ const source:FixedCommittedSource=Object.freeze({
++  async readOrigin(call:JournalCall):Promise<RegisteredOrigin>{return transaction(call,false,async()=>Object.freeze({lineage:pins.lineage,schemaDigest:pins.schemaDigest,configurationId:pins.configurationId,sourceIdentity:pins.sourceIdentity,fenced:false}));},
++  async readCommittedEvent(eventId:string,call:JournalCall):Promise<PrivacyJournalEvent>{uuid.parse(eventId);return transaction(call,false,session=>committedEvent(session,eventId));},
++  async readCommittedAcceptance(jobId:string,call:JournalCall):Promise<PrivacyJournalEvent>{uuid.parse(jobId);return transaction(call,false,session=>committedAcceptance(session,jobId));},
++  async listUnacknowledgedJobEvents(jobId:string,call:JournalCall):Promise<readonly string[]>{
++   uuid.parse(jobId);return transaction(call,false,async session=>{
++    const ids=z.array(uuid).max(MAX_EVENTS).parse(jsonResult(await session.query('SELECT pg_catalog.to_json(ritc.privacy_journal_source_unacknowledged($1,$2,$3,$4,$5,$6,$7))::text AS value',[...common,jobId,MAX_EVENTS]),MAX_EVENTS*40+8192));
++    if(new Set(ids).size!==ids.length)throw Error('Duplicate committed-source event');return Object.freeze(ids);
++   });
++  },
++  async acknowledge(eventId:string,payloadDigest:string,commitRecordSeq:number,commitRecordHash:string,verifiedReceipt:AdmissionReceipt,call:JournalCall):Promise<void>{
++   uuid.parse(eventId);hash.parse(payloadDigest);hash.parse(commitRecordHash);z.number().int().min(1).max(MAX_EVENTS).parse(commitRecordSeq);
++   // Snapshot and authenticate before pool acquisition: forged/unrelated proofs
++   // dispatch no SQL. Reverification below is immediately before the ack call.
++   const proof=receipt(structuredClone(verifiedReceipt),eventId,payloadDigest,commitRecordSeq,commitRecordHash);
++   return transaction(call,true,async session=>{
++    const value=await committedEvent(session,eventId);
++    if(value.payloadDigest!==payloadDigest||value.payload.jobId!==proof.record.jobId)throw Error('Acknowledgement exact committed payload or job conflict');
++    if(value.payload.kind==='acceptance')validatePrivacyRestoreEvents([value]);
++    else validatePrivacyRestoreEvents([await committedAcceptance(session,value.payload.jobId),value]);
++    // Session.query updates SQL timeouts before dispatch. The receipt is verified
++    // again inside its final pre-dispatch callback, after that asynchronous I/O.
++    await session.query('SELECT ritc.privacy_journal_source_acknowledge($1,$2,$3,$4,$5,$6,$7,$8,$9)',[...common,eventId,payloadDigest,commitRecordSeq,commitRecordHash],()=>{
++     const checked=receipt(proof,eventId,payloadDigest,commitRecordSeq,commitRecordHash);
++     if(checked.record.jobId!==value.payload.jobId)throw Error('Acknowledgement receipt job conflict');
++    });
++   });
++  },
++ });
++ return Object.freeze({source,async close(){if(!closed){closed=true;for(const abort of activeCalls)abort(Error('Committed source is closed'));await pool.end();}}});
++}
+--- /dev/null
++++ b/service/migrations/024_privacy_journal_source.sql
+@@ -0,0 +1,149 @@
++-- Proposal only. No role, role membership, policy, source or EXECUTE grant is
++-- enabled here. Provisioning a separate observer is an explicit owner action.
++CREATE TABLE ritc.privacy_journal_source_registration (
++ singleton boolean PRIMARY KEY DEFAULT true CHECK(singleton),
++ source_identity text NOT NULL CHECK(length(source_identity) BETWEEN 1 AND 200),
++ database_oid oid NOT NULL,
++ observer_oid oid NOT NULL
++);
++ALTER TABLE ritc.privacy_journal_source_registration ENABLE ROW LEVEL SECURITY;
++ALTER TABLE ritc.privacy_journal_source_registration FORCE ROW LEVEL SECURITY;
++DO $$ BEGIN
++ EXECUTE format('CREATE POLICY owner_scope ON ritc.privacy_journal_source_registration TO %I USING(true) WITH CHECK(true)',current_user);
++END $$;
++REVOKE ALL ON ritc.privacy_journal_source_registration FROM PUBLIC,ritc_app,ritc_worker;
++CREATE TRIGGER immutable_source_registration BEFORE UPDATE OR DELETE ON ritc.privacy_journal_source_registration
++ FOR EACH ROW EXECUTE FUNCTION ritc.privacy_journal_immutable();
++
++-- The caller can neither choose an origin nor reuse this capability against a
++-- restored database. session_user is the actual login, including through SET ROLE.
++CREATE FUNCTION ritc.privacy_journal_source_guard(s text,l uuid,d text,c text,b oid) RETURNS jsonb
++LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $$
++DECLARE registration ritc.privacy_journal_source_registration; origin ritc.privacy_journal_origin;
++ actor record; owner_oid oid; actual_oid oid;
++BEGIN
++ SELECT * INTO STRICT registration FROM ritc.privacy_journal_source_registration WHERE singleton;
++ SELECT oid INTO STRICT actual_oid FROM pg_database WHERE datname=current_database();
++ SELECT oid,rolname,rolcanlogin,rolsuper,rolbypassrls,rolcreaterole,rolcreatedb,rolreplication INTO STRICT actor
++  FROM pg_roles WHERE rolname=session_user;
++ SELECT relowner INTO STRICT owner_oid FROM pg_class WHERE oid='ritc.privacy_journal_source_registration'::regclass;
++ IF s IS DISTINCT FROM registration.source_identity OR b IS DISTINCT FROM registration.database_oid
++  OR actual_oid IS DISTINCT FROM registration.database_oid OR actor.oid IS DISTINCT FROM registration.observer_oid
++  OR NOT actor.rolcanlogin OR actor.rolsuper OR actor.rolbypassrls OR actor.rolcreaterole OR actor.rolcreatedb OR actor.rolreplication
++  OR pg_has_role(actor.oid,owner_oid,'MEMBER') OR pg_has_role(actor.oid,'ritc_app','MEMBER')
++  OR pg_has_role(actor.oid,'ritc_worker','MEMBER')
++  OR COALESCE(current_setting('role',true),'none') NOT IN ('none',session_user)
++ THEN RAISE EXCEPTION 'journal_source_binding_conflict' USING ERRCODE='42501'; END IF;
++ SELECT * INTO STRICT origin FROM ritc.privacy_journal_origin WHERE singleton FOR SHARE;
++ IF origin.lineage IS DISTINCT FROM l OR origin.schema_digest IS DISTINCT FROM d
++  OR origin.configuration_id IS DISTINCT FROM c OR origin.fenced
++ THEN RAISE EXCEPTION 'journal_source_origin_conflict' USING ERRCODE='42501'; END IF;
++ -- Recheck effective capabilities at the function boundary. A benign inherited
++ -- verifier group is acceptable only after its database-local powers are removed.
++ IF EXISTS(SELECT 1 FROM pg_roles r WHERE pg_has_role(actor.oid,r.oid,'MEMBER')
++   AND (r.rolsuper OR r.rolbypassrls OR r.rolcreaterole OR r.rolcreatedb OR r.rolreplication))
++  OR has_database_privilege(actor.oid,actual_oid,'CREATE,TEMP')
++  OR EXISTS(SELECT 1 FROM pg_database db WHERE db.oid=actual_oid AND pg_has_role(actor.oid,db.datdba,'MEMBER'))
++  OR EXISTS(SELECT 1 FROM pg_namespace ns WHERE ns.nspname !~ '^pg_' AND ns.nspname<>'information_schema'
++   AND (has_schema_privilege(actor.oid,ns.oid,'CREATE') OR pg_has_role(actor.oid,ns.nspowner,'MEMBER')))
++  OR EXISTS(SELECT 1 FROM pg_class rel JOIN pg_namespace ns ON ns.oid=rel.relnamespace
++   WHERE ns.nspname !~ '^pg_' AND ns.nspname<>'information_schema'
++   AND (pg_has_role(actor.oid,rel.relowner,'MEMBER')
++    OR (rel.relkind IN('r','v','m','p','f') AND has_table_privilege(actor.oid,rel.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER'))
++    OR (rel.relkind='S' AND has_sequence_privilege(actor.oid,rel.oid,'USAGE,SELECT,UPDATE'))))
++  OR EXISTS(SELECT 1 FROM pg_attribute a JOIN pg_class rel ON rel.oid=a.attrelid JOIN pg_namespace ns ON ns.oid=rel.relnamespace
++   WHERE ns.nspname !~ '^pg_' AND ns.nspname<>'information_schema' AND a.attnum>0 AND NOT a.attisdropped
++   AND rel.relkind IN('r','v','m','p','f') AND has_column_privilege(actor.oid,rel.oid,a.attnum,'SELECT,INSERT,UPDATE,REFERENCES'))
++  OR EXISTS(SELECT 1 FROM pg_proc f JOIN pg_namespace ns ON ns.oid=f.pronamespace WHERE ns.nspname !~ '^pg_' AND ns.nspname<>'information_schema'
++   AND (pg_has_role(actor.oid,f.proowner,'MEMBER') OR (has_function_privilege(actor.oid,f.oid,'EXECUTE') AND f.oid NOT IN(
++    'ritc.privacy_journal_source_binding(text,uuid,text,text,oid)'::regprocedure,
++    'ritc.privacy_journal_source_event(text,uuid,text,text,oid,uuid)'::regprocedure,
++    'ritc.privacy_journal_source_acceptance(text,uuid,text,text,oid,uuid)'::regprocedure,
++    'ritc.privacy_journal_source_unacknowledged(text,uuid,text,text,oid,uuid,integer)'::regprocedure,
++    'ritc.privacy_journal_source_acknowledge(text,uuid,text,text,oid,uuid,text,bigint,text)'::regprocedure))))
++ THEN RAISE EXCEPTION 'journal_source_capability_conflict' USING ERRCODE='42501'; END IF;
++ IF (SELECT count(*)<>5 OR bool_or(f.oid IS NULL OR NOT f.prosecdef OR f.proowner<>owner_oid
++   OR f.proconfig IS DISTINCT FROM ARRAY['search_path=pg_catalog']::text[]
++   OR NOT has_function_privilege(actor.oid,f.oid,'EXECUTE')
++   OR has_function_privilege('ritc_app',f.oid,'EXECUTE') OR has_function_privilege('ritc_worker',f.oid,'EXECUTE')
++   OR EXISTS(SELECT 1 FROM aclexplode(COALESCE(f.proacl,acldefault('f',f.proowner))) acl WHERE acl.grantee=0 AND acl.privilege_type='EXECUTE'))
++  FROM unnest(ARRAY[
++   'ritc.privacy_journal_source_binding(text,uuid,text,text,oid)'::regprocedure::oid,
++   'ritc.privacy_journal_source_event(text,uuid,text,text,oid,uuid)'::regprocedure::oid,
++   'ritc.privacy_journal_source_acceptance(text,uuid,text,text,oid,uuid)'::regprocedure::oid,
++   'ritc.privacy_journal_source_unacknowledged(text,uuid,text,text,oid,uuid,integer)'::regprocedure::oid,
++   'ritc.privacy_journal_source_acknowledge(text,uuid,text,text,oid,uuid,text,bigint,text)'::regprocedure::oid
++  ]) expected(oid) LEFT JOIN pg_proc f ON f.oid=expected.oid)
++ THEN RAISE EXCEPTION 'journal_source_function_conflict' USING ERRCODE='42501'; END IF;
++
++ RETURN jsonb_build_object('sourceIdentity',registration.source_identity,'databaseName',current_database(),
++  'databaseOid',actual_oid::text,'observerRole',actor.rolname,'ownerRole',pg_get_userbyid(owner_oid),
++  'lineage',origin.lineage,'schemaDigest',origin.schema_digest,'configurationId',origin.configuration_id,'fenced',origin.fenced);
++END $$;
++REVOKE ALL ON FUNCTION ritc.privacy_journal_source_guard(text,uuid,text,text,oid) FROM PUBLIC,ritc_app,ritc_worker;
++
++CREATE FUNCTION ritc.privacy_journal_source_binding(s text,l uuid,d text,c text,b oid) RETURNS jsonb
++LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $$
++BEGIN RETURN ritc.privacy_journal_source_guard(s,l,d,c,b); END $$;
++REVOKE ALL ON FUNCTION ritc.privacy_journal_source_binding(text,uuid,text,text,oid) FROM PUBLIC,ritc_app,ritc_worker;
++
++CREATE FUNCTION ritc.privacy_journal_source_event(s text,l uuid,d text,c text,b oid,e uuid) RETURNS jsonb
++LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $$
++DECLARE event ritc.privacy_journal_outbox;
++BEGIN
++ PERFORM ritc.privacy_journal_source_guard(s,l,d,c,b);
++ SELECT * INTO event FROM ritc.privacy_journal_outbox WHERE event_id=e;
++ IF NOT FOUND THEN RAISE EXCEPTION 'journal_source_event_missing'; END IF;
++ IF octet_length(event.payload::text)>1048576 THEN RAISE EXCEPTION 'journal_source_event_too_large'; END IF;
++ IF event.lineage IS DISTINCT FROM l OR event.payload->>'lineage' IS DISTINCT FROM l::text
++  OR event.payload->>'schemaDigest' IS DISTINCT FROM d OR event.payload->>'configurationId' IS DISTINCT FROM c
++  OR event.payload->>'eventId' IS DISTINCT FROM event.event_id::text OR event.payload->>'jobId' IS DISTINCT FROM event.job_id::text
++  OR event.payload->>'kind' IS DISTINCT FROM event.kind
++  OR event.payload_digest IS DISTINCT FROM encode(sha256(convert_to(ritc.privacy_journal_canonical(event.payload),'utf8')),'hex')
++ THEN RAISE EXCEPTION 'journal_source_event_conflict'; END IF;
++ RETURN jsonb_build_object('eventId',event.event_id,'payloadDigest',event.payload_digest,'payload',event.payload);
++END $$;
++REVOKE ALL ON FUNCTION ritc.privacy_journal_source_event(text,uuid,text,text,oid,uuid) FROM PUBLIC,ritc_app,ritc_worker;
++
++CREATE FUNCTION ritc.privacy_journal_source_acceptance(s text,l uuid,d text,c text,b oid,j uuid) RETURNS jsonb
++LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $$
++DECLARE e uuid;
++BEGIN
++ PERFORM ritc.privacy_journal_source_guard(s,l,d,c,b);
++ SELECT event_id INTO e FROM ritc.privacy_journal_outbox WHERE job_id=j AND kind='acceptance';
++ IF NOT FOUND THEN RAISE EXCEPTION 'journal_source_acceptance_missing'; END IF;
++ RETURN ritc.privacy_journal_source_event(s,l,d,c,b,e);
++END $$;
++REVOKE ALL ON FUNCTION ritc.privacy_journal_source_acceptance(text,uuid,text,text,oid,uuid) FROM PUBLIC,ritc_app,ritc_worker;
++
++CREATE FUNCTION ritc.privacy_journal_source_unacknowledged(s text,l uuid,d text,c text,b oid,j uuid,n integer) RETURNS uuid[]
++LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $$
++DECLARE events uuid[];
++BEGIN
++ PERFORM ritc.privacy_journal_source_guard(s,l,d,c,b);
++ IF n IS NULL OR n<1 OR n>10000 THEN RAISE EXCEPTION 'journal_source_list_bound'; END IF;
++ PERFORM ritc.privacy_journal_source_acceptance(s,l,d,c,b,j);
++ SELECT COALESCE(array_agg(event_id ORDER BY acceptance_order,created_at,event_id),'{}'::uuid[]) INTO events FROM (
++  SELECT e.event_id,CASE WHEN e.kind='acceptance' THEN 0 ELSE 1 END AS acceptance_order,e.created_at
++  FROM ritc.privacy_journal_outbox e WHERE e.job_id=j
++   AND NOT EXISTS(SELECT 1 FROM ritc.privacy_journal_ack a WHERE a.event_id=e.event_id)
++  ORDER BY acceptance_order,e.created_at,e.event_id LIMIT n+1
++ ) bounded;
++ IF cardinality(events)>n THEN RAISE EXCEPTION 'journal_source_list_too_large'; END IF;
++ RETURN events;
++END $$;
++REVOKE ALL ON FUNCTION ritc.privacy_journal_source_unacknowledged(text,uuid,text,text,oid,uuid,integer) FROM PUBLIC,ritc_app,ritc_worker;
++
++-- External authority signatures are independently checked at the trusted Node
++-- boundary immediately before this entry point. SQL rechecks its exact source
++-- event and retains the original acknowledgement conflict/idempotency semantics.
++CREATE FUNCTION ritc.privacy_journal_source_acknowledge(s text,l uuid,d text,c text,b oid,e uuid,p text,n bigint,h text) RETURNS void
++LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $$
++DECLARE event jsonb;
++BEGIN
++ event=ritc.privacy_journal_source_event(s,l,d,c,b,e);
++ IF p IS DISTINCT FROM event->>'payloadDigest' OR n IS NULL OR n<1 OR h IS NULL OR h !~ '^[0-9a-f]{64}$'
++ THEN RAISE EXCEPTION 'journal_source_ack_conflict'; END IF;
++ PERFORM ritc.privacy_journal_acknowledge(e,p,n,h);
++END $$;
++REVOKE ALL ON FUNCTION ritc.privacy_journal_source_acknowledge(text,uuid,text,text,oid,uuid,text,bigint,text) FROM PUBLIC,ritc_app,ritc_worker;
+--- /dev/null
++++ b/service/tests/privacy-journal-pg-source.integration.mjs
+@@ -0,0 +1,217 @@
++// Real local PostgreSQL evidence for the fixed-source boundary. All identifiers,
++// events and authority keys are synthetic; private keys stay only in memory.
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import {randomUUID,sign,createHash} from 'node:crypto';
++import {setTimeout as delay} from 'node:timers/promises';
++import pg from 'pg';
++import {createPostgresCommittedSource} from '../dist/privacy-journal-pg-source.js';
++import {acceptedEvent,progressEvent,canonical,digest,keys,clone,call,zero} from './durable-independent-fixture.mjs';
++
++const adminURL=new URL(process.env.TEST_ADMIN_DATABASE_URL),wrongURL=new URL(process.env.TEST_JOURNAL_WRONG_DATABASE_URL);
++const observer=process.env.TEST_JOURNAL_OBSERVER_ROLE;
++if(adminURL.searchParams.get('host')!=='/tmp'||adminURL.searchParams.get('port')!=='55432'||!adminURL.pathname.startsWith('/ritc_journal_pg_source_')||!wrongURL.pathname.startsWith('/ritc_journal_pg_wrong_'))throw Error('Dedicated disposable local databases required');
++const owner=new pg.Client({connectionString:adminURL.toString()}),wrongOwner=new pg.Client({connectionString:wrongURL.toString()});
++await owner.connect();await wrongOwner.connect();
++const ownerRole=(await owner.query('SELECT current_user AS name,(SELECT oid::text FROM pg_roles WHERE rolname=current_user) AS oid')).rows[0];
++const observerRole=(await owner.query('SELECT oid::text FROM pg_roles WHERE rolname=$1',[observer])).rows[0];
++const databaseOid=(await owner.query('SELECT oid::text FROM pg_database WHERE datname=current_database()')).rows[0].oid;
++const writer=keys(),authority=keys(),schemaDigest=digest((await owner.query('SELECT version,checksum FROM public.ritc_schema_migration ORDER BY version')).rows);
++const origin={lineage:randomUUID(),schemaDigest,configurationId:'synthetic-postgres-source-proposal-v1'};
++const pins={...origin,keyId:'synthetic-writer-v1',publicKeyFingerprint:writer.fingerprint,sourceIdentity:'synthetic-fixed-postgres-source-v1',recordStoreIdentity:'synthetic-record-store-v1',recordNamespace:'synthetic-record-namespace-v1',checkpointAuthority:'synthetic-authority-v1',deploymentPrincipal:'synthetic-deployment-v1',authorityKeyId:'synthetic-authority-key-v1',authorityPublicKeyFingerprint:authority.fingerprint};
++for(const client of [owner,wrongOwner]){
++ await client.query('INSERT INTO ritc.privacy_journal_origin(lineage,schema_digest,configuration_id) VALUES($1,$2,$3)',[origin.lineage,origin.schemaDigest,origin.configurationId]);
++ await client.query('INSERT INTO ritc.privacy_journal_source_registration(source_identity,database_oid,observer_oid) VALUES($1,$2::oid,$3::oid)',[pins.sourceIdentity,databaseOid,observerRole.oid]);
++}
++const common=[pins.sourceIdentity,pins.lineage,pins.schemaDigest,pins.configurationId,databaseOid];
++const signatures=['binding(text,uuid,text,text,oid)','event(text,uuid,text,text,oid,uuid)','acceptance(text,uuid,text,text,oid,uuid)','unacknowledged(text,uuid,text,text,oid,uuid,integer)','acknowledge(text,uuid,text,text,oid,uuid,text,bigint,text)'];
++const openHandles=new Set();
++function configuration(changes={}){
++ return {pins:clone(pins),authorityPublicKey:authority.publicKey,connection:{host:'/tmp',port:55432,database:adminURL.pathname.slice(1),user:observer},databaseOid,observerRoleOid:observerRole.oid,ownerRole:ownerRole.name,ownerRoleOid:ownerRole.oid,applicationName:'journal-source-test-'+randomUUID(),maxConnections:1,...changes};
++}
++function adapter(changes={}){const config=configuration(changes),handle={...createPostgresCommittedSource(config),config};openHandles.add(handle);return handle;}
++async function stop(handle){await handle.close();openHandles.delete(handle);}
++async function connection(role=observer,url=adminURL){const u=new URL(url);u.username=role;u.password='';const c=new pg.Client({connectionString:u.toString()});await c.connect();return c;}
++async function insert(event,client=owner,createdAt='2026-11-03T12:00:00Z'){
++ await client.query('INSERT INTO ritc.privacy_journal_outbox(event_id,lineage,job_id,kind,payload,payload_digest,created_at)VALUES($1,$2,$3,$4,$5::jsonb,$6,$7)',[event.eventId,event.payload.lineage,event.payload.jobId,event.payload.kind,JSON.stringify(event.payload),event.payloadDigest,createdAt]);return event;
++}
++async function acceptance(){return insert(acceptedEvent(origin));}
++function receipt(event,seq=1){
++ const unsigned={version:1,keyId:pins.keyId,seq,previousHash:zero,kind:'commit',event};
++ const record={...unsigned,signature:sign(null,Buffer.from(canonical(unsigned)),writer.privateKey).toString('base64url')};
++ const recordHash=digest(record),byteLength=Buffer.byteLength(canonical(record)+'\n'),scopeDigest=digest({version:1,...pins});
++ const identity={seq,previousHash:zero,recordHash,byteLength,eventId:event.eventId,payloadDigest:event.payloadDigest,jobId:event.payload.jobId,transition:'commit'};
++ const body={version:1,domain:'ritc-privacy-journal-admission-v1',scopeDigest,authorityKeyId:pins.authorityKeyId,operationId:digest({version:1,scopeDigest,eventId:event.eventId,payloadDigest:event.payloadDigest,transition:'commit'}),admitted:{head:{version:1,...origin,seq,hash:recordHash,fenced:false},generation:1,authorityRevision:1,mode:'active',pendingOperation:null,totalBytes:byteLength},record:identity,stored:{objectKey:`${scopeDigest}/${seq}/${recordHash}`,immutableVersion:'synthetic-exact-version',recordHash,byteLength}};
++ return {...body,authoritySignature:sign(null,Buffer.from(canonical(body)),authority.privateKey).toString('base64url')};
++}
++function resign(proof){const {authoritySignature,...body}=proof;return {...body,authoritySignature:sign(null,Buffer.from(canonical(body)),authority.privateKey).toString('base64url')};}
++const acknowledge=(source,event,proof=receipt(event),c=call())=>source.acknowledge(event.eventId,event.payloadDigest,proof.record.seq,proof.record.recordHash,proof,c);
++const ackRows=async event=>(await owner.query('SELECT event_id::text,payload_digest,head_seq::text,head_hash FROM ritc.privacy_journal_ack WHERE event_id=$1',[event.eventId])).rows;
++const activities=async name=>(await owner.query('SELECT pid,state,wait_event_type,wait_event,query FROM pg_stat_activity WHERE datname=current_database() AND application_name=$1 ORDER BY pid',[name])).rows;
++async function until(check,label,ms=6000){const end=Date.now()+ms;while(Date.now()<end){const value=await check();if(value)return value;await delay(15);}throw Error('Timed out observing '+label);}
++async function blocked(name,c){const tag=createHash('sha256').update(c.attemptId).digest('hex');return until(async()=>{const rows=await activities(name);return rows.find(x=>x.wait_event_type==='Lock'&&x.query.includes(tag));},'actual blocked backend');}
++async function backendGone(pid,ms=6000){await until(async()=>!(await owner.query('SELECT 1 FROM pg_stat_activity WHERE pid=$1',[pid])).rowCount,'backend rollback/removal',ms);}
++async function blocker(sql){const c=await connection(ownerRole.name);await c.query('BEGIN');await c.query(sql);return c;}
++async function unlock(c){await c.query('ROLLBACK').catch(()=>{});await c.end().catch(()=>{});}
++
++test.after(async()=>{for(const h of openHandles)await h.close().catch(()=>{});await wrongOwner.end();await owner.end();});
++
++test('024 uses fixed definer/search_path, PUBLIC/app/worker denied, observer raw journal and helper access denied',async()=>{
++ const funcs=(await owner.query("SELECT p.proname,p.prosecdef,p.proconfig,pg_get_userbyid(p.proowner) AS owner,EXISTS(SELECT 1 FROM aclexplode(COALESCE(p.proacl,acldefault('f',p.proowner))) a WHERE a.grantee=0 AND a.privilege_type='EXECUTE') AS public_execute FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='ritc' AND p.proname LIKE 'privacy_journal_source_%' ORDER BY p.proname")).rows;
++ assert.equal(funcs.length,6);for(const f of funcs){assert.equal(f.prosecdef,true);assert.deepEqual(f.proconfig,['search_path=pg_catalog']);assert.equal(f.owner,ownerRole.name);assert.equal(f.public_execute,false);}
++ for(const role of ['ritc_test_runtime','ritc_test_worker',observer]){
++  const c=await connection(role);try{
++   for(const table of ['privacy_journal_origin','privacy_journal_outbox','privacy_journal_target','privacy_journal_ack','privacy_journal_source_registration'])await assert.rejects(async()=>c.query('SELECT * FROM ritc.'+table),{code:'42501'});
++   await assert.rejects(async()=>c.query('SELECT ritc.privacy_journal_acknowledge($1,$2,1,$3)',[randomUUID(),'a'.repeat(64),'b'.repeat(64)]),{code:'42501'});
++   await assert.rejects(async()=>c.query('SELECT ritc.privacy_journal_source_guard($1,$2,$3,$4,$5::oid)',common),{code:'42501'});
++   if(role!==observer)for(const sig of signatures)assert.equal((await c.query('SELECT has_function_privilege(current_user,$1,\'EXECUTE\') AS allowed',['ritc.privacy_journal_source_'+sig])).rows[0].allowed,false);
++  }finally{await c.end();}
++ }
++ const h=adapter();try{let registered;try{registered=await h.source.readOrigin(call());}catch(error){console.error('Synthetic fixture cause:',error.cause?.code??'',error.cause?.message??'');throw error;}assert.deepEqual(registered,{...origin,sourceIdentity:pins.sourceIdentity,fenced:false});}finally{await stop(h);}
++});
++
++test('real committed visibility, exact original acceptance and deterministic bounded job list',async()=>{
++ const h=adapter(),a=acceptedEvent(origin),transaction=await connection(ownerRole.name);
++ try{
++  await transaction.query('BEGIN');await insert(a,transaction);
++  await assert.rejects(async()=>h.source.readCommittedEvent(a.eventId,call()));
++  await transaction.query('COMMIT');assert.deepEqual(await h.source.readCommittedEvent(a.eventId,call()),a);
++  const p=await insert(progressEvent(a,'source_pending'),owner,'2026-11-03T11:59:59Z');
++  assert.deepEqual(await h.source.readCommittedAcceptance(a.payload.jobId,call()),a);
++  assert.deepEqual(await h.source.listUnacknowledgedJobEvents(a.payload.jobId,call()),[a.eventId,p.eventId]);
++  const c=await connection();try{
++   await assert.rejects(async()=>c.query('SELECT ritc.privacy_journal_source_unacknowledged($1,$2,$3,$4,$5::oid,$6,1)',[...common,a.payload.jobId]),/too_large/);
++   for(const n of [0,-1,10001,null])await assert.rejects(async()=>c.query('SELECT ritc.privacy_journal_source_unacknowledged($1,$2,$3,$4,$5::oid,$6,$7)',[...common,a.payload.jobId,n]),/bound/);
++   await assert.rejects(async()=>c.query('SELECT ritc.privacy_journal_source_unacknowledged($1,$2,$3,$4,$5::oid,$6,10000)',[...common,randomUUID()]),/acceptance_missing/);
++  }finally{await c.end();}
++  await acknowledge(h.source,a);assert.deepEqual(await h.source.listUnacknowledgedJobEvents(a.payload.jobId,call()),[p.eventId]);
++  assert.deepEqual(await h.source.readCommittedAcceptance(a.payload.jobId,call()),a);
++ }finally{await transaction.end();await stop(h);}
++});
++
++test('SQL event reads reject oversized payload and persisted digest or envelope conflicts',async()=>{
++ const variants=[];
++ const oversized=acceptedEvent(origin);oversized.payload.data.padding='x'.repeat(1048576);oversized.payloadDigest=digest(oversized.payload);variants.push(oversized);
++ const wrongDigest=acceptedEvent(origin);wrongDigest.payloadDigest='e'.repeat(64);variants.push(wrongDigest);
++ const wrongEnvelope=acceptedEvent(origin);wrongEnvelope.payload.eventId=randomUUID();wrongEnvelope.payloadDigest=digest(wrongEnvelope.payload);variants.push(wrongEnvelope);
++ for(const event of variants){await insert(event);const c=await connection();try{await assert.rejects(async()=>c.query('SELECT ritc.privacy_journal_source_event($1,$2,$3,$4,$5::oid,$6)',[...common,event.eventId]));}finally{await c.end();}const h=adapter();try{await assert.rejects(async()=>h.source.readCommittedEvent(event.eventId,call()));assert.equal((await ackRows(event)).length,0);}finally{await stop(h);}}
++});
++
++test('SQL repeats exact source, origin and database pins and refuses SET ROLE or foreign login',async()=>{
++ const c=await connection();try{
++  for(const [index,value]of [[0,'wrong-source'],[1,randomUUID()],[2,'e'.repeat(64)],[3,'wrong-config'],[4,String(Number(databaseOid)+1)]]){
++   const changed=[...common];changed[index]=value;
++   await assert.rejects(async()=>c.query('SELECT ritc.privacy_journal_source_binding($1,$2,$3,$4,$5::oid)',changed),{code:'42501'});
++  }
++  await c.query('SET ROLE ritc_guardian_verifier');await assert.rejects(async()=>c.query('SELECT ritc.privacy_journal_source_binding($1,$2,$3,$4,$5::oid)',common),{code:'42501'});await c.query('RESET ROLE');
++ }finally{await c.end();}
++ const wrong=await connection(observer,wrongURL);try{await assert.rejects(async()=>wrong.query('SELECT ritc.privacy_journal_source_binding($1,$2,$3,$4,$5::oid)',common),{code:'42501'});}finally{await wrong.end();}
++ await assert.rejects(async()=>owner.query('SELECT ritc.privacy_journal_source_binding($1,$2,$3,$4,$5::oid)',common),{code:'42501'});
++ assert.throws(()=>adapter({connection:{host:'/tmp',port:55432,database:adminURL.pathname.slice(1),user:ownerRole.name}}),/Separate/);
++ for(const changes of [{pins:{...pins,sourceIdentity:'wrong-source'}},{databaseOid:String(Number(databaseOid)+1)},{connection:{host:'/tmp',port:55432,database:wrongURL.pathname.slice(1),user:observer}},{connection:{host:'/tmp',port:55432,database:adminURL.pathname.slice(1),user:'ritc_test_runtime'}}]){
++  const h=adapter(changes);try{await assert.rejects(async()=>h.source.readOrigin(call()));}finally{await stop(h);}
++ }
++});
++
++test('every SQL wrapper rejects newly effective column/extra-function capabilities, including after a blocked checkout',async()=>{
++ const a=await acceptance(),proof=receipt(a),c=await connection();
++ const invocations=[['binding',[...common]],['event',[...common,a.eventId]],['acceptance',[...common,a.payload.jobId]],['unacknowledged',[...common,a.payload.jobId,10000]],['acknowledge',[...common,a.eventId,a.payloadDigest,proof.record.seq,proof.record.recordHash]]];
++ try{
++  for(const [grant,revoke] of [
++   ['GRANT SELECT(event_id) ON ritc.privacy_journal_outbox TO '+observer,'REVOKE SELECT(event_id) ON ritc.privacy_journal_outbox FROM '+observer],
++   ['GRANT EXECUTE ON FUNCTION ritc.privacy_journal_canonical(jsonb) TO '+observer,'REVOKE EXECUTE ON FUNCTION ritc.privacy_journal_canonical(jsonb) FROM '+observer],
++   ...['PUBLIC','ritc_app','ritc_worker'].map(role=>['GRANT EXECUTE ON FUNCTION ritc.privacy_journal_source_acknowledge(text,uuid,text,text,oid,uuid,text,bigint,text) TO '+role,'REVOKE EXECUTE ON FUNCTION ritc.privacy_journal_source_acknowledge(text,uuid,text,text,oid,uuid,text,bigint,text) FROM '+role]),
++   ["CREATE SCHEMA pga;CREATE FUNCTION pga.synthetic_source_extra() RETURNS boolean LANGUAGE sql AS 'SELECT true';REVOKE ALL ON FUNCTION pga.synthetic_source_extra() FROM PUBLIC;GRANT USAGE ON SCHEMA pga TO "+observer+';GRANT EXECUTE ON FUNCTION pga.synthetic_source_extra() TO '+observer,'DROP SCHEMA pga CASCADE'],
++  ]){
++   await owner.query(grant);
++   try{
++    for(const [name,args]of invocations){const placeholders=args.map((_,i)=>'$'+(i+1)+(i===4?'::oid':'')).join(',');await assert.rejects(async()=>c.query('SELECT ritc.privacy_journal_source_'+name+'('+placeholders+')',args),{code:'42501'});}
++    const h=adapter();try{await assert.rejects(async()=>h.source.readOrigin(call()));}finally{await stop(h);}
++   }finally{await owner.query(revoke);}
++  }
++  // Block inside the SQL guard after the Node checkout preflight. A grant made
++  // during that wait must still fail the SQL boundary after the lock releases.
++  const h=adapter(),held=await blocker('LOCK TABLE ritc.privacy_journal_origin IN ACCESS EXCLUSIVE MODE'),request=call();
++  let pending;try{
++   pending=h.source.readCommittedEvent(a.eventId,request);pending.catch(()=>{});await blocked(h.config.applicationName,request);
++   await owner.query('GRANT SELECT(event_id) ON ritc.privacy_journal_outbox TO '+observer);
++   await unlock(held);await assert.rejects(async()=>pending);
++  }finally{await unlock(held);await owner.query('REVOKE SELECT(event_id) ON ritc.privacy_journal_outbox FROM '+observer);await stop(h);}
++  assert.equal((await ackRows(a)).length,0);
++ }finally{await c.end();}
++});
++
++test('independently signed receipt is verified before any SQL: malformed/wrong event/job/digest/transition/head/scope/key rejected',async()=>{
++ const a=await acceptance(),original=receipt(a);
++ const variants=[null,{}, {...original,authoritySignature:'A'.repeat(86)}];
++ for(const change of [p=>p.record.eventId=randomUUID(),p=>p.record.payloadDigest='f'.repeat(64),p=>p.record.transition='intent',p=>p.record.seq++,p=>p.record.recordHash='e'.repeat(64),p=>p.scopeDigest='e'.repeat(64),p=>p.authorityKeyId='wrong-key',p=>p.extra=true]){const p=clone(original);change(p);variants.push(resign(p));}
++ for(const proof of variants){const h=adapter();try{assert.equal((await activities(h.config.applicationName)).length,0);await assert.rejects(async()=>h.source.acknowledge(a.eventId,a.payloadDigest,original.record.seq,original.record.recordHash,proof,call()));assert.equal((await activities(h.config.applicationName)).length,0);assert.equal((await ackRows(a)).length,0);}finally{await stop(h);}}
++ const wrongJob=clone(original);wrongJob.record.jobId=randomUUID();
++ const bound=adapter();try{await assert.rejects(async()=>acknowledge(bound.source,a,resign(wrongJob)));assert.equal((await ackRows(a)).length,0);}finally{await stop(bound);}
++ const h=adapter();try{
++  await acknowledge(h.source,a,original);await acknowledge(h.source,a,original);
++  assert.deepEqual(await ackRows(a),[{event_id:a.eventId,payload_digest:a.payloadDigest,head_seq:String(original.record.seq),head_hash:original.record.recordHash}]);
++  await assert.rejects(async()=>acknowledge(h.source,a,receipt(a,2)));
++  assert.equal((await ackRows(a))[0].head_seq,String(original.record.seq));
++ }finally{await stop(h);}
++});
++
++test('preaborted and expired calls start no backend or SQL; queued abort starts no later acknowledgement',async()=>{
++ const a=await acceptance();
++ for(const variant of ['abort','deadline']){const h=adapter(),c=call();if(variant==='abort')c.controller.abort();else c.deadlineUnixMs=Date.now()-1;
++  try{await assert.rejects(async()=>h.source.readOrigin(c));await assert.rejects(async()=>acknowledge(h.source,a,receipt(a),c));assert.equal((await activities(h.config.applicationName)).length,0);assert.equal((await ackRows(a)).length,0);}finally{await stop(h);}}
++ const h=adapter(),held=await blocker('LOCK TABLE ritc.privacy_journal_outbox IN ACCESS EXCLUSIVE MODE'),first=call(),second=call();
++ let pending;try{
++  pending=h.source.readCommittedEvent(a.eventId,first);pending.catch(()=>{});const active=await blocked(h.config.applicationName,first);
++  const queued=acknowledge(h.source,a,receipt(a),second);queued.catch(()=>{});await delay(30);second.controller.abort();await assert.rejects(async()=>queued);
++  const tag=createHash('sha256').update(second.attemptId).digest('hex');assert(!(await activities(h.config.applicationName)).some(x=>x.query.includes(tag)));
++  await unlock(held);assert.deepEqual(await pending,a);await delay(60);
++  assert.equal((await ackRows(a)).length,0);assert(!(await activities(h.config.applicationName)).some(x=>x.query.includes(tag)));
++  await backendGone(active.pid);assert.deepEqual(await h.source.readCommittedEvent(a.eventId,call()),a);assert.notEqual((await activities(h.config.applicationName))[0].pid,active.pid);
++ }finally{await unlock(held);await stop(h);}
++});
++
++test('actual blocked read cancellation destroys connection; backend terminates within SQL timeout and a fresh call succeeds',async()=>{
++ const a=await acceptance(),h=adapter(),held=await blocker('LOCK TABLE ritc.privacy_journal_outbox IN ACCESS EXCLUSIVE MODE'),c=call({deadlineUnixMs:Date.now()+800});
++ let unlocked=false;try{
++  const pending=h.source.readCommittedEvent(a.eventId,c);pending.catch(()=>{});const active=await blocked(h.config.applicationName,c),start=Date.now();c.controller.abort();await assert.rejects(async()=>pending);assert(Date.now()-start<500);
++  // A disconnected blocked backend may remain until its actual statement_timeout.
++  await backendGone(active.pid,4000);await unlock(held);unlocked=true;
++  assert.deepEqual(await h.source.readCommittedEvent(a.eventId,call()),a);assert.equal((await ackRows(a)).length,0);
++ }finally{if(!unlocked)await unlock(held);await stop(h);}
++});
++
++test('blocked acknowledgement abort rolls back: no late acknowledgement after unblock or actual statement timeout',async()=>{
++ const a=await acceptance(),h=adapter(),held=await blocker('LOCK TABLE ritc.privacy_journal_ack IN ACCESS EXCLUSIVE MODE'),c=call({deadlineUnixMs:Date.now()+900});
++ let unlocked=false;try{
++  const pending=acknowledge(h.source,a,receipt(a),c);pending.catch(()=>{});const active=await blocked(h.config.applicationName,c);c.controller.abort();await assert.rejects(async()=>pending);
++  await unlock(held);unlocked=true;await backendGone(active.pid,4000);assert.equal((await ackRows(a)).length,0);await delay(80);assert.equal((await ackRows(a)).length,0);
++  await acknowledge(h.source,a);assert.equal((await ackRows(a)).length,1);
++ }finally{if(!unlocked)await unlock(held);await stop(h);}
++});
++
++test('actual deadline bounds blocked SQL and leaves no acknowledgement or idle transaction',async()=>{
++ const a=await acceptance(),h=adapter(),held=await blocker('LOCK TABLE ritc.privacy_journal_ack IN ACCESS EXCLUSIVE MODE'),c=call({deadlineUnixMs:Date.now()+450});
++ let unlocked=false;try{
++  const pending=acknowledge(h.source,a,receipt(a),c);pending.catch(()=>{});const active=await blocked(h.config.applicationName,c);await assert.rejects(async()=>pending);
++  await backendGone(active.pid,4000);await unlock(held);unlocked=true;assert.equal((await ackRows(a)).length,0);
++  assert(!(await activities(h.config.applicationName)).some(x=>x.state==='idle in transaction'));
++ }finally{if(!unlocked)await unlock(held);await stop(h);}
++});
++
++test('real COMMIT response loss reports uncertainty; late committed acknowledgement remains exact and retryable',async()=>{
++ const a=await acceptance(),proof=receipt(a),h=adapter(),c=call();
++ await owner.query("CREATE FUNCTION ritc.synthetic_ack_commit_delay() RETURNS trigger LANGUAGE plpgsql SET search_path=pg_catalog AS $$ BEGIN PERFORM pg_sleep(0.65);RETURN NEW;END $$; REVOKE ALL ON FUNCTION ritc.synthetic_ack_commit_delay() FROM PUBLIC,ritc_app,ritc_worker,ritc_guardian_verifier");
++ await owner.query('CREATE CONSTRAINT TRIGGER synthetic_ack_commit_delay AFTER INSERT ON ritc.privacy_journal_ack DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION ritc.synthetic_ack_commit_delay()');
++ try{
++  const pending=acknowledge(h.source,a,proof,c);pending.catch(()=>{});
++  const active=await until(async()=>{const rows=await activities(h.config.applicationName);return rows.find(x=>x.query.includes('COMMIT')&&x.wait_event==='PgSleep');},'real COMMIT deferred trigger executing');
++  assert.equal((await ackRows(a)).length,0);c.controller.abort();
++  await assert.rejects(async()=>pending,error=>error.acknowledgementMayHaveCommitted===true&&error.sqlDispatched===true);
++  await backendGone(active.pid,5000);
++  assert.deepEqual(await ackRows(a),[{event_id:a.eventId,payload_digest:a.payloadDigest,head_seq:String(proof.record.seq),head_hash:proof.record.recordHash}]);
++  await stop(h);const retry=adapter();try{await acknowledge(retry.source,a,proof);assert.equal((await ackRows(a)).length,1);}finally{await stop(retry);}
++ }finally{
++  await stop(h);await owner.query('DROP TRIGGER synthetic_ack_commit_delay ON ritc.privacy_journal_ack');await owner.query('DROP FUNCTION ritc.synthetic_ack_commit_delay()');
++ }
++});
+--- /dev/null
++++ b/service/scripts/test-privacy-journal-pg-source.mjs
+@@ -0,0 +1,54 @@
++// Dedicated local-only runner. Requires a previously reviewed existing observer.
++// It never creates/changes a cluster role, password, membership or role setting.
++import {randomUUID,createHash} from 'node:crypto';
++import {readFile,readdir} from 'node:fs/promises';
++import {spawn} from 'node:child_process';
++import pg from 'pg';
++
++const base=new URL(process.env.TEST_ADMIN_DATABASE_URL??'postgresql://palatis@localhost/postgres?host=/tmp&port=55432');
++if(!['localhost','127.0.0.1'].includes(base.hostname)||base.searchParams.get('host')!=='/tmp'||base.searchParams.get('port')!=='55432')throw Error('Only explicitly local /tmp:55432 PostgreSQL is permitted');
++const observer=process.env.TEST_JOURNAL_OBSERVER_ROLE;
++if(!observer||!/^[_a-z][_a-z0-9]*$/.test(observer))throw Error('TEST_JOURNAL_OBSERVER_ROLE must name the reviewed existing observer');
++const admin=new pg.Client({connectionString:base.toString()});await admin.connect();
++const databases=[],roleSnapshot=async()=>({roles:(await admin.query('SELECT oid,rolname,rolsuper,rolinherit,rolcreaterole,rolcreatedb,rolcanlogin,rolreplication,rolbypassrls FROM pg_roles ORDER BY oid')).rows,memberships:(await admin.query('SELECT roleid,member,grantor,admin_option,inherit_option,set_option FROM pg_auth_members ORDER BY roleid,member,grantor')).rows});
++const before=await roleSnapshot();
++try{
++ const existing=(await admin.query('SELECT oid::text,rolcanlogin,rolinherit,rolsuper,rolcreaterole,rolcreatedb,rolreplication,rolbypassrls FROM pg_roles WHERE rolname=$1',[observer])).rows[0];
++ if(observer!=='ritc_guardian_test_verifier'||!existing||!existing.rolcanlogin||existing.rolsuper||existing.rolcreaterole||existing.rolcreatedb||existing.rolreplication||existing.rolbypassrls)throw Error('Reviewed existing observer login required; no role changes performed');
++ const reachable=(await admin.query("SELECT rolname,rolsuper,rolcreaterole,rolcreatedb,rolreplication,rolbypassrls FROM pg_roles WHERE pg_has_role($1::oid,oid,'MEMBER') ORDER BY rolname",[existing.oid])).rows;
++ if(reachable.some(x=>x.rolsuper||x.rolcreaterole||x.rolcreatedb||x.rolreplication||x.rolbypassrls)||reachable.some(x=>!['ritc_guardian_test_verifier','ritc_guardian_verifier'].includes(x.rolname)))throw Error('Unexpected inherited observer capabilities; no membership changes performed');
++ for(const required of ['ritc_app','ritc_worker','ritc_guardian_verifier','ritc_test_runtime','ritc_test_worker'])if(!(await admin.query('SELECT 1 FROM pg_roles WHERE rolname=$1',[required])).rowCount)throw Error('Existing fixture roles required; no role creation permitted');
++ const migrations=(await readdir(new URL('../migrations/',import.meta.url))).filter(x=>/^\d+.*\.sql$/.test(x)).sort();
++ if(migrations.length!==24||!migrations.at(-1).startsWith('024_'))throw Error('Exact migrations 001–024 required');
++ const frozen=await Promise.all(migrations.map(async name=>({name,sql:await readFile(new URL('../migrations/'+name,import.meta.url),'utf8')})));
++ for(const kind of ['source','wrong']){
++  const name='ritc_journal_pg_'+kind+'_'+randomUUID().replaceAll('-','');
++  await admin.query('CREATE DATABASE '+name);databases.push(name);
++  await admin.query('REVOKE ALL ON DATABASE '+name+' FROM PUBLIC');
++  await admin.query('GRANT CONNECT ON DATABASE '+name+' TO '+observer+',ritc_test_runtime,ritc_test_worker');
++  const url=new URL(base);url.pathname='/'+name;
++  const client=new pg.Client({connectionString:url.toString()});await client.connect();
++  try{
++   await client.query('CREATE SCHEMA auth;CREATE TABLE auth.users(id uuid PRIMARY KEY,email text,email_confirmed_at timestamptz);CREATE TABLE auth.sessions(id uuid PRIMARY KEY,user_id uuid NOT NULL,not_after timestamptz)');
++   await client.query('CREATE TABLE public.ritc_schema_migration(version text PRIMARY KEY,checksum text NOT NULL,applied_at timestamptz NOT NULL DEFAULT now());REVOKE ALL ON public.ritc_schema_migration FROM PUBLIC');
++   for(const {name,sql}of frozen){await client.query('BEGIN');try{await client.query(sql);await client.query('INSERT INTO public.ritc_schema_migration(version,checksum)VALUES($1,$2)',[name,createHash('sha256').update(sql).digest('hex')]);await client.query('COMMIT');}catch(error){await client.query('ROLLBACK');throw Error(name+': '+error.message,{cause:error});}}
++   await client.query('REVOKE CREATE ON SCHEMA public FROM PUBLIC');
++   await client.query('REVOKE ALL ON ALL TABLES IN SCHEMA ritc FROM ritc_guardian_verifier');
++   await client.query('REVOKE ALL ON ALL SEQUENCES IN SCHEMA ritc FROM ritc_guardian_verifier');
++   await client.query('REVOKE ALL ON ALL FUNCTIONS IN SCHEMA ritc FROM PUBLIC,ritc_guardian_verifier');
++   await client.query('GRANT USAGE ON SCHEMA ritc TO '+observer);
++   for(const signature of ['binding(text,uuid,text,text,oid)','event(text,uuid,text,text,oid,uuid)','acceptance(text,uuid,text,text,oid,uuid)','unacknowledged(text,uuid,text,text,oid,uuid,integer)','acknowledge(text,uuid,text,text,oid,uuid,text,bigint,text)'])await client.query('GRANT EXECUTE ON FUNCTION ritc.privacy_journal_source_'+signature+' TO '+observer);
++  }finally{await client.end();}
++ }
++ const sourceURL=new URL(base);sourceURL.pathname='/'+databases[0];
++ const wrongURL=new URL(base);wrongURL.pathname='/'+databases[1];
++ const child=spawn(process.execPath,['--test','--test-concurrency=1',...(process.argv.includes('--diagnose')?['--test-name-pattern=024 uses']:[]),'tests/privacy-journal-pg-source.integration.mjs'],{cwd:new URL('../',import.meta.url),stdio:'inherit',env:{...process.env,TEST_ADMIN_DATABASE_URL:sourceURL.toString(),TEST_JOURNAL_WRONG_DATABASE_URL:wrongURL.toString(),TEST_JOURNAL_OBSERVER_ROLE:observer}});
++ const watchdog=setTimeout(()=>{console.error('Disposable fixture exceeded bounded 120-second run; terminating test child for cleanup');child.kill('SIGTERM');},120000);
++ try{process.exitCode=await new Promise((resolve,reject)=>{child.once('error',reject);child.once('exit',(code,signal)=>resolve(code??(signal?1:0)));});}finally{clearTimeout(watchdog);}
++}finally{
++ for(const name of databases){await admin.query('SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname=$1 AND pid<>pg_backend_pid()',[name]);await admin.query('DROP DATABASE '+name);}
++ const after=await roleSnapshot();
++ if(JSON.stringify(before)!==JSON.stringify(after)){process.exitCode=1;console.error('Cluster role or membership snapshot changed during the runner');}
++ else console.log('Verified unchanged cluster roles and memberships; both disposable databases removed.');
++ await admin.end();
++}

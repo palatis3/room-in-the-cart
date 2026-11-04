@@ -7,6 +7,8 @@ import {type Database,digest,tokenHash} from './database.js';
 import {ServiceError} from './errors.js';
 import {assertWorkerRole,workerQuery} from './maintenance.js';
 import type {PrivacyJournalPort} from './privacy-journal.js';
+import type {DurablePrivacyJournalPort,JournalCall} from './privacy-journal-durable-contract.js';
+import {PrivacyCall,privacyPhase,withPrivacyClient} from './privacy-call.js';
 const id=z.string().uuid(),secret=z.string().regex(/^[A-Za-z0-9_-]{43}$/);
 const shopChoice=z.discriminatedUnion('action',[
  z.object({shopId:id,revision:z.number().int().positive(),authorityEpoch:z.number().int().positive(),action:z.literal('close')}).strict(),
@@ -17,31 +19,33 @@ export const exitChoiceSchema=z.object({householdId:id,organizer:z.enum(['none',
 });
 export const deletionSchema=z.object({clientKey:id,statusToken:secret,confirm:z.literal(true),households:z.array(exitChoiceSchema).max(100)}).strict().superRefine((v,c)=>{if(new Set(v.households.map(h=>h.householdId)).size!==v.households.length)c.addIssue({code:'custom',message:'Duplicate household'});});
 export const exitSchema=z.object({clientKey:id,confirm:z.literal(true),disposition:exitChoiceSchema}).strict();
-export interface AccountDeletionProvider { assertAvailable(subject:string):Promise<void>; deleteAccount(subject:string):Promise<void> }
+export interface AccountDeletionProvider { assertAvailable(subject:string,call?:JournalCall):Promise<void>; deleteAccount(subject:string,call?:JournalCall):Promise<void> }
 const unavailable=()=>new ServiceError(503,'deletion_unavailable','Account deletion is unavailable until the configured provider can remove the account.');
 export class SupabaseAccountDeletionProvider implements AccountDeletionProvider {
  private readonly base:string;private readonly key:string;
- constructor(config:{url:string;secretKey:string;revokeApple?:(subject:string)=>Promise<void>},private readonly fetcher:typeof fetch=(input,init)=>globalThis.fetch(input,init)){
+ constructor(config:{url:string;secretKey:string;revokeApple?:(subject:string,call?:JournalCall)=>Promise<void>},private readonly fetcher:typeof fetch=(input,init)=>globalThis.fetch(input,init)){
   const url=new URL(config.url);if(url.protocol!=='https:'||url.username||url.password||url.search||url.hash||!['','/'].includes(url.pathname))throw Error('Fixed HTTPS provider origin required');
   if(!config.secretKey.startsWith('sb_secret_')){try{if(decodeJwt(config.secretKey).role!=='service_role')throw Error();}catch{throw Error('Privileged server-only provider key required');}}
   if(config.secretKey.length<20||config.secretKey.length>4096)throw Error('Invalid privileged provider key');this.base=url.origin+'/auth/v1/admin/users/';this.key=config.secretKey;this.apple=config.revokeApple;
  }
- private readonly apple:((subject:string)=>Promise<void>)|undefined;
- private async request(subject:string,method:'GET'|'DELETE'){
+ private readonly apple:((subject:string,call?:JournalCall)=>Promise<void>)|undefined;
+ private async request(subject:string,method:'GET'|'DELETE',parent:JournalCall){
+  return privacyPhase(parent,async call=>{
   id.parse(subject);let response:Response;
-  try{response=await this.fetcher(this.base+subject,{method,headers:{apikey:this.key,Authorization:'Bearer '+this.key,'Content-Type':'application/json'},redirect:'error',signal:AbortSignal.timeout(5000),...(method==='DELETE'?{body:JSON.stringify({should_soft_delete:false})}:{})});}catch{throw unavailable();}
+  try{response=await this.fetcher(this.base+subject,{method,headers:{apikey:this.key,Authorization:'Bearer '+this.key,'Content-Type':'application/json'},redirect:'error',signal:call.signal,...(method==='DELETE'?{body:JSON.stringify({should_soft_delete:false})}:{})});}catch{throw unavailable();}
   if(response.status===404)return null;if(!response.ok)throw unavailable();if(method==='DELETE'){await response.body?.cancel();return null;}
   if(!/^application\/json(?:\s*;|$)/i.test(response.headers.get('content-type')??''))throw unavailable();
   const reader=response.body?.getReader();if(!reader)throw unavailable();let size=0;const parts:Uint8Array[]=[];
   for(;;){const part=await reader.read();if(part.done)break;size+=part.value.length;if(size>65536){await reader.cancel();throw unavailable();}parts.push(part.value);}
   try{const user=z.object({id,identities:z.array(z.object({provider:z.string()}))}).parse(JSON.parse(Buffer.concat(parts).toString('utf8')));if(user.id!==subject)throw Error();return user;}catch{throw unavailable();}
+  });
  }
- private async account(subject:string){const value=await this.request(subject,'GET');if(value&&value.identities.some(i=>i.provider==='apple')&&!this.apple)throw unavailable();return value;}
- async assertAvailable(subject:string){if(!await this.account(subject))throw unavailable();}
- async deleteAccount(subject:string){const user=await this.account(subject);if(!user)return;if(user.identities.some(i=>i.provider==='apple'))await this.apple!(subject);await this.request(subject,'DELETE');if(await this.request(subject,'GET'))throw unavailable();}
+ private async account(subject:string,call:JournalCall){const value=await this.request(subject,'GET',call);if(value&&value.identities.some(i=>i.provider==='apple')&&!this.apple)throw unavailable();return value;}
+ async assertAvailable(subject:string,parent?:JournalCall){const scope=new PrivacyCall(parent);try{await scope.run(async call=>{if(!await this.account(subject,call))throw unavailable();});}finally{scope.dispose();}}
+ async deleteAccount(subject:string,parent?:JournalCall){const scope=new PrivacyCall(parent);try{await scope.run(async call=>{const user=await this.account(subject,call);if(!user)return;if(user.identities.some(i=>i.provider==='apple'))await privacyPhase(call,child=>this.apple!(subject,child));scope.check();await this.request(subject,'DELETE',call);scope.check();if(await this.request(subject,'GET',call))throw unavailable();});}finally{scope.dispose();}}
 }
 export interface DeletionPolicy {receiptRetentionDays:number;erasureMarkerRetentionDays:number;verifiedBackupRetentionDays:number}
-function policy(value:DeletionPolicy){z.object({receiptRetentionDays:z.number().int().min(1).max(365),erasureMarkerRetentionDays:z.number().int().min(1).max(3650),verifiedBackupRetentionDays:z.number().int().min(0).max(3650)}).strict().parse(value);if(value.erasureMarkerRetentionDays<Math.max(value.receiptRetentionDays,value.verifiedBackupRetentionDays))throw Error('Erasure markers must cover receipts and the verified backup horizon');return value;}
+function policy(value:DeletionPolicy){const checked=z.object({receiptRetentionDays:z.number().int().min(1).max(365),erasureMarkerRetentionDays:z.number().int().min(1).max(3650),verifiedBackupRetentionDays:z.number().int().min(0).max(3650)}).strict().parse(value);if(checked.erasureMarkerRetentionDays<Math.max(checked.receiptRetentionDays,checked.verifiedBackupRetentionDays))throw Error('Erasure markers must cover receipts and the verified backup horizon');return Object.freeze(checked);}
 async function journalDeadline<T>(work:Promise<T>):Promise<T>{let timer:ReturnType<typeof setTimeout>|undefined;try{return await Promise.race([work,new Promise<never>((_,reject)=>{timer=setTimeout(()=>reject(unavailable()),5000);})]);}finally{if(timer)clearTimeout(timer);}}
 function digestSession(identity:VerifiedIdentity){return createHash('sha256').update(identity.issuer+'\n'+identity.subject+'\n'+identity.sessionId).digest('hex');}
 function recent(identity:VerifiedIdentity){const time=identity.authenticatedAt?.getTime();if(!time||time>Date.now()+5000||Date.now()-time>5*60_000)throw new ServiceError(401,'reauthentication_required','Sign in again, then confirm this account action within five minutes.');}
@@ -55,29 +59,37 @@ function mapped(error:unknown):never{
 }
 export class PrivacyService {
  private readonly policy:DeletionPolicy|undefined;
- constructor(private readonly repo:HouseholdRepository,private readonly options:{provider?:AccountDeletionProvider;policy?:DeletionPolicy;journal?:PrivacyJournalPort}={}){this.policy=options.policy?policy(options.policy):undefined;}
- private async authenticated(identity:VerifiedIdentity){const db=await this.repo.pool.connect();try{await db.query('BEGIN');await this.repo.assertSession(db,identity,new Date());await db.query('COMMIT');}catch(e){await db.query('ROLLBACK');throw e;}finally{db.release();}}
- async preview(identity:VerifiedIdentity){
-  await this.authenticated(identity);
-  try{const result=(await workerQuery(this.repo.pool,'SELECT ritc.privacy_preview($1,$2,$3::uuid) AS value',[identity.issuer,identity.subject,identity.sessionId])).rows[0].value;
+ constructor(private readonly repo:HouseholdRepository,private readonly options:{provider?:AccountDeletionProvider;policy?:DeletionPolicy;journal?:PrivacyJournalPort|DurablePrivacyJournalPort}={}){this.policy=options.policy?policy(options.policy):undefined;}
+ private async authenticated(identity:VerifiedIdentity,call:JournalCall){return withPrivacyClient(this.repo.pool,call,async db=>{try{await db.query('BEGIN');await this.repo.assertSession(db,identity,new Date());await db.query('COMMIT');}catch(e){await db.query('ROLLBACK').catch(()=>{});throw e;}});}
+ private async query(call:JournalCall,text:string,values:unknown[]=[]){return withPrivacyClient(this.repo.pool,call,async db=>{try{await db.query('BEGIN');await db.query("SET LOCAL statement_timeout='10s'; SET LOCAL lock_timeout='2s'");const value=await db.query(text,values);await db.query('COMMIT');return value;}catch(e){await db.query('ROLLBACK').catch(()=>{});throw e;}});}
+ async preview(identity:VerifiedIdentity,parent?:JournalCall){
+  const scope=new PrivacyCall(parent);try{return await scope.run(async call=>{
+  await this.authenticated(identity,call);
+  try{const result=(await this.query(call,'SELECT ritc.privacy_preview($1,$2,$3::uuid) AS value',[identity.issuer,identity.subject,identity.sessionId])).rows[0].value;
    return{...result,verifiedBackupRetentionDays:this.policy?.verifiedBackupRetentionDays??null,deletionAvailable:Boolean(this.options.provider&&this.policy&&this.options.journal),reauthenticationRequired:!identity.authenticatedAt||Date.now()-identity.authenticatedAt.getTime()>300000,subscriptionManagementURL:'https://apps.apple.com/account/subscriptions/',subscriptionCancelledByDeletion:false};
   }catch(e){return mapped(e);}
+  });}finally{scope.dispose();}
  }
- async request(identity:VerifiedIdentity,input:z.infer<typeof deletionSchema>){
-  recent(identity);await this.authenticated(identity);if(!this.options.provider||!this.policy||!this.options.journal||!identity.authenticatedMethod)throw unavailable();
-  await this.options.provider.assertAvailable(identity.subject);
-  const db=await this.repo.pool.connect();let eventId:string;
-  try{
+ async request(identity:VerifiedIdentity,input:z.infer<typeof deletionSchema>,parent?:JournalCall){
+  input=deletionSchema.parse(input);
+  const scope=new PrivacyCall(parent);try{return await scope.run(async call=>{
+  recent(identity);await this.authenticated(identity,call);if(!this.options.provider||!this.policy||!this.options.journal||!identity.authenticatedMethod)throw unavailable();
+  const {provider,journal}=this.options,retention=this.policy;
+  await privacyPhase(call,child=>provider.assertAvailable(identity.subject,child));
+  let eventId:string;
+  await withPrivacyClient(this.repo.pool,call,async db=>{try{
    await db.query('BEGIN');await db.query("SET LOCAL statement_timeout='10s'; SET LOCAL lock_timeout='2s'; SET LOCAL idle_in_transaction_session_timeout='7s'");
-   const event=(await db.query('SELECT ritc.privacy_journal_request($1,$2,$3::uuid,$4::uuid,$5,$6,$7::jsonb,$8,$9,$10::jsonb) AS event',[identity.issuer,identity.subject,identity.sessionId,input.clientKey,tokenHash(input.statusToken),digest({...input,statusToken:undefined}),JSON.stringify(input.households),this.policy.receiptRetentionDays,this.policy.erasureMarkerRetentionDays,JSON.stringify({configurationId:this.options.journal.configurationId,authenticatedAt:identity.authenticatedAt!.toISOString(),authenticatedMethod:identity.authenticatedMethod,providerAvailability:'configured_adapter_passed',appleGate:'availability_contract_passed',policy:this.policy,sessionBindingHash:digestSession(identity),checkedAt:new Date().toISOString()})])).rows[0].event;
-   eventId=event.eventId;await journalDeadline(this.options.journal.beforeCommit(event));await db.query('COMMIT');
-  }catch(e){await db.query('ROLLBACK').catch(()=>{});mapped(e);}finally{db.release();}
-  await journalDeadline(this.options.journal.afterCommit(eventId!));
-  return this.status(input.clientKey,input.statusToken);
+   const event=(await db.query('SELECT ritc.privacy_journal_request($1,$2,$3::uuid,$4::uuid,$5,$6,$7::jsonb,$8,$9,$10::jsonb) AS event',[identity.issuer,identity.subject,identity.sessionId,input.clientKey,tokenHash(input.statusToken),digest({...input,statusToken:undefined}),JSON.stringify(input.households),retention.receiptRetentionDays,retention.erasureMarkerRetentionDays,JSON.stringify({configurationId:journal.configurationId,authenticatedAt:identity.authenticatedAt!.toISOString(),authenticatedMethod:identity.authenticatedMethod,providerAvailability:'configured_adapter_passed',appleGate:'availability_contract_passed',policy:retention,sessionBindingHash:digestSession(identity),checkedAt:new Date().toISOString()})])).rows[0].event;
+   eventId=event.eventId;await privacyPhase(call,child=>journal.beforeCommit(event,child));scope.check();await db.query('COMMIT');
+  }catch(e){await db.query('ROLLBACK').catch(()=>{});mapped(e);}});
+  await privacyPhase(call,child=>journal.afterCommit(eventId!,child));
+  return this.status(input.clientKey,input.statusToken,call);
+  });}finally{scope.dispose();}
  }
- async status(jobId:string,statusToken:string){id.parse(jobId);secret.parse(statusToken);let value=(await workerQuery(this.repo.pool,'SELECT ritc.privacy_status($1,$2) AS value',[jobId,tokenHash(statusToken)])).rows[0].value;if(!value)throw new ServiceError(404,'unavailable','Use the deletion receipt from this device.');if(this.options.journal){await journalDeadline(this.options.journal.acknowledgeJob(jobId));value=(await workerQuery(this.repo.pool,'SELECT ritc.privacy_status($1,$2) AS value',[jobId,tokenHash(statusToken)])).rows[0].value;if(!value)throw new ServiceError(404,'unavailable','Use the deletion receipt from this device.');}return value;}
- async leave(identity:VerifiedIdentity,householdId:string,input:z.infer<typeof exitSchema>){recent(identity);await this.authenticated(identity);if(input.disposition.householdId!==householdId||input.disposition.eraseChildProfiles.length)throw new ServiceError(422,'invalid_candidate','Leaving a household does not erase child profiles. Resolve guardian responsibility first.');
-  try{await workerQuery(this.repo.pool,'SELECT ritc.leave_household($1,$2,$3::uuid,$4::uuid,$5::uuid,$6,$7::jsonb)',[identity.issuer,identity.subject,identity.sessionId,householdId,input.clientKey,digest(input),JSON.stringify(input.disposition)]);return{householdId,left:true as const,accountDeleted:false as const};}catch(e){return mapped(e);}
+ async status(jobId:string,statusToken:string,parent?:JournalCall){const scope=new PrivacyCall(parent);try{return await scope.run(async call=>{id.parse(jobId);secret.parse(statusToken);let value=(await this.query(call,'SELECT ritc.privacy_status($1,$2) AS value',[jobId,tokenHash(statusToken)])).rows[0].value;if(!value)throw new ServiceError(404,'unavailable','Use the deletion receipt from this device.');if(this.options.journal){await privacyPhase(call,child=>this.options.journal!.acknowledgeJob(jobId,child));value=(await this.query(call,'SELECT ritc.privacy_status($1,$2) AS value',[jobId,tokenHash(statusToken)])).rows[0].value;if(!value)throw new ServiceError(404,'unavailable','Use the deletion receipt from this device.');}return value;});}finally{scope.dispose();}}
+ async leave(identity:VerifiedIdentity,householdId:string,input:z.infer<typeof exitSchema>,parent?:JournalCall){const scope=new PrivacyCall(parent);try{return await scope.run(async call=>{recent(identity);await this.authenticated(identity,call);if(input.disposition.householdId!==householdId||input.disposition.eraseChildProfiles.length)throw new ServiceError(422,'invalid_candidate','Leaving a household does not erase child profiles. Resolve guardian responsibility first.');
+  try{await this.query(call,'SELECT ritc.leave_household($1,$2,$3::uuid,$4::uuid,$5::uuid,$6,$7::jsonb)',[identity.issuer,identity.subject,identity.sessionId,householdId,input.clientKey,digest(input),JSON.stringify(input.disposition)]);return{householdId,left:true as const,accountDeleted:false as const};}catch(e){return mapped(e);}
+  });}finally{scope.dispose();}
  }
 }
 export class PrivacyMaintenance {

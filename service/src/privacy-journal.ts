@@ -4,6 +4,7 @@ import {open,readFile,rename,mkdir,stat,unlink} from 'node:fs/promises';
 import {dirname,resolve} from 'node:path';
 import {z} from 'zod';
 import type {Database} from './database.js';
+import type {JournalCall} from './privacy-journal-durable-contract.js';
 
 const uuid=z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/),hash=z.string().regex(/^[0-9a-f]{64}$/);
 export function journalCanonical(value:unknown):string{
@@ -17,9 +18,9 @@ const eventSchema=z.object({eventId:uuid,payloadDigest:hash,payload:payloadSchem
 export type PrivacyJournalEvent=z.infer<typeof eventSchema>;
 export interface PrivacyJournalPort{
  readonly configurationId:string;
- beforeCommit(candidate:PrivacyJournalEvent):Promise<void>;
- afterCommit(eventId:string):Promise<void>;
- acknowledgeJob(jobId:string):Promise<void>;
+ beforeCommit(candidate:PrivacyJournalEvent,call?:JournalCall):Promise<void>;
+ afterCommit(eventId:string,call?:JournalCall):Promise<void>;
+ acknowledgeJob(jobId:string,call?:JournalCall):Promise<void>;
 }
 const headSchema=z.object({version:z.literal(1),lineage:uuid,schemaDigest:hash,configurationId:z.string().min(1).max(100),seq:z.number().int().nonnegative(),hash, fenced:z.boolean()}).strict();
 export type PrivacyJournalHead=z.infer<typeof headSchema>;
@@ -73,11 +74,24 @@ async function ownerFile(path:string,allowMissing=false){
  try{const s=await stat(path);if(!s.isFile()||(s.mode&0o077)!==0||s.uid!==process.getuid?.())throw Error('Owner-only file required');}
  catch(e){if(allowMissing&&(e as NodeJS.ErrnoException).code==='ENOENT')return;throw e;}
 }
-async function fsyncDirectory(path:string){const handle=await open(path,constants.O_RDONLY);try{await handle.sync();}finally{await handle.close();}}
-async function atomicPrivateJSON(path:string,value:unknown){
- const temporary=path+'.pending';const handle=await open(temporary,constants.O_WRONLY|constants.O_CREAT|constants.O_EXCL|constants.O_NOFOLLOW,0o600);
- try{await handle.writeFile(journalCanonical(value)+'\n');await handle.sync();}finally{await handle.close();}
- await rename(temporary,path);await fsyncDirectory(dirname(path));
+function assertLocalCall(call?:JournalCall):void{
+ if(call===undefined)return;
+ if(!call||typeof call.attemptId!=='string'||!call.attemptId.length||call.attemptId.length>100||!Number.isSafeInteger(call.deadlineUnixMs)||!(call.signal instanceof AbortSignal))throw Error('Call-owned journal deadline and AbortSignal required');
+ call.signal.throwIfAborted();if(Date.now()>=call.deadlineUnixMs)throw Error('Journal deadline exceeded');
+}
+function localCallEnded(call?:JournalCall){return Boolean(call&&(call.signal.aborted||Date.now()>=call.deadlineUnixMs));}
+interface LocalOperation {readonly call:JournalCall|undefined;uncertainFileTail:boolean}
+// Node 22 readFile/writeFile support best-effort AbortSignal buffering cancellation.
+// open, sync and rename do not; their admitted OS requests may finish after abort.
+async function fsyncDirectory(path:string,call?:JournalCall){
+ assertLocalCall(call);const handle=await open(path,constants.O_RDONLY);
+ try{assertLocalCall(call);await handle.sync();assertLocalCall(call);}finally{await handle.close();}
+ assertLocalCall(call);
+}
+async function atomicPrivateJSON(path:string,value:unknown,call?:JournalCall){
+ assertLocalCall(call);const temporary=path+'.pending';const handle=await open(temporary,constants.O_WRONLY|constants.O_CREAT|constants.O_EXCL|constants.O_NOFOLLOW,0o600);
+ try{assertLocalCall(call);await handle.writeFile(journalCanonical(value)+'\n',call?{signal:call.signal}:undefined);assertLocalCall(call);await handle.sync();assertLocalCall(call);}finally{await handle.close();}
+ assertLocalCall(call);await rename(temporary,path);assertLocalCall(call);await fsyncDirectory(dirname(path),call);assertLocalCall(call);
 }
 export interface LocalPrivacyJournalConfiguration{
  source:Database;directory:string;checkpointPath:string;privateKeyPath:string;keyId:string;lineage:string;schemaDigest:string;configurationId:string;
@@ -124,8 +138,37 @@ export async function createLocalPrivacyJournal(configuration:LocalPrivacyJourna
   }
  }catch(e){await lock.close();await unlink(directory+'/writer.lock');throw e;}
  const head=(fenced=false):PrivacyJournalHead=>({version:1,lineage:configuration.lineage,schemaDigest:configuration.schemaDigest,configurationId:configuration.configurationId,seq:records.length,hash:records.length?journalHash(records[records.length-1]):zero,fenced});
- const serial=<T>(fn:()=>Promise<T>):Promise<T>=>{const next=queue.then(()=>{if(closed)throw Error('Journal closed');if(poisoned)throw Error('Journal requires explicit fenced recovery');return fn();});queue=next.catch(()=>{});return next;};
- async function append(kind:JournalRecord['kind'],candidate:PrivacyJournalEvent){
+ const serial=<T>(fn:(operation:LocalOperation)=>Promise<T>,input?:JournalCall):Promise<T>=>{
+  let call:JournalCall|undefined,dispose=()=>{},cancelled:Promise<never>|undefined;
+  let operation:LocalOperation={call:undefined,uncertainFileTail:false};
+  if(input!==undefined){
+   try{assertLocalCall(input);}catch(error){return Promise.reject(error);}
+   // Capture before queueing: neither waiting nor caller mutation renews a budget.
+   const attemptId=input.attemptId,deadlineUnixMs=input.deadlineUnixMs,signal=input.signal,controller=new AbortController();
+   const abort=()=>controller.abort(signal.reason??Error('Journal call aborted'));
+   signal.addEventListener('abort',abort,{once:true});
+   let timer:ReturnType<typeof setTimeout>;
+   const expire=()=>{const remaining=deadlineUnixMs-Date.now();if(remaining<=0)controller.abort(Error('Journal deadline exceeded'));else timer=setTimeout(expire,Math.min(2_147_483_647,remaining));};
+   timer=setTimeout(expire,Math.min(2_147_483_647,Math.max(0,deadlineUnixMs-Date.now())));
+   call=Object.freeze({attemptId,deadlineUnixMs,signal:controller.signal});
+   cancelled=new Promise<never>((_,reject)=>{const ended=()=>{if(operation.uncertainFileTail)poisoned=true;reject(controller.signal.reason??Error('Journal call aborted'));};controller.signal.addEventListener('abort',ended,{once:true});dispose=()=>{clearTimeout(timer);signal.removeEventListener('abort',abort);controller.signal.removeEventListener('abort',ended);};});
+   if(signal.aborted)abort();
+  }
+  operation={call,uncertainFileTail:false};
+  const next=queue.then(async()=>{assertLocalCall(call);if(closed)throw Error('Journal closed');if(poisoned)throw Error('Journal requires explicit fenced recovery');const value=await fn(operation);assertLocalCall(call);return value;});
+  // Keep the real work serialized even when the caller has already rejected.
+  queue=next.catch(()=>{});return cancelled?Promise.race([next,cancelled]).finally(dispose):next;
+ };
+ async function sourceQuery(sql:string,args:unknown[]=[],operation?:LocalOperation){
+  const call=operation?.call;assertLocalCall(call);
+  if(!call)return configuration.source.query(sql,args);
+  // Pool.query may wait for a connection internally. Recheck at actual dispatch,
+  // and release an eventually acquired unused connection after caller abort.
+  const db=await configuration.source.connect();
+  try{assertLocalCall(call);const result=await db.query(sql,args);assertLocalCall(call);return result;}finally{db.release();}
+ }
+ async function append(kind:JournalRecord['kind'],candidate:PrivacyJournalEvent,operation?:LocalOperation){
+  const call=operation?.call;assertLocalCall(call);
   const event=validateEvent(candidate);
   const previous=records.filter(r=>r.event.eventId===event.eventId).at(-1);
   if(kind==='intent'&&previous||kind==='rollback'&&previous?.kind!=='intent'||kind==='commit'&&(previous&&previous.kind!=='intent'||event.payload.kind==='acceptance'&&!previous))throw Error('Journal transition conflict');
@@ -135,29 +178,30 @@ export async function createLocalPrivacyJournal(configuration:LocalPrivacyJourna
   const line=journalCanonical(record)+'\n';if(records.length>=MAX_RECORDS||byteLength+Buffer.byteLength(line)>MAX_BYTES)throw Error('Local journal capacity reached');
   try{
   if(kind==='intent')configuration.fault?.('before_intent_sync');
-  const h=await open(file,constants.O_WRONLY|constants.O_CREAT|constants.O_APPEND|constants.O_NOFOLLOW,0o600);
-  try{await h.writeFile(line);await h.sync();}finally{await h.close();}
-  await fsyncDirectory(directory);records.push(record);byteLength+=Buffer.byteLength(line);
+  assertLocalCall(call);const h=await open(file,constants.O_WRONLY|constants.O_CREAT|constants.O_APPEND|constants.O_NOFOLLOW,0o600);
+  try{assertLocalCall(call);if(operation)operation.uncertainFileTail=true;await h.writeFile(line,call?{signal:call.signal}:undefined);assertLocalCall(call);await h.sync();assertLocalCall(call);}finally{await h.close();}
+  assertLocalCall(call);await fsyncDirectory(directory,call);assertLocalCall(call);records.push(record);byteLength+=Buffer.byteLength(line);
   if(kind==='intent')configuration.fault?.('after_intent_sync');else configuration.fault?.('after_commit_append');
-  configuration.fault?.('before_checkpoint');await atomicPrivateJSON(checkpointPath,head());configuration.fault?.('after_checkpoint');
-  }catch(error){poisoned=true;throw error;}
+  assertLocalCall(call);configuration.fault?.('before_checkpoint');assertLocalCall(call);await atomicPrivateJSON(checkpointPath,head(),call);configuration.fault?.('after_checkpoint');assertLocalCall(call);
+  if(operation)operation.uncertainFileTail=false;
+  }catch(error){if(operation?.uncertainFileTail||!localCallEnded(call))poisoned=true;throw error;}
  }
- async function committedEvent(eventId:string){uuid.parse(eventId);const row=(await configuration.source.query('SELECT event_id,payload,payload_digest FROM ritc.privacy_journal_outbox WHERE event_id=$1',[eventId])).rows[0];if(!row)throw Error('Committed source event unavailable');return validateEvent({eventId:row.event_id,payloadDigest:row.payload_digest,payload:row.payload});}
- async function afterCommit(eventId:string){const event=await committedEvent(eventId),prior=records.find(r=>r.kind==='commit'&&r.event.eventId===eventId);
+ async function committedEvent(eventId:string,operation?:LocalOperation){uuid.parse(eventId);const row=(await sourceQuery('SELECT event_id,payload,payload_digest FROM ritc.privacy_journal_outbox WHERE event_id=$1',[eventId],operation)).rows[0];if(!row)throw Error('Committed source event unavailable');return validateEvent({eventId:row.event_id,payloadDigest:row.payload_digest,payload:row.payload});}
+ async function afterCommit(eventId:string,operation?:LocalOperation){const call=operation?.call;assertLocalCall(call);const event=await committedEvent(eventId,operation),prior=records.find(r=>r.kind==='commit'&&r.event.eventId===eventId);
   if(prior&&prior.event.payloadDigest!==event.payloadDigest)throw Error('Committed event changed');
   if(event.payload.kind==='acceptance'&&!records.some(r=>r.event.eventId===eventId&&r.event.payloadDigest===event.payloadDigest&&r.kind==='intent')&&!prior)throw Error('Committed acceptance lacks its original durable intent');
-  if(!prior)await append('commit',event);
+  if(!prior)await append('commit',event,operation);
   // Ack references the commit record itself; retries use the same immutable head.
-  const record=prior??records[records.length-1]!;const cp=headSchema.parse(JSON.parse(await readFile(checkpointPath,'utf8')));
+  const record=prior??records[records.length-1]!;assertLocalCall(call);const checkpoint=await readFile(checkpointPath,{encoding:'utf8',...(call?{signal:call.signal}:{})});assertLocalCall(call);const cp=headSchema.parse(JSON.parse(checkpoint));
   if(cp.seq<record.seq)throw Error('Independent checkpoint pending');
   if(cp.seq>records.length||cp.hash!==(cp.seq?journalHash(records[cp.seq-1]):zero)||cp.lineage!==configuration.lineage)throw Error('Independent checkpoint conflict');
-  await configuration.source.query('SELECT ritc.privacy_journal_acknowledge($1,$2,$3,$4)',[eventId,event.payloadDigest,record.seq,journalHash(record)]);
+  await sourceQuery('SELECT ritc.privacy_journal_acknowledge($1,$2,$3,$4)',[eventId,event.payloadDigest,record.seq,journalHash(record)],operation);
  }
  if(configuration.mode==='recover_fenced')await atomicPrivateJSON(checkpointPath,head());
  const port:PrivacyJournalPort={configurationId:configuration.configurationId,
-  beforeCommit:candidate=>serial(async()=>{if(writerFenced)throw Error('Fenced writer cannot accept requests');const event=validateEvent(candidate),prior=records.filter(r=>r.event.eventId===event.eventId).at(-1);if(prior){if(prior.kind==='rollback'||prior.event.payloadDigest!==event.payloadDigest)throw Error('Intent event already resolved or changed');return;}await append('intent',event);}),
-  afterCommit:eventId=>serial(()=>afterCommit(eventId)),
-  acknowledgeJob:jobId=>serial(async()=>{uuid.parse(jobId);const rows=(await configuration.source.query('SELECT e.event_id FROM ritc.privacy_journal_outbox e WHERE e.job_id=$1 AND NOT EXISTS(SELECT 1 FROM ritc.privacy_journal_ack a WHERE a.event_id=e.event_id) ORDER BY e.created_at,e.event_id',[jobId])).rows;for(const row of rows)await afterCommit(row.event_id);}),
+  beforeCommit:(candidate,call)=>serial(async operation=>{if(writerFenced)throw Error('Fenced writer cannot accept requests');const event=validateEvent(candidate),prior=records.filter(r=>r.event.eventId===event.eventId).at(-1);if(prior){if(prior.kind==='rollback'||prior.event.payloadDigest!==event.payloadDigest)throw Error('Intent event already resolved or changed');return;}await append('intent',event,operation);},call),
+  afterCommit:(eventId,call)=>serial(operation=>afterCommit(eventId,operation),call),
+  acknowledgeJob:(jobId,call)=>serial(async operation=>{uuid.parse(jobId);const rows=(await sourceQuery('SELECT e.event_id FROM ritc.privacy_journal_outbox e WHERE e.job_id=$1 AND NOT EXISTS(SELECT 1 FROM ritc.privacy_journal_ack a WHERE a.event_id=e.event_id) ORDER BY e.created_at,e.event_id',[jobId],operation)).rows;for(const row of rows){assertLocalCall(operation.call);await afterCommit(row.event_id,operation);}},call),
  };
  return{port,publicKey,
   async fence(){return serial(async()=>{

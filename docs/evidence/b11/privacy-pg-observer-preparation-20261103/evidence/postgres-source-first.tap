@@ -1,0 +1,89 @@
+TAP version 13
+# Subtest: 024 uses fixed definer/search_path, PUBLIC/app/worker denied, observer raw journal and helper access denied
+not ok 1 - 024 uses fixed definer/search_path, PUBLIC/app/worker denied, observer raw journal and helper access denied
+  ---
+  duration_ms: 26.593834
+  location: '/Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-pg-source/service/tests/privacy-journal-pg-source.integration.mjs:59:1'
+  failureType: 'testCodeFailure'
+  error: 'Committed source call failed'
+  code: 'ERR_TEST_FAILURE'
+  name: 'PostgresCommittedSourceCallError'
+  stack: |-
+    failure (file:///Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-pg-source/service/dist/privacy-journal-pg-source.js:131:37)
+    transaction (file:///Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-pg-source/service/dist/privacy-journal-pg-source.js:214:19)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (file:///Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-pg-source/service/tests/privacy-journal-pg-source.integration.mjs:70:41)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: real committed visibility, exact original acceptance and deterministic bounded job list
+not ok 2 - real committed visibility, exact original acceptance and deterministic bounded job list
+  ---
+  duration_ms: 22.105584
+  location: '/Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-pg-source/service/tests/privacy-journal-pg-source.integration.mjs:73:1'
+  failureType: 'testCodeFailure'
+  error: 'Committed source call failed'
+  code: 'ERR_TEST_FAILURE'
+  name: 'PostgresCommittedSourceCallError'
+  stack: |-
+    failure (file:///Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-pg-source/service/dist/privacy-journal-pg-source.js:131:37)
+    transaction (file:///Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-pg-source/service/dist/privacy-journal-pg-source.js:214:19)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (file:///Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-pg-source/service/tests/privacy-journal-pg-source.integration.mjs:78:54)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: SQL repeats exact source, origin and database pins and refuses SET ROLE or foreign login
+ok 3 - SQL repeats exact source, origin and database pins and refuses SET ROLE or foreign login
+  ---
+  duration_ms: 40.438708
+  ...
+# Subtest: every SQL wrapper rejects newly effective column/extra-function capabilities, including after a blocked checkout
+not ok 4 - every SQL wrapper rejects newly effective column/extra-function capabilities, including after a blocked checkout
+  ---
+  duration_ms: 6041.467916
+  location: '/Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-pg-source/service/tests/privacy-journal-pg-source.integration.mjs:108:1'
+  failureType: 'testCodeFailure'
+  error: 'Timed out observing actual blocked backend'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    until (file:///Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-pg-source/service/tests/privacy-journal-pg-source.integration.mjs:51:160)
+    async TestContext.<anonymous> (file:///Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-pg-source/service/tests/privacy-journal-pg-source.integration.mjs:126:81)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: independently signed receipt is verified before any SQL: malformed/wrong event/job/digest/transition/head/scope/key rejected
+not ok 5 - independently signed receipt is verified before any SQL: malformed/wrong event/job/digest/transition/head/scope/key rejected
+  ---
+  duration_ms: 9.32425
+  location: '/Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-pg-source/service/tests/privacy-journal-pg-source.integration.mjs:134:1'
+  failureType: 'testCodeFailure'
+  error: ''
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    verifyDurableAdmissionReceipt (file:///Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-pg-source/service/dist/privacy-journal-durable.js:114:35)
+    receipt (file:///Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-pg-source/service/dist/privacy-journal-pg-source.js:244:23)
+    Object.acknowledge (file:///Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-pg-source/service/dist/privacy-journal-pg-source.js:269:27)
+    file:///Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-pg-source/service/tests/privacy-journal-pg-source.integration.mjs:138:155
+    waitForActual (node:assert:861:21)
+    Function.rejects (node:assert:996:31)
+    TestContext.<anonymous> (file:///Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-pg-source/service/tests/privacy-journal-pg-source.integration.mjs:138:134)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: preaborted and expired calls start no backend or SQL; queued abort starts no later acknowledgement
+not ok 6 - preaborted and expired calls start no backend or SQL; queued abort starts no later acknowledgement
+  ---
+  duration_ms: 6022.764042
+  location: '/Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-pg-source/service/tests/privacy-journal-pg-source.integration.mjs:149:1'
+  failureType: 'testCodeFailure'
+  error: 'Timed out observing actual blocked backend'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    until (file:///Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-pg-source/service/tests/privacy-journal-pg-source.integration.mjs:51:160)
+    async TestContext.<anonymous> (file:///Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-pg-source/service/tests/privacy-journal-pg-source.integration.mjs:155:91)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+Verified unchanged cluster roles and memberships; both disposable databases removed.

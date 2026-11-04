@@ -1,0 +1,5 @@
+286a3cde6bb711b38dc9f0473d23c96e28fdaae6e4c4ed1222ffc150723337a6  service/src/privacy-journal-pg-source.ts
+bd4a7436e1a0184ee201eb0b9fbc5fbc8db2593620cbfbdd0b1747cc58054fcb  service/dist/privacy-journal-pg-source.js
+cba685feb94dd472069dc0435b17cabc570376eded8994c9536b7c6af2ab26eb  service/migrations/024_privacy_journal_source.sql
+148ce970bc50ca0bbe9076332dd6637513c15a8e52df143c5db55879eceda07e  service/tests/privacy-journal-pg-source.integration.mjs
+ee0aee0742296b4c305617352ea9ca6baacff12592f12e8014d06b2860e9fb7c  service/scripts/test-privacy-journal-pg-source.mjs

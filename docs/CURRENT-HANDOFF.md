@@ -2,7 +2,19 @@
 
 The complete production app remains the objective. The current checkpoint below supersedes the earlier resumed and pre-restart inventories. Passing earlier snapshots do not certify later source changes. Use the [current 52-requirement / 27-route map](CURRENT-ACCEPTANCE.md) for implementation and remaining acceptance.
 
-## Current checkpoint — November 3, 23:33 UTC
+## Safe pause checkpoint — November 3 local / November 4 UTC
+
+The user requested winding down because credits are running low. Current bounded implementation and verification are finished; no new milestone, deployment or test run should start until the user resumes. Root is saving this checkpoint locally and pausing the production goal. Lumpy is idle with his workers finished, and no owned test/build process remains. No Git remote is configured.
+
+The [installed privacy-call cancellation checkpoint](evidence/b11/privacy-cancellation-20261103/validation.json) adds server-owned absolute deadlines, disconnect-aware HTTP continuation, bounded application database leases, provider AbortSignals and legacy local-journal cancellation checks. Source is pinned to294 inputs, SHA `c2c25b2d80e131d85b57390a5401e9fc1b56ba5ee89dfaf92423c0f1320cd9f9`. Strict service compilation and the full unit invocation collected345 / passed344 / failed0 / skipped1; the optional separate billing-PG skip is covered in the fresh **175/175 actual PostgreSQL/HTTP/Swift/web wire** run on001–023. The cancellation fault tests mostly use controlled leases; the wire suite does not prove every real PostgreSQL cancellation fault. Generic auth I/O keeps its existing timeouts, and already-issued filesystem/SQL work can finish after cancellation. Provider erasure and default processing remain off.
+
+Lumpy’s [four-file PostgreSQL observer proposal and review](evidence/b11/privacy-pg-observer-preparation-20261103/README.md) are archived with [root’s hash-verified receipt](evidence/b11/privacy-pg-observer-preparation-20261103/ROOT-ARCHIVE.json), **uninstalled and unactivated**. He reports11/11 real PostgreSQL cases, strict compilation and independent review; root has not rerun or completed combined integration review. Both candidate fixture databases were removed and role/membership snapshots remained unchanged according to his handoff; their exact generated names/OIDs were not retained. Migration024 is evidence only, outside the live migrations directory. Root’s separate successful001–023 fixture `ritc_shared_20261103_a5748e37` remains local with zero clients at completion.
+
+Resume from the saved source rather than repeating completed native builds. First review the proposed024/source adapter against the current cancellation hooks, including its stricter effective-ACL requirements, before local installation. Then finish worker-wide cancellation and durable-journal composition/reconciliation. Actual remote record/checkpoint/uncertainty storage, approved policy/operator recovery and deployment remain separate unfinished work. No hosted migration, provider call, key provisioning or external activation occurred in this checkpoint.
+
+The compiled native app and preview remain at the polished470-input source described below; backend-only edits do not change those binaries. The regular iPhone17 preview and its data are preserved. Dedicated17e and SE17 test simulators were released; Android remains closed with its unresolved sign-in/current-browser check pending. Apple paid membership and SMTP remain owner-deferred. The app is not release-accepted.
+
+## Previous checkpoint — November 3, 23:33 UTC
 
 All six gaps from the [21:40 source review](evidence/b11/current-launch-gap-review.md) are implemented and have passing dedicated screen scopes: stock-bound pack/no-purchase review; current-demand cook/readback; dependent-meal stock correction preview; S24 protected meal context; bounded S23 duplicate comparison; scoped S21 device inventory/revocation with023 enrollment fences. No further unowned local product-flow gap was demonstrated. This documentation lane made no Git call; use the exact frozen source/binary proofs below.
 

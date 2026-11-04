@@ -1,0 +1,30 @@
+[
+  {
+    "path": "shared/contracts/guardian-enrollment-v1.d.ts",
+    "sha256": "fd88eee34a27137bd167131a45a1e720b5abc07c795135285b6293f43db5dd02"
+  },
+  {
+    "path": "shared/contracts/household-review-v1.d.ts",
+    "sha256": "8a955c80ebe72d42556e41daee288c5353a965448c945123637624bef980cbd1"
+  },
+  {
+    "path": "shared/contracts/theme.json",
+    "sha256": "fc17b3a299808141abf5020b7c2098ee5631a2d542415d1051257339d12a6299"
+  },
+  {
+    "path": "shared/contracts/pack-comparisons.json",
+    "sha256": "c660eed1e17cb72495b80c9624f1e447d8db8bf20ab20f4d6f40a51c4f109b3d"
+  },
+  {
+    "path": "shared/contracts/service-v1.d.ts",
+    "sha256": "1a2036eb3316f6c920126d2eefd06d12b5e2ff7eefdb1c9671e1ce8233b61e02"
+  },
+  {
+    "path": "shared/contracts/history-v1.d.ts",
+    "sha256": "bd488e2782023f2cf23117324f42a9385dc166916f66c98e93ef27377816a051"
+  },
+  {
+    "path": "shared/contracts/guardian-enrollment-proposed-v1.d.ts",
+    "sha256": "80feba3354ab41440fc399bc674f83e2b8f8105fb5640e76f1eca98ae81c1ac1"
+  }
+]

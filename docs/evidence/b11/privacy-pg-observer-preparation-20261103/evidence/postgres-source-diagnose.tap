@@ -1,0 +1,29 @@
+TAP version 13
+# Synthetic fixture cause:  Restricted committed-source role or database capability conflict
+# Subtest: 024 uses fixed definer/search_path, PUBLIC/app/worker denied, observer raw journal and helper access denied
+not ok 1 - 024 uses fixed definer/search_path, PUBLIC/app/worker denied, observer raw journal and helper access denied
+  ---
+  duration_ms: 26.510833
+  location: '/Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-pg-source/service/tests/privacy-journal-pg-source.integration.mjs:59:1'
+  failureType: 'testCodeFailure'
+  error: 'Committed source call failed'
+  code: 'ERR_TEST_FAILURE'
+  name: 'PostgresCommittedSourceCallError'
+  stack: |-
+    failure (file:///Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-pg-source/service/dist/privacy-journal-pg-source.js:131:37)
+    transaction (file:///Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-pg-source/service/dist/privacy-journal-pg-source.js:214:19)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (file:///Users/palatis/Documents/Codex/2026-11-03/task-2/privacy-journal-pg-source/service/tests/privacy-journal-pg-source.integration.mjs:70:54)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 106.638958
+Verified unchanged cluster roles and memberships; both disposable databases removed.

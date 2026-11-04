@@ -1,0 +1,52 @@
+{
+  "baselineHead": "8d607950a64a38a05293f8343ba59b49a2261000",
+  "status": "scratch candidate; not installed or activated",
+  "actualPostgresTests": {
+    "pass": 11,
+    "fail": 0,
+    "skipped": 0,
+    "durationMs": 3031.973708
+  },
+  "files": [
+    {
+      "path": "service/src/privacy-journal-pg-source.ts",
+      "sha256": "286a3cde6bb711b38dc9f0473d23c96e28fdaae6e4c4ed1222ffc150723337a6",
+      "installation": "new file; scratch only"
+    },
+    {
+      "path": "service/migrations/024_privacy_journal_source.sql",
+      "sha256": "cba685feb94dd472069dc0435b17cabc570376eded8994c9536b7c6af2ab26eb",
+      "installation": "new file; scratch only"
+    },
+    {
+      "path": "service/tests/privacy-journal-pg-source.integration.mjs",
+      "sha256": "148ce970bc50ca0bbe9076332dd6637513c15a8e52df143c5db55879eceda07e",
+      "installation": "new file; scratch only"
+    },
+    {
+      "path": "service/scripts/test-privacy-journal-pg-source.mjs",
+      "sha256": "ee0aee0742296b4c305617352ea9ca6baacff12592f12e8014d06b2860e9fb7c",
+      "installation": "new file; scratch only"
+    },
+    {
+      "path": "service/dist/privacy-journal-pg-source.js",
+      "sha256": "bd4a7436e1a0184ee201eb0b9fbc5fbc8db2593620cbfbdd0b1747cc58054fcb",
+      "installation": "evidence only"
+    },
+    {
+      "path": "evidence/postgres-source-second.tap",
+      "sha256": "6fa344de1a96315abd8e986f5aa0438b7cc40871115408514773d3d220ef367e",
+      "installation": "evidence only"
+    },
+    {
+      "path": "evidence/second-candidate-sha256.txt",
+      "sha256": "8114026cc69247151dc288ea9de5a77141072b5c18b37f1a2492d72ba465de18",
+      "installation": "evidence only"
+    },
+    {
+      "path": "postgres-source-candidate.patch",
+      "sha256": "88a27c12f83ddbf3f379c8133f8fba3a19856a04be6633836a8531762deacf90",
+      "installation": "evidence only"
+    }
+  ]
+}
