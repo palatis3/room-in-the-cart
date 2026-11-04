@@ -4,6 +4,14 @@ The complete production app remains the objective. The current checkpoint below 
 
 ## Current checkpoint — November 4
 
+Migration 025 aligns the SQL restore projection with the 10,000-record, 32 MiB signed archive limit. PostgreSQL may add whitespace to the JSON representation, so the SQL transport ceiling is 64 MiB. Source capture, committed observation and restore retain the 1 MiB event limit. The independent authority now reserves enough capacity for either outcome of an admitted intent. One remaining slot or one missing byte prevents a new intent from being admitted, and another progress event cannot take the reserved slot.
+
+The current capacity drill verified a signed journal with 1,001 committed events and a restore projection above 16 MiB. PostgreSQL registered all 1,000 observations, 216,000 distinct retired purchase markers and 24 absent-target receipts. Invalid count and oversized individual payloads failed before creating a restore run. See the [capacity evidence](evidence/b11/privacy-journal-capacity-20261104/validation.json).
+
+Before production deletion is enabled, account for the future worker progress and completion records and define operation at capacity. The current reservation protects an admitted intent’s immediate resolution. Hosted activation, an independently hosted restore drill and provider reconciliation remain open.
+
+## Previous checkpoint — November 4, independent recovery
+
 The independent journal now has owner-only fencing, recovery and export. The authority closes admission first and the source fence waits for in-flight capture transactions. Recovery verifies retained admissions against the fenced source, records exact outcomes, and seals the archive. A standalone export command reads a previously sealed archive from the independent database using public keys even after the source is gone.
 
 The [eight-case PostgreSQL and HTTPS run](evidence/b11/privacy-independent-recovery-20261104/validation.json) includes a real pre-deletion `pg_dump` and restore. The operator waited for a held source commit, recovered its acceptance, rolled back a separate aborted intent, and prevented an old reservation from publishing. The actual `verify`, `plan`, `replay`, and `gate` commands erased the intended member in quarantine, preserved an unrelated member, blocked the deleted identity, and repeated replay without another erasure. The prior restore command’s stale import is fixed. The export after deleting the source fixture reproduced the exact signed archive.

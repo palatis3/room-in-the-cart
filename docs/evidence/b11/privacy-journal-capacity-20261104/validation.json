@@ -1,0 +1,68 @@
+{
+  "sourceSHA256": "eb70f43f32de424f6b257bcf91f1ed4239873b3b6c7f11ff775bc6b0e42827b1",
+  "sourceFiles": 309,
+  "baseCommit": "e7c1642",
+  "migrations001To024ByteIdentical": true,
+  "documentationUpdatedAfterFreeze": [
+    "service/PRIVACY-JOURNAL.md"
+  ],
+  "builds": {
+    "service": "passed",
+    "web": "passed"
+  },
+  "runs": {
+    "capacity": {
+      "passed": 10,
+      "failed": 0,
+      "skipped": 0,
+      "artifact": "capacity.tap",
+      "sha256": "2f943cbc35e41febf4163aeaf1616a1016d95010836dcbbde12db1e31574399f"
+    },
+    "observer": {
+      "passed": 13,
+      "failed": 0,
+      "skipped": 0,
+      "artifact": "observer.tap",
+      "sha256": "1ef20609506c73f45e0397a837a21ad6087af9f2cf2a69a23c16d2bc8754d5b1"
+    },
+    "sharedWire": {
+      "passed": 178,
+      "failed": 0,
+      "skipped": 0,
+      "artifact": "sharedWire.tap",
+      "sha256": "ca5f46ac8da42fa3769f5a5e29458f6487346626076797582972ed3ab103badc"
+    },
+    "unit": {
+      "passed": 344,
+      "failed": 0,
+      "skipped": 1,
+      "artifact": ".build/PrivacyCapacity-unit-20261104.tap",
+      "sha256": "b3770a518c579ccb225f8198252e58d5118efd91d521f47f96b9ce7c3927095f"
+    }
+  },
+  "unitSkip": "Optional standalone billing database fixture is covered by the shared PostgreSQL suite.",
+  "testedBounds": {
+    "recordCount": 10000,
+    "canonicalArchiveBytes": 33554432,
+    "sqlJSONBTransportBytes": 67108864,
+    "sourcePayloadBytes": 1048576,
+    "intentResolutionOverheadBytes": 6
+  },
+  "actualSQLProjection": {
+    "committedEvents": 1001,
+    "projectedBytes": "Greater than 16 MiB; signed fixture remained below 32 MiB",
+    "retainedProgressObservations": 1000,
+    "retainedDistinctPurchaseMarkers": 216000,
+    "absentTargets": 24,
+    "negativeCases": "Over-count and oversized individual payload failed before a restore run was created."
+  },
+  "scope": [
+    "Local PostgreSQL 17.11, signed synthetic fixture and actual 025 restore function.",
+    "Authority capacity tests seed high-water checkpoint counts to isolate count and byte boundaries. The separate recovery cases verify the entire authentic journal chain and actual quarantined restore.",
+    "Shared 178 includes real Swift HTTPS and browser wire tests on migrations 001\u2013025. The fresh owned fixture retained zero clients at exit."
+  ],
+  "limits": [
+    "Capacity reservation covers commit or rollback of admitted intents. Runtime activation still requires a capacity plan for future progress and final outcome events.",
+    "Local fixtures do not establish independently hosted durability, provider erasure or release acceptance."
+  ]
+}

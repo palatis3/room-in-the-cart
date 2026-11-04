@@ -10,6 +10,7 @@ import {
  admittedSchema,durableJournalPublicKeyFingerprint,durableJournalScopeDigest,recordSchema,storedSchema,ticketSchema,verifyDurableAdmissionReceipt,
 } from './privacy-journal-durable.js';
 import type {DurableJournalPins,JournalCall,StoredRecord} from './privacy-journal-durable-contract.js';
+import {MAX_JOURNAL_BYTES as MAX_BYTES,MAX_JOURNAL_RECORDS as MAX_RECORDS,MAX_RESTORE_JSON_BYTES,MAX_SOURCE_EVENT_BYTES} from './privacy-journal-limits.js';
 
 const hash=z.string().regex(/^[0-9a-f]{64}$/),uuid=z.string().uuid();
 const databaseOid=z.string().regex(/^[1-9][0-9]{0,9}$/).refine(value=>Number(value)<=4294967295);
@@ -21,7 +22,6 @@ const sealSchema=z.object({version:z.literal(1),domain:z.literal('ritc-privacy-j
  authorityKeyId:z.string().min(1).max(100),generation:z.number().int().min(2),head:admittedSchema.shape.head,
  bundleDigest:hash,sourceEventsDigest:hash,sourceDatabaseOid:databaseOid,retiredReservation:hash.nullable(),
  retiredClaim:uuid.nullable(),authoritySignature:z.string().regex(/^[A-Za-z0-9_-]{86}$/)}).strict();
-const MAX_BYTES=32*1024*1024,MAX_RECORDS=10_000;
 type DatabaseIdentity=z.infer<typeof identity>;
 type RecoverySeal=z.infer<typeof sealSchema>;
 type Record=z.infer<typeof recordSchema>;
@@ -182,8 +182,9 @@ export function createIndependentRecovery(configuration:RecoveryConfiguration){
  async function sourceSnapshot(call:JournalCall){
   return transaction(source.pool,call,async db=>{
    if(!await sourceOrigin(db,false))throw Error('Recovery requires a committed source fence');
-   const size=(await db.query('SELECT count(*)::int AS n,COALESCE(sum(octet_length(payload::text)),0)::text AS bytes FROM ritc.privacy_journal_outbox')).rows[0];
-   if(!size||size.n>MAX_RECORDS||Number(size.bytes)>MAX_BYTES)throw Error('Committed recovery source exceeds bounds');
+   const size=(await db.query(`SELECT count(*)::int AS n,COALESCE(sum(bytes),0)::text AS bytes,COALESCE(max(bytes),0) AS largest
+    FROM (SELECT octet_length(payload::text) AS bytes FROM ritc.privacy_journal_outbox) events`)).rows[0];
+   if(!size||size.n>MAX_RECORDS||Number(size.bytes)>MAX_RESTORE_JSON_BYTES||size.largest>MAX_SOURCE_EVENT_BYTES)throw Error('Committed recovery source exceeds bounds');
    const {rows}=await db.query(`SELECT e.event_id,e.lineage,e.job_id,e.kind,e.payload,e.payload_digest,
     a.payload_digest AS ack_digest,a.head_seq::text AS ack_seq,a.head_hash AS ack_hash
     FROM ritc.privacy_journal_outbox e LEFT JOIN ritc.privacy_journal_ack a USING(event_id)

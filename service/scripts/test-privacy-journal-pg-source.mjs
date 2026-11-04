@@ -19,7 +19,7 @@ try{
  if(reachable.some(x=>x.rolsuper||x.rolcreaterole||x.rolcreatedb||x.rolreplication||x.rolbypassrls)||reachable.some(x=>!['ritc_guardian_test_verifier','ritc_guardian_verifier'].includes(x.rolname)))throw Error('Unexpected inherited observer capabilities; no membership changes performed');
  for(const required of ['ritc_app','ritc_worker','ritc_guardian_verifier','ritc_test_runtime','ritc_test_worker'])if(!(await admin.query('SELECT 1 FROM pg_roles WHERE rolname=$1',[required])).rowCount)throw Error('Existing fixture roles required; no role creation permitted');
  const migrations=(await readdir(new URL('../migrations/',import.meta.url))).filter(x=>/^\d+.*\.sql$/.test(x)).sort();
- if(migrations.length!==24||!migrations.at(-1).startsWith('024_'))throw Error('Exact migrations 001–024 required');
+ if(migrations.length<24||migrations.some((name,index)=>!name.startsWith(String(index+1).padStart(3,'0')+'_')))throw Error('Continuous migrations through the journal observer are required');
  const frozen=await Promise.all(migrations.map(async name=>({name,sql:await readFile(new URL('../migrations/'+name,import.meta.url),'utf8')})));
  for(const kind of ['source','wrong']){
   const name='ritc_journal_pg_'+kind+'_'+randomUUID().replaceAll('-','');

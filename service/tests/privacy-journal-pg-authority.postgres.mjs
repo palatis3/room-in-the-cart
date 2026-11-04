@@ -15,6 +15,8 @@ import {createPostgresCommittedSource} from '../dist/privacy-journal-pg-source.j
 import {durableJournalScopeDigest,verifyDurableAdmissionReceipt} from '../dist/privacy-journal-durable.js';
 import {createHTTPSJournalAuthority} from '../dist/privacy-journal-https.js';
 import {createIndependentRecovery,verifyIndependentRecovery} from '../dist/privacy-journal-recovery.js';
+import {validatePrivacyRestoreEvents,verifyPrivacyJournal} from '../dist/privacy-journal.js';
+import {MAX_JOURNAL_BYTES,MAX_JOURNAL_RECORDS,MAX_INTENT_RESOLUTION_OVERHEAD,MAX_SOURCE_EVENT_BYTES} from '../dist/privacy-journal-limits.js';
 import {PrivacyMaintenance,PrivacyService} from '../dist/privacy.js';
 import {HouseholdRepository} from '../dist/repository.js';
 import {SupabaseSessionVerifier} from '../dist/auth.js';
@@ -215,6 +217,48 @@ test('progress without the original admitted acceptance is rejected before any r
   assert.equal((await ports.recordPool.query('SELECT 1 FROM ritc_records.object WHERE object_key=$1',[ticket.objectKey])).rowCount,0);
   assert.equal((await ports.authority.readCurrent(nonce(context))).value.head.seq,0);
  }finally{await ports.close();}
+});
+
+test('checkpoint keeps count and byte capacity for the exact resolution of an admitted intent',async()=>{
+ const remaining=async(count,over=0)=>{
+  const r=await register(),event=r.f.event();
+  const head={...r.head,head:{...r.head.head,seq:MAX_JOURNAL_RECORDS-count,hash:'1'.repeat(64)}};
+  const size=signed(r.f,head,event,'intent').identity.byteLength;
+  head.totalBytes=MAX_JOURNAL_BYTES-size*2-MAX_INTENT_RESOLUTION_OVERHEAD+over;
+  // Seed only a high-water checkpoint for this admission boundary test. The
+  // separately verified recovery tests exercise a complete authenticated chain.
+  await owner.query('UPDATE ritc_checkpoint.origin SET head=$2 WHERE lineage=$1',[r.f.pins.lineage,head]);
+  return {r,event,head,ports:await r.open()};
+ };
+ for(const [count,over] of [[1,0],[2,1]]){
+  const {r,event,head,ports}=await remaining(count,over);
+  try{
+   await assert.rejects(reserve(r,ports,event,'intent',time()),/cover intent resolution/);
+   const result=(await ports.authority.readCurrent(nonce(time()))).value;
+   assert.deepEqual(result,head);
+  }finally{await ports.close();}
+ }
+ for(const commit of [false,true]){
+  const {r,event,ports}=await remaining(2);
+  try{
+   const context=time(),intent=await reserve(r,ports,event,'intent',context);
+   const stored=await ports.records.putExact(intent.ticket,intent.content,context);
+   const proof=await ports.authority.publish(intent.ticket,stored,nonce(context));
+   await ports.uncertainty.complete(intent.claim,proof,context);
+   const followup=time();
+   if(commit){
+    const next=await reserve(r,ports,event,'commit',followup);
+    const record=await ports.records.putExact(next.ticket,next.content,followup);
+    const finished=await ports.authority.publish(next.ticket,record,nonce(followup));
+    await ports.uncertainty.complete(next.claim,finished,followup);
+    assert.equal(finished.admitted.head.seq,MAX_JOURNAL_RECORDS);
+    assert.ok(finished.admitted.totalBytes<=MAX_JOURNAL_BYTES);
+   }else{
+    await assert.rejects(reserve(r,ports,progressEvent(event),'commit',followup),/cover intent resolution/);
+    assert.equal((await ports.authority.readCurrent(nonce(time()))).value.head.seq,MAX_JOURNAL_RECORDS-1);
+   }
+  }finally{await ports.close();}
+ }
 });
 
 test('app and worker recover one request through a restarted HTTPS authority on a separate PostgreSQL cluster',async()=>{
@@ -439,4 +483,41 @@ test('a persisted commit claim without its source event cannot seal or reopen th
   assert.equal((await owner.query('SELECT 1 FROM ritc_checkpoint.recovery_seal WHERE lineage=$1',[r.f.pins.lineage])).rowCount,0);
   assert.equal((await source.owner.query('SELECT fenced FROM ritc.privacy_journal_origin')).rows[0].fenced,true);
  }finally{await ports?.close();await source.close();}
+});
+
+test('a verified restore projection can exceed both former SQL limits without dropping observations or retired purchases',async()=>{
+ const source=await sourceCluster();
+ try{
+  const {r,config}=await recoveryFixture(source),{f}=r;
+  const accepted=f.event();
+  const targets=Array.from({length:24},()=>f.event().payload.data.targets[0]);
+  accepted.payload.data.targets=targets;accepted.payload.data.effects=[];accepted.payloadDigest=digest(accepted.payload);
+  const events=[accepted];
+  for(const [index,target] of targets.entries()){
+   const retiredPurchases=Array.from({length:9000},(_,n)=>({originalHash:createHash('sha256').update(`${index}/${n}`).digest('hex')}));
+   events.push(progressEvent(accepted,'target_erased',{data:{householdId:target.householdId,memberId:target.memberId,retiredPurchases,erasedAt:'2026-11-03T12:01:00.000Z'}}));
+  }
+  while(events.length<1001)events.push(progressEvent(accepted,'source_pending'));
+  const head={...r.head,head:{...r.head.head,fenced:true}},parts=[];
+  for(const [transition,event] of [['intent',accepted],...events.map(event=>['commit',event])]){
+   const record=signed(f,head,event,transition);
+   parts.push(record.content);head.head.seq++;head.head.hash=record.identity.recordHash;
+  }
+  const archive=Buffer.concat(parts);
+  assert.ok(archive.length<=MAX_JOURNAL_BYTES);
+  const verified=verifyPrivacyJournal(archive,{...f.origin,keyId:f.pins.keyId,publicKey:f.writerKeys.publicKeyPEM,head:head.head});
+  validatePrivacyRestoreEvents(verified.events);
+  const projected=JSON.stringify(verified.events);
+  assert.ok(verified.events.length>1000&&Buffer.byteLength(projected)>16*1024*1024);
+  const sql='SELECT ritc.privacy_restore_register($1,$2,$3,$4::jsonb,$5::jsonb) AS run';
+  const input=[randomUUID(),config.source.identity.databaseOid,verified.bundleDigest,JSON.stringify(verified.head)];
+  await assert.rejects(source.owner.query(sql,[...input,JSON.stringify(Array.from({length:MAX_JOURNAL_RECORDS+1},()=>({})))]),/journal_too_large/);
+  await assert.rejects(source.owner.query(sql,[...input,JSON.stringify([{payload:{padding:'x'.repeat(MAX_SOURCE_EVENT_BYTES)}}])]),/journal_source_event_too_large/);
+  assert.equal((await source.owner.query('SELECT count(*)::int AS n FROM ritc.privacy_restore_run')).rows[0].n,0);
+  assert.equal((await source.owner.query(sql,[...input,projected])).rows[0].run,input[0]);
+  const facts=(await source.owner.query(`SELECT (SELECT jsonb_array_length(source_observations) FROM ritc.privacy_restore_job WHERE job_id=$1) AS observations,
+   (SELECT count(*)::int FROM ritc.retired_purchase) AS markers,
+   (SELECT count(*)::int FROM ritc.privacy_restore_receipt WHERE result='absent_no_effect') AS absent`,[accepted.payload.jobId])).rows[0];
+  assert.deepEqual(facts,{observations:1000,markers:216000,absent:24});
+ }finally{await source.close();}
 });

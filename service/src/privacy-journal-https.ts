@@ -9,9 +9,10 @@ import {
 import type {
  CheckpointAuthority,DurableJournalPins,DurableUncertaintyStore,ImmutableRecordTransport,JournalCall,
 } from './privacy-journal-durable-contract.js';
+import {MAX_JOURNAL_BYTES as maxRecordBytes} from './privacy-journal-limits.js';
 
 const path='/v1/journal';
-const maxRecordBytes=32*1024*1024,maxEncodedBytes=4*Math.ceil(maxRecordBytes/3),maxBody=maxEncodedBytes+8192;
+const maxEncodedBytes=4*Math.ceil(maxRecordBytes/3),maxBody=maxEncodedBytes+8192;
 const hash=z.string().regex(/^[0-9a-f]{64}$/);
 const tokenSchema=z.string().regex(/^[A-Za-z0-9_-]{43}$/).refine(value=>Buffer.from(value,'base64url').toString('base64url')===value);
 const encoded=z.string().min(4).max(maxEncodedBytes);

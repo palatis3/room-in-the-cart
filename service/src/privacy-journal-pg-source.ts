@@ -6,7 +6,9 @@ import {journalHash,validatePrivacyRestoreEvents,type PrivacyJournalEvent} from 
 import {durableJournalPublicKeyFingerprint,durableJournalScopeDigest,verifyDurableAdmissionReceipt} from './privacy-journal-durable.js';
 import type {AdmissionReceipt,DurableJournalPins,FixedCommittedSource,JournalCall,RegisteredOrigin} from './privacy-journal-durable-contract.js';
 
-const MAX_EVENTS=10000,MAX_EVENT_BYTES=1048576,MAX_TIMER=2147483647;
+import {MAX_JOURNAL_RECORDS as MAX_EVENTS,MAX_SOURCE_EVENT_BYTES as MAX_EVENT_BYTES} from './privacy-journal-limits.js';
+
+const MAX_TIMER=2147483647;
 const hash=z.string().regex(/^[0-9a-f]{64}$/);
 const uuid=z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
 const identifier=z.string().min(1).max(63).regex(/^[^\x00-\x1f\x7f]+$/);

@@ -3,6 +3,7 @@ import {z} from 'zod';
 import type {Database,Transaction} from './database.js';
 import {PrivacyCall,withPrivacyClient} from './privacy-call.js';
 import {journalCanonical,journalHash,validatePrivacyRestoreEvents} from './privacy-journal.js';
+import {MAX_JOURNAL_BYTES as maxBytes,MAX_JOURNAL_RECORDS as maxRecords,MAX_INTENT_RESOLUTION_OVERHEAD} from './privacy-journal-limits.js';
 import {
  admittedSchema,durableJournalOperationId,durableJournalPublicKeyFingerprint,durableJournalScopeDigest,
  identitySchema,recordSchema,storedSchema,ticketSchema,verifyDurableAdmissionReceipt,
@@ -13,7 +14,6 @@ import type {
  RecordIdentity,StoredRecord,UncertaintyClaim,
 } from './privacy-journal-durable-contract.js';
 
-const maxBytes=32*1024*1024,maxRecords=10000;
 const hash=z.string().regex(/^[0-9a-f]{64}$/);
 const uuid=z.string().uuid();
 const operationSchema=z.object({scopeDigest:hash,eventId:uuid,transition:z.enum(['intent','commit'])}).strict();
@@ -218,11 +218,18 @@ export async function createPostgresJournalAuthority(configuration:PostgresJourn
     if(!matches(head,expected)||record.seq!==head.head.seq+1||record.previousHash!==head.head.hash||
      record.seq>maxRecords||head.totalBytes+record.byteLength>maxBytes)throw Error('Journal head compare-and-set conflict');
     const operationId=durableJournalOperationId(scopeDigest,record.eventId,record.payloadDigest,record.transition);
-    const previous=(await db.query('SELECT receipt FROM ritc_checkpoint.admission WHERE lineage=$1 AND event_id=$2',[pins.lineage,record.eventId])).rows;
-    if(previous.some(row=>{
-     const prior=verifyReceipt(row.receipt).record;
-     return prior.payloadDigest!==record.payloadDigest||prior.jobId!==record.jobId||prior.transition!=='intent'||record.transition!=='commit';
-    }))throw Error('Journal event transition conflict');
+    const previous=(await db.query('SELECT receipt FROM ritc_checkpoint.admission WHERE lineage=$1 AND event_id=$2',[pins.lineage,record.eventId])).rows.map(row=>verifyReceipt(row.receipt).record);
+    if(previous.some(prior=>prior.payloadDigest!==record.payloadDigest||prior.jobId!==record.jobId||prior.transition!=='intent'||record.transition!=='commit'))throw Error('Journal event transition conflict');
+    // Every admitted intent must still fit its commit or rollback even if this
+    // process dies. A progress observation cannot consume a reserved slot.
+    const {count,bytes}=(await db.query(`SELECT count(*)::int AS count,COALESCE(sum((i.receipt->'record'->>'byteLength')::int+$2::int),0)::text AS bytes
+     FROM ritc_checkpoint.admission i WHERE i.lineage=$1 AND i.transition='intent'
+      AND NOT EXISTS(SELECT 1 FROM ritc_checkpoint.admission c WHERE c.lineage=i.lineage AND c.event_id=i.event_id AND c.transition='commit')`,
+     [pins.lineage,MAX_INTENT_RESOLUTION_OVERHEAD])).rows[0];
+    const resolved=previous[0],newIntent=record.transition==='intent';
+    const reserveCount=count+(newIntent?1:resolved?-1:0);
+    const reserveBytes=Number(bytes)+(newIntent?record.byteLength+MAX_INTENT_RESOLUTION_OVERHEAD:resolved?-(resolved.byteLength+MAX_INTENT_RESOLUTION_OVERHEAD):0);
+    if(record.seq+reserveCount>maxRecords||head.totalBytes+record.byteLength+reserveBytes>maxBytes)throw Error('Journal capacity must cover intent resolution');
     const now=await databaseClock(db),authorityExpiresAtUnixMs=Math.min(now+3500,call.deadlineUnixMs-1);
     if(authorityExpiresAtUnixMs<=now)throw Error('Insufficient time for journal reservation');
     const ticket={operationId,generation:head.generation,expected:head,record,objectKey:objectKey(record),authorityExpiresAtUnixMs};

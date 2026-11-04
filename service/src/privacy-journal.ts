@@ -5,6 +5,7 @@ import {dirname,resolve} from 'node:path';
 import {z} from 'zod';
 import type {Database} from './database.js';
 import type {JournalCall} from './privacy-journal-durable-contract.js';
+import {MAX_JOURNAL_BYTES as MAX_BYTES,MAX_JOURNAL_RECORDS as MAX_RECORDS} from './privacy-journal-limits.js';
 
 const uuid=z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/),hash=z.string().regex(/^[0-9a-f]{64}$/);
 export function journalCanonical(value:unknown):string{
@@ -27,7 +28,7 @@ export type PrivacyJournalHead=z.infer<typeof headSchema>;
 const recordSchema=z.object({version:z.literal(1),keyId:z.string().min(1).max(100),seq:z.number().int().positive(),previousHash:hash,kind:z.enum(['intent','commit','rollback']),event:eventSchema,signature:z.string().regex(/^[A-Za-z0-9_-]{86}$/)}).strict();
 type JournalRecord=z.infer<typeof recordSchema>;
 export interface JournalTrust {lineage:string;schemaDigest:string;configurationId:string;keyId:string;publicKey:string;head:PrivacyJournalHead}
-const zero='0'.repeat(64),MAX_BYTES=32*1024*1024,MAX_RECORDS=10000;
+const zero='0'.repeat(64);
 function parseCanonical(text:string){const value:unknown=JSON.parse(text);if(journalCanonical(value)!==text)throw Error('Noncanonical or duplicate-key journal JSON');return value;}
 function validateEvent(input:unknown):PrivacyJournalEvent{
  const e=eventSchema.parse(input);if(e.eventId!==e.payload.eventId||e.payloadDigest!==journalHash(e.payload))throw Error('Journal event digest conflict');

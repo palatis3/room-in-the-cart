@@ -1,6 +1,7 @@
 import {createHash,createPublicKey,randomBytes,sign,verify,type KeyObject} from 'node:crypto';
 import {z} from 'zod';
 import {journalCanonical,journalHash,validatePrivacyRestoreEvents,type PrivacyJournalEvent} from './privacy-journal.js';
+import {MAX_JOURNAL_BYTES as MAX_BYTES,MAX_JOURNAL_RECORDS as MAX_RECORDS} from './privacy-journal-limits.js';
 import type {
  AdmittedHead,AdmissionReceipt,AuthorityCall,
  DurableJournalPins,DurablePrivacyJournalConfiguration,DurablePrivacyJournalPort,
@@ -8,7 +9,7 @@ import type {
 } from './privacy-journal-durable-contract.js';
 export type * from './privacy-journal-durable-contract.js';
 
-const MAX_BYTES=32*1024*1024,MAX_RECORDS=10000,ZERO='0'.repeat(64);
+const ZERO='0'.repeat(64);
 const hash=z.string().regex(/^[0-9a-f]{64}$/);
 const uuid=z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
 const identifier=z.string().min(1).max(300).regex(/^[^\x00-\x1f\x7f]+$/);
