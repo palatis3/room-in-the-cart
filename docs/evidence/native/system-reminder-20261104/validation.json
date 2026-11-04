@@ -1,0 +1,36 @@
+{
+  "productRevision": "74eeff8567240b83dbf3804fcc2505f474a4f302",
+  "candidateBaseCommit": "073943df6bc1589f7e15b38ce7d9516bdcd0386b",
+  "candidatePatchSHA256": "a2cc54158d0fa678f76d60af95d3f03d8ab552129744a2ad435aeae178eea8f3",
+  "independentlyCheckedNativeInputHashes": 430,
+  "harness": "DEBUG simulator-only overlay prepares a fictional placed pickup through production models and confirms a reminder through the real coordinator. The test substitutes fixture creation and date entry. Apple UserNotifications, app lifecycle callbacks and routing run unchanged.",
+  "artifactDirectory": "/Users/palatis/Documents/Codex/2026-11-04/task-3/notifications/evidence",
+  "sealedArtifactDirectory": "/Users/palatis/Documents/Codex/2026-11-04/task-3/notifications/evidence/sealed",
+  "device": "iPhone 17 Pro simulator, iOS 27.0",
+  "nativePermission": "An earlier separate fresh-candidate run accepted the actual Allow prompt (0 to 2) and verified one scheduled request. That invocation stopped at the SpringBoard interaction.",
+  "systemInteraction": "The simulator intercepted card taps and requested a side swipe. A native side swipe invoked the default action in both passing runs.",
+  "notificationProjection": "Brand title, generic reminder body and one opaque surfaceHandle field.",
+  "runs": {
+    "warm": {
+      "result": "/Users/palatis/Documents/Codex/2026-11-04/task-3/notifications/evidence/NotificationCandidateWarmOpen.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "cutoffEpoch": 1793806388,
+      "pickupRevisionBeforeAndAfter": 5,
+      "destinationImage": "/Users/palatis/Documents/Codex/2026-11-04/task-3/notifications/evidence/candidate-warm-open-attachments/01758F35-9B95-4BD6-AE8F-4C63CE7FD714.png",
+      "destinationImageSHA256": "9b0e5926ad3ca33fbdc8bb00956184d6f6533fafc12748e6e64f38f3167d8079",
+      "outcome": "The system notification's default action opened the exact offer sheet and displayed Await pickup · fill still unknown."
+    },
+    "cold": {
+      "result": "/Users/palatis/Documents/Codex/2026-11-04/task-3/notifications/evidence/NotificationCandidateCold.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "cutoffEpoch": 1793806568,
+      "pickupRevisionBeforeAndAfter": 5,
+      "destinationImage": "/Users/palatis/Documents/Codex/2026-11-04/task-3/notifications/evidence/candidate-cold-attachments/A328BF99-4660-46CA-8599-F3F08F2F8C89.png",
+      "destinationImageSHA256": "00e54b2e8e261ee375bf6232806f1aa2d60670f4df1a5109de133166a06ef0e2",
+      "outcome": "The system notification's default action opened the exact offer sheet and displayed Await pickup · fill still unknown."
+    }
+  },
+  "scope": "Two separate native-system passes on the routing candidate. Earlier failed gesture attempts remain in the evidence folder. Background-save coverage belongs to its separate versioned app and package tests. Physical passcode, production signing and protected signed-in routing remain open."
+}

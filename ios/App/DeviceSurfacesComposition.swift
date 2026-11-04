@@ -30,6 +30,7 @@ import DeviceSurfaces
     private var nonce = UUID()
     private var authorityKey: String?
     private var reminderPersona: DeviceReminderPersona?
+    private var reminderSaveGeneration = UUID()
     private var pendingReminderCancellation = false
     private var pickupWorkspaceID: UUID?
     private var active = true
@@ -42,13 +43,15 @@ import DeviceSurfaces
     private let runtime: SurfaceRuntimeIsolation
     private let bundle: Bundle
     private let clock: () -> Date
+    private let reminderScheduler: (any NotificationScheduling)?
 
     init(directory: URL? = nil, bundle: Bundle = .main, clock: @escaping () -> Date = Date.init,
-         launchArguments: [String] = ProcessInfo.processInfo.arguments) {
+         launchArguments: [String] = ProcessInfo.processInfo.arguments, reminderScheduler: (any NotificationScheduling)? = nil) {
         let runtime = SurfaceRuntimeIsolation(directory: directory, launchArguments: launchArguments,
             applicationSupport: FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0])
         self.runtime = runtime; self.directory = runtime.directory
         self.bundle = bundle; self.clock = clock
+        self.reminderScheduler = reminderScheduler
     }
     var privateAuthorized: Bool {
         guard active, let access, access.unlocked, let household else { return false }
@@ -90,7 +93,8 @@ import DeviceSurfaces
         let openedRoutes = try SurfaceRouteStore(url: directory.appendingPathComponent("routes.json"))
         let reminderStore = try ReminderStore(url: directory.appendingPathComponent("reminders.sqlite"))
         self.journal = openedJournal; self.routes = openedRoutes
-        self.reminderStore = reminderStore; reminders = ReminderCoordinator(store: reminderStore, scheduler: runtime.makeScheduler { IOSNotificationScheduler() })
+        self.reminderStore = reminderStore
+        reminders = ReminderCoordinator(store: reminderStore, scheduler: reminderScheduler ?? runtime.makeScheduler { IOSNotificationScheduler() })
         // UI tests never resolve an App Group, even when the real bundle is configured.
         if runtime.isUITesting {
             inbox = try runtime.makeInbox { throw SurfaceError.unconfigured }
@@ -125,7 +129,7 @@ import DeviceSurfaces
     }
     func scopeChanged() {
         nonce = UUID(); entries = []; draft = nil; destination = nil; pendingURL = nil; pendingHandle = nil
-        pendingReminderTap = nil; authorityKey = nil
+        pendingReminderTap = nil; authorityKey = nil; reminderSaveGeneration = UUID()
         Task { await sourceDidChange() }
     }
     func receiveReminderTap(_ handle: RouteHandle) {
@@ -150,6 +154,7 @@ import DeviceSurfaces
         if let previous = reminderPersona, previous != currentReminderPersona {
             pendingReminderTap = nil
             pendingReminderCancellation = true
+            reminderSaveGeneration = UUID()
         }
         reminderPersona = currentReminderPersona
         if pendingReminderCancellation, let reminders, let persona = access?.localActorID {
@@ -399,29 +404,47 @@ import DeviceSurfaces
         return ["shopper", "organizer"].contains(role)
     }
     var reminderTargets: [SurfaceReminderTarget] {
-        guard privateAuthorized, reminderRoleAuthorized, let workspace = pickupWorkspaceID else { return [] }
-        return (pickup?.reminderJourneys ?? []).flatMap { journey in
+        privateAuthorized && reminderRoleAuthorized ? currentReminderTargets : []
+    }
+    private var currentReminderTargets: [SurfaceReminderTarget] {
+        guard let pickup, let workspace = pickupWorkspaceID, pickup.sourceWorkspaceID == workspace else { return [] }
+        return pickup.reminderJourneys.flatMap { journey in
             journey.unfilledOffers.map { SurfaceReminderTarget(target: .offer(workspaceID: workspace, journeyID: journey.id, offerID: $0.id), title: $0.replacement, revision: journey.revision, cutoff: $0.deadline.cutoff, timeZoneID: $0.deadline.timeZoneID) }
             + journey.deferred.filter { $0.status == "review" }.map { SurfaceReminderTarget(target: .deferral(workspaceID: workspace, journeyID: journey.id, needID: $0.id), title: $0.line.name, revision: journey.revision, cutoff: nil, timeZoneID: TimeZone.current.identifier) }
         }
     }
     func reminderContext(_ selected: SurfaceReminderTarget, expiresAt: Date) async throws -> ReminderEditorContext {
-        guard privateAuthorized, reminderTargets.contains(selected), let persona = access?.localActorID, let routes, let reminderStore else { throw SurfaceError.stale }
+        guard let authorization = reminderAuthorization(selected), let persona = access?.localActorID,
+              let routes, let reminderStore else { throw SurfaceError.stale }
         let previous = try routes.all().first { $0.target == selected.target && $0.reminderID != nil && $0.sourceRevision == selected.revision }
         let handle = previous?.route.handle ?? .random(), reminderID = previous?.reminderID ?? UUID()
+        if previous == nil {
+            let route = try PrivateRoute(handle: handle, personaID: persona, targetID: selected.id, generation: routeGeneration(selected.target), destination: .shoppingList, expiresAt: .distantFuture)
+            try routes.put(SurfaceRouteRecord(route: route, target: selected.target, sourceRevision: selected.revision, reminderID: reminderID))
+        }
         let saved = try await reminderStore.get(reminderID)
-        guard privateAuthorized, reminderTargets.contains(selected) else { throw SurfaceError.stale }
-        let route = try PrivateRoute(handle: handle, personaID: persona, targetID: selected.id, generation: routeGeneration(selected.target), destination: .shoppingList, expiresAt: .distantFuture)
-        if previous == nil { try routes.put(SurfaceRouteRecord(route: route, target: selected.target, sourceRevision: selected.revision, reminderID: reminderID)) }
+        guard reminderAuthorization(selected) == authorization else { throw SurfaceError.stale }
         let quietHours = saved == nil ? try QuietHours(startMinute: 22 * 60, endMinute: 7 * 60) : saved?.intent.quietHours
         return ReminderEditorContext(reminderID: reminderID, personaID: persona, targetID: selected.id, subject: selected.cutoff == nil ? .deferral : .offer, sourceRevision: selected.revision,
             routeHandle: handle, expiresAt: selected.cutoff ?? expiresAt, cutoff: selected.cutoff, initialFireAt: saved?.intent.fireAt ?? clock().addingTimeInterval(3600),
             timeZoneID: saved?.intent.localTime.timeZoneID ?? selected.timeZoneID, initialQuietHours: quietHours, expectedVersion: saved?.version)
     }
     func reminderAuthorization(_ selected: SurfaceReminderTarget) -> UUID? { privateAuthorized && reminderTargets.contains(selected) ? nonce : nil }
+    func authorizeReminderSave(_ selected: SurfaceReminderTarget, reviewedGeneration: UUID) -> ReminderCoordinator.SaveAuthorization? {
+        guard reminderAuthorization(selected) == reviewedGeneration, !pendingReminderCancellation,
+              let persona = household?.deviceReminderPersona, reminderPersona == persona else { return nil }
+        let generation = reminderSaveGeneration
+        return { @MainActor [weak self] in
+            guard let self else { return false }
+            return self.reminderSaveGeneration == generation && !self.pendingReminderCancellation &&
+                self.household?.deviceReminderPersona == persona && self.currentReminderTargets.contains {
+                    $0.target == selected.target && $0.revision == selected.revision
+                }
+        }
+    }
 }
 
-struct SurfaceReminderTarget: Identifiable, Equatable {
+struct SurfaceReminderTarget: Identifiable, Equatable, Sendable {
     var id: UUID { target.id }
     let target: SurfacePrivateTarget
     let title: String

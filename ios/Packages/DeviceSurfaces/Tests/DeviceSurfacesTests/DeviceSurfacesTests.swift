@@ -206,6 +206,52 @@ final class DeviceSurfacesTests: XCTestCase {
         let final = try await save.value; XCTAssertEqual(final.status, .cancelled)
         let pending = await fake.pending; XCTAssertTrue(pending.isEmpty)
     }
+    func testInvalidatedConfirmationCannotCancelNewerReminderVersion() async throws {
+        let store = try ReminderStore(url: file()), scheduler = FakeScheduler(), date = now
+        let value = try intent(), replacement = try intent(id: value.id, handle: value.routeHandle, day: 21)
+        let authority = ReminderTestAuthorization()
+        let coordinator = ReminderCoordinator(store: store, scheduler: scheduler, now: { date })
+        await scheduler.setPermission(.authorized); await scheduler.blockNextAdd()
+        let save = Task {
+            try await coordinator.save(value, expectedVersion: nil, requestPermission: true, authorized: { await authority.valid })
+        }
+        await scheduler.waitUntilAddEntered()
+        let newer = try await store.put(replacement, expectedVersion: 1, now: now)
+        await authority.invalidate()
+        await scheduler.releaseAdd()
+        do { _ = try await save.value; XCTFail("The original confirmation lost authority") }
+        catch { XCTAssertEqual(error as? SurfaceError, .stale) }
+        try await coordinator.reconcileAll()
+        let final = try await store.get(value.id)
+        XCTAssertEqual(final?.version, newer.version)
+        XCTAssertEqual(final?.intent, replacement)
+        XCTAssertEqual(final?.status, .scheduled)
+        let pending = await scheduler.pending
+        XCTAssertEqual(Array(pending.values), [ReminderNotification(replacement)])
+    }
+    func testAutomaticReconciliationLeavesInFlightConfirmationToItsOwnAuthorization() async throws {
+        let store = try ReminderStore(url: file()), scheduler = FakeScheduler(), value = try intent(), date = now
+        let coordinator = ReminderCoordinator(store: store, scheduler: scheduler, now: { date })
+        await scheduler.setPermission(.authorized); await scheduler.blockNextAdd()
+        let confirmation = Task {
+            try await coordinator.save(value, expectedVersion: nil, requestPermission: true, authorized: { true })
+        }
+        await scheduler.waitUntilAddEntered()
+        let reconciled = expectation(description: "Automatic work does not wait for an in-flight confirmation")
+        let reconciliation = Task { try await coordinator.reconcileAll(); reconciled.fulfill() }
+        await fulfillment(of: [reconciled], timeout: 2)
+        do {
+            _ = try await coordinator.save(value, expectedVersion: 1, requestPermission: true, authorized: { true })
+            XCTFail("Two independent confirmations cannot own the same in-flight version")
+        } catch { XCTAssertEqual(error as? SurfaceError, .busy) }
+        await scheduler.releaseAdd()
+        try await reconciliation.value
+        let original = try await confirmation.value
+        XCTAssertEqual(original.status, .scheduled)
+        let next = try await coordinator.save(value, expectedVersion: original.version, requestPermission: true, authorized: { true })
+        XCTAssertEqual(next.version, original.version + 1)
+        XCTAssertEqual(next.status, .scheduled)
+    }
     func testSessionChangedReplayCannotReuseSuccessfulSave() async throws {
         let inbox = try SelectedTextInbox(url: file()), session = SelectedTextSession()
         _ = try await session.save(original: "12 wraps", edited: nil, now: now, inbox: inbox)
@@ -279,6 +325,11 @@ final class DeviceSurfacesTests: XCTestCase {
         XCTAssertTrue(try legacy.rows("SELECT body FROM reminders").isEmpty)
     }
 
+}
+
+private actor ReminderTestAuthorization {
+    private(set) var valid = true
+    func invalidate() { valid = false }
 }
 
 actor FakeScheduler: NotificationScheduling {

@@ -1,0 +1,49 @@
+{
+  "baseCommit": "74eeff8567240b83dbf3804fcc2505f474a4f302",
+  "sourceSHA256": {
+    "ios/App/DeviceSurfacesComposition.swift": "87c40ede118789b79627640bd52407be86261c10c4f786bd6bf2bd77d7436b3d",
+    "ios/Features/DeviceSurfaces/ContextualReminderEntry.swift": "94ee1f060f7bdf180afe00b81e567616572eb52f02b94d4a82fd02ff7ea4ccd1",
+    "ios/Features/DeviceSurfaces/ReminderEditorView.swift": "7d8c432e307c77402965cc56f61ed0d4236b96af30278bae42d69ee97ca76037",
+    "ios/Features/DeviceSurfaces/SurfaceRouteStore.swift": "8500a916fe19d2124fcb050f88bc050027c41e7c5d9db289d2815fc4d10d883f",
+    "ios/Packages/DeviceSurfaces/Sources/DeviceSurfaces/Reminders.swift": "d648457d0633924ee41d80560d293e5a54d9b6b904339453d0b247f244e215d9",
+    "ios/Packages/DeviceSurfaces/Tests/DeviceSurfacesTests/DeviceSurfacesTests.swift": "af1fbff7e224d26583c7f72f26bcb2f0edd5efb8801d2f80be711f7aed83e937",
+    "ios/Tests/ContextualReminderTests.swift": "2098e11c4e046e44f6d89cc2b7eb30be9865f08649afdd1a06bbe72b8a743460"
+  },
+  "iOS17": {
+    "device": "iPhone SE (2nd generation), iOS 17.0 (21A328)",
+    "result": ".build/ReminderSave20261104/ReminderSaveFinal.xcresult",
+    "modelTests": 544,
+    "contextualReminderUITests": 2,
+    "failed": 0,
+    "cases": {
+      "testConfirmedReminderSurvivesBackgroundDuringOSRegistration": "Backgrounds the composition while its own injected scheduler is paused in add. The editor becomes unavailable. The exact confirmed intent remains scheduled and the OS adapter double retains one request.",
+      "testConfirmedReminderIsWithdrawnWhenOfferChangesDuringOSRegistration": "Changes the saved offer revision while add is paused. The old confirmation returns stale, its row is cancelled, and its notification is removed.",
+      "testContextualOpeningKeepsTypedIdentityAndCreatesNoReminderOrShopMutation": "Two overlapping editor openings use one opaque route and reminder identity with no scheduled row.",
+      "testNextShopDeferralRequestsReminderOnlyAfterExplicitScheduleAndCanCancel": "Existing deferral UI still requires confirmation and preserves the Cancel path.",
+      "testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending": "Existing saved offer UI preserves the pending retailer decision on Cancel."
+    },
+    "scope": "Production composition, coordinator and SQLite store with an injected scheduler. No protected physical-device registration or app termination is claimed."
+  },
+  "package": {
+    "result": ".build/ReminderSave20261104/package-frozen.log",
+    "passed": 29,
+    "failed": 0,
+    "cases": [
+      "testAutomaticReconciliationLeavesInFlightConfirmationToItsOwnAuthorization",
+      "testInvalidatedConfirmationCannotCancelNewerReminderVersion"
+    ],
+    "checks": "Automatic reconciliation skips the guarded confirmation. An overlapping confirmation is busy. A new explicit confirmation receives its own version. A stale completion cannot cancel a newer saved request."
+  },
+  "firstAppInvocation": {
+    "result": ".build/ReminderSave20261104/ReminderSaveMinimum.xcresult",
+    "finding": "The first model test used two coordinators and inconsistent dates. Routine reconciliation expired the fixture and the scheduled-state and pending-request assertions failed. The final fixture uses the composition's own coordinator and a future notice."
+  },
+  "archive": {
+    "path": ".build/ReminderSave20261104/RoomInTheCart-ReminderSaveFinal.xcarchive",
+    "binaryUUID": "CF4F6176-D364-305A-9BD6-EFCE7024673E",
+    "executableSHA256": "d1af7b922b2e4ac8c14b4206c5f1022e1afc6aea1ed23353ace36a00ed002d8e",
+    "signed": false,
+    "builtAppVerification": "Compiled Release iPhone app verified: executable, assets, privacy, environment, and embedded extensions.",
+    "strictProductionMetadataResult": "Built app verification failed: Release metadata is incomplete: HouseholdSubscriptionProductID, PrivacyPolicyURL, TermsOfUseURL, SupportURL"
+  }
+}

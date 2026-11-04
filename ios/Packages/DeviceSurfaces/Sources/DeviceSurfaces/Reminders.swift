@@ -103,11 +103,14 @@ public actor ReminderStore {
         }
     }
     @discardableResult public func put(_ intent: ReminderIntent, expectedVersion: Int64?, now: Date) throws -> SavedReminder {
+        try put(intent, expectedVersion: expectedVersion, now: now, reuseExisting: true)
+    }
+    func put(_ intent: ReminderIntent, expectedVersion: Int64?, now: Date, reuseExisting: Bool) throws -> SavedReminder {
         try intent.validate(now: now)
         return try database.transaction {
             guard try database.rows("SELECT id FROM reminder_retirements WHERE id=?", [.text(intent.id.uuidString)]).isEmpty else { throw SurfaceError.stale }
             let old = try get(intent.id)
-            if let old, old.intent == intent, old.status != .cancelled, old.status != .expired,
+            if reuseExisting, let old, old.intent == intent, old.status != .cancelled, old.status != .expired,
                expectedVersion == old.version || expectedVersion == (old.version == 1 ? nil : old.version - 1) { return old }
             guard old?.version == expectedVersion, (old?.version ?? 0) < Int64.max else { throw SurfaceError.stale }
             let counts = try database.rows("SELECT COUNT(*), COALESCE(SUM(CASE WHEN status NOT IN ('cancelled','expired') THEN 1 ELSE 0 END),0) FROM reminders")[0]
@@ -123,8 +126,11 @@ public actor ReminderStore {
     public func get(_ id: UUID) throws -> SavedReminder? { try database.rows("SELECT id,version,body,status FROM reminders WHERE id=?", [.text(id.uuidString)]).first.map(decode) }
     public func all() throws -> [SavedReminder] { try database.rows("SELECT id,version,body,status FROM reminders ORDER BY id").map(decode) }
     @discardableResult public func cancel(_ id: UUID) throws -> SavedReminder? {
+        try cancel(id, matchingVersion: nil)
+    }
+    func cancel(_ id: UUID, matchingVersion: Int64?) throws -> SavedReminder? {
         try database.transaction {
-            guard let old = try get(id) else { return nil }
+            guard let old = try get(id), matchingVersion == nil || old.version == matchingVersion else { return nil }
             if old.status == .cancelled { return old }
             guard old.version < Int64.max else { throw SurfaceError.stale }
             try database.execute("UPDATE reminders SET version=version+1,status='cancelled' WHERE id=?", [.text(id.uuidString)])
@@ -183,19 +189,35 @@ public protocol NotificationScheduling: Sendable {
 /// OS operations are serialized, including across reentrant actor calls.
 /// The private desired state is persisted first; a stale callback cannot publish scheduled state.
 public actor ReminderCoordinator {
+    public typealias SaveAuthorization = @Sendable () async -> Bool
     private let store: ReminderStore
     private let scheduler: any NotificationScheduling
     private let now: @Sendable () -> Date
     private var tail: Task<Void, Never>?
+    private var confirming = Set<UUID>()
     public init(store: ReminderStore, scheduler: any NotificationScheduling, now: @escaping @Sendable () -> Date = { Date() }) { self.store = store; self.scheduler = scheduler; self.now = now }
-    public func save(_ intent: ReminderIntent, expectedVersion: Int64?, requestPermission: Bool) async throws -> SavedReminder {
-        _ = try await store.put(intent, expectedVersion: expectedVersion, now: now())
-        await enqueue(intent.id, requestPermission: requestPermission).value
-        guard let result = try await store.get(intent.id) else { throw SurfaceError.corrupt }; return result
+    public func save(_ intent: ReminderIntent, expectedVersion: Int64?, requestPermission: Bool,
+                     authorized: SaveAuthorization? = nil) async throws -> SavedReminder {
+        guard !confirming.contains(intent.id) else { throw SurfaceError.busy }
+        if authorized != nil { confirming.insert(intent.id) }
+        defer { if authorized != nil { confirming.remove(intent.id) } }
+        if let authorized, !(await authorized()) { throw SurfaceError.stale }
+        let written = try await store.put(intent, expectedVersion: expectedVersion, now: now(), reuseExisting: authorized == nil)
+        await enqueue(intent.id, requestPermission: requestPermission, version: written.version, authorized: authorized).value
+        let result = try await store.get(intent.id)
+        if let authorized, !(await authorized()) {
+            // The original confirmation can only withdraw its own version.
+            if let cancelled = try await store.cancel(intent.id, matchingVersion: written.version) {
+                await enqueue(intent.id, requestPermission: false, version: cancelled.version).value
+            }
+            throw SurfaceError.stale
+        }
+        guard let result else { throw SurfaceError.corrupt }
+        return result
     }
     public func cancel(_ id: UUID) async throws {
-        _ = try await store.cancel(id)
-        await enqueue(id, requestPermission: false).value
+        let cancelled = try await store.cancel(id)
+        await enqueue(id, requestPermission: false, version: cancelled?.version).value
     }
     /// Removal is idempotent. A concurrent new version fails rather than deleting it.
     public func erase(_ id: UUID) async throws {
@@ -206,19 +228,28 @@ public actor ReminderCoordinator {
     }
     public func current(_ id: UUID) async throws -> SavedReminder? { try await store.get(id) }
     public func reconcileAll() async throws {
-        for row in try await store.all() { await enqueue(row.intent.id, requestPermission: false).value }
+        for row in try await store.all() where !confirming.contains(row.intent.id) {
+            await enqueue(row.intent.id, requestPermission: false, version: row.version, automatic: true).value
+        }
     }
     public func cancelAll(personaID: UUID) async throws {
         for row in try await store.all() where row.intent.personaID == personaID { try await cancel(row.intent.id) }
     }
-    private func enqueue(_ id: UUID, requestPermission: Bool) -> Task<Void, Never> {
+    private func enqueue(_ id: UUID, requestPermission: Bool, version: Int64?, automatic: Bool = false,
+                         authorized: SaveAuthorization? = nil) -> Task<Void, Never> {
         let previous = tail
-        let task = Task { await previous?.value; await self.reconcile(id, requestPermission: requestPermission) }
+        let task = Task {
+            await previous?.value
+            if automatic, self.confirming.contains(id) { return }
+            await self.reconcile(id, requestPermission: requestPermission, version: version, authorized: authorized)
+        }
         tail = task; return task
     }
-    private func reconcile(_ id: UUID, requestPermission: Bool) async {
+    private func reconcile(_ id: UUID, requestPermission: Bool, version: Int64?, authorized: SaveAuthorization?) async {
         let identifier = ReminderNotification.identifier(id)
-        guard let row = try? await store.get(id) else { await scheduler.remove([identifier]); return }
+        let saved = try? await store.get(id)
+        guard saved?.version == version else { return }
+        guard let row = saved else { await scheduler.remove([identifier]); return }
         if row.status == .cancelled { await scheduler.remove([identifier]); return }
         let currentTime = now()
         do {
@@ -235,6 +266,7 @@ public actor ReminderCoordinator {
         }
         var permission = await scheduler.permission()
         if permission == .unknown, requestPermission {
+            if let authorized, !(await authorized()) { return }
             do { permission = try await scheduler.requestPermission() ? .authorized : .denied }
             catch { _ = try? await store.mark(id, version: row.version, status: .retryNeeded); return }
         }
@@ -242,8 +274,10 @@ public actor ReminderCoordinator {
             await scheduler.remove([identifier]); _ = try? await store.mark(id, version: row.version, status: permission == .unknown ? .permissionRequired : .denied); return
         }
         guard let current = try? await store.get(id), current.version == row.version, current.status != .cancelled else { return }
+        if let authorized, !(await authorized()) { return }
         do {
             try await scheduler.add(ReminderNotification(row.intent))
+            if let authorized, !(await authorized()) { await scheduler.remove([identifier]); return }
             let marked = try await store.mark(id, version: row.version, status: .scheduled)
             if !marked { await scheduler.remove([identifier]) }
         } catch { _ = try? await store.mark(id, version: row.version, status: .retryNeeded) }

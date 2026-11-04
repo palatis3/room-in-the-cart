@@ -16,11 +16,12 @@ import UserNotifications
         let surfaces: DeviceSurfacesComposition
     }
 
-    private func fixture(clock: (() -> Date)? = nil) async throws -> Fixture {
+    private func fixture(clock: (() -> Date)? = nil, date: Date? = nil, reminderScheduler: (any NotificationScheduling)? = nil) async throws -> Fixture {
+        let now = date ?? self.now
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
-        let ledger = LedgerModel(databaseURL: directory.appendingPathComponent("ledger.sqlite"), clock: { self.now })
+        let ledger = LedgerModel(databaseURL: directory.appendingPathComponent("ledger.sqlite"), clock: { now })
         await ledger.open()
-        let pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"), clock: { self.now })
+        let pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"), clock: { now })
         let shopID = UUID(), lineID = UUID()
         let quantity = Quantity(amount: try Rational(2), unit: .count, originalLiteral: "2")
         let line = BasketLine(id: lineID, name: "Wraps", quantity: quantity, expectedCost: .exact(.zero))
@@ -45,7 +46,8 @@ import UserNotifications
         addTeardownBlock { defaults.removePersistentDomain(forName: suite) }
         let access = WorkspaceAccess(defaults: defaults)
         let household = HouseholdModel(outboxURL: directory.appendingPathComponent("household.json"))
-        let surfaces = DeviceSurfacesComposition(directory: directory.appendingPathComponent("surfaces"), clock: clock ?? { self.now }, launchArguments: ["--ui-testing"])
+        let surfaces = DeviceSurfacesComposition(directory: directory.appendingPathComponent("surfaces"), clock: clock ?? { now },
+            launchArguments: ["--ui-testing"], reminderScheduler: reminderScheduler)
         surfaces.bind(ledger: ledger, pickup: pickup, household: household, access: access)
         await surfaces.foreground()
         await settle { surfaces.reminderTargets.count == 2 }
@@ -60,8 +62,9 @@ import UserNotifications
         for target in f.surfaces.reminderTargets {
             let request = ContextualReminderRequest(target: target.target, sourceRevision: before.revision, sourceSavedAt: before.savedAt)
             XCTAssertEqual(request.resolve(in: f.surfaces.reminderTargets, at: now), target)
-            let first = try await f.surfaces.reminderContext(target, expiresAt: now.addingTimeInterval(172_800))
-            let reopened = try await f.surfaces.reminderContext(target, expiresAt: now.addingTimeInterval(172_800))
+            async let opening = f.surfaces.reminderContext(target, expiresAt: now.addingTimeInterval(172_800))
+            async let reopening = f.surfaces.reminderContext(target, expiresAt: now.addingTimeInterval(172_800))
+            let (first, reopened) = try await (opening, reopening)
             XCTAssertEqual(first.reminderID, reopened.reminderID)
             XCTAssertEqual(first.routeHandle, reopened.routeHandle)
             XCTAssertEqual(first.targetID, target.id)
@@ -223,7 +226,55 @@ import UserNotifications
         guard case .unavailable = f.surfaces.destination else { return XCTFail("A known fill opened as an unknown offer") }
     }
 
+    func testConfirmedReminderSurvivesBackgroundDuringOSRegistration() async throws {
+        let (f, intent, scheduler, saving) = try await confirmOfferReminder()
+        f.surfaces.background()
+        f.household.lock()
+        XCTAssertTrue(f.surfaces.reminderTargets.isEmpty)
+        await scheduler.release()
+        let saved = try await saving.value
+        XCTAssertEqual(saved.intent, intent)
+        XCTAssertEqual(saved.status, .scheduled)
+        let pending = await scheduler.pending
+        XCTAssertEqual(pending, ReminderNotification(intent))
+    }
+
+    func testConfirmedReminderIsWithdrawnWhenOfferChangesDuringOSRegistration() async throws {
+        let (f, intent, scheduler, saving) = try await confirmOfferReminder()
+        f.surfaces.background()
+        let changed = await f.pickup.change { $0.offers[0].householdPreference = "New source revision" }
+        XCTAssertTrue(changed)
+        await scheduler.release()
+        do { _ = try await saving.value; XCTFail("The original offer revision changed") }
+        catch { XCTAssertEqual(error as? SurfaceError, .stale) }
+        let pending = await scheduler.pending
+        XCTAssertNil(pending)
+        let saved = try await f.surfaces.reminderStore?.get(intent.id)
+        XCTAssertEqual(saved?.status, .cancelled)
+    }
+
+    private func confirmOfferReminder() async throws -> (Fixture, ReminderIntent, PausedReminderScheduler, Task<SavedReminder, Error>) {
+        let date = Date(), scheduler = PausedReminderScheduler()
+        let fixture = try await fixture(date: date, reminderScheduler: scheduler)
+        let (target, intent) = try await offerReminder(in: fixture, now: date)
+        let generation = try XCTUnwrap(fixture.surfaces.reminderAuthorization(target))
+        let authorization = try XCTUnwrap(fixture.surfaces.authorizeReminderSave(target, reviewedGeneration: generation))
+        let coordinator = try XCTUnwrap(fixture.surfaces.reminders)
+        let saving = Task {
+            try await coordinator.save(intent, expectedVersion: nil, requestPermission: true, authorized: authorization)
+        }
+        try await scheduler.waitUntilAdding()
+        return (fixture, intent, scheduler, saving)
+    }
+
     private func storedOfferReminder(in fixture: Fixture) async throws -> ReminderIntent {
+        let (_, intent) = try await offerReminder(in: fixture, now: now)
+        let store = try XCTUnwrap(fixture.surfaces.reminderStore)
+        _ = try await store.put(intent, expectedVersion: nil, now: now)
+        return intent
+    }
+
+    private func offerReminder(in fixture: Fixture, now: Date) async throws -> (SurfaceReminderTarget, ReminderIntent) {
         let target = try XCTUnwrap(fixture.surfaces.reminderTargets.first { $0.cutoff != nil })
         let context = try await fixture.surfaces.reminderContext(target, expiresAt: now.addingTimeInterval(86_400))
         let utc = Calendar(identifier: .gregorian).dateComponents(in: .gmt, from: now.addingTimeInterval(3600))
@@ -232,9 +283,7 @@ import UserNotifications
         let intent = try ReminderIntent(id: context.reminderID, personaID: context.personaID, targetID: context.targetID,
             subject: .offer, sourceRevision: context.sourceRevision, routeHandle: context.routeHandle, localTime: time,
             expiresAt: context.expiresAt, cutoff: context.cutoff, language: .english, now: now)
-        let store = try XCTUnwrap(fixture.surfaces.reminderStore)
-        _ = try await store.put(intent, expectedVersion: nil, now: now)
-        return intent
+        return (target, intent)
     }
 
     private func settle(_ condition: () -> Bool) async {
@@ -244,5 +293,32 @@ import UserNotifications
         }
         XCTAssertTrue(condition(), "Device surfaces did not finish loading their durable source identities")
     }
+}
+
+private actor PausedReminderScheduler: NotificationScheduling {
+    private var adding: CheckedContinuation<Void, Never>?
+    private var paused = false
+    private(set) var pending: ReminderNotification?
+
+    func permission() -> NotificationPermission { .authorized }
+    func requestPermission() -> Bool { true }
+    func add(_ notification: ReminderNotification) async throws {
+        if !paused {
+            paused = true
+            await withCheckedContinuation { adding = $0 }
+        }
+        pending = notification
+    }
+    func remove(_ identifiers: [String]) {
+        if let pending, identifiers.contains(pending.identifier) { self.pending = nil }
+    }
+    func waitUntilAdding() async throws {
+        let deadline = ContinuousClock.now + .seconds(5)
+        while adding == nil {
+            guard ContinuousClock.now < deadline else { throw SurfaceError.unavailable }
+            try await Task.sleep(for: .milliseconds(10))
+        }
+    }
+    func release() { adding?.resume(); adding = nil }
 }
 #endif

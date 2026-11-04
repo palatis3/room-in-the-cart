@@ -54,7 +54,8 @@ struct SurfaceReminderSetup: View {
             else if let context, let coordinator = composition.reminders {
                 ReminderEditorView(context: context, coordinator: coordinator,
                     sourceTitle: target.title, sourceSavedAt: sourceSavedAt,
-                    currentAuthorization: { composition.reminderAuthorization(target) })
+                    currentAuthorization: { composition.reminderAuthorization(target) },
+                    authorizeSave: { composition.authorizeReminderSave(target, reviewedGeneration: $0) })
             } else {
                 Form {
                     Text(target.title).font(.headline).accessibilityIdentifier("reminder.subject")

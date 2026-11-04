@@ -1,7 +1,7 @@
 import SwiftUI
 import DeviceSurfaces
 
-public struct ReminderEditorContext {
+public struct ReminderEditorContext: Sendable {
     public let reminderID: UUID, personaID: UUID, targetID: UUID
     public let subject: ReminderSubject
     public let sourceRevision: Int64
@@ -26,6 +26,7 @@ public struct ReminderEditorContext {
     private let sourceSavedAt: Date?
     /// Root returns a generation only when both current persona AND current subject revision are permitted.
     private let currentAuthorization: () -> UUID?
+    private let authorizeSave: (UUID) -> ReminderCoordinator.SaveAuthorization?
     @Environment(\.locale) private var locale
     @Environment(\.dismiss) private var dismiss
     @State private var fireAt: Date
@@ -42,8 +43,10 @@ public struct ReminderEditorContext {
     @State private var saved: SavedReminder?
     @State private var statusLoaded = false
     @State private var statusLoadFailed = false
-    public init(context: ReminderEditorContext, coordinator: ReminderCoordinator, sourceTitle: String? = nil, sourceSavedAt: Date? = nil, currentAuthorization: @escaping () -> UUID?) {
+    public init(context: ReminderEditorContext, coordinator: ReminderCoordinator, sourceTitle: String? = nil, sourceSavedAt: Date? = nil,
+                currentAuthorization: @escaping () -> UUID?, authorizeSave: @escaping (UUID) -> ReminderCoordinator.SaveAuthorization?) {
         self.context = context; self.coordinator = coordinator; self.sourceTitle = sourceTitle; self.sourceSavedAt = sourceSavedAt; self.currentAuthorization = currentAuthorization
+        self.authorizeSave = authorizeSave
         _fireAt = State(initialValue: context.initialFireAt); _timeZoneID = State(initialValue: context.timeZoneID); _version = State(initialValue: context.expectedVersion)
         _quiet = State(initialValue: context.initialQuietHours != nil)
         _quietStart = State(initialValue: (context.initialQuietHours?.startMinute ?? 22 * 60) / 60)
@@ -92,13 +95,16 @@ public struct ReminderEditorContext {
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(SurfaceCopy.text(saved?.status == .scheduled ? "Done" : "Cancel")) { dismiss() }.disabled(busy).accessibilityIdentifier("reminder.close") } }
             .keyboardDoneAction(visible: timeZoneFocused, title: SurfaceCopy.text("Done"), identifier: "reminder.keyboardDone") { timeZoneFocused = false }
             .interactiveDismissDisabled(busy)
-            .task(id: context.reminderID) {
-                guard currentAuthorization() != nil else { return }
+            .task(id: currentAuthorization()) {
+                guard let generation = currentAuthorization() else { return }
                 do {
                     let current = try await coordinator.current(context.reminderID)
-                    guard currentAuthorization() != nil else { return }
+                    guard currentAuthorization() == generation, !busy else { return }
                     saved = current; statusLoaded = true; statusLoadFailed = false
-                } catch { statusLoaded = true; statusLoadFailed = true }
+                } catch {
+                    guard currentAuthorization() == generation else { return }
+                    statusLoaded = true; statusLoadFailed = true
+                }
             }
             .onChange(of: fireAt) { _, _ in clearReview() }.onChange(of: timeZoneID) { _, _ in clearReview() }
             .onChange(of: quiet) { _, _ in clearReview() }.onChange(of: quietStart) { _, _ in clearReview() }.onChange(of: quietEnd) { _, _ in clearReview() }
@@ -138,16 +144,21 @@ public struct ReminderEditorContext {
         } catch { message = errorText(error) }
     }
     private func save(_ value: ReminderIntent) {
-        guard let generation = reviewedGeneration, currentAuthorization() == generation else { clearReview(); message = SurfaceCopy.text("This reminder needs a fresh review."); return }
+        guard let generation = reviewedGeneration, let authorized = authorizeSave(generation) else {
+            clearReview(); message = SurfaceCopy.text("This reminder needs a fresh review."); return
+        }
+        let expectedVersion = version
         busy = true
         Task {
             defer { busy = false }
             do {
-                guard currentAuthorization() == generation else { clearReview(); return }
-                let saved = try await coordinator.save(value, expectedVersion: version, requestPermission: true)
-                guard currentAuthorization() == generation else { try? await coordinator.erase(value.id); clearReview(); return }
+                let saved = try await coordinator.save(value, expectedVersion: expectedVersion, requestPermission: true, authorized: authorized)
+                guard await authorized(), currentAuthorization() != nil else { clearReview(); return }
                 version = saved.version; self.saved = saved; statusLoaded = true; statusLoadFailed = false; reviewed = nil; message = nil
-            } catch { message = errorText(error) }
+            } catch {
+                if currentAuthorization() == generation { message = errorText(error) }
+                else { clearReview() }
+            }
         }
     }
     private func turnOff() {

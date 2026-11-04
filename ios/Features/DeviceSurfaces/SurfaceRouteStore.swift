@@ -2,7 +2,7 @@ import Foundation
 import DeviceSurfaces
 import Darwin
 
-enum SurfacePrivateTarget: Codable, Equatable {
+enum SurfacePrivateTarget: Codable, Equatable, Sendable {
     case shop(workspaceID: UUID, shopID: UUID)
     case offer(workspaceID: UUID, journeyID: UUID, offerID: UUID)
     case deferral(workspaceID: UUID, journeyID: UUID, needID: UUID)
