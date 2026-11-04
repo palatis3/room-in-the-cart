@@ -1,0 +1,43 @@
+{
+  "sourceCommit": "16d9ae4e818661c66c8697f9a0cb06819fdfd5d7",
+  "sourceSHA256": {
+    "ios/Features/Capture/CaptureReviewView.swift": "f6a82c521896da35aca72fc97140ceb43e5364cc2d6b1868f695d28d4b89e786",
+    "ios/Features/Capture/ScanReviewView.swift": "9faa07194a92cdac7e9fd544f4a339d9cc149a125daa02a0d350cbf2f2bb01eb",
+    "ios/Features/Capture/StructuredCaptureReviewView.swift": "548d9a32779b9d7f87f0fff5cd9e726e3a001be1b8a50631dc9973580386b3ef",
+    "ios/Features/Capture/Capture.xcstrings": "14a590622c1c3ff6d6bf86defc796a300d9c87e254c5aa2e72a28a7d3cfab385"
+  },
+  "englishUI": {
+    "device": "iPhone 17e, iOS 27.0 (24A434)",
+    "result": ".build/CaptureFieldReview20261104/QuantityKeyboardAccessible.xcresult",
+    "harnessSHA256": "fd9b8c9540c414ae89602ffcdb05fd16d363da774adccced9ce8abbaa72b4e37",
+    "passed": 1,
+    "failed": 0,
+    "testSeconds": 149.985,
+    "runtimeWarnings": [],
+    "scope": "An enrolled fictional contributor used the production request form. The visible labels persisted after changing 2 packs to 3 and 8 per pack to 6. Done dismissed each keyboard. Purpose, destination and exclusions exposed their explicit accessibility names and kept their filled values. Request review preserved the original words and edited quantities. Cancel left zero submitted requests in the fixture.",
+    "filledFieldsCapture": {
+      "path": ".build/CaptureFieldReview20261104/accessible-attachments/389779EA-713C-4FCF-B9CE-E5A5FF3AB1D2.png",
+      "sha256": "bed89bc51a5e5781db7c61369ae07ed4f18618a0459d27c5a580594facf24b03"
+    },
+    "reviewCapture": {
+      "path": ".build/CaptureFieldReview20261104/accessible-attachments/B7B40AC7-10E7-4930-B06C-61559AE29419.png",
+      "sha256": "21f4a5c7c667a031ed3f67d3ca7956be9d47a90acbee13ab839038f2b4be43b0"
+    }
+  },
+  "priorUI": [
+    {
+      "result": ".build/CaptureFieldReview20261104/QuantityKeyboard.xcresult",
+      "scope": "The quantity-only candidate passed the numeric fields, both Done actions and request review before adding captions to the text fields."
+    },
+    {
+      "result": ".build/CaptureFieldReview20261104/QuantityKeyboardFinal.xcresult",
+      "scope": "The expanded run reached both quantity edits. It failed when XCTest could not find the filled multiline purpose field by its accessible name. The final code assigns explicit labels and identifiers to the purpose, destination and exclusions fields."
+    }
+  ],
+  "compiledDebug": {
+    "log": ".build/IntegratedCaptureWidget20261104/build-verification.log",
+    "executableSHA256": "d7c5065db9a36bd25161dd3077833d4537833698fdd1fa0c747a6aca2e2e453f",
+    "scope": "Ordinary arm64 Debug, with the independently reviewed widget guard included. Executable, assets, privacy, environment and embedded extensions passed verification."
+  },
+  "remaining": ["US Spanish device and large-text verification", "Physical VoiceOver and Switch Control"]
+}
