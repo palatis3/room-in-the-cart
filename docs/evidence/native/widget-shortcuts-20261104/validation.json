@@ -1,5 +1,37 @@
 {
   "assignment": "Foundation 2.1 E07 widget and App Intent acceptance",
+  "queued_url_scene_follow_up": {
+    "integrated_source_commit": "08e1e0b6eb16a80c908d5bb9e0a2fd953edd91c6",
+    "candidate_source_digest": "87ff25489599a3e5b8ce0032ad09ec0a1ba2749960ffd753374ffc3af22572bd",
+    "reviewed_patch_sha256": "7475e5df7ad34d86ba45f59f975c06db39f5c4f337104b3d3df30e6d6af7c4a5",
+    "integrated_composition_sha256": "c64f70ddae45aa328e878486e5ccf0cd2eeb67ee229b579b567a7e39f3230b9b",
+    "integrated_startup_tests_sha256": "c07f5a26cee13281974fe61b408a49f7c815b8f472407055ed6908e518a1268e",
+    "readback_directory": ".build/WidgetLifecycleFinal20261104/widget-readback",
+    "readback_manifest_sha256": "a9ece047a662e70cdc70490e7da40790b340f3ff6e10af3f876cdc782781ce2d",
+    "sealed_report_sha256": "e04396f712ffbe81847f5730395e6b97c073266c4fb2b5923aa8e5693fbb9d0e",
+    "regression": "A ready link could reopen its pickup after the app went to the background and legitimately returned before the queued task executed. The task now carries the existing scene generation and expires across the background transition. A fresh link after foreground still opens the current pickup.",
+    "focused_native": {"before_failed": 1, "after_passed": 20, "after_failed": 0},
+    "integrated_debug": {
+      "bundle_verification": ".build/WidgetLifecycleFinal20261104/debug-verification.log",
+      "executable_sha256": "e8d39ab111978ee369b38e6fbb7246a6e27eb3ff0aa2af2c26f5eeb3f9fcb299",
+      "debug_dylib_sha256": "be9901802f66a8989550839e7ff799cd0203c68d8d92ef5d0edd1342696c137c",
+      "full_ordinary_model_target": [
+        {"device": "iPhone 17e, iOS 27.0 (24A434)", "result": ".build/WidgetLifecycleFinal20261104/Models-27.xcresult", "passed": 563, "failed": 0, "skipped": 0, "runtime_warnings": []},
+        {"device": "iPhone SE, iOS 17.0 (21A328)", "result": ".build/WidgetLifecycleFinal20261104/Models-17.xcresult", "passed": 563, "failed": 0, "skipped": 0, "runtime_warnings": []}
+      ]
+    },
+    "system_widget": {"cold": "LifecycleColdWidget passed and opened the current pickup list.", "warm": "LifecycleWarmWidget passed and opened the grocery entry editor.", "saved_workspace": "Both actual taps preserved the selected pickup, revision 8, full workspace and shop payloads."},
+    "integrated_release": {
+      "archive": ".build/WidgetLifecycleFinal20261104/RoomInTheCart-WidgetLifecycle.xcarchive",
+      "archive_log": ".build/WidgetLifecycleFinal20261104/archive.log",
+      "bundle_verification": ".build/WidgetLifecycleFinal20261104/archive-verification.log",
+      "executable_sha256": "acb8fb4d439b6af272066e878c3714779945ca3e2bddee44b7e6fd765a4291ae",
+      "executable_uuid": "39662DBE-D9DB-3125-9ECE-D5B32F716FDF",
+      "signed": false,
+      "missing_distribution_metadata": ["HouseholdSubscriptionProductID", "PrivacyPolicyURL", "TermsOfUseURL", "SupportURL"]
+    },
+    "remaining": ["Physical signed-device and lock-state checks", "Delayed WidgetKit refresh on a physical iPhone"]
+  },
   "ready_url_privacy_follow_up": {
     "candidate_source_digest": "962575a85dcf6c630d2d836ef98b948e6fe06401363b1a477b89034dbe2c3945",
     "reviewed_patch_sha256": "a190591ff1958f6ceedc773b1778e6bbe056ca7812218c3440d03783741a24c7",

@@ -1,0 +1,21 @@
+{
+  "sourceCommit": "cedbae0fcdac543675842799844fa3bbb086bb92",
+  "device": "iPhone 17e, iOS 27.0 (24A434)",
+  "result": ".build/NativeCheckpoint20261104-cedbae0/Ordinary.xcresult",
+  "summary": ".build/NativeCheckpoint20261104-cedbae0/summary.json",
+  "log": ".build/NativeCheckpoint20261104-cedbae0/ordinary.log",
+  "outcome": "Failed",
+  "passed": 585,
+  "modelsPassed": 545,
+  "uiPassed": 40,
+  "uiFailed": 4,
+  "skipped": 0,
+  "runtimeWarnings": [],
+  "separateFocusedFollowUps": [
+    {"case": "ContextualNavigationUITests.testEnteredStoreQuotesKeepTripCostsSeparateAndAdoptOnlyReviewedSavedProof", "originalFailure": "12-minute execution allowance", "laterEvidence": "../connected-store-quotes/acceptance.json", "laterDevice": "iPhone SE, iOS 17.0"},
+    {"case": "ContextualNavigationUITests.testUnknownTaxKeepsWeighedPickupUnresolved", "originalFailure": "12-minute execution allowance", "laterEvidence": "../checkout-keyboard-20261104/validation.json", "laterDevice": "iPhone SE, iOS 17.0"},
+    {"case": "FreeJourneyUITests.testDinnerMoveAcrossDisplayedWeeksKeepsLunchAndOccurrence", "originalFailure": "The older test could not reach its dinnerMoveDate element", "laterEvidence": "../meal-week-move-20261104/validation.json", "laterDevice": "iPhone SE, iOS 17.0"},
+    {"case": "RoomInTheCartUITests.testLargestTextSourceAndSavedDetailsAreFullyReadableAboveTabs", "originalFailure": "12-minute execution allowance", "laterEvidence": "../minimum-os-current-20261104/validation.json", "laterDevice": "iPhone 17e, iOS 27.0"}
+  ],
+  "scope": "This frozen invocation completed with four UI failures. Each case has a later passing focused result with its own source and simulator scope. A single combined UI pass on the current source remains open."
+}
