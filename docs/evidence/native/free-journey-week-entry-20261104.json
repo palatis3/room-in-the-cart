@@ -31,6 +31,18 @@
     "runtime_warnings": [],
     "failure": "The original Free journey looked for Unscheduled on the Dinners root, after This week became a pushed route. Both later focused runs passed with the corrected test navigation and the same app source."
   },
+  "current_full_suite_case": {
+    "app_source_commit": "3510eb1d97d51958e80032475cb9a4de54a34805",
+    "app_debug_dylib_sha256": "7270ccca0337bd8c9c00a095953cb2e61cf7c4d05ce6a6b04b02d68f36285e93",
+    "ui_test_executable_sha256": "42c07b12b31d396cce6ae3881a148f65f6b38c967c021c0e1704f1d89e5b69fe",
+    "device": "iPhone 17e, iOS 27.0 (24A434), arm64 simulator",
+    "result_bundle": ".build/CurrentOrdinary3510eb1/ordinary-ui.xcresult",
+    "log_excerpt": ".build/CurrentOrdinary3510eb1/current-free-journey-pass.log",
+    "log_excerpt_sha256": "9dbbcec04e6fa49c7610ba2c7a6da8c9eafc54c68aacd559ce33e22cdbaf2002",
+    "duration_seconds": 414.199,
+    "passed": 1,
+    "scope": "The ordinary suite recorded the Free journey passing on the accessible meal-week build. It saved the dinner and protected lunch, reviewed whole packs and frozen placement, recorded an observed short fill, prepared the cook note, settled and reopened the reusable dinner in the next shop. The final reopen preserved the repair decision. This is one case in the larger run, which was still executing and had already recorded a separate deferral reminder timeout."
+  },
   "minimum_os": {
     "device": "iPhone SE, iOS 17.0 (21A328), arm64 simulator",
     "unmodified_logging": {

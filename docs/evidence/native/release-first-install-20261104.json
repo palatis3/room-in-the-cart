@@ -110,5 +110,24 @@
       }
     }
   },
+  "ios27SupportCopy": {
+    "testHarnessSHA256": "eb7b590167f186f6cecd824eb4acbaf8d43fa767053cccc976e9009b414e4cf7",
+    "initialResult": ".build/FirstInstallRelease20261104/ReleaseSupportSummary.xcresult",
+    "initialLogSHA256": "2f64cbb4bc9ff512231226e876e54cc892fe53f2b2cbea385c290a1e0b65b3de",
+    "initialFinding": "The support preview passed the field checks and the share sheet opened. XCTest searched for a button while the system exposed Copy as a collection cell.",
+    "result": ".build/FirstInstallRelease20261104/ReleaseSupportSummaryCopyCell.xcresult",
+    "logSHA256": "ebd5b93c6584fced6f08a9ef43ba6b6073e26badf83ae998ea70d0aeb4757e26",
+    "summarySHA256": "c8d15c28dc2888fca374db3c4da2fbb354aaade06d82bdd228c0865a0d88eec6",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 88.978,
+    "runtimeWarnings": [],
+    "previewAndPasteboardSHA256": "dbeeceda233e0edf95d2c9a97c7f2486a07ca57afebb8bdfd06fb8c0db1217f8",
+    "postCopyDatabaseReadbackSHA256": "571f2240ebe5fd42ee20a0f87bbc49a06201c9845a9ff388d1e71c0f4c59caf4",
+    "previewCapture": {"path": ".build/FirstInstallRelease20261104/support-attachments/302A6FF8-142E-4F08-A0D3-4CA91B168F6D.png", "sha256": "4588da0ba934cfe854edd7efea7005ebb0c94b18d4d728da4cf75893b729cdec"},
+    "systemShareCapture": {"path": ".build/FirstInstallRelease20261104/support-attachments/B6BD2D6F-8F73-4C4B-81CA-01970F2D3FC2.png", "sha256": "a29e2e4a7132dc016f78f5682b6266deeb93452c6e2d5d6f3dd4185203def73c"},
+    "scope": "The same Release executable reopened the saved fictional comparison before navigating to Privacy and data and Support. Both absent policy links displayed unavailable text. The supplied support address was visible separately. The preview contained the fixed diagnostic header, version, build, OS, language, environment and two configuration booleans. The native share sheet copied exactly those bytes to an initially empty simulator pasteboard. The read-only comparison-store result matched the earlier readback byte for byte. The test used local Copy only. Mail delivery and published policy URLs remain open."
+  },
   "scope": "Each new simulator had no Room in the Cart installation. The ordinary app launched with no test arguments and the compiled household service URL was blank. Records started empty. The UI saved and reopened the original item-only result, and the standard app database held one revision-one comparison after relaunch. Normal app logging remained enabled. Physical first install, network-interruption behavior and signed distribution remain separate gates."
 }

@@ -187,7 +187,7 @@ All 27 have current source entries. “Pending” below concerns current screen 
 | S17 Apply | Dinner decision sheet / shared proposal → shopper `HouseholdShopView`. | PLANNING/B175; final shared candidate. |
 | S18 Offer | Settings/selected paid feature → `MembershipEntryView`. | Local StoreKit matrix; actual Apple deferred. |
 | S19 Seats | Membership named seats and shared-shop authorized handover. | N526/B175; actual second paid device. |
-| S20 Records | Records root → history, saved evidence, recovery and managed views. | F07/LIBRARY; system export and final device. |
+| S20 Records | Records root → history, saved evidence, recovery and managed views. | F07/LIBRARY. The [Release support check](evidence/native/release-first-install-20261104.json) verified exact preview-to-clipboard content and preserved the saved comparison. Physical Files delivery, support mailbox operation and policy publication remain open. |
 | S21 People/grants/devices | Household → People/Guardian/Managed views/Devices. | DEVICE/G29/GUARDIAN-UI; dedicated English and Spanish SE/iOS17 cases pass with exact separate logging/source limits. |
 | S22 Own requests | Contributor/child scoped root; native structured review and narrow web client. | N526/GUARDIAN-UI/WEB; actual provider/mixed phone. |
 | S23 Inbox | Shop contextual inbox or Household → grouped requests/comparison. | N526/B175/REQUEST-UI/CAPTION; both functional cases and separate Spanish post-wrap case pass. |
