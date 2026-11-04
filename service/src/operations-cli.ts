@@ -10,6 +10,6 @@ export async function operationsCLI(args:string[]=process.argv.slice(2),environm
   runtime=createOperationsRuntime(environment);
   console.info(JSON.stringify(await runtime.run(args[0] as 'run'|'status')));return 0;
  }catch{console.error(JSON.stringify({event:'operations_failed',error:'operations_unavailable'}));return 1;}
- finally{await runtime?.pool.end();}
+ finally{await runtime?.close();}
 }
 if(process.argv[1]===fileURLToPath(import.meta.url))process.exitCode=await operationsCLI();

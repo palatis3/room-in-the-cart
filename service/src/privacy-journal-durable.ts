@@ -4,7 +4,7 @@ import {journalCanonical,journalHash,validatePrivacyRestoreEvents,type PrivacyJo
 import {MAX_JOURNAL_BYTES as MAX_BYTES,MAX_JOURNAL_RECORDS as MAX_RECORDS} from './privacy-journal-limits.js';
 import {ServiceError} from './errors.js';
 import type {
- AdmittedHead,AdmissionReceipt,AuthorityCall,
+ AdmittedHead,AdmissionReceipt,AuthorityCall,JournalCapacity,
  DurableJournalPins,DurablePrivacyJournalConfiguration,DurablePrivacyJournalPort,
  JournalCall,JournalTransition,RecordIdentity,UncertaintyClaim,WorkerJournalKind,
 } from './privacy-journal-durable-contract.js';
@@ -16,11 +16,13 @@ const uuid=z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0
 const identifier=z.string().min(1).max(300).regex(/^[^\x00-\x1f\x7f]+$/);
 const safe=z.number().int().min(0).max(Number.MAX_SAFE_INTEGER);
 const signature=z.string().regex(/^[A-Za-z0-9_-]{86}$/);
-const pinsSchema=z.object({lineage:uuid,schemaDigest:hash,configurationId:identifier.max(100),keyId:identifier.max(100),publicKeyFingerprint:hash,sourceIdentity:identifier,recordStoreIdentity:identifier,recordNamespace:identifier,checkpointAuthority:identifier,deploymentPrincipal:identifier,authorityKeyId:identifier.max(100),authorityPublicKeyFingerprint:hash}).strict();
+export const durableJournalPinsSchema=z.object({lineage:uuid,schemaDigest:hash,configurationId:identifier.max(100),keyId:identifier.max(100),publicKeyFingerprint:hash,sourceIdentity:identifier,recordStoreIdentity:identifier,recordNamespace:identifier,checkpointAuthority:identifier,deploymentPrincipal:identifier,authorityKeyId:identifier.max(100),authorityPublicKeyFingerprint:hash}).strict();
 const payloadSchema=z.object({version:z.literal(1),eventId:uuid,lineage:uuid,schemaDigest:hash,configurationId:identifier.max(100),jobId:uuid,kind:z.enum(['acceptance','target_erased','source_completed','source_pending']),data:z.record(z.string(),z.unknown())}).strict();
 const eventSchema=z.object({eventId:uuid,payloadDigest:hash,payload:payloadSchema}).strict();
 const headSchema=z.object({version:z.literal(1),lineage:uuid,schemaDigest:hash,configurationId:identifier.max(100),seq:safe.max(MAX_RECORDS),hash,fenced:z.boolean()}).strict();
 export const admittedSchema=z.object({head:headSchema,generation:safe.min(1),authorityRevision:safe,mode:z.enum(['active','pending','blocked','recovery','sealed']),pendingOperation:hash.nullable(),totalBytes:safe.max(MAX_BYTES)}).strict();
+export const journalCapacitySchema=z.object({mode:admittedSchema.shape.mode,uncertain:z.boolean(),
+ usedRecords:safe.max(MAX_RECORDS),reservedRecords:safe.max(MAX_RECORDS),usedBytes:safe.max(MAX_BYTES),reservedBytes:safe.max(MAX_BYTES)}).strict();
 export const identitySchema=z.object({seq:safe.min(1).max(MAX_RECORDS),previousHash:hash,recordHash:hash,byteLength:safe.min(1).max(MAX_BYTES),eventId:uuid,payloadDigest:hash,jobId:uuid,transition:z.enum(['intent','commit','rollback'])}).strict();
 export const storedSchema=z.object({objectKey:identifier,immutableVersion:identifier,recordHash:hash,byteLength:safe.min(1).max(MAX_BYTES)}).strict();
 export const workerKindSchema=z.enum(['target_erased','source_pending','source_completed']);
@@ -54,7 +56,7 @@ function pinnedPublicKey(input:KeyObject|string):KeyObject{
  }
  if(input.type!=='public')throw Error('Public authority key required');return input;
 }
-export function durableJournalScopeDigest(pins:DurableJournalPins):string{return journalHash({version:1,...pinsSchema.parse(pins)});}
+export function durableJournalScopeDigest(pins:DurableJournalPins):string{return journalHash({version:1,...durableJournalPinsSchema.parse(pins)});}
 export function durableJournalOperationId(scopeDigest:string,eventId:string,payloadDigest:string,transition:JournalTransition):string{
  hash.parse(scopeDigest);uuid.parse(eventId);hash.parse(payloadDigest);
  return journalHash({version:1,scopeDigest,eventId,payloadDigest,transition:z.enum(['intent','commit','rollback']).parse(transition)});
@@ -97,7 +99,7 @@ function objectKey(scopeDigest:string,record:RecordIdentity):string{return `${sc
 
 /** Strict, independently authenticated immutable proof; never accepts a provider Boolean. */
 export function verifyDurableAdmissionReceipt(input:unknown,pinsInput:DurableJournalPins,authorityPublicKey:KeyObject|string):AdmissionReceipt{
- const pins=pinsSchema.parse(pinsInput),scopeDigest=durableJournalScopeDigest(pins);
+ const pins=durableJournalPinsSchema.parse(pinsInput),scopeDigest=durableJournalScopeDigest(pins);
  const key=pinnedPublicKey(authorityPublicKey);
  if(key.type!=='public'||durableJournalPublicKeyFingerprint(key)!==pins.authorityPublicKeyFingerprint||pins.authorityPublicKeyFingerprint===pins.publicKeyFingerprint)throw Error('Independent authority key fingerprint conflict');
  const receipt=receiptSchema.parse(input),{authoritySignature,...body}=receipt;
@@ -112,8 +114,8 @@ export function verifyDurableAdmissionReceipt(input:unknown,pinsInput:DurableJou
  * callback. It is not an arbitrary-event network signing or import endpoint.
  * There is deliberately no environment composition or provider implementation.
  */
-export function createDurablePrivacyJournal(configuration:DurablePrivacyJournalConfiguration):{readonly port:DurablePrivacyJournalPort;isPoisoned():boolean}{
- const pins=immutable(pinsSchema.parse(copied(configuration.pins))),scopeDigest=durableJournalScopeDigest(pins);
+export function createDurablePrivacyJournal(configuration:DurablePrivacyJournalConfiguration):{readonly port:DurablePrivacyJournalPort;isPoisoned():boolean;capacity(call:JournalCall):Promise<JournalCapacity>}{
+ const pins=immutable(durableJournalPinsSchema.parse(copied(configuration.pins))),scopeDigest=durableJournalScopeDigest(pins);
  const privateKey=configuration.privateKey;
  if(privateKey.type!=='private'||privateKey.asymmetricKeyType!=='ed25519'||durableJournalPublicKeyFingerprint(privateKey)!==pins.publicKeyFingerprint)throw Error('Pinned Ed25519 private key required');
  const publicKey=createPublicKey(privateKey),authorityPublicKey=pinnedPublicKey(configuration.authorityPublicKey);
@@ -124,7 +126,7 @@ export function createDurablePrivacyJournal(configuration:DurablePrivacyJournalC
  // independently pin its actual endpoint, credentials and registered resource.
  const source={readOrigin:configuration.source.readOrigin.bind(configuration.source),readCommittedEvent:configuration.source.readCommittedEvent.bind(configuration.source),readCommittedAcceptance:configuration.source.readCommittedAcceptance.bind(configuration.source),listUnacknowledgedJobEvents:configuration.source.listUnacknowledgedJobEvents.bind(configuration.source),acknowledge:configuration.source.acknowledge.bind(configuration.source)};
  const records={putExact:configuration.records.putExact.bind(configuration.records),readExact:configuration.records.readExact.bind(configuration.records)};
- const authority={readCurrent:configuration.authority.readCurrent.bind(configuration.authority),inspectOperation:configuration.authority.inspectOperation.bind(configuration.authority),reserve:configuration.authority.reserve.bind(configuration.authority),publish:configuration.authority.publish.bind(configuration.authority),reserveWorkerCapacity:configuration.authority.reserveWorkerCapacity?.bind(configuration.authority)};
+ const authority={readCurrent:configuration.authority.readCurrent.bind(configuration.authority),inspectOperation:configuration.authority.inspectOperation.bind(configuration.authority),reserve:configuration.authority.reserve.bind(configuration.authority),publish:configuration.authority.publish.bind(configuration.authority),reserveWorkerCapacity:configuration.authority.reserveWorkerCapacity?.bind(configuration.authority),readCapacity:configuration.authority.readCapacity?.bind(configuration.authority)};
  const uncertainty={begin:configuration.uncertainty.begin.bind(configuration.uncertainty),beginIntent:configuration.uncertainty.beginIntent?.bind(configuration.uncertainty),complete:configuration.uncertainty.complete.bind(configuration.uncertainty)};
  let poisoned=false;
  async function step<T>(call:JournalCall,work:()=>Promise<T>):Promise<T>{
@@ -283,5 +285,12 @@ export function createDurablePrivacyJournal(configuration:DurablePrivacyJournalC
    });
   },
  });
- return Object.freeze({port,isPoisoned:()=>poisoned});
+ return Object.freeze({port,isPoisoned:()=>poisoned,async capacity(call:JournalCall){
+  const read=authority.readCapacity;
+  if(!read)throw Error('Signed journal capacity is unavailable');
+  return withOwnedCall(call,now,async owned=>{
+   const request=authorityCall(owned);
+   return envelope(await step(owned,()=>read(request)),journalCapacitySchema,request);
+  });
+ }});
 }

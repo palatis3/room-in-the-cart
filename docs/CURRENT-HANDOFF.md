@@ -4,11 +4,15 @@ The complete production app remains the objective. The current checkpoint below 
 
 ## Current checkpoint — November 4
 
+Migration 027 binds the normal application and operations entry points to the registered source. Acceptance and processing are independently opt-in. Each enabled runtime checks the dedicated observer and verifies a fresh signed capacity report from the HTTPS authority. The worker reports an alert at 80% of used plus reserved records or bytes and rejects any claimed job with a different identity issuer before erasing data or calling the provider.
+
+The [runtime validation](evidence/b11/privacy-runtime-20261104/validation.json) covers a signed application request, a real two-database journal, a worker run against a simulated provider and the completed receipt. It also covers unavailable and blocked states. Hosted verification, independent backup and restore, real provider testing, and delivery of capacity alerts remain release gates. Before enabling hosted deletion, address normal writer contention without poisoning the losing writer and rehearse succession for a lineage approaching capacity.
+
+## Previous checkpoint — November 4, worker capacity
+
 Migration 026 and authority schema 003 protect worker capacity. The durable worker reserves space before target erasure and before invoking the provider. The checkpoint keeps exact allowances across a restart and spends them only when it admits the matching outcome. Identical provider retries reuse the prior pending outcome. A new deletion request that cannot fit fails before opening an uncertainty claim.
 
 The [worker capacity tests](evidence/b11/privacy-worker-capacity-20261104/validation.json) show that an exhausted target or outcome budget leaves the step pending and the provider untouched. In a separate case the old job uses its final reserved slot after the new request is refused. The real HTTPS restart test preserves the completion allowance through provider failures and a lost completion observation, then recovers the exact completion without calling the provider again.
-
-Next prepare reviewed runtime composition and operational capacity alerts. The finite lineage still requires owner recovery and a capacity policy before service is exhausted. Hosted activation, backup and restore, and real provider verification remain release gates.
 
 ## Previous checkpoint — November 4, restore capacity
 

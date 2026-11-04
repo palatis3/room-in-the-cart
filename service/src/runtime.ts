@@ -9,6 +9,7 @@ import { HouseholdRepository } from './repository.js';
 import { createHTTPServer } from './http.js';
 import { BrowserAuthService, SupabaseEmailOTPProvider } from './browser-auth.js';
 import { PrivacyService } from './privacy.js';
+import { createPrivacyRuntime } from './privacy-runtime.js';
 import { guardianRuntime } from './guardian-runtime.js';
 
 /** Trust Vercel's overwritten edge metadata only inside its deployed runtime.
@@ -46,6 +47,7 @@ export async function createRuntime(environment: NodeJS.ProcessEnv = process.env
   const pool = new Pool(databaseConfiguration(environment));
   pool.on('error', () => { console.error(JSON.stringify({ event: 'database_idle_connection_error' })); });
   let guardianPool:Awaited<ReturnType<typeof guardianRuntime>>['pool'];
+  let privacyRuntime:ReturnType<typeof createPrivacyRuntime>|undefined;
   try {
     await assertRuntimeRole(pool);
     const { JWT_ISSUER: issuer, JWT_AUDIENCE: audience, JWT_JWKS_URL: jwksUrl, WEB_ORIGIN: webOrigin } = environment;
@@ -73,19 +75,18 @@ export async function createRuntime(environment: NodeJS.ProcessEnv = process.env
     repository.options.allowChildNetwork=guardian.service.notice('en').available&&guardian.service.notice('es').available;
     if(repository.options.allowChildNetwork)repository.options.noticeVersion=guardian.service.notice('en').notice!.version;
     const clientAddress = deploymentClientAddress(environment);
-    // Free responsibility preview, existing status receipts and household exit
-    // do not depend on an account-deletion provider. The default service keeps
-    // accepting new deletion jobs disabled until a reviewed gateway and numeric
-    // retention policy are explicitly supplied by the deployment owner.
-    const privacy = new PrivacyService(repository);
+    privacyRuntime=createPrivacyRuntime(pool,environment,'application');
+    const privacy = new PrivacyService(repository,privacyRuntime.options);
     const server = createHTTPServer({ repository, verifier, billing: new BillingService(appleGatewayFromEnvironment(environment)),
       privacy,guardian:guardian.service,
       ...(webOrigin ? { webOrigin } : {}), ...(browserAuth ? { browserAuth } : {}), ...(clientAddress ? { clientAddress } : {}) });
     server.requestTimeout = 15_000;
     server.headersTimeout = 10_000;
     if(guardianPool)server.once('close',()=>{void guardianPool!.end();});
+    server.once('close',()=>{void privacyRuntime?.close();});
     return { server, pool };
   } catch (error) {
+    await privacyRuntime?.close();
     if(guardianPool)await guardianPool.end();
     await pool.end();
     throw error;

@@ -1,7 +1,9 @@
 import type {PoolConfig} from 'pg';
+import {randomUUID} from 'node:crypto';
 import {Pool} from './database.js';
 import {AuthMaintenance,assertWorkerRole} from './maintenance.js';
 import {PrivacyMaintenance} from './privacy.js';
+import {createPrivacyRuntime} from './privacy-runtime.js';
 import {guardianRetentionPolicy} from './guardian-policy.js';
 import {SupabaseEmailOTPProvider} from './browser-auth.js';
 
@@ -48,26 +50,34 @@ export function createOperationsRuntime(environment:NodeJS.ProcessEnv=process.en
  const auth=new AuthMaintenance(pool,{
   ...(environment.BFF_TOKEN_ENCRYPTION_KEY?{encryptionKey:environment.BFF_TOKEN_ENCRYPTION_KEY}:{}),...(provider?{provider}:{}),
  });
- // There is deliberately no environment switch for provider account deletion.
- // Enabling job processing needs reviewed composition, retention, and restore evidence.
- const privacy=new PrivacyMaintenance(pool);
+ const privacyRuntime=createPrivacyRuntime(pool,environment,'operations');
+ const privacy=new PrivacyMaintenance(pool,privacyRuntime.options);
  let running=false;
- return{pool,async run(mode:OperationsMode='run',signal:AbortSignal=AbortSignal.timeout(OPERATIONS_DEADLINE_MS)){
+ return{pool,async close(){await Promise.all([privacyRuntime.close(),pool.end()]);},
+ async run(mode:OperationsMode='run',signal:AbortSignal=AbortSignal.timeout(OPERATIONS_DEADLINE_MS)){
   if(running)throw Error('Operations already running');running=true;
   const started=Date.now();
   try{
    signal.throwIfAborted();await assertWorkerRole(pool);signal.throwIfAborted();
    const authResult=mode==='run'?await auth.run({batchSize:OPERATIONS_BATCH_SIZE,timeBudgetMs:10_000,signal}):null;
    signal.throwIfAborted();
-   const privacyResult=mode==='run'?await privacy.cleanup({batchSize:OPERATIONS_BATCH_SIZE,signal}):null;
+   const privacyJournal=await privacyRuntime.health({attemptId:randomUUID(),deadlineUnixMs:started+OPERATIONS_DEADLINE_MS,signal});
+   const privacyJobProcessingEnabled=privacyJournal.state==='ready';
+   signal.throwIfAborted();
+   const options={batchSize:OPERATIONS_BATCH_SIZE,signal};
+   const deletionResult=mode==='run'&&privacyJobProcessingEnabled?await privacy.run({...options,timeBudgetMs:8000}):null;
+   const privacyResult=mode==='run'?(deletionResult??await privacy.cleanup(options)):null;
+   const privacyAttention=deletionResult&&(deletionResult.capacityDeferred||deletionResult.issuerMismatch||deletionResult.leaseLost);
    signal.throwIfAborted();
    const guardianResult=mode==='run'?(await pool.query('SELECT * FROM ritc.guardian_housekeeping($1,$2,$3)',[OPERATIONS_BATCH_SIZE,guardianPolicy?.pendingHours??null,guardianPolicy?.evidenceDays??null])).rows[0]:null;
    signal.throwIfAborted();
    const row=(await pool.query('SELECT * FROM ritc.operations_health()')).rows[0];signal.throwIfAborted();
    const health={authDue:Number(row.auth_due),authRetryPending:Number(row.auth_retry_pending),authExpiredUnconfirmed:Number(row.auth_expired_unconfirmed),privacyPending:Number(row.privacy_pending),privacyDue:Number(row.privacy_due)};
    return{event:'operations_result' as const,mode,durationMs:Date.now()-started,batchSize:OPERATIONS_BATCH_SIZE,
-    logoutProviderConfigured:Boolean(provider),privacyJobProcessingEnabled:false as const,auth:authResult,privacy:privacyResult,guardian:guardianResult?{expired:Number(guardianResult.expired),purged:Number(guardianResult.purged),retentionConfigured:Boolean(guardianPolicy)}:null,health,
-    attentionRequired:Boolean(health.authDue||health.authRetryPending||health.authExpiredUnconfirmed||health.privacyPending||authResult?.logoutExpiredUnconfirmed||authResult?.leaseLost),
+    logoutProviderConfigured:Boolean(provider),privacyJobProcessingEnabled,privacyJournal,auth:authResult,privacy:privacyResult,guardian:guardianResult?{expired:Number(guardianResult.expired),purged:Number(guardianResult.purged),retentionConfigured:Boolean(guardianPolicy)}:null,health,
+    attentionRequired:Boolean(health.authDue||health.authRetryPending||health.authExpiredUnconfirmed||health.privacyPending||
+     authResult?.logoutExpiredUnconfirmed||authResult?.leaseLost||privacyAttention||privacyJournal.capacity?.nearLimit||
+     !['disabled','ready'].includes(privacyJournal.state)),
    };
   }finally{running=false;}
  }};

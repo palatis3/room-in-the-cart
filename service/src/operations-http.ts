@@ -30,7 +30,7 @@ export function createOperationsHandler(environment:NodeJS.ProcessEnv=process.en
    console.error(JSON.stringify({event:'operations_failed',error}));respond(response,503,{error});
   }
  }
- return{handler,async close(){await runtime?.pool.end();}};
+ return{handler,async close(){await runtime?.close();}};
 }
 
 export function createOperationsHTTPServer(environment:NodeJS.ProcessEnv=process.env){

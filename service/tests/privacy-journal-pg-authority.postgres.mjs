@@ -9,6 +9,7 @@ import {setTimeout as delay} from 'node:timers/promises';
 import {fileURLToPath} from 'node:url';
 import test,{before,after} from 'node:test';
 import pg from 'pg';
+import {exportJWK,generateKeyPair,SignJWT} from 'jose';
 import {migrate} from '../scripts/migrate.mjs';
 import {createPostgresJournalAuthority} from '../dist/privacy-journal-pg-authority.js';
 import {createPostgresCommittedSource} from '../dist/privacy-journal-pg-source.js';
@@ -20,6 +21,9 @@ import {MAX_JOURNAL_BYTES,MAX_JOURNAL_RECORDS,MAX_INTENT_RESOLUTION_OVERHEAD,MAX
 import {PrivacyMaintenance,PrivacyService} from '../dist/privacy.js';
 import {HouseholdRepository} from '../dist/repository.js';
 import {SupabaseSessionVerifier} from '../dist/auth.js';
+import {createRuntime} from '../dist/runtime.js';
+import {createOperationsRuntime} from '../dist/operations-runtime.js';
+import {privacyDeploymentConfigurationId} from '../dist/privacy-runtime.js';
 import {fixture} from './durable-authority-fixture.mjs';
 import {call,canonical,digest,gate,progressEvent,zero} from './durable-independent-fixture.mjs';
 
@@ -136,8 +140,8 @@ async function sourceCluster(){
  }catch(error){await close();throw error;}
 }
 
-async function recoveryFixture(source){
- const r=await register({schemaDigest:source.schemaDigest});
+async function recoveryFixture(source,configurationId){
+ const r=await register({schemaDigest:source.schemaDigest,...(configurationId?{configurationId}:{})});
  const pins=r.f.pins;
  await source.owner.query('INSERT INTO ritc.privacy_journal_origin(lineage,schema_digest,configuration_id) VALUES($1,$2,$3)',[pins.lineage,pins.schemaDigest,pins.configurationId]);
  await source.owner.query('INSERT INTO ritc.privacy_journal_source_registration(source_identity,database_oid,observer_oid) VALUES($1,$2,$3)',
@@ -608,4 +612,165 @@ test('a verified restore projection can exceed both former SQL limits without dr
    (SELECT count(*)::int FROM ritc.privacy_restore_receipt WHERE result='absent_no_effect') AS absent`,[accepted.payload.jobId])).rows[0];
   assert.deepEqual(facts,{observations:1000,markers:216000,absent:24});
  }finally{await source.close();}
+});
+
+test('deployed runtime entry points bind deletion to the registered source and report signed capacity',async()=>{
+ const source=await sourceCluster();
+ const runtimes=[],workers=[];
+ const originalFetch=globalThis.fetch;
+ let authority;
+ const databaseURL=user=>`postgresql://${user}@localhost:55434/postgres?host=${encodeURIComponent(source.configuration.connection.host)}`;
+ try{
+  const providerOrigin='https://runtime.fixture.invalid';
+  const issuer=providerOrigin+'/auth/v1',audience='authenticated',jwks=issuer+'/.well-known/jwks.json';
+  const subject=randomUUID(),sessionId=randomUUID(),jobId=randomUUID();
+  const statusToken=randomBytes(32).toString('base64url'),key='sb_secret_'+randomBytes(32).toString('base64url');
+  const {privateKey,publicKey}=await generateKeyPair('ES256');
+  const signatureKey={...await exportJWK(publicKey),kid:'runtime-test'};
+  const timestamp=Math.floor(Date.now()/1000);
+  const token=await new SignJWT({session_id:sessionId,amr:[{method:'otp',timestamp}]})
+   .setProtectedHeader({alg:'ES256',kid:signatureKey.kid}).setIssuer(issuer).setAudience(audience)
+   .setSubject(subject).setIssuedAt(timestamp).setExpirationTime(timestamp+300).sign(privateKey);
+  const policy={receiptRetentionDays:1,erasureMarkerRetentionDays:2,verifiedBackupRetentionDays:1};
+  const retentionApprovalReference='synthetic-retention-review';
+  const restoreApprovalReference='synthetic-restore-drill';
+  const configurationId=privacyDeploymentConfigurationId({issuer,policy,retentionApprovalReference,restoreApprovalReference});
+  const {r}=await recoveryFixture(source,configurationId);
+  const writerToken=randomBytes(32).toString('base64url'),path=join(dir,'runtime-authority.json');
+  const database=user=>({host:dir,port:55433,database:'postgres',user});
+  await writeFile(path,JSON.stringify({pins:r.f.pins,writerToken,writerPublicKey:r.f.writerKeys.publicKeyPEM,
+   authorityPrivateKey:pem(r.f.authorityKeys.privateKey),checkpointDatabase:database(checkpointRole),
+   recordDatabase:database(objectRole),listen:{host:'127.0.0.1',port:0},tls:{key:tls.key.toString(),cert:tls.cert}}),
+   {mode:0o600,flag:'wx'});
+  authority=await startAuthority(path);
+  const {applicationName,...observer}=source.configuration;
+  const config={version:1,pins:r.f.pins,writerPrivateKey:pem(r.f.writerKeys.privateKey),
+   authorityPublicKey:r.f.authorityKeys.publicKeyPEM,authority:{origin:authority.origin,writerToken,ca:tls.cert},observer,
+   retentionPolicy:policy,retentionApprovalReference,restoreApprovalReference};
+  const environment={DATABASE_URL:databaseURL(source.runtime),WORKER_DATABASE_URL:databaseURL(source.worker),
+   JWT_ISSUER:issuer,JWT_AUDIENCE:audience,JWT_JWKS_URL:jwks,SUPABASE_URL:providerOrigin,
+   PRIVACY_SUPABASE_ADMIN_KEY:key,PRIVACY_DELETION_JSON:JSON.stringify(config),
+   PRIVACY_DELETION_ACCEPTANCE:'true',PRIVACY_DELETION_PROCESSING:'true'};
+
+  const requests=[];
+  let providerDeleted=false;
+  globalThis.fetch=async(input,init)=>{
+   const url=String(input);
+   if(url===jwks)return Response.json({keys:[signatureKey]});
+   if(!url.startsWith(providerOrigin+'/'))return originalFetch(input,init);
+   assert.equal(url,issuer+'/admin/users/'+subject);
+   assert.equal(init.headers.apikey,key);
+   assert.equal(init.headers.Authorization,undefined);
+   requests.push(init.method);
+   if(init.method==='DELETE'){
+    assert.deepEqual(JSON.parse(init.body),{should_soft_delete:false});
+    providerDeleted=true;
+    await source.owner.query('DELETE FROM auth.sessions WHERE user_id=$1',[subject]);
+    return new Response(null,{status:204});
+   }
+   return providerDeleted?new Response(null,{status:404}):Response.json({id:subject,identities:[{provider:'email'}]});
+  };
+  await source.owner.query('INSERT INTO auth.sessions(id,user_id) VALUES($1,$2)',[sessionId,subject]);
+  async function startApplication(overrides={}){
+   const runtime=await createRuntime({...environment,...overrides});
+   runtimes.push(runtime);
+   runtime.server.listen(0,'127.0.0.1');
+   await once(runtime.server,'listening');
+   return 'http://127.0.0.1:'+runtime.server.address().port;
+  }
+  const auth={authorization:'Bearer '+token};
+  const preview=base=>originalFetch(base+'/v1/privacy/deletion-preview',{headers:auth}).then(response=>{
+   assert.equal(response.status,200);
+   return response.json();
+  });
+  const request=base=>originalFetch(base+'/v1/privacy/deletions',{method:'POST',headers:{...auth,'content-type':'application/json'},
+   body:JSON.stringify({clientKey:jobId,statusToken,confirm:true,households:[]})});
+
+  const badConfig=await startApplication({PRIVACY_DELETION_JSON:JSON.stringify({...config,restoreApprovalReference:'different-review'})});
+  assert.equal((await preview(badConfig)).deletionAvailable,false);
+  const badSource=await startApplication({PRIVACY_DELETION_JSON:JSON.stringify({...config,observer:{...observer,databaseOid:'999999999'}})});
+  assert.equal((await preview(badSource)).deletionAvailable,false);
+  assert.equal((await request(badSource)).status,503);
+  assert.deepEqual(requests,[]);
+  assert.equal((await source.owner.query('SELECT count(*)::int AS count FROM ritc.privacy_job')).rows[0].count,0);
+
+  const base=await startApplication();
+  const operations=createOperationsRuntime(environment);
+  workers.push(operations);
+  const disabled=createOperationsRuntime({...environment,PRIVACY_DELETION_PROCESSING:'false'});
+  workers.push(disabled);
+  assert.equal((await preview(base)).deletionAvailable,true);
+  const ready=await operations.run('status');
+  assert.equal(ready.privacyJobProcessingEnabled,true);
+  assert.deepEqual(ready.privacyJournal,{state:'ready',capacity:{mode:'active',uncertain:false,
+   usedRecords:0,reservedRecords:0,usedBytes:0,reservedBytes:0,nearLimit:false}});
+
+  const localAuthority=await r.open();
+  try{
+   const context=time();
+   await localAuthority.uncertainty.begin({scopeDigest:r.scope,eventId:randomUUID(),transition:'intent'},context);
+   const blocked=await operations.run('status');
+   assert.equal(blocked.privacyJournal.state,'blocked');
+   assert.equal(blocked.privacyJournal.capacity.uncertain,true);
+   assert.equal(blocked.attentionRequired,true);
+   assert.equal((await preview(base)).deletionAvailable,false);
+   assert.deepEqual(requests,[]);
+   // The fixture opened this synthetic claim without dispatching a source write.
+   await owner.query('UPDATE ritc_checkpoint.origin SET claim=NULL WHERE lineage=$1',[r.f.pins.lineage]);
+  }finally{await localAuthority.close();}
+
+  const accepted=await request(base);
+  const receipt=await accepted.json();
+  assert.equal(accepted.status,202,JSON.stringify(receipt));
+  assert.equal(receipt.status,'pending');
+  assert.deepEqual(requests,['GET']);
+  const off=await disabled.run();
+  assert.equal(off.privacyJobProcessingEnabled,false);
+  assert.equal(off.privacyJournal.state,'disabled');
+  assert.deepEqual(requests,['GET']);
+
+  await source.owner.query('UPDATE ritc.privacy_job SET issuer=$2 WHERE job_id=$1',[jobId,'https://other.fixture.invalid/auth/v1']);
+  const mismatch=await operations.run();
+  assert.equal(mismatch.privacy.issuerMismatch,1);
+  assert.equal(mismatch.attentionRequired,true);
+  assert.deepEqual(requests,['GET']);
+  await source.owner.query('UPDATE ritc.privacy_job SET issuer=$2,lease_until=NULL,lease_id=NULL WHERE job_id=$1',[jobId,issuer]);
+
+  const done=await operations.run();
+  assert.equal(done.privacy.completed,1);
+  assert.deepEqual(requests,['GET','GET','DELETE','GET']);
+  const receiptResponse=await originalFetch(base+'/v1/privacy/jobs/'+jobId,{headers:{'x-deletion-token':statusToken}});
+  assert.equal(receiptResponse.status,200);
+  const completed=await receiptResponse.json();
+  assert.equal(completed.status,'complete');
+  assert.equal(completed.providerAccountDeleted,true);
+  const healthy=await operations.run('status');
+  assert.equal(healthy.privacyJournal.capacity.usedRecords,3);
+  assert.equal(healthy.privacyJournal.capacity.reservedRecords,0);
+  for(const secret of [key,writerToken,statusToken,jobId,subject,sessionId,issuer]){
+   assert.ok(!JSON.stringify(healthy).includes(secret));
+  }
+
+  // Artificial high-water mark in the disposable authority. No more appends.
+  await owner.query("UPDATE ritc_checkpoint.origin SET head=jsonb_set(head,'{totalBytes}',to_jsonb($2::int)) WHERE lineage=$1",
+   [r.f.pins.lineage,Math.ceil(MAX_JOURNAL_BYTES*0.8)]);
+  const high=await operations.run('status');
+  assert.equal(high.privacyJournal.capacity.nearLimit,true);
+  assert.equal(high.attentionRequired,true);
+
+  await authority.stop();
+  const unavailable=await operations.run('status');
+  assert.deepEqual(unavailable.privacyJournal,{state:'authority_unavailable',capacity:null});
+  assert.equal(unavailable.privacyJobProcessingEnabled,false);
+  assert.equal((await originalFetch(base+'/health')).status,200);
+ }finally{
+  globalThis.fetch=originalFetch;
+  await Promise.all(runtimes.map(async({server,pool})=>{
+   await new Promise(resolve=>server.close(resolve));
+   await pool.end();
+  }));
+  await Promise.all(workers.map(worker=>worker.close()));
+  await authority?.stop();
+  await source.close();
+ }
 });

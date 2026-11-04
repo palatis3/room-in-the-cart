@@ -40,6 +40,14 @@ export interface AdmittedHead {
  readonly pendingOperation:string|null;
  readonly totalBytes:number;
 }
+export interface JournalCapacity {
+ readonly mode:AdmittedHead['mode'];
+ readonly uncertain:boolean;
+ readonly usedRecords:number;
+ readonly reservedRecords:number;
+ readonly usedBytes:number;
+ readonly reservedBytes:number;
+}
 export interface RecordIdentity {
  readonly seq:number;
  readonly previousHash:string;
@@ -107,6 +115,7 @@ export interface ImmutableRecordTransport {
  */
 export interface CheckpointAuthority {
  readCurrent(call:AuthorityCall):Promise<AuthorityEnvelope<AdmittedHead>>;
+ readCapacity?(call:AuthorityCall):Promise<AuthorityEnvelope<JournalCapacity>>;
  inspectOperation(operationId:string,call:AuthorityCall):Promise<AuthorityEnvelope<OperationInspection>>;
  reserve(expected:AdmittedHead,record:RecordIdentity,call:AuthorityCall,workerKind?:WorkerJournalKind):Promise<AuthorityEnvelope<AppendTicket>>;
  publish(ticket:AppendTicket,stored:StoredRecord,call:AuthorityCall):Promise<AdmissionReceipt>;

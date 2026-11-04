@@ -4,7 +4,7 @@ import {Agent,request} from 'node:https';
 import {z} from 'zod';
 import {PrivacyCall,privacyHTTPCall,privacyPhase} from './privacy-call.js';
 import {
- admittedSchema,durableJournalScopeDigest,identitySchema,inspectionSchema,receiptSchema,storedSchema,ticketSchema,workerKindSchema,workerKindsSchema,
+ admittedSchema,durableJournalScopeDigest,identitySchema,inspectionSchema,journalCapacitySchema,receiptSchema,storedSchema,ticketSchema,workerKindSchema,workerKindsSchema,
 } from './privacy-journal-durable.js';
 import type {
  CheckpointAuthority,DurableJournalPins,DurableUncertaintyStore,ImmutableRecordTransport,JournalCall,
@@ -20,6 +20,7 @@ const operationSchema=z.object({scopeDigest:hash,eventId:z.string().uuid(),trans
 const claimSchema=operationSchema.extend({claimId:z.string().uuid()});
 const commandSchema=z.discriminatedUnion('action',[
  z.object({action:z.literal('current'),nonce:hash}).strict(),
+ z.object({action:z.literal('capacity'),nonce:hash}).strict(),
  z.object({action:z.literal('inspect'),nonce:hash,id:hash}).strict(),
  z.object({action:z.literal('reserve'),nonce:hash,head:admittedSchema,record:identitySchema,workerKind:workerKindSchema.optional()}).strict(),
  z.object({action:z.literal('worker_capacity'),jobId:z.string().uuid(),kinds:workerKindsSchema}).strict(),
@@ -63,6 +64,10 @@ export function journalAuthorityHandler(configuration:Ports&{readonly pins:Durab
  async function dispatch(command:Command,call:JournalCall):Promise<unknown>{
   switch(command.action){
    case 'current':return authority.readCurrent({...call,requestNonce:command.nonce});
+   case 'capacity':{
+    if(!authority.readCapacity)throw Error('Journal capacity is unavailable');
+    return authority.readCapacity({...call,requestNonce:command.nonce});
+   }
    case 'inspect':return authority.inspectOperation(command.id,{...call,requestNonce:command.nonce});
    case 'reserve':return authority.reserve(command.head,command.record,{...call,requestNonce:command.nonce},command.workerKind);
    case 'worker_capacity':{
@@ -141,9 +146,10 @@ export function createHTTPSJournalAuthority(configuration:{readonly pins:Durable
  const signed=<T>(value:z.ZodType<T>)=>z.object({version:z.literal(1),domain:z.literal('ritc-privacy-journal-authority-v1'),
   scopeDigest:hash,authorityKeyId:z.string().min(1).max(100),requestNonce:hash,value,
   authoritySignature:z.string().regex(/^[A-Za-z0-9_-]{86}$/)}).strict();
- const current=signed(admittedSchema),inspect=signed(inspectionSchema),reserve=signed(ticketSchema);
+ const current=signed(admittedSchema),inspect=signed(inspectionSchema),reserve=signed(ticketSchema),capacity=signed(journalCapacitySchema);
  const authority:CheckpointAuthority={
   readCurrent:call=>send({action:'current',nonce:call.requestNonce},call,current),
+  readCapacity:call=>send({action:'capacity',nonce:call.requestNonce},call,capacity),
   inspectOperation:(id,call)=>send({action:'inspect',nonce:call.requestNonce,id},call,inspect),
   reserve:(head,record,call,workerKind)=>send({action:'reserve',nonce:call.requestNonce,head,record,workerKind},call,reserve),
   reserveWorkerCapacity:(jobId,kinds,call)=>send({action:'worker_capacity',jobId,kinds:[...kinds]},call,z.boolean()),

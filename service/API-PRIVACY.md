@@ -1,6 +1,6 @@
 # Account lifecycle and operational jobs
 
-Implemented behind explicit runtime configuration. Migrations 009 and 010 must be applied before this service version. The migration registry and migrations 001–008 are unchanged. Runtime/deployment/cron wiring belongs to the deployment owner; this module does not provision credentials or schedules.
+The application and operations worker load deletion configuration independently. Enable them only after the source is migrated through 027, the independent journal is provisioned and the deployment owner has approved the retention policy and restore drill.
 
 ## Authentication and scope
 
@@ -66,43 +66,26 @@ All of the subject's memberships, including previously revoked memberships, are 
 
 Errors include `reauthentication_required` (401), `deletion_unavailable` (503), `organizer_disposition_required`, `shop_disposition_stale`, `guardian_disposition_required` (409), and `unavailable` (404). Missing privileged provider, numeric retention policy or trusted journal port rejects deletion before any job or access mutation. An outage after acceptance leaves a durable pending job, never a false completion.
 
-## Runtime ports
+## Runtime configuration
 
-```ts
-const provider = new SupabaseAccountDeletionProvider({
-  url: SUPABASE_URL,
-  secretKey: PRIVILEGED_SERVER_ONLY_KEY,
-  // Optional actual upstream revocation adapter. A linked Apple identity blocks
-  // account deletion if this is absent. It must succeed before provider deletion.
-  revokeApple: async (subject) => { /* real reviewed upstream revocation */ }
-});
-const privacy = new PrivacyService(repository, {
-  provider,
-  journal: reviewedLocalJournal.port, // explicit trusted signer/exporter; no default
-  policy: {
-    receiptRetentionDays,
-    erasureMarkerRetentionDays,
-    verifiedBackupRetentionDays
-  }
-});
-createHTTPServer({ /* existing options */, privacy });
-```
+`PRIVACY_DELETION_ACCEPTANCE=true` enables new requests in the application runtime. `PRIVACY_DELETION_PROCESSING=true` enables claim and erasure work in the [operations runtime](OPERATIONS.md). Both default to disabled. The application can still show responsibilities and handle household exit. The worker can still retire completed receipts on their persisted schedule.
 
-Omit `provider`, `policy` or `journal` to keep deletion honestly unavailable; household exit and preview remain implemented. There are no numeric production defaults. Marker retention must cover the verified backup horizon and receipt retention. The owner must approve the actual deployment policy before enabling deletion. An HTTPS fixed-origin provider adapter performs bounded server-only admin lookups, rejects mismatched subjects, uses hard deletion (`should_soft_delete:false`) and verifies 404 afterward. It never sends the privileged key to clients or logs provider bodies.
+Use `SUPABASE_URL` for the fixed HTTPS provider origin and inject `PRIVACY_SUPABASE_ADMIN_KEY` through the server's secret manager. The application verifier must use that origin's `/auth/v1` issuer and `/auth/v1/.well-known/jwks.json` endpoint with the configured audience. The worker verifies the issuer on every claimed job before erasing data or calling the provider. The adapter validates the returned subject, requests hard deletion and confirms absence by lookup. A linked Apple identity requires successful upstream token revocation. The environment composition currently supports accounts without an Apple identity and refuses linked Apple accounts.
 
-The separate non-owner, non-superuser, non-bypass worker login inherits `ritc_worker`, not `ritc_app`. It gets only narrow SECURITY DEFINER function execution, no raw auth/session/household table SELECT or mutation. Use a distinct verified-TLS worker pool and an authenticated cron adapter.
+Inject `PRIVACY_DELETION_JSON` into each enabled runtime. Its strict version 1 fields are:
 
-```ts
-new AuthMaintenance(workerPool, {
-  encryptionKey: BFF_TOKEN_ENCRYPTION_KEY,
-  provider: emailOTPProvider // only logout(accessToken) is used
-}).run({batchSize:25, timeBudgetMs:20000});
+| Field | Value |
+| --- | --- |
+| `version` | Number `1` |
+| `pins` | Full registered durable journal scope, including writer and authority fingerprints |
+| `writerPrivateKey` | Writer's PKCS#8 Ed25519 private PEM |
+| `authorityPublicKey` | Independent authority's SPKI Ed25519 public PEM |
+| `authority` | `origin`, `writerToken`, optional `ca` PEM |
+| `observer` | `databaseOid`, `observerRoleOid`, `ownerRole`, `ownerRoleOid` and fixed `connection` with `host`, `port`, `database`, `user`, optional `password` and pinned `tls` with `ca` and `servername` |
+| `retentionPolicy` | Approved integer `receiptRetentionDays`, `erasureMarkerRetentionDays` and `verifiedBackupRetentionDays` |
+| `retentionApprovalReference`, `restoreApprovalReference` | References to the owner's actual approvals |
 
-new PrivacyMaintenance(workerPool, {provider: deletionProvider})
-  .run({batchSize:25, timeBudgetMs:20000});
-```
-
-These classes support the reviewed composition example above; it does not enable provider deletion in the deployed default. The implemented [operations runtime and CLI](OPERATIONS.md) uses a separate verified worker pool, authenticated scheduled function, fixed bounded auth housekeeping, aggregate counters, and **privacy cleanup only**. It never claims or erases pending privacy jobs. Provider deletion still requires the reviewed gateway, numeric policy and restore evidence.
+Use `privacyDeploymentConfigurationId` from the built service to derive `pins.configurationId` from the issuer, validated policy and both approval references. Register that same ID in the source and checkpoint. The application and worker verify their own source binding against the dedicated observer and the registered pins before starting deletion work. The authority signs the aggregate capacity response against a fresh nonce. A mismatched source, unreachable authority or unresolved journal claim keeps deletion unavailable. Marker retention covers the verified backup and receipt horizons. Deployment custody keeps the authority signing key and database logins separate from these runtimes. See the [independent journal runbook](journal-authority/README.md).
 
 Both class-level `run` calls cap batch size at 100 and requested runtime at 25 seconds. Claims are durable 30-second leases, with bounded exponential retry delays up to one hour and content-free error categories. Provider requests time out after five seconds; an in-flight request can finish after the requested loop budget. Erasure calls additionally use a ten-second PostgreSQL statement timeout and two-second lock timeout. Each privacy lease processes at most 100 target profiles. Oversized profiles that repeatedly hit the statement timeout remain pending and require operational investigation; they are not marked erased.
 
@@ -116,7 +99,7 @@ The [local privacy journal contract](PRIVACY-JOURNAL.md) describes the required 
 
 ## Remaining release evidence
 
-No live email/provider deletion, real Apple-token revocation, scheduled cron execution, backup purge or restore replay has been claimed. Restore tooling must preserve the deletion marker/target journal outside a restored database and reapply erasure before serving it; restoring a pre-deletion database alone would omit the marker. The backup owner must test that workflow and its maximum horizon before enabling deletion. Provider/log retention and retired-purchase marker retirement remain policy decisions; this code does not invent legal retention exceptions. Native and web account-settings integration must use these exact contracts and show the separate subscription/local-records/backup scopes.
+The runtime test exercises an isolated source and authority using a simulated provider. Hosted provider deletion, Apple-token revocation, scheduled execution and a hosted backup and restore drill still require evidence. Restore tooling must preserve the deletion marker/target journal outside a restored database and reapply erasure before serving it; restoring a pre-deletion database alone would omit the marker. The backup owner must test that workflow and its maximum horizon before enabling deletion. Provider/log retention and retired-purchase marker retirement remain policy decisions; this code does not invent legal retention exceptions. Native and web account-settings integration must use these exact contracts and show the separate subscription/local-records/backup scopes.
 
 Primary references checked during implementation: [Apple account deletion](https://developer.apple.com/help/app-review/guideline-reference/5-1-1-account-deletion), [Supabase admin deletion](https://supabase.com/docs/reference/javascript/auth-admin-deleteuser), [Supabase admin HTTP implementation](https://github.com/supabase/auth-js/blob/master/src/GoTrueAdminApi.ts), [signed JWT fields](https://supabase.com/docs/guides/auth/jwt-fields).
 

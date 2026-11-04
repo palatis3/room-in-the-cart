@@ -1,0 +1,57 @@
+{
+  "sourceSHA256": "a453132e8a2036cc0b90afa79eaee91deb36d73daa2aff424196741068367212",
+  "sourceFiles": 313,
+  "baseCommit": "160d64d",
+  "migrations": "001–027",
+  "independentAuthorityMigrations": "001–003",
+  "environment": "Node 22.14 and local PostgreSQL 17.11 with disposable source and checkpoint fixtures",
+  "runs": {
+    "unit": {
+      "tests": 345,
+      "passed": 344,
+      "failed": 0,
+      "skipped": 1,
+      "localLogSHA256": "36ac66217dad159fec5f7a05d0854709a897cef630f452290aaed91a03147a33"
+    },
+    "wire": {
+      "tests": 178,
+      "passed": 178,
+      "failed": 0,
+      "skipped": 0,
+      "localLogSHA256": "f930fc75f21aca22ca4298408fb533787de77e211ad7112a930f8d966e25346c"
+    },
+    "observer": {
+      "tests": 13,
+      "passed": 13,
+      "failed": 0,
+      "skipped": 0,
+      "localLogSHA256": "7404cf5e191624c06a3b19235dc5435a1ac5d0ed7e7e40611870e4c15b2d11fe"
+    },
+    "operations": {
+      "tests": 15,
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0,
+      "localLogSHA256": "e10106b4b67086bf748133772a455dd0fbde38e4e326c9282deada6936111848"
+    },
+    "authority": {
+      "tests": 12,
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0,
+      "localLogSHA256": "e7fac8c06d472a8aa45a51421e760d7efb613f6af4f26529ae3b6a35493c4b80"
+    }
+  },
+  "observations": [
+    "The application runtime verified a signed ES256 token and live source session, then accepted a deletion through the public HTTP route.",
+    "The worker runtime rejected a mismatched issuer before erasure or provider work. With the correct issuer it used the modern Supabase key header, requested hard deletion and verified account absence.",
+    "The application exposed a completed receipt only after the separate HTTPS journal admitted the worker outcome and the observer acknowledged it.",
+    "A changed approval reference, wrong database OID and unresolved journal claim left acceptance unavailable. Processing disabled independently.",
+    "Authenticated worker status reported signed used and reserved counts, the 80 percent warning and unavailable authority state. Aggregate output excluded fixture identity and credentials."
+  ],
+  "scope": [
+    "The provider and JWKS were simulated. Source, worker, roles, observer, PostgreSQL authority, TLS transport, JWT verifier and application HTTP routes were real local implementations.",
+    "The optional billing PostgreSQL unit skip is exercised in the wire suite.",
+    "Hosted source, keys, journal and provider were untouched. A usable lineage lifecycle, hosted restore, provider verification and alert delivery remain release work."
+  ]
+}

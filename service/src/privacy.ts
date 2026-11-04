@@ -32,7 +32,7 @@ export class SupabaseAccountDeletionProvider implements AccountDeletionProvider 
  private async request(subject:string,method:'GET'|'DELETE',parent:JournalCall){
   return privacyPhase(parent,async call=>{
   id.parse(subject);let response:Response;
-  try{response=await this.fetcher(this.base+subject,{method,headers:{apikey:this.key,Authorization:'Bearer '+this.key,'Content-Type':'application/json'},redirect:'error',signal:call.signal,...(method==='DELETE'?{body:JSON.stringify({should_soft_delete:false})}:{})});}catch{throw unavailable();}
+  try{response=await this.fetcher(this.base+subject,{method,headers:{apikey:this.key,...(this.key.startsWith('sb_secret_')?{}:{Authorization:'Bearer '+this.key}),'Content-Type':'application/json'},redirect:'error',signal:call.signal,...(method==='DELETE'?{body:JSON.stringify({should_soft_delete:false})}:{})});}catch{throw unavailable();}
   if(response.status===404)return null;if(!response.ok)throw unavailable();if(method==='DELETE'){await response.body?.cancel();return null;}
   if(!/^application\/json(?:\s*;|$)/i.test(response.headers.get('content-type')??''))throw unavailable();
   const reader=response.body?.getReader();if(!reader)throw unavailable();let size=0;const parts:Uint8Array[]=[];
@@ -45,7 +45,7 @@ export class SupabaseAccountDeletionProvider implements AccountDeletionProvider 
  async deleteAccount(subject:string,parent?:JournalCall){const scope=new PrivacyCall(parent);try{await scope.run(async call=>{const user=await this.account(subject,call);if(!user)return;if(user.identities.some(i=>i.provider==='apple'))await privacyPhase(call,child=>this.apple!(subject,child));scope.check();await this.request(subject,'DELETE',call);scope.check();if(await this.request(subject,'GET',call))throw unavailable();});}finally{scope.dispose();}}
 }
 export interface DeletionPolicy {receiptRetentionDays:number;erasureMarkerRetentionDays:number;verifiedBackupRetentionDays:number}
-function policy(value:DeletionPolicy){const checked=z.object({receiptRetentionDays:z.number().int().min(1).max(365),erasureMarkerRetentionDays:z.number().int().min(1).max(3650),verifiedBackupRetentionDays:z.number().int().min(0).max(3650)}).strict().parse(value);if(checked.erasureMarkerRetentionDays<Math.max(checked.receiptRetentionDays,checked.verifiedBackupRetentionDays))throw Error('Erasure markers must cover receipts and the verified backup horizon');return Object.freeze(checked);}
+export function validateDeletionPolicy(value:unknown):DeletionPolicy{const checked=z.object({receiptRetentionDays:z.number().int().min(1).max(365),erasureMarkerRetentionDays:z.number().int().min(1).max(3650),verifiedBackupRetentionDays:z.number().int().min(0).max(3650)}).strict().parse(value);if(checked.erasureMarkerRetentionDays<Math.max(checked.receiptRetentionDays,checked.verifiedBackupRetentionDays))throw Error('Erasure markers must cover receipts and the verified backup horizon');return Object.freeze(checked);}
 async function privacyQuery(pool:Database,call:JournalCall,text:string,values:unknown[]=[]){
  return withPrivacyClient(pool,call,async db=>{
   try{
@@ -69,14 +69,16 @@ function mapped(error:unknown):never{
 }
 export class PrivacyService {
  private readonly policy:DeletionPolicy|undefined;
- constructor(private readonly repo:HouseholdRepository,private readonly options:{provider?:AccountDeletionProvider;policy?:DeletionPolicy;journal?:PrivacyJournalPort|DurablePrivacyJournalPort}={}){this.policy=options.policy?policy(options.policy):undefined;}
+ constructor(private readonly repo:HouseholdRepository,private readonly options:{provider?:AccountDeletionProvider;policy?:DeletionPolicy;journal?:PrivacyJournalPort|DurablePrivacyJournalPort;
+  available?:(call:JournalCall)=>Promise<boolean>;assertSource?:(call:JournalCall)=>Promise<void>}={}){this.policy=options.policy?validateDeletionPolicy(options.policy):undefined;}
  private async authenticated(identity:VerifiedIdentity,call:JournalCall){return withPrivacyClient(this.repo.pool,call,async db=>{try{await db.query('BEGIN');await this.repo.assertSession(db,identity,new Date());await db.query('COMMIT');}catch(e){await db.query('ROLLBACK').catch(()=>{});throw e;}});}
  private query(call:JournalCall,text:string,values:unknown[]=[]){return privacyQuery(this.repo.pool,call,text,values);}
  async preview(identity:VerifiedIdentity,parent?:JournalCall){
   const scope=new PrivacyCall(parent);try{return await scope.run(async call=>{
   await this.authenticated(identity,call);
   try{const result=(await this.query(call,'SELECT ritc.privacy_preview($1,$2,$3::uuid) AS value',[identity.issuer,identity.subject,identity.sessionId])).rows[0].value;
-   return{...result,verifiedBackupRetentionDays:this.policy?.verifiedBackupRetentionDays??null,deletionAvailable:Boolean(this.options.provider&&this.policy&&this.options.journal),reauthenticationRequired:!identity.authenticatedAt||Date.now()-identity.authenticatedAt.getTime()>300000,subscriptionManagementURL:'https://apps.apple.com/account/subscriptions/',subscriptionCancelledByDeletion:false};
+   const deletionAvailable=Boolean(this.options.provider&&this.policy&&this.options.journal)&&(!this.options.available||await this.options.available(call));
+   return{...result,verifiedBackupRetentionDays:this.policy?.verifiedBackupRetentionDays??null,deletionAvailable,reauthenticationRequired:!identity.authenticatedAt||Date.now()-identity.authenticatedAt.getTime()>300000,subscriptionManagementURL:'https://apps.apple.com/account/subscriptions/',subscriptionCancelledByDeletion:false};
   }catch(e){return mapped(e);}
   });}finally{scope.dispose();}
  }
@@ -84,6 +86,7 @@ export class PrivacyService {
   input=deletionSchema.parse(input);
   const scope=new PrivacyCall(parent);try{return await scope.run(async call=>{
   recent(identity);await this.authenticated(identity,call);if(!this.options.provider||!this.policy||!this.options.journal||!identity.authenticatedMethod)throw unavailable();
+  if(this.options.available&&!await this.options.available(call))throw unavailable();
   const {provider,journal}=this.options,retention=this.policy;
   await privacyPhase(call,child=>provider.assertAvailable(identity.subject,child));
   let eventId:string;
@@ -96,14 +99,26 @@ export class PrivacyService {
   return this.status(input.clientKey,input.statusToken,call);
   });}finally{scope.dispose();}
  }
- async status(jobId:string,statusToken:string,parent?:JournalCall){const scope=new PrivacyCall(parent);try{return await scope.run(async call=>{id.parse(jobId);secret.parse(statusToken);let value=(await this.query(call,'SELECT ritc.privacy_status($1,$2) AS value',[jobId,tokenHash(statusToken)])).rows[0].value;if(!value)throw new ServiceError(404,'unavailable','Use the deletion receipt from this device.');if(this.options.journal){await privacyPhase(call,child=>this.options.journal!.acknowledgeJob(jobId,child));value=(await this.query(call,'SELECT ritc.privacy_status($1,$2) AS value',[jobId,tokenHash(statusToken)])).rows[0].value;if(!value)throw new ServiceError(404,'unavailable','Use the deletion receipt from this device.');}return value;});}finally{scope.dispose();}}
+ async status(jobId:string,statusToken:string,parent?:JournalCall){const scope=new PrivacyCall(parent);try{return await scope.run(async call=>{
+  id.parse(jobId);secret.parse(statusToken);
+  const read=async()=>{
+   const value=(await this.query(call,'SELECT ritc.privacy_status($1,$2) AS value',[jobId,tokenHash(statusToken)])).rows[0].value;
+   if(!value)throw new ServiceError(404,'unavailable','Use the deletion receipt from this device.');
+   return value;
+  };
+  const value=await read();
+  if(!this.options.journal)return value;
+  await this.options.assertSource?.(call);
+  await privacyPhase(call,child=>this.options.journal!.acknowledgeJob(jobId,child));
+  return read();
+ });}finally{scope.dispose();}}
  async leave(identity:VerifiedIdentity,householdId:string,input:z.infer<typeof exitSchema>,parent?:JournalCall){const scope=new PrivacyCall(parent);try{return await scope.run(async call=>{recent(identity);await this.authenticated(identity,call);if(input.disposition.householdId!==householdId||input.disposition.eraseChildProfiles.length)throw new ServiceError(422,'invalid_candidate','Leaving a household does not erase child profiles. Resolve guardian responsibility first.');
   try{await this.query(call,'SELECT ritc.leave_household($1,$2,$3::uuid,$4::uuid,$5::uuid,$6,$7::jsonb)',[identity.issuer,identity.subject,identity.sessionId,householdId,input.clientKey,digest(input),JSON.stringify(input.disposition)]);return{householdId,left:true as const,accountDeleted:false as const};}catch(e){return mapped(e);}
   });}finally{scope.dispose();}
  }
 }
 export class PrivacyMaintenance {
- constructor(private readonly pool:Database,private readonly options:{provider?:AccountDeletionProvider;journal?:PrivacyJournalPort|DurablePrivacyJournalPort}={}){}
+ constructor(private readonly pool:Database,private readonly options:{provider?:AccountDeletionProvider;journal?:PrivacyJournalPort|DurablePrivacyJournalPort;issuer?:string}={}){}
  private async bounded<T>(signal:AbortSignal|undefined,budgetMs:number,work:(scope:PrivacyCall)=>Promise<T>){
   const parent=signal?{signal,deadlineUnixMs:Date.now()+budgetMs,attemptId:randomUUID()}:undefined;
   const scope=new PrivacyCall(parent,budgetMs);
@@ -139,7 +154,7 @@ export class PrivacyMaintenance {
     await acknowledge(jobId);
     await privacyQuery(this.pool,call,'SELECT ritc.privacy_release_reconciliation($1,$2)',[jobId,lease]);
    }
-   const result={completed:0,retryScheduled:0,leaseLost:0,capacityDeferred:0,...await this.retireReceipts(call,batch)};
+   const result={completed:0,retryScheduled:0,leaseLost:0,capacityDeferred:0,issuerMismatch:0,...await this.retireReceipts(call,batch)};
    const reserve='reserveWorkerCapacity' in journal?journal.reserveWorkerCapacity.bind(journal):undefined;
    const needs=async(jobId:string,lease:string)=> (await privacyQuery(this.pool,call,'SELECT * FROM ritc.privacy_worker_journal_needs($1,$2)',[jobId,lease])).rows[0];
    const capacity=async(jobId:string,kinds:readonly WorkerJournalKind[])=>{
@@ -150,6 +165,7 @@ export class PrivacyMaintenance {
    jobs:for(let i=0;i<batch;i++){
     const lease=randomUUID(),job=(await privacyQuery(this.pool,call,'SELECT * FROM ritc.privacy_claim($1)',[lease])).rows[0];
     if(!job)break;
+    if(this.options.issuer&&job.issuer!==this.options.issuer){result.issuerMismatch++;continue;}
     let deleted=false,failure:string|null=null;
     try{
      let erased=job.app_erased;

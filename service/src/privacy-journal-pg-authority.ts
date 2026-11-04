@@ -220,6 +220,15 @@ export async function createPostgresJournalAuthority(configuration:PostgresJourn
   },
  };
  const authority:CheckpointAuthority={
+  async readCapacity(call){
+   hash.parse(call.requestNonce);
+   return transaction(checkpointPool,call,async db=>{
+    const {head,pending,claim}=await load(db,'share'),reserved=await reservedCapacity(db);
+    const expired=pending&&pending.authorityExpiresAtUnixMs<=await databaseClock(db);
+    return envelope({mode:expired&&head.mode==='pending'?'blocked' as const:head.mode,uncertain:Boolean(claim||pending),
+     usedRecords:head.head.seq,reservedRecords:reserved.count,usedBytes:head.totalBytes,reservedBytes:reserved.bytes},call);
+   });
+  },
   async reserveWorkerCapacity(jobInput,kindsInput,call){
    const jobId=uuid.parse(jobInput),kinds=workerKindsSchema.parse(kindsInput);
    return transaction(checkpointPool,call,async db=>{
