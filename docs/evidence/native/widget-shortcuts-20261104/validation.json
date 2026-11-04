@@ -1,5 +1,36 @@
 {
   "assignment": "Foundation 2.1 E07 widget and App Intent acceptance",
+  "ready_url_privacy_follow_up": {
+    "candidate_source_digest": "962575a85dcf6c630d2d836ef98b948e6fe06401363b1a477b89034dbe2c3945",
+    "reviewed_patch_sha256": "a190591ff1958f6ceedc773b1778e6bbe056ca7812218c3440d03783741a24c7",
+    "integrated_source_sha256": {
+      "ios/App/DeviceSurfacesComposition.swift": "6f148047f391105e29ecfccfe48b781b1aa94aa63584ae3e820493d28a80e990",
+      "ios/Tests/ContributorRequestCaptureTests.swift": "4943d0600b03e60a02d23d2949de658dfb15ad69367fa5129173b6cf1b36c6e6",
+      "ios/Tests/NativeCompositionStartupTest.swift": "f825a4096d1fdaa1e8509ba3460d7172c84c3b791f7be001a03307796a4f6c18"
+    },
+    "readback_directory": ".build/IntegratedWidgetPrivacy20261104/widget-readback",
+    "readback_manifest_sha256": "7621d231fd039895276eea35475b40ed72e64600af575555fd43c66f1ec1f3e2",
+    "sealed_report_sha256": "d6fc4e4f42e626b29cbfe7402851563ecfabf7ced4998f7e3f90c92813ee7207",
+    "reproductions": [
+      "A ready opaque shortcut followed immediately by backgrounding reactivated private routing, presented a pickup and republished an opaque widget handle.",
+      "The same sequence through a generic shortcut reactivated routing, presented the grocery editor and republished an opaque widget handle.",
+      "The first synchronous generic candidate lost the contributor’s own-request destination during binding reconciliation. The final candidate preserves it for the same live persona and clears it on lock."
+    ],
+    "focused_native": {"passed": 19, "failed": 0, "skipped": 0},
+    "integrated_debug": {
+      "bundle_verification": ".build/IntegratedWidgetPrivacy20261104/build-verification.log",
+      "executable_sha256": "fdfd43d4f1077cdfd2e49a46424c8ede8d07e7c4b7099aade9545a21d493631e",
+      "debug_dylib_sha256": "8416ad9a588419dca900cf51166e207a4a0874c19524636a593e027ce47d544c",
+      "full_ordinary_model_target": [
+        {"device": "iPhone 17e, iOS 27.0 (24A434)", "result": ".build/IntegratedWidgetPrivacy20261104/Models-27.xcresult", "passed": 562, "failed": 0, "skipped": 0, "runtime_warnings": []},
+        {"device": "iPhone SE, iOS 17.0 (21A328)", "result": ".build/IntegratedWidgetPrivacy20261104/Models-17.xcresult", "passed": 562, "failed": 0, "skipped": 0, "runtime_warnings": []}
+      ]
+    },
+    "cold_widget": "RacesColdWidget.xcresult passed. The real Home Screen tile opened the current pickup list after app termination.",
+    "warm_widget": "RacesWarmWidget.xcresult passed. The real Home Screen tile opened the grocery entry editor with the app running.",
+    "workspace_readback": "Both real tile probes preserved the selected pickup, ledger revision 8, full workspace and shop payloads.",
+    "remaining": ["Queued opaque request across a subsequent genuine foreground", "Physical signed-device and lock-state checks"]
+  },
   "shortcut_screen_refresh": {
     "source_sha256": "95d98da7c2c13219cb3648301145458e0626f97e62ae6fb1b9ceb12519b253ab",
     "device": "iPhone 17e, iOS 27.0 (24A434)",

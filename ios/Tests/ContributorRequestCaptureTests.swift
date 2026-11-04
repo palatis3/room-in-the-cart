@@ -214,6 +214,74 @@ import DeviceSurfaces
         model.item = "Changed after review"; gate.signal(); await sending.value
         XCTAssertTrue(fixture.commands.isEmpty)
     }
+    func testImmediateInactiveContributorEntrySurvivesBindingThenClearsOnLock() async throws {
+        let queue = location(), directory = queue.deletingLastPathComponent()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let fixture = ContributorCaptureFixture(), household = try await model(fixture, queue: queue)
+        let suite = "ContributorSurface." + UUID().uuidString
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let access = WorkspaceAccess(defaults: defaults); access.protect()
+        let bundleURL = directory.appendingPathComponent("Surface.bundle")
+        try FileManager.default.createDirectory(at: bundleURL, withIntermediateDirectories: true)
+        try PropertyListSerialization.data(fromPropertyList: ["CFBundleIdentifier":"invalid.fixture.surface", SurfaceInfo.schemeKey:"roominthecart-fixture"], format: .xml, options: 0)
+            .write(to: bundleURL.appendingPathComponent("Info.plist"))
+        let bundle = try XCTUnwrap(Bundle(url: bundleURL))
+        let ledger = LedgerModel(databaseURL: directory.appendingPathComponent("unopened-ledger.sqlite"))
+        let pickup = PickupModel(databaseURL: directory.appendingPathComponent("unopened-pickup.sqlite"))
+        let surfaces = DeviceSurfacesComposition(directory: directory.appendingPathComponent("surfaces"), bundle: bundle, launchArguments: ["--ui-testing"])
+        surfaces.bind(ledger: ledger, pickup: pickup, household: household, access: access, sceneActive: false)
+        let codec = try SurfaceURLCodec(scheme: "roominthecart-fixture")
+        surfaces.handle(url: codec.url(handle: nil))
+        try await Task.sleep(for: .milliseconds(100))
+        for _ in 0..<100 {
+            if case .ownRequest = surfaces.destination { break }
+            await Task.yield()
+        }
+        guard case .ownRequest = surfaces.destination else { return XCTFail("Generic capture must open only the live contributor's own request") }
+        household.lock(); await surfaces.sourceDidChange()
+        XCTAssertNil(surfaces.destination, "Authority loss must clear even a valid contributor destination")
+        surfaces.handle(url: codec.url(handle: .random()))
+        guard case .unavailable = surfaces.destination else { return XCTFail("An opaque adult handle cannot grant contributor access") }
+        XCTAssertFalse(access.unlocked); XCTAssertFalse(ledger.ready); XCTAssertFalse(pickup.ready)
+        XCTAssertFalse(surfaces.privateAuthorized); XCTAssertEqual(fixture.privateReads, 0)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: directory.appendingPathComponent("unopened-ledger.sqlite").path))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: directory.appendingPathComponent("unopened-pickup.sqlite").path))
+    }
+    func testInactiveContributorGenericEntrySurvivesSettledReconciliation() async throws {
+        let queue = location(), directory = queue.deletingLastPathComponent()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let fixture = ContributorCaptureFixture(), household = try await model(fixture, queue: queue)
+        let suite = "ContributorSurface." + UUID().uuidString
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let access = WorkspaceAccess(defaults: defaults); access.protect()
+        let bundleURL = directory.appendingPathComponent("Surface.bundle")
+        try FileManager.default.createDirectory(at: bundleURL, withIntermediateDirectories: true)
+        try PropertyListSerialization.data(fromPropertyList: ["CFBundleIdentifier":"invalid.fixture.surface", SurfaceInfo.schemeKey:"roominthecart-fixture"], format: .xml, options: 0)
+            .write(to: bundleURL.appendingPathComponent("Info.plist"))
+        let bundle = try XCTUnwrap(Bundle(url: bundleURL))
+        let ledger = LedgerModel(databaseURL: directory.appendingPathComponent("unopened-ledger.sqlite"))
+        let pickup = PickupModel(databaseURL: directory.appendingPathComponent("unopened-pickup.sqlite"))
+        let surfaces = DeviceSurfacesComposition(directory: directory.appendingPathComponent("surfaces"), bundle: bundle, launchArguments: ["--ui-testing"])
+        surfaces.bind(ledger: ledger, pickup: pickup, household: household, access: access, sceneActive: false)
+        // Match root startup: initial binding reconciliation precedes URL receipt.
+        try await Task.sleep(for: .milliseconds(50))
+        let codec = try SurfaceURLCodec(scheme: "roominthecart-fixture")
+        surfaces.handle(url: codec.url(handle: nil))
+        try await Task.sleep(for: .milliseconds(100))
+        for _ in 0..<100 {
+            if case .ownRequest = surfaces.destination { break }
+            await Task.yield()
+        }
+        guard case .ownRequest = surfaces.destination else { return XCTFail("Generic capture must open only the live contributor's own request") }
+        surfaces.handle(url: codec.url(handle: .random()))
+        guard case .unavailable = surfaces.destination else { return XCTFail("An opaque adult handle cannot grant contributor access") }
+        XCTAssertFalse(access.unlocked); XCTAssertFalse(ledger.ready); XCTAssertFalse(pickup.ready)
+        XCTAssertFalse(surfaces.privateAuthorized); XCTAssertEqual(fixture.privateReads, 0)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: directory.appendingPathComponent("unopened-ledger.sqlite").path))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: directory.appendingPathComponent("unopened-pickup.sqlite").path))
+    }
     func testColdContributorCaptureURLDoesNotNeedAdultStoresAndRejectsPrivateHandle() async throws {
         let queue = location(), directory = queue.deletingLastPathComponent()
         defer { try? FileManager.default.removeItem(at: directory) }

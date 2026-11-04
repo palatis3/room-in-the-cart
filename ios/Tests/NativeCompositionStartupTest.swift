@@ -5,6 +5,55 @@ import DeviceSurfaces
 
 #if DEBUG
 @MainActor final class DeviceSurfacesCompositionStartupTests: XCTestCase {
+    func testReadyGenericURLDoesNotReactivateAfterBackgroundBeforeTaskRuns() async throws {
+        let f = try await coldURLFixture(); defer { f.cleanup() }
+        let saved = f.ledger.workspace, revision = f.ledger.revision
+        f.composition.handle(url: f.codec.url(handle: nil)); f.composition.background()
+        try await Task.sleep(for: .milliseconds(200))
+        XCTAssertFalse(f.composition.privateAuthorized, "Generic capture must not reactivate after background")
+        XCTAssertNil(f.composition.destination)
+        let widget = try WidgetProjectionFile(directory: f.base.appendingPathComponent("surfaces/TestWidget"))
+        XCTAssertNil(try widget.read().routeHandle)
+        XCTAssertEqual(f.ledger.workspace, saved); XCTAssertEqual(f.ledger.revision, revision)
+    }
+    func testActiveAdultGenericCaptureKeepsLedgerUnchanged() async throws {
+        let f = try await coldURLFixture(); defer { f.cleanup() }
+        let saved = f.ledger.workspace, revision = f.ledger.revision
+        f.composition.handle(url: f.codec.url(handle: nil)); await waitForSurfaceDestination(f.composition)
+        guard case .capture = f.composition.destination else { return XCTFail("Active adult generic entry should open capture") }
+        XCTAssertTrue(f.composition.privateAuthorized)
+        XCTAssertEqual(f.ledger.workspace, saved); XCTAssertEqual(f.ledger.revision, revision)
+    }
+    func testLockedGenericEntryDoesNotPublishPrivateWidgetOrChangeLedger() async throws {
+        let f = try await coldURLFixture(); defer { f.cleanup() }
+        let saved = f.ledger.workspace, revision = f.ledger.revision
+        f.access.protect(); f.composition.background(); f.composition.handle(url: f.codec.url(handle: nil))
+        try await Task.sleep(for: .milliseconds(200))
+        XCTAssertFalse(f.composition.privateAuthorized); XCTAssertFalse(f.access.unlocked)
+        if let destination = f.composition.destination {
+            guard case .unavailable = destination else { return XCTFail("Locked entry must not expose a private destination") }
+        }
+        let widget = try WidgetProjectionFile(directory: f.base.appendingPathComponent("surfaces/TestWidget"))
+        XCTAssertNil(try widget.read().routeHandle)
+        XCTAssertEqual(f.ledger.workspace, saved); XCTAssertEqual(f.ledger.revision, revision)
+    }
+
+    func testReadyOpaqueURLDoesNotReactivateAfterBackgroundBeforeTaskRuns() async throws {
+        let f = try await coldURLFixture(); defer { f.cleanup() }
+        let saved = f.ledger.workspace, revision = f.ledger.revision
+        XCTAssertTrue(f.composition.privateAuthorized)
+        f.composition.handle(url: f.codec.url(handle: f.handle))
+        // No suspension between receiving the ready URL and entering background:
+        // the URL's scheduled task has not had a chance to run yet.
+        f.composition.background()
+        try await Task.sleep(for: .milliseconds(200))
+        XCTAssertFalse(f.composition.privateAuthorized, "A queued URL must not reactivate a backgrounded composition")
+        XCTAssertNil(f.composition.destination)
+        let widget = try WidgetProjectionFile(directory: f.base.appendingPathComponent("surfaces/TestWidget"))
+        XCTAssertNil(try widget.read().routeHandle)
+        XCTAssertEqual(f.ledger.workspace, saved); XCTAssertEqual(f.ledger.revision, revision)
+    }
+
     func testColdCurrentURLWaitsForActiveAndReadyModels() async throws {
         let f = try await coldURLFixture(); defer { f.cleanup() }
         let coldLedger = LedgerModel(databaseURL: f.base.appendingPathComponent("ledger.sqlite"))

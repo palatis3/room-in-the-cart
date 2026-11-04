@@ -29,6 +29,7 @@ import DeviceSurfaces
     private var subscriptions = Set<AnyCancellable>()
     private var nonce = UUID()
     private var authorityKey: String?
+    private var ownRequestPersona: DeviceReminderPersona?
     private var reminderPersona: DeviceReminderPersona?
     private var reminderSaveGeneration = UUID()
     private var pendingReminderCancellation = false
@@ -58,6 +59,14 @@ import DeviceSurfaces
         guard let access, access.unlocked, let household else { return false }
         if let role = household.projection?.role, !["shopper", "organizer"].contains(role) { return false }
         return !household.locked
+    }
+    private var currentOwnRequestPersona: DeviceReminderPersona? {
+        guard let household, household.projection?.role == "contributor", !household.locked else { return nil }
+        return household.deviceReminderPersona
+    }
+    private var preservesOwnRequest: Bool {
+        guard case .ownRequest = destination, let ownRequestPersona else { return false }
+        return ownRequestPersona == currentOwnRequestPersona
     }
     var scope: SurfaceImportScope? {
         guard privateAuthorized, let ledger, ledger.ready, !ledger.hasPendingLedgerDeletion, let workspace = ledger.sourceWorkspaceID, let access else { return nil }
@@ -116,6 +125,7 @@ import DeviceSurfaces
     func foreground() async { active = true; await sourceDidChange() }
     func background() {
         active = false; nonce = UUID(); entries = []; draft = nil; destination = nil; pendingURL = nil; pendingHandle = nil
+        ownRequestPersona = nil
         // A cold child/locked launch may never open the adult stores. Resolve
         // only the widget file so a prior process's shortcut is still cleared.
         if projection == nil {
@@ -130,6 +140,7 @@ import DeviceSurfaces
     }
     func scopeChanged() {
         nonce = UUID(); entries = []; draft = nil; destination = nil; pendingURL = nil; pendingHandle = nil
+        ownRequestPersona = nil
         pendingReminderTap = nil; authorityKey = nil; reminderSaveGeneration = UUID()
         Task { await sourceDidChange() }
     }
@@ -150,7 +161,12 @@ import DeviceSurfaces
         reconciling = true
         defer { reconciling = false; if reconcileAgain { reconcileAgain = false; Task { await sourceDidChange() } } }
         let key = [String(privateAuthorized), household?.identity?.subject ?? "", household?.projection?.memberId ?? "", household?.projection?.role ?? "", ledger?.sourceWorkspaceID?.uuidString ?? ""].joined(separator: "|")
-        if key != authorityKey { authorityKey = key; nonce = UUID(); entries = []; draft = nil; destination = nil }
+        if key != authorityKey {
+            authorityKey = key; nonce = UUID(); entries = []; draft = nil
+            // Initial binding must not erase an explicit entry for the same
+            // live contributor. Identity or authority loss still clears it.
+            if !preservesOwnRequest { destination = nil; ownRequestPersona = nil }
+        }
         let currentReminderPersona = household?.deviceReminderPersona
         if let previous = reminderPersona, previous != currentReminderPersona {
             pendingReminderTap = nil
@@ -166,7 +182,9 @@ import DeviceSurfaces
         }
         guard privateAuthorized else {
             if !hasAdultAuthority { pendingURL = nil }
-            entries = []; draft = nil; destination = nil; try? projection?.clear(now: clock()); return
+            entries = []; draft = nil
+            if !preservesOwnRequest { destination = nil; ownRequestPersona = nil }
+            try? projection?.clear(now: clock()); return
         }
         // Root binds before opening either model. No cleanup may treat that
         // incomplete (or uncertain-save) projection as an empty durable workspace.
@@ -293,17 +311,24 @@ import DeviceSurfaces
                 pendingURL = url; return
             }
             guard let handle else {
-                Task { await foreground(); openCapture() }
+                openCapture()
                 return
             }
             guard privateAuthorized else { destination = .unavailable(UUID()); return }
             guard ledger?.ready == true, pickup?.ready == true else { pendingURL = url; return }
-            Task { await foreground(); await open(handle) }
+            Task {
+                // A background transition may precede this scheduled task.
+                guard privateAuthorized else { return }
+                await open(handle)
+            }
         } catch { destination = .unavailable(UUID()) }
     }
     func openCapture() {
+        ownRequestPersona = nil
         if privateAuthorized { destination = .capture(UUID()) }
-        else if household?.projection?.role == "contributor", household?.locked == false { destination = .ownRequest(UUID()) }
+        else if let persona = currentOwnRequestPersona {
+            ownRequestPersona = persona; destination = .ownRequest(UUID())
+        }
         else { destination = .unavailable(UUID()) }
         SurfaceCaptureRequests.shared.consumeAfterRouting()
     }
