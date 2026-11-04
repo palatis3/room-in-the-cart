@@ -40,11 +40,7 @@ struct PickupHomeView: View {
             }
             Section {
                 NavigationLink(pTr("Confirm pantry or freezer food")) {
-                    Form {
-                        PickupSaveStatus(model: model)
-                        if model.journey?.closedAt == nil { PickupNewStockSection(model: model).id(model.selectedID) }
-                        if let journey = model.journey { PickupSavedStockSection(model: model, journey: journey) }
-                    }.navigationTitle(pTr("Confirm pantry or freezer food"))
+                    PickupStockEntryView(model: model, title: pTr("Confirm pantry or freezer food"))
                 }
                 NavigationLink(pTr("Something is missing")) { UrgentRepairView(model: model) }
             }

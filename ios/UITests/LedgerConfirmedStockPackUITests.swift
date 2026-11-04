@@ -67,14 +67,21 @@ import XCTest
         launch(reset: true)
         tap(element("openPickupList")); tap(element("ledgerStartShop"))
         fill("Confirmed stock packs", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
-        tap(element("ledgerImport")); fill("12 wraps", into: "ledgerImportText")
+        tap(element("ledgerImport"))
+        let original = element("ledgerImportText")
+        tap(original); app.typeText("12 wraps")
+        dismissKeyboard()
+        XCTAssertEqual(original.value as? String, "12 wraps")
         tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
         shopRoot(); tap(app.buttons["Review checkout"]); tap(app.buttons["Continue to checkout review"])
         tap(app.buttons["Apply reviewed checkout copy"])
         shopRoot(); tap(element("openPickupList")); tap(app.buttons["Inspect wraps"])
         tap(app.buttons["Confirm pantry or freezer food"])
         fill("Checked freezer wraps", into: "Actual food or freezer batch")
-        fill(amount, into: "Confirmed usable amount")
+        let usableAmount = element("Confirmed usable amount")
+        tap(usableAmount); app.typeText(amount)
+        dismissKeyboard()
+        XCTAssertEqual(usableAmount.value as? String, amount)
         enable("I reviewed identity, exclusions and usable quantity")
         tap(app.buttons["Confirm this separate stock lot"])
         let batch = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "stockBatch-")).firstMatch
@@ -94,6 +101,12 @@ import XCTest
         tap(element(id)); app.typeText(text)
         let done = app.buttons["Done"]
         if done.exists && done.isHittable { done.tap() }
+    }
+    private func dismissKeyboard() {
+        let done = app.buttons["Done"]
+        XCTAssertTrue(done.waitForExistence(timeout: 5))
+        XCTAssertTrue(done.isHittable, "The editor must offer a reachable keyboard dismissal control")
+        done.tap()
     }
     private func enable(_ id: String) {
         let control = app.switches[id]; reveal(control)

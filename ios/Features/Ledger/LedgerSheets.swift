@@ -17,6 +17,7 @@ struct LedgerImportView: View {
     @State private var captured: ReviewedCapture?
     @State private var captureBinding: LedgerCaptureBinding?
     @State private var showCapture = false
+    @FocusState private var originalFocused: Bool
     private enum Focus: Hashable { case preview, status }
     @AccessibilityFocusState private var focus: Focus?
     private var shop: ShoppingLedger? { model.workspace.shops.first { $0.id == shopID } }
@@ -76,6 +77,7 @@ struct LedgerImportView: View {
                 Section {
                     Text(ledgerText("One item per line. For example: 12 wraps or 2 kg rice."))
                     TextEditor(text: $original).frame(minHeight: 180)
+                        .focused($originalFocused)
                         .accessibilityLabel(ledgerText("List to review")).accessibilityIdentifier("ledgerImportText")
                     PasteButton(payloadType: String.self) { values in
                         original = values.joined(separator: "\n")
@@ -89,6 +91,7 @@ struct LedgerImportView: View {
                     Text(captureText("Capture is for this private list. Guest changes use the dinner preview.")).font(.footnote)
                     Button(ledgerText("Review list")) {
                         guard let shop else { return }
+                        originalFocused = false
                         let staged = shop.stageImport(text: original, source: source, importID: importID)
                         preview = staged
                         choices = Dictionary(uniqueKeysWithValues: staged.lines.filter { $0.duplicateLineIDs.isEmpty }.map { ($0.id, "new") })
@@ -99,6 +102,7 @@ struct LedgerImportView: View {
             }
             Section { LedgerSaveStatus(model: model, onRetried: { dismiss() }).accessibilityFocused($focus, equals: .status) }
         }.scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(ledgerText("Bring the list"))
+            .keyboardDoneAction(visible: originalFocused, title: ledgerText("Done")) { originalFocused = false }
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() }.disabled(model.saving) } }
             .interactiveDismissDisabled(model.saving)
             .sheet(isPresented: $showCapture) {

@@ -205,16 +205,49 @@ private struct PickupBatchReview: View {
     }
 }
 
+struct PickupStockEntryView: View {
+    @ObservedObject var model: PickupModel
+    let title: String
+    var shopID: UUID? = nil
+    var ingredientID: UUID? = nil
+    @FocusState private var field: PickupNewStockSection.Field?
+
+    var body: some View {
+        Form {
+            PickupSaveStatus(model: model)
+            if canShowStock {
+                if model.journey?.closedAt == nil {
+                    PickupNewStockSection(model: model, ingredientID: ingredientID, field: $field).id(model.selectedID)
+                }
+                if let journey = model.journey {
+                    PickupSavedStockSection(model: model, journey: journey, onlyFoodID: ingredientID)
+                }
+            }
+        }.navigationTitle(title)
+            .scrollDismissesKeyboard(.interactively)
+            .keyboardDoneAction(visible: field != nil, title: tr("Done")) { field = nil }
+            .onAppear { if let shopID { model.selectedID = shopID } }
+    }
+
+    private var canShowStock: Bool {
+        guard let shopID, let ingredientID else { return true }
+        guard let current = model.journey, current.id == shopID else { return false }
+        return current.basket?.current.lines.contains(where: { $0.id == ingredientID }) == true ||
+            current.plannedNeeds.contains(where: { $0.orderLineID == ingredientID })
+    }
+}
+
 struct PickupNewStockSection: View {
+    enum Field: Hashable { case stockName, stockAmount }
     @ObservedObject var model: PickupModel
     let ingredientID: UUID?
-    init(model: PickupModel, ingredientID: UUID? = nil) {
+    let field: FocusState<Field?>.Binding
+    init(model: PickupModel, ingredientID: UUID? = nil, field: FocusState<Field?>.Binding) {
         self.model = model
         self.ingredientID = ingredientID
+        self.field = field
         _stockFoodID = State(initialValue: ingredientID)
     }
-    private enum Field { case stockName, stockAmount }
-    @FocusState private var field: Field?
     @State private var newJourneyID = UUID()
     @State private var stockFoodID: UUID?
     @State private var stockAmount = ""
@@ -236,8 +269,8 @@ struct PickupNewStockSection: View {
                     ForEach(model.journey?.reviewedStockMatches ?? []) { Text($0.name).tag(Optional($0.id)) }
                 }
             }
-            TextField(pTr("Actual food or freezer batch"), text: $stockName).focused($field, equals: .stockName)
-            TextField(pTr("Confirmed usable amount"), text: $stockAmount).keyboardType(.decimalPad).focused($field, equals: .stockAmount)
+            TextField(pTr("Actual food or freezer batch"), text: $stockName).focused(field, equals: .stockName)
+            TextField(pTr("Confirmed usable amount"), text: $stockAmount).keyboardType(.decimalPad).focused(field, equals: .stockAmount)
             Picker(pTr("Unit"), selection: $stockUnit) { ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pTr($0.rawValue)).tag($0) } }
             Picker(pTr("Stock source"), selection: $stockSource) {
                 Text(pTr("Freezer")).tag(ConfirmedStockSource.freezer)
@@ -253,15 +286,6 @@ struct PickupNewStockSection: View {
             .onChange(of: stockFoodID) { _, _ in stockConfirmed = false }
             .onChange(of: stockObservedAt) { _, _ in stockConfirmed = false }
             .onChange(of: useFirst) { _, _ in stockConfirmed = false }
-
-            .toolbar {
-                ToolbarItemGroup(placement: .keyboard) {
-                    if field != nil {
-                        Spacer()
-                        Button(tr("Done")) { field = nil }
-                    }
-                }
-            }
     }
     private func addStock() {
         do {

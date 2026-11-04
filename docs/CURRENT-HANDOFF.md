@@ -6,7 +6,7 @@ The complete production app remains the objective. The current checkpoint below 
 
 The authenticated Supabase dashboard confirmed exactly eight applied migration checksums and no scheduled backup. The [pinned staging candidate](evidence/b11/staging-upgrade-20261104/candidate.json) includes the exact 21 pending migrations and a local upgrade from a populated 008 baseline. It preserved household data, existing device access and tenant boundaries. The pre-upgrade dump restored into a separate database. The hosted backup remains the rollout gate.
 
-The ordinary native run uses a newly created iPhone 17e on iOS 27.0. Its log and result bundle are under `.build/NativeAcceptance-20261104`. The 526 model tests passed and the UI run began. Check its live process and final result before using the UI result as acceptance evidence. The existing preview simulator was preserved.
+The ordinary native run uses a newly created iPhone 17e on iOS 27.0 and earlier frozen source. Its log and result bundle are under `.build/NativeAcceptance-20261104`. All 526 model tests and 26 UI cases had passed at this checkpoint. The two stock cases failed at list entry and a saved-offer case reached the ten-minute timeout after updating and copying the offer. The existing preview simulator was preserved. Check the live process and final result before using the UI results as whole-suite evidence.
 
 The rebuilt unsigned Release archive now declares the required reason for private recovery-file metadata checks. The compiled app and both extensions passed local metadata verification. The exported Xcode report has seven linked data types and tracking marked No on each. [Archive validation](evidence/native/privacy-archive-20261104/validation.json)
 
@@ -15,6 +15,10 @@ The latest authorized assignment to Lumpy's `Offer main workflow help` chat retu
 The companion web app now saves an opted-in request if the connection drops before the send-time session check. It uses the last checked contributor scope and an unexpired replay window for local storage. The original command still requires an explicit retry under fresh authorization. The compiled app's local browser run covered reload, receipt and revoked-access cleanup. [Offline queue validation](evidence/b11/web-offline-queue-20261104/validation.json)
 
 Native contributor requests now save after a transport failure before send if the current enrollment has an unexpired replay window. The existing protected outbox retains the original command and waits for an authorized retry. All 529 current native model cases passed and the updated unsigned Release archive compiled with both notice languages. The ordinary UI run above retains its earlier frozen source. [Native offline validation](evidence/native/contributor-offline-20261104/validation.json)
+
+The list and stock entry forms now expose Done during keyboard entry. Both previously blocked stock-to-checkout cases pass in the updated app, including persistence after restart and the no-retailer-order branch. The related freezer-repair UI case and all 529 model tests passed. The updated unsigned Release archive also passed metadata checks. [Keyboard validation](evidence/native/stock-keyboard-20261104/validation.json)
+
+The App Store draft has six visually reviewed screenshot candidates from the prior ordinary Release configuration on iPhone 17. The English and Spanish sets show both pack results and the saved record. [Capture manifest](app-store/screenshots/manifest.json)
 
 ## Previous checkpoint — November 4, quarantine restore window
 

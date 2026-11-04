@@ -65,6 +65,7 @@ struct PickupRepairView: View {
     @ObservedObject var model: PickupModel
     private enum Field { case purpose, amount, instruction, minutes }
     @FocusState private var field: Field?
+    @FocusState private var stockField: PickupNewStockSection.Field?
     @State private var lineID: UUID?
     @State private var purpose = ""
     @State private var amount = ""
@@ -131,7 +132,7 @@ struct PickupRepairView: View {
                     Text(pTr("No current stock or purchase is assumed for this carried need."))
                 }
             }
-            if model.journey?.closedAt == nil { PickupNewStockSection(model: model).id(model.selectedID) }
+            if model.journey?.closedAt == nil { PickupNewStockSection(model: model, field: $stockField).id(model.selectedID) }
             if let journey = model.journey { PickupSavedStockSection(model: model, journey: journey) }
             if let ledger = fallbackLedger {
                 NavigationLink(dinnerText("Recover with an accepted dinner")) {
@@ -167,6 +168,7 @@ struct PickupRepairView: View {
             NavigationLink(pTr("Preview a dated cook instruction")) { PickupCookView(model: model) }
         }.navigationTitle(pTr("Repair the meal"))
             .scrollDismissesKeyboard(.interactively)
+            .keyboardDoneAction(visible: stockField != nil, title: tr("Done")) { stockField = nil }
             .toolbar {
                 ToolbarItemGroup(placement: .keyboard) {
                     if field != nil {

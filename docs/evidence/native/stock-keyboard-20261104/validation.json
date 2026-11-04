@@ -1,0 +1,52 @@
+{
+  "recordedAtUTC": "2026-11-04T10:09:08.265948+00:00",
+  "baseCommit": "a70d39db43d7c5544edbb23c6f04e79a6d77587b",
+  "sourceSHA256": {
+    "ios/App/Theme.swift": "72638655e0bbc20dd2f2bd9266d977e21b978b658e6f943aa8fc95275a36dfe8",
+    "ios/Features/Ledger/LedgerIngredientView.swift": "2edc6cb0cfd5cbed7048c989c512f3e22e84a538a6c4b7d888e39794012d99e5",
+    "ios/Features/Ledger/LedgerSheets.swift": "e629857f044e66ac612d225be285017561cbe7050e36253f67a9cf8c84d4a690",
+    "ios/Features/Pickup/PickupHomeView.swift": "0f911ae1f994c129928084cfab550fc1809cf961bc1f9b3e038dd5e21496dbd1",
+    "ios/Features/Pickup/PickupRepairView.swift": "1504d568f90e41d8c0c4de22efd40f22ac7d48a7bfc172c35bf8874134b3adfb",
+    "ios/Features/Pickup/PickupSavedStockSection.swift": "cb593e3ab7567d7532f83d0760275f500244f90437278a80ef7c91538772f349",
+    "ios/UITests/LedgerConfirmedStockPackUITests.swift": "e317be1e4049a9d54f60a7addc727d8edc4536bb10573a8cb23a910d40548ed5"
+  },
+  "priorFailure": "The frozen ordinary run could see Review list behind the software keyboard, but neither stock case could tap it.",
+  "listEditorCheckpoint": {
+    "bundle": ".build/StockImportKeyboard20261104/StockImport.xcresult",
+    "stagedListPass": true,
+    "stockCasesReachedLaterFailure": "The stock confirmation switch was covered by the keyboard on the ingredient route."
+  },
+  "currentStockUI": {
+    "bundle": ".build/StockImportKeyboard20261104/StockFocusedForm.xcresult",
+    "device": {
+      "architecture": "arm64",
+      "deviceId": "6002E6CC-3391-4F26-A1E8-5258860E239C",
+      "deviceName": "RITC Contributor Offline 20261104",
+      "modelName": "iPhone 17e",
+      "osBuildNumber": "24A434",
+      "osVersion": "27.0",
+      "platform": "iOS Simulator"
+    },
+    "passed": 2,
+    "assertions": [
+      "Done reachable after typed list and numeric stock entry; text survives dismissal",
+      "Full coverage saves a use-at-home plan with no retailer order after restart",
+      "Eight confirmed of twelve required leads to one whole eight-unit pack, with the confirmed quantity retained after restart"
+    ]
+  },
+  "currentRepairAndModels": {
+    "bundle": ".build/StockImportKeyboard20261104/StockRepairModels.xcresult",
+    "repairUI": 1,
+    "models": 529,
+    "failures": 0
+  },
+  "release": {
+    "archive": ".build/StockImportKeyboard20261104/RoomInTheCart-StockKeyboard.xcarchive",
+    "binarySHA256": "9ae85bdcc695a96e0ebdc12f722c613410df22478568f0ac175e924fd958de82",
+    "manifestSHA256": "00a04709e2034eb948b051abc761b2bf7f05693ada0e5c986569dbdaec968d27",
+    "architecture": "arm64",
+    "metadata": "pass",
+    "signing": "disabled"
+  },
+  "scope": "Focused UI and model checks on the current checkout and unsigned iPhoneOS archive. The still-running broad UI suite uses an older source snapshot with separate failure and timeout results."
+}

@@ -37,15 +37,7 @@ struct LedgerIngredientView: View {
                     NavigationLink(ledgerText("Staple for future pickups")) { StapleApprovalView(ledger: model, shop: shop, line: line) }
                     if pickup.journeys.contains(where: { $0.id == shopID && ($0.basket?.current.lines.contains(where: { $0.id == lineID }) == true || $0.plannedNeeds.contains(where: { $0.orderLineID == lineID })) }) {
                         NavigationLink(pTr("Confirm pantry or freezer food")) {
-                            Form {
-                                PickupSaveStatus(model: pickup)
-                                if let current = pickup.journey, current.id == shopID,
-                                   (current.basket?.current.lines.contains(where: { $0.id == lineID }) == true || current.plannedNeeds.contains(where: { $0.orderLineID == lineID })) {
-                                    if current.closedAt == nil { PickupNewStockSection(model: pickup, ingredientID: lineID) }
-                                    PickupSavedStockSection(model: pickup, journey: current, onlyFoodID: lineID)
-                                }
-                            }.navigationTitle(line.name)
-                                .onAppear { pickup.selectedID = shopID }
+                            PickupStockEntryView(model: pickup, title: line.name, shopID: shopID, ingredientID: lineID)
                         }
                     }
                     Button(ledgerText("Edit item and visible notes")) { sheet = .line }
