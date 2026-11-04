@@ -102,6 +102,13 @@ class PlanIOSTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "positive integers"):
             make_plan(enumeration([MODEL, UI_TESTS[0]]), {**DURATIONS, "default_seconds": 0}, 1)
 
+    def test_rejects_disabled_ordinary_tests_even_when_enabled_counts_still_look_valid(self):
+        for disabled in (f"{MODEL_TARGET}/ModelTests/testHiddenRegression()", UI_TESTS[1],
+                         f"{MODEL_TARGET}/StoreKitScenarioTestsLookalike/testHiddenRegression()"):
+            with self.subTest(disabled=disabled):
+                with self.assertRaisesRegex(ValueError, "Ordinary tests must not be disabled"):
+                    make_plan(enumeration([MODEL, UI_TESTS[0]], [DISABLED, disabled]), DURATIONS, 1)
+
 
 if __name__ == "__main__":
     unittest.main()

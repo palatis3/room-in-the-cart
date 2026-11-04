@@ -32,6 +32,7 @@ jobs:
         if: always()
         with:
           name: swift-${{ matrix.sanitizer }}-${{ github.run_attempt }}
+          include-hidden-files: true
           path: .build/sanitizer-results/
           retention-days: 7
   storekit:
@@ -72,6 +73,7 @@ jobs:
         if: always()
         with:
           name: storekit-${{ matrix.locale }}-${{ github.run_attempt }}
+          include-hidden-files: true
           path: |
             .build/StoreKit.xcresult
             .build/StoreKit.log

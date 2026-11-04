@@ -54,6 +54,12 @@ def make_plan(enumeration, durations, ui_shards):
     seen = set()
     enabled = read_identifiers(configuration, "enabledTests", seen)
     disabled = read_identifiers(configuration, "disabledTests", seen)
+    # StoreKit scenarios use their dedicated test plan. Every ordinary compiled
+    # test must remain enabled so disabling a regression cannot make CI green.
+    unexpected_disabled = [identifier for identifier in disabled
+                           if not identifier.startswith(f"{MODEL_TARGET}/StoreKitScenarioTests/")]
+    if unexpected_disabled:
+        raise ValueError(f"Ordinary tests must not be disabled: {unexpected_disabled!r}")
     models = [identifier for identifier in enabled if identifier.startswith(f"{MODEL_TARGET}/")]
     ui_tests = [identifier for identifier in enabled if identifier.startswith(f"{UI_TARGET}/")]
     if not models or not ui_tests:
