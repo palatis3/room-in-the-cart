@@ -345,7 +345,9 @@ import DeviceSurfaces
         if row.reminderID != nil, !reminderRoleAuthorized { return false }
         let eligible = row.reminderID == nil ? pickup?.journeys : pickup?.reminderJourneys
         switch row.target {
-        case .shop(let workspace, let shopID): return scope?.workspaceID == workspace && shop(shopID) != nil
+        case .shop(let workspace, let shopID):
+            // A widget opens the current pickup.
+            return scope?.workspaceID == workspace && ledger?.shop?.id == shopID && shop(shopID) != nil
         case .offer(let workspace, let journeyID, let offerID):
             guard pickupWorkspaceID == workspace, let journey = eligible?.first(where: { $0.id == journeyID }),
                   journey.unfilledOffers.contains(where: { $0.id == offerID }) else { return false }

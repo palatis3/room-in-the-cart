@@ -158,7 +158,9 @@ struct DeviceSurfacesDestination: View {
         }.modifier(PickupNextShopRoute(model: pickup, requested: $nextShopRequested) { nextShopFocused = true })
         .task {
             guard composition.privateAuthorized else { return }
-            switch destination { case .shop(let id): await ledger.selectShop(id)
+            // A newer pickup selection can arrive after route resolution. The
+            // shop view above checks identity; presentation must never reselect.
+            switch destination {
             case .offer(let id, _), .deferral(let id, _): if composition.privateAuthorized { pickup.selectedID = id }
             default: break }
             selected = true
