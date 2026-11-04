@@ -64,6 +64,7 @@ import XCTest
     }
 
     func testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop() throws {
+        avoidIOS17SnapshotLoggingCrash()
         func verifyChosenDinnerInWeek() {
             dinnerRoot()
             openMealWeek()
@@ -515,11 +516,7 @@ import XCTest
 
     private func verifyDatedMealWeek(spanish: Bool, moveAcrossWeek: Bool = false) {
         func copy(_ english: String, _ translation: String) -> String { spanish ? translation : english }
-        // Xcode's newer accessibility snapshots can trip iOS 17's logging
-        // quarantine inside XCTAutomationSupport while querying these forms.
-        if ProcessInfo.processInfo.operatingSystemVersion.majorVersion == 17 {
-            app.launchEnvironment["OS_ACTIVITY_MODE"] = "disable"
-        }
+        avoidIOS17SnapshotLoggingCrash()
         let dinner = copy("Roasted veggie tacos", "Tacos de verduras asadas")
         let food = copy("Flour tortillas", "Tortillas de harina")
         let purpose = copy("School lunch", "Almuerzo escolar")
@@ -829,6 +826,13 @@ import XCTest
         XCTAssertTrue(app.tabBars.buttons[spanish ? "Compras" : "Shop"].waitForExistence(timeout: 15))
     }
     private func restart() { app.terminate(); launch(reset: false) }
+    private func avoidIOS17SnapshotLoggingCrash() {
+        // High-volume accessibility snapshots can crash XCTAutomationSupport
+        // during iOS 17 logging quarantine. Keep XCTest action logs available.
+        if ProcessInfo.processInfo.operatingSystemVersion.majorVersion == 17 {
+            app.launchEnvironment["OS_ACTIVITY_MODE"] = "disable"
+        }
+    }
     private func element(_ id: String) -> XCUIElement { app.descendants(matching: .any).matching(identifier: id).firstMatch }
     private func tap(_ target: XCUIElement) { reveal(target); XCTAssertTrue(target.isHittable, target.debugDescription); target.tap() }
     private func enableSwitch(_ label: String) {
