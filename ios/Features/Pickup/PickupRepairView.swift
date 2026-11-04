@@ -223,7 +223,7 @@ struct PickupCookView: View {
             TextEditor(text: $text).frame(minHeight: 220).accessibilityLabel(pTr("Editable cook instruction"))
             if let readback {
                 Section {
-                    CookReadbackView(instruction: instruction(for: readback), authorize: authorizeReadback)
+                    CookReadbackView(instruction: readback.instruction, authorize: authorizeReadback)
                         .id(readback.authorityBindingID)
                 }
             }
@@ -274,13 +274,8 @@ struct PickupCookView: View {
             workspaceUnlocked: access.unlocked, householdLocked: household.locked,
             saving: model.saving, pendingSave: model.hasPendingSave)
     }
-    private func instruction(for binding: PickupCookReadbackBinding) -> CookReadbackInstruction {
-        .init(authorityBindingID: binding.authorityBindingID, sourceID: binding.sourceID,
-            sourceRevision: binding.sourceRevision, createdAt: binding.createdAt, text: binding.text,
-            localeIdentifier: binding.localeIdentifier, excludesPrivateBudget: true)
-    }
     private func authorizeReadback(_ requested: CookReadbackInstruction, at: Date) -> Bool {
-        guard let readback, requested == instruction(for: readback) else { return false }
+        guard let readback, requested == readback.instruction else { return false }
         return readback.isCurrent(journey: model.journey, allocation: model.allocation, result: model.result,
             language: language, includeBudget: includeBudget, text: text, context: readbackContext, at: at)
     }

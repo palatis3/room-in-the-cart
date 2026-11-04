@@ -461,6 +461,28 @@ import XCTest
         reviewAndApprovePattern(spanish: false)
     }
 
+    func testListCaptureOpensWithTypedDraftAndReopensAfterCancel() {
+        launch(reset: true)
+        openShoppingList()
+        tap(element("ledgerStartShop"))
+        fill("List capture pickup", into: "ledgerShopName")
+        tap(element("ledgerCreateShop"))
+        tap(element("ledgerImport"))
+        fill("2 Wraps", into: "ledgerImportText")
+
+        let review = app.navigationBars["Capture a list"]
+        let editor = app.textViews["capture.editor"]
+        for _ in 0..<2 {
+            tap(element("ledger.capture"))
+            XCTAssertTrue(review.waitForExistence(timeout: 8))
+            reveal(editor)
+            XCTAssertEqual(editor.value as? String, "2 Wraps")
+            tap(review.buttons["Cancel"])
+            XCTAssertTrue(review.waitForNonExistence(timeout: 8))
+        }
+        XCTAssertEqual(app.textViews["ledgerImportText"].value as? String, "2 Wraps")
+    }
+
     func testRecipeCaptureOpensOnFirstAttemptAndReopensAfterCancel() {
         launch(reset: true)
         tap(app.tabBars.buttons["Dinners"])

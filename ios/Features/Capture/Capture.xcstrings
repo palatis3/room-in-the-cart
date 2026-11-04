@@ -834,6 +834,23 @@
         }
       }
     },
+    "Prepare the instruction again to start a new readback.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prepare the instruction again to start a new readback."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a preparar la instrucción para iniciar una nueva lectura en voz alta."
+          }
+        }
+      }
+    },
     "Prepare the current instruction without private budget details before playback.": {
       "extractionState": "manual",
       "localizations": {

@@ -108,7 +108,7 @@ struct PickupCookReadbackContext: Equatable {
     }
 }
 
-/// Ephemeral local-view lease, deliberately not Codable and not a remote access token or expiry.
+/// Ephemeral local view binding, deliberately not Codable or a remote access token.
 struct PickupCookReadbackBinding {
     let authorityBindingID = UUID()
     let sourceID: UUID
@@ -116,9 +116,14 @@ struct PickupCookReadbackBinding {
     let createdAt: Date
     let text: String
     let localeIdentifier: String
-    let expiresAt: Date
+    let startBefore: Date
     private let scope: PickupCookReadbackScope
     private let timeZone: TimeZone
+    var instruction: CookReadbackInstruction {
+        .init(authorityBindingID: authorityBindingID, sourceID: sourceID, sourceRevision: sourceRevision,
+              createdAt: createdAt, startBefore: startBefore, text: text, localeIdentifier: localeIdentifier,
+              excludesPrivateBudget: true)
+    }
     init?(journey: PickupJourney, allocation: StockAllocationResult?, result: CheckoutResult?,
           language: String, includeBudget: Bool, text: String, context: PickupCookReadbackContext,
           at: Date, timeZone: TimeZone = .current) {
@@ -126,13 +131,14 @@ struct PickupCookReadbackBinding {
               text == PickupCookProjection.text(journey: journey, allocation: allocation, result: result,
                   language: language, at: at, timeZone: timeZone) else { return nil }
         sourceID = journey.id; sourceRevision = journey.revision; createdAt = at
-        self.text = text; localeIdentifier = language; expiresAt = at.addingTimeInterval(60)
+        self.text = text; localeIdentifier = language; startBefore = at.addingTimeInterval(60)
         scope = context.scope; self.timeZone = timeZone
     }
+    /// Recheck live authority and content throughout playback; the model applies the start deadline separately.
     func isCurrent(journey: PickupJourney?, allocation: StockAllocationResult?, result: CheckoutResult?,
                    language: String, includeBudget: Bool, text: String, context: PickupCookReadbackContext, at: Date) -> Bool {
         guard context.permitsLocalReadback, context.scope == scope, !includeBudget,
-              at >= createdAt, at < expiresAt, let journey, journey.id == sourceID, journey.revision == sourceRevision,
+              at >= createdAt, let journey, journey.id == sourceID, journey.revision == sourceRevision,
               language == localeIdentifier, text == self.text else { return false }
         return text == PickupCookProjection.text(journey: journey, allocation: allocation, result: result,
             language: language, at: createdAt, timeZone: timeZone)

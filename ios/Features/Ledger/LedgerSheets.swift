@@ -16,7 +16,7 @@ struct LedgerImportView: View {
     @State private var importID = UUID()
     @State private var captured: ReviewedCapture?
     @State private var captureBinding: LedgerCaptureBinding?
-    @State private var showCapture = false
+    @State private var capturePresentation: LedgerCapturePresentation?
     @FocusState private var originalFocused: Bool
     private enum Focus: Hashable { case preview, status }
     @AccessibilityFocusState private var focus: Focus?
@@ -66,7 +66,7 @@ struct LedgerImportView: View {
                     }.buttonStyle(PrimaryAction()).disabled(model.saving || !allDecided(preview))
                         .accessibilityIdentifier("ledgerCommitImport")
                     if captured != nil {
-                        Button(captureText("Edit captured fields")) { showCapture = true }
+                        Button(captureText("Edit captured fields")) { beginCapture() }
                             .disabled(model.saving || model.hasPendingSave || !captureAuthorized)
                     } else {
                         Button(ledgerText("Edit original text")) { self.preview = nil; choices = [:]; importID = UUID() }
@@ -105,18 +105,17 @@ struct LedgerImportView: View {
             .keyboardDoneAction(visible: originalFocused, title: ledgerText("Done")) { originalFocused = false }
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() }.disabled(model.saving) } }
             .interactiveDismissDisabled(model.saving)
-            .sheet(isPresented: $showCapture) {
-                if let binding = captureBinding, let shop {
-                    NavigationStack {
-                        CaptureReviewView(initialText: original, initialSource: source == .paste ? .paste : .typed, localeIdentifier: binding.localeIdentifier,
-                            destination: shop.title, existingCapture: captured,
-                            correctionScope: CaptureCorrectionScope(profileID: "local:" + binding.workspaceID.uuidString, localeIdentifier: binding.localeIdentifier),
-                            authorize: { captureAuthorized }, onReviewed: receiveCapture)
-                    }
+            .sheet(item: $capturePresentation) { presentation in
+                let binding = presentation.binding
+                NavigationStack {
+                    CaptureReviewView(initialText: presentation.text, initialSource: presentation.source, localeIdentifier: binding.localeIdentifier,
+                        destination: presentation.destination, existingCapture: presentation.reviewed,
+                        correctionScope: CaptureCorrectionScope(profileID: "local:" + binding.workspaceID.uuidString, localeIdentifier: binding.localeIdentifier),
+                        authorize: { liveCaptureBinding == binding }, onReviewed: { receiveCapture($0, binding: binding) })
                 }
             }
             .onChange(of: liveCaptureBinding) { _, current in
-                if let binding = captureBinding, current != binding { invalidateCapture() }
+                if let binding = capturePresentation?.binding ?? captureBinding, current != binding { invalidateCapture() }
             }
             .onChange(of: scenePhase) { _, phase in if phase == .background { invalidateCapture() } }
     }
@@ -135,26 +134,29 @@ struct LedgerImportView: View {
     }
     private var captureAuthorized: Bool { captureBinding != nil && liveCaptureBinding == captureBinding }
     private func beginCapture() {
-        guard let binding = liveCaptureBinding, !model.saving, !model.hasPendingSave else { return }
-        captureBinding = binding; showCapture = true
+        guard let binding = liveCaptureBinding, let shop, !model.saving, !model.hasPendingSave else { return }
+        originalFocused = false
+        capturePresentation = LedgerCapturePresentation(binding: binding, destination: shop.title,
+            text: original, source: source == .paste ? .paste : .typed, reviewed: captured)
     }
-    private func receiveCapture(_ capture: ReviewedCapture) {
-        guard captureAuthorized, !model.saving, !model.hasPendingSave, let shop else { return }
+    private func receiveCapture(_ capture: ReviewedCapture, binding: LedgerCaptureBinding) {
+        guard liveCaptureBinding == binding, !model.saving, !model.hasPendingSave, let shop else { return }
         do {
             let staged = try CaptureLedgerImport.stage(capture, in: shop)
-            if staged.alreadyApplied { showCapture = false; dismiss(); return }
+            if staged.alreadyApplied { capturePresentation = nil; dismiss(); return }
+            captureBinding = binding
             captured = capture; importID = capture.id; original = capture.originalText
             source = staged.preview.source; preview = staged.preview
             choices = Dictionary(uniqueKeysWithValues: staged.preview.lines.filter { $0.duplicateLineIDs.isEmpty }.map { ($0.id, "new") })
-            showCapture = false; focus = .preview; model.error = nil
+            capturePresentation = nil; focus = .preview; model.error = nil
         } catch {
             model.error = captureText("Review each item. Use a positive amount or leave it explicitly unknown; pack counts must be whole numbers.")
             focus = .status
         }
     }
     private func invalidateCapture() {
-        guard captureBinding != nil else { return }
-        showCapture = false; captured = nil; captureBinding = nil
+        guard capturePresentation != nil || captureBinding != nil else { return }
+        capturePresentation = nil; captured = nil; captureBinding = nil
         preview = nil; choices = [:]; original = ""; importID = UUID()
     }
 
@@ -225,6 +227,15 @@ private struct LedgerCaptureBinding: Equatable {
     let memberID: String?
     let role: String?
     let localeIdentifier: String
+}
+
+private struct LedgerCapturePresentation: Identifiable {
+    let id = UUID()
+    let binding: LedgerCaptureBinding
+    let destination: String
+    let text: String
+    let source: CaptureSource
+    let reviewed: ReviewedCapture?
 }
 
 private struct ImportMatch: Identifiable { let id: UUID; let name: String }

@@ -230,15 +230,49 @@ final class PickupCookProjectionTests: XCTestCase {
                 text: value.text, context: current, at: now))
         }
     }
-    func testBindingLeaseIsLocalBoundedAndNeverRestoredFromSameText() throws {
+    func testBindingIsNeverRestoredFromSameText() throws {
         let (journey, allocation) = try fixture(); let value = try binding(journey, allocation)
-        for (offset, expected) in [(-1.0, false), (0, true), (59, true), (60, false), (600, false)] {
-            XCTAssertEqual(value.isCurrent(journey: journey, allocation: allocation, result: nil, language: "en-US", includeBudget: false,
-                text: value.text, context: context(), at: now.addingTimeInterval(offset)), expected)
-        }
+        XCTAssertFalse(value.isCurrent(journey: journey, allocation: allocation, result: nil, language: "en-US", includeBudget: false,
+            text: value.text, context: context(), at: now.addingTimeInterval(-1)))
         let fresh = try binding(journey, allocation)
         XCTAssertNotEqual(value.authorityBindingID, fresh.authorityBindingID)
         XCTAssertEqual(value.text, fresh.text)
+    }
+
+    @MainActor func testReadbackCanFinishPastStartDeadlineButStillStopsWhenWorkspaceLocks() throws {
+        let (journey, allocation) = try fixture(); let value = try binding(journey, allocation)
+        let speech = FakeCookSpeech()
+        var currentContext = context()
+        var instant = now.addingTimeInterval(59)
+        let model = CookReadbackModel(instruction: value.instruction, speech: speech, clock: { instant }) { requested, at in
+            requested == value.instruction && value.isCurrent(journey: journey, allocation: allocation, result: nil,
+                language: "en-US", includeBudget: false, text: value.text, context: currentContext, at: at)
+        }
+        defer { model.close() }
+        XCTAssertTrue(model.canStart)
+        model.playFromBeginning()
+        XCTAssertEqual(speech.spoken, [value.text])
+
+        instant = now.addingTimeInterval(60)
+        model.checkCurrent()
+        XCTAssertEqual(model.state, .speaking)
+        XCTAssertTrue(model.canRead)
+        XCTAssertFalse(model.canStart)
+        model.playFromBeginning()
+        XCTAssertEqual(speech.spoken, [value.text])
+        XCTAssertEqual(model.state, .speaking)
+        model.pause()
+        XCTAssertTrue(model.canResume)
+        model.resume()
+        XCTAssertEqual(speech.resumes, 1)
+        XCTAssertEqual(model.state, .speaking)
+
+        let stops = speech.stops
+        currentContext = context(unlocked: false)
+        model.checkCurrent()
+        XCTAssertEqual(speech.stops, stops + 1)
+        XCTAssertEqual(model.state, .stopped)
+        XCTAssertFalse(model.canRead)
     }
     func testSourceRevisionTextLocaleBudgetAndSaveChangesInvalidateBinding() throws {
         let (journey, allocation) = try fixture(); let value = try binding(journey, allocation)

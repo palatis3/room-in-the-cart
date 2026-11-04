@@ -1,7 +1,7 @@
 import SwiftUI
 import AVFoundation
 
-/// The parent supplies the current authorized cook projection and an identity/revision/lease check.
+/// The parent supplies the current cook projection and checks that its authority is still valid.
 @MainActor struct CookReadbackView: View {
     let instruction: CookReadbackInstruction
     @StateObject private var model: CookReadbackModel
@@ -24,11 +24,14 @@ import AVFoundation
                     if model.state == .speaking {
                         Button(captureText("Pause readback")) { model.pause() }
                     } else if model.state == .paused {
-                        Button(captureText("Resume readback")) { model.resume() }.disabled(!model.canPlay)
+                        Button(captureText("Resume readback")) { model.resume() }.disabled(!model.canResume)
                     }
                     Button(captureText("Read from beginning")) { model.playFromBeginning() }
-                        .disabled(!model.canPlay).accessibilityIdentifier("capture.readback.play")
+                        .disabled(!model.canStart).accessibilityIdentifier("capture.readback.play")
                     Button(captureText("Stop readback")) { model.stop() }.disabled(model.state == .stopped)
+                    if model.state == .stopped && !model.voiceOverActive && !model.canStart {
+                        Text(captureText("Prepare the instruction again to start a new readback."))
+                    }
                     if model.unavailable { Text(captureText("A local voice is unavailable. The complete instruction remains readable.")) }
                 } else {
                     Text(captureText("Prepare the current instruction without private budget details before playback."))

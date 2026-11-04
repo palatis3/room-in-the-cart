@@ -1,0 +1,71 @@
+{
+  "baseCommit": "8f8bbe478a4e2b2352a39ef7576673edd179e8aa",
+  "toolchain": "Xcode 27.1 (27A9275)",
+  "sourceSHA256": {
+    "ios/Features/Ledger/LedgerSheets.swift": "91cf19971aa0fc6ba5726bd3cd1bef9c1c851084fda89de94f4538099ef208d6",
+    "ios/Features/Capture/Capture.xcstrings": "549fd2f4ab8e996013e6de78b54343abaf95d83b691b10ac0c4b5dd434971c81",
+    "ios/Features/Capture/CookReadbackModel.swift": "fc473cf91929d2122b9a662391d2e37cef2206493cdf88ff5d0627e2f4110e01",
+    "ios/Features/Capture/CookReadbackView.swift": "64e4415b20f706b1a3526c04020eb13e8baaea9dadb34055b1495fed556a9890",
+    "ios/Features/Pickup/PickupCookProjection.swift": "e126503d24cf4e6ba8811e74f8013d2ed7aac5acae199d6eae528e78526c1bf9",
+    "ios/Features/Pickup/PickupRepairView.swift": "27d82a2eecf8073270512854af562229748129e511ac32d704133ac62cb69e10",
+    "ios/Tests/CookReadbackTests.swift": "35723bbeedfd07271fd1a05c431a327479c0a4497a1859ca5a70615a9d24a11e",
+    "ios/Tests/PickupCookProjectionTests.swift": "7c90b284f87b3d0be6919ef38e2afd7f71227cc2283af8c414ebb980ffb2b572",
+    "ios/UITests/FreeJourneyUITests.swift": "c867cfd9026480eb1a8c8d55cf13a5ed1db3729f3b2d665c329fc59eddac2e38"
+  },
+  "beforeFix": {
+    "result": ".build/SpeechFallback20261104/ListCaptureBefore.xcresult",
+    "passed": 0,
+    "failed": 1,
+    "log": ".build/SpeechFallback20261104/list-capture-before.log",
+    "finding": "First launch of Capture and review fields presented a blank sheet with the typed source already entered."
+  },
+  "iOS27": {
+    "result": ".build/SpeechFallback20261104/SpeechAndReadback.xcresult",
+    "passed": 539,
+    "failed": 0,
+    "log": ".build/SpeechFallback20261104/speech-and-readback.log",
+    "device": "iPhone 17e, iOS 27.0 (24A434)",
+    "modelTests": 537,
+    "casesSeconds": {
+      "testListCaptureOpensWithTypedDraftAndReopensAfterCancel": 64.397,
+      "testNativeSpeechRefusalLeavesTypedCaptureReviewable": 264.438,
+      "testReadbackCanFinishPastStartDeadlineButStillStopsWhenWorkspaceLocks": 0.004
+    }
+  },
+  "speechFallback": {
+    "harnessSHA256": "dfdfe67fc866d59da6e0c31bec3b4bb0fdfa64a85edb4f122be003a530aaa002",
+    "authorization": "Actual iOS Speech Recognition prompt. The test chose Don\u2019t Allow. Microphone access was also revoked on the disposable simulator before the test.",
+    "checks": "The app displayed the permission-denied message, preserved the typed draft and let the shopper review the destination and correct one amount. The user explicitly confirmed the item and saved the preview. One Wraps line reopened after relaunch.",
+    "persisted": {
+      "originalText": "2 Wraps",
+      "source": "typed",
+      "reviewedQuantity": 3,
+      "importBatches": 1,
+      "ledgerHeadRevision": 2
+    }
+  },
+  "readback": {
+    "case": "testReadbackCanFinishPastStartDeadlineButStillStopsWhenWorkspaceLocks",
+    "checks": "Start just before the 60-second deadline. Playback and explicit resume remain available past it while the exact dated source and authorization stay valid. Repeat needs a fresh preparation. Lock the workspace and confirm immediate stop and text revocation.",
+    "scope": "Production projection and playback-state models with a controlled clock and speech double."
+  },
+  "iOS17": {
+    "result": ".build/SpeechFallback20261104/MinimumCaptureReadback.xcresult",
+    "passed": 25,
+    "failed": 0,
+    "log": ".build/SpeechFallback20261104/minimum.log",
+    "device": "iPhone SE, iOS 17.0 (21A328)",
+    "casesSeconds": {
+      "testListCaptureOpensWithTypedDraftAndReopensAfterCancel": 28.077,
+      "testReadbackCanFinishPastStartDeadlineButStillStopsWhenWorkspaceLocks": 0.006
+    }
+  },
+  "archive": {
+    "path": ".build/SpeechFallback20261104/RoomInTheCart-CaptureReadback.xcarchive",
+    "binaryUUID": "788B24BB-2492-32AF-B4BD-5055E846D40E",
+    "executableSHA256": "716b61964337f24e22c4ee2311de4c4015951b1f63d77f89eabba68b0c42145a",
+    "builtAppVerification": "passed",
+    "signed": false
+  },
+  "scope": "Native permission refusal and typed fallback on a simulator. Successful speech recognition, physical audio, VoiceOver arbitration and signed-device acceptance remain open."
+}

@@ -6,7 +6,8 @@ import XCTest
     func instruction(revision: Int64 = 3, text: String = "Tuesday · Revision 3\nUse four wraps. Save two wraps for lunch.", budgetExcluded: Bool = true) -> CookReadbackInstruction {
         .init(authorityBindingID: UUID(uuidString: "11111111-1111-4111-8111-111111111111")!,
             sourceID: UUID(uuidString: "22222222-2222-4222-8222-222222222222")!, sourceRevision: revision,
-            createdAt: now.addingTimeInterval(-30), text: text, localeIdentifier: "es-US", excludesPrivateBudget: budgetExcluded)
+            createdAt: now.addingTimeInterval(-30), startBefore: now.addingTimeInterval(30),
+            text: text, localeIdentifier: "es-US", excludesPrivateBudget: budgetExcluded)
     }
     func testPlaybackUsesExactAuthorizedDatedProjection() {
         let value = instruction(); let speech = FakeCookSpeech()
@@ -90,15 +91,15 @@ import XCTest
         model.close()
     }
 }
-@MainActor private final class FakeCookSpeech: CookSpeechPlayback {
+@MainActor final class FakeCookSpeech: CookSpeechPlayback {
     var onEnd: ((UUID) -> Void)?
     var spoken: [String] = []; var locales: [String] = []; var ids: [UUID] = []
-    var resumes = 0; var failure: CaptureFailure?
+    var resumes = 0; var stops = 0; var failure: CaptureFailure?
     func speak(_ text: String, localeIdentifier: String, playbackID: UUID) throws {
         if let failure { throw failure }
         spoken.append(text); locales.append(localeIdentifier); ids.append(playbackID)
     }
     func pause() -> Bool { true }
     func resume() throws -> Bool { resumes += 1; return true }
-    func stop() {}
+    func stop() { stops += 1 }
 }

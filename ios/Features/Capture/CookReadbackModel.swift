@@ -7,6 +7,7 @@ struct CookReadbackInstruction: Equatable, Sendable {
     let sourceID: UUID
     let sourceRevision: Int64
     let createdAt: Date
+    let startBefore: Date
     let text: String
     let localeIdentifier: String
     let excludesPrivateBudget: Bool
@@ -41,12 +42,19 @@ struct CookReadbackInstruction: Equatable, Sendable {
             self.stop()
         }
     }
-    var canRead: Bool {
-        !closed && instruction.excludesPrivateBudget && instruction.sourceRevision >= 0 &&
-        instruction.createdAt <= clock() && !instruction.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-        (try? CaptureLimits.validate(instruction.text)) != nil && authorize(instruction, clock())
+    var canRead: Bool { canRead(at: clock()) }
+    var canStart: Bool {
+        let now = clock()
+        return now < instruction.startBefore && !voiceOverActive && canRead(at: now)
     }
-    var canPlay: Bool { canRead && !voiceOverActive }
+    var canResume: Bool { state == .paused && canContinue }
+    private var canContinue: Bool { !voiceOverActive && canRead }
+
+    private func canRead(at now: Date) -> Bool {
+        !closed && instruction.excludesPrivateBudget && instruction.sourceRevision >= 0 &&
+        instruction.createdAt <= now && !instruction.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        (try? CaptureLimits.validate(instruction.text)) != nil && authorize(instruction, now)
+    }
 
     func update(_ instruction: CookReadbackInstruction) {
         guard !closed else { return }
@@ -57,7 +65,7 @@ struct CookReadbackInstruction: Equatable, Sendable {
         if active { stop() } // VoiceOver is exclusive. Turning it off never resumes playback automatically.
     }
     func playFromBeginning() {
-        guard canPlay else { stop(); return }
+        guard canStart else { checkCurrent(); return }
         stop(); unavailable = false
         let id = UUID(); playbackID = id
         do {
@@ -68,18 +76,19 @@ struct CookReadbackInstruction: Equatable, Sendable {
     }
     func pause() {
         guard state == .speaking else { return }
+        guard canContinue else { stop(); return }
         if speech.pause() { state = .paused }
         else { stop() }
     }
     func resume() {
-        guard state == .paused, canPlay else { stop(); return }
+        guard canResume else { stop(); return }
         do {
             if try speech.resume() { state = .speaking }
             else { stop(); unavailable = true }
         } catch { stop(); unavailable = true }
     }
     /// Parent may call synchronously on an authority/source change; the watchdog also checks during playback.
-    func checkCurrent() { if !canPlay { stop() } }
+    func checkCurrent() { if !canContinue { stop() } }
     func stop() {
         playbackID = nil; watchdog?.cancel(); watchdog = nil
         speech.stop(); state = .stopped
