@@ -1,0 +1,58 @@
+{
+  "commit": "c6ca046d565d16066587e90a6f126380b0d08777",
+  "toolchain": "Xcode 27.1 (27A9275)",
+  "sourceSHA256": {
+    "ios/Features/Records/RecordsToolsModel.swift": "357b6348bf60fd8b72f4620bafb802f775e16f5ef131f0460e95e785a870a3db",
+    "ios/Features/Records/RecordsToolsView.swift": "14692363dbd3287e91d2bcbb949ae0fe2cb56d6d9b36760772d5633e6f8db599",
+    "ios/Features/Records/Records.xcstrings": "5331d4b9e1a7c67f7734f05ae8a276412c29a8ea5bff9340e562814cd38648d2",
+    "ios/Tests/RecordsAdapterTests.swift": "4b8ef8f9744667f5bdb65d0d0df06d9a05c393622549474ef8bfc91e0b98a929"
+  },
+  "beforeFix": {
+    "result": ".build/RecipeImportOutcome20261104/Red.xcresult",
+    "failed": 1,
+    "finding": "A duplicate and skipped row returned an already-saved message without the skip report and reused the previous action outcome ID."
+  },
+  "models": {
+    "result": ".build/RecipeImportOutcome20261104/ModelsFinal.xcresult",
+    "os": "iOS 27.0",
+    "passed": 534,
+    "failed": 0
+  },
+  "systemPicker": {
+    "device": "iPhone 17e, iOS 27.0 (24A434)",
+    "inputSHA256": "53c0649cfdf4adddf6243cc289b4c3ac410688db3b08d48900a3cf6366a62b33",
+    "inputSource": "Safari downloaded a fictional two-row Recipe JSON-LD graph from a local HTTP fixture into Files, On My iPhone, Downloads.",
+    "attempts": [
+      {
+        "result": ".build/SystemRecipePicker20261104/Current.xcresult",
+        "failure": "Safari exposed Download as a button outside the alert query."
+      },
+      {
+        "result": ".build/SystemRecipePicker20261104/CurrentRerun.xcresult",
+        "failure": "After downloading, the picker opened on empty Recents. System Cancel returned to Records."
+      },
+      {
+        "result": ".build/SystemRecipePicker20261104/CurrentBrowse.xcresult",
+        "failure": "On the final reopening after relaunch the test tapped the Downloads actions menu and could not find the file cell.",
+        "verifiedBeforeFailure": "System Cancel, actual file preview, review cancellation without saving, deliberate save, and original yield, ingredient, instructions and source after relaunch.",
+        "attachments": ".build/SystemRecipePicker20261104/picker-attachments/manifest.json"
+      }
+    ],
+    "isolatedRepeatImport": {
+      "result": ".build/SystemRecipePicker20261104/CurrentDuplicate.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "seconds": 85.126,
+      "harnessSHA256": "20b9067ab67734fa0e7253ece9147e5d5a621c5b865dbbb66f21b3ddbe4e46d4",
+      "verified": "One existing recipe and one skipped row, unsupported nutrition, zero new recipes, no apply control, and one durable copy."
+    }
+  },
+  "archive": {
+    "path": ".build/RecipeImportOutcome20261104/RoomInTheCart-RecipeOutcome.xcarchive",
+    "binaryUUID": "E6ABB091-E07A-3A5A-A72B-FDC12700B62F",
+    "executableSHA256": "ae6b1fbe07bf98f526bc16f8c90a91c9f1d2a3b6ce5faa5d3d0ac667429e2f20",
+    "builtAppMetadataCheck": "passed",
+    "signed": false
+  },
+  "scope": "Ordinary app source with a scratch XCTest driver and isolated data. The iOS simulator uses the actual system picker and a real downloaded file. Cloud providers, physical-device file handling, and spoken VoiceOver focus remain separate."
+}

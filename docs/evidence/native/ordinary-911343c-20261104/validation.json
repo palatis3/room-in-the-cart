@@ -1,0 +1,23 @@
+{
+  "commit": "911343c7b2d274e925421434749e7635a06e18b1",
+  "toolchain": "Xcode 27.1 (27A9275)",
+  "device": "iPhone 17e, iOS 27.0 (24A434)",
+  "result": ".build/NativeReleaseCandidate20261104/OrdinaryCandidate.xcresult",
+  "log": ".build/NativeReleaseCandidate20261104/ordinary.log",
+  "modelPassed": 530,
+  "uiPassed": 36,
+  "uiFailed": 2,
+  "failures": [
+    {
+      "test": "ContextualReminderUITests/testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending()",
+      "scope": "The automation queried a disappearing navigation bar during sheet dismissal.",
+      "followUp": "../reminder-viewport-20261104/validation.json"
+    },
+    {
+      "test": "FreeJourneyUITests/testCancellingSystemShareKeepsTheFrozenPickupUnplaced()",
+      "scope": "The failure screenshot shows that the native share sheet remained open after the close tap.",
+      "followUp": "../share-cancellation-20261104/validation.json"
+    }
+  ],
+  "scope": "One frozen ordinary run. Both failure records remain part of this result. The follow-up scopes passed separately, and the updated ordinary candidate is a new invocation."
+}
