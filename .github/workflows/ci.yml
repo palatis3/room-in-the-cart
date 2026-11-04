@@ -43,6 +43,7 @@ jobs:
       TEST_ADMIN_DATABASE_URL: postgresql://postgres:fixture-only@127.0.0.1:5432/ritc_test
       MIGRATION_DATABASE_URL: postgresql://postgres:fixture-only@127.0.0.1:5432/ritc_test
       TEST_DATABASE_URL: postgresql://ritc_runtime:fixture-only@127.0.0.1:5432/ritc_test
+      TEST_WORKER_DATABASE_URL: postgresql://ritc_test_worker:fixture-only@127.0.0.1:5432/ritc_test
       BILLING_TEST_ADMIN_DATABASE_URL: postgresql://postgres:fixture-only@127.0.0.1:5432/ritc_test
       BILLING_TEST_DATABASE_URL: postgresql://ritc_runtime:fixture-only@127.0.0.1:5432/ritc_test
     steps:
@@ -59,14 +60,27 @@ jobs:
         working-directory: web
       - name: Prepare disposable provider-session and maintenance fixtures
         run: |
-          psql "$TEST_ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 -c 'CREATE SCHEMA auth; CREATE TABLE auth.sessions(id uuid PRIMARY KEY, user_id uuid NOT NULL, not_after timestamptz);'
+          psql "$TEST_ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          CREATE SCHEMA auth;
+          CREATE TABLE auth.users(id uuid PRIMARY KEY, email text, email_confirmed_at timestamptz);
+          CREATE TABLE auth.sessions(id uuid PRIMARY KEY, user_id uuid NOT NULL, not_after timestamptz);
+          SQL
           psql "$TEST_ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 -c 'CREATE DATABASE ritc_operations'
       - run: npm run migrate
         working-directory: service
-      - name: Create a separate non-owner runtime role
-        run: >-
-          psql "$TEST_ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 -c
-          "CREATE ROLE ritc_runtime LOGIN PASSWORD 'fixture-only' NOSUPERUSER NOBYPASSRLS; GRANT ritc_app TO ritc_runtime; CREATE ROLE ritc_test_worker LOGIN PASSWORD 'fixture-only' NOSUPERUSER NOBYPASSRLS; GRANT ritc_worker TO ritc_test_worker;"
+      - name: Create restricted app, guardian verification and worker roles
+        run: |
+          psql "$TEST_ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          CREATE ROLE ritc_runtime LOGIN PASSWORD 'fixture-only' NOSUPERUSER NOBYPASSRLS;
+          GRANT ritc_app TO ritc_runtime;
+          CREATE ROLE ritc_guardian_test_verifier LOGIN PASSWORD 'fixture-only' NOSUPERUSER NOBYPASSRLS;
+          GRANT ritc_guardian_verifier TO ritc_guardian_test_verifier;
+          CREATE ROLE ritc_test_worker LOGIN PASSWORD 'fixture-only' NOSUPERUSER NOBYPASSRLS;
+          GRANT ritc_worker TO ritc_test_worker;
+          -- Negative readiness fixture. A verifier must reject this combined identity.
+          CREATE ROLE ritc_guardian_combined_worker LOGIN PASSWORD 'fixture-only' NOSUPERUSER NOBYPASSRLS;
+          GRANT ritc_guardian_verifier, ritc_worker TO ritc_guardian_combined_worker;
+          SQL
       - run: npm test && npm run test:integration
         working-directory: service
         env:
@@ -77,6 +91,7 @@ jobs:
         env:
           OPERATIONS_TEST_DATABASE_URL: postgresql://ritc_runtime:fixture-only@127.0.0.1:5432/ritc_operations
           OPERATIONS_TEST_ADMIN_DATABASE_URL: postgresql://postgres:fixture-only@127.0.0.1:5432/ritc_operations
+          TEST_WORKER_DATABASE_URL: postgresql://ritc_test_worker:fixture-only@127.0.0.1:5432/ritc_operations
   ios:
     runs-on: macos-15
     timeout-minutes: 100
