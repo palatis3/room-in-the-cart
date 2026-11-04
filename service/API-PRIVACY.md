@@ -64,7 +64,7 @@ All of the subject's memberships, including previously revoked memberships, are 
 
 `POST /v1/households/{householdId}/exit` accepts `{clientKey,confirm:true,disposition:<one household choice above>}`. It returns `{householdId,left:true,accountDeleted:false}`. It requires recent authentication, closes that membership/grants/windows and preserves the service identity, other memberships and records. Same-identity exact-key retries return the same result without needing the revoked device. It does not erase records or child profiles; `eraseChildProfiles` must be empty, and unresolved sole guardianship returns `guardian_disposition_required`.
 
-Errors include `reauthentication_required` (401), `deletion_unavailable` (503), `organizer_disposition_required`, `shop_disposition_stale`, `guardian_disposition_required` (409), and `unavailable` (404). Missing privileged provider, numeric retention policy or trusted journal port rejects deletion before any job or access mutation. An outage after acceptance leaves a durable pending job, never a false completion.
+Errors include `reauthentication_required` (401), `deletion_unavailable` and `deletion_journal_busy` (503), `organizer_disposition_required`, `shop_disposition_stale`, `guardian_disposition_required` (409), and `unavailable` (404). Missing privileged provider, numeric retention policy or trusted journal port rejects deletion before any job or access mutation. A busy journal can interrupt acceptance or its committed observation. Check the saved receipt before submitting again. A committed acceptance stays pending until the worker records it.
 
 ## Runtime configuration
 

@@ -13,6 +13,7 @@ import type {
  DurableJournalPins,DurableUncertaintyStore,ImmutableRecordTransport,JournalCall,OperationInspection,
  RecordIdentity,StoredRecord,UncertaintyClaim,UncertaintyOperation,
 } from './privacy-journal-durable-contract.js';
+import {JournalWriterBusy} from './privacy-journal-durable-contract.js';
 
 const hash=z.string().regex(/^[0-9a-f]{64}$/);
 const uuid=z.string().uuid();
@@ -128,6 +129,24 @@ export async function createPostgresJournalAuthority(configuration:PostgresJourn
  function assertActive(state:Origin){
   if(state.head.head.fenced||state.head.mode!=='active'||state.pending)throw Error('Independent journal origin is blocked');
  }
+ const writerBusy=Symbol('writer busy');
+ async function writerTransaction<T>(call:JournalCall,work:(db:Transaction,state:Origin)=>Promise<T>):Promise<T>{
+  const result=await transaction(checkpointPool,call,async db=>{
+   const state=await load(db,'write').catch(error=>{
+    // This is the initial lock read. No write for this command was dispatched.
+    if(error?.code==='55P03')throw new JournalWriterBusy();
+    throw error;
+   });
+   if(!state.head.head.fenced&&state.claim&&(
+    state.head.mode==='active'||state.head.mode==='pending'&&state.pending&&
+     state.pending.authorityExpiresAtUnixMs>await databaseClock(db)
+   ))return writerBusy;
+   assertActive(state);
+   return work(db,state);
+  });
+  if(result===writerBusy)throw new JournalWriterBusy();
+  return result;
+ }
  function assertHeld(state:Origin,identity:RecordIdentity,call:JournalCall){
   if(!state.claim||state.claim.attemptId!==call.attemptId||state.claim.claim.scopeDigest!==scopeDigest||
    state.claim.claim.eventId!==identity.eventId||state.claim.claim.transition!==identity.transition)throw Error('Journal uncertainty claim does not cover this attempt');
@@ -183,9 +202,7 @@ export async function createPostgresJournalAuthority(configuration:PostgresJourn
    const operation=operationSchema.parse(input);
    if(operation.scopeDigest!==scopeDigest)throw Error('Journal uncertainty scope conflict');
    if(intentBound!==undefined&&operation.transition!=='intent')throw Error('Intent capacity preflight requires an intent claim');
-   return transaction(checkpointPool,call,async db=>{
-    const state=await load(db,'write');assertActive(state);
-    if(state.claim)throw Error('Outstanding journal uncertainty claim');
+   return writerTransaction(call,async(db,state)=>{
     if(intentBound!==undefined){
      const existing=await db.query("SELECT 1 FROM ritc_checkpoint.admission WHERE lineage=$1 AND event_id=$2 AND transition='intent'",[pins.lineage,operation.eventId]);
      if(!existing.rowCount){
@@ -231,9 +248,7 @@ export async function createPostgresJournalAuthority(configuration:PostgresJourn
   },
   async reserveWorkerCapacity(jobInput,kindsInput,call){
    const jobId=uuid.parse(jobInput),kinds=workerKindsSchema.parse(kindsInput);
-   return transaction(checkpointPool,call,async db=>{
-    const state=await load(db,'write');assertActive(state);
-    if(state.claim)throw Error('Outstanding journal uncertainty claim');
+   return writerTransaction(call,async(db,state)=>{
     const rows=(await db.query("SELECT event_kind FROM ritc_checkpoint.admission WHERE lineage=$1 AND job_id=$2 AND transition='commit' AND event_kind IN ('acceptance','source_completed')",[pins.lineage,jobId])).rows;
     if(!rows.some(row=>row.event_kind==='acceptance')||rows.some(row=>row.event_kind==='source_completed'))throw Error('Worker allowance requires an accepted unfinished job');
     const existing=(await db.query('SELECT event_kind FROM ritc_checkpoint.worker_allowance WHERE lineage=$1 AND job_id=$2',[pins.lineage,jobId])).rows;

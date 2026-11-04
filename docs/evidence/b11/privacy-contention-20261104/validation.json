@@ -1,0 +1,57 @@
+{
+  "sourceSHA256": "dccce90914078f4ff49ab663deec34df80de6d20f37092696a61518d71533d22",
+  "sourceFiles": 314,
+  "baseCommit": "b278abd",
+  "migrations": "001–027",
+  "independentAuthorityMigrations": "001–003",
+  "environment": "Node 22.14 and PostgreSQL 17.11 using private local fixtures",
+  "runs": {
+    "unit": {
+      "tests": 345,
+      "passed": 344,
+      "failed": 0,
+      "skipped": 1,
+      "localLogSHA256": "a3d6f33836ffb2394b452327128961b0e52b20111794126f8876d50980fe9839"
+    },
+    "wire": {
+      "tests": 178,
+      "passed": 178,
+      "failed": 0,
+      "skipped": 0,
+      "localLogSHA256": "9a0e2da483313f9b9b58053d0d70a5953fd85a44782b00cdb233740e7913daac"
+    },
+    "observer": {
+      "tests": 13,
+      "passed": 13,
+      "failed": 0,
+      "skipped": 0,
+      "localLogSHA256": "26359bf010813ae67d87702102aff40e973447f4efa7da8bcd318e786e6e5269"
+    },
+    "operations": {
+      "tests": 15,
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0,
+      "localLogSHA256": "4b3ab3339096b96702fa971dad2077d22c1bc4db4249c2c87e776d0983d7db7f"
+    },
+    "authority": {
+      "tests": 13,
+      "passed": 13,
+      "failed": 0,
+      "skipped": 0,
+      "localLogSHA256": "f048e7099d74a11a4a0fecbf3dbf050a89d980442b7c28b2398931911507d820"
+    }
+  },
+  "observations": [
+    "A real checkpoint row lock timed out before the contender acquired a claim. The HTTPS refusal left the contender usable.",
+    "While an unrelated reservation was held, the application rolled back a fresh request and safely deferred receipt reconciliation. The worker deferred both reconciliation and a capacity reservation, released the reconciliation lease and made no provider call.",
+    "When the first reservation cleared, the same worker completed the pending job with one simulated provider call. An acknowledged receipt briefly deferred during a separate pending reservation and then returned its original completion.",
+    "The same application writer retried its original operation key and accepted the fresh request after the reservation cleared.",
+    "Pre-aborted calls did not poison the writer. Existing mutation-response loss, crash, expired reservation and fenced recovery regressions remained green."
+  ],
+  "scope": [
+    "The provider was simulated. The source transaction, observer, app and worker journal clients, HTTPS authority process, leases, reservations and independent checkpoint database were real local implementations.",
+    "The optional billing PostgreSQL unit skip is exercised in the wire suite.",
+    "Hosted provider verification, alert delivery, capacity succession and release activation remain separate."
+  ]
+}

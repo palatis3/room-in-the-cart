@@ -8,6 +8,7 @@ import {ServiceError} from './errors.js';
 import {assertWorkerRole} from './maintenance.js';
 import type {PrivacyJournalPort} from './privacy-journal.js';
 import type {DurablePrivacyJournalPort,JournalCall,WorkerJournalKind} from './privacy-journal-durable-contract.js';
+import {JournalWriterBusy} from './privacy-journal-durable-contract.js';
 import {PrivacyCall,privacyPhase,withPrivacyClient} from './privacy-call.js';
 const id=z.string().uuid(),secret=z.string().regex(/^[A-Za-z0-9_-]{43}$/);
 const shopChoice=z.discriminatedUnion('action',[
@@ -144,25 +145,41 @@ export class PrivacyMaintenance {
   const budget=z.number().int().min(1000).max(25000).parse(input.timeBudgetMs??20000);
   return this.bounded(input.signal,budget,async scope=>{
    const {call}=scope;
-   const acknowledge=(jobId:string)=>privacyPhase(call,phase=>journal.acknowledgeJob(jobId,phase));
+   const result={completed:0,retryScheduled:0,leaseLost:0,capacityDeferred:0,issuerMismatch:0,journalDeferred:0,receiptsCleared:0,jobsPurged:0};
+   const acknowledge=async(jobId:string)=>{
+    try{await privacyPhase(call,phase=>journal.acknowledgeJob(jobId,phase));return true;}
+    catch(error){
+     if(!(error instanceof JournalWriterBusy))throw error;
+     result.journalDeferred++;
+     return false;
+    }
+   };
    // Resume exact journal observations left behind by an interrupted request or
    // worker. A reconciliation lease cannot erase targets or finish a job.
    for(let i=0;i<batch;i++){
     const lease=randomUUID();
     const {job_id:jobId}=(await privacyQuery(this.pool,call,'SELECT ritc.privacy_claim_reconciliation($1) AS job_id',[lease])).rows[0];
     if(!jobId)break;
-    await acknowledge(jobId);
+    const acknowledged=await acknowledge(jobId);
     await privacyQuery(this.pool,call,'SELECT ritc.privacy_release_reconciliation($1,$2)',[jobId,lease]);
+    if(!acknowledged)break;
    }
-   const result={completed:0,retryScheduled:0,leaseLost:0,capacityDeferred:0,issuerMismatch:0,...await this.retireReceipts(call,batch)};
+   Object.assign(result,await this.retireReceipts(call,batch));
    const reserve='reserveWorkerCapacity' in journal?journal.reserveWorkerCapacity.bind(journal):undefined;
    const needs=async(jobId:string,lease:string)=> (await privacyQuery(this.pool,call,'SELECT * FROM ritc.privacy_worker_journal_needs($1,$2)',[jobId,lease])).rows[0];
    const capacity=async(jobId:string,kinds:readonly WorkerJournalKind[])=>{
-    if(!reserve||await privacyPhase(call,phase=>reserve(jobId,kinds,phase)))return true;
+    try{if(!reserve||await privacyPhase(call,phase=>reserve(jobId,kinds,phase)))return true;}
+    catch(error){
+     if(!(error instanceof JournalWriterBusy))throw error;
+     result.journalDeferred++;
+     return false;
+    }
     result.capacityDeferred++;
     return false;
    };
-   jobs:for(let i=0;i<batch;i++){
+   // End the batch on contention. Capacity refusals still let later jobs use
+   // their already reserved space.
+   jobs:for(let i=0;i<batch&&result.journalDeferred===0;i++){
     const lease=randomUUID(),job=(await privacyQuery(this.pool,call,'SELECT * FROM ritc.privacy_claim($1)',[lease])).rows[0];
     if(!job)break;
     if(this.options.issuer&&job.issuer!==this.options.issuer){result.issuerMismatch++;continue;}
@@ -178,10 +195,10 @@ export class PrivacyMaintenance {
        if(required.target_remaining&&!await capacity(job.job_id,['target_erased']))continue jobs;
       }
       erased=(await privacyQuery(this.pool,call,'SELECT ritc.privacy_erase_target($1,$2) AS erased',[job.job_id,lease])).rows[0].erased;
-      await acknowledge(job.job_id);
+      if(!await acknowledge(job.job_id))return result;
      }
      if(erased){
-      await acknowledge(job.job_id);
+      if(!await acknowledge(job.job_id))return result;
       if(!provider)failure='provider_configuration';
       else{
        if(reserve){
@@ -203,7 +220,7 @@ export class PrivacyMaintenance {
      if(required.pending_needed&&!await capacity(job.job_id,['source_pending']))continue jobs;
     }
     const committed=(await privacyQuery(this.pool,call,'SELECT ritc.privacy_finish($1,$2,$3,$4) AS committed',[job.job_id,lease,deleted,failure])).rows[0].committed;
-    if(committed)await acknowledge(job.job_id);
+    if(committed&&!await acknowledge(job.job_id))return result;
     if(!committed)result.leaseLost++;
     else if(deleted)result.completed++;
     else result.retryScheduled++;

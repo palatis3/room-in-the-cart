@@ -9,6 +9,7 @@ import {
 import type {
  CheckpointAuthority,DurableJournalPins,DurableUncertaintyStore,ImmutableRecordTransport,JournalCall,
 } from './privacy-journal-durable-contract.js';
+import {JournalWriterBusy} from './privacy-journal-durable-contract.js';
 import {MAX_JOURNAL_BYTES as maxRecordBytes} from './privacy-journal-limits.js';
 
 const path='/v1/journal';
@@ -34,7 +35,9 @@ const commandSchema=z.discriminatedUnion('action',[
 const envelopeSchema=z.object({version:z.literal(1),scopeDigest:hash,attemptId:z.string().min(1).max(100),
  deadlineUnixMs:z.number().int().positive().max(Number.MAX_SAFE_INTEGER),command:commandSchema}).strict();
 const responseSchema=z.object({value:z.unknown()}).strict();
+const busyResponse=z.object({error:z.literal('journal_writer_busy')}).strict();
 type Command=z.infer<typeof commandSchema>;
+const canRefuseWriter=(action:Command['action'])=>action==='begin'||action==='begin_intent'||action==='worker_capacity';
 interface Ports {readonly authority:CheckpointAuthority;readonly records:ImmutableRecordTransport;readonly uncertainty:DurableUncertaintyStore}
 
 function bytes(value:string):Buffer{
@@ -109,8 +112,13 @@ export function journalAuthorityHandler(configuration:Ports&{readonly pins:Durab
    const input=await transport.run(async()=>envelopeSchema.parse(await readJSON(req)));
    if(input.scopeDigest!==scopeDigest){reject(403);return;}
    const call={attemptId:input.attemptId,deadlineUnixMs:Math.min(input.deadlineUnixMs,transport.call.deadlineUnixMs),signal:transport.call.signal};
-   const value=await privacyPhase(call,phase=>dispatch(input.command,phase));
-   respond(200,{value});
+   try{
+    const value=await privacyPhase(call,phase=>dispatch(input.command,phase));
+    respond(200,{value});
+   }catch(error){
+    if(error instanceof JournalWriterBusy&&canRefuseWriter(input.command.action))respond(409,{error:'journal_writer_busy'});
+    else throw error;
+   }
   }catch{reject(503);}
   finally{transport.call.signal.removeEventListener('abort',stopBody);transport.dispose();active--;}
  };
@@ -135,6 +143,9 @@ export function createHTTPSJournalAuthority(configuration:{readonly pins:Durable
    scope.check();
    const req=request(endpoint,{agent,method:'POST',signal:call.signal,headers:{Authorization:credential,
     'Content-Type':'application/json','Content-Length':Buffer.byteLength(body)}},res=>{
+    if(res.statusCode===409&&res.headers['content-type']==='application/json'&&canRefuseWriter(command.action)){
+     readJSON(res).then(value=>{busyResponse.parse(value);reject(new JournalWriterBusy());}).catch(reject);return;
+    }
     if(res.statusCode!==200||res.headers['content-type']!=='application/json'){
      res.destroy();reject(Error('Independent journal request rejected'));return;
     }

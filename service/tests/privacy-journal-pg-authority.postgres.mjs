@@ -184,7 +184,7 @@ test('one claim wins across independent clients and cannot be removed by a diffe
   const calls=[time(),time()];
   const results=await Promise.allSettled([first.uncertainty.begin(input,calls[0]),second.uncertainty.begin(input,calls[1])]);
   assert.equal(results.filter(result=>result.status==='fulfilled').length,1);
-  assert.match(results.find(result=>result.status==='rejected').reason.message,/Outstanding journal uncertainty claim/);
+  assert.equal(results.find(result=>result.status==='rejected').reason.code,'deletion_journal_busy');
   const competing=await r.open({pins:{...r.f.pins,deploymentPrincipal:'rotated-writer'}});
   try{await assert.rejects(competing.authority.readCurrent(nonce(time())),/pinned to another deployment/);}finally{await competing.close();}
   const winner=results.findIndex(result=>result.status==='fulfilled');
@@ -435,7 +435,7 @@ test('crash restart preserves exact admitted versions, claims, and expired reser
   const observed=await reopened.authority.inspectOperation(ticket.operationId,nonce(time()));
   assert.deepEqual(observed.value.receipt,proof);
   assert.deepEqual(await reopened.records.readExact(stored,time()),content);
-  await assert.rejects(reopened.uncertainty.begin({scopeDigest:admitted.scope,eventId:ticket.record.eventId,transition:'intent'},time()),/Outstanding journal uncertainty claim/);
+  await assert.rejects(reopened.uncertainty.begin({scopeDigest:admitted.scope,eventId:ticket.record.eventId,transition:'intent'},time()),{code:'deletion_journal_busy'});
   await delay(Math.max(0,pending.ticket.authorityExpiresAtUnixMs-Date.now()+10));
   assert.equal((await blocked.authority.inspectOperation(pending.ticket.operationId,nonce(time()))).value.state,'blocked');
   assert.equal((await blocked.authority.readCurrent(nonce(time()))).value.head.seq,0);
@@ -771,6 +771,110 @@ test('deployed runtime entry points bind deletion to the registered source and r
   }));
   await Promise.all(workers.map(worker=>worker.close()));
   await authority?.stop();
+  await source.close();
+ }
+});
+
+test('overlapping HTTPS writers defer without poisoning the losing app or worker',async()=>{
+ const source=await sourceCluster(),runtime=source.pool(source.runtime),workerPool=source.pool(source.worker);
+ const writing=gate(),resume=gate();
+ let server,remote,observer,winnerWrite;
+ try{
+  const {r}=await recoveryFixture(source);
+  const {pins}=r.f,writerToken=randomBytes(32).toString('base64url');
+  const path=join(dir,'contention-authority.json');
+  const database=user=>({host:dir,port:55433,database:'postgres',user});
+  await writeFile(path,JSON.stringify({pins,writerToken,writerPublicKey:r.f.writerKeys.publicKeyPEM,
+   authorityPrivateKey:pem(r.f.authorityKeys.privateKey),checkpointDatabase:database(checkpointRole),
+   recordDatabase:database(objectRole),listen:{host:'127.0.0.1',port:0},tls:{key:tls.key.toString(),cert:tls.cert}}),
+   {mode:0o600,flag:'wx'});
+  server=await startAuthority(path);
+  remote=createHTTPSJournalAuthority({pins,origin:server.origin,writerToken,ca:tls.cert});
+  observer=createPostgresCommittedSource({pins,authorityPublicKey:r.f.authorityKeys.publicKey,...source.configuration});
+  const ports={...remote,source:observer.source};
+  const app=r.f.adapter(ports),worker=r.f.adapter(ports);
+  const winner=r.f.adapter({...ports,records:{...remote.records,async putExact(...args){
+   writing.resolve();
+   await resume.promise;
+   return remote.records.putExact(...args);
+  }}});
+
+  const issuer='https://contention.fixture.invalid/auth/v1',subject=randomUUID(),sessionId=randomUUID();
+  const identity={issuer,subject,sessionId,expiresAt:new Date(Date.now()+60_000),authenticatedAt:new Date(),authenticatedMethod:'otp'};
+  const input={clientKey:randomUUID(),statusToken:randomBytes(32).toString('base64url'),confirm:true,households:[]};
+  await source.owner.query('INSERT INTO auth.sessions(id,user_id) VALUES($1,$2)',[sessionId,subject]);
+  const repository=new HouseholdRepository(runtime,{allowChildNetwork:false,noticeVersion:'fixture',sessionStatus:new SupabaseSessionVerifier(issuer)});
+  const policy={receiptRetentionDays:1,erasureMarkerRetentionDays:2,verifiedBackupRetentionDays:1};
+  let providerDeletes=0;
+  const provider={assertAvailable:async()=>{},deleteAccount:async candidate=>{
+   assert.equal(candidate,subject);
+   providerDeletes++;
+  }};
+  const privacy=new PrivacyService(repository,{provider,policy,journal:app.port});
+  const maintenance=new PrivacyMaintenance(workerPool,{provider,journal:worker.port,issuer});
+  // Leave a genuine committed acceptance for the reconciliation worker, as
+  // when the accepting process exits after COMMIT and before observing it.
+  const interrupted=new PrivacyService(repository,{provider,policy,journal:{...app.port,
+   afterCommit:async()=>{throw Error('fixture stopped before observation');}}});
+  await assert.rejects(interrupted.request(identity,input),/fixture stopped before observation/);
+
+  const busy={code:'deletion_journal_busy'};
+  const blocker=await owner.connect();
+  try{
+   await blocker.query('BEGIN');
+   await blocker.query('SELECT 1 FROM ritc_checkpoint.origin WHERE lineage=$1 FOR UPDATE',[pins.lineage]);
+   await assert.rejects(app.port.beforeCommit(r.f.event(),time()),busy);
+   assert.equal(app.isPoisoned(),false);
+  }finally{
+   await blocker.query('ROLLBACK');
+   blocker.release();
+  }
+
+  winnerWrite=winner.port.beforeCommit(r.f.event(),time());
+  winnerWrite.catch(()=>{});
+  await Promise.race([writing.promise,winnerWrite.then(()=>{throw Error('Fixture did not reach its write gate');})]);
+  assert.equal((await app.capacity(time())).mode,'pending');
+  const other={...identity,subject:randomUUID(),sessionId:randomUUID()};
+  const another={...input,clientKey:randomUUID(),statusToken:randomBytes(32).toString('base64url')};
+  await source.owner.query('INSERT INTO auth.sessions(id,user_id) VALUES($1,$2)',[other.sessionId,other.subject]);
+  await assert.rejects(privacy.request(other,another),busy);
+  assert.equal((await source.owner.query('SELECT 1 FROM ritc.privacy_job WHERE job_id=$1',[another.clientKey])).rowCount,0);
+  await assert.rejects(privacy.status(input.clientKey,input.statusToken),busy);
+  await assert.rejects(worker.port.reserveWorkerCapacity(input.clientKey,['source_completed'],time()),busy);
+  const deferred=await maintenance.run({batchSize:1});
+  assert.equal(deferred.journalDeferred,1);
+  assert.equal(deferred.retryScheduled,0);
+  assert.equal(providerDeletes,0);
+  assert.equal((await source.owner.query('SELECT lease_id FROM ritc.privacy_job WHERE job_id=$1',[input.clientKey])).rows[0].lease_id,null);
+  assert.equal(app.isPoisoned(),false);
+  assert.equal(worker.isPoisoned(),false);
+
+  resume.resolve();
+  await winnerWrite;
+  const done=await maintenance.run({batchSize:1});
+  assert.equal(done.completed,1);
+  assert.equal(done.journalDeferred,0);
+  assert.equal(providerDeletes,1);
+  const receipt=await privacy.status(input.clientKey,input.statusToken);
+  assert.equal(receipt.status,'complete');
+  assert.equal(receipt.providerAccountDeleted,true);
+  assert.equal((await app.capacity(time())).usedRecords,4);
+
+  const context=time();
+  const pending=await reserve(r,remote,r.f.event(),'intent',context);
+  await assert.rejects(privacy.status(input.clientKey,input.statusToken),busy);
+  assert.equal(app.isPoisoned(),false);
+  const stored=await remote.records.putExact(pending.ticket,pending.content,context);
+  const proof=await remote.authority.publish(pending.ticket,stored,nonce(context));
+  await remote.uncertainty.complete(pending.claim,proof,context);
+  assert.equal((await privacy.status(input.clientKey,input.statusToken)).status,'complete');
+  assert.equal((await privacy.request(other,another)).status,'pending');
+ }finally{
+  resume.resolve();
+  await winnerWrite?.catch(()=>{});
+  remote?.close();
+  await server?.stop();
+  await Promise.all([observer?.close(),runtime.end(),workerPool.end()]);
   await source.close();
  }
 });

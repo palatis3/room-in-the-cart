@@ -179,6 +179,7 @@ test('real adapter: pre-aborted or expired calls initiate no remote mutation or 
     const c=call();if(variant==='abort')c.controller.abort();else c.deadlineUnixMs=Date.now()-1;
     const mutations=f.mutations;
     await assert.rejects(()=>phase==='before'?adapter.port.beforeCommit(a,c):phase==='after'?adapter.port.afterCommit(a.eventId,c):adapter.port.acknowledgeJob(a.payload.jobId,c));
+    assert.equal(adapter.isPoisoned(),false);
     assert.equal(f.mutations,mutations);assert.equal(f.acknowledgements.length,0);
   });
 });

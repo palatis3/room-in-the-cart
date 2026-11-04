@@ -1,5 +1,11 @@
 import type {KeyObject} from 'node:crypto';
 import type {PrivacyJournalEvent, PrivacyJournalHead} from './privacy-journal.js';
+import {ServiceError} from './errors.js';
+
+/** A definite contention response. The rejected call did not acquire a claim or allowance. */
+export class JournalWriterBusy extends ServiceError {
+ constructor(){super(503,'deletion_journal_busy','The deletion journal is busy. Check any saved receipt and try again.');}
+}
 
 /** One caller-owned deadline. Every implementation must pass signal to its actual I/O. */
 export interface JournalCall {

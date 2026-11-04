@@ -3,6 +3,7 @@ import {z} from 'zod';
 import {journalCanonical,journalHash,validatePrivacyRestoreEvents,type PrivacyJournalEvent} from './privacy-journal.js';
 import {MAX_JOURNAL_BYTES as MAX_BYTES,MAX_JOURNAL_RECORDS as MAX_RECORDS} from './privacy-journal-limits.js';
 import {ServiceError} from './errors.js';
+import {JournalWriterBusy} from './privacy-journal-durable-contract.js';
 import type {
  AdmittedHead,AdmissionReceipt,AuthorityCall,JournalCapacity,
  DurableJournalPins,DurablePrivacyJournalConfiguration,DurablePrivacyJournalPort,
@@ -138,9 +139,11 @@ export function createDurablePrivacyJournal(configuration:DurablePrivacyJournalC
   if(parsed.scopeDigest!==scopeDigest||parsed.authorityKeyId!==pins.authorityKeyId||parsed.requestNonce!==call.requestNonce)throw Error('Independent observation scope or freshness conflict');
   const {authoritySignature,...body}=parsed;verifySignature(body,authoritySignature,authorityPublicKey);return immutable(parsed.value);
  }
- async function current(call:JournalCall):Promise<AdmittedHead>{
+ async function current(call:JournalCall,readOnly=false):Promise<AdmittedHead>{
   const request=authorityCall(call),value=envelope(await step(call,()=>authority.readCurrent(request)),admittedSchema,request);
-  verifyHeadPins(value,pins);active(value);return value;
+  verifyHeadPins(value,pins);
+  if(readOnly&&!value.head.fenced&&value.mode==='pending'&&value.pendingOperation)throw new JournalWriterBusy();
+  active(value);return value;
  }
  function event(input:unknown):PrivacyJournalEvent{
   const value=eventSchema.parse(copied(input));
@@ -223,8 +226,8 @@ export function createDurablePrivacyJournal(configuration:DurablePrivacyJournalC
   if(held.scopeDigest!==proof.scopeDigest||held.eventId!==proof.record.eventId||held.transition!==proof.record.transition)throw Error('Uncertainty completion proof binding conflict');
   await step(call,()=>uncertainty.complete(held,proof,call));
  }
- async function covered(proof:AdmissionReceipt,call:JournalCall):Promise<void>{
-  const head=await current(call);
+ async function covered(proof:AdmissionReceipt,call:JournalCall,readOnly=false):Promise<void>{
+  const head=await current(call,readOnly);
   if(head.generation!==proof.admitted.generation||head.authorityRevision<proof.admitted.authorityRevision||head.head.seq<proof.record.seq||head.head.seq===proof.record.seq&&head.head.hash!==proof.record.recordHash)throw Error('Receipt is not covered by current active independent head');
  }
  async function afterCommit(eventId:string,call:JournalCall,requiredJobId?:string):Promise<void>{
@@ -243,7 +246,11 @@ export function createDurablePrivacyJournal(configuration:DurablePrivacyJournalC
  }
  async function guarded<T>(call:JournalCall,work:(owned:JournalCall)=>Promise<T>):Promise<T>{
   if(poisoned)throw Error('Durable journal requires explicit fenced reconciliation');
-  try{return await withOwnedCall(call,now,work);}catch(error){if(!(error instanceof JournalCapacityUnavailable))poisoned=true;throw error;}
+  let started=false;
+  try{return await withOwnedCall(call,now,owned=>{started=true;return work(owned);});}catch(error){
+   if(started&&!(error instanceof JournalCapacityUnavailable||error instanceof JournalWriterBusy))poisoned=true;
+   throw error;
+  }
  }
  const port:DurablePrivacyJournalPort=Object.freeze({configurationId:pins.configurationId,
   reserveWorkerCapacity(jobId:string,kinds:readonly WorkerJournalKind[],call:JournalCall):Promise<boolean>{
@@ -279,7 +286,7 @@ export function createDurablePrivacyJournal(configuration:DurablePrivacyJournalC
     if(new Set(ids).size!==ids.length)throw Error('Duplicate unacknowledged source event');
     if(!ids.length){
      const proof=await find(acceptance,'commit',owned);if(!proof)throw Error('Acknowledged job has no durable acceptance');
-     await covered(proof,owned);
+     await covered(proof,owned,true);
     }
     for(const id of ids)await afterCommit(id,owned,jobId);
    });

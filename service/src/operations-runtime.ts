@@ -67,7 +67,7 @@ export function createOperationsRuntime(environment:NodeJS.ProcessEnv=process.en
    const options={batchSize:OPERATIONS_BATCH_SIZE,signal};
    const deletionResult=mode==='run'&&privacyJobProcessingEnabled?await privacy.run({...options,timeBudgetMs:8000}):null;
    const privacyResult=mode==='run'?(deletionResult??await privacy.cleanup(options)):null;
-   const privacyAttention=deletionResult&&(deletionResult.capacityDeferred||deletionResult.issuerMismatch||deletionResult.leaseLost);
+   const privacyAttention=deletionResult&&(deletionResult.capacityDeferred||deletionResult.journalDeferred||deletionResult.issuerMismatch||deletionResult.leaseLost);
    signal.throwIfAborted();
    const guardianResult=mode==='run'?(await pool.query('SELECT * FROM ritc.guardian_housekeeping($1,$2,$3)',[OPERATIONS_BATCH_SIZE,guardianPolicy?.pendingHours??null,guardianPolicy?.evidenceDays??null])).rows[0]:null;
    signal.throwIfAborted();

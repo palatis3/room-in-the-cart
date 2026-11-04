@@ -4,9 +4,15 @@ The complete production app remains the objective. The current checkpoint below 
 
 ## Current checkpoint — November 4
 
+Concurrent journal writers now distinguish a definite refusal from a lost response. The second app request rolls back and can retry using its saved operation key. The worker defers without advancing a blocked step and reports `journalDeferred`. A pre-aborted call leaves its writer usable. Lost responses after a dispatched mutation still retain the original recovery boundary.
+
+The [contention validation](evidence/b11/privacy-contention-20261104/validation.json) covers a PostgreSQL lock timeout, an overlapping HTTPS reservation, receipt polling during that reservation and worker reconciliation after it clears. The app and worker complete the retry using the same writer instances. The next journal release gate is succession for a lineage approaching capacity, including backup replay across the transition.
+
+## Previous checkpoint — November 4, opt-in runtime
+
 Migration 027 binds the normal application and operations entry points to the registered source. Acceptance and processing are independently opt-in. Each enabled runtime checks the dedicated observer and verifies a fresh signed capacity report from the HTTPS authority. The worker reports an alert at 80% of used plus reserved records or bytes and rejects any claimed job with a different identity issuer before erasing data or calling the provider.
 
-The [runtime validation](evidence/b11/privacy-runtime-20261104/validation.json) covers a signed application request, a real two-database journal, a worker run against a simulated provider and the completed receipt. It also covers unavailable and blocked states. Hosted verification, independent backup and restore, real provider testing, and delivery of capacity alerts remain release gates. Before enabling hosted deletion, address normal writer contention without poisoning the losing writer and rehearse succession for a lineage approaching capacity.
+The [runtime validation](evidence/b11/privacy-runtime-20261104/validation.json) covers a signed application request, a real two-database journal, a worker run against a simulated provider and the completed receipt. It also covers unavailable and blocked states. Hosted verification, independent backup and restore, real provider testing, and delivery of capacity alerts remain release gates. Before enabling hosted deletion, rehearse succession for a lineage approaching capacity.
 
 ## Previous checkpoint — November 4, worker capacity
 
