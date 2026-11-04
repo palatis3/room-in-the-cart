@@ -5,6 +5,11 @@ on:
   pull_request:
   workflow_dispatch:
   workflow_call:
+    inputs:
+      require_release_metadata:
+        description: Reject missing production support, policy and Apple product metadata
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
@@ -158,6 +163,7 @@ jobs:
       actions: read
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+      REQUIRE_RELEASE_METADATA: ${{ inputs.require_release_metadata }}
     steps:
       - uses: actions/checkout@v4
       - name: Initialize Swift security analysis
@@ -179,7 +185,13 @@ jobs:
             COMPILATION_CACHE_ENABLE_CACHING=NO SWIFT_ENABLE_COMPILE_CACHE=NO \
             SWIFT_USE_INTEGRATED_DRIVER=NO build 2>&1 | tee .build/ReleaseBuild.log
       - name: Verify the compiled iPhone app and embedded extensions
-        run: python3 scripts/check_built_app.py .build/ReleaseDerivedData/Build/Products/Release-iphoneos/RoomInTheCart.app --configuration Release
+        shell: bash
+        run: |
+          args=(--configuration Release)
+          if [[ "$REQUIRE_RELEASE_METADATA" == true ]]; then
+            args+=(--require-release-metadata)
+          fi
+          python3 scripts/check_built_app.py .build/ReleaseDerivedData/Build/Products/Release-iphoneos/RoomInTheCart.app "${args[@]}"
       - name: Analyze Swift security findings
         uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
         with:

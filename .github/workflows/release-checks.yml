@@ -18,6 +18,8 @@ jobs:
       actions: read
       security-events: write
     uses: ./.github/workflows/ci.yml
+    with:
+      require_release_metadata: true
   security:
     name: Source security
     permissions:
