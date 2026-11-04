@@ -5041,6 +5041,22 @@
         }
       }
     },
+    "The dinner and its serving groups move together. Grocery quantities and separate protected reservations stay as saved. Review any cook instructions already shared for this dinner.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The dinner and its serving groups move together. Grocery quantities and separate protected reservations stay as saved. Review any cook instructions already shared for this dinner."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cena y sus grupos de porciones se mueven juntos. Las cantidades de compra y las reservas protegidas por separado se mantienen tal como se guardaron. Revisa las instrucciones de cocina que ya compartiste para esta cena."
+          }
+        }
+      }
+    },
     "The entered cap is already the amount available for its scope. A recorded reserve is not subtracted again.": {
       "localizations": {
         "en": {

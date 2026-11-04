@@ -41,6 +41,7 @@ import DeviceSurfaces
                         guardianChild.enforcePrivacyBoundary(adult: household, access: access, surfaces: surfaces)
                     } else if !access.unlocked { surfaces.background() }
                     navigation.bind(app: model, ledger: ledger, household: household, access: access)
+                    pickup.bindCookLedger(ledger)
                     membership.bind(to: household)
                     surfaces.bind(ledger: ledger, pickup: pickup, household: household, access: access,
                                   sceneActive: scenePhase == .active && !guardianChild.presented)

@@ -129,9 +129,9 @@ extension PickupModel {
         guard let value = journey, value.id == copy.shopID, !saving, !hasPendingSave,
               handoffCopy(channel: copy.channel, versionID: copy.versionID, language: copy.language) == copy else { return false }
         if copy.channel == .retailer { return hasCurrentBasketStockBasis && frozenSnapshot?.id == copy.versionID }
-        guard let note = value.notes.last, note.id == copy.versionID, let review = note.reviewedHandoff,
+        guard let current = cookJourney, let note = value.notes.last, note.id == copy.versionID, let review = note.reviewedHandoff,
               let zone = TimeZone(identifier: review.timeZoneID) else { return false }
-        let pieces = PickupCookProjection.pieces(journey: value, allocation: allocation, language: note.language, timeZone: zone)
+        let pieces = PickupCookProjection.pieces(journey: current, allocation: allocation, language: note.language, timeZone: zone)
         return pieces == review.pieces && (!review.includesBudget || review.budget == result.map { PickupCookProjection.budgetText($0, language: note.language) })
     }
 
@@ -254,6 +254,7 @@ struct PickupRecipientSection: View {
             .onChange(of: destinationConfirmed) { _, _ in resetReview() }
             .onChange(of: privateWordingConfirmed) { _, _ in resetReview() }
             .onChange(of: scenePhase) { _, value in if value != .active { privateWordingConfirmed = false; resetReview() } }
+            .onReceive(model.cookLedgerRevisions) { _ in if channel == .cook { resetReview() } }
         }
     }
     private func resetReview() { reviewRevision = nil; copied = false }

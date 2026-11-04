@@ -7,6 +7,9 @@ struct DinnerOccurrenceView: View {
     @State private var date = Date()
     @State private var scheduled = false
     @State private var showPreview = false
+    @State private var calendarZone = TimeZone.current.identifier
+    @State private var calendarRevision: UUID?
+    @State private var planningRevision: UUID?
     private var meal: MealOccurrence? { model.shop?.mealOccurrences.first { $0.id == occurrenceID && $0.removedAt == nil } }
     var body: some View {
         Group {
@@ -20,6 +23,7 @@ struct DinnerOccurrenceView: View {
     private var occurrenceForm: some View {
         Form {
             if let meal {
+                let proposedDay = try? DinnerEntry.date(date, zone: calendarZone, scheduled: scheduled)
                 Section {
                     Text(meal.title).font(.title2.bold())
                     Text(dinnerFormat("Servings: %@", meal.servings.description))
@@ -34,14 +38,25 @@ struct DinnerOccurrenceView: View {
                 Section { DinnerAwayCarryoverLink(model: model, occurrenceID: meal.id) }
                 Section(dinnerText("Move this dinner")) {
                     Toggle(dinnerText("Assign a date"), isOn: $scheduled)
-                    if scheduled { DatePicker(dinnerText("Dinner date"), selection: $date, displayedComponents: .date) }
-                    Text(model.shop?.basis.timeZoneIdentifier ?? "")
+                    if scheduled {
+                        DatePicker(dinnerText("Dinner date"), selection: $date, displayedComponents: .date)
+                            .environment(\.timeZone, TimeZone(identifier: calendarZone) ?? .current)
+                            .accessibilityIdentifier("dinnerMoveDate")
+                    }
+                    Text(calendarZone)
                     Button(dinnerText("Preview calendar change")) {
                         do {
                             guard let shop = model.shop else { return }
-                            showPreview = model.prepare([.move(occurrenceID: meal.id, day: try DinnerEntry.date(date, zone: shop.basis.timeZoneIdentifier, scheduled: scheduled))])
+                            guard calendarRevision == shop.revisionID, planningRevision == model.state.revisionID else {
+                                resetCalendarDraft()
+                                throw DinnerPlanningError.stalePreview
+                            }
+                            let day = try DinnerEntry.date(date, zone: calendarZone, scheduled: scheduled)
+                            guard day != meal.scheduledDay else { return }
+                            showPreview = model.prepare([.move(occurrenceID: meal.id, day: day)], expectedRevision: calendarRevision)
                         } catch { model.report(error) }
-                    }.disabled(!model.editable)
+                    }.disabled(!model.editable || calendarRevision == nil || proposedDay == meal.scheduledDay)
+                        .accessibilityIdentifier("dinnerMoveReview")
                 }
                 Section(dinnerText("Portions and needs")) {
                     NavigationLink(dinnerText("Edit quantities manually")) { DinnerManualAdjustmentView(model: model, meal: meal) }
@@ -61,8 +76,20 @@ struct DinnerOccurrenceView: View {
             } else { Text(dinnerText("This chosen dinner is no longer available.")) }
             DinnerFeedback(model: model)
         }.navigationTitle(dinnerText("Chosen dinner")).dinnerAccess(model)
-            .onAppear { if let day = meal?.scheduledDay { scheduled = true; date = day.date ?? date } }
+            .onAppear(perform: resetCalendarDraft)
+            .onChange(of: showPreview) { _, presented in
+                if !presented, calendarRevision != model.shop?.revisionID { resetCalendarDraft() }
+            }
             .dinnerApplyPresentation(model, presented: $showPreview)
+    }
+
+    private func resetCalendarDraft() {
+        let day = meal?.scheduledDay
+        scheduled = day != nil
+        date = day?.date ?? Date()
+        calendarZone = day?.timeZoneIdentifier ?? model.shop?.basis.timeZoneIdentifier ?? TimeZone.current.identifier
+        calendarRevision = model.shop?.revisionID
+        planningRevision = model.state.revisionID
     }
 }
 struct DinnerManualAdjustmentView: View {

@@ -463,8 +463,9 @@ import XCTest
 
     func testEnglishMealWeekListAndGridShowDatedProtectedLunch() { verifyDatedMealWeek(spanish: false) }
     func testSpanishMealWeekListAndGridShowDatedProtectedLunch() { verifyDatedMealWeek(spanish: true) }
+    func testDinnerMoveAcrossDisplayedWeeksKeepsLunchAndOccurrence() { verifyDatedMealWeek(spanish: false, moveAcrossWeek: true) }
 
-    private func verifyDatedMealWeek(spanish: Bool) {
+    private func verifyDatedMealWeek(spanish: Bool, moveAcrossWeek: Bool = false) {
         func copy(_ english: String, _ translation: String) -> String { spanish ? translation : english }
         // Xcode's newer accessibility snapshots can trip iOS 17's logging
         // quarantine inside XCTAutomationSupport while querying these forms.
@@ -476,7 +477,7 @@ import XCTest
         let purpose = copy("School lunch", "Almuerzo escolar")
         let tab = copy("Dinners", "Cenas")
         let assignDate = copy("Assign a date", "Asignar fecha")
-        func applyFrom(_ editor: String) {
+        func applyFrom(_ editor: String, returnToPlan: Bool = true) {
             let apply = element("dinnerApply")
             tap(apply)
             XCTAssertTrue(apply.waitForNonExistence(timeout: 10))
@@ -484,7 +485,7 @@ import XCTest
             let backReady = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND hittable == true"), object: back)
             XCTAssertEqual(XCTWaiter.wait(for: [backReady], timeout: 10), .completed)
             back.tap()
-            dinnerRoot()
+            if returnToPlan { dinnerRoot() }
         }
         launch(reset: true, spanish: spanish)
         tap(app.tabBars.buttons[tab]); tap(element("dinnerStartPickup"))
@@ -494,8 +495,23 @@ import XCTest
         fill("4", into: "ledgerDinnerServings", replacing: true)
         fill(copy("Corn tortillas", "Tortillas"), into: copy("Ingredient name", "Nombre del ingrediente"))
         fill("8", into: copy("Amount, optional", "Cantidad, opcional"))
-        enableSwitch(assignDate)
+        if !moveAcrossWeek { enableSwitch(assignDate) }
         tap(element("ledgerReviewDinner")); applyFrom(copy("Manual dinner", "Cena manual"))
+        if moveAcrossWeek {
+            assertText("Unscheduled")
+            let meal = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "dinnerOccurrence-")).firstMatch
+            tap(meal)
+            enableSwitch(assignDate)
+            tap(element("dinnerMoveReview"))
+            assertText("Before: Unscheduled")
+            applyFrom("Chosen dinner", returnToPlan: false)
+            XCTAssertTrue(app.navigationBars[tab].waitForExistence(timeout: 8))
+            let protect = app.buttons["Protect a lunch or side"]
+            for _ in 0..<16 {
+                if protect.exists && protect.isHittable { break }
+                scrollContent(upward: false)
+            }
+        }
 
         tap(app.buttons[copy("Protect a lunch or side", "Proteger un almuerzo o acompañamiento")])
         fill(food, into: copy("Food name", "Nombre del alimento"), requireDone: true)
@@ -533,6 +549,60 @@ import XCTest
         app.terminate(); launch(reset: false, spanish: spanish)
         tap(app.tabBars.buttons[tab]); dinnerRoot()
         reveal(element(lunchID)); reveal(element(dinnerID))
+        if moveAcrossWeek {
+            moveMealToLaterWeek(dinnerID: dinnerID, lunchID: lunchID, dateFormatter: date)
+        }
+    }
+
+    private func moveMealToLaterWeek(dinnerID: String, lunchID: String, dateFormatter: DateFormatter) {
+        let movedReview = element("dinnerMoveReview")
+        let apply = element("dinnerApply")
+        let calendar = Calendar(identifier: .gregorian)
+        let today = Date()
+        let month = calendar.dateInterval(of: .month, for: today)!.start
+        let futureMonth = calendar.date(byAdding: .month, value: 2, to: month)!
+        let moved = calendar.date(byAdding: .day, value: 14, to: futureMonth)!
+        tap(element(dinnerID))
+        chooseTwoMonthsAhead(moved, pickerID: "dinnerMoveDate")
+        tap(movedReview)
+        assertText("Before: " + dateFormatter.string(from: today))
+        assertText("After: " + dateFormatter.string(from: moved))
+        assertText("Grocery quantities and separate protected reservations stay as saved.")
+        tap(element("dinnerCancelPreview"))
+        XCTAssertTrue(apply.waitForNonExistence(timeout: 10))
+        assertText(dateFormatter.string(from: today))
+        tap(movedReview)
+        assertText("After: " + dateFormatter.string(from: moved))
+        tap(apply)
+        XCTAssertTrue(apply.waitForNonExistence(timeout: 10))
+        assertText(dateFormatter.string(from: moved))
+        app.terminate(); launch(reset: false)
+        tap(app.tabBars.buttons["Dinners"]); dinnerRoot()
+        reveal(element(lunchID))
+        XCTAssertFalse(element(dinnerID).exists)
+        capture("Meal-week-original-lunch-after-move")
+        chooseTwoMonthsAhead(moved, pickerID: "dinnerWeekStart")
+        reveal(element(dinnerID))
+        XCTAssertFalse(element(lunchID).exists)
+        capture("Meal-week-same-dinner-on-new-date")
+    }
+
+    private func chooseTwoMonthsAhead(_ date: Date, pickerID: String) {
+        let picker = element(pickerID)
+        reveal(picker)
+        tap(picker.buttons.firstMatch)
+        let next = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] %@ OR identifier CONTAINS[c] %@", "Next Month", "NextMonth")).firstMatch
+        XCTAssertTrue(next.waitForExistence(timeout: 5), app.debugDescription)
+        next.tap()
+        next.tap()
+        let format = DateFormatter()
+        format.locale = Locale(identifier: "en_US")
+        format.dateFormat = "EEEE, MMMM d"
+        let day = app.datePickers.collectionViews.buttons[format.string(from: date)]
+        let visible = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND hittable == true"), object: day)
+        XCTAssertEqual(XCTWaiter.wait(for: [visible], timeout: 8), .completed, app.debugDescription)
+        day.tap()
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.07)).tap()
     }
 
     func testListCaptureOpensWithTypedDraftAndReopensAfterCancel() {

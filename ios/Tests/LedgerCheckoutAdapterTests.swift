@@ -110,6 +110,71 @@ final class LedgerCheckoutAdapterTests: XCTestCase {
         XCTAssertEqual(review.needs, repeated.needs)
     }
 
+    @MainActor func testCalendarMoveUpdatesCookCorrectionWithoutChangingPlacedPickup() async throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let ledger = LedgerModel(databaseURL: directory.appendingPathComponent("ledger.sqlite"))
+        let pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"))
+        await ledger.open(); await pickup.load()
+        pickup.bindCookLedger(ledger)
+        var shop = ShoppingLedger(title: "Family pickup", basis: basis())
+        let original = try MealDay(year: 2026, month: 11, day: 4, timeZoneIdentifier: shop.basis.timeZoneIdentifier)
+        let moved = try MealDay(year: 2026, month: 11, day: 12, timeZoneIdentifier: original.timeZoneIdentifier)
+        let occurrence = try shop.chooseMeal(.init(title: "Tacos", ingredients: [.init(name: "Wraps", quantity: quantity(6))]), on: original.date)
+        _ = try shop.addProtectedNeed(name: "Lunch wraps", quantity: quantity(2), purpose: "School lunch")
+        let seeded = await ledger.change(key: "seed-calendar-move") { $0.shops = [shop]; $0.selectedShopID = shop.id }
+        XCTAssertTrue(seeded)
+        let review = try LedgerCheckoutAdapter.review(shop: shop, workspaceRevision: ledger.revision, previous: nil)
+        let staged = try await LedgerCheckoutAdapter.apply(review, ledger: ledger, pickup: pickup)
+        XCTAssertTrue(staged)
+        let quoted = await pickup.setQuote(.init(scope: .wholeCheckout, context: review.context, pricing: .inclusiveTotal(.exact(.init(minorUnits: 600)))), cap: nil)
+        XCTAssertTrue(quoted)
+        let frozen = await pickup.freeze(); XCTAssertTrue(frozen)
+        let placed = await pickup.reportPlaced(); XCTAssertTrue(placed)
+        let initial = try XCTUnwrap(pickup.cookJourney)
+        let now = Date(), zone = TimeZone.current
+        let oldText = PickupCookProjection.text(journey: initial, allocation: pickup.allocation, result: nil, language: "en-US", at: now, timeZone: zone)
+        XCTAssertTrue(oldText.contains(original.iso8601))
+        let oldReview = CookHandoffReview(pieces: PickupCookProjection.pieces(journey: initial, allocation: pickup.allocation, language: "en-US", timeZone: zone),
+                                         timeZoneID: zone.identifier, includesBudget: false, customWording: false, budget: nil)
+        let note = PickupCookNote(id: UUID(), text: oldText, language: "en-US", createdAt: now, revision: initial.revision, reviewedHandoff: oldReview)
+        let saved = await pickup.change { $0.notes.append(note) }; XCTAssertTrue(saved)
+        let copy = try XCTUnwrap(pickup.handoffCopy(channel: .cook, versionID: note.id, language: "en-US"))
+        let sent = await pickup.markRecipient(copy, recipient: "Cook", acknowledge: false, reviewedRevision: try XCTUnwrap(pickup.journey?.revision))
+        XCTAssertTrue(sent)
+        let checkout = try XCTUnwrap(pickup.journey)
+        let workspaceID = try XCTUnwrap(ledger.sourceWorkspaceID)
+        let model = DinnerFeatureModel(store: ledger, access: { id in
+            .init(scope: .local(workspaceID: workspaceID), actorID: "local", shopID: id, assignedShopperID: "local",
+                  canPlan: true, canReadBudget: true, hasPaidTools: false, roleRevision: 0, verifiedAt: now, validUntil: now.addingTimeInterval(60))
+        }, phase: { _ in pickup.journey?.basket?.phase ?? .draft }, clock: { now })
+        XCTAssertTrue(model.prepare([.move(occurrenceID: occurrence, day: moved)]))
+        let applied = await model.applyPreview(); XCTAssertTrue(applied)
+        XCTAssertEqual(pickup.journey, checkout)
+        XCTAssertFalse(pickup.isCurrent(copy))
+        XCTAssertEqual(ledger.shop?.contributions, shop.contributions)
+        let current = try XCTUnwrap(pickup.cookJourney)
+        XCTAssertEqual(current.needs, checkout.needs)
+        let newText = PickupCookProjection.text(journey: current, allocation: pickup.allocation, result: nil, language: "en-US", at: now, timeZone: zone)
+        XCTAssertTrue(newText.contains(moved.iso8601))
+        XCTAssertFalse(newText.contains(original.iso8601))
+        XCTAssertEqual(pickup.handoffCopy(channel: .cook, versionID: note.id, language: "en-US")?.fullText, oldText)
+
+        let correctionReview = CookHandoffReview(pieces: PickupCookProjection.pieces(journey: current, allocation: pickup.allocation, language: "en-US", timeZone: zone),
+                                                timeZoneID: zone.identifier, includesBudget: false, customWording: false, budget: nil)
+        let correctionNote = PickupCookNote(id: UUID(), text: newText, language: "en-US", createdAt: now, revision: current.revision, reviewedHandoff: correctionReview)
+        let savedCorrection = await pickup.change { $0.notes.append(correctionNote) }; XCTAssertTrue(savedCorrection)
+        let currentCopy = try XCTUnwrap(pickup.handoffCopy(channel: .cook, versionID: correctionNote.id, language: "en-US"))
+        let correction = pickup.reviewedCorrection(currentCopy, recipient: "Cook", destinationConfirmed: true,
+                                                   privateWordingConfirmed: false, paid: true, reviewedRevision: pickup.journey?.revision)
+        guard case let .changes(added, removed, _) = correction else { return XCTFail("Expected the reviewed recipient correction") }
+        XCTAssertEqual(added, ["Tacos: \(moved.iso8601) · \(moved.timeZoneIdentifier)"])
+        XCTAssertEqual(removed, ["Tacos: \(original.iso8601) · \(original.timeZoneIdentifier)"])
+        XCTAssertEqual(pickup.journey?.basket, checkout.basket)
+        XCTAssertEqual(pickup.journey?.needs, checkout.needs)
+        XCTAssertEqual(pickup.journey?.recipientSends, checkout.recipientSends)
+    }
+
     func testNamedServingGroupsPartitionOneMealAndKeepStableNeedIdentities() throws {
         var shop = ShoppingLedger(basis: basis())
         let meal = MealTemplate(title: "Soup", servings: try Rational(6), ingredients: [MealIngredient(name: "Soup portions", quantity: quantity(6))], servingGroups: [ServingGroup(name: "Lunch", servings: try Rational(2), isProtected: true)])

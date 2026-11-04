@@ -260,6 +260,7 @@ struct PickupCookView: View {
             .onChange(of: includeBudget) { _, _ in readback = nil }
             .onChange(of: model.journey?.id) { _, _ in readback = nil; noteID = nil; prepared = nil; text = "" }
             .onChange(of: model.journey?.revision) { _, _ in readback = nil }
+            .onReceive(model.cookLedgerRevisions) { _ in readback = nil }
             .onChange(of: readbackContext) { _, _ in readback = nil }
             .onChange(of: scenePhase) { _, phase in if phase != .active { readback = nil } }
             .sheet(item: $sharing) { copy in
@@ -276,12 +277,12 @@ struct PickupCookView: View {
     }
     private func authorizeReadback(_ requested: CookReadbackInstruction, at: Date) -> Bool {
         guard let readback, requested == readback.instruction else { return false }
-        return readback.isCurrent(journey: model.journey, allocation: model.allocation, result: model.result,
+        return readback.isCurrent(journey: model.cookJourney, allocation: model.allocation, result: model.result,
             language: language, includeBudget: includeBudget, text: text, context: readbackContext, at: at)
     }
     private func prepare() {
         readback = nil
-        guard let value = model.journey, !model.saving, !model.hasPendingSave else { return }
+        guard let value = model.cookJourney, !model.saving, !model.hasPendingSave else { return }
         let at = Date(), timeZone = TimeZone.current
         text = PickupCookProjection.text(journey: value, allocation: model.allocation, result: model.result,
             language: language, includeBudget: includeBudget, at: at, timeZone: timeZone)
@@ -298,7 +299,7 @@ struct PickupCookView: View {
     }
     @discardableResult private func saveNote() async -> Bool {
         readback = nil
-        guard let value = model.journey, !text.isEmpty else { return false }
+        guard let value = model.cookJourney, !text.isEmpty else { return false }
         if let saved = value.notes.first(where: { $0.id == (noteID ?? draftID) && $0.text == text && $0.language == language }) {
             noteID = saved.id
             return true

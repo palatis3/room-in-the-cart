@@ -108,7 +108,7 @@ struct PickupNeedDetail: Codable, Equatable, Identifiable {
     let id: UUID
     let mealName: String
     let exclusions: [String]
-    let scheduledDay: MealDay?
+    var scheduledDay: MealDay?
     let leadTimeMinutes: Int?
     let completedSteps: [String]
     var sourceContributionID: UUID? = nil
@@ -249,6 +249,7 @@ struct PickupPersistenceLocation {
     private let launchArguments: [String]
     private var opening = false
     private var storeRevisions: [UUID: Int64] = [:]
+    private weak var cookLedger: LedgerModel?
     private struct Pending {
         let value: PickupJourney
         let payload: Data
@@ -264,6 +265,19 @@ struct PickupPersistenceLocation {
     }
     var sourceWorkspaceID: UUID? { store?.workspaceID }
     var journey: PickupJourney? { journeys.first { $0.id == selectedID } }
+    var cookJourney: PickupJourney? {
+        guard let journey else { return nil }
+        guard journey.ledgerSourceRevisionID != nil, let cookLedger else { return journey }
+        guard cookLedger.ready, !cookLedger.saving, !cookLedger.hasPendingSave else { return nil }
+        guard let shop = cookLedger.workspace.shops.first(where: { $0.id == journey.id }) else { return journey }
+        return journey.withCurrentMealDates(from: shop)
+    }
+    func bindCookLedger(_ ledger: LedgerModel) {
+        cookLedger = ledger
+    }
+    var cookLedgerRevisions: AnyPublisher<Int64, Never> {
+        cookLedger?.$revision.removeDuplicates().dropFirst().eraseToAnyPublisher() ?? Empty().eraseToAnyPublisher()
+    }
     var reminderJourneys: [PickupJourney] {
         let previousTrips = Set(journeys.compactMap(\.originShopID))
         return journeys.filter { !previousTrips.contains($0.id) }

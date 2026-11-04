@@ -1,6 +1,26 @@
 import Foundation
 import CoreDomain
 
+extension PickupJourney {
+    /// Update the cook's calendar from exact live meal links. The checkout copy,
+    /// its quantities, and the text of every saved instruction stay historical.
+    func withCurrentMealDates(from shop: ShoppingLedger) -> Self {
+        guard id == shop.id, ledgerSourceRevisionID != nil else { return self }
+        let sources = Dictionary(uniqueKeysWithValues: shop.contributions.filter { $0.removedAt == nil }.map { ($0.id, $0.source) })
+        let meals = Dictionary(uniqueKeysWithValues: shop.mealOccurrences.filter { $0.removedAt == nil }.map { ($0.id, $0) })
+        var current = self
+        current.needDetails = needDetails.map { detail in
+            let id = detail.sourceContributionID ?? detail.id
+            guard case .meal(let occurrenceID) = sources[id], let meal = meals[occurrenceID],
+                  meal.ingredientContributionIDs.contains(id) else { return detail }
+            var detail = detail
+            detail.scheduledDay = meal.scheduledDay
+            return detail
+        }
+        return current
+    }
+}
+
 /// Produces the same reviewed handoff for sharing and playback, without mutating the pickup.
 /// The caller supplies its timestamp; tests can also supply a fixed local timezone.
 enum PickupCookProjection {

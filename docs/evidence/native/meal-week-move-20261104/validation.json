@@ -1,0 +1,119 @@
+{
+  "baseCommit": "f7e31eb05f3cccf1ca4abe7dff1450b82ed0172b",
+  "sourceSHA256": {
+    "ios/App/RoomInTheCartApp.swift": "ab900dab2551a8929b22180405dac978fe6049bdaa03d109ee3d6f46ec8c8ed8",
+    "ios/Features/Dinners/DinnerPlanningHome.swift": "805fbc7a5b95df7bf864eb881fa4d09b6cf0715299f98971e882c87140afe4e8",
+    "ios/Features/Dinners/DinnerWeekEditors.swift": "a84ded1200ace6813223a7983dd26168b6df5085f1decf03257c7d2265467ea8",
+    "ios/Features/Dinners/Dinners.xcstrings": "3c88dec2670c888e4d8f3a64639470e0c7e5da933a13ef3cc0bba6ec7ce3d300",
+    "ios/Features/Pickup/PickupCookProjection.swift": "cba414c8997a3b67bbc92d5d566c854b2072c4883217850b39c43af3117aeb38",
+    "ios/Features/Pickup/PickupModel.swift": "cb0266ebdd87a4ea6dd51cfafd69a971f1f95761446a97e46ceb1567fa4abbd1",
+    "ios/Features/Pickup/PickupRecipientHandoff.swift": "2fe891b1c38f800b8330d56b82a939bf66c3959c5eafd6b58a7060f529fc5dd7",
+    "ios/Features/Pickup/PickupRepairView.swift": "e1130b2976c8f63e4239fb4eb06aa70220f433a24ad8a48b630750eb5f3a6614",
+    "ios/Tests/LedgerCheckoutAdapterTests.swift": "c741df2d987039a4b5ee39ef99e8d2e0156cf8c07fe4a4e8ef8beafbeacc6410",
+    "ios/UITests/FreeJourneyUITests.swift": "4108544161349860aa611fd2c7745210f307befb286d7ab378a5f947ed5e4c6f"
+  },
+  "nativeUI": {
+    "result": ".build/MealMove20261104/CalendarMoveFinalUI.xcresult",
+    "device": "iPhone SE (2nd generation), iOS 17.0 (21A328)",
+    "case": "FreeJourneyUITests.testDinnerMoveAcrossDisplayedWeeksKeepsLunchAndOccurrence",
+    "durationSeconds": 122.153,
+    "passed": 1,
+    "failed": 0,
+    "scope": "Real app forms with an isolated Debug workspace, fictional input through the UI and the existing iOS 17 app-process logging accommodation.",
+    "visibleChecks": "Assigning the date moves the same undated occurrence into the current week. A second move shows both dates and the effect on portions and reservations. Cancelling keeps the original date. Applying moves that occurrence to the second displayed week, while the two-unit named lunch remains on its original day after relaunch.",
+    "captures": {
+      "Meal-week-same-dinner-on-new-date": {
+        "path": ".build/MealMove20261104/ui-final-attachments/ABFA278E-1AB9-4C79-AE5B-C755CEFFFC1C.png",
+        "sha256": "3755becd191b19d7a5c589a63ab084ed028ddb621381e3282eb6800c6c45dee3"
+      },
+      "Meal-week-original-lunch-after-move": {
+        "path": ".build/MealMove20261104/ui-final-attachments/E5888147-7BB7-49CE-8725-A117EB27BEEA.png",
+        "sha256": "97d68d05c48906ee74248c10760d7a928239dc3d29f89fc1dba779fe5a271577"
+      }
+    },
+    "sqliteReadback": {
+      "headRevision": 5,
+      "operations": {
+        "createPickup": 1,
+        "chooseUndated": 2,
+        "assignDate": 3,
+        "protectLunch": 4,
+        "moveDinner": 5
+      },
+      "meal": {
+        "id": "6B2C68FC-FEB3-4A16-9170-F448B46BB783",
+        "title": "Roasted veggie tacos",
+        "before": {
+          "day": 4,
+          "month": 11,
+          "timeZoneIdentifier": "America/New_York",
+          "year": 2026
+        },
+        "after": {
+          "day": 15,
+          "month": 1,
+          "timeZoneIdentifier": "America/New_York",
+          "year": 2027
+        },
+        "contributionIDs": [
+          "0DE7278F-96FC-4B91-B07E-16FA36B3864A"
+        ]
+      },
+      "protected": {
+        "id": "584EE51D-A6BF-4D6F-8586-ABC236644DD5",
+        "day": {
+          "day": 4,
+          "month": 11,
+          "timeZoneIdentifier": "America/New_York",
+          "year": 2026
+        },
+        "quantity": 2,
+        "purpose": "School lunch"
+      },
+      "unchanged": [
+        "ingredient contribution records",
+        "allocations",
+        "protected reservation identity, date and quantity"
+      ],
+      "verifiedPayloadDigests": {
+        "1": "dde38906cdb60260f4dc0f20792b90584b0434ac15f8d4dde739aea2e5610849",
+        "2": "a5a74afb3ddbea1b7bffa8f4866ffaf3a01718aebce993643c6d7c8780e153f3",
+        "3": "069eb89cebeac2664068870e24ef97ad81cf95d0b53789bc88600d834bdc59d2",
+        "4": "0acb5c0a72d3679e912366f69b7ca9c110501655a85c9074e8b9a179bb520513",
+        "5": "cbdabf217485444559cbeec9a184014455b803c423aaf8a1144f65202ccc0a5a"
+      }
+    }
+  },
+  "priorAttempts": [
+    {
+      "result": ".build/MealMove20261104/CalendarMoveUI.xcresult",
+      "failed": 1,
+      "reason": "Date assignment saved. The test helper searched for Back after it had returned to the calendar root."
+    },
+    {
+      "result": ".build/MealMove20261104/CalendarMoveCorrected.xcresult",
+      "modelsPassed": 57,
+      "uiFailed": 1,
+      "reason": "The generic date button query re-resolved during native calendar animation. The app preview correctly displayed the day selected by the retried tap."
+    }
+  ],
+  "placedPickupRegression": {
+    "result": ".build/MealMove20261104/CalendarMoveCorrected.xcresult",
+    "case": "LedgerCheckoutAdapterTests.testCalendarMoveUpdatesCookCorrectionWithoutChangingPlacedPickup",
+    "scope": "Real ledger and pickup stores, checkout adapter, placed order, meal preview and recipient history. Both stores use disposable local SQLite files.",
+    "resultDetail": "The date-only move keeps the sealed basket, allocation quantities and original sent copy intact. A current cook instruction uses the moved date and the original copy becomes stale. A newly saved dated correction removes the exact previous civil date and adds the exact new one without recording a send.",
+    "suite": "57 passed across DinnerFeatureModel, LedgerCheckoutAdapter, PickupCookProjection and PickupRecipientHandoff. The co-invoked UI test failed as recorded above and passed separately after a test-only fix."
+  },
+  "archive": {
+    "path": ".build/MealMove20261104/RoomInTheCart-MealMoveFinal.xcarchive",
+    "binaryUUID": "11CD1478-F1E8-3F92-BE47-8AE172E01A0D",
+    "executableSHA256": "635dfead6e32bfd0b3505b9ee95e3324add9c10df26abde80464637db71f3a21",
+    "signed": false,
+    "verification": "Compiled Release iPhone app verified: executable, assets, privacy, environment, and embedded extensions.",
+    "strictProductionMetadata": "Built app verification failed: Release metadata is incomplete: HouseholdSubscriptionProductID, PrivacyPolicyURL, TermsOfUseURL, SupportURL"
+  },
+  "remaining": [
+    "Dedicated pushed This week route and physical assistive navigation.",
+    "Deployed adult planning and linked commitment review across devices."
+  ]
+}

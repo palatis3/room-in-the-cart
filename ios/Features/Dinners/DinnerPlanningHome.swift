@@ -68,6 +68,7 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                 }.disabled(!model.editable)
                 Section(dinnerText("Week")) {
                     DatePicker(dinnerText("Week starting"), selection: $weekStart, displayedComponents: .date)
+                        .accessibilityIdentifier("dinnerWeekStart")
                     Picker(dinnerText("Week display"), selection: $showWeekGrid) {
                         Text(dinnerText("List")).tag(false)
                         Text(dinnerText("Grid")).tag(true)
@@ -85,7 +86,9 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                                 }
                             }.buttonStyle(.borderless).accessibilityIdentifier("dinnerWeekGrid")
                         } else {
-                            ForEach(week.days, id: \.day) { day in dayContent(day, in: shop).padding(.vertical, 6) }
+                            ForEach(week.days, id: \.day) { day in
+                                dayContent(day, in: shop).padding(.vertical, 6).buttonStyle(.borderless)
+                            }
                         }
                         if !week.unscheduled.isEmpty {
                             Text(dinnerText("Unscheduled")).font(.headline).accessibilityAddTraits(.isHeader)
@@ -171,10 +174,20 @@ struct DinnerPreviewView: View {
                 }
                 Section(dinnerText("Dinners")) {
                     ForEach(preview.projectedMeals.filter { preview.changedOccurrenceIDs.contains($0.id) }) { meal in
+                        let movesDate = preview.proposal.changes.contains {
+                            if case .move(let id, _) = $0 { return id == meal.id }
+                            return false
+                        }
                         VStack(alignment: .leading, spacing: 5) {
                             Text(meal.title).font(.headline)
                             Text(meal.removedAt == nil ? dinnerFormat("Servings: %@", meal.servings.description) : dinnerText("Remove chosen dinner"))
-                            Text(meal.scheduledDay.map(dinnerDay) ?? dinnerText("Unscheduled"))
+                            if movesDate, let original = model.shop?.mealOccurrences.first(where: { $0.id == meal.id }) {
+                                Text(dinnerFormat("Before: %@", original.scheduledDay.map(dinnerDay) ?? dinnerText("Unscheduled")))
+                                Text(dinnerFormat("After: %@", meal.scheduledDay.map(dinnerDay) ?? dinnerText("Unscheduled")))
+                                Text(dinnerText("The dinner and its serving groups move together. Grocery quantities and separate protected reservations stay as saved. Review any cook instructions already shared for this dinner."))
+                            } else {
+                                Text(meal.scheduledDay.map(dinnerDay) ?? dinnerText("Unscheduled"))
+                            }
                             ForEach(meal.servingGroups.filter(\.isProtected)) { group in
                                 Text(dinnerFormat("Protected: %@ · %@", group.name, group.servings.description))
                             }
