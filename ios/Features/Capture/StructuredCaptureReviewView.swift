@@ -174,6 +174,7 @@ struct StructuredCaptureField: Hashable {
 }
 
 @MainActor private struct CaptureStructuredRow: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Binding var line: CaptureLineDraft
     @ObservedObject var corrections: CaptureCorrectionsModel
     let fieldFocus: FocusState<StructuredCaptureField?>.Binding
@@ -275,9 +276,24 @@ struct StructuredCaptureField: Hashable {
     private func field(_ path: WritableKeyPath<CaptureLineDraft, String>) -> Binding<String> {
         Binding(get: { line[keyPath: path] }, set: { line[keyPath: path] = $0; line.confirmed = false })
     }
-    private func unitPicker(_ title: String, value: WritableKeyPath<CaptureLineDraft, UnitOfMeasure>) -> some View {
-        Picker(title, selection: Binding(get: { line[keyPath: value] }, set: { line[keyPath: value] = $0; line.confirmed = false })) {
+    @ViewBuilder private func unitPicker(_ title: String, value: WritableKeyPath<CaptureLineDraft, UnitOfMeasure>) -> some View {
+        let picker = Picker(title, selection: Binding(get: { line[keyPath: value] }, set: { line[keyPath: value] = $0; line.confirmed = false })) {
             ForEach(UnitOfMeasure.allCases, id: \.self) { Text(captureText(captureUnitKey($0))).tag($0) }
+        }
+        if dynamicTypeSize.isAccessibilitySize {
+            let selectedUnit = captureText(captureUnitKey(line[keyPath: value]))
+            labeledField(title) {
+                Menu {
+                    picker
+                } label: {
+                    Label(selectedUnit, systemImage: "chevron.up.chevron.down")
+                        .frame(minHeight: 44, alignment: .leading)
+                }
+                .accessibilityLabel(title)
+                .accessibilityValue(selectedUnit)
+            }
+        } else {
+            picker
         }
     }
 }

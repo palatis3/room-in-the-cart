@@ -113,5 +113,26 @@
       "scope": "The repository's guarded contributor UI test verified that the original Spanish wording is visible near the top of the viewport when the structured review opens."
     }
   },
-  "remaining": ["Human US Spanish copy review", "Improve unit picker wrapping at the largest accessibility text size", "Physical VoiceOver and Switch Control"]
+  "accessibilityUnitMenu": {
+    "device": "iPhone SE, iOS 17.0 (21A328)",
+    "textSize": "UICTContentSizeCategoryAccessibilityXXXL",
+    "sourceSHA256": "807b7b1a112ac68256b196ffe3b02dc8917b7b6c8331050dfb7a512427053065",
+    "harnessSHA256": "2996f090fd9afcbc05de1da301cbf6e6759bea83be5d8d3435a02c859f6c294a",
+    "result": ".build/CaptureUnitPicker20261104/SpanishLarge17UnitMenuTap.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "testSeconds": 87.471,
+    "runtimeWarnings": [],
+    "scope": "The stacked label and menu use the full width. At the largest text size the Spanish accessibility tree reported Unidad por paquete as the button’s name and Unidades as its current value. A tap on the visible control opened the system menu. Choosing Gramos and then Unidades changed the accessible value each time. The original wording, edited pack quantity, purpose and milk exclusion remained readable, and Cancel left zero submitted requests.",
+    "stackedUnitCapture": {
+      "path": ".build/CaptureUnitPicker20261104/verified-attachments/73E4EB6C-577F-45B3-AE07-145F6D411005.png",
+      "sha256": "d452d3e02e1112cc25063fb67fa66eec9eb5f08acc6adefe45cf94772fded262"
+    },
+    "priorAttempts": [
+      {"result": ".build/CaptureUnitPicker20261104/SpanishLarge17Units.xcresult", "observation": "The visual layout stacked the label, but the native picker exposed a duplicated accessibility name."},
+      {"result": ".build/CaptureUnitPicker20261104/SpanishLarge17UnitMenu.xcresult", "observation": "The replacement exposed the distinct name and selected value. XCTest reported the menu button as non-hittable despite its visible frame. The passing harness tapped inside the visible frame and checked actual choices and values."}
+    ]
+  },
+  "remaining": ["Human US Spanish copy review", "Physical VoiceOver and Switch Control"]
 }
