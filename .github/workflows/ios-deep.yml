@@ -1,0 +1,79 @@
+name: iOS deep checks
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  sanitizers:
+    runs-on: macos-15-intel
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        sanitizer: [thread, address]
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+      SANITIZER: ${{ matrix.sanitizer }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check package tests for memory errors or data races
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p .build/sanitizer-results
+          for manifest in ios/Packages/*/Package.swift; do
+            package="$(dirname "$manifest")"
+            swift test --package-path "$package" --sanitize="$SANITIZER" 2>&1 | tee ".build/sanitizer-results/$(basename "$package").log"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: swift-${{ matrix.sanitizer }}-${{ github.run_attempt }}
+          path: .build/sanitizer-results/
+          retention-days: 7
+  storekit:
+    runs-on: macos-15-intel
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - locale: en
+            configuration: US English — local StoreKit
+          - locale: es
+            configuration: US Spanish app · Spanish (Mexico) offer · USA storefront
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+      STOREKIT_CONFIGURATION: ${{ matrix.configuration }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select iPhone
+        run: xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+      - name: Run purchase, restore, renewal and revocation scenarios
+        timeout-minutes: 35
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p .build
+          xcrun simctl bootstatus "$SIMULATOR_ID" -b
+          xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart-LocalStoreKit \
+            -configuration Debug -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
+            -only-test-configuration "$STOREKIT_CONFIGURATION" -parallel-testing-enabled NO \
+            -test-timeouts-enabled YES -default-test-execution-time-allowance 120 \
+            -maximum-test-execution-time-allowance 120 -collect-test-diagnostics never \
+            -derivedDataPath .build/StoreKitDerivedData -resultBundlePath .build/StoreKit.xcresult \
+            CODE_SIGN_IDENTITY=- test 2>&1 | tee .build/StoreKit.log
+          xcrun xcresulttool get test-results summary --path .build/StoreKit.xcresult --compact > .build/storekit-summary.json
+          python3 -c 'import json, os; from pathlib import Path; s=json.loads(Path(".build/storekit-summary.json").read_text()); assert s["totalTestCount"] == 15 and s["passedTests"] == s["totalTestCount"] and s["skippedTests"] == 0 and s["result"] == "Passed" and {c["testPlanConfiguration"]["configurationName"] for c in s["devicesAndConfigurations"]} == {os.environ["STOREKIT_CONFIGURATION"]}, s'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: storekit-${{ matrix.locale }}-${{ github.run_attempt }}
+          path: |
+            .build/StoreKit.xcresult
+            .build/StoreKit.log
+            .build/storekit-summary.json
+          retention-days: 7
