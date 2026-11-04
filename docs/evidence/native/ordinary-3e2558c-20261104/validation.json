@@ -1,0 +1,19 @@
+{
+  "sourceCommit": "3e2558c5186173d679adde10903ab7340ce51177",
+  "result": ".build/NativeCheckpoint20261104-3e2558c/Ordinary.xcresult",
+  "log": ".build/NativeCheckpoint20261104-3e2558c/ordinary.log",
+  "modelPasses": 536,
+  "uiPasses": 39,
+  "uiFailures": [
+    {
+      "failureText": "Test exceeded execution time allowance of 12 minutes",
+      "targetName": "RoomInTheCartUITests",
+      "testIdentifier": 575,
+      "testIdentifierString": "RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer()",
+      "testIdentifierURL": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer",
+      "testName": "testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer()"
+    }
+  ],
+  "animationWaitWarningsInFailedCase": 13,
+  "scope": "One complete frozen ordinary iOS 27 test invocation. The Spanish comparison did not reach its save and reopen assertions within the allowance. The later unresolved-quantity UI case still ran and passed. This source predates the later print, capture and reminder changes."
+}

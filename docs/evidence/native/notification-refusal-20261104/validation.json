@@ -1,0 +1,51 @@
+{
+  "result": "PASS: real native notification refusal leaves a persisted denied reminder, zero pending OS requests, unchanged pickup, and usable ordinary Shop navigation.",
+  "commit": "5e8cedb11dd68cf4b2b3f2342619514b5400a095",
+  "sourceRoot": "/Users/palatis/Documents/Codex/2026-11-04/task-3/notifications/refusal-source",
+  "trackedSourceDigest": "f7e035e0f3e7c1933f382e0431e0f4798b312d21b814f298a3f3764af269089b",
+  "simulator": "C318B37A-C725-47C2-80EE-1D385C25E53E",
+  "runtime": "iOS 27.0 / iPhone 17 Pro; isolated disposable simulator",
+  "tests": {
+    "passed": 1,
+    "failed": 0,
+    "method": "ContextualReminderUITests.testRealNotificationRefusalKeepsOrdinaryShopUsable"
+  },
+  "verified": {
+    "nativePrompt": "Tapped actual Don’t Allow; UNAuthorizationStatus 0 -> 1.",
+    "persistedReminderStatus": "denied",
+    "persistedReminderVersion": 1,
+    "pendingOSRequests": 0,
+    "pickupStoreAndPayloadRevisions": 5,
+    "retailerResponse": "unchanged, empty",
+    "ordinaryShop": "Opened ordinary shopping list, opened its Add/Paste editor, typed fictional unsaved text, cancelled, and returned to an enabled Add/Paste control."
+  },
+  "harness": {
+    "guard": "DEBUG && targetEnvironment(simulator), --notification-smoke; no --ui-testing",
+    "changedFiles": [
+      "ios/App/RoomInTheCartApp.swift",
+      "ios/Features/DeviceSurfaces/ContextualReminderEntry.swift",
+      "ios/UITests/ContextualReminderUITests.swift"
+    ],
+    "scope": "Fictional pickup and offer through existing models; native permission via production reminder coordinator; only setup and automation added. No product scheduling or authorization behavior changed.",
+    "testSource": "/Users/palatis/Documents/Codex/2026-11-04/task-3/notifications/refusal-source/ios/UITests/ContextualReminderUITests.swift",
+    "fixtureSource": "/Users/palatis/Documents/Codex/2026-11-04/task-3/notifications/refusal-source/ios/Features/DeviceSurfaces/ContextualReminderEntry.swift"
+  },
+  "evidence": {
+    "report": "/Users/palatis/Documents/Codex/2026-11-04/task-3/notifications/refusal-evidence/sealed/acceptance-report.json",
+    "resultBundle": "/Users/palatis/Documents/Codex/2026-11-04/task-3/notifications/refusal-evidence/NotificationRefusal.xcresult",
+    "originalLog": "/Users/palatis/Documents/Codex/2026-11-04/task-3/notifications/refusal-evidence/refusal.log",
+    "sourceIdentity": "source-identity.json",
+    "exactCommand": "invocation.json",
+    "persistedState": "persisted-state.json"
+  },
+  "remainingLimitations": [
+    "This verifies first native refusal, not settings-based revocation or later re-authorization.",
+    "Simulator evidence; signed physical-device locked/protected-data checks remain separately scoped."
+  ],
+  "cleanup": "Disposable refusal simulator shut down; shared checkout, user preview and other active simulators untouched; Android remains paused.",
+  "sealedAtUTC": "2026-11-04T15:47:54.984575+00:00",
+  "independentReview": {
+    "nativeInputHashesChecked": 430,
+    "checks": "All sealed artifact hashes matched. The result bundle reports one pass. Read-only SQLite verification found denied version one and the same pickup revision. Inspected the system permission and ordinary Shop screenshots."
+  }
+}
