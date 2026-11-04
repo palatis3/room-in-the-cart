@@ -1,0 +1,38 @@
+{
+  "baseCommit": "3c1b2fb4c8f46644b6d8f43bc59b9cc50f5fc9fd",
+  "toolchain": "Xcode 27.1 (27A9275)",
+  "sourceSHA256": {
+    "ios/UITests/FreeJourneyUITests.swift": "180fb41d8d2685ef3aa234fbea50cf050f637d6a9791eaef29422fe82712a5e5"
+  },
+  "originalFailure": {
+    "commit": "911343c7b2d274e925421434749e7635a06e18b1",
+    "log": ".build/NativeReleaseCandidate20261104/ordinary.log",
+    "lines": [
+      12462,
+      12881
+    ],
+    "attachment": ".build/ShareCancellation20261104/original-failure.png",
+    "attachmentSHA256": "71d0c9eea68496266bf799f789d0e036b34440b6eac853e5ab0dfab29e1fa1e5",
+    "finding": "The failure attachment shows the native share sheet still open with its Close button visible after the logged tap."
+  },
+  "isolatedBeforeTestChange": {
+    "result": ".build/ShareCancellation20261104/Before.xcresult",
+    "os": "iOS 27.0",
+    "passed": 1
+  },
+  "currentSimulator": {
+    "result": ".build/ShareCancellation20261104/Current.xcresult",
+    "log": ".build/ShareCancellation20261104/current.log",
+    "device": "iPhone 17e, iOS 27.0 (24A434)",
+    "passedRepetitions": 3,
+    "failed": 0
+  },
+  "minimumSimulator": {
+    "result": ".build/ShareCancellation20261104/Minimum.xcresult",
+    "log": ".build/ShareCancellation20261104/minimum.log",
+    "device": "iPhone SE, iOS 17.0 (21A328)",
+    "passed": 1,
+    "failed": 0
+  },
+  "scope": "The test waits for the actual system Close button to be hittable and verifies sheet dismissal before checking the saved history. Every updated execution found the cancellation and the frozen unplaced basket after relaunch. Physical sharing and the combined suite have separate results."
+}

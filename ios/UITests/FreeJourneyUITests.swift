@@ -42,9 +42,16 @@ import XCTest
         tap(app.buttons["Prepare retailer handoff"])
         tap(app.buttons["Freeze reviewed basket"])
         tap(app.buttons["Share dated list"])
-        let close = app.buttons.matching(NSPredicate(format: "label IN %@", ["Close", "Cancel"])).firstMatch
-        XCTAssertTrue(close.waitForExistence(timeout: 15), app.debugDescription)
+        let close = app.buttons.matching(NSPredicate(format: "identifier == %@ OR label == %@", "header.closeButton", "Close")).firstMatch
+        let closeReady = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND hittable == true"), object: close)
+        XCTAssertEqual(XCTWaiter.wait(for: [closeReady], timeout: 15), .completed, app.debugDescription)
         close.tap()
+        // The system sheet can expose Close while presentation is still settling.
+        if !close.waitForNonExistence(timeout: 4) {
+            XCTAssertTrue(close.isHittable, app.debugDescription)
+            close.tap()
+            XCTAssertTrue(close.waitForNonExistence(timeout: 8), "The system share sheet stayed open after Close.")
+        }
         assertText("Share cancelled")
         restart()
         shopRoot()
