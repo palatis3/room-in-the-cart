@@ -86,7 +86,27 @@
     "modelPasses": 26,
     "failures": 0,
     "scope": "Ordinary Debug target. Eight spelling store, eleven contributor request and seven account deletion tests passed. The current enrolled member and selected language bind the spelling review. Changing the review or locking access rejects the stale scope. Separate member, account, language and private-workspace storage survives unrelated deletion. A blocked local account purge can be retried after sign-out and the account marker rejects stale writes.",
-    "compiledDebug": "Executable, assets, privacy, environment and embedded extensions passed verification."
+    "compiledDebug": "Executable, assets, privacy, environment and embedded extensions passed verification.",
+    "firstPhotosRun": {
+      "result": ".build/ContributorSpelling20261104/Photos.xcresult",
+      "harnessSHA256": "a8b9c40f89ad454f2d8eaef7a1987f80a408cf98f0cd8f92d20eb75250c6996d",
+      "testDurationSeconds": 353.041,
+      "scope": "Production contributor capture views and an enrolled fictional household transport. The system Photos picker selected a fictional label. On-device OCR produced 2 tortiyas, and the next capture offered the explicitly saved correction without changing the field. Use changed the editable name to tortillas. Request review kept the original wording and count of two. Cancel kept the fixture at zero submitted requests. Forget removed the suggestion.",
+      "terminalResult": "One UI test failed before confirming opt-out. XCTest matched two accessibility nodes for the same destructive button. The screenshot shows one destructive button and one Cancel button in the native alert.",
+      "reviewCapture": {
+        "path": ".build/ContributorSpelling20261104/photos-attachments/E9CDC5B2-FBD5-48E1-9CFA-FE5BA547A594.png",
+        "sha256": "87f032a8e3206b474962d78b2776ff3510c283e4a1a8e43a697b844c1e0e6d23"
+      },
+      "optOutAlertCapture": {
+        "path": ".build/ContributorSpelling20261104/photos-attachments/EECB63AC-6F67-4CF0-AA5D-11707FF7097F.png",
+        "sha256": "9f2bff4a78cc3d101a4afbd3622b6c970e8cabfee00606e830bc31738c4bac20"
+      },
+      "afterForgetReadback": {
+        "enabled": true,
+        "storedRuleCount": 0,
+        "payloadSHA256": "922237378266aeb3f015ef5061d8b8465c28ad06326e2c183fb1eb99a165b37c"
+      }
+    }
   },
   "otherAttempts": [
     {
@@ -122,6 +142,6 @@
   },
   "remaining": [
     "Physical VoiceOver focus and device testing.",
-    "Connected contributor Photos review on the simulator, bilingual device acceptance and a live enrolled household."
+    "Connected contributor opt-out confirmation on the simulator, bilingual device acceptance and a live enrolled household."
   ]
 }
