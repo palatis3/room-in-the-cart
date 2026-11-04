@@ -1,0 +1,55 @@
+{
+  "sourceCommit": "5e8cedb11dd68cf4b2b3f2342619514b5400a095",
+  "simulator": "554DD9A4-F7E4-4D72-B7D5-DDCF8B215793",
+  "runtime": "iOS 27.0 (24A434), iPhone 17 Pro",
+  "testScope": "Ordinary Shop and source-reference entry with fictional data entered through the app. Only the scratch XCTest sources changed. The capability probe reads the real video authorization state.",
+  "tested": {
+    "ordinaryEntryAndCapability": {
+      "passed": 2,
+      "failed": 0,
+      "resultBundle": "/Users/palatis/Documents/Codex/2026-11-04/task-3/notifications/camera-evidence/CameraFallback.xcresult"
+    },
+    "authorizationReadback": {
+      "passed": 1,
+      "failed": 0,
+      "resultBundle": "/Users/palatis/Documents/Codex/2026-11-04/task-3/notifications/camera-evidence/CameraStatusAfterRefusal.xcresult"
+    },
+    "cameraPickerSourceAvailable": true,
+    "videoCaptureDevicePresent": false,
+    "videoAuthorizationBefore": {
+      "state": "notDetermined",
+      "rawValue": 0
+    },
+    "videoAuthorizationAfterNativeRefusal": {
+      "state": "denied",
+      "rawValue": 2
+    },
+    "ui": "Native Don’t Allow preserves the typed draft and displays denial guidance. The user reviews the manual match, saves the draft and reopens it after terminating and relaunching the app.",
+    "persistedReference": {
+      "kind": "packageReference",
+      "reviewedLabel": "Wraps",
+      "revision": 1,
+      "hasImage": false,
+      "hasBarcode": false,
+      "receiptLineCount": 0
+    }
+  },
+  "independentReview": {
+    "matchingNativeAndConfigurationFiles": 451,
+    "verifiedSealedArtifacts": 19,
+    "observedScreenshots": [
+      "native-camera-refusal.png",
+      "denied-guidance.png",
+      "typed-reference-reopened.png"
+    ],
+    "result": "The two result bundles report the stated passes. The sealed screenshots show the native prompt, denial guidance and reopened source reference."
+  },
+  "evidence": {
+    "sealedReport": "/Users/palatis/Documents/Codex/2026-11-04/task-3/notifications/camera-evidence/sealed/acceptance-report.json",
+    "sha256Manifest": "/Users/palatis/Documents/Codex/2026-11-04/task-3/notifications/camera-evidence/sealed/artifact-sha256.json"
+  },
+  "remaining": [
+    "Physical camera capture and refusal, low-light bilingual and barcode checks.",
+    "Hardware-unavailable branch and Settings-based authorization changes."
+  ]
+}
