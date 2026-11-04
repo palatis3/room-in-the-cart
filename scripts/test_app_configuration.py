@@ -17,13 +17,69 @@ class AppConfigurationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
             (root / "config").mkdir()
-            (root / "config/staging.json").write_text(json.dumps({"serviceURL": "https://staging.grocery-app.com", "publishableKey": "staging-public-key", "supportURL": "https://staging.grocery-app.com/support"}))
+            (root / "config/staging.json").write_text(json.dumps({"serviceURL": "https://staging.grocery-app.com", "publishableKey": "sb_publishable_staging", "supportURL": "https://staging.grocery-app.com/support"}))
             self.assertEqual(load_configuration(root, "Release"), {})
             release = compiled_metadata(load_configuration(root, "Release"), "Release")
             self.assertEqual(release["HouseholdServiceURL"], "")
             self.assertEqual(release["SupportURL"], "")
             self.assertEqual(release["SupabasePublishableKey"], "")
             self.assertEqual(release["RITCBuildEnvironment"], "Release")
+
+    def test_release_backend_origins_and_client_key_must_differ_from_staging(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "config").mkdir()
+            staging = {
+                "environment": "staging", "supabaseURL": "https://staging-auth.grocery-app.com",
+                "serviceURL": "https://staging-service.grocery-app.com", "publishableKey": "sb_publishable_staging",
+                "supportURL": "https://grocery-app.com/support",
+            }
+            release = {
+                **staging, "environment": "production", "supabaseURL": "https://auth.grocery-app.com",
+                "serviceURL": "https://service.grocery-app.com", "publishableKey": "sb_publishable_production",
+            }
+            (root / "config/staging.json").write_text(json.dumps(staging))
+            path = root / "config/release.json"
+            path.write_text(json.dumps(release))
+            self.assertEqual(load_configuration(root, "Release"), release)
+            self.assertEqual(load_configuration(root, "Staging"), staging)
+            for key, aliases in {
+                "supabaseURL": (staging["supabaseURL"], "https://STAGING-AUTH.grocery-app.com.:443/subpath"),
+                "serviceURL": (staging["serviceURL"], "https://Staging-Service.grocery-app.com:443/another-path"),
+                "publishableKey": (staging["publishableKey"],),
+            }.items():
+                for value in aliases:
+                    with self.subTest(key=key, value=value):
+                        path.write_text(json.dumps({**release, key: value}))
+                        with self.assertRaisesRegex(ValueError, key + ".*separate from staging"):
+                            load_configuration(root, "Release")
+            release["serviceURL"] = "https://staging-service.grocery-app.com:8443"
+            path.write_text(json.dumps(release))
+            self.assertEqual(load_configuration(root, "Release"), release)
+            staging["serviceURL"] = "https://8.8.8.8"
+            (root / "config/staging.json").write_text(json.dumps(staging))
+            path.write_text(json.dumps({**release, "serviceURL": "https://[::ffff:8.8.8.8]:443"}))
+            with self.assertRaisesRegex(ValueError, "serviceURL.*separate from staging"):
+                load_configuration(root, "Release")
+
+    def test_nonempty_backend_values_must_be_safe_for_the_native_client(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "config").mkdir()
+            path = root / "config/staging.json"
+            for key, values in {
+                "supabaseURL": ("http://auth.grocery-app.com", "https://user:password@auth.grocery-app.com", "https://auth.grocery-app.com:0", "https://faß.de"),
+                "serviceURL": ("https://service.grocery-app.com?", "https://service.grocery-app.com#route", "https://%73ervice.grocery-app.com", "https://134744072", "https://0x08080808", "https://8.8.2056"),
+                "publishableKey": ("sb_secret_fixture", "eyJfixture.jwt.signature", "sb_publishable_", "sb_publishable_bad\nkey"),
+            }.items():
+                for value in values:
+                    with self.subTest(key=key, value=value):
+                        path.write_text(json.dumps({key: value}))
+                        with self.assertRaisesRegex(ValueError, key):
+                            load_configuration(root, "Staging")
+            config = {"supabaseURL": "https://xn--fa-hia.de", "serviceURL": "https://[::1]:8443/api", "publishableKey": "sb_publishable_fixture-1"}
+            path.write_text(json.dumps(config))
+            self.assertEqual(load_configuration(root, "Staging"), config)
 
     def test_all_public_fields_reach_build_settings_and_plist_expectations(self):
         config = {key: "value-" + key for _, key, _ in PUBLIC_SETTINGS}
