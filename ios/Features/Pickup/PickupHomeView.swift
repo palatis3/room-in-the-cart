@@ -170,6 +170,7 @@ struct PickupCheckoutView: View {
     @State private var selected: Set<UUID> = []
     @State private var preview: (BasketProposal, CheckoutComparison)?
     @State private var formError: String?
+    @State private var comparingHold = false
     @State private var hold = ""
     @State private var availableFunds = ""
     var body: some View {
@@ -221,11 +222,14 @@ struct PickupCheckoutView: View {
                 }
             }
             Section(pTr("Payment hold · separate from spending")) {
-                PickupEvidenceField(title: "Retailer-displayed hold", amount: $hold).focused($field, equals: .hold)
-                PickupEvidenceField(title: "Available funds (private, this screen only)", amount: $availableFunds).focused($field, equals: .funds)
-                if let held = try? ComparisonModel.money(hold), let funds = try? ComparisonModel.money(availableFunds), let gap = try? held.subtracting(funds) {
-                    Text("\(pTr("Hold less available funds")): \(pMoney(gap))")
-                } else { Text(pTr("Hold comparison unresolved")) }
+                Toggle(pTr("Compare an authorization hold"), isOn: $comparingHold)
+                if comparingHold {
+                    PickupEvidenceField(title: "Retailer-displayed hold", amount: $hold).focused($field, equals: .hold)
+                    PickupEvidenceField(title: "Available funds (private, this screen only)", amount: $availableFunds).focused($field, equals: .funds)
+                    if let held = try? ComparisonModel.money(hold), let funds = try? ComparisonModel.money(availableFunds), let gap = try? held.subtracting(funds) {
+                        Text("\(pTr("Hold less available funds")): \(pMoney(gap))")
+                    } else { Text(pTr("Hold comparison unresolved")) }
+                }
             }
             if !inclusive, model.result != nil {
                 Section(pTr("Protect or defer · preview before applying")) {
@@ -262,6 +266,12 @@ struct PickupCheckoutView: View {
         .keyboardDoneAction(visible: field != nil, title: pTr("Done")) { field = nil }
         .disabled(model.saving)
         .onAppear { populate() }
+        .onChange(of: comparingHold) { _, enabled in
+            guard !enabled else { return }
+            if field == .hold || field == .funds { field = nil }
+            hold = ""
+            availableFunds = ""
+        }
     }
     private func populate() {
         guard let value = model.journey else { return }

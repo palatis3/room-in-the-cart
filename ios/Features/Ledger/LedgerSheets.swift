@@ -321,6 +321,8 @@ struct LedgerFactsView: View {
     @State private var reviewedRevision: Int
     @State private var reviewedBase: ShopBasis
     @State private var validation: String?
+    private enum Input: Hashable { case branch, timeZone, cap, reserve, fees, retailerTotal, retailerSource, includedCharges }
+    @FocusState private var inputFocus: Input?
     init(model: LedgerModel, shop: ShoppingLedger) {
         self.model = model
         self.shop = shop
@@ -357,6 +359,7 @@ struct LedgerFactsView: View {
             } else {
                 Section(ledgerText("Store and timing")) {
                     TextField(ledgerText("Store branch"), text: $basis.branch, axis: .vertical).accessibilityIdentifier("ledgerBranch")
+                        .focused($inputFocus, equals: .branch)
                     Picker(ledgerText("How you will shop"), selection: $basis.mode) {
                         Text(FulfillmentMode.pickup.ledgerLabel).tag(FulfillmentMode.pickup)
                         Text(FulfillmentMode.delivery.ledgerLabel).tag(FulfillmentMode.delivery)
@@ -369,10 +372,12 @@ struct LedgerFactsView: View {
                     }
                     TextField(ledgerText("Time zone, for example America/New_York"), text: $basis.timeZoneIdentifier)
                         .textInputAutocapitalization(.never).autocorrectionDisabled()
+                        .focused($inputFocus, equals: .timeZone)
                 }.disabled(model.saving || model.hasPendingSave)
                 Section {
                     TextField(ledgerText("Spending cap (USD, optional)"), text: $cap).keyboardType(.decimalPad)
                         .accessibilityIdentifier("ledgerCap")
+                        .focused($inputFocus, equals: .cap)
                     Picker(ledgerText("What the cap covers"), selection: $basis.capScope) {
                         Text(BudgetScope.wholeShop.ledgerLabel).tag(BudgetScope.wholeShop)
                         Text(BudgetScope.dinnersOnly.ledgerLabel).tag(BudgetScope.dinnersOnly)
@@ -383,7 +388,9 @@ struct LedgerFactsView: View {
                         Text(ledgerText("Flexible limit")).tag(CapFirmness.flexible)
                     }
                     TextField(ledgerText("Fixed reserve (USD, optional)"), text: $reserve).keyboardType(.decimalPad)
+                        .focused($inputFocus, equals: .reserve)
                     TextField(ledgerText("Known fees (USD, unknown if blank)"), text: $fees).keyboardType(.decimalPad)
+                        .focused($inputFocus, equals: .fees)
                     Text(ledgerText("Currency: USD"))
                 } header: { Text(ledgerText("Spending cap")) } footer: {
                     Text(ledgerText("A dinner-only cap does not cover the whole pickup. Missing prices and fees remain unknown."))
@@ -392,10 +399,13 @@ struct LedgerFactsView: View {
                     Toggle(ledgerText("Record a retailer preview"), isOn: $hasRetailerPreview)
                     if hasRetailerPreview {
                         TextField(ledgerText("Retailer total (USD, unknown if blank)"), text: $retailerTotal).keyboardType(.decimalPad)
+                            .focused($inputFocus, equals: .retailerTotal)
                         TextField(ledgerText("Source of the retailer preview"), text: $retailerSource, axis: .vertical)
+                            .focused($inputFocus, equals: .retailerSource)
                         DatePicker(ledgerText("When this preview was shown"), selection: $retailerDate)
                             .environment(\.timeZone, TimeZone(identifier: basis.timeZoneIdentifier) ?? .current)
                         TextField(ledgerText("Included charges, separated by commas"), text: $includedCharges, axis: .vertical)
+                            .focused($inputFocus, equals: .includedCharges)
                         Text(ledgerText("This records what the retailer displayed. It is not a calculated whole-pickup quote."))
                     }
                 }.disabled(model.saving || model.hasPendingSave)
@@ -408,10 +418,12 @@ struct LedgerFactsView: View {
             if let validation { Text(validation).foregroundStyle(Theme.warning) }
             LedgerSaveStatus(model: model, onRetried: { dismiss() })
         }.scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(ledgerText("Describe this pickup"))
+            .keyboardDoneAction(visible: inputFocus != nil, title: ledgerText("Done"), identifier: "ledgerFactsKeyboardDone") { inputFocus = nil }
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() }.disabled(model.saving) } }
             .interactiveDismissDisabled(model.saving)
     }
     private func review() {
+        inputFocus = nil
         do {
             guard TimeZone(identifier: basis.timeZoneIdentifier) != nil else {
                 validation = ledgerText("Enter a valid time zone, such as America/New_York.")

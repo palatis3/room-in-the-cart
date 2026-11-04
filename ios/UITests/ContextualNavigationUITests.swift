@@ -20,6 +20,109 @@ import XCTest
         enterWeighedPickup(knownTax: false)
     }
 
+    func testDinnerOnlyCapAndCancelledSlotChangeSurviveRelaunch() {
+        launch(reset: true)
+        shopRoot(); tap(element("openPickupList")); tap(element("ledgerStartShop"))
+        fill("Pickup details regression", into: "ledgerShopName")
+        tap(element("ledgerCreateShop"))
+        let details = element("ledgerFacts")
+        func openDetails() {
+            revealContent(details); details.tap()
+            XCTAssertTrue(app.navigationBars["Describe this pickup"].waitForExistence(timeout: 5))
+        }
+        openDetails()
+        let slot = app.switches["Set a pickup date and time"]
+        enableSwitch("Set a pickup date and time")
+        fill("35", into: "ledgerCap")
+        XCTAssertFalse(app.keyboards.firstMatch.exists, "Done must dismiss the decimal keyboard")
+        choose("What the cap covers", value: "Dinners only")
+        tap(element("ledgerReviewFacts"))
+        assertText("$35.00 · Dinners only")
+        assertText("Fees: Unknown")
+        tap(element("ledgerCommitFacts"))
+        XCTAssertTrue(app.navigationBars["Describe this pickup"].waitForNonExistence(timeout: 8))
+        revealContent(details)
+        XCTAssertTrue(details.label.contains("$35.00 · Dinners only"))
+        let savedLabel = details.label
+        XCTAssertFalse(savedLabel.contains("Date not set"))
+
+        openDetails()
+        revealContent(slot)
+        XCTAssertEqual(slot.value as? String, "1")
+        slot.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        XCTAssertEqual(slot.value as? String, "0")
+        tap(element("ledgerReviewFacts"))
+        assertText("Date not set")
+        tap(app.navigationBars["Describe this pickup"].buttons["Cancel"])
+        XCTAssertTrue(app.navigationBars["Describe this pickup"].waitForNonExistence(timeout: 8))
+        revealContent(details)
+        XCTAssertEqual(details.label, savedLabel)
+        restart()
+        shopRoot(); tap(element("openPickupList"))
+        revealContent(details)
+        XCTAssertEqual(details.label, savedLabel)
+        openDetails()
+        XCTAssertEqual(slot.value as? String, "1")
+        let cap = app.textFields["ledgerCap"]
+        revealContent(cap)
+        XCTAssertEqual(cap.value as? String, "35")
+        capture("S03-saved-dinner-cap-and-cancelled-slot-after-relaunch")
+    }
+
+    func testAuthorizationHoldIsOptionalAndSeparateFromCheckoutCap() {
+        launch(reset: true)
+        shopRoot(); tap(element("openPickupList")); tap(element("ledgerStartShop"))
+        fill("Private hold comparison", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
+        tap(element("ledgerImport")); fill("2 wraps", into: "ledgerImportText")
+        tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
+        shopRoot(); tap(app.buttons["Review checkout"]); tap(app.buttons["Continue to checkout review"])
+        tap(app.buttons["Apply reviewed checkout copy"]); tap(app.buttons["Review whole checkout"])
+        fill("Family market", into: "Store", replacing: true)
+        fill("Main branch", into: "Branch", replacing: true)
+        fill("Tuesday 5 PM", into: "Pickup or delivery slot", replacing: true)
+        fill("Retailer quote", into: "Source of these prices", replacing: true)
+        fill("38", into: "Spending cap", replacing: true)
+        enableSwitch("Retailer total already includes all charges")
+        fill("30", into: "Inclusive total")
+        tap(app.buttons["Save and evaluate checkout"])
+        let capResult = "Within this scope’s cap · room remaining $8.00"
+        assertText(capResult)
+
+        let option = "Compare an authorization hold"
+        let compareHold = app.switches[option]
+        let holdLabel = "Retailer-displayed hold"
+        let fundsLabel = "Available funds (private, this screen only)"
+        let hold = app.textFields[holdLabel]
+        let funds = app.textFields[fundsLabel]
+        reveal(compareHold)
+        XCTAssertEqual(compareHold.value as? String, "0")
+        XCTAssertFalse(hold.exists)
+        XCTAssertFalse(funds.exists)
+        enableSwitch(option)
+        fill("40", into: fundsLabel)
+        assertText("Hold comparison unresolved")
+        fill("45", into: holdLabel)
+        assertText("Hold less available funds: $5.00")
+        assertText(capResult)
+
+        reveal(compareHold)
+        compareHold.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        XCTAssertEqual(compareHold.value as? String, "0")
+        XCTAssertFalse(hold.exists)
+        XCTAssertFalse(funds.exists)
+        enableSwitch(option)
+        reveal(funds)
+        XCTAssertEqual(funds.value as? String, funds.placeholderValue)
+        reveal(hold)
+        XCTAssertEqual(hold.value as? String, hold.placeholderValue)
+        assertText("Hold comparison unresolved")
+        backOnce(from: "Whole checkout", to: "Pickup")
+        tap(app.buttons["Review whole checkout"])
+        reveal(compareHold)
+        XCTAssertEqual(compareHold.value as? String, "0")
+        assertText(capResult)
+    }
+
     private func enterWeighedPickup(knownTax: Bool) {
         launch(reset: true)
         shopRoot(); tap(element("openPickupList")); tap(element("ledgerStartShop"))
@@ -256,7 +359,7 @@ import XCTest
     private func tap(_ target: XCUIElement) { reveal(target); XCTAssertTrue(target.isHittable, target.debugDescription); target.tap() }
     private func enableSwitch(_ label: String) {
         let control = app.switches[label]
-        reveal(control)
+        revealContent(control)
         if control.value as? String == "0" {
             // The accessibility frame includes the Form label. Tap the trailing switch itself.
             control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
@@ -264,11 +367,37 @@ import XCTest
         XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
     }
     private func fill(_ text: String, into id: String, replacing: Bool = false) {
-        let field = element(id); tap(field)
+        let field = element(id)
+        revealContent(field)
+        field.tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), "The field must have keyboard focus: \(id)")
         if replacing, let old = field.value as? String, old != field.placeholderValue { app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
         app.typeText(text)
         let done = app.buttons.matching(NSPredicate(format: "label == %@", "Done")).firstMatch
         if done.exists && done.isHittable { done.tap() }
+    }
+    private func revealContent(_ target: XCUIElement) {
+        for attempt in 0..<24 {
+            let area = scrollableArea()
+            if target.exists && !target.frame.isEmpty {
+                let center = CGPoint(x: target.frame.midX, y: target.frame.midY)
+                let bounds = app.frame
+                let navigation = app.navigationBars.firstMatch
+                let tabs = app.tabBars.firstMatch
+                let keyboard = app.keyboards.firstMatch
+                let top = navigation.exists ? navigation.frame.maxY : bounds.minY
+                let bottom = min(tabs.exists ? tabs.frame.minY : bounds.maxY,
+                                 keyboard.exists ? keyboard.frame.minY : bounds.maxY)
+                let viewport = CGRect(x: bounds.minX, y: top, width: bounds.width, height: max(0, bottom - top))
+                // A partly visible Form row can be hittable while its center is
+                // behind the tab bar. Scroll its tap point into clear content.
+                if viewport.insetBy(dx: 0, dy: 4).contains(center) && target.isHittable { return }
+                scrollContent(upward: center.y > area.midY)
+            } else {
+                scrollContent(upward: attempt < 16)
+            }
+        }
+        XCTFail("Content tap point is obscured: \(target.debugDescription)")
     }
     private func reveal(_ target: XCUIElement) {
         for attempt in 0..<24 {

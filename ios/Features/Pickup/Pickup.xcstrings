@@ -613,6 +613,23 @@
         }
       }
     },
+    "Compare an authorization hold": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare an authorization hold"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparar una retención de pago"
+          }
+        }
+      }
+    },
     "Confirm pantry or freezer food": {
       "extractionState": "manual",
       "localizations": {

@@ -183,6 +183,7 @@ struct LedgerHomeView: View {
                     Text("\(moneyText(cap)) · \(shop.basis.capScope.ledgerLabel)")
                 } else { Text(ledgerText("No spending cap entered")) }
             }.frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 5)
+                .contentShape(Rectangle())
         }.buttonStyle(.plain).accessibilityIdentifier("ledgerFacts")
             .disabled(model.saving || model.hasPendingSave)
     }
