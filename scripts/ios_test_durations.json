@@ -2,7 +2,8 @@
   "provenance": {
     "hosted_seconds": "GitHub Actions run 41898379149, comparison-context job 126826550970, Xcode 26.3 on macos-15-intel. Uses completed passes and the observed timeout allowance. The store-quotes case failed before completing, so its estimate uses the local pass.",
     "local_seconds": "The iPhone 17e iOS 27 runs in .build/CurrentOrdinary3510eb1/ordinary-ui.log and .build/WidgetLifecycleFinal20261104/latest-ordinary-journeys.log. Prefer the newer completed pass when available. Scale local durations by four to budget for observed Intel runner slowdown.",
-    "default_seconds": "Five minutes for cases without a prior duration."
+    "default_seconds": "Five minutes for cases without a prior duration.",
+    "runner_transition": "Historical timings are from Intel hosted jobs and local Apple Silicon. Standard macos-15 arm64 validation is pending; retain conservative weights until completed native hosted samples are available."
   },
   "default_seconds": 300,
   "local_multiplier": 4,
