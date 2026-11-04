@@ -1,0 +1,34 @@
+{
+  "app_source_commit": "aaff8f99f019dc4cc037b70cfce5641a1d0c6448",
+  "test": "FreeJourneyUITests/testNativeMicrophoneRefusalLeavesTypedCaptureReviewable",
+  "configuration": "Ordinary Debug app and a temporary test-only addition. The committed test retains the executed method under NATIVE_MICROPHONE_PERMISSION_PROBE.",
+  "executed_test_source_sha256": "b14234dc61ddfb0b36b86c59ab619f95d6502590aaafcb9f687b3aa766d1499d",
+  "app_debug_dylib_sha256": "8aa36b636aac6306ef656bd48451a94166373254338a74a63e21a8cc06b58705",
+  "xcode": "27.1 (27A9275)",
+  "device": "iPhone 17e, iOS 27.0 (24A434), fresh arm64 simulator, US English",
+  "result_bundle": ".build/MicrophoneRefusal20261104/MicrophoneRefusal.xcresult",
+  "log": ".build/MicrophoneRefusal20261104/microphone-refusal.log",
+  "log_sha256": "1589812f273871de830571edcddcfff6a0af66a1037b758e90577c3920415330",
+  "duration_seconds": 110.009,
+  "passed": 1,
+  "failed": 0,
+  "skipped": 0,
+  "runtime_warnings": [],
+  "system_prompts": [
+    {"permission": "Speech Recognition", "action": "Allow", "screenshot": ".build/MicrophoneRefusal20261104/attachments/21896B35-29CF-4DCF-A24E-1EDDE605555F.png", "screenshot_sha256": "d4d1b91422665a7ea875f304cd78031fd6427063de2aae47338ad52ae9d45bf6"},
+    {"permission": "Microphone", "action": "Don't Allow", "screenshot": ".build/MicrophoneRefusal20261104/attachments/9447D1BC-083E-408D-B277-33AEFBCE55A9.png", "screenshot_sha256": "00b139033b76af200137e7c811391020f905d5acff1a9d8f6db60e3c0e9c9626"}
+  ],
+  "readback": {
+    "file": ".build/MicrophoneRefusal20261104/persisted-readback.json",
+    "sha256": "1f534eb108a8708043d8533f25701e5de348688589aa65a0e49ea6bcd973121e",
+    "initial_app_permission_rows": [],
+    "final_app_permission_auth_values": {"microphone": 0, "speech_recognition": 2},
+    "original_text": "2 Wraps",
+    "source": "typed",
+    "reviewed_quantity": 3,
+    "import_batches": 1,
+    "ledger_revisions": [1, 2],
+    "audio_files_in_test_workspace": []
+  },
+  "scope": "The two distinct native prompts were visible and used in sequence. Microphone refusal returned to the typed review with the original wording, without a listening or captured-text control. The user explicitly confirmed and saved the corrected quantity, and the item reopened after relaunch. Physical speech recognition, permitted microphone use and human accessibility remain separate."
+}

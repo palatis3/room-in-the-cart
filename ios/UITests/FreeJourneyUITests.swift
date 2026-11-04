@@ -13,6 +13,93 @@ import XCTest
         app.terminate()
     }
 
+#if DEBUG && NATIVE_MICROPHONE_PERMISSION_PROBE
+    // Requires a fresh simulator with both app permissions undetermined.
+    func testNativeMicrophoneRefusalLeavesTypedCaptureReviewable() throws {
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        func permissionAlert(containing wording: String) -> XCUIElement? {
+            let matches = NSPredicate(format: "label CONTAINS[c] %@", wording)
+            for _ in 0..<30 {
+                for owner in [app!, springboard] {
+                    let alert = owner.alerts.firstMatch
+                    if alert.exists && (alert.label.localizedCaseInsensitiveContains(wording)
+                                        || alert.staticTexts.matching(matches).firstMatch.exists) {
+                        return alert
+                    }
+                }
+                Thread.sleep(forTimeInterval: 0.2)
+            }
+            let evidence = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+            evidence.name = "Missing native prompt: \(wording)"
+            evidence.lifetime = .keepAlways
+            add(evidence)
+            return nil
+        }
+        func capturePermissionAlert(_ name: String) {
+            let evidence = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+            evidence.name = name
+            evidence.lifetime = .keepAlways
+            add(evidence)
+        }
+
+        launch(reset: true)
+        openShoppingList()
+        tap(element("ledgerStartShop"))
+        fill("Fictional microphone pickup", into: "ledgerShopName")
+        tap(element("ledgerCreateShop"))
+        tap(element("ledgerImport"))
+        fill("2 Wraps", into: "ledgerImportText")
+        tap(element("ledger.capture"))
+        let captureSheet = app.navigationBars["Capture a list"]
+        XCTAssertTrue(captureSheet.waitForExistence(timeout: 8))
+        let editor = app.textViews["capture.editor"]
+        reveal(editor)
+        XCTAssertEqual(editor.value as? String, "2 Wraps")
+
+        tap(element("capture.startSpeech"))
+        let speech = try XCTUnwrap(permissionAlert(containing: "speech recognition"), "Native Speech Recognition prompt did not appear")
+        let allow = speech.buttons["Allow"]
+        XCTAssertTrue(allow.exists && allow.isHittable)
+        capturePermissionAlert("B09-native-speech-authorization")
+        allow.tap()
+
+        let microphone = try XCTUnwrap(permissionAlert(containing: "microphone"), "Native microphone prompt did not appear after allowing Speech Recognition")
+        let refuse = microphone.buttons.matching(NSPredicate(format: "label IN %@", ["Don’t Allow", "Don't Allow"])).firstMatch
+        XCTAssertTrue(refuse.exists && refuse.isHittable)
+        capturePermissionAlert("B09-native-microphone-authorization")
+        refuse.tap()
+
+        let failure = app.staticTexts["capture.error"]
+        reveal(failure)
+        XCTAssertTrue(failure.label.contains("permission was not granted"), failure.label)
+        XCTAssertFalse(element("capture.stopSpeech").exists)
+        XCTAssertFalse(element("capture.useText").exists)
+        reveal(editor)
+        XCTAssertEqual(editor.value as? String, "2 Wraps")
+        capture("B09-microphone-refusal-preserves-typed-draft")
+
+        enableSwitch("I checked the wording, amounts, units and exclusions.")
+        tap(element("capture.reviewFields"))
+        assertText("Actual destination: Fictional microphone pickup")
+        assertText("2 Wraps")
+        let amount = app.textFields["Total amount, unknown if blank"]
+        reveal(amount)
+        XCTAssertEqual(amount.value as? String, "2")
+        fill("3", into: "Total amount, unknown if blank", replacing: true)
+        if app.keyboards.firstMatch.exists { scrollContent(upward: false) }
+        enableSwitch("I reviewed this item, amounts, packs, purpose, destination and exclusions, including any unknowns.")
+        tap(element("capture.continue"))
+        XCTAssertTrue(captureSheet.waitForNonExistence(timeout: 10))
+        tap(element("ledgerCommitImport"))
+        restart()
+        openShoppingList()
+        reveal(app.buttons["Inspect Wraps"])
+        assertText("3 items")
+        capture("B09-typed-amount-reopened-after-microphone-refusal")
+    }
+
+#endif
+
     func testCancellingSystemShareKeepsTheFrozenPickupUnplaced() {
         launch(reset: true)
         openShoppingList()

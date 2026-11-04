@@ -50,6 +50,8 @@ Cook readback is documented in `READBACK.md`; it uses an explicitly authorized c
 
 The isolated combined suite has 43 passing tests, including actual local Vision OCR, deterministic three-row reading order, bilingual structured parsing, negation/unknown/pack conflicts, material edit confirmation, exact/changed/undone replay, correction opt-in/forget/locale/profile isolation, erasure late-write rejection and DEBUG directory isolation. All 115 en/es catalog entries compile. SDK checks are development evidence, not physical-device acceptance.
 
+The [native microphone refusal probe](../../../docs/evidence/native/microphone-refusal-20261104.json) passed on a fresh US-English iPhone 17e simulator. Run the probe in Debug on a fresh iOS 27 simulator by adding `SWIFT_ACTIVE_COMPILATION_CONDITIONS='DEBUG NATIVE_MICROPHONE_PERMISSION_PROBE'` to `xcodebuild test` and selecting `-only-testing:RoomInTheCartUITests/FreeJourneyUITests/testNativeMicrophoneRefusalLeavesTypedCaptureReviewable`. Both system permissions must start undetermined. The probe requires both native prompts and verifies the typed item after relaunch.
+
 Still required: root native/runtime integration checks; physical microphone and permission refusal tests; airplane-mode recognition availability; noisy speech and low-light bilingual photo review; large text/VoiceOver and human US-Spanish review; shared contributor request-only capture routing; actual Dinners guest entry; physical camera/barcode/manual product matching; native runtime verification of persistent package attachments and receipt/recipe-specific review. Optional widgets/share/reminders and print/aisle work have separate owners and device gates. B09 is not complete.
 
 
