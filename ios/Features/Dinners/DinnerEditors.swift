@@ -37,6 +37,7 @@ struct DinnerTemplateEditor: View {
     @State private var acceptedID = UUID()
     @State private var showPreview = false
     @State private var completed = false
+    @FocusState private var inputFocus: String?
     @Environment(\.dismiss) private var dismiss
     init(model: DinnerFeatureModel, purpose: DinnerEditorPurpose, initial: MealTemplate? = nil, idea: DinnerIdeaDraft? = nil) {
         self.model = model; self.purpose = purpose; originalIdea = idea
@@ -93,7 +94,7 @@ struct DinnerTemplateEditor: View {
                     Button(dinnerText("Continue editing")) { self.reviewed = nil; reviewedIdea = nil }
                 }
             } else {
-                DinnerTemplateFields(draft: $draft)
+                DinnerTemplateFields(draft: $draft, focus: $inputFocus)
                 if purpose == .manual {
                     Section(dinnerText("Night")) {
                         Toggle(dinnerText("Assign a date"), isOn: $scheduled)
@@ -114,6 +115,7 @@ struct DinnerTemplateEditor: View {
                             Text(dinnerText("Suggested by Room in the Cart"))
                         }
                         TextField(dinnerText("Assumptions, one per line"), text: $assumptions, axis: .vertical)
+                            .focused($inputFocus, equals: "assumptions")
                         Toggle(dinnerText("Usable yield reviewed"), isOn: $yieldConfirmed)
                         Toggle(dinnerText("Availability reviewed"), isOn: $availabilityConfirmed)
                         if let originalIdea, !originalIdea.hardExclusions.isEmpty {
@@ -129,11 +131,13 @@ struct DinnerTemplateEditor: View {
             }
             DinnerFeedback(model: model)
         }.navigationTitle(purpose == .manual ? dinnerText("Manual dinner") : purpose == .idea ? dinnerText("Dinner idea") : dinnerText("Reusable dinner")).dinnerAccess(model)
+            .keyboardDoneAction(visible: inputFocus != nil, title: dinnerText("Done")) { inputFocus = nil }
             .dinnerApplyPresentation(model, presented: $showPreview)
     }
     private func review() {
         do {
             let template = try draft.template(validate: purpose != .idea)
+            inputFocus = nil
             if purpose == .manual {
                 guard let shop = model.shop else { return }
                 let day = try DinnerEntry.date(date, zone: shop.basis.timeZoneIdentifier, scheduled: scheduled)
@@ -153,26 +157,29 @@ struct DinnerTemplateEditor: View {
 }
 struct DinnerTemplateFields: View {
     @Binding var draft: DinnerTemplateDraft
+    let focus: FocusState<String?>.Binding
     var body: some View {
         Section(dinnerText("Dinner")) {
-            TextField(dinnerText("Dinner name"), text: $draft.title).accessibilityIdentifier("ledgerDinnerTitle")
-            TextField(dinnerText("Total servings"), text: $draft.servings).accessibilityIdentifier("ledgerDinnerServings")
-            TextField(dinnerText("Notes"), text: $draft.notes, axis: .vertical)
-            TextField(dinnerText("Source URL, optional"), text: $draft.source)
-            TextField(dinnerText("Hard exclusions, one per line"), text: $draft.exclusions, axis: .vertical)
-            TextField(dinnerText("Remaining lead time in minutes, optional"), text: $draft.lead)
-            TextField(dinnerText("Completed steps, one per line"), text: $draft.completed, axis: .vertical)
+            TextField(dinnerText("Dinner name"), text: $draft.title).focused(focus, equals: "title").accessibilityIdentifier("ledgerDinnerTitle")
+            TextField(dinnerText("Total servings"), text: $draft.servings).focused(focus, equals: "servings").accessibilityIdentifier("ledgerDinnerServings")
+            TextField(dinnerText("Notes"), text: $draft.notes, axis: .vertical).focused(focus, equals: "notes")
+            TextField(dinnerText("Source URL, optional"), text: $draft.source).focused(focus, equals: "source")
+            TextField(dinnerText("Hard exclusions, one per line"), text: $draft.exclusions, axis: .vertical).focused(focus, equals: "exclusions")
+            TextField(dinnerText("Remaining lead time in minutes, optional"), text: $draft.lead).focused(focus, equals: "leadTime")
+            TextField(dinnerText("Completed steps, one per line"), text: $draft.completed, axis: .vertical).focused(focus, equals: "completed")
         }
         Section(dinnerText("Ingredients")) {
             Text(dinnerText("Enter exact amounts or leave them unresolved. Count means individual units, not packs."))
             ForEach(draft.ingredients) { ingredient in
                 let row = dinnerDraftBinding(ingredient, in: $draft.ingredients)
+                let prefix = "ingredient.\(ingredient.id)."
                 VStack(alignment: .leading, spacing: 8) {
-                    TextField(dinnerText("Ingredient name"), text: row.name)
-                    TextField(dinnerText("Amount, optional"), text: row.amount)
+                    TextField(dinnerText("Ingredient name"), text: row.name).focused(focus, equals: prefix + "name")
+                    TextField(dinnerText("Amount, optional"), text: row.amount).focused(focus, equals: prefix + "amount")
                     DinnerUnitPicker(unit: row.unit)
-                    TextField(dinnerText("Ingredient notes"), text: row.notes, axis: .vertical)
+                    TextField(dinnerText("Ingredient notes"), text: row.notes, axis: .vertical).focused(focus, equals: prefix + "notes")
                     TextField(dinnerText("Ingredient exclusions, one per line"), text: row.exclusions, axis: .vertical)
+                        .focused(focus, equals: prefix + "exclusions")
                     Button(dinnerText("Remove ingredient"), role: .destructive) { draft.ingredients.removeAll { $0.id == ingredient.id } }
                         .buttonStyle(.borderless)
                 }.padding(.vertical, 6)
@@ -184,8 +191,8 @@ struct DinnerTemplateFields: View {
             ForEach(draft.groups) { group in
                 let row = dinnerDraftBinding(group, in: $draft.groups)
                 VStack(alignment: .leading, spacing: 8) {
-                    TextField(dinnerText("Group name"), text: row.name)
-                    TextField(dinnerText("Group servings"), text: row.servings)
+                    TextField(dinnerText("Group name"), text: row.name).focused(focus, equals: "group.\(group.id).name")
+                    TextField(dinnerText("Group servings"), text: row.servings).focused(focus, equals: "group.\(group.id).servings")
                     Toggle(dinnerText("Protected group"), isOn: row.isProtected)
                     Button(dinnerText("Remove group"), role: .destructive) { draft.groups.removeAll { $0.id == group.id } }
                         .buttonStyle(.borderless)

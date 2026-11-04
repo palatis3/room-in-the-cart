@@ -9,6 +9,7 @@ struct DinnerQuotesView: View {
     @State private var pair: TwoStoreQuotePair?
     @State private var result: TwoStoreQuoteResult?
     @State private var showPreview = false
+    @FocusState private var inputFocus: String?
     var body: some View {
         Form {
             if model.budgetVisible, let basis = model.shop?.basis {
@@ -48,7 +49,9 @@ struct DinnerQuotesView: View {
                     ForEach($commitments) { $commitment in
                         VStack(alignment: .leading, spacing: 6) {
                             TextField(dinnerText("Commitment name"), text: $commitment.name)
+                                .focused($inputFocus, equals: "commitment.\(commitment.id).name")
                             TextField(dinnerText("Required portions"), text: $commitment.portions)
+                                .focused($inputFocus, equals: "commitment.\(commitment.id).portions")
                             Picker(dinnerText("Commitment type"), selection: $commitment.kind) {
                                 Text(dinnerText("Dinner")).tag(DinnerCommitment.Kind.dinner)
                                 Text(dinnerText("Lunch")).tag(DinnerCommitment.Kind.lunch)
@@ -61,8 +64,8 @@ struct DinnerQuotesView: View {
                     }
                     Button(dinnerText("Add commitment")) { commitments.append(DinnerCommitmentDraft()) }.disabled(commitments.count >= 100)
                 }
-                DinnerStoreFields(title: dinnerText("First store"), prefix: "quote.first.", draft: $first)
-                DinnerStoreFields(title: dinnerText("Second store"), prefix: "quote.second.", draft: $second)
+                DinnerStoreFields(title: dinnerText("First store"), prefix: "quote.first.", draft: $first, focus: $inputFocus)
+                DinnerStoreFields(title: dinnerText("Second store"), prefix: "quote.second.", draft: $second, focus: $inputFocus)
                 Section {
                     Button(dinnerText("Review two complete trips")) {
                         do {
@@ -84,12 +87,8 @@ struct DinnerQuotesView: View {
                         Button(dinnerText("Edit quotes"), action: editQuotes).accessibilityIdentifier("quoteEditReviewed")
                     }
                 }
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    Button(ledgerText("Done")) { UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil) }
-                        .accessibilityIdentifier("quoteKeyboardDone")
-                }
             }
+            .keyboardDoneAction(visible: inputFocus != nil, title: ledgerText("Done"), identifier: "quoteKeyboardDone") { inputFocus = nil }
             .dinnerApplyPresentation(model, presented: $showPreview)
     }
     private func editQuotes() {
@@ -138,22 +137,23 @@ struct DinnerStoreFields: View {
     let title: String
     let prefix: String
     @Binding var draft: DinnerStoreDraft
+    let focus: FocusState<String?>.Binding
     var body: some View {
         Section(title) {
-            TextField(dinnerText("Store label"), text: $draft.label).accessibilityIdentifier(prefix + "label")
-            TextField(dinnerText("Retailer name or identifier"), text: $draft.storeID).accessibilityIdentifier(prefix + "storeID")
-            TextField(dinnerText("Branch"), text: $draft.branch).accessibilityIdentifier(prefix + "branch")
+            textField(dinnerText("Store label"), value: $draft.label, key: "label")
+            textField(dinnerText("Retailer name or identifier"), value: $draft.storeID, key: "storeID")
+            textField(dinnerText("Branch"), value: $draft.branch, key: "branch")
             Picker(dinnerText("Mode"), selection: $draft.mode) {
                 Text(dinnerText("Pickup")).tag(ShoppingMode.pickup)
                 Text(dinnerText("Delivery")).tag(ShoppingMode.delivery)
                 Text(dinnerText("In store")).tag(ShoppingMode.inStore)
             }
             DatePicker(dinnerText("Store slot"), selection: $draft.slot)
-            TextField(dinnerText("Evidence source"), text: $draft.source).accessibilityIdentifier(prefix + "source")
+            textField(dinnerText("Evidence source"), value: $draft.source, key: "source")
             DatePicker(dinnerText("Observed at"), selection: $draft.observedAt)
-            EnteredQuoteValueField(title: dinnerText("Items before fees and discounts in USD, optional"), value: $draft.itemSubtotal, identifier: prefix + "itemSubtotal")
-            TextField(dinnerText("Price conditions, such as a loyalty card"), text: $draft.eligibilityTerms).accessibilityIdentifier(prefix + "eligibilityTerms")
-            EnteredQuoteValueField(title: dinnerText("Whole checkout total in USD, optional"), value: $draft.total, identifier: prefix + "total")
+            EnteredQuoteValueField(title: dinnerText("Items before fees and discounts in USD, optional"), value: $draft.itemSubtotal, identifier: prefix + "itemSubtotal", focus: focus)
+            textField(dinnerText("Price conditions, such as a loyalty card"), value: $draft.eligibilityTerms, key: "eligibilityTerms")
+            EnteredQuoteValueField(title: dinnerText("Whole checkout total in USD, optional"), value: $draft.total, identifier: prefix + "total", focus: focus)
             Toggle(dinnerText("Total includes every item, fee, discount, tax and deposit"), isOn: $draft.allChargesIncluded).accessibilityIdentifier(prefix + "allChargesIncluded")
             Toggle(dinnerText("All required quantities match the commitments"), isOn: $draft.quantitiesMatched).accessibilityIdentifier(prefix + "quantitiesMatched")
             Toggle(dinnerText("This is one complete store plan"), isOn: $draft.singleStore).accessibilityIdentifier(prefix + "singleStore")
@@ -162,11 +162,15 @@ struct DinnerStoreFields: View {
                 Text(dinnerText("Reviewed available")).tag(1)
                 Text(dinnerText("Unavailable")).tag(2)
             }.accessibilityIdentifier(prefix + "availability")
-            EnteredQuoteValueField(title: dinnerText("Incremental trip cash in USD, optional"), value: $draft.tripCash, identifier: prefix + "tripCash")
-            EnteredQuoteValueField(title: dinnerText("Extra minutes, optional"), value: $draft.extraMinutes, identifier: prefix + "extraMinutes")
+            EnteredQuoteValueField(title: dinnerText("Incremental trip cash in USD, optional"), value: $draft.tripCash, identifier: prefix + "tripCash", focus: focus)
+            EnteredQuoteValueField(title: dinnerText("Extra minutes, optional"), value: $draft.extraMinutes, identifier: prefix + "extraMinutes", focus: focus)
             Toggle(dinnerText("Trip already planned"), isOn: $draft.alreadyPlanned).accessibilityIdentifier(prefix + "alreadyPlanned")
             Text(dinnerText("Blank costs stay unresolved. Enter zero only when you have confirmed there is no charge."))
         }
+    }
+    private func textField(_ title: String, value: Binding<String>, key: String) -> some View {
+        let identifier = prefix + key
+        return TextField(title, text: value).focused(focus, equals: identifier).accessibilityIdentifier(identifier)
     }
 }
 
@@ -175,10 +179,11 @@ struct EnteredQuoteValueField: View {
     let title: String
     @Binding var value: String
     let identifier: String
+    let focus: FocusState<String?>.Binding
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title).font(.caption).foregroundStyle(.secondary)
-            TextField(title, text: $value).accessibilityIdentifier(identifier)
+            TextField(title, text: $value).focused(focus, equals: identifier).accessibilityIdentifier(identifier)
         }
     }
 }

@@ -190,10 +190,13 @@ struct LedgerMealEditor: View {
                     ForEach($ingredients) { $ingredient in
                         VStack(alignment: .leading, spacing: 10) {
                             TextField(ledgerText("Ingredient name"), text: $ingredient.name, axis: .vertical)
-                                .focused($inputFocus, equals: "ingredient-\(ingredient.id)")
-                            LedgerQuantityFields(amount: $ingredient.amount, unit: $ingredient.unit)
+                                .focused($inputFocus, equals: "ingredient.\(ingredient.id).name")
+                            LedgerQuantityFields(amount: $ingredient.amount, unit: $ingredient.unit,
+                                                 amountFocus: ($inputFocus, "ingredient.\(ingredient.id).amount"))
                             TextField(ledgerText("Ingredient notes"), text: $ingredient.notes, axis: .vertical)
+                                .focused($inputFocus, equals: "ingredient.\(ingredient.id).notes")
                             TextField(ledgerText("Ingredient exclusions, separated by commas"), text: $ingredient.exclusions, axis: .vertical)
+                                .focused($inputFocus, equals: "ingredient.\(ingredient.id).exclusions")
                             Button(ledgerText("Remove ingredient"), role: .destructive) { ingredients.removeAll { $0.id == ingredient.id } }
                         }.padding(.vertical, 6)
                     }
@@ -203,7 +206,9 @@ struct LedgerMealEditor: View {
                     ForEach($portions) { $portion in
                         VStack(alignment: .leading, spacing: 8) {
                             TextField(ledgerText("Who or what this is for"), text: $portion.name, axis: .vertical)
+                                .focused($inputFocus, equals: "portion.\(portion.id).name")
                             TextField(ledgerText("Portions"), text: $portion.amount).keyboardType(.decimalPad)
+                                .focused($inputFocus, equals: "portion.\(portion.id).amount")
                             Toggle(ledgerText("Protect these portions"), isOn: $portion.protected)
                             Button(ledgerText("Remove named portion"), role: .destructive) { portions.removeAll { $0.id == portion.id } }
                         }
@@ -212,7 +217,9 @@ struct LedgerMealEditor: View {
                 }.disabled(model.saving || model.hasPendingSave)
                 Section(ledgerText("Optional preparation details")) {
                     TextField(ledgerText("Known elapsed lead time, minutes"), text: $leadTime).keyboardType(.numberPad)
+                        .focused($inputFocus, equals: "leadTime")
                     TextField(ledgerText("Already completed steps, one per line"), text: $completed, axis: .vertical)
+                        .focused($inputFocus, equals: "completed")
                 }.disabled(model.saving || model.hasPendingSave)
                 Button(ledgerText("Review dinner")) { review() }.buttonStyle(PrimaryAction())
                     .disabled(model.saving || model.hasPendingSave).accessibilityIdentifier("ledgerReviewDinner")
@@ -222,8 +229,8 @@ struct LedgerMealEditor: View {
         }.scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(ledgerText(chooseNow ? "Dinner for this pickup" : "Usual dinner"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() }.disabled(model.saving) }
-                ToolbarItemGroup(placement: .keyboard) { Spacer(); Button(ledgerText("Done")) { inputFocus = nil } }
             }.interactiveDismissDisabled(model.saving)
+            .keyboardDoneAction(visible: inputFocus != nil, title: ledgerText("Done")) { inputFocus = nil }
     }
     private func separated(_ text: String) -> [String] {
         text.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }

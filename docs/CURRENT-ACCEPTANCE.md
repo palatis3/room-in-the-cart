@@ -65,6 +65,7 @@ Results belong to their own immutable source and binary identities. Do not add t
 | RECORDS-CANCEL | [Records deletion validation](evidence/native/records-cancel-20261104/validation.json) | The current alert gives Cancel and Delete distinct reachable actions. Both focused cases pass. Cancel retains the record through owner-file preview, discard and restart. Explicit deletion survives restart. The updated unsigned Release archive also passed metadata checks. |
 | HANDOFF-VERSION | [Handoff version validation](evidence/native/handoff-version-20261104/validation.json) | All 530 model cases pass. The iOS 27 iPhone 17e and iOS 17 iPhone SE share-sheet cases retain the exact frozen unplaced basket and cancellation through relaunch. The first SE automation attempt stopped before share. The unsigned Release archive passes metadata checks. |
 | CHECKOUT-KEYBOARD | [Checkout keyboard validation](evidence/native/checkout-keyboard-20261104/validation.json) | The frame warning traces to the SwiftUI keyboard accessory bar. The checkout, pack and repair forms now use the focus-driven Done control. Four iOS 27 UI cases, one iOS 17 UI case and all 530 model cases pass. Both result bundles report zero runtime warnings. The unsigned Release archive passes metadata checks. |
+| PLANNING-KEYBOARD | [Planning keyboard validation](evidence/native/planning-keyboard-20261104/validation.json) | Local and shared store quotes, shared meal ideas and dinner editors use a focus-driven Done control. Four iOS 27 UI cases, one iOS 17 reusable-dinner UI case and all 530 model cases passed. The fixture and ordinary result bundles report zero runtime warnings. The unsigned Release archive passed metadata checks. |
 
 ## Launch requirement traceability
 
@@ -97,7 +98,7 @@ Results belong to their own immutable source and binary identities. Do not add t
 | F07 | Versioned bounded archive/media staging, siblings, canonical identity and scoped cleanup; N526, F07. | Final system Files/photo flow, production deletion recovery. |
 | F08 | Actor-keyed outboxes and authoritative local service receipts; separate draft/waiting/received/conflict/placed states; N526, B175, WEB, WEB-OFFLINE, NATIVE-OFFLINE. | Deployed offline/refresh/device-loss task. |
 | F09 | StoreKit/server purchase binding, seats and separate measurement consent; N526, B175, MEASUREMENT, PRIVACY. | Final privacy questionnaire; owner-deferred actual Apple product/team and sandbox lifecycle. |
-| P01 | Accepted versioned dinners, one Free selection, rotations/pins/this-week separation; N526, PLANNING. | Actual paid access/two-device reuse and final rotation UI matrix. |
+| P01 | Accepted versioned dinners, one Free selection, rotations/pins/this-week separation; N526, PLANNING, PLANNING-KEYBOARD. | Actual paid access/two-device reuse and final rotation UI matrix. |
 | P02 | Accepted unscheduled library enumeration, whole-pack/current commitments and confirmed unreserved stock scenarios; N526, PLANNING. | Hardware complete-equivalent-plan task with real household. |
 | P03 | Named group/guest/away changes, pack impact and manual alternative; N526, PLANNING, B175. | Deployed non-shopper proposal and post-purchase task. |
 | P04 | Confirmed accepted fallback ranking from actual fill/stock, exclusions, elapsed time and explicit top-up consent; N526, PLANNING. | Human fallback/travel comparison and actual pickup scenario. |
@@ -122,8 +123,8 @@ Results belong to their own immutable source and binary identities. Do not add t
 | N06 | Source/revision/projection/conflict comparison and separate recovery; N526, F07. | Real Files cancel/corrupt/reimport and lifecycle task. |
 | N07 | Spoken/typed guest proposal uses the same identified group planner and review; N526, PLANNING. | Physical speech and current-grant apply/amendment task. |
 | A01 | Adult meal week/list, full civil dates, stable occurrence identity and protected lunches; N526, LIBRARY, PLANNING. | Deployed cross-device week and physical accessibility. |
-| A02 | App-owned/manual editable ideas, exclusions/yield/source, adult approval distinct from choose/apply; N526, PLANNING. | Final household/human idea task; unavailable generator fallback. |
-| A03 | Two entered complete quotes, trip cash/time, break-even/unknowns, private proposal and shopper adoption; N526, B175, QUOTES. | Final configured household/hardware bilingual task. |
+| A02 | App-owned/manual editable ideas, exclusions/yield/source, adult approval distinct from choose/apply; N526, PLANNING, PLANNING-KEYBOARD. | Final household/human idea task; unavailable generator fallback. |
+| A03 | Two entered complete quotes, trip cash/time, break-even/unknowns, private proposal and shopper adoption; N526, B175, QUOTES, PLANNING-KEYBOARD. | Final configured household/hardware bilingual task. |
 
 ## Route traceability
 

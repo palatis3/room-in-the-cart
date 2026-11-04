@@ -219,8 +219,11 @@ private struct LedgerContributionEditor: View {
 struct LedgerQuantityFields: View {
     @Binding var amount: String
     @Binding var unit: UnitOfMeasure
+    var amountFocus: (binding: FocusState<String?>.Binding, id: String)? = nil
     var body: some View {
-        TextField(ledgerText("Amount, unknown if blank"), text: $amount).keyboardType(.decimalPad)
+        let field = TextField(ledgerText("Amount, unknown if blank"), text: $amount).keyboardType(.decimalPad)
+        if let amountFocus { field.focused(amountFocus.binding, equals: amountFocus.id) }
+        else { field }
         Picker(ledgerText("Unit"), selection: $unit) {
             ForEach(UnitOfMeasure.allCases, id: \.self) { Text($0.displayName).tag($0) }
         }

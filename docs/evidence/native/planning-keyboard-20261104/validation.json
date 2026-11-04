@@ -1,0 +1,55 @@
+{
+  "baseCommit": "e647f40107ca3de3fe15ad0b1851736bcbb4559b",
+  "sourceSHA256": {
+    "ios/App/Theme.swift": "5c22cb54e31caa827b83d87497aff950ba8cea73cb38df430ecd3fe57511e627",
+    "ios/Features/Dinners/DinnerEditors.swift": "c56ae443ec6a56f16d45b9f1fe2421e3350ecd1ef36610320b1940ad2afd9fbc",
+    "ios/Features/Dinners/DinnerQuotesView.swift": "76177a19de64d5d42ea2ba66d29593e14128d9ace2dca06c6a8228559e6807a2",
+    "ios/Features/Household/SharedMealIdeasView.swift": "f2d55c764f969f313a4cfa87ecfece5dba9e088ab27f6bd861d68cbbd2ebd915",
+    "ios/Features/Household/SharedStoreQuotesView.swift": "8e8a915be21df2e023c2c2f8f1970f136532b75be1d14ace7da32554e4075017",
+    "ios/Features/Ledger/LedgerIngredientView.swift": "a5609273c88fd2f9d260a3480f7574eea5dd87041fb79e21890e748bd02ad874",
+    "ios/Features/Ledger/LedgerMealsView.swift": "4fd28122b8e42769d272926c731d3c255475026c9422bdab3d2493e37e134247",
+    "ios/UITests/FreeJourneyUITests.swift": "d3fc64347c00054f84310680cbace6f258c827139754e472625a755a300907e0",
+    "ios/UITests/SharedStoreQuoteUITests.swift": "ecc6ee4611423ac92f69c558fead7aa1e96b686dfadf08b10f4402044244dbee"
+  },
+  "initialFailure": {
+    "result": ".build/PlanningKeyboard20261104/LocalPlanning.xcresult",
+    "observation": "The standard Dinners route opened DinnerTemplateEditor. The ingredient field accepted the amount but Done was missing. The later edit binds that editor's fields directly."
+  },
+  "ordinarySimulator": {
+    "device": "iPhone 17e, iOS 27.0 (24A434)",
+    "result": ".build/PlanningKeyboard20261104/LocalPlanningRerun.xcresult",
+    "debugAppCodeSHA256": "c668f4fa3d200b881e06d98b9751b836fccccd85025a3a23bbb6d0cc44706638",
+    "modelTestsPassed": 530,
+    "uiTestsPassed": 2,
+    "failed": 0,
+    "runtimeWarnings": [],
+    "observed": ["Enter and save two local quotes with unknown price and availability.", "Dismiss the keyboard from an ingredient amount, save and choose a reusable dinner, and keep the chosen dinner out of pairing suggestions."]
+  },
+  "householdSimulator": {
+    "device": "iPhone 17e, iOS 27.0 (24A434)",
+    "result": ".build/PlanningKeyboard20261104/HouseholdPlanning.xcresult",
+    "debugAppCodeSHA256": "9a7c8c9748e15b177b56fc8174810429ada4fb3ab779cd13e0a17d1606c217c1",
+    "uiTestsPassed": 2,
+    "failed": 0,
+    "runtimeWarnings": [],
+    "observed": ["Enter exact fractions, review and save a shared draft, cancel and confirm adult approval, and separately propose and review it as shopper.", "Enter shared subtotal, total, trip cash, time and cap, with reachable Done and persistent labels. Review the named adult's budget access action."],
+    "scope": "Guarded CONTRIBUTOR_CAPTURE_UI_FIXTURE app uses a synthetic household. This build predates the separate DinnerTemplateEditor change. The tested shared editor code matches the source hashes above."
+  },
+  "minimumSimulator": {
+    "device": "iPhone SE (2nd generation), iOS 17.0 (21A328)",
+    "result": ".build/PlanningKeyboard20261104/MinimumDinner.xcresult",
+    "uiTestsPassed": 1,
+    "failed": 0,
+    "runtimeWarnings": [],
+    "uiSeconds": 53.663,
+    "observed": "Reach Done from an ingredient amount and save and choose the reusable dinner. The chosen dinner stays out of pairing suggestions."
+  },
+  "archive": {
+    "path": ".build/PlanningKeyboard20261104/RoomInTheCart-PlanningKeyboard.xcarchive",
+    "binaryUUID": "841F2A07-62F4-3629-9A54-9471E30C08EB",
+    "executableSHA256": "6d3efc8ae3466daff488c9023005706e24957c2a78bd3d9dd54e897a6a97ea20",
+    "builtAppMetadataCheck": "passed",
+    "signed": false
+  },
+  "scope": "The Records recipe-to-dinner editor compiles with the new focus binding. Its direct keyboard interaction, physical assistive access, and hosted household acceptance remain separate checks."
+}

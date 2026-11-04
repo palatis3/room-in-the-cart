@@ -224,7 +224,7 @@ import XCTest
         fill("Dinner plan", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
         tap(element("dinnerLibrary")); tap(element("ledgerNewTemplate"))
         fill("Pepper rice", into: "ledgerDinnerTitle"); fill("3", into: "ledgerDinnerServings")
-        fill("Peppers", into: "Ingredient name"); fill("3", into: "Amount, optional")
+        fill("Peppers", into: "Ingredient name"); fill("3", into: "Amount, optional", requireDone: true)
         tap(element("ledgerReviewDinner")); tap(element("ledgerSaveDinner")); tap(app.buttons["Done"])
         tap(element("ledgerChooseTemplate")); tap(element("dinnerApply")); dinnerRoot()
         tap(app.buttons["Pairing and fallback evidence"])

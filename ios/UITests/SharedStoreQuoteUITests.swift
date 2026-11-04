@@ -118,7 +118,7 @@ import XCTest
         capture("S27-named-adult-budget-grant-accessibility-label")
     }
     private func inputMeaning(_ value: String, id: String, title: String) {
-        fill(value,into:id)
+        fill(value,into:id,requireDone:true)
         let label = app.staticTexts.matching(identifier:title).firstMatch
         reveal(label)
         XCTAssertTrue(label.isHittable,title)
@@ -167,11 +167,13 @@ import XCTest
         if target.value as? String == "0" { target.coordinate(withNormalizedOffset:CGVector(dx:0.92,dy:0.5)).tap() }
         XCTAssertEqual(target.value as? String,"1",id)
     }
-    private func fill(_ text: String, into id: String, replacing: Bool = false) {
+    private func fill(_ text: String, into id: String, replacing: Bool = false, requireDone: Bool = false) {
         let field = app.textFields.matching(identifier:id).firstMatch; tap(field)
         if replacing, let old = field.value as? String, old != field.placeholderValue { app.typeText(String(repeating:XCUIKeyboardKey.delete.rawValue,count:old.count)) }
         if !text.isEmpty { app.typeText(text) }
-        let done = app.buttons.matching(identifier:"Done").firstMatch; if done.exists && done.isHittable { done.tap() }
+        let done = app.buttons.matching(identifier:"Done").firstMatch
+        if requireDone { XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable, "Done must be reachable from \(id)") }
+        if done.exists && done.isHittable { done.tap() }
     }
     private func assertLabel(_ id: String, contains text: String) { let target = element(id); reveal(target); XCTAssertTrue(target.label.contains(text),target.label) }
     private func assertText(_ text: String) {

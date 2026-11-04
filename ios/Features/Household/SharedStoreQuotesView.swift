@@ -42,6 +42,7 @@ private struct SharedStoreQuotesContent: View {
     @State private var acknowledged = false
     @State private var clearing = false
     @State private var entryNotice: String?
+    @FocusState private var inputFocus: String?
     @AccessibilityFocusState private var reviewFocused: Bool
     @AccessibilityFocusState private var resultFocused: Bool
     var body: some View {
@@ -181,15 +182,13 @@ private struct SharedStoreQuotesContent: View {
         .confirmationDialog(StoreQuoteCopy.text("Clear local retry?"), isPresented: $clearing, titleVisibility: .visible) {
             Button(StoreQuoteCopy.text("Refresh and clear local retry"), role: .destructive) { Task { await model.clearPendingAfterRefresh() } }
         } message: { Text(StoreQuoteCopy.text("Clearing cannot undo a comparison, proposal, grant, or store adoption already received. Review the refreshed household result.")) }
-        .toolbar { ToolbarItemGroup(placement: .keyboard) {
-            Spacer(); Button(ledgerText("Done")) { UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil) }
-        } }
+        .keyboardDoneAction(visible: inputFocus != nil, title: ledgerText("Done")) { inputFocus = nil }
         }
     }
     @ViewBuilder private func editor(_ page: StoreQuotePage) -> some View {
-        DinnerStoreFields(title: dinnerText("First store"), prefix: "sharedQuotes.first.", draft: $first)
+        DinnerStoreFields(title: dinnerText("First store"), prefix: "sharedQuotes.first.", draft: $first, focus: $inputFocus)
         termsAndCap(first: true)
-        DinnerStoreFields(title: dinnerText("Second store"), prefix: "sharedQuotes.second.", draft: $second)
+        DinnerStoreFields(title: dinnerText("Second store"), prefix: "sharedQuotes.second.", draft: $second, focus: $inputFocus)
         termsAndCap(first: false)
         Section {
             Button(StoreQuoteCopy.text("Review private comparison save")) {
@@ -208,7 +207,7 @@ private struct SharedStoreQuotesContent: View {
             Toggle(StoreQuoteCopy.text("Eligibility and price conditions reviewed"), isOn: isFirst ? $firstEligibility : $secondEligibility)
                 .accessibilityIdentifier(isFirst ? "sharedQuotes.first.eligibility" : "sharedQuotes.second.eligibility")
             EnteredQuoteValueField(title: StoreQuoteCopy.text("Applicable cap in USD, optional"), value: isFirst ? $firstCap : $secondCap,
-                identifier: isFirst ? "sharedQuotes.first.cap" : "sharedQuotes.second.cap")
+                identifier: isFirst ? "sharedQuotes.first.cap" : "sharedQuotes.second.cap", focus: $inputFocus)
             Picker(StoreQuoteCopy.text("Cap scope"), selection: isFirst ? $firstCapScope : $secondCapScope) {
                 Text(dinnerText("Whole pickup")).tag("wholeCheckout")
                 Text(StoreQuoteCopy.text("Items before fees and discounts only")).tag("itemsOnly")
