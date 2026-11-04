@@ -129,6 +129,18 @@
       "path": ".build/CaptureUnitPicker20261104/verified-attachments/73E4EB6C-577F-45B3-AE07-145F6D411005.png",
       "sha256": "d452d3e02e1112cc25063fb67fa66eec9eb5f08acc6adefe45cf94772fded262"
     },
+    "ordinaryMinimumOS": {
+      "sourceCommit": "e631e1c2d89d95a42307d90f08cb371b9f7c5f0b",
+      "compiledBundleVerification": ".build/NativeMinimumColdCapture20261104/build-verification.log",
+      "result": ".build/NativeMinimumColdCapture20261104/MinimumColdCapture.xcresult",
+      "executableSHA256": "282732bf86e66eed46176d775387e8c7df80775894e8e52d3bdbecfb6d1bfe63",
+      "debugDylibSHA256": "232ce2de138308363d5048191c7dd6ec03430b1bbe85e810bf7d460b06de42c2",
+      "passed": 55,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": [],
+      "scope": "The ordinary Debug app passed bundle verification. Its iOS 17 model run covered structured capture, spelling, contributor requests, and widget startup and route isolation."
+    },
     "priorAttempts": [
       {"result": ".build/CaptureUnitPicker20261104/SpanishLarge17Units.xcresult", "observation": "The visual layout stacked the label, but the native picker exposed a duplicated accessibility name."},
       {"result": ".build/CaptureUnitPicker20261104/SpanishLarge17UnitMenu.xcresult", "observation": "The replacement exposed the distinct name and selected value. XCTest reported the menu button as non-hittable despite its visible frame. The passing harness tapped inside the visible frame and checked actual choices and values."}
