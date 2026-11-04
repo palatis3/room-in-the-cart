@@ -251,7 +251,7 @@ These seven rows are outside the 52 launch-requirement count. E05 is intentional
 | Build and test provenance | The evidence linked above names the tested snapshots, devices and results. An unsigned local device archive and simulator builds are available. | Record the final build and source revision for each package, service, browser and native acceptance result. |
 | Release operations and product obligations | No signed launch rehearsal, complete support/privacy/account-deletion/consent operating process or optional measurement acceptance recorded | Lead/product owner completes B11 operational drills, public help/privacy/support/review/demo/terms, data lifecycle and consented measurement; listing claims only from submitted-build evidence |
 
-These are blocks on release or the affected assurance, not reasons to stop independent implementation. Supabase availability is no longer listed as an infrastructure outage. Direct retailer integration E05 is deliberately not a launch block. The [required-reason API source audit](REQUIRED-REASON-API-AUDIT.md) found no missing declaration in inspected shipping source; archive/privacy-report acceptance remains open.
+These are blocks on release or the affected assurance, not reasons to stop independent implementation. Supabase availability is no longer listed as an infrastructure outage. Direct retailer integration E05 is deliberately not a launch block. The Release archive review identified a required-reason declaration for recovered-file checks and corrected the app manifest. [Required-reason API audit](REQUIRED-REASON-API-AUDIT.md)
 
 ## Evidence required to close a row
 

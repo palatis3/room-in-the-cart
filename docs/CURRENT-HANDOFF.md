@@ -8,6 +8,10 @@ The authenticated Supabase dashboard confirmed exactly eight applied migration c
 
 The ordinary native run uses a newly created iPhone 17e on iOS 27.0. Its log and result bundle are under `.build/NativeAcceptance-20261104`. The 526 model tests passed and the UI run began. Check its live process and final result before using the UI result as acceptance evidence. The existing preview simulator was preserved.
 
+The rebuilt unsigned Release archive now declares the required reason for private recovery-file metadata checks. The compiled app and both extensions passed local metadata verification. The exported Xcode report has seven linked data types and tracking marked No on each. [Archive validation](evidence/native/privacy-archive-20261104/validation.json)
+
+The latest authorized assignment to Lumpy's `Offer main workflow help` chat returned a delivery error. A status check showed the same idle turn. The assignment was to review the remaining Foundation 2.1 release gates and take the highest-priority locally actionable gap outside the native archive and iPhone suite.
+
 ## Previous checkpoint — November 4, quarantine restore window
 
 Migration 029 and the restore operator verify a complete signed archive window before recording its plan in quarantine. Each segment waits for the previous segment's local erasure receipts. The gate checks the entire staged window, and the tool refuses a quarantine that application logins can access.

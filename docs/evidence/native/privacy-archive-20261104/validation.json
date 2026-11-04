@@ -1,0 +1,78 @@
+{
+  "recordedAtUTC": "2026-11-04T09:30:09.375563+00:00",
+  "archive": ".build/NativeAcceptance-20261104/RoomInTheCart-RequiredReasons.xcarchive",
+  "sourceCommitBeforePrivacyEdit": "a223e84b70e6103eca22861f67dc65959e51799a",
+  "referenceSourceManifest": "docs/evidence/native/current-build-20261103/polish/source-manifest.json",
+  "referenceSourceManifestSHA256": "f32b15dcd4992b4d9a23ba4d4546970207ef85aa361994267228e433efeaa001",
+  "sourceInputCount": 470,
+  "changedInputs": [
+    {
+      "path": "ios/Resources/PrivacyInfo.xcprivacy",
+      "referenceSHA256": "8c7d98854976ca3bdf570ed0cfb50b4e9652a7cdc543256b3b944999ac47906d",
+      "archiveSourceSHA256": "00a04709e2034eb948b051abc761b2bf7f05693ada0e5c986569dbdaec968d27"
+    },
+    {
+      "path": "ios/UITests/HouseholdDevicesUITests.swift",
+      "referenceSHA256": "d78d6ad1c714472e8b0b407d129825fe42b02998a69fc630e2ddc9ae198f3df5",
+      "archiveSourceSHA256": "143865e9cc386d3fcea3121058da04c03fc54917178c16438f46998658f8cfb2"
+    }
+  ],
+  "releaseTestHelperIncluded": false,
+  "bundleIdentifier": "dev.roominthecart.app",
+  "version": "0.1.0",
+  "build": "1",
+  "minimumOS": "17.0",
+  "xcode": [
+    "Xcode 27.1",
+    "Build version 27A9275"
+  ],
+  "compiledMetadataCheck": "pass",
+  "compiledManifestSHA256": "00a04709e2034eb948b051abc761b2bf7f05693ada0e5c986569dbdaec968d27",
+  "declaredReasons": {
+    "NSPrivacyAccessedAPICategoryUserDefaults": [
+      "CA92.1"
+    ],
+    "NSPrivacyAccessedAPICategoryFileTimestamp": [
+      "C617.1"
+    ]
+  },
+  "binaries": {
+    "RoomInTheCart": {
+      "architecture": "arm64",
+      "sha256": "d5bddf05d1c1fe85e39291484c7d394982411baeae4a6969c50209b5376517d1",
+      "matchingDirectImports": [
+        "_$s7SwiftUI10AppStorageV12wrappedValue_5storeACySSGSS_SSSo14NSUserDefaultsCSgtcSSRszlufC",
+        "_$s7SwiftUI10AppStorageV12wrappedValuexvg",
+        "_$s7SwiftUI10AppStorageV14projectedValueAA7BindingVyxGvg",
+        "_$s7SwiftUI10AppStorageVMn",
+        "_OBJC_CLASS_$_NSUserDefaults",
+        "_lstat"
+      ]
+    },
+    "RoomInTheCartShare": {
+      "architecture": "arm64",
+      "sha256": "a48f26003ecf245643ca5372e4693fc0aeba2d39e14a18ef6be959adb9848bf7",
+      "matchingDirectImports": []
+    },
+    "RoomInTheCartWidget": {
+      "architecture": "arm64",
+      "sha256": "e23b0034d7bbfa41cb6c03e7e7412eb58c3e7a9aa5f02241a7b4550124bbfe03",
+      "matchingDirectImports": []
+    }
+  },
+  "xcodePrivacyReport": {
+    "file": "RoomInTheCart-PrivacyReport.pdf",
+    "sha256": "3c8b39d533c92c535dc99dd727936b92c882f064af1ccec041f8b38901f46d3b",
+    "pages": 1,
+    "collectedTypes": 7,
+    "tracking": false,
+    "linkedTypes": 7,
+    "analyticsPurposes": [
+      "NSPrivacyCollectedDataTypeUserID",
+      "NSPrivacyCollectedDataTypeOtherUserContent",
+      "NSPrivacyCollectedDataTypePurchaseHistory"
+    ],
+    "extractedTextMatchesPriorArchive": true
+  },
+  "scope": "Unsigned local iPhoneOS Release archive. Source and sampled direct imports establish this check's required-reason scope. The Xcode report summarizes declared collection. Signed distribution and App Store validation are separate."
+}
