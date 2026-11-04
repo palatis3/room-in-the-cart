@@ -24,5 +24,11 @@
   },
   "coverage": "All 15 DeviceSurfacesCompositionStartupTests, including exact destination presentation action after old widget resolution and new pickup selection, plus authority loss before presentation.",
   "hostedFailure": "Run41922121507:562 of563 models passed; original test failed its5-second onAppear wait from a bare navigation destination in an arbitrary UIWindowScene. No shipping-app failure established.",
-  "limits": "Focused local evidence only; hosted revalidation pending. Other coldURLFixture cleanup still emits SQLite unlink warnings in raw logs."
+  "limits": "Focused local evidence only; hosted revalidation pending. Other coldURLFixture cleanup still emits SQLite unlink warnings in raw logs.",
+  "mutationCheck": {
+    "mutation": "Scratch-only restore of case .shop(let id): await ledger.selectShop(id) in the real presentation action.",
+    "resultBundle": ".build/PickupFactsHold20261104/StartupPresentationMutation.xcresult",
+    "summarySHA256": "c78744b364687c3b39a608e06070280220cc446fa6ee1e5b3ccff8d613ccfcf3",
+    "result": "Expected failure: exact saved ledger assertion detected stale-shop reselection. Scratch source restored afterward."
+  }
 }

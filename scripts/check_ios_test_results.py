@@ -34,8 +34,10 @@ def main():
         failures.append(f"Unexpected execution inventory. Missing {sorted(set(expected) - set(actual))}; extra {sorted(set(actual) - set(expected))}")
     if summary.get("totalTestCount") != len(expected) or summary.get("passedTests") != len(expected):
         failures.append("Executed and passing counts do not match the selected tests")
-    if summary.get("failedTests") or summary.get("skippedTests") or summary.get("result") != "Passed":
-        failures.append("The shard contains failures or skipped tests")
+    if summary.get("failedTests") or summary.get("skippedTests") or summary.get("expectedFailures") or summary.get("result") != "Passed":
+        failures.append("The shard contains failures, expected failures or skipped tests")
+    if any(node.get("result") != "Passed" for _, node in cases):
+        failures.append("Every selected test must individually report Passed")
     report = [f"Executed {len(actual)} of {len(expected)} selected tests.", "", "| Test | Result | Seconds |", "|---|---|---|"]
     for identifier, node in sorted(cases, key=lambda item: item[1].get("durationInSeconds", 0), reverse=True):
         report.append(f"| {identifier} | {node.get('result', 'Unknown')} | {node.get('durationInSeconds', 0):.2f} |")
