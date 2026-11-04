@@ -1,0 +1,64 @@
+{
+  "recordedAtUTC": "2026-11-04T10:20:21.454095+00:00",
+  "frozenRun": {
+    "resultBundle": ".build/NativeAcceptance-20261104/Ordinary.xcresult",
+    "sourceManifest": "docs/evidence/native/current-build-20261103/polish/source-manifest.json",
+    "device": {
+      "architecture": "arm64",
+      "deviceId": "915D062C-5DBE-40C3-A2E7-D16B0320FA18",
+      "deviceName": "RITC Ordinary Acceptance 20261104",
+      "modelName": "iPhone 17e",
+      "osBuildNumber": "24A434",
+      "osVersion": "27.0",
+      "platform": "iOS Simulator"
+    },
+    "modelPassed": 526,
+    "uiPassed": 33,
+    "uiFailed": 4,
+    "failures": [
+      {
+        "test": "LedgerConfirmedStockPackUITests/testFullyCoveredSavesUseAtHomePlanWithoutPurchasedItemOrRetailerOrder()",
+        "firstFailureLine": "XCTAssertTrue failed - Attributes: Button, 0x1027dfac0, {{16.0, 666.3}, {358.0, 82.0}}, identifier: 'ledgerReviewImport', label: 'Review list'",
+        "followup": "Current 2-case keyboard rerun passed. See stock-keyboard-20261104/validation.json."
+      },
+      {
+        "test": "RoomInTheCartUITests/testOwnerExportReviewAndCancelledDeletionPreserveComparisonAfterRestart()",
+        "firstFailureLine": "failed - Could not reveal \"Cancel\" Button",
+        "followup": "Open. Cancel was absent from the test query after the deletion confirmation appeared."
+      },
+      {
+        "test": "PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart()",
+        "firstFailureLine": "Test exceeded execution time allowance of 10 minutes",
+        "followup": "Current focused saved-offer rerun passed in 480.220 seconds."
+      },
+      {
+        "test": "LedgerConfirmedStockPackUITests/testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack()",
+        "firstFailureLine": "XCTAssertTrue failed - Attributes: Button, 0x115ad1680, {{16.0, 666.3}, {358.0, 82.0}}, identifier: 'ledgerReviewImport', label: 'Review list'",
+        "followup": "Current 2-case keyboard rerun passed. See stock-keyboard-20261104/validation.json."
+      }
+    ]
+  },
+  "savedOfferRerun": {
+    "resultBundle": ".build/StockImportKeyboard20261104/SavedOfferRetry.xcresult",
+    "sourceCommit": "e4ed3ca7989491337e8cefc8df9d1da03e61771b",
+    "device": {
+      "architecture": "arm64",
+      "deviceId": "6002E6CC-3391-4F26-A1E8-5258860E239C",
+      "deviceName": "RITC Contributor Offline 20261104",
+      "modelName": "iPhone 17e",
+      "osBuildNumber": "24A434",
+      "osVersion": "27.0",
+      "platform": "iOS Simulator"
+    },
+    "passed": 1,
+    "failed": 0,
+    "seconds": 480.22,
+    "observed": [
+      "Save reviewed offer and reopen after restart",
+      "Reopen a passed cutoff into actual arrival",
+      "Update and copy the response",
+      "Cancel a later edit and keep the saved response"
+    ]
+  },
+  "scope": "The frozen run failed overall. Later focused tests have separate source and device scopes."
+}
