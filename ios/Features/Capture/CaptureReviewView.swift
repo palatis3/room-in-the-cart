@@ -24,6 +24,8 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
     @State private var loadingPhoto = false
     @State private var photoTask: Task<Void, Never>?
     @AccessibilityFocusState private var reviewFocused: Bool
+    @AccessibilityFocusState private var capturedTextFocused: Bool
+    @FocusState private var itemNameFocus: UUID?
 
     init(initialText: String = "", initialSource: CaptureSource = .typed, localeIdentifier: String = Locale.current.identifier,
          destination: String = captureText("This pickup"), requestMode: Bool = false, dismissOnReview: Bool = true, existingCapture: ReviewedCapture? = nil, correctionScope: CaptureCorrectionScope? = nil,
@@ -43,9 +45,25 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
     }
 
     var body: some View {
+        ScrollViewReader { scroll in
+            captureForm
+                .onChange(of: model.candidate != nil && !model.busy) { _, ready in
+                    guard ready else { return }
+                    Task { @MainActor in
+                        await Task.yield()
+                        guard authorize(), model.candidate != nil, !model.busy, !reviewingFields else { return }
+                        scroll.scrollTo("capture.useText", anchor: .center)
+                        capturedTextFocused = true
+                    }
+                }
+        }
+    }
+
+    private var captureForm: some View {
         Form {
             if reviewingFields {
-                StructuredCaptureReviewView(lines: $structuredLines, corrections: corrections, destination: destination,
+                StructuredCaptureReviewView(lines: $structuredLines, corrections: corrections, correctionScope: correctionScope,
+                    itemNameFocus: $itemNameFocus, destination: destination,
                     source: model.acceptedEvidence?.source ?? .typed, context: requestMode ? .request : .list, originalText: model.acceptedEvidence?.text ?? model.text,
                     imageData: model.acceptedEvidence?.previewImageData ?? model.acceptedEvidence?.sourceImageData,
                     authorize: authorize, onBack: { reviewingFields = false }) { lines in
@@ -65,6 +83,7 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
                     if !model.busy {
                         Button(captureText("Use captured text")) { model.acceptCandidate(); reviewFocused = true }
                             .accessibilityIdentifier("capture.useText")
+                            .id("capture.useText").accessibilityFocused($capturedTextFocused)
                         Button(captureText("Keep my typed draft")) { model.discardCandidate() }
                     }
                 }
@@ -125,11 +144,13 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
         }
         .navigationTitle(captureText(requestMode ? "Capture a request" : "Capture a list"))
         .scrollDismissesKeyboard(.interactively)
+        .keyboardDoneAction(visible: itemNameFocus != nil, title: captureText("Done"), identifier: "capture.itemNameDone") {
+            itemNameFocus = nil
+        }
         .toolbar { ToolbarItem(placement: .cancellationAction) {
             Button(captureText("Cancel")) { close(); dismiss() }
         } }
         .task(id: correctionScope) { await corrections.bind(correctionScope) }
-        .onChange(of: correctionScope) { _, _ in corrections.invalidate() }
         .task {
             while !Task.isCancelled {
                 try? await Task.sleep(for: .milliseconds(250))

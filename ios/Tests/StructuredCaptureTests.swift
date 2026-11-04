@@ -145,6 +145,9 @@ final class StructuredCaptureTests: XCTestCase {
         await model.remember(original:"tortiyas",replacement:"tortillas")
         await model.setEnabled(false)
         XCTAssertFalse(model.snapshot.enabled); XCTAssertTrue(model.snapshot.entries.isEmpty)
+        try await store.forget(id, scope: english)
+        let files = try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
+        XCTAssertTrue(files.isEmpty, "A stale forget must not recreate the deleted spelling file")
         let reloaded=try await store.load(english); XCTAssertTrue(reloaded.entries.isEmpty)
     }
     func testProfileAndLocaleIsolationAndInvalidation() async throws {

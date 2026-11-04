@@ -29,6 +29,7 @@ import CoreDomain
     @State private var reviewingIngredients = false
     @State private var error: String?
     @FocusState private var focusedField: InputField?
+    @FocusState private var itemNameFocus: UUID?
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
 
@@ -41,7 +42,8 @@ import CoreDomain
     var body: some View {
         Form {
             if reviewingIngredients {
-                StructuredCaptureReviewView(lines: $ingredients, corrections: corrections,
+                StructuredCaptureReviewView(lines: $ingredients, corrections: corrections, correctionScope: correctionScope,
+                    itemNameFocus: $itemNameFocus,
                     destination: captureText("This recipe"), source: model.source, context: .recipe, originalText: model.originalText,
                     imageData: model.accepted?.originalImageData, authorize: authorize,
                     onBack: { reviewingIngredients = false }, onContinue: finishRecipe)
@@ -87,8 +89,9 @@ import CoreDomain
             if let failure = model.failure { Section { Text(failureText(failure)) } }
         }
         .scrollDismissesKeyboard(.interactively)
-        .keyboardDoneAction(visible: focusedField != nil, title: captureText("Done"), identifier: "scan.sourceDone") {
+        .keyboardDoneAction(visible: focusedField != nil || itemNameFocus != nil, title: captureText("Done"), identifier: "scan.sourceDone") {
             focusedField = nil
+            itemNameFocus = nil
         }
         .navigationTitle(captureText("Photo and scan review"))
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button(captureText("Cancel")) { close(); dismiss() } } }

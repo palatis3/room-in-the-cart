@@ -64,7 +64,10 @@ actor CaptureCorrectionStore {
         try save(value, scope: scope)
     }
     func forget(_ id: UUID, scope: CaptureCorrectionScope) throws {
-        var value = try load(scope); value.entries.removeAll { $0.id == id }; try save(value, scope: scope)
+        var value = try load(scope)
+        guard value.enabled, let index = value.entries.firstIndex(where: { $0.id == id }) else { return }
+        value.entries.remove(at: index)
+        try save(value, scope: scope)
     }
     /// Erases all locale files for the retired profile. Root composes this into durable erasure cleanup.
     func eraseProfile(_ scope: CaptureCorrectionScope) async throws {

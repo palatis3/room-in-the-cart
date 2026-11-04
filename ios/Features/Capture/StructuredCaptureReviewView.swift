@@ -37,6 +37,8 @@ import CoreDomain
 
     @Binding var lines: [CaptureLineDraft]
     @ObservedObject var corrections: CaptureCorrectionsModel
+    let correctionScope: CaptureCorrectionScope?
+    let itemNameFocus: FocusState<UUID?>.Binding
     let destination: String
     let source: CaptureSource
     let context: Context
@@ -46,6 +48,14 @@ import CoreDomain
     let onBack: () -> Void
     let onContinue: ([CaptureImportLine]) -> Void
     @State private var validationMessage: String?
+    @State private var spellingWorking = false
+    @State private var confirmDisable = false
+    @State private var requestedDisableScope: CaptureCorrectionScope?
+
+    private var liveSpellingScope: CaptureCorrectionScope? {
+        guard authorize(), let correctionScope, corrections.scope == correctionScope else { return nil }
+        return correctionScope
+    }
 
     var body: some View {
         let copy = context.copy
@@ -63,14 +73,19 @@ import CoreDomain
                 originalText: "", originalName: "", name: "")
             let line = captureDraftBinding(placeholder, in: $lines)
             Section {
-                CaptureStructuredRow(line: line, corrections: corrections, destination: destination, source: source, authorize: authorize)
+                CaptureStructuredRow(line: line, corrections: corrections, itemNameFocus: itemNameFocus, destination: destination, source: source,
+                    authorizeSpelling: { liveSpellingScope != nil && !spellingWorking }) { original, replacement in
+                    changeSpellings { await corrections.remember(original: original, replacement: replacement) }
+                }
             }
         }
-        if corrections.scope != nil {
+        if let scope = liveSpellingScope {
             Section(captureText("Optional spelling memory")) {
                 Toggle(captureText("Remember product spellings on this device"), isOn: Binding(get: { corrections.snapshot.enabled }, set: { value in
-                    Task { guard authorize() else { return }; await corrections.setEnabled(value) }
-                }))
+                    guard liveSpellingScope == scope, !spellingWorking else { return }
+                    if value { changeSpellings { await corrections.setEnabled(true) } }
+                    else { requestedDisableScope = scope; confirmDisable = true }
+                })).disabled(spellingWorking).accessibilityIdentifier("capture.spelling.enabled")
                 Text(captureText("Only spellings you explicitly remember are saved for this profile and language. Turning this off deletes them. Previous records never change."))
                     .font(.footnote)
                 if corrections.snapshot.enabled {
@@ -78,7 +93,10 @@ import CoreDomain
                         HStack {
                             Text(entry.original + " → " + entry.replacement)
                             Spacer()
-                            Button(captureText("Forget spelling"), role: .destructive) { Task { guard authorize() else { return }; await corrections.forget(entry.id) } }
+                            Button(captureText("Forget spelling"), role: .destructive) {
+                                changeSpellings { await corrections.forget(entry.id) }
+                            }.frame(minHeight: 44).disabled(spellingWorking)
+                                .accessibilityLabel(CorrectionSettingsOutcome.forgetLabel(entry))
                         }
                     }
                 }
@@ -86,6 +104,17 @@ import CoreDomain
                     Text(captureText(context == .recipe ? "Spelling memory is unavailable. Your reviewed ingredients are still usable." :
                         "Spelling memory is unavailable. Your reviewed list is still usable."))
                 }
+            }
+            .alert(captureText("Turn off spelling memory?"), isPresented: $confirmDisable) {
+                Button(captureText("Turn off and delete these spellings"), role: .destructive) {
+                    guard requestedDisableScope == scope, liveSpellingScope == scope else { return }
+                    requestedDisableScope = nil
+                    changeSpellings { await corrections.setEnabled(false) }
+                }.accessibilityIdentifier("capture.spelling.confirmDisable")
+                Button(captureText("Cancel"), role: .cancel) { requestedDisableScope = nil }
+                    .accessibilityIdentifier("capture.spelling.cancelDisable")
+            } message: {
+                Text(captureText("This deletes remembered spellings for this private workspace and selected language. Other languages and previously saved records stay as they are."))
             }
         }
         Section {
@@ -111,24 +140,50 @@ import CoreDomain
             Text(captureText(copy.next))
                 .font(.footnote)
         }
+        .onChange(of: liveSpellingScope) { _, _ in
+            requestedDisableScope = nil
+            confirmDisable = false
+        }
+    }
+
+    private func changeSpellings(_ change: @escaping @MainActor () async -> Void) {
+        guard let scope = liveSpellingScope, !spellingWorking else { return }
+        spellingWorking = true
+        Task {
+            defer { spellingWorking = false }
+            guard liveSpellingScope == scope else { return }
+            await change()
+        }
     }
 }
 
 @MainActor private struct CaptureStructuredRow: View {
     @Binding var line: CaptureLineDraft
     @ObservedObject var corrections: CaptureCorrectionsModel
+    let itemNameFocus: FocusState<UUID?>.Binding
     let destination: String
     let source: CaptureSource
-    let authorize: () -> Bool
+    let authorizeSpelling: () -> Bool
+    let rememberSpelling: (String, String) -> Void
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(line.originalText).font(.footnote).textSelection(.enabled)
             Toggle(captureText("Skip this captured line"), isOn: $line.skip)
             if !line.skip {
                 TextField(captureText("Item name"), text: field(\.name))
-                if authorize(), let suggestion = corrections.suggestion(for: line.originalName), line.name != suggestion.replacement {
+                    .focused(itemNameFocus, equals: line.id)
+                    .submitLabel(.done)
+                    .onSubmit { itemNameFocus.wrappedValue = nil }
+                if authorizeSpelling(), let suggestion = corrections.suggestion(for: line.originalName), line.name != suggestion.replacement {
                     Text(captureText("Remembered spelling to review") + ": " + suggestion.replacement)
-                    Button(captureText("Use this spelling")) { guard authorize() else { return }; line.name = suggestion.replacement; line.confirmed = false }
+                    Button {
+                        guard authorizeSpelling() else { return }
+                        line.name = suggestion.replacement
+                        line.confirmed = false
+                        itemNameFocus.wrappedValue = nil
+                    } label: {
+                        Text(captureText("Use this spelling")).frame(minHeight: 44)
+                    }.buttonStyle(.borderless)
                 }
                 TextField(captureText("Total amount, unknown if blank"), text: field(\.amount)).keyboardType(.numbersAndPunctuation)
                 unitPicker(captureText("Total unit"), value: \.unit)
@@ -147,12 +202,15 @@ import CoreDomain
                 if line.warnings.contains(.negation) {
                     Text(captureText("Negation may describe the product or exclude it. Nothing is deleted automatically. Correct or skip this line before confirming."))
                 }
-                if authorize(), corrections.snapshot.enabled, source == .speech || source == .photoOCR,
+                if authorizeSpelling(), corrections.snapshot.enabled, source == .speech || source == .photoOCR,
                    CaptureCorrectionStore.validProduct(line.originalName), CaptureCorrectionStore.validProduct(line.name),
                    CaptureCorrectionStore.key(line.originalName) != CaptureCorrectionStore.key(line.name) {
-                    Button(captureText("Remember this corrected product spelling")) {
-                        Task { guard authorize() else { return }; await corrections.remember(original: line.originalName, replacement: line.name) }
-                    }
+                    Button {
+                        rememberSpelling(line.originalName, line.name)
+                        itemNameFocus.wrappedValue = nil
+                    } label: {
+                        Text(captureText("Remember this corrected product spelling")).frame(minHeight: 44)
+                    }.buttonStyle(.borderless)
                 }
                 Toggle(captureText("I reviewed this item, amounts, packs, purpose, destination and exclusions, including any unknowns."), isOn: $line.confirmed)
             }

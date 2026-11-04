@@ -1,0 +1,104 @@
+{
+  "baseCommit": "cedbae0fcdac543675842799844fa3bbb086bb92",
+  "sourceSHA256": {
+    "ios/Features/Capture/CaptureCorrections.swift": "e7c5a263e106ef5573fdffe2adb30b9ba89e5f6ff05b9931cffc797d6837e90f",
+    "ios/Features/Capture/CaptureReviewView.swift": "ee0446252ae93ee29314f8abd5280ce7496400a3bcd14f82382212c43d3cfbe5",
+    "ios/Features/Capture/ScanReviewView.swift": "fdde3741dbb2c120818f286fac99d6e1a18d92cc5a6135f4ac2a722000e16b58",
+    "ios/Features/Capture/StructuredCaptureReviewView.swift": "3da5a20a07ef04d4acdabf7b9b733e0a044c917c0703a26c4f7416f61819b762",
+    "ios/Tests/StructuredCaptureTests.swift": "826a8f202785613af50062fc7a568512be14ae23a445d279f910a275b3d3ef1f"
+  },
+  "device": {
+    "id": "DA9D5069-37BE-4A62-AE74-16CB9AB2BA4F",
+    "model": "iPhone 17e",
+    "os": "27.0",
+    "build": "24A434"
+  },
+  "scope": "The ordinary Shop list, system Photos picker and on-device OCR used fictional input in the isolated Debug workspace. The scratch UI harness was the only testing source addition beyond the stated app and unit-test changes.",
+  "photoFixture": {
+    "path": ".build/SpellingMemory20261104/fictional-spelling.jpg",
+    "sha256": "ee7efaaa007a747cd3a2fb37862f057b05186dfbac2b4fc443f5f2cac68c112b",
+    "sourceText": "2 tortiyas"
+  },
+  "actualEntry": {
+    "result": ".build/SpellingMemory20261104/SpellingMemoryCorrected.xcresult",
+    "harnessSHA256": "092e652ff40709fb19ae495db22df31fc0f3e76b639c8affcd6086f768808f1d",
+    "scope": "This run predates the alert change. It selected the real photo, brought the OCR review into view, used Done, opted in, explicitly remembered the corrected spelling and applied the reviewed import. After restart the suggestion appeared while the item still had the original spelling, and Use changed the editable name.",
+    "terminalResult": "10 model passes and 1 UI failure while trying to query the compact opt-out popover's unavailable Cancel action.",
+    "verifiedSavedRule": {
+      "sha256": "986dbd65313b0109a74d3e5927d7d277d25f608c88bd8ad6227bfbff860ed861",
+      "scopedFile": "55ba7e9fbe8d59d349cb44efe63aada0c4d8b9dc71a3e1eed81cfaf77fc0905b-5c49f88dafe66e0ecdca8f682ae0b38c38ccd3ad464e3358e899beca88c18560.json",
+      "snapshot": {
+        "entries": [
+          {
+            "replacement": "tortillas",
+            "original": "tortiyas",
+            "createdAt": 815503859.137962,
+            "id": "C61BA76E-0EE3-481F-BB22-FBCC876377C2"
+          }
+        ],
+        "enabled": true
+      }
+    }
+  },
+  "finalReadback": {
+    "result": ".build/SpellingMemory20261104/SpellingMemoryFinal.xcresult",
+    "harnessSHA256": "8def9176d9571475cf15d4f39f63a2882a9fdb865278aa5704563e1ec665f556",
+    "modelPasses": 10,
+    "uiPasses": 1,
+    "failures": 0,
+    "durationSeconds": 158.574,
+    "scope": "Reused the same saved fictional pickup and rule. Selecting the matching photo again showed the suggestion without applying it. Native alert Cancel kept the rule, named Forget removed it, and confirmed opt-out disabled memory across another relaunch.",
+    "sqliteAndFileReadback": {
+      "ledgerHeadUnchanged": true,
+      "revision": 2,
+      "payloadSHA256": "20a72dd03e0d53c9b516d317734e12aa847328908c8608ddb6900d517523b2cb",
+      "lineName": "tortillas",
+      "originalText": "2 tortiyas",
+      "quantity": {
+        "amount": {
+          "denominator": 1,
+          "numerator": 2
+        },
+        "originalLiteral": "2",
+        "unit": "count"
+      },
+      "activeEnglishSpellingFileDeleted": true
+    }
+  },
+  "otherAttempts": [
+    {
+      "result": ".build/SpellingMemory20261104/SpellingMemory.xcresult",
+      "reason": "The original photo result was offscreen and tapping Remember with the keyboard still open saved no rule. This led to visible result positioning, Done and independent spelling controls."
+    },
+    {
+      "result": ".build/SpellingMemory20261104/SpellingMemoryReadback.xcresult",
+      "reason": "Native popover snapshot reported duplicate button semantics. Its screenshot showed the destructive action without a visible Cancel. The final build uses a native alert."
+    }
+  ],
+  "inspectedCaptures": {
+    "N04-suggestion-awaits-explicit-use": {
+      "path": ".build/SpellingMemory20261104/corrected-attachments/11939ECC-1907-4B3F-8BDF-0F30CA837AD3.png",
+      "sha256": "744d6689ce1abfc477caf8fdc721b48f40f7a7b12ae18e48eaff54533d918186"
+    },
+    "N04-explicit-remembered-spelling": {
+      "path": ".build/SpellingMemory20261104/corrected-attachments/79099449-1645-4E5F-8766-70F1380E3A13.png",
+      "sha256": "363ce53b3825daee4991d37a4d7e260b10d4cacb12cc93e844334e2f0dd405d4"
+    },
+    "N04-original-import-unchanged-after-forget-and-opt-out": {
+      "path": ".build/SpellingMemory20261104/final-attachments/2BD51B58-0FD2-4AB9-835A-3784545EE2E9.png",
+      "sha256": "a9f65b49dbca0046c08c5e233c1b5e3ebfef498562106e7dd518b79991907bf6"
+    },
+    "N04-capture-opt-out-confirmed": {
+      "path": ".build/SpellingMemory20261104/final-attachments/F6AE2FAF-BBE5-4C3E-85D9-3F1703B791A8.png",
+      "sha256": "524f293b7d2f656fe9e67f9adbc09cba8cd962a66fee769e1f9f79817d4ea595"
+    },
+    "N04-opt-out-confirmation-before-cancel": {
+      "path": ".build/SpellingMemory20261104/final-attachments/AA76AD2D-EF0F-4391-8E89-697C300A7ABF.png",
+      "sha256": "3f26e00206fe8af762db9c42dca0bf56d433cabf03ef49e1a479a4efaf507b5f"
+    }
+  },
+  "remaining": [
+    "Physical VoiceOver focus and device testing.",
+    "Connected contributor profile and locale acceptance."
+  ]
+}
