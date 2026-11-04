@@ -60,7 +60,11 @@ export class WebApp {
     try { await action(); if(purpose==='load'&&this.failurePurpose==='load'){this.notice='';this.failurePurpose=null;} } catch(error) { await this.fail(error,purpose); }
     finally {this.busy=false;this.render();this.root.querySelector<HTMLElement>('[role="status"]')?.focus();}
   }
-  private supportedRoute():boolean {return ['/', '/requests', '/invite', '/view'].includes(this.root.ownerDocument.defaultView?.location.pathname??'/');}
+  private supportedRoute():boolean {
+    const path=this.root.ownerDocument.defaultView?.location.pathname??'/';
+    if(path==='/')return true;
+    return ['/requests','/invite','/view'].includes(path.endsWith('/')?path.slice(0,-1):path);
+  }
   private get signOutPending():boolean {return this.logoutPending||browserSignOutPending(this.root.ownerDocument.defaultView);}
   async start():Promise<void> {
     if(!this.supportedRoute()){this.render();return;}

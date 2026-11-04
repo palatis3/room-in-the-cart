@@ -1,0 +1,25 @@
+{
+  "baseCommit": "b66b134ef65e2c5cd42398736c3164b9db123728",
+  "sourceSHA256": {
+    "vercel.json": "d42c7750ebfcec10d05f0bbd41093ec614ea3d76ca566f3af1e6f45fc18311f7",
+    "web/src/app.ts": "1eda706fc1d9a3ee2a34a489eccd2eb9770598ded4e91a82b1637b7ea7afe014",
+    "web/tests/client.test.mjs": "334f045e5d7f749028430be692b6f6e107f2b9af3da1affe7dd4b6bc6cbbd300",
+    "web/tests/config.test.mjs": "4fe2915f59463df4befcb1490278f4067440df0cb965ba04c8df339cc5acb205"
+  },
+  "bundleSHA256": {
+    "web/public-build/assets/index-DfcLasv-.js": "474ead6ca42c2d16feaa4bb2fafb755308774e5489b0b81cb02d18401a1f2989"
+  },
+  "beforeFix": "Both new regressions failed. The guardian URL had no HTML rewrite and the browser client rejected /requests/ before checking session access.",
+  "webTests": {"passed": 109, "failed": 0, "skipped": 0},
+  "loopbackHTTP": {
+    "html200": ["/child-invite", "/child-invite/", "/requests/", "/invite/", "/view/"],
+    "json200": ["/health", "/v1/guardian/availability"],
+    "json404": ["/v1/unknown"],
+    "text404": ["/child-invite-extra"]
+  },
+  "desktopBrowser": {
+    "/child-invite/": "A fictional token fragment cleared from the address bar. The Child invitation screen displayed the unavailable guardian setup message. The only API read was guardian availability.",
+    "/invite/": "A fictional token fragment cleared from the address bar. Sign in to continue displayed after the fixture session and sign-in availability reads."
+  },
+  "scope": "Local HTTP fixture applied the checked-in rewrites to the compiled bundle. Desktop browser used synthetic API responses. Hosted Vercel routing and real guardian admission remain separate acceptance checks."
+}

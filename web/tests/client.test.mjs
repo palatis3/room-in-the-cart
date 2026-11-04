@@ -34,6 +34,19 @@ test('invitation secrets leave URL before a request and never enter storage',()=
  assert.equal(dom.window.localStorage.length,0);
 });
 
+test('companion links accept the trailing slashes served by the host',async(t)=>{
+ for(const path of ['/requests/','/invite/','/view/']){
+  const dom=new JSDOM('<div id="app"></div>',{url:`https://food.example${path}`});
+  t.after(()=>dom.window.close());
+  const root=dom.window.document.getElementById('app');
+  let reads=0;
+  const api=fakeAPI({session:async()=>{reads++;return session();}});
+  await new WebApp(root,api,new Outbox(new IDBFactory())).start();
+  assert.equal(reads,1,path);
+  assert.match(root.querySelector('h1').textContent,/Ask the shopper/,path);
+ }
+});
+
 test('API is same-origin, no-store, CSRF protected; own projection discards private keys',async()=>{
  const calls=[];const api=new API(async(path,options)=>{calls.push({path,options});return new Response(JSON.stringify(path.endsWith('/mine')?{requests:[{...own(),budgetMinor:3800,otherAuthors:['private']}],nextCursor:null}:{operationId:'op-a',kind:'request.send',request:{...own(),shopId:'shop-a'}}),{status:200});});
  const rows=await api.requests(session());assert.equal('budgetMinor' in rows[0],false);assert.equal('otherAuthors' in rows[0],false);

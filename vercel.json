@@ -83,6 +83,14 @@
       "destination": "/index.html"
     },
     {
+      "source": "/child-invite",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/child-invite/",
+      "destination": "/index.html"
+    },
+    {
       "source": "/v1/:path*",
       "destination": "/api"
     },

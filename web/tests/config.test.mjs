@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import { publicConfiguration } from "../dist/config.js";
 
@@ -17,4 +18,11 @@ test("deployed environments reject missing, credentialed, and non-HTTPS origins"
     assert.throws(() => publicConfiguration({ environment: "production", apiOrigin }));
   }
   assert.throws(() => publicConfiguration({ environment: "prod", apiOrigin: "https://api.example.test" }));
+});
+
+test("Vercel serves direct child invitation links through the web entry point", () => {
+  const { rewrites } = JSON.parse(readFileSync(new URL("../../vercel.json", import.meta.url), "utf8"));
+  for (const source of ["/child-invite", "/child-invite/"]) {
+    assert.equal(rewrites.find(route => route.source === source)?.destination, "/index.html", source);
+  }
 });
