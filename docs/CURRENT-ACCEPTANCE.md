@@ -70,6 +70,7 @@ Results belong to their own immutable source and binary identities. Do not add t
 | PLANNING-KEYBOARD | [Planning keyboard validation](evidence/native/planning-keyboard-20261104/validation.json) | Local and shared store quotes, shared meal ideas and dinner editors use a focus-driven Done control. Four iOS 27 UI cases, one iOS 17 reusable-dinner UI case and all 530 model cases passed. The fixture and ordinary result bundles report zero runtime warnings. The unsigned Release archive passed metadata checks. |
 | MEMBERSHIP-DELIVERY | [Purchase recovery validation](evidence/native/membership-delivery-20261104/validation.json) | Subscribe checks for unfinished Apple transactions before starting a new purchase. All 532 model cases and 30 local StoreKit executions on iOS 17 passed. Five of six focused iOS 27 executions passed, and the timed-out English case passed on its isolated rerun. The unsigned Release archive passed metadata checks. |
 | SHARE-CANCELLATION | [System share validation](evidence/native/share-cancellation-20261104/validation.json) | The failed combined-run screenshot shows Apple's share sheet remained open. The updated UI test verifies dismissal before reading history. All three iOS 27 repetitions and the iOS 17 case found the cancellation and frozen unplaced basket after relaunch. |
+| REMINDER-VIEWPORT | [Reminder UI validation](evidence/native/reminder-viewport-20261104/validation.json) | The test measures the visible viewport from one accessibility snapshot to avoid querying disappearing navigation bars. The next-shop case and isolated saved-offer case passed on iOS 27. The saved offer stayed pending when the unscheduled reminder closed. |
 | RECIPE-ADOPTION | [Recipe adoption validation](evidence/native/recipe-adoption-20261104/validation.json) | On iOS 17 and iOS 27, enter recipe servings and an ingredient amount from Records, dismiss each keyboard, then choose the reviewed dinner explicitly. SQLite confirms one new ledger revision with the original recipe and existing pickup items preserved. The file selection uses the guarded fixture. |
 
 ## Launch requirement traceability
@@ -143,7 +144,7 @@ All 27 have current source entries. “Pending” below concerns current screen 
 | S04 Ingredient | List/meal → `LedgerIngredientView`; pack sheet and matching stock. Standalone `ComparisonView`. | ORDINARY stock pack/no-purchase cases; final promoted artifacts. |
 | S05 Checkout | Shop/list → `LedgerCheckoutEntry` → `PickupCheckoutView`; contextual quote entry. | ORDINARY, QUOTES; unknown/stock stale review. |
 | S06 Retailer handoff | Pickup → `PickupHandoffView`; connected `PlacementRecordsEntryView`. | N526, B175, HANDOFF-VERSION, SHARE-CANCELLATION. Physical external open and retailer return remain. |
-| S07 Offer | Pickup or Shop resume → `PickupOfferView` / editor sheet. | Scoped S07 UI; physical cutoff. |
+| S07 Offer | Pickup or Shop resume → `PickupOfferView` / editor sheet. | Scoped S07 UI and REMINDER-VIEWPORT; physical cutoff. |
 | S08 Arrivals/urgent | Pickup → `PickupArrivalView`; Shop → `UrgentRepairView`. | ORDINARY/STOCK; physical receipt. |
 | S09 Repair | Arrival/urgent/pickup → `PickupRepairView`, fallback review. | STOCK; actual household food task. |
 | S10 Cook | Repair/pickup → `PickupCookView`; dated text/current-view choice. | STOCK, recipient history; Android human handoff/audio. |

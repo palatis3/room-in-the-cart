@@ -1,0 +1,30 @@
+{
+  "toolchain": "Xcode 27.1 (27A9275)",
+  "sourceSHA256": {
+    "ios/UITests/ContextualReminderUITests.swift": "1ae554a56c8227a44bb513f27a1a22a01b85afac6eeb03778e2598db32f199cb"
+  },
+  "originalFailure": {
+    "commit": "911343c7b2d274e925421434749e7635a06e18b1",
+    "log": ".build/NativeReleaseCandidate20261104/ordinary.log",
+    "line": 11993,
+    "finding": "XCTest queried the closing sheet's navigation bar as a hit target and failed on its infinite-origin, zero-size frame."
+  },
+  "nextShop": {
+    "log": ".build/MembershipDelivery20261104/reminder-rerun.log",
+    "result": ".build/MembershipDelivery20261104/ReminderRerun.xcresult",
+    "os": "iOS 27.0",
+    "passed": 1,
+    "seconds": 128.479,
+    "scope": "The next-shop case passed. The saved-offer case in this batch was still in progress at this checkpoint, with repeated XCTest animation-notification timeouts."
+  },
+  "savedOffer": {
+    "result": ".build/MembershipDelivery20261104/OfferIsolated.xcresult",
+    "log": ".build/MembershipDelivery20261104/offer-isolated.log",
+    "os": "iOS 27.0",
+    "passed": 1,
+    "failed": 0,
+    "seconds": 130.279,
+    "scope": "The isolated case saved a pending retailer offer, opened its exact reminder, and verified the offer still pending after cancelling the unscheduled reminder."
+  },
+  "scope": "Test-only viewport measurement. One accessibility snapshot bounds each navigation, keyboard and tab calculation. There is no change to reminder scheduling or offer behavior."
+}

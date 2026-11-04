@@ -170,29 +170,36 @@ import XCTest
             "Missing a visible touch point in \(area) for UI element: \(target.debugDescription)")
     }
     private func touchableArea() -> CGRect {
-        let bounds = app.frame
-        let keyboard = app.keyboards.firstMatch
-        let keyboardTop = keyboard.exists ? keyboard.frame.minY : bounds.maxY
-        let tabs = app.tabBars.firstMatch
-        // The next-shop review is a sheet; its covered parent tab bar may still
-        // exist with an empty/offscreen frame and must not bound sheet content.
-        let tabTop = tabs.exists && tabs.isHittable && !tabs.frame.isEmpty ? tabs.frame.minY : bounds.maxY
-        let navigationBar = app.navigationBars.firstMatch
-        let top = navigationBar.exists && navigationBar.isHittable ? navigationBar.frame.maxY : bounds.minY + 88
-        return CGRect(x: bounds.minX, y: top, width: bounds.width, height: max(0, min(keyboardTop, tabTop) - 4 - top))
+        let viewport = viewportBoundaries()
+        return CGRect(x: viewport.bounds.minX, y: viewport.navigationBottom, width: viewport.bounds.width,
+                      height: max(0, min(viewport.keyboardTop, viewport.tabTop) - 4 - viewport.navigationBottom))
     }
     private func scrollableArea() -> CGRect {
-        let bounds = app.frame
-        let keyboard = app.keyboards.firstMatch
-        let keyboardTop = keyboard.exists ? keyboard.frame.minY : bounds.maxY
-        // During a sheet dismissal the navigation-bar count can change between
-        // snapshots. A firstMatch query follows the current bar without retaining
-        // an index into the disappearing sheet's hierarchy.
-        let navigationBar = app.navigationBars.firstMatch
-        let barBottom = navigationBar.exists && navigationBar.isHittable ? navigationBar.frame.maxY : bounds.minY + 88
-        let top = max(bounds.minY + 88, min(barBottom + 12, keyboardTop - 140))
-        let bottom = min(bounds.maxY - 100, keyboardTop - 16)
-        return CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))
+        let viewport = viewportBoundaries()
+        let top = max(viewport.bounds.minY + 88, min(viewport.navigationBottom + 12, viewport.keyboardTop - 140))
+        let bottom = min(viewport.bounds.maxY - 100, viewport.keyboardTop - 16)
+        return CGRect(x: viewport.bounds.minX + 24, y: top, width: viewport.bounds.width - 48, height: max(80, bottom - top))
+    }
+    private func viewportBoundaries() -> (bounds: CGRect, navigationBottom: CGFloat, keyboardTop: CGFloat, tabTop: CGFloat) {
+        // A sheet transition can remove a bar between separate accessibility queries.
+        let snapshot = try? app.snapshot()
+        let bounds = snapshot?.frame ?? app.frame
+        var navigationBottom = bounds.minY + 88
+        var keyboardTop = bounds.maxY
+        var tabTop = bounds.maxY
+        var elements = snapshot.map { [$0] } ?? []
+        while let element = elements.popLast() {
+            elements.append(contentsOf: element.children)
+            let frame = element.frame
+            guard !frame.isEmpty, frame.intersects(bounds) else { continue }
+            switch element.elementType {
+            case .navigationBar: navigationBottom = max(navigationBottom, frame.maxY)
+            case .keyboard: keyboardTop = min(keyboardTop, frame.minY)
+            case .tabBar: tabTop = min(tabTop, frame.minY)
+            default: break
+            }
+        }
+        return (bounds, navigationBottom, keyboardTop, tabTop)
     }
     private func scrollContent(upward: Bool) {
         // Whole-app swipes can start on the software keyboard. Drag only in
