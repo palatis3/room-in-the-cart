@@ -79,6 +79,15 @@
       "SupportURL"
     ]
   },
+  "connectedContributor": {
+    "sourceCommit": "2f8a3910cc8009f71610b5893c9ce9040ad1f112",
+    "result": ".build/ContributorSpelling20261104/ModelsFinal.xcresult",
+    "device": "iPhone 17e, iOS 27.0 (24A434)",
+    "modelPasses": 26,
+    "failures": 0,
+    "scope": "Ordinary Debug target. Eight spelling store, eleven contributor request and seven account deletion tests passed. The current enrolled member and selected language bind the spelling review. Changing the review or locking access rejects the stale scope. Separate member, account, language and private-workspace storage survives unrelated deletion. A blocked local account purge can be retried after sign-out and the account marker rejects stale writes.",
+    "compiledDebug": "Executable, assets, privacy, environment and embedded extensions passed verification."
+  },
   "otherAttempts": [
     {
       "result": ".build/SpellingMemory20261104/SpellingMemory.xcresult",
@@ -113,6 +122,6 @@
   },
   "remaining": [
     "Physical VoiceOver focus and device testing.",
-    "Connected contributor profile and locale acceptance."
+    "Connected contributor Photos review on the simulator, bilingual device acceptance and a live enrolled household."
   ]
 }
