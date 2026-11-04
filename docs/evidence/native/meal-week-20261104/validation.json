@@ -128,6 +128,30 @@
     "functionalRetests": {
       "spanishIOS27": {"result": ".build/MealWeekAccessibilityInline20261104/MealWeekListContrastDiagnostic.xcresult", "passed": 1, "seconds": 104.810, "scope": "Same meal and lunch IDs in both presentations, native Back and tab return, exact date note, restart and rediscovery with the corrected bidirectional search."},
       "crossWeekIOS17": {"result": ".build/MealWeekAccessibilityInline20261104/MealWeekInlineMinimumOS.xcresult", "logSHA256": "01ebb83036d37c487dfbf830a611ef0f90a304fd3c10f310829e11aeac03bf9f", "passed": 1, "seconds": 169.671, "scope": "The same dinner moved across weeks and the protected lunch stayed on its original day after relaunch. The test uses the scoped iOS 17 logging accommodation."},
+      "rightToLeftSpanishIOS17": {
+        "sourceCommit": "2b8f53c8c2249e9d42101bdb769549af5b0b3589",
+        "configuration": "Ordinary arm64 Debug on an isolated iPhone SE, iOS 17.0 (21A328)",
+        "appDebugDylibSHA256BothRuns": "00ee83ff2537f29fbd79f5e52b2405ffa5c5a18e5d9e254721094638074cbe5d",
+        "scratchTestSourceSHA256": "8b457816161adbd4f6c291ea2b15f1b72b00334354595972b66bd11acb2ad330",
+        "initialResult": ".build/MealWeekRTLAudit20261104/MealWeekRTL.xcresult",
+        "initialLogSHA256": "99818340ca29d0021d235d089f5371a47f5c12e6eac3bc190e3900b00e2376bc",
+        "initialFinding": "The standard Spanish journey saved and reopened its meal week. With only AppleTextDirection set, the native Back control was still on the left, and the direction assertion stopped the test.",
+        "result": ".build/MealWeekRTLAudit20261104/MealWeekRTLFullLaunchFlags.xcresult",
+        "logSHA256": "ff11dee79f92429849c27da8b313c682f4b1a1224824021251e1b3317d4216e7",
+        "summarySHA256": "7a424cd3f8b0a9d56517939a1caf6e7d9dc336302135cea44d3f3183c96ac603",
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "seconds": 25.429,
+        "gridNoteCentersXInPoints": {"leftToRight": [105.5, 267.0], "rightToLeft": [269.5, 108.0]},
+        "rightToLeftLaunchArguments": ["-AppleTextDirection", "YES", "-NSForceRightToLeftWritingDirection", "YES"],
+        "captures": {
+          "leftToRight": {"path": ".build/MealWeekRTLAudit20261104/rtl-final-attachments/3D321FE8-0211-4E2E-9CE2-0A95138DFBF3.png", "sha256": "111010cb15de8e27a5e2f33badfeef8b577fdcaac778f1def9c3f8ee567c0f22"},
+          "rightToLeft": {"path": ".build/MealWeekRTLAudit20261104/rtl-final-attachments/9B082F6F-9E3E-4165-AF3E-EDCA5C40E21B.png", "sha256": "0eb443a08137672f1e10cc0f7dfac4baf77eb4b403558cda21ad5376a6c1dce3"},
+          "exactDayNote": {"path": ".build/MealWeekRTLAudit20261104/rtl-final-attachments/236258C3-D6D9-4AE5-914E-A36FB574E4CF.png", "sha256": "cb6a04ca36645991f755cc5ed708a05b3fe902512933e4d6eafed32a14ca77c5"}
+        },
+        "scope": "The two native launch options visible in the installed Xcode launcher mirrored the same Spanish week and placed Back on the right. Meal and lunch IDs, original wording, the two-unit reservation and its purpose survived relaunch. Tapping the next date opened the corresponding note and native Back returned to the week. The scoped iOS 17 app logging accommodation was active."
+      },
       "pickupScopeIOS17": {
         "device": "iPhone SE, iOS 17.0 (21A328)",
         "initialResult": ".build/MealWeekAccessibilityInline20261104/pickup-scope-minimum-os.xcresult",
