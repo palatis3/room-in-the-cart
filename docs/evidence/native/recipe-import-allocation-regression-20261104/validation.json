@@ -1,0 +1,33 @@
+{
+  "baseCommit": "90faa0752367348d2bf97f06c2440e32dd1d92ff",
+  "sourcePath": "ios/Tests/RecordsAdapterTests.swift",
+  "sourceGitBlob": "799305110fe25ebe92b8e72c4b8130241c574abc",
+  "sourceSHA256": "4c41f6acb663fd3470f919e60ce29811e18e61a508ea027236f58d9c07800e20",
+  "patchPath": "/tmp/room-cart-n05.mqxXWY/n05-regression.patch",
+  "patchSHA256": "384ae48d926ab235500dd71b796061076cc4f55a2fbce7f9687aa327faabbdef",
+  "selector": "RoomInTheCartTests/RecordsAdapterTests/testFailedRecipeImportPreservesEditableDinnerAndWeeklyAllocationsAcrossRestart",
+  "xcode": [
+    "Xcode 27.1",
+    "Build version 27A9275"
+  ],
+  "simulator": {
+    "architecture": "arm64",
+    "deviceId": "6CC995D5-E0E8-4310-8A31-F79F1A2BCC1B",
+    "deviceName": "RITC N05 Recipe Allocation Regression",
+    "modelName": "iPhone 17",
+    "osBuildNumber": "24A434",
+    "osVersion": "27.0",
+    "platform": "iOS Simulator"
+  },
+  "result": "Passed",
+  "passedTests": 1,
+  "failedTests": 0,
+  "elapsedTestSeconds": 0.215,
+  "newCompilerWarnings": [],
+  "editedFileCompilerWarnings": [],
+  "preexistingCompilerWarningsInFinalLog": 4,
+  "sqliteUnlinkWarnings": 0,
+  "log": "/tmp/room-cart-n05.mqxXWY/N05-final.log",
+  "resultBundle": "/tmp/room-cart-n05.mqxXWY/N05-final.xcresult",
+  "attributionCoverage": "Saved .invalid attribution and manual recipe content survive reopen and edit. Network requests were outside the scope of instrumentation."
+}

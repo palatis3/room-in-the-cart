@@ -183,6 +183,151 @@ final class RecordsAdapterTests: XCTestCase {
         XCTAssertNotEqual(model.actionOutcomeID, previousOutcome)
         XCTAssertEqual(try Data(contentsOf: registryURL), before)
     }
+    @MainActor private final class RecipeLedgerLifetime {
+        weak var owner: LedgerModel?
+        func released() async -> Bool {
+            let deadline = ContinuousClock.now + .seconds(2)
+            while owner != nil && ContinuousClock.now < deadline { await Task.yield() }
+            return owner == nil
+        }
+    }
+
+    @MainActor func testFailedRecipeImportPreservesEditableDinnerAndWeeklyAllocationsAcrossRestart() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let lifetime = RecipeLedgerLifetime()
+        addTeardownBlock {
+            guard await lifetime.released() else { return XCTFail("The reopened ledger still owns its SQLite files") }
+            try FileManager.default.removeItem(at: directory)
+        }
+        let ledgerURL = directory.appendingPathComponent("ledger.sqlite")
+        let registryURL = directory.appendingPathComponent("recipes.json")
+        let file = directory.appendingPathComponent("picked-recipe.json")
+        let now = Date(timeIntervalSince1970: 1_793_664_000)
+        let weekStart = try MealDay(year: 2026, month: 11, day: 2, timeZoneIdentifier: "UTC")
+        let dinnerDay = try MealDay(year: 2026, month: 11, day: 4, timeZoneIdentifier: "UTC")
+        let dinner = ServingGroup(name: "Dinner", servings: try Rational(2))
+        let lunch = ServingGroup(name: "Protected lunch", servings: .one, isProtected: true)
+        let recipe = MealTemplate(title: "Our lentil wraps", servings: try Rational(3),
+            ingredients: [MealIngredient(name: "Wraps", quantity: Quantity(amount: try Rational(6), unit: .count, originalLiteral: "6"))],
+            notes: "Warm the wraps and set aside lunch before serving.", sourceURL: "https://vanished-recipe.invalid/lentil-wraps",
+            servingGroups: [dinner, lunch])
+        let planned = PlannedDinner(template: recipe, day: dinnerDay)
+        let sourceID = try XCTUnwrap(planned.contributionIDs.first)
+        let bindings = [
+            DinnerPortionBinding(occurrenceID: planned.occurrenceID, contributionID: sourceID, groupID: dinner.id,
+                quantity: Quantity(amount: try Rational(4), unit: .count, originalLiteral: "4"), servings: dinner.servings),
+            DinnerPortionBinding(occurrenceID: planned.occurrenceID, contributionID: sourceID, groupID: lunch.id,
+                quantity: Quantity(amount: try Rational(2), unit: .count, originalLiteral: "2"), servings: lunch.servings)
+        ]
+        let valid = #"{"@type":"Recipe","name":"Fictional lentil soup","recipeIngredient":["2 cups lentils"]}"#
+        // Balanced delimiters let the malformed second node reach the JSON parser.
+        try Data(#"{"@graph":[\#(valid),not_json]}"#.utf8).write(to: file)
+
+        func planningModel(_ ledger: LedgerModel, workspaceID: UUID) -> DinnerFeatureModel {
+            DinnerFeatureModel(store: ledger, access: { shopID in
+                DinnerAccessContext(scope: .local(workspaceID: workspaceID), actorID: "local", shopID: shopID,
+                    assignedShopperID: "local", canPlan: true, canReadBudget: true, hasPaidTools: false,
+                    roleRevision: 0, verifiedAt: now, validUntil: now.addingTimeInterval(60))
+            }, phase: { _ in .draft }, clock: { now })
+        }
+        func recordsModel(_ ledger: LedgerModel, registry: RecoveryRegistry) -> RecordsToolsModel {
+            RecordsToolsModel(registry: registry, snapshot: { [] }, validateNativePayload: { try RecordsNativeCodec.validate($0) },
+                openRecovered: { _ in XCTFail("Recipe preview must not open a recovered record") },
+                beginAuthorization: { [weak ledger] in { [weak ledger] in ledger?.ready == true } })
+        }
+
+        let workspaceID: UUID, revision: Int64
+        let workspace: LedgerWorkspace, savedWeek: DinnerMealWeek
+        let ledgerBytes: Data, registryBytes: Data
+        do {
+            let ledger = LedgerModel(databaseURL: ledgerURL, clock: { now })
+            lifetime.owner = ledger
+            await ledger.open()
+            let started = await ledger.startShop(title: "Wednesday pickup")
+            XCTAssertTrue(started)
+            workspaceID = try XCTUnwrap(ledger.sourceWorkspaceID)
+            let savedTemplate = await ledger.change(key: "template-\(recipe.id)") { $0.mealTemplates.append(recipe) }
+            XCTAssertTrue(savedTemplate)
+            let planning = planningModel(ledger, workspaceID: workspaceID)
+            XCTAssertTrue(planning.prepare([.choose(planned)]))
+            let chosen = await planning.applyPreview()
+            XCTAssertTrue(chosen)
+            let bound = await planning.saveBindings(bindings, occurrenceID: planned.occurrenceID)
+            XCTAssertTrue(bound)
+
+            workspace = ledger.workspace
+            revision = ledger.revision
+            ledgerBytes = try ledger.exportPayload()
+            savedWeek = try planning.week(start: weekStart)
+            let dated = try XCTUnwrap(savedWeek.days.first { $0.day == dinnerDay })
+            XCTAssertEqual(dated.meals.map(\.id), [planned.occurrenceID])
+            XCTAssertEqual(dated.meals.first?.templateID, recipe.id)
+            XCTAssertEqual(dated.meals.first?.ingredientContributionIDs, [sourceID])
+            XCTAssertEqual(dated.meals.first?.sourceURL, recipe.sourceURL)
+            XCTAssertEqual(workspace.dinnerPlanning.portionBindings, bindings)
+
+            let registry = try RecoveryRegistry(url: registryURL)
+            let existing = try ImportedRecipe(title: "Existing saved recipe").archiveRecord(origin: "recipe-library-v1", savedAt: now)
+            let envelope = try ArchiveCodec.make(records: [existing], kind: .personalRecovery,
+                origin: existing.origin, revision: existing.revision)
+            _ = try await registry.apply(registry.review(envelope), now: now)
+            registryBytes = try Data(contentsOf: registryURL)
+            let records = recordsModel(ledger, registry: registry)
+            await records.importFile(file, recipes: true)
+
+            XCTAssertEqual(records.error, .malformed)
+            XCTAssertNil(records.review)
+            XCTAssertNil(records.recipeReport)
+            XCTAssertTrue(records.lastImportIDs.isEmpty)
+            XCTAssertEqual(try Data(contentsOf: registryURL), registryBytes)
+            XCTAssertEqual(ledger.workspace, workspace)
+            XCTAssertEqual(ledger.revision, revision)
+            XCTAssertEqual(try ledger.exportPayload(), ledgerBytes)
+        }
+
+        guard await lifetime.released() else { return XCTFail("The original ledger must release its SQLite store before reopening") }
+        let reopened = LedgerModel(databaseURL: ledgerURL, clock: { now })
+        lifetime.owner = reopened
+        await reopened.open()
+        XCTAssertEqual(reopened.sourceWorkspaceID, workspaceID)
+        XCTAssertEqual(reopened.workspace, workspace)
+        XCTAssertEqual(reopened.revision, revision)
+        XCTAssertEqual(try reopened.exportPayload(), ledgerBytes)
+        let planning = planningModel(reopened, workspaceID: workspaceID)
+        XCTAssertEqual(try planning.week(start: weekStart), savedWeek)
+        XCTAssertEqual(planning.state.portionBindings, bindings)
+
+        let registry = try RecoveryRegistry(url: registryURL)
+        let records = recordsModel(reopened, registry: registry)
+        try Data(valid.utf8).write(to: file)
+        await records.importFile(file, recipes: true)
+        XCTAssertNil(records.error)
+        XCTAssertEqual(records.review?.rows.map(\.disposition), [.absent])
+        XCTAssertEqual(records.recipeReport?.recipes.map(\.title), ["Fictional lentil soup"])
+        records.cancelReview()
+        XCTAssertNil(records.review)
+        XCTAssertNil(records.recipeReport)
+        XCTAssertEqual(try Data(contentsOf: registryURL), registryBytes)
+        XCTAssertEqual(try reopened.exportPayload(), ledgerBytes)
+
+        let reopenedRecipe = try XCTUnwrap(reopened.workspace.mealTemplates.first)
+        XCTAssertEqual(reopenedRecipe, recipe)
+        var draft = DinnerTemplateDraft(reopenedRecipe)
+        draft.notes = "Warm the wraps, then pack the protected lunch."
+        let edited = try draft.template()
+        let savedEdit = await reopened.change(key: "template-\(edited.id)") { candidate in
+            let index = try XCTUnwrap(candidate.mealTemplates.firstIndex { $0.id == edited.id })
+            candidate.mealTemplates[index] = edited
+        }
+        XCTAssertTrue(savedEdit)
+        XCTAssertEqual(reopened.workspace.mealTemplates, [edited])
+        XCTAssertEqual(edited.sourceURL, recipe.sourceURL)
+        XCTAssertEqual(edited.revision, recipe.revision + 1)
+        XCTAssertEqual(reopened.revision, revision + 1)
+        XCTAssertEqual(try planning.week(start: weekStart), savedWeek)
+        XCTAssertEqual(planning.state.portionBindings, bindings)
+    }
     @MainActor func testWholeLedgerErasurePurgesAllReviewedHistoryAndRecoveryOriginOnly() async throws {
         let directory = try temporaryDirectory(), url = directory.appendingPathComponent("ledger.sqlite")
         let model = LedgerModel(databaseURL: url)
