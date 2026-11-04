@@ -1,6 +1,40 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Spelling memory is unavailable. You can still review this request.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spelling memory is unavailable. You can still review this request."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La memoria de nombres no está disponible. Aún puedes revisar esta solicitud."
+          }
+        }
+      }
+    },
+    "This deletes remembered spellings for this household profile and language.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This deletes remembered spellings for this household profile and language."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esto elimina los nombres guardados para este perfil del hogar y este idioma."
+          }
+        }
+      }
+    },
     "Capture is optional. You can always type your list.": {
       "extractionState": "manual",
       "localizations": {

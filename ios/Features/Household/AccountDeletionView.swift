@@ -103,7 +103,12 @@ struct AccountDeletionView: View {
             Button(ht("Check deletion status")) {
                 Task { if await deletion.check(receipt) { await account.deletionAccepted(subject: receipt.subject) } }
             }
-            if deletion.statuses[receipt.id]?.status == .complete || deletion.missing.contains(receipt.id) {
+            if account.pendingSpellingCleanup.contains(receipt.subject) {
+                Text(ht("This iPhone could not clear saved product spellings."))
+                Button(ht("Retry clearing saved spellings")) {
+                    Task { await account.retryDeletedAccountSpellingCleanup(subject: receipt.subject) }
+                }
+            } else if deletion.statuses[receipt.id]?.status == .complete || deletion.missing.contains(receipt.id) {
                 Button(ht("Remove receipt from this phone"), role: .destructive) { removing = receipt }
             }
         }

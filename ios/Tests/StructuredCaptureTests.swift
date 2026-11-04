@@ -187,6 +187,45 @@ final class StructuredCaptureTests: XCTestCase {
         XCTAssertEqual(files.filter { $0.hasSuffix(".json") }.count,0)
         XCTAssertEqual(files.filter { $0.hasSuffix(".erased") }.count,1)
     }
+    func testConnectedSpellingFilesIsolateMembersAndAccountErasure() async throws {
+        let directory = location(); defer { try? FileManager.default.removeItem(at: directory) }
+        let household = UUID().uuidString, member = UUID().uuidString, otherMember = UUID().uuidString
+        let subject = "verified-account", otherSubject = "other-account"
+        func scope(_ subject: String, memberID: String? = nil, locale: String = "en-US") throws -> CaptureCorrectionScope {
+            try XCTUnwrap(.connected(subject: subject, householdID: household, memberID: memberID ?? member, localeIdentifier: locale))
+        }
+        let connected = try scope(subject), spanish = try scope(subject, locale: "es-US")
+        let sibling = try scope(subject, memberID: otherMember), otherAccount = try scope(otherSubject)
+        let store = CaptureCorrectionStore(directory: directory)
+        for saved in [connected, english, otherAccount] {
+            try await store.setEnabled(true, scope: saved)
+            try await store.remember(original: "tortiyas", replacement: "tortillas", scope: saved)
+        }
+        for separate in [spanish, sibling] {
+            let initial = try await store.load(separate)
+            XCTAssertFalse(initial.enabled); XCTAssertTrue(initial.entries.isEmpty)
+            try await store.setEnabled(true, scope: separate)
+        }
+        try await store.eraseProfile(connected)
+        let retired = try await store.load(spanish)
+        let survivingMember = try await store.load(sibling)
+        XCTAssertFalse(retired.enabled); XCTAssertTrue(survivingMember.enabled)
+        try await store.eraseConnectedAccount(subject)
+
+        let reopened = CaptureCorrectionStore(directory: directory)
+        for erased in [connected, spanish, sibling] {
+            let snapshot = try await reopened.load(erased)
+            XCTAssertFalse(snapshot.enabled); XCTAssertTrue(snapshot.entries.isEmpty)
+            do {
+                try await reopened.setEnabled(true, scope: erased)
+                XCTFail("A deleted account must reject late writes")
+            } catch CaptureCorrectionFailure.invalidScope {}
+        }
+        for preserved in [english, otherAccount] {
+            let snapshot = try await reopened.load(preserved)
+            XCTAssertEqual(snapshot.entries.first?.replacement, "tortillas")
+        }
+    }
     func testUITestCorrectionDirectoryNeverSelectsDevelopmentProfiles() throws {
         let base = location()
         let normal = CaptureCorrectionStore.defaultDirectory(applicationSupport: base, arguments: [])

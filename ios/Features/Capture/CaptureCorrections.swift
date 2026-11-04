@@ -5,9 +5,23 @@ import Combine
 struct CaptureCorrectionScope: Equatable, Hashable, Sendable {
     let profileID: String
     let localeIdentifier: String
+    let accountID: String?
     init(profileID: String, localeIdentifier: String) {
+        self.init(profileID: profileID, localeIdentifier: localeIdentifier, accountID: nil)
+    }
+    private init(profileID: String, localeIdentifier: String, accountID: String?) {
         self.profileID = profileID
         self.localeIdentifier = Locale(identifier: localeIdentifier).identifier.replacingOccurrences(of: "_", with: "-")
+        self.accountID = accountID
+    }
+    static func connected(subject: String, householdID: String, memberID: String, localeIdentifier: String) -> Self? {
+        guard let household = UUID(uuidString: householdID), let member = UUID(uuidString: memberID),
+              validAccountID(subject) else { return nil }
+        return Self(profileID: household.uuidString + ":" + member.uuidString,
+                    localeIdentifier: localeIdentifier, accountID: subject)
+    }
+    fileprivate static func validAccountID(_ value: String) -> Bool {
+        !value.isEmpty && value.utf8.count <= 300 && !value.contains("@")
     }
 }
 struct CaptureCorrection: Codable, Equatable, Identifiable, Sendable {
@@ -30,7 +44,7 @@ actor CaptureCorrectionStore {
 
     func load(_ scope: CaptureCorrectionScope) throws -> CaptureCorrectionSnapshot {
         let url = try file(scope)
-        if FileManager.default.fileExists(atPath: try marker(scope).path) { return .init() }
+        if try isErased(scope) { return .init() }
         guard FileManager.default.fileExists(atPath: url.path) else { return .init() }
         let handle = try FileHandle(forReadingFrom: url)
         defer { try? handle.close() }
@@ -72,21 +86,20 @@ actor CaptureCorrectionStore {
     /// Erases all locale files for the retired profile. Root composes this into durable erasure cleanup.
     func eraseProfile(_ scope: CaptureCorrectionScope) async throws {
         try validate(scope)
-        var directory = try root()
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        var resources = URLResourceValues(); resources.isExcludedFromBackup = true
-        try directory.setResourceValues(resources)
-        // Content-free retirement marker rejects late writes after erasure and survives restart.
-        #if os(iOS)
-        try Data().write(to: marker(scope), options: [.atomic, .completeFileProtection])
-        #else
-        try Data().write(to: marker(scope), options: .atomic)
-        #endif
+        let directory = try profileDirectory(scope)
+        try retire(at: marker(scope))
         let prefix = digest(scope.profileID) + "-"
         for url in try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
             where url.lastPathComponent.hasPrefix(prefix) && url.pathExtension == "json" {
             try FileManager.default.removeItem(at: url)
         }
+    }
+    /// Account deletion also clears spelling files for memberships that are no longer selected.
+    func eraseConnectedAccount(_ subject: String) throws {
+        guard CaptureCorrectionScope.validAccountID(subject) else { throw CaptureCorrectionFailure.invalidScope }
+        let directory = try accountDirectory(subject)
+        try retire(at: directory.appendingPathExtension("erased"))
+        if FileManager.default.fileExists(atPath: directory.path) { try FileManager.default.removeItem(at: directory) }
     }
     nonisolated static func key(_ text: String) -> String {
         text.precomposedStringWithCanonicalMapping.lowercased(with: Locale(identifier: "en_US_POSIX"))
@@ -119,24 +132,51 @@ actor CaptureCorrectionStore {
         return applicationSupport.appendingPathComponent("RoomInTheCart/CaptureCorrections", isDirectory: true)
     }
     private func marker(_ scope: CaptureCorrectionScope) throws -> URL {
-        try root().appendingPathComponent(digest(scope.profileID) + ".erased")
+        try profileDirectory(scope).appendingPathComponent(digest(scope.profileID) + ".erased")
+    }
+    private func accountDirectory(_ subject: String) throws -> URL {
+        try root().appendingPathComponent("Connected", isDirectory: true)
+            .appendingPathComponent(digest(subject), isDirectory: true)
+    }
+    private func profileDirectory(_ scope: CaptureCorrectionScope) throws -> URL {
+        if let subject = scope.accountID { return try accountDirectory(subject) }
+        return try root()
+    }
+    private func isErased(_ scope: CaptureCorrectionScope) throws -> Bool {
+        if let subject = scope.accountID,
+           FileManager.default.fileExists(atPath: try accountDirectory(subject).appendingPathExtension("erased").path) { return true }
+        return FileManager.default.fileExists(atPath: try marker(scope).path)
     }
     private func file(_ scope: CaptureCorrectionScope) throws -> URL {
         try validate(scope)
-        return try root().appendingPathComponent(digest(scope.profileID) + "-" + digest(scope.localeIdentifier) + ".json")
+        return try profileDirectory(scope).appendingPathComponent(digest(scope.profileID) + "-" + digest(scope.localeIdentifier) + ".json")
     }
     private func digest(_ value: String) -> String { SHA256.hash(data: Data(value.utf8)).map { String(format: "%02x", $0) }.joined() }
-    private func save(_ value: CaptureCorrectionSnapshot, scope: CaptureCorrectionScope) throws {
-        let url = try file(scope)
-        guard !FileManager.default.fileExists(atPath: try marker(scope).path) else { throw CaptureCorrectionFailure.invalidScope }
-        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-        var directory = url.deletingLastPathComponent()
+    private func prepareDirectory(_ url: URL) throws {
+        var directory = url
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         var resources = URLResourceValues(); resources.isExcludedFromBackup = true
         try directory.setResourceValues(resources)
+        #if os(iOS)
+        try FileManager.default.setAttributes([.protectionKey: FileProtectionType.complete], ofItemAtPath: directory.path)
+        #endif
+    }
+    private func retire(at url: URL) throws {
+        try prepareDirectory(url.deletingLastPathComponent())
+        // The content-free marker rejects late writes across process restarts.
+        #if os(iOS)
+        try Data().write(to: url, options: [.atomic, .completeFileProtection])
+        #else
+        try Data().write(to: url, options: .atomic)
+        #endif
+    }
+    private func save(_ value: CaptureCorrectionSnapshot, scope: CaptureCorrectionScope) throws {
+        let url = try file(scope)
+        guard try !isErased(scope) else { throw CaptureCorrectionFailure.invalidScope }
+        try prepareDirectory(url.deletingLastPathComponent())
         let bytes = try JSONEncoder().encode(value)
         guard bytes.count <= 128_000 else { throw CaptureCorrectionFailure.storage }
         #if os(iOS)
-        try FileManager.default.setAttributes([.protectionKey: FileProtectionType.complete], ofItemAtPath: directory.path)
         try bytes.write(to: url, options: [.atomic, .completeFileProtection])
         #else
         try bytes.write(to: url, options: .atomic)

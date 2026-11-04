@@ -101,8 +101,12 @@ import CoreDomain
                     }
                 }
                 if corrections.failed {
-                    Text(captureText(context == .recipe ? "Spelling memory is unavailable. Your reviewed ingredients are still usable." :
-                        "Spelling memory is unavailable. Your reviewed list is still usable."))
+                    let message = switch context {
+                    case .recipe: captureText("Spelling memory is unavailable. Your reviewed ingredients are still usable.")
+                    case .request: captureText("Spelling memory is unavailable. You can still review this request.")
+                    case .list: captureText("Spelling memory is unavailable. Your reviewed list is still usable.")
+                    }
+                    Text(message)
                 }
             }
             .alert(captureText("Turn off spelling memory?"), isPresented: $confirmDisable) {
@@ -114,7 +118,8 @@ import CoreDomain
                 Button(captureText("Cancel"), role: .cancel) { requestedDisableScope = nil }
                     .accessibilityIdentifier("capture.spelling.cancelDisable")
             } message: {
-                Text(captureText("This deletes remembered spellings for this private workspace and selected language. Other languages and previously saved records stay as they are."))
+                Text(captureText(context == .request ? "This deletes remembered spellings for this household profile and language." :
+                    "This deletes remembered spellings for this private workspace and selected language. Other languages and previously saved records stay as they are."))
             }
         }
         Section {

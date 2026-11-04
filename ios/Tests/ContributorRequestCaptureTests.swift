@@ -5,13 +5,15 @@ import DeviceSurfaces
 @testable import RoomInTheCart
 
 @MainActor final class ContributorRequestCaptureTests: XCTestCase {
-    private func model(_ fixture: ContributorCaptureFixture, queue: URL, deviceVault: ContributorCaptureVault = .init()) async throws -> HouseholdModel {
+    private func model(_ fixture: ContributorCaptureFixture, queue: URL, deviceVault: ContributorCaptureVault = .init(),
+                       captureCorrections: CaptureCorrectionStore = .shared) async throws -> HouseholdModel {
         ContributorCaptureProtocol.handler = fixture.respond
         let config = URLSessionConfiguration.ephemeral; config.protocolClasses = [ContributorCaptureProtocol.self]
         let transport = HTTPTransport(session: URLSession(configuration: config))
         let auth = AdultAuth(configuration: try .init(projectURL: URL(string: "https://identity.test")!, publishableKey: "sb_publishable_test"), vault: ContributorCaptureVault(), transport: transport)
         let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://household.test")!), auth: auth, deviceVault: deviceVault, transport: transport)
-        let model = HouseholdModel(auth: auth, service: service, outboxURL: queue, deletionVault: ContributorCaptureVault(), exitVault: ContributorCaptureVault())
+        let model = HouseholdModel(auth: auth, service: service, outboxURL: queue, deletionVault: ContributorCaptureVault(),
+                                   exitVault: ContributorCaptureVault(), captureCorrections: captureCorrections)
         model.email = "sam@example.test"; model.code = "123456"; await model.verifyCode()
         model.keepLocalPrivate = true; await model.join(try XCTUnwrap(model.workspaces.first))
         return model
@@ -73,6 +75,47 @@ import DeviceSurfaces
         XCTAssertNil(model.contributorRequestScope)
         await model.sendRequest(reviewed: review, approved: true)
         XCTAssertTrue(fixture.commands.isEmpty); XCTAssertTrue(fixture.rows.isEmpty)
+    }
+    func testSpellingScopeRequiresTheCurrentContributorReview() async throws {
+        let queue = location(); defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
+        let fixture = ContributorCaptureFixture(), model = try await model(fixture, queue: queue)
+        let review = try XCTUnwrap(model.contributorRequestScope)
+        let english = try XCTUnwrap(model.contributorCorrectionScope(for: review, localeIdentifier: "en-US"))
+        let spanish = try XCTUnwrap(model.contributorCorrectionScope(for: review, localeIdentifier: "es-US"))
+        let expected = try XCTUnwrap(CaptureCorrectionScope.connected(subject: review.subject, householdID: fixture.household,
+                                                                     memberID: fixture.member, localeIdentifier: "en-US"))
+        XCTAssertEqual(english, expected)
+        XCTAssertEqual(english.profileID, spanish.profileID)
+        XCTAssertNotEqual(english, spanish)
+
+        model.item = "A different review"
+        XCTAssertNil(model.contributorCorrectionScope(for: review, localeIdentifier: "en-US"))
+        let updated = try XCTUnwrap(model.contributorRequestScope)
+        XCTAssertEqual(model.contributorCorrectionScope(for: updated, localeIdentifier: "en-US"), english)
+        model.lock()
+        XCTAssertNil(model.contributorCorrectionScope(for: updated, localeIdentifier: "en-US"))
+    }
+    func testAcceptedAccountDeletionRetriesSpellingCleanupAfterSignOut() async throws {
+        let queue = location(), directory = queue.deletingLastPathComponent().appendingPathComponent("Spellings")
+        defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
+        let store = CaptureCorrectionStore(directory: directory)
+        let model = try await model(ContributorCaptureFixture(), queue: queue, captureCorrections: store)
+        let review = try XCTUnwrap(model.contributorRequestScope)
+        let spelling = try XCTUnwrap(model.contributorCorrectionScope(for: review, localeIdentifier: "en-US"))
+        try await store.setEnabled(true, scope: spelling)
+        let connected = directory.appendingPathComponent("Connected"), parked = directory.appendingPathComponent("Parked")
+        try FileManager.default.moveItem(at: connected, to: parked)
+        try Data().write(to: connected)
+
+        await model.deletionAccepted(subject: review.subject)
+        XCTAssertNil(model.identity)
+        XCTAssertTrue(model.pendingSpellingCleanup.contains(review.subject))
+        try FileManager.default.removeItem(at: connected)
+        try FileManager.default.moveItem(at: parked, to: connected)
+        await model.retryDeletedAccountSpellingCleanup(subject: review.subject)
+        XCTAssertFalse(model.pendingSpellingCleanup.contains(review.subject))
+        let removed = try await store.load(spelling)
+        XCTAssertFalse(removed.enabled)
     }
     func testLostReplyRestartUsesExactProtectedRequestAndNeverChangesBasket() async throws {
         let queue = location(); defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }

@@ -1,6 +1,40 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "This iPhone could not clear saved product spellings.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This iPhone could not clear saved product spellings."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este iPhone no pudo borrar los nombres de productos guardados."
+          }
+        }
+      }
+    },
+    "Retry clearing saved spellings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry clearing saved spellings"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a intentar borrar los nombres guardados"
+          }
+        }
+      }
+    },
     "Suggestion reviewed": {
       "localizations": {
         "en": {

@@ -33,6 +33,7 @@ struct DeviceReminderPersona: Equatable {
     @Published private(set) var locked = false
     @Published private(set) var codeSent = false
     @Published private(set) var notice: String?
+    @Published private(set) var pendingSpellingCleanup: Set<String> = []
     @Published var email = ""
     @Published var code = ""
     @Published var item = ""
@@ -59,6 +60,7 @@ struct DeviceReminderPersona: Equatable {
     let guardianIntentStore: GuardianIntentStore
     private let deviceRevocationStore: DeviceRevocationStore
     private let placementStore: PlacementPendingStore
+    private let captureCorrections: CaptureCorrectionStore
     @Published private(set) var placementEvidenceUnlocked = false
     @Published private(set) var placementEvidenceNotice: String?
     private var placementEvidenceIdentity: (subject: String, householdID: String, memberID: String)?
@@ -78,8 +80,10 @@ struct DeviceReminderPersona: Equatable {
     private var contributorDeviceID: String?
     private var contributorReplayWindow: (value: ReplayWindow, expiresAt: Date)?
 
-    init(bundle: Bundle = .main, auth: AdultAuth? = nil, service: HouseholdService? = nil, outboxURL: URL? = nil, deletionVault: (any RefreshTokenVault)? = nil, exitVault: (any RefreshTokenVault)? = nil, guardianVault: (any RefreshTokenVault)? = nil, guardianChildOnly: Bool = false) {
+    init(bundle: Bundle = .main, auth: AdultAuth? = nil, service: HouseholdService? = nil, outboxURL: URL? = nil, deletionVault: (any RefreshTokenVault)? = nil, exitVault: (any RefreshTokenVault)? = nil, guardianVault: (any RefreshTokenVault)? = nil, guardianChildOnly: Bool = false,
+         captureCorrections: CaptureCorrectionStore = .shared) {
         self.guardianChildOnly = guardianChildOnly
+        self.captureCorrections = captureCorrections
         let otpSetting = bundle.object(forInfoDictionaryKey: "RITCEmailOTPEnabled")
         emailOTPEnabled = (auth != nil && service != nil) || (otpSetting as? String == "YES") || (otpSetting as? Bool == true)
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
@@ -271,6 +275,11 @@ struct DeviceReminderPersona: Equatable {
     var contributorRequestScope: ContributorRequestScope? {
         guard !busy, !locked, pending == nil else { return nil }
         return currentContributorRequestScope()
+    }
+    func contributorCorrectionScope(for reviewed: ContributorRequestScope, localeIdentifier: String) -> CaptureCorrectionScope? {
+        guard !guardianChildOnly, reviewed.grantID == nil, contributorRequestScope == reviewed else { return nil }
+        return .connected(subject: reviewed.subject, householdID: reviewed.householdID, memberID: reviewed.memberID,
+                          localeIdentifier: localeIdentifier)
     }
     private func currentContributorRequestScope() -> ContributorRequestScope? {
         guard let identity, let projection, let contributorDeviceID, projection.enrolled,
@@ -494,11 +503,26 @@ struct DeviceReminderPersona: Equatable {
         }
     }
     func deletionAccepted(subject: String) async {
-        guard identity?.subject == subject else { return }
-        let removed: Bool
-        do { try householdExit?.forget(subject: subject); removed = true } catch { removed = false }
-        await finishSignOut(allDevices: false, alreadyRevoked: true)
-        if !removed { notice = ht("Unlock this phone to update the saved household exit request.") }
+        if identity?.subject == subject {
+            let removed: Bool
+            do { try householdExit?.forget(subject: subject); removed = true } catch { removed = false }
+            await finishSignOut(allDevices: false, alreadyRevoked: true)
+            if !removed { notice = ht("Unlock this phone to update the saved household exit request.") }
+        }
+        // A saved deletion receipt may be checked after sign-out.
+        await clearDeletedAccountSpellings(subject: subject)
+    }
+    func retryDeletedAccountSpellingCleanup(subject: String) async {
+        guard pendingSpellingCleanup.contains(subject) else { return }
+        await clearDeletedAccountSpellings(subject: subject)
+    }
+    private func clearDeletedAccountSpellings(subject: String) async {
+        do {
+            try await captureCorrections.eraseConnectedAccount(subject)
+            pendingSpellingCleanup.remove(subject)
+        } catch {
+            pendingSpellingCleanup.insert(subject)
+        }
     }
     func signOut(allDevices: Bool = false) async {
         await finishSignOut(allDevices: allDevices, alreadyRevoked: false)
