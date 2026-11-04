@@ -1,0 +1,20 @@
+{
+  "source_commit": "5b7f7cdc5b1ff508bd42f9d45336245270309145",
+  "checkout_during_run": "e063303df6288e483f7b4d19e6fefaa84405d9c5 with the exact subsequently committed FreeJourneyUITests.swift change",
+  "test_source_sha256": "63275c40c39cab91fc600b7cfdc7357a3dfed16f1f0813066cd5c31164f8cfeb",
+  "xcode": "27.1 (27A9275)",
+  "device": "iPhone 17e, iOS 27.0 (24A434), arm64 simulator",
+  "configuration": "Ordinary Debug without fixture compilation flags",
+  "result_bundle": ".build/FreeJourneyWeekEntry20261104/FreeJourneyWeekEntryFinal.xcresult",
+  "log": ".build/FreeJourneyWeekEntry20261104/focused-final.log",
+  "log_sha256": "937fba4cde3bf7981d7a50212f63ab350b8caef221f09e3c37fc4aeb2ee91ef4",
+  "app_debug_dylib_sha256": "c81664fceb5b3a9df3ae36a0074514badbaceb467b5e8b51243a6c08dafc86df",
+  "ui_test_executable_sha256": "ac984d44927e769b08159ef851bad1ac1a920063b2cb4ac7fae80d284e354be8",
+  "test": "FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop",
+  "duration_seconds": 440.107,
+  "passed": 1,
+  "failed": 0,
+  "skipped": 0,
+  "runtime_warnings": [],
+  "scope": "The UI opened the pushed meal week for all four saved-dinner checks and found the unscheduled dinner after restart. The journey also exercised pack review, placement, observed short fill, the cook note, settlement, next-shop dinner reuse after restart and saved repair history. The original broader invocation used the old root locator. This separate result establishes the corrected Free journey on one simulator."
+}
