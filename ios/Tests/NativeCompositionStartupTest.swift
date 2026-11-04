@@ -5,6 +5,100 @@ import DeviceSurfaces
 
 #if DEBUG
 @MainActor final class DeviceSurfacesCompositionStartupTests: XCTestCase {
+    func testColdCurrentURLWaitsForActiveAndReadyModels() async throws {
+        let f = try await coldURLFixture(); defer { f.cleanup() }
+        let coldLedger = LedgerModel(databaseURL: f.base.appendingPathComponent("ledger.sqlite"))
+        let coldPickup = PickupModel(databaseURL: f.base.appendingPathComponent("pickup.sqlite"), launchArguments: [])
+        let cold = DeviceSurfacesComposition(directory: f.base.appendingPathComponent("surfaces"), bundle: f.bundle, launchArguments: ["--ui-testing"])
+        cold.bind(ledger: coldLedger, pickup: coldPickup, household: f.household, access: f.access, sceneActive: false)
+        cold.handle(url: f.codec.url(handle: f.handle))
+        XCTAssertNil(cold.destination, "Inactive startup must not present or prematurely reject a known adult URL")
+        XCTAssertFalse(cold.privateAuthorized); XCTAssertFalse(coldLedger.ready); XCTAssertFalse(coldPickup.ready)
+        await coldLedger.open(); await coldPickup.load()
+        let saved = coldLedger.workspace, revision = coldLedger.revision
+        await cold.foreground(); await waitForSurfaceDestination(cold)
+        guard case .shop(let id) = cold.destination else { return XCTFail("Current cold URL should open after readiness and authority reconcile") }
+        XCTAssertEqual(id, saved.selectedShopID); XCTAssertEqual(coldLedger.workspace, saved); XCTAssertEqual(coldLedger.revision, revision)
+    }
+    func testColdGenericCaptureWaitsForAdultModels() async throws {
+        let f = try await coldURLFixture(); defer { f.cleanup() }
+        let coldLedger = LedgerModel(databaseURL: f.base.appendingPathComponent("ledger.sqlite"))
+        let coldPickup = PickupModel(databaseURL: f.base.appendingPathComponent("pickup.sqlite"), launchArguments: [])
+        let cold = DeviceSurfacesComposition(directory: f.base.appendingPathComponent("surfaces"), bundle: f.bundle, launchArguments: ["--ui-testing"])
+        cold.bind(ledger: coldLedger, pickup: coldPickup, household: f.household, access: f.access, sceneActive: false)
+        cold.handle(url: f.codec.url(handle: nil))
+        try await Task.sleep(for: .milliseconds(100))
+        XCTAssertNil(cold.destination); XCTAssertFalse(cold.privateAuthorized)
+        await coldLedger.open(); await coldPickup.load(); await cold.foreground(); await waitForSurfaceDestination(cold)
+        guard case .capture = cold.destination else { return XCTFail("Generic cold widget must open capture only after the local models are ready") }
+    }
+    func testURLReceivedDuringLaterInactivityWaitsForActivation() async throws {
+        let f = try await coldURLFixture(); defer { f.cleanup() }
+        let saved = f.ledger.workspace, revision = f.ledger.revision
+        f.composition.background()
+        f.composition.handle(url: f.codec.url(handle: f.handle))
+        await f.composition.sourceDidChange()
+        XCTAssertNil(f.composition.destination); XCTAssertFalse(f.composition.privateAuthorized)
+        await f.composition.foreground(); await waitForSurfaceDestination(f.composition)
+        guard case .shop(let id) = f.composition.destination else { return XCTFail("A URL received after a prior active session must wait, then revalidate") }
+        XCTAssertEqual(id, saved.selectedShopID); XCTAssertEqual(f.ledger.workspace, saved); XCTAssertEqual(f.ledger.revision, revision)
+    }
+    func testDeferredURLCannotOpenAfterAuthorityLossBeforeActivation() async throws {
+        let f = try await coldURLFixture(); defer { f.cleanup() }
+        let saved = f.ledger.workspace, revision = f.ledger.revision
+        f.composition.background(); f.composition.handle(url: f.codec.url(handle: f.handle))
+        f.access.protect(); await f.composition.sourceDidChange(); await f.composition.foreground()
+        try await Task.sleep(for: .milliseconds(100))
+        XCTAssertFalse(f.access.unlocked); XCTAssertFalse(f.composition.privateAuthorized); XCTAssertNil(f.composition.destination)
+        XCTAssertEqual(f.ledger.workspace, saved); XCTAssertEqual(f.ledger.revision, revision)
+    }
+    func testDeferredURLRevalidatesStalePickupAfterSwitch() async throws {
+        let f = try await coldURLFixture(); defer { f.cleanup() }
+        f.composition.background(); f.composition.handle(url: f.codec.url(handle: f.handle))
+        let madeB = await f.ledger.startShop(title: "Fictional deferred B"); XCTAssertTrue(madeB)
+        let saved = f.ledger.workspace, revision = f.ledger.revision
+        await f.composition.foreground(); await waitForSurfaceDestination(f.composition)
+        guard case .unavailable = f.composition.destination else { return XCTFail("The deferred old pickup handle must fail closed after a switch") }
+        XCTAssertEqual(f.ledger.workspace, saved); XCTAssertEqual(f.ledger.revision, revision)
+    }
+    func testBackgroundAgainCancelsDeferredURL() async throws {
+        let f = try await coldURLFixture(); defer { f.cleanup() }
+        f.composition.background(); f.composition.handle(url: f.codec.url(handle: f.handle)); f.composition.background()
+        await f.composition.foreground()
+        try await Task.sleep(for: .milliseconds(100))
+        XCTAssertNil(f.composition.destination)
+    }
+    private func waitForSurfaceDestination(_ surfaces: DeviceSurfacesComposition) async {
+        for _ in 0..<100 {
+            if surfaces.destination != nil { return }
+            try? await Task.sleep(for: .milliseconds(20))
+        }
+    }
+    private struct ColdURLFixture {
+        let base: URL, bundle: Bundle, suite: String, defaults: UserDefaults
+        let ledger: LedgerModel, pickup: PickupModel, household: HouseholdModel, access: WorkspaceAccess
+        let composition: DeviceSurfacesComposition, codec: SurfaceURLCodec, handle: RouteHandle
+        func cleanup() { defaults.removePersistentDomain(forName: suite); try? FileManager.default.removeItem(at: base) }
+    }
+    private func coldURLFixture() async throws -> ColdURLFixture {
+        let base = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let bundleURL = base.appendingPathComponent("Surface.bundle")
+        try FileManager.default.createDirectory(at: bundleURL, withIntermediateDirectories: true)
+        try PropertyListSerialization.data(fromPropertyList: ["CFBundleIdentifier": "invalid.fixture.cold", SurfaceInfo.schemeKey: "roominthecart-fixture"], format: .xml, options: 0).write(to: bundleURL.appendingPathComponent("Info.plist"))
+        let bundle = try XCTUnwrap(Bundle(url: bundleURL))
+        let ledger = LedgerModel(databaseURL: base.appendingPathComponent("ledger.sqlite")); await ledger.open()
+        let started = await ledger.startShop(title: "Fictional cold A"); XCTAssertTrue(started)
+        let pickup = PickupModel(databaseURL: base.appendingPathComponent("pickup.sqlite"), launchArguments: []); await pickup.load()
+        let household = HouseholdModel(bundle: bundle, outboxURL: base.appendingPathComponent("outbox.json"))
+        let suite = "ColdSurface." + UUID().uuidString, now = Date(timeIntervalSince1970: 1_793_664_000)
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite)), access = WorkspaceAccess(defaults: defaults)
+        let composition = DeviceSurfacesComposition(directory: base.appendingPathComponent("surfaces"), bundle: bundle, clock: { now }, launchArguments: ["--ui-testing"])
+        composition.bind(ledger: ledger, pickup: pickup, household: household, access: access)
+        let widget = try WidgetProjectionFile(directory: base.appendingPathComponent("surfaces/TestWidget"))
+        let projection = try await publishedWidget(widget, at: now)
+        return ColdURLFixture(base: base, bundle: bundle, suite: suite, defaults: defaults, ledger: ledger, pickup: pickup, household: household, access: access, composition: composition, codec: try SurfaceURLCodec(scheme: "roominthecart-fixture"), handle: try XCTUnwrap(projection.routeHandle))
+    }
+
     func testRetainedWidgetRouteCannotOpenPreviouslySelectedShop() async throws {
         let base = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: base) }

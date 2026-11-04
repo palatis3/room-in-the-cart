@@ -1,5 +1,35 @@
 {
   "assignment": "Foundation 2.1 E07 widget and App Intent acceptance",
+  "cold_presentation_follow_up": {
+    "candidate_source_digest": "fb82ed0db232d07f32d76ecc4a269a23aec4322d6e942a901efd4b185f2f2156",
+    "reviewed_patch_sha256": "af7fd25260a3341f7369ab7a16795efedb4ebfd0cfd15d12c0616f585b587a6a",
+    "integrated_composition_sha256": "23a8987f81424575eb08858bd935cd64e77d6a29c0ad340579caeb9d32ebf65b",
+    "integrated_startup_tests_sha256": "3c03777ed51ef9cc07c7a673e6cd290d4292dd7c88df6b354f12023117585a00",
+    "source_difference": "The integrated composition retains the existing one-line comment from the current-pickup guard. The tested executable logic and startup tests match the reviewed patch.",
+    "device": "iPhone 17 Pro, iOS 27.0 (24A434), disposable simulator",
+    "readback_directory": ".build/IntegratedColdWidgetUnits20261104/widget-readback",
+    "readback_manifest_sha256": "e80bb97008a4ff60496fad8f4dd428fd36e9661c1684bf1093b3ce96e190b3a7",
+    "sealed_report_sha256": "2408d2c7e6ef334af96e7945abf6dfcbd680e47ea4b7cf8501a453b8d0e93240",
+    "destination_correction_sha256": "c3caab9a351986292fa9d549f4f3b453b770ae376e71e1fb7241791483881619",
+    "diagnosis": "The root received the cold link after binding while the scene was inactive and the stores were loading. The adult workspace was unlocked. The inactive check rejected the opaque link before it could be queued, and reconciliation cleared the temporary unavailable destination.",
+    "focused_models": {"original_passed": 2, "original_failed": 4, "candidate_passed": 13, "candidate_failed": 0},
+    "integrated_debug": {
+      "verification_log": ".build/IntegratedColdWidgetUnits20261104/build-verification.log",
+      "result": ".build/IntegratedColdWidgetUnits20261104/IntegratedColdWidgetModels.xcresult",
+      "device": "iPhone 17e, iOS 27.0 (24A434)",
+      "executable_sha256": "8f3a74e8fbbb5ffc6ab1b929801a1f5ff9517329cd583318cc5676ec244a576a",
+      "debug_dylib_sha256": "fa1e9c27a4058a106834e930de9414d555c0f8853f7ef118b8902c4ed02c980e",
+      "passed": 55,
+      "failed": 0,
+      "skipped": 0,
+      "runtime_warnings": []
+    },
+    "direct_routes": "Cold current opened the current pickup, generic opened grocery entry, and stale opened the unavailable screen. All three preserved the selected pickup, ledger revision and saved workspace.",
+    "cold_system_widget": "ColdFixedWidget.xcresult passed. Tapping the Home Screen widget after confirming app termination opened the current pickup’s saved list. The screenshot and accessibility output identify E07 current B and its saved line.",
+    "warm_system_widget": "WarmFixedWidget.xcresult passed. Tapping the Home Screen widget with the app running opened Bring the list. The screenshot and accessibility output identify the editor.",
+    "workspace_readback": "Both actual widget taps retained the current pickup and revision 8. The full workspace and shop payloads match. The widget’s generic exterior can render either the current route or the generic entry across timeline refreshes.",
+    "remaining": ["Physical signed-device and lock-state checks", "Delayed physical WidgetKit refresh and locked shortcut tasks"]
+  },
   "retained_route_follow_up": {
     "baseline_source_commit": "1ee83aa7b6822c83c0fdc615aa6bffb129679123",
     "integrated_source_commit": "f1975f05c15d7f10c8d47a587b3deecde09e391a",

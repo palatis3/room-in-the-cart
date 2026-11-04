@@ -53,8 +53,9 @@ import DeviceSurfaces
         self.bundle = bundle; self.clock = clock
         self.reminderScheduler = reminderScheduler
     }
-    var privateAuthorized: Bool {
-        guard active, let access, access.unlocked, let household else { return false }
+    var privateAuthorized: Bool { active && hasAdultAuthority }
+    private var hasAdultAuthority: Bool {
+        guard let access, access.unlocked, let household else { return false }
         if let role = household.projection?.role, !["shopper", "organizer"].contains(role) { return false }
         return !household.locked
     }
@@ -163,7 +164,10 @@ import DeviceSurfaces
             guard currentReminderPersona == household?.deviceReminderPersona else { return }
             pendingReminderCancellation = false
         }
-        guard privateAuthorized else { entries = []; draft = nil; destination = nil; try? projection?.clear(now: clock()); return }
+        guard privateAuthorized else {
+            if !hasAdultAuthority { pendingURL = nil }
+            entries = []; draft = nil; destination = nil; try? projection?.clear(now: clock()); return
+        }
         // Root binds before opening either model. No cleanup may treat that
         // incomplete (or uncertain-save) projection as an empty durable workspace.
         let sources = sourceSnapshot()
@@ -282,7 +286,13 @@ import DeviceSurfaces
             // Parsing its public scheme must not require private stores to open.
             if urls == nil { urls = try IOSSurfaceContainers.urls(bundle: bundle) }
             guard let urls else { throw SurfaceError.unconfigured }
-            guard let handle = try urls.parse(url) else {
+            let handle = try urls.parse(url)
+            // Keep an adult URL only until activation and model readiness. Its
+            // destination still resolves against current authority and sources.
+            if hasAdultAuthority, !active || ledger?.ready != true || pickup?.ready != true {
+                pendingURL = url; return
+            }
+            guard let handle else {
                 Task { await foreground(); openCapture() }
                 return
             }
