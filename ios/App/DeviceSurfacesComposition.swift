@@ -366,8 +366,10 @@ import DeviceSurfaces
         guard privateAuthorized, reminderTargets.contains(selected) else { throw SurfaceError.stale }
         let route = try PrivateRoute(handle: handle, personaID: persona, targetID: selected.id, generation: routeGeneration(selected.target), destination: .shoppingList, expiresAt: .distantFuture)
         if previous == nil { try routes.put(SurfaceRouteRecord(route: route, target: selected.target, sourceRevision: selected.revision, reminderID: reminderID)) }
+        let quietHours = saved == nil ? try QuietHours(startMinute: 22 * 60, endMinute: 7 * 60) : saved?.intent.quietHours
         return ReminderEditorContext(reminderID: reminderID, personaID: persona, targetID: selected.id, subject: selected.cutoff == nil ? .deferral : .offer, sourceRevision: selected.revision,
-            routeHandle: handle, expiresAt: selected.cutoff ?? expiresAt, cutoff: selected.cutoff, initialFireAt: saved?.intent.fireAt ?? clock().addingTimeInterval(3600), timeZoneID: selected.timeZoneID, expectedVersion: saved?.version)
+            routeHandle: handle, expiresAt: selected.cutoff ?? expiresAt, cutoff: selected.cutoff, initialFireAt: saved?.intent.fireAt ?? clock().addingTimeInterval(3600),
+            timeZoneID: saved?.intent.localTime.timeZoneID ?? selected.timeZoneID, initialQuietHours: quietHours, expectedVersion: saved?.version)
     }
     func reminderAuthorization(_ selected: SurfaceReminderTarget) -> UUID? { privateAuthorized && reminderTargets.contains(selected) ? nonce : nil }
 }

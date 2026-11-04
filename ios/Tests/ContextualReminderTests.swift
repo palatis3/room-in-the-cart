@@ -66,6 +66,7 @@ import DeviceSurfaces
             XCTAssertEqual(first.targetID, target.id)
             XCTAssertEqual(first.sourceRevision, before.revision)
             XCTAssertEqual(first.personaID, f.access.localActorID)
+            XCTAssertEqual(first.initialQuietHours, try QuietHours(startMinute: 22 * 60, endMinute: 7 * 60))
             switch target.target {
             case .offer: XCTAssertEqual(first.subject, .offer); XCTAssertEqual(first.cutoff, target.cutoff); XCTAssertEqual(first.expiresAt, target.cutoff)
             case .deferral: XCTAssertEqual(first.subject, .deferral); XCTAssertNil(first.cutoff); XCTAssertEqual(first.expiresAt, now.addingTimeInterval(172_800))
@@ -130,6 +131,11 @@ import DeviceSurfaces
         // The test runtime never invokes an OS authorization or notification API.
         let denied = try await coordinator.save(intent, expectedVersion: nil, requestPermission: true)
         XCTAssertEqual(denied.status, .denied)
+        let reopened = try await f.surfaces.reminderContext(target, expiresAt: context.expiresAt)
+        XCTAssertEqual(reopened.timeZoneID, local.timeZoneID)
+        XCTAssertEqual(reopened.initialFireAt, intent.fireAt)
+        XCTAssertNil(reopened.initialQuietHours)
+        XCTAssertEqual(reopened.expectedVersion, denied.version)
         try await coordinator.cancel(intent.id)
         let cancelled = try await coordinator.current(intent.id)
         XCTAssertEqual(cancelled?.status, .cancelled)

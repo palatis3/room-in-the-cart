@@ -219,9 +219,20 @@ public actor ReminderCoordinator {
     private func reconcile(_ id: UUID, requestPermission: Bool) async {
         let identifier = ReminderNotification.identifier(id)
         guard let row = try? await store.get(id) else { await scheduler.remove([identifier]); return }
-        if row.status == .cancelled || row.status == .expired { await scheduler.remove([identifier]); return }
-        do { try row.intent.validate(now: now()) }
+        if row.status == .cancelled { await scheduler.remove([identifier]); return }
+        let currentTime = now()
+        do {
+            try row.intent.validate(now: currentTime, allowPastFire: true)
+            if row.intent.subject == .deferral, currentTime >= row.intent.expiresAt { throw SurfaceError.expired }
+        }
         catch { await scheduler.remove([identifier]); _ = try? await store.mark(id, version: row.version, status: .expired); return }
+        if currentTime >= row.intent.fireAt || row.status == .expired {
+            // A late offer tap must still open the current pickup after cutoff.
+            // Retain only the existing OS notice and never register it again.
+            if await scheduler.permission() != .authorized { await scheduler.remove([identifier]) }
+            if row.status != .expired { _ = try? await store.mark(id, version: row.version, status: .expired) }
+            return
+        }
         var permission = await scheduler.permission()
         if permission == .unknown, requestPermission {
             do { permission = try await scheduler.requestPermission() ? .authorized : .denied }

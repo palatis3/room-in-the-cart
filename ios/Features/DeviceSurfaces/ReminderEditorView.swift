@@ -10,10 +10,12 @@ public struct ReminderEditorContext {
     public let cutoff: Date?
     public let initialFireAt: Date
     public let timeZoneID: String
+    public let initialQuietHours: QuietHours?
     public let expectedVersion: Int64?
-    public init(reminderID: UUID = UUID(), personaID: UUID, targetID: UUID, subject: ReminderSubject, sourceRevision: Int64, routeHandle: RouteHandle, expiresAt: Date, cutoff: Date?, initialFireAt: Date, timeZoneID: String, expectedVersion: Int64?) {
+    public init(reminderID: UUID = UUID(), personaID: UUID, targetID: UUID, subject: ReminderSubject, sourceRevision: Int64, routeHandle: RouteHandle, expiresAt: Date, cutoff: Date?, initialFireAt: Date, timeZoneID: String, initialQuietHours: QuietHours?, expectedVersion: Int64?) {
         self.reminderID = reminderID; self.personaID = personaID; self.targetID = targetID; self.subject = subject; self.sourceRevision = sourceRevision
         self.routeHandle = routeHandle; self.expiresAt = expiresAt; self.cutoff = cutoff; self.initialFireAt = initialFireAt; self.timeZoneID = timeZoneID; self.expectedVersion = expectedVersion
+        self.initialQuietHours = initialQuietHours
     }
 }
 
@@ -28,9 +30,10 @@ public struct ReminderEditorContext {
     @Environment(\.dismiss) private var dismiss
     @State private var fireAt: Date
     @State private var timeZoneID: String
-    @State private var quiet = true
-    @State private var quietStart = 22
-    @State private var quietEnd = 7
+    @FocusState private var timeZoneFocused: Bool
+    @State private var quiet: Bool
+    @State private var quietStart: Int
+    @State private var quietEnd: Int
     @State private var reviewed: ReminderIntent?
     @State private var reviewedGeneration: UUID?
     @State private var version: Int64?
@@ -42,6 +45,9 @@ public struct ReminderEditorContext {
     public init(context: ReminderEditorContext, coordinator: ReminderCoordinator, sourceTitle: String? = nil, sourceSavedAt: Date? = nil, currentAuthorization: @escaping () -> UUID?) {
         self.context = context; self.coordinator = coordinator; self.sourceTitle = sourceTitle; self.sourceSavedAt = sourceSavedAt; self.currentAuthorization = currentAuthorization
         _fireAt = State(initialValue: context.initialFireAt); _timeZoneID = State(initialValue: context.timeZoneID); _version = State(initialValue: context.expectedVersion)
+        _quiet = State(initialValue: context.initialQuietHours != nil)
+        _quietStart = State(initialValue: (context.initialQuietHours?.startMinute ?? 22 * 60) / 60)
+        _quietEnd = State(initialValue: (context.initialQuietHours?.endMinute ?? 7 * 60) / 60)
     }
     public var body: some View {
         Form {
@@ -63,6 +69,7 @@ public struct ReminderEditorContext {
                 DatePicker(SurfaceCopy.text("Reminder time"), selection: $fireAt).environment(\.timeZone, TimeZone(identifier: timeZoneID) ?? .gmt)
                     .accessibilityIdentifier("reminder.time")
                 TextField(SurfaceCopy.text("Time zone"), text: $timeZoneID).textInputAutocapitalization(.never).autocorrectionDisabled()
+                    .focused($timeZoneFocused).submitLabel(.done).onSubmit { timeZoneFocused = false }
                 Toggle(SurfaceCopy.text("Quiet hours"), isOn: $quiet).accessibilityIdentifier("reminder.quietHours")
                 if quiet {
                     Stepper(SurfaceCopy.text("Quiet hours start") + ": \(quietStart):00", value: $quietStart, in: 0...23)
@@ -83,6 +90,7 @@ public struct ReminderEditorContext {
             Button(SurfaceCopy.text("Turn off this reminder"), role: .destructive) { turnOff() }.frame(minHeight: 44).accessibilityIdentifier("reminder.turnOff")
         }.disabled(busy).navigationTitle(SurfaceCopy.text("Reminder"))
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(SurfaceCopy.text(saved?.status == .scheduled ? "Done" : "Cancel")) { dismiss() }.disabled(busy).accessibilityIdentifier("reminder.close") } }
+            .keyboardDoneAction(visible: timeZoneFocused, title: SurfaceCopy.text("Done"), identifier: "reminder.keyboardDone") { timeZoneFocused = false }
             .interactiveDismissDisabled(busy)
             .task(id: context.reminderID) {
                 guard currentAuthorization() != nil else { return }
@@ -114,6 +122,7 @@ public struct ReminderEditorContext {
         formatter.dateStyle = .full; formatter.timeStyle = .long; return formatter.string(from: date)
     }
     private func prepare() {
+        timeZoneFocused = false
         clearReview()
         guard let generation = currentAuthorization(), let zone = TimeZone(identifier: timeZoneID) else { message = SurfaceCopy.text("This reminder needs a fresh review."); return }
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = zone

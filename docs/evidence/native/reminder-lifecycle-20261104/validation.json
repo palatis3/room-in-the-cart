@@ -1,0 +1,62 @@
+{
+  "sourceSHA256": {
+    "ios/App/DeviceSurfacesComposition.swift": "ffe9dda1ac612103c3a357472ac358d933cc7398b1989899610687d11820052b",
+    "ios/Features/DeviceSurfaces/ReminderEditorView.swift": "7ea2c7232ba35df1d22fc52a19189d308a936b405bdc602c3f6d264b07c395dd",
+    "ios/Tests/ContextualReminderTests.swift": "d78b6fd4ac6f00d63b16d90557c0e7a1acc0bc8c94ecb9076c44df3c9c7d39db",
+    "ios/Packages/DeviceSurfaces/Sources/DeviceSurfaces/Reminders.swift": "9e3d9058bd504ee58391ac106abd26c3341d8c7754bf031632781b334b9ae5a2",
+    "ios/Packages/DeviceSurfaces/Tests/DeviceSurfacesTests/DeviceSurfacesTests.swift": "33f15978e5bb01b7c6c305e32324f4e41813422371c3e5972d0388191eb93491"
+  },
+  "minimumOS": {
+    "result": ".build/ReminderSystem20261104/ReminderSettingsMinimum.xcresult",
+    "device": "iPhone SE (2nd generation), iOS 17.0 (21A328)",
+    "passed": 17,
+    "failed": 0,
+    "scopes": {
+      "appModelAndIsolation": 15,
+      "contextualUI": 2
+    },
+    "cases": [
+      "testExplicitSaveDeniedAndOffRemainSeparateFromPendingOfferAndDeferral",
+      "testNextShopDeferralRequestsReminderOnlyAfterExplicitScheduleAndCanCancel",
+      "testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending"
+    ],
+    "notes": "This run predates the package retention change. It verifies that reopening initializes the saved time, time zone, quiet-hours choice and edit version, and that both contextual UI paths remain usable. The UI uses an isolated denied scheduler and the existing iOS 17 logging workaround."
+  },
+  "noticeRetention": {
+    "before": ".build/ReminderSystem20261104/retention-before.log",
+    "beforeCasesFailed": 2,
+    "after": ".build/ReminderSystem20261104/retention-after.log",
+    "afterCasesPassed": 27,
+    "afterCasesFailed": 0,
+    "cases": [
+      "testElapsedOfferNoticesSurviveReconciliationUntilTurnOffOrPermissionLoss",
+      "testElapsedDeferralNoticeIsRemovedAtItsExplicitExpiry"
+    ],
+    "checks": [
+      "Existing pending and delivered offer notices survive fire time and cutoff under authorized reconciliation without re-registering a fired notice.",
+      "Turning off the reminder or losing OS authorization removes the existing notice.",
+      "A deferral notice survives fire time and is removed when its explicit expiry passes."
+    ],
+    "scope": "Production reminder store and coordinator with an isolated scheduler that distinguishes pending and delivered notices."
+  },
+  "remaining": [
+    "Complete system permission, notification delivery and actual notification tap verification.",
+    "Keep an early notification response through foreground and authentication, then recheck the exact current source.",
+    "Distinguish ordinary household privacy suspension from real reminder authority loss.",
+    "Confirm cold-launch delegate installation and physical-device behavior."
+  ],
+  "archive": {
+    "path": ".build/ReminderSystem20261104/RoomInTheCart-ReminderLifecycle.xcarchive",
+    "executableSHA256": "f60664c8c0ae3a69b9c0bd6544519c2bc357cf49d7859289edaafdfcdee99d76",
+    "binaryUUID": "21ECC0F1-29C0-312C-9EE9-44E286B2B419",
+    "signed": false,
+    "builtAppVerification": "Compiled Release iPhone app verified: executable, assets, privacy, environment, and embedded extensions.",
+    "strictProductionMetadataResult": "Built app verification failed: Release metadata is incomplete: HouseholdSubscriptionProductID, PrivacyPolicyURL, TermsOfUseURL, SupportURL"
+  },
+  "realSystemPermissionProbe": {
+    "sourceCommit": "9539f3ec435552fc2b4b3ff594aa9b04c813473b",
+    "result": ".build/ReminderSystem20261104/ReminderBefore.xcresult",
+    "statusAtCheckpoint": "Live on the original app source. No system permission or delivery claim at this checkpoint.",
+    "scope": "Disposable iOS 27 iPhone simulator, ordinary app launch with a scratch-only XCTest probe. The scheduler is not substituted."
+  }
+}

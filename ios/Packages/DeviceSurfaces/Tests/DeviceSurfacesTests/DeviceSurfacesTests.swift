@@ -148,6 +148,51 @@ final class DeviceSurfacesTests: XCTestCase {
         let saved = try await store.get(value.id); XCTAssertEqual(saved?.status, .scheduled)
         let pending = await fake.pending; XCTAssertEqual(pending.count, 1)
     }
+    func testElapsedOfferNoticesSurviveReconciliationUntilTurnOffOrPermissionLoss() async throws {
+        let store = try ReminderStore(url: file()), scheduler = FakeScheduler(), date = now
+        let delivered = try intent(), delayed = try intent()
+        let deliveredID = ReminderNotification.identifier(delivered.id), delayedID = ReminderNotification.identifier(delayed.id)
+        await scheduler.setPermission(.authorized)
+        let original = ReminderCoordinator(store: store, scheduler: scheduler, now: { date })
+        _ = try await original.save(delivered, expectedVersion: nil, requestPermission: true)
+        _ = try await original.save(delayed, expectedVersion: nil, requestPermission: true)
+        await scheduler.deliver(deliveredID)
+
+        let atFire = ReminderCoordinator(store: store, scheduler: scheduler, now: { delivered.fireAt })
+        try await atFire.reconcileAll()
+        let afterCutoff = ReminderCoordinator(store: store, scheduler: scheduler, now: { delivered.expiresAt.addingTimeInterval(1) })
+        try await afterCutoff.reconcileAll()
+        let saved = try await store.all()
+        let pending = await scheduler.pending, visible = await scheduler.delivered
+        XCTAssertEqual(saved.map(\.status), [.expired, .expired])
+        XCTAssertEqual(pending, [delayedID: ReminderNotification(delayed)])
+        XCTAssertEqual(visible, [deliveredID: ReminderNotification(delivered)])
+
+        try await afterCutoff.cancel(delivered.id)
+        await scheduler.setPermission(.denied)
+        try await afterCutoff.reconcileAll()
+        let revokedPending = await scheduler.pending, cancelledVisible = await scheduler.delivered
+        XCTAssertTrue(revokedPending.isEmpty)
+        XCTAssertTrue(cancelledVisible.isEmpty)
+    }
+    func testElapsedDeferralNoticeIsRemovedAtItsExplicitExpiry() async throws {
+        let store = try ReminderStore(url: file()), scheduler = FakeScheduler(), date = now, value = try intent(subject: .deferral)
+        let id = ReminderNotification.identifier(value.id)
+        await scheduler.setPermission(.authorized)
+        let original = ReminderCoordinator(store: store, scheduler: scheduler, now: { date })
+        _ = try await original.save(value, expectedVersion: nil, requestPermission: true)
+        await scheduler.deliver(id)
+
+        let atFire = ReminderCoordinator(store: store, scheduler: scheduler, now: { value.fireAt })
+        try await atFire.reconcileAll()
+        let beforeExpiry = await scheduler.delivered
+        XCTAssertEqual(beforeExpiry[id], ReminderNotification(value))
+
+        let atExpiry = ReminderCoordinator(store: store, scheduler: scheduler, now: { value.expiresAt })
+        try await atExpiry.reconcileAll()
+        let afterExpiry = await scheduler.delivered
+        XCTAssertTrue(afterExpiry.isEmpty)
+    }
     func testCancellationWhileOSAddWaitsCannotPublishStaleScheduledResult() async throws {
         let store = try ReminderStore(url: file()), fake = FakeScheduler(), value = try intent(), date = now
         await fake.setPermission(.authorized); await fake.blockNextAdd()
@@ -239,6 +284,7 @@ final class DeviceSurfacesTests: XCTestCase {
 actor FakeScheduler: NotificationScheduling {
     var authorization: NotificationPermission = .unknown
     var pending: [String: ReminderNotification] = [:]
+    var delivered: [String: ReminderNotification] = [:]
     var requestCalls = 0
     var failure = false
     var shouldBlock = false
@@ -256,5 +302,8 @@ actor FakeScheduler: NotificationScheduling {
         if failure { throw SurfaceError.unavailable }
         pending[notification.identifier] = notification
     }
-    func remove(_ identifiers: [String]) { for id in identifiers { pending.removeValue(forKey: id) } }
+    func deliver(_ id: String) { delivered[id] = pending.removeValue(forKey: id) }
+    func remove(_ identifiers: [String]) {
+        for id in identifiers { pending.removeValue(forKey: id); delivered.removeValue(forKey: id) }
+    }
 }
