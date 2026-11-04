@@ -29,7 +29,6 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
     @ObservedObject var model: DinnerFeatureModel
     let startPickup: () -> Void
     @ViewBuilder let saveStatus: () -> SaveStatus
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var weekStart = Date()
     @State private var showWeekGrid = false
     var body: some View {
@@ -48,6 +47,14 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
             } else if !model.accessAvailable {
                 Section { Text(dinnerText("Planning access changed or expired. Reconnect and review again.")) }
             } else {
+                Section {
+                    if let shop = model.shop {
+                        NavigationLink(dinnerText("This week")) {
+                            DinnerWeekView(model: model, shopID: shop.id, weekStart: $weekStart,
+                                showWeekGrid: $showWeekGrid, saveStatus: saveStatus)
+                        }.accessibilityIdentifier("dinnerWeekEntry")
+                    }
+                }
                 Section(dinnerText("Plan")) {
                     NavigationLink(dinnerText("All chosen dinners, including earlier dates")) { DinnerAllMealsView(model: model) }
                     NavigationLink(dinnerText("Add a manual dinner")) { DinnerTemplateEditor(model: model, purpose: .manual) }
@@ -66,36 +73,6 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                         NavigationLink(dinnerText("Compare two store trips")) { DinnerQuotesView(model: model) }
                     }
                 }.disabled(!model.editable)
-                Section(dinnerText("Week")) {
-                    DatePicker(dinnerText("Week starting"), selection: $weekStart, displayedComponents: .date)
-                        .accessibilityIdentifier("dinnerWeekStart")
-                    Picker(dinnerText("Week display"), selection: $showWeekGrid) {
-                        Text(dinnerText("List")).tag(false)
-                        Text(dinnerText("Grid")).tag(true)
-                    }.pickerStyle(.segmented).accessibilityIdentifier("dinnerWeekDisplay")
-                    if let shop = model.shop, let start = try? MealDay(date: weekStart, timeZoneIdentifier: shop.basis.timeZoneIdentifier),
-                       let week = try? model.week(start: start) {
-                        if showWeekGrid {
-                            let column = GridItem(.flexible(), spacing: 12, alignment: .topLeading)
-                            LazyVGrid(columns: dynamicTypeSize.isAccessibilitySize ? [column] : [column, column], spacing: 12) {
-                                ForEach(week.days, id: \.day) { day in
-                                    dayContent(day, in: shop)
-                                        .padding(10)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .background(Theme.canvas, in: RoundedRectangle(cornerRadius: 12))
-                                }
-                            }.buttonStyle(.borderless).accessibilityIdentifier("dinnerWeekGrid")
-                        } else {
-                            ForEach(week.days, id: \.day) { day in
-                                dayContent(day, in: shop).padding(.vertical, 6).buttonStyle(.borderless)
-                            }
-                        }
-                        if !week.unscheduled.isEmpty {
-                            Text(dinnerText("Unscheduled")).font(.headline).accessibilityAddTraits(.isHeader)
-                            ForEach(week.unscheduled) { meal in mealLink(meal) }
-                        }
-                    } else { Text(dinnerText("The week could not be read. Check access and the pickup time zone.")) }
-                }
                 if model.preview != nil {
                     Section { DinnerDecisionButton(model: model, title: dinnerText("Review pending dinner changes"), identifier: "dinnerPending", preservePending: false) { DinnerPreviewView(model: model) } }
                 }
@@ -103,6 +80,89 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
             DinnerFeedback(model: model)
             Section { saveStatus() }
         }.navigationTitle(dinnerText("Dinners")).listStyle(.insetGrouped)
+    }
+}
+
+/// The Dinners root owns the selected week and presentation, so popping this
+/// destination or switching tabs keeps the same local calendar context.
+struct DinnerWeekView<SaveStatus: View>: View {
+    @ObservedObject var model: DinnerFeatureModel
+    @State private var shopID: UUID
+    @Binding var weekStart: Date
+    @Binding var showWeekGrid: Bool
+    @ViewBuilder let saveStatus: () -> SaveStatus
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    private enum Destination: Hashable { case meal(UUID), note(MealDay), reservation }
+    @State private var destination: Destination?
+
+    init(model: DinnerFeatureModel, shopID: UUID, weekStart: Binding<Date>,
+         showWeekGrid: Binding<Bool>, @ViewBuilder saveStatus: @escaping () -> SaveStatus) {
+        self.model = model; _shopID = State(initialValue: shopID)
+        _weekStart = weekStart; _showWeekGrid = showWeekGrid; self.saveStatus = saveStatus
+    }
+
+    var body: some View {
+        Group {
+            if model.shop?.id == shopID {
+                List {
+                    Section {
+                        if let shop = model.shop { Text(shop.title).font(.headline) }
+                        Button(dinnerText("Protect a lunch or side")) { destination = .reservation }
+                            .disabled(!model.editable)
+                    }
+                    Section(dinnerText("Week")) {
+                        DatePicker(dinnerText("Week starting"), selection: $weekStart, displayedComponents: .date)
+                            .accessibilityIdentifier("dinnerWeekStart")
+                        Picker(dinnerText("Week display"), selection: $showWeekGrid) {
+                            Text(dinnerText("List")).tag(false)
+                            Text(dinnerText("Grid")).tag(true)
+                        }.pickerStyle(.segmented).accessibilityIdentifier("dinnerWeekDisplay")
+                        if let shop = model.shop, let start = try? MealDay(date: weekStart, timeZoneIdentifier: shop.basis.timeZoneIdentifier),
+                           let week = try? model.week(start: start) {
+                            if showWeekGrid {
+                                let column = GridItem(.flexible(), spacing: 12, alignment: .topLeading)
+                                LazyVGrid(columns: dynamicTypeSize.isAccessibilitySize ? [column] : [column, column], spacing: 12) {
+                                    ForEach(week.days, id: \.day) { day in
+                                        dayContent(day, in: shop)
+                                            .padding(10)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                            .background(Theme.canvas, in: RoundedRectangle(cornerRadius: 12))
+                                    }
+                                }.buttonStyle(.borderless).accessibilityIdentifier("dinnerWeekGrid")
+                            } else {
+                                ForEach(week.days, id: \.day) { day in
+                                    dayContent(day, in: shop).padding(.vertical, 6).buttonStyle(.borderless)
+                                }
+                            }
+                            if !week.unscheduled.isEmpty {
+                                Text(dinnerText("Unscheduled")).font(.headline).accessibilityAddTraits(.isHeader)
+                                ForEach(week.unscheduled) { meal in mealLink(meal) }
+                            }
+                        } else { Text(dinnerText("The week could not be read. Check access and the pickup time zone.")) }
+                    }
+                    if model.preview != nil {
+                        Section { DinnerDecisionButton(model: model, title: dinnerText("Review pending dinner changes"), identifier: "dinnerPending", preservePending: false) { DinnerPreviewView(model: model) } }
+                    }
+                    DinnerFeedback(model: model)
+                    Section { saveStatus() }
+                }.listStyle(.insetGrouped)
+            } else {
+                pickupChanged
+            }
+        }.navigationTitle(dinnerText("This week")).dinnerAccess(model)
+            .navigationDestination(item: $destination) { selection in
+                if model.shop?.id == shopID {
+                    switch selection {
+                    case .meal(let id): DinnerOccurrenceView(model: model, occurrenceID: id)
+                    case .note(let day): DinnerNoteView(model: model, day: day)
+                    case .reservation: DinnerReservationView(model: model)
+                    }
+                } else { pickupChanged }
+            }
+    }
+    private var pickupChanged: some View {
+        ContentUnavailableView(dinnerText("Pickup selection changed"), systemImage: "arrow.triangle.2.circlepath",
+            description: Text(dinnerText("Return to the original pickup to review this week.")))
     }
     private func dayContent(_ day: DinnerMealWeek.Day, in shop: ShoppingLedger) -> some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -130,13 +190,16 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                     }.accessibilityElement(children: .combine).accessibilityIdentifier("dinnerProtected-\(id)")
                 }
             }
-            NavigationLink { DinnerNoteView(model: model, day: day.day) } label: {
+            Button { destination = .note(day.day) } label: {
                 Text(dinnerText("Add or edit a day note")).frame(minHeight: 44, alignment: .leading)
-            }
+            }.buttonStyle(.borderless)
+                .accessibilityIdentifier("dinnerDayNote-\(day.day.year)-\(day.day.month)-\(day.day.day)")
         }.fixedSize(horizontal: false, vertical: true)
     }
     private func mealLink(_ meal: MealOccurrence, calendarZone: String? = nil) -> some View {
-        NavigationLink { DinnerOccurrenceView(model: model, occurrenceID: meal.id) } label: {
+        // Several calendar actions share one List row in Grid. Explicit selection
+        // avoids the row-wide NavigationLink activation choosing a different day.
+        Button { destination = .meal(meal.id) } label: {
             VStack(alignment: .leading, spacing: 4) {
                 Text(meal.title).font(.headline)
                 Text(dinnerFormat("Servings: %@", meal.servings.description))
@@ -145,9 +208,10 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                 }
                 if meal.isHidden { Text(dinnerText("Hidden dinner")) }
             }.frame(minHeight: 44, alignment: .leading)
-        }.accessibilityIdentifier("dinnerOccurrence-\(meal.id)")
+        }.buttonStyle(.borderless).accessibilityIdentifier("dinnerOccurrence-\(meal.id)")
     }
 }
+
 struct DinnerFeedback: View {
     @ObservedObject var model: DinnerFeatureModel
     @AccessibilityFocusState private var errorFocused: Bool

@@ -461,6 +461,48 @@ import XCTest
         reviewAndApprovePattern(spanish: false)
     }
 
+    func testMealWeekReservationDraftCannotFollowAnotherPickup() {
+        launch(reset: true)
+        tap(app.tabBars.buttons["Dinners"]); tap(element("dinnerStartPickup"))
+        fill("Original reservation pickup", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
+        openMealWeek(); tapWeekRow(app.buttons["Protect a lunch or side"])
+        fill("Fictional original lunch", into: "Food name", requireDone: true)
+        fill("2", into: "Protected amount", requireDone: true)
+        fill("Original pickup only", into: "Purpose, such as lunch", requireDone: true)
+        openShoppingList(); tap(element("ledgerShopPicker")); tap(app.buttons["Start another pickup"])
+        fill("Different reservation pickup", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
+        tap(app.tabBars.buttons["Dinners"])
+        capture("S25-open-reservation-after-pickup-switch")
+        XCTAssertTrue(app.staticTexts["Pickup selection changed"].waitForExistence(timeout: 8), app.debugDescription)
+        XCTAssertFalse(app.buttons["Review protected need"].exists)
+        XCTAssertFalse(element("Food name").exists)
+        dinnerRoot(); openMealWeek(); tapWeekRow(app.buttons["Protect a lunch or side"])
+        let name = element("Food name")
+        XCTAssertTrue(name.waitForExistence(timeout: 8))
+        XCTAssertNotEqual(name.value as? String, "Fictional original lunch")
+        capture("S25-fresh-reservation-for-new-pickup")
+    }
+
+    func testMealWeekKeepsOriginalPickupWhenShopSelectionChanges() {
+        launch(reset: true)
+        tap(app.tabBars.buttons["Dinners"]); tap(element("dinnerStartPickup"))
+        fill("First fictional pickup", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
+        openMealWeek()
+        tap(element("dinnerWeekDisplay").buttons["Grid"])
+        openShoppingList()
+        tap(element("ledgerShopPicker")); tap(app.buttons["Start another pickup"])
+        fill("Second fictional pickup", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
+        tap(app.tabBars.buttons["Dinners"])
+        XCTAssertTrue(app.navigationBars["This week"].waitForExistence(timeout: 8))
+        assertText("Pickup selection changed")
+        XCTAssertFalse(element("dinnerWeekDisplay").exists)
+        capture("S25-pickup-selection-change-keeps-original-week-scope")
+        app.navigationBars["This week"].buttons.firstMatch.tap()
+        openMealWeek()
+        assertText("Second fictional pickup")
+        XCTAssertTrue(element("dinnerWeekDisplay").exists)
+    }
+
     func testEnglishMealWeekListAndGridShowDatedProtectedLunch() { verifyDatedMealWeek(spanish: false) }
     func testSpanishMealWeekListAndGridShowDatedProtectedLunch() { verifyDatedMealWeek(spanish: true) }
     func testDinnerMoveAcrossDisplayedWeeksKeepsLunchAndOccurrence() { verifyDatedMealWeek(spanish: false, moveAcrossWeek: true) }
@@ -477,6 +519,7 @@ import XCTest
         let purpose = copy("School lunch", "Almuerzo escolar")
         let tab = copy("Dinners", "Cenas")
         let assignDate = copy("Assign a date", "Asignar fecha")
+        let weekTitle = copy("This week", "Esta semana")
         func applyFrom(_ editor: String, returnToPlan: Bool = true) {
             let apply = element("dinnerApply")
             tap(apply)
@@ -497,15 +540,16 @@ import XCTest
         fill("8", into: copy("Amount, optional", "Cantidad, opcional"))
         if !moveAcrossWeek { enableSwitch(assignDate) }
         tap(element("ledgerReviewDinner")); applyFrom(copy("Manual dinner", "Cena manual"))
+        openMealWeek(title: weekTitle)
         if moveAcrossWeek {
             assertText("Unscheduled")
             let meal = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "dinnerOccurrence-")).firstMatch
-            tap(meal)
+            tapWeekRow(meal)
             enableSwitch(assignDate)
             tap(element("dinnerMoveReview"))
             assertText("Before: Unscheduled")
             applyFrom("Chosen dinner", returnToPlan: false)
-            XCTAssertTrue(app.navigationBars[tab].waitForExistence(timeout: 8))
+            XCTAssertTrue(app.navigationBars[weekTitle].waitForExistence(timeout: 8))
             let protect = app.buttons["Protect a lunch or side"]
             for _ in 0..<16 {
                 if protect.exists && protect.isHittable { break }
@@ -513,7 +557,8 @@ import XCTest
             }
         }
 
-        tap(app.buttons[copy("Protect a lunch or side", "Proteger un almuerzo o acompañamiento")])
+        tapWeekRow(app.buttons[copy("Protect a lunch or side", "Proteger un almuerzo o acompañamiento")])
+        XCTAssertTrue(app.navigationBars[copy("Protect food", "Proteger alimentos")].waitForExistence(timeout: 8))
         fill(food, into: copy("Food name", "Nombre del alimento"), requireDone: true)
         fill("2", into: copy("Protected amount", "Cantidad protegida"), requireDone: true)
         fill(purpose, into: copy("Purpose, such as lunch", "Finalidad, por ejemplo almuerzo"), requireDone: true)
@@ -525,6 +570,7 @@ import XCTest
         let date = DateFormatter(); date.locale = Locale(identifier: spanish ? "es_US" : "en_US"); date.dateStyle = .full
         XCTAssertTrue(reviewed.label.contains(date.string(from: Date())), reviewed.label)
         applyFrom(copy("Protect food", "Proteger alimentos"))
+        openMealWeek(title: weekTitle)
 
         let chosen = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "dinnerOccurrence-")).firstMatch
         let protected = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "dinnerProtected-")).firstMatch
@@ -546,8 +592,32 @@ import XCTest
             XCTAssertTrue(protected.label.contains(copy("2 units", "2 unidades")), protected.label)
             capture((spanish ? "es-US" : "en-US") + "-meal-week-" + mode)
         }
+        // Native Back and each tab's navigation stack retain the week context.
+        tap(app.tabBars.buttons[copy("Shop", "Compras")])
+        tap(app.tabBars.buttons[tab])
+        XCTAssertTrue(app.navigationBars[weekTitle].waitForExistence(timeout: 8))
+        XCTAssertTrue(display.buttons[copy("Grid", "Cuadrícula")].isSelected)
+        app.navigationBars[weekTitle].buttons.firstMatch.tap()
+        XCTAssertTrue(app.navigationBars[tab].waitForExistence(timeout: 8))
+        XCTAssertTrue(element("dinnerWeekEntry").isHittable)
+        XCTAssertFalse(element("dinnerWeekDisplay").exists)
+        capture((spanish ? "es-US" : "en-US") + "-Dinners-stable-return")
+        openMealWeek(title: weekTitle)
+        XCTAssertTrue(display.buttons[copy("Grid", "Cuadrícula")].isSelected)
+        tapWeekRow(element(dinnerID))
+        XCTAssertTrue(app.navigationBars[copy("Chosen dinner", "Cena elegida")].waitForExistence(timeout: 8), app.debugDescription)
+        app.navigationBars[copy("Chosen dinner", "Cena elegida")].buttons.firstMatch.tap()
+        XCTAssertTrue(app.navigationBars[weekTitle].waitForExistence(timeout: 8))
+        let today = Calendar.current.dateComponents([.year, .month, .day], from: Date())
+        tapWeekRow(element("dinnerDayNote-\(today.year!)-\(today.month!)-\(today.day!)"))
+        let noteTitle = copy("Day note", "Nota del día")
+        XCTAssertTrue(app.navigationBars[noteTitle].waitForExistence(timeout: 8))
+        assertText(date.string(from: Date()))
+        capture((spanish ? "es-US" : "en-US") + "-exact-day-note-from-grid")
+        app.navigationBars[noteTitle].buttons.firstMatch.tap()
+        reveal(element(lunchID))
         app.terminate(); launch(reset: false, spanish: spanish)
-        tap(app.tabBars.buttons[tab]); dinnerRoot()
+        tap(app.tabBars.buttons[tab]); dinnerRoot(); openMealWeek(title: weekTitle)
         reveal(element(lunchID)); reveal(element(dinnerID))
         if moveAcrossWeek {
             moveMealToLaterWeek(dinnerID: dinnerID, lunchID: lunchID, dateFormatter: date)
@@ -562,7 +632,7 @@ import XCTest
         let month = calendar.dateInterval(of: .month, for: today)!.start
         let futureMonth = calendar.date(byAdding: .month, value: 2, to: month)!
         let moved = calendar.date(byAdding: .day, value: 14, to: futureMonth)!
-        tap(element(dinnerID))
+        tapWeekRow(element(dinnerID))
         chooseTwoMonthsAhead(moved, pickerID: "dinnerMoveDate")
         tap(movedReview)
         assertText("Before: " + dateFormatter.string(from: today))
@@ -577,7 +647,7 @@ import XCTest
         XCTAssertTrue(apply.waitForNonExistence(timeout: 10))
         assertText(dateFormatter.string(from: moved))
         app.terminate(); launch(reset: false)
-        tap(app.tabBars.buttons["Dinners"]); dinnerRoot()
+        tap(app.tabBars.buttons["Dinners"]); dinnerRoot(); openMealWeek()
         reveal(element(lunchID))
         XCTAssertFalse(element(dinnerID).exists)
         capture("Meal-week-original-lunch-after-move")
@@ -585,6 +655,34 @@ import XCTest
         reveal(element(dinnerID))
         XCTAssertFalse(element(lunchID).exists)
         capture("Meal-week-same-dinner-on-new-date")
+        let selectedWeek = element("dinnerWeekStart").buttons.firstMatch.label
+        XCTAssertFalse(selectedWeek.isEmpty)
+        app.navigationBars["This week"].buttons.firstMatch.tap()
+        openMealWeek()
+        XCTAssertEqual(element("dinnerWeekStart").buttons.firstMatch.label, selectedWeek)
+        reveal(element(dinnerID))
+        XCTAssertFalse(element(lunchID).exists)
+    }
+
+    private func openMealWeek(title: String = "This week") {
+        tapWeekRow(element("dinnerWeekEntry"))
+        XCTAssertTrue(app.navigationBars[title].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.navigationBars[title].buttons.firstMatch.isHittable, "The pushed week must have a native Back control")
+    }
+
+    private func tapWeekRow(_ row: XCUIElement) {
+        // XCUI's default activation point can lie above the scrolled content.
+        // Use the visible row center, clear of navigation and tab bars.
+        for _ in 0..<24 {
+            let area = scrollableArea().insetBy(dx: 0, dy: 12)
+            if row.exists && row.isHittable && area.contains(CGPoint(x: row.frame.midX, y: row.frame.midY)) {
+                print("S25_ROW_TAP id=\(row.identifier) frame=\(row.frame) area=\(area)")
+                row.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+                return
+            }
+            scrollContent(upward: row.exists ? row.frame.midY > area.midY : true)
+        }
+        XCTFail("No visible center for week row: \(row.debugDescription)")
     }
 
     private func chooseTwoMonthsAhead(_ date: Date, pickerID: String) {

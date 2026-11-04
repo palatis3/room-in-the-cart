@@ -56,6 +56,37 @@
       }
     }
   },
+  "pushedWeekRoute": {
+    "candidate": {
+      "baseCommit": "cedbae0fcdac543675842799844fa3bbb086bb92",
+      "sourceDigestSHA256": "ff67a528a422ac19d87ca1e933e6dd2b3820a82d2bac60a460a5deed3d31454e",
+      "patchSHA256": "32826da17b46e6886ac972af939e8534d52a8bad5ed7ed64b0c5b40e39109d65",
+      "device": "iPhone 17 Pro, iOS 27.0 (24A434)",
+      "modelPasses": 25,
+      "uiPasses": 4,
+      "failures": 0,
+      "scope": "English and Spanish navigation, exact Grid meal and day-note taps, Back and tab return, cross-week move with the original lunch date, relaunch and the parent week after a pickup switch. This candidate preceded the reservation-editor guard."
+    },
+    "reservationBaseline": {
+      "sourceDigestSHA256": "12cad4c225b0b31f26e263772edfba823948981facffb1296788108cd3f430b4",
+      "patchSHA256": "b69337b8c8ac2fff6a4e8482be93f0080baece356bc4b462026647e17fba8163",
+      "scope": "The open reservation retained the first pickup's draft and Review protected need after the app switched to a second pickup. One UI regression failed on the candidate with only its test added."
+    },
+    "integrated": {
+      "baseCommit": "120e24d3732a611b6f050ecb09a4cf1505062fd4",
+      "result": ".build/MealWeekIntegration20261104/WeekReservation27.xcresult",
+      "device": "iPhone 17e, iOS 27.0 (24A434)",
+      "modelPasses": 25,
+      "uiPasses": 2,
+      "failures": 0,
+      "scope": "The normal English reservation flow passed. Switching pickups replaced the still-open editor with the pickup-change notice, removed its review action and opened a fresh reservation from the newly selected pickup.",
+      "sourceSHA256": {
+        "ios/Features/Dinners/DinnerPlanningHome.swift": "84b0958f5c902dba339fc5774c7e3d449bb9cef3d2bf102fe57489b360f48735",
+        "ios/Features/Dinners/Dinners.xcstrings": "c86564f020522ad4075e6a0507260932423bcb1b4cda3a0fef9754856aa28de8",
+        "ios/UITests/FreeJourneyUITests.swift": "339a0f41b4cf0a928993866cd82eb7585fbeba0dbcfcbe8709c2aaffbba8cfd4"
+      }
+    }
+  },
   "archive": {
     "path": ".build/MealWeekCorrected20261104/RoomInTheCart-MealWeek.xcarchive",
     "binaryUUID": "405D8E02-B885-30BE-BBAE-BAE7FA3F995E",
