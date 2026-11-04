@@ -74,6 +74,9 @@
       "checks": [
         "OpenShoppingCaptureIntent resolved by system metadata",
         "Run opened ledgerImportText review-entry screen"
+      ],
+      "screenshots": [
+        "E07-system-AppIntent-opened-reviewed-entry.png"
       ]
     },
     {
@@ -87,9 +90,9 @@
         "App foregrounds on review-entry screen"
       ],
       "screenshots": [
-        "E07-Shortcuts-discovery.png",
-        "E07-Shortcuts-UI-opened-reviewed-entry.png"
-      ]
+        "E07-Shortcuts-discovery.png"
+      ],
+      "capture_limitation": "The passing Shortcuts UI invocation asserted the app was foreground and ledgerImportText existed. Its destination screenshot caught a transition blur and is omitted from sealed artifacts. Separate system-infrastructure run has a clear destination screenshot."
     },
     {
       "scope": "No unintended data writes",
@@ -130,6 +133,12 @@
       "bundle": "E07ShortcutsFinal.xcresult",
       "passed": 1,
       "failed": 0
+    },
+    {
+      "bundle": "E07ShortcutsStableCapture.xcresult",
+      "result": "Interrupted",
+      "exit_code": 75,
+      "reason": "Optional screenshot-only recapture after simulator reboot stalled while Apple Shortcuts launched (black screen; event-loop-idle timeout). Scoped run interrupted and disposable simulator shut down. No repeat functional result claimed; earlier successful actual Shortcuts run retained."
     }
   ],
   "findings": [
@@ -140,6 +149,10 @@
     {
       "status": "privacy boundary supported",
       "detail": "Projection permits only version/generation/writtenAt/opaque routeHandle/destination. Widget view always renders generic label. Source declares complete file protection and App Intent requiresAuthentication; simulator does not establish physical enforcement."
+    },
+    {
+      "status": "simulator tooling limitation",
+      "detail": "Optional Shortcuts screenshot recapture stalled after reboot. Cause not diagnosed. It does not establish a Room in the Cart defect or invalidate the earlier successful actual Shortcuts invocation."
     }
   ],
   "remaining_physical_device_checks": [
@@ -162,23 +175,29 @@
   "main_thread_notified": true,
   "shared_checkout_modified": false,
   "protected_simulators_used": false,
+  "raw_evidence_root": "..",
+  "simulator_final_state": "Shutdown confirmed; disposable simulator retained for reproduction.",
+  "android_lane": {
+    "state": "paused by Dot coordinator pending user approval",
+    "actions_before_pause": "Read existing Android evidence and official documentation only. No emulator boot, download, install, account action, or AVD change."
+  },
   "artifact_directory": "/Users/palatis/Documents/Codex/2026-11-04/task-3/evidence",
   "sealed_artifact_directory": "/Users/palatis/Documents/Codex/2026-11-04/task-3/evidence/sealed",
   "acceptance_record_review": {
-    "result_bundles": "Independent xcresulttool check matched every original invocation count.",
+    "result_bundles": "Independent xcresulttool check matched every terminal invocation count. The separately interrupted screenshot recapture makes no functional claim.",
     "source": "Seven product input hashes matched the pinned repository revision.",
     "ledger": "Read-only before and after export files matched each other and the reported SHA-256.",
-    "visual": "Independently inspected widget placement and exact saved list screenshots. Shortcuts capture was during a transition, so UI accessibility and test result are the destination evidence."
+    "visual": "Independently inspected widget placement, the exact saved list and the clear AppIntentsTesting destination. The actual Shortcuts run relies on the test result and accessibility check for the destination."
   },
   "artifact_sha256": {
-    "acceptance-report.json": "2609595b782b239c45b398886ca84f274dabb3ff0d3b85ac295dde89af08e2d8",
-    "source-manifest.json": "1323557efe59ec554adf4e186540862e892c2f94c2341986dc1d003cb475581e",
+    "acceptance-report.json": "462337b0fb5baf0b1e6f034b2e05bcfa025694e4ba9646fd31db7b2da765f0cb",
+    "source-manifest.json": "62ba5e30857cf2203efdbe9a57ca4080faef7ab2b927c6d2e2c0659e609c436b",
     "acceptance-probes.patch": "cee3da1d8d6d75d26c2ba5aedf70834d72153ad4a2a1166e8604a5d183f42e57",
-    "commands.txt": "3c93f157cd6fd8e62bbd5e10630ff6d3eff679e161568b51bc6d5b312b0c3689",
+    "commands.txt": "b23c05620bb33942e0e8c761d6f158e435288c4f2bb3524f22ec94b453ca9766",
     "E07-actual-Home-Screen-widget.png": "41520ed2b3fb215f89a68ff9d647e8d78aa26d209454c7088ddefb4898deb1ca",
     "E07-widget-tap-destination.png": "4d333835d8a3f12d6d4f9e3e036aeb09c9f296cadba53e9285ba9c68d3fcd151",
     "E07-Shortcuts-discovery.png": "c8a4e0aa8d5fd097ffc9568d4134cf015217c3d2f74d753fb47bfc481e9c1e0b",
-    "E07-Shortcuts-UI-opened-reviewed-entry.png": "70c03388cfdd7f9a024e91ef327724ec2f70d71b00b4c6f1ac9767ea746bf30e",
+    "E07-system-AppIntent-opened-reviewed-entry.png": "77407ceefabc8b088402b1b838f7250eaf09a16b3d4ba88c3475c750701fc51c",
     "app-intents-metadata.json": "7598a3a7cc11454984c0d0ca519fc4afa5fa2cc648515fd8220edb32a00df62a",
     "widget-after-home.json": "cd3b2f40dd36653d58bbdca9826d5998fb708c778e8569acef1a40ed8015c408"
   }

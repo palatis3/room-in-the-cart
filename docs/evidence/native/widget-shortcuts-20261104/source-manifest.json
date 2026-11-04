@@ -26,5 +26,9 @@
     "ios/Tests/NativeCompositionStartupTest.swift",
     "ios/UITests/FreeJourneyUITests.swift"
   ],
-  "all_other_tracked_files_match_commit": true
+  "all_other_tracked_files_match_commit": true,
+  "test_probe_sha256": {
+    "ios/Tests/NativeCompositionStartupTest.swift": "d4c7428f467810815353260a261b9372507e1d2798d56eaa8e07d735f2648e8c",
+    "ios/UITests/FreeJourneyUITests.swift": "eef30417356ebb2864ac3bc03b0496b2097d7770466c87844ae401af8b11b774"
+  }
 }
