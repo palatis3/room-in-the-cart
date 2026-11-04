@@ -4,6 +4,8 @@ The complete production app remains the objective. The current checkpoint below 
 
 ## Current checkpoint — November 4
 
+Subscribe recovers an unfinished Apple transaction before asking Apple for another purchase. If service delivery remains pending, Restore Purchases stays available and Free access continues. All 532 model tests and both 15-case iOS 17 StoreKit configurations passed. The focused iOS 27 purchase test passed on its isolated rerun after timing out in the initial batch. The unsigned Release archive passed metadata checks. [Purchase recovery validation](evidence/native/membership-delivery-20261104/validation.json)
+
 The combined ordinary iPhone 17e run passed all 529 model and 37 UI cases on frozen `b66b134`. It preserved the 15 SwiftUI warnings from the earlier keyboard accessory bar. The later checkout and planning changes each have focused passing results. [Combined ordinary result](evidence/native/ordinary-combined-20261104/validation.json)
 
 The Records recipe-to-dinner check passed on iOS 17 and iOS 27. Done dismisses the servings and ingredient keyboards. Preview leaves the existing pickup alone, and explicit choice creates one ledger revision with the entered servings, known amount, and unresolved second ingredient. The original saved recipe survives. The unsigned Release archive passed metadata checks. [Recipe adoption validation](evidence/native/recipe-adoption-20261104/validation.json)
