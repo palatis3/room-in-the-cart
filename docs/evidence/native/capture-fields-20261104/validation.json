@@ -72,5 +72,26 @@
       "sha256": "b8814898580e725fd6dc71fceafda37b0f4b26e58f3a78ed90a829ff3e0a5015"
     }
   },
-  "remaining": ["US Spanish device and large-text verification", "Physical VoiceOver and Switch Control"]
+  "spanishLargeTextReviewStart": {
+    "device": "iPhone SE, iOS 17.0 (21A328)",
+    "result": ".build/CaptureFieldReview20261104/SpanishLarge17ReviewStart.xcresult",
+    "sourceSHA256": {
+      "ios/Features/Capture/CaptureReviewView.swift": "9918b6755f28d5a9a3a8357fc77f0657ae9f3e12302ff052057db63813966b23",
+      "ios/Features/Capture/StructuredCaptureReviewView.swift": "75e060c2cc308aa1d9dc5943d8ed9e6be7192e1ff2ab92d2530a51bf193f09b4"
+    },
+    "harnessSHA256": "74aed3cbd2cd82b9096b2f4121d48ade469907be11c145deebe63dada2ed074e",
+    "passed": 1,
+    "failed": 0,
+    "testSeconds": 111.782,
+    "runtimeWarnings": [],
+    "scope": "At the largest accessibility text size the structured review opens with the original wording visible without scrolling. The Spanish fixture found pack count 2, changed the usable amount from 8 to 6, closed the keyboard with Listo, read the lunch purpose and milk exclusion, and cancelled with zero submitted requests.",
+    "captures": {
+      ".build/CaptureFieldReview20261104/spanish-large17-review-start-attachments/6F092CB6-0D52-4585-93C2-398C2BFE7CA9.png": "24e4290edf42d5088d8a0de88bcd90603c2c04a8b41657ec7355240a4f3811d4",
+      ".build/CaptureFieldReview20261104/spanish-large17-review-start-attachments/343919D2-757F-4368-825A-3F033D58B1F3.png": "feac45e58ef9342ff4c09ffa12d9e599fb56efcd7efe06f83b75fdaa160c4341",
+      ".build/CaptureFieldReview20261104/spanish-large17-review-start-attachments/AF74423C-1635-4FDE-87D8-9B8C006049BA.png": "9eb114f6eade187fa138d295d60c5b6c11e4eebbeda9d763be89ac3f11f1d71b"
+    },
+    "ordinaryDebugVerificationLog": ".build/CaptureFieldReview20261104/review-start-ordinary-verification.log",
+    "ordinaryDebugExecutableSHA256": "7349d28e18b496eb259694256d8f981197911618555e49ac334038bd682de2d0"
+  },
+  "remaining": ["Human US Spanish copy review", "Improve unit picker wrapping at the largest accessibility text size", "Physical VoiceOver and Switch Control"]
 }

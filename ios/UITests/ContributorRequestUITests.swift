@@ -12,6 +12,30 @@ import XCTest
         if testRun?.failureCount ?? 0 > 0 { capture("Contributor-request-failure") }
         app.terminate()
     }
+    func testSpanishLargeTextReviewStartsAtTheOriginalWording() {
+        if ProcessInfo.processInfo.operatingSystemVersion.majorVersion == 17 {
+            app.launchEnvironment["OS_ACTIVITY_MODE"] = "disable"
+        }
+        app.launchArguments = ["--ui-testing", "-AppleLanguages", "(es)", "-AppleLocale", "es_US",
+            "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+        app.launch()
+        XCTAssertTrue(app.navigationBars["Hogar"].waitForExistence(timeout: 30))
+        tap(element("household.request.capture"))
+        let captureBar = app.navigationBars["Capturar una solicitud"]
+        XCTAssertTrue(captureBar.waitForExistence(timeout: 10))
+        let original = "2 paquetes de 8 tortillas para almuerzo sin leche"
+        fill(original, into: "capture.editor", replacing: true)
+        enableSwitch("Revisé el texto, las cantidades, las unidades y las exclusiones.")
+        tap(element("capture.reviewFields"))
+
+        let atTop = XCTNSPredicateExpectation(predicate: NSPredicate { object, _ in
+            guard let text = object as? XCUIElement, text.exists, text.isHittable else { return false }
+            return text.frame.minY >= captureBar.frame.maxY && text.frame.minY < self.app.frame.midY
+        }, object: element("capture.structured.original"))
+        XCTAssertEqual(XCTWaiter.wait(for: [atTop], timeout: 12), .completed)
+        XCTAssertEqual(element("capture.structured.original").label, original)
+    }
+
     func testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest() throws {
         app.launchArguments = ["--ui-testing", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()

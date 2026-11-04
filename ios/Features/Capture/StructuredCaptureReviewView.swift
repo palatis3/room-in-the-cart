@@ -8,6 +8,8 @@ struct StructuredCaptureField: Hashable {
 }
 
 @MainActor struct StructuredCaptureReviewView: View {
+    static let originalAnchor = "capture.structured.original"
+
     enum Context {
         case list, request, recipe
 
@@ -67,6 +69,8 @@ struct StructuredCaptureField: Hashable {
         let copy = context.copy
         Section(captureText("Original wording and source")) {
             Text(originalText).textSelection(.enabled)
+                .id(Self.originalAnchor)
+                .accessibilityIdentifier(Self.originalAnchor)
             if let imageData, let image = UIImage(data: imageData) {
                 Image(uiImage: image).resizable().scaledToFit().frame(maxHeight: 240)
                     .accessibilityLabel(captureText("Selected source photo"))

@@ -47,6 +47,12 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
     var body: some View {
         ScrollViewReader { scroll in
             captureForm
+                .task(id: reviewingFields) {
+                    guard reviewingFields else { return }
+                    await Task.yield()
+                    guard !Task.isCancelled, reviewingFields, authorize() else { return }
+                    scroll.scrollTo(StructuredCaptureReviewView.originalAnchor, anchor: .top)
+                }
                 .onChange(of: model.candidate != nil && !model.busy) { _, ready in
                     guard ready else { return }
                     Task { @MainActor in
