@@ -175,7 +175,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [planning-pickup, comparison-context]
+        shard: [free-journey, planning-pickup, checkout-context, comparison]
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
       UI_SHARD: ${{ matrix.shard }}
@@ -204,24 +204,29 @@ jobs:
           test_runs=(.build/DerivedData/Build/Products/RoomInTheCart_iphonesimulator*.xctestrun)
           test "${#test_runs[@]}" -eq 1
           test -f "${test_runs[0]}"
-          planning_suites=(
-            FreeJourneyUITests
+          free_suites=(FreeJourneyUITests)
+          pickup_suites=(
             PickupOfferUITests
             LedgerConfirmedStockPackUITests
             ContextualReminderUITests
             NavigationRestorationUITests
           )
+          checkout_suites=(ContextualNavigationUITests)
+          mode=only
           selectors=()
           case "$UI_SHARD" in
-            planning-pickup) mode=only ;;
-            comparison-context)
+            free-journey) suites=("${free_suites[@]}") ;;
+            planning-pickup) suites=("${pickup_suites[@]}") ;;
+            checkout-context) suites=("${checkout_suites[@]}") ;;
+            comparison)
               mode=skip
+              suites=("${free_suites[@]}" "${pickup_suites[@]}" "${checkout_suites[@]}")
               selectors+=('-skip-testing:RoomInTheCartTests')
               ;;
             *) exit 1 ;;
           esac
-          # The second shard also picks up future UI suites.
-          for suite in "${planning_suites[@]}"; do
+          # The comparison shard also picks up future UI suites.
+          for suite in "${suites[@]}"; do
             selectors+=("-${mode}-testing:RoomInTheCartUITests/$suite")
           done
           run_journeys() {

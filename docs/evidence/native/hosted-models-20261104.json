@@ -20,7 +20,7 @@
     "test_products_sha256": "078529544d4cac4bed4fa29bbdb925d0585c7ab933c6b8ab00108f6a3174dc20",
     "readback": "The downloaded tar contains the x86_64 simulator app, both test bundles and one format-1 .xctestrun. Both test-host paths, the UI target app path and every dependent-product path resolve in the restored directory.",
     "consumer_jobs": [
-      {"name": "ios-ui (comparison-context)", "job_id": 126826550970, "download": "passed", "restore": "passed"},
+      {"name": "ios-ui (comparison-context)", "job_id": 126826550970, "download": "passed", "restore": "passed", "result": "The test step hit its 92-minute limit. Its uploaded stdout records 12 individual passes, one UI query timeout, one case exceeding its execution allowance, and one case interrupted by the step limit."},
       {"name": "ios-ui (planning-pickup)", "job_id": 126826552111, "download": "passed", "restore": "passed", "result": "XCTest runner received SIGKILL before establishing its test connection. The app UI cases did not start."}
     ],
     "planning_pickup_failure": {
@@ -34,6 +34,24 @@
         "scope": "The YAML-parsed Bash step was exercised with simulator and Xcode command stand-ins and the exact hosted failure log. Six cases passed. A direct pass ran once. A pre-connection kill rebooted and retried. A failed assertion and a kill after case start did not retry. A repeated kill and a failed simulator boot surfaced failure. The retry kept the original test selectors."
       }
     },
-    "scope": "Both actual hosted consumers restored the same artifact. The planning and pickup consumer failed during XCTest startup. The comparison and context consumer was still running."
+    "comparison_context_readback": {
+      "artifact": "iphone-ui-results-comparison-context-1",
+      "log": ".build/HostedProducts41898379149/comparison-context-results/UITests.log",
+      "log_sha256": "9301fdc3a700fb5164c2124afecbdc4ea3aebb13b49cb9034ad6d9d3ef9cc46d",
+      "started_in_log": 15,
+      "passed_in_log": 12,
+      "passed_by_suite": {"ContextualNavigationUITests": 4, "RoomInTheCartUITests": 8},
+      "query_timeout": "testEnteredStoreQuotesKeepTripCostsSeparateAndAdoptOnlyReviewedSavedProof",
+      "execution_allowance_timeout": "testConfirmedComparisonDeletionSurvivesRestart",
+      "interrupted": "testOwnerExportReviewAndCancelledDeletionPreserveComparisonAfterRestart",
+      "result_bundle": "The uploaded xcresult is partial and lacks Info.plist. The individual passes are stdout evidence."
+    },
+    "next_shards": {
+      "names": ["free-journey", "planning-pickup", "checkout-context", "comparison"],
+      "workflow_step_sha256": "1a9bdd1f3c241ce79ebc863c7ea50464ba5f9f0a32203dd44183d0bad17b02dc",
+      "local_shell_validation_log_sha256": "73f7c272c7291591763e701d758efc76d59cb9dc41c2caa6d28f478dfe0bd3de",
+      "scope": "Nine local shell cases verified exact, disjoint selectors for the four jobs and preserved the bounded startup retry. Comparison excludes the three explicit suite groups and native models, so it picks up other and future UI suites. Hosted results for the new grouping remain open."
+    },
+    "scope": "Both hosted consumers restored the same artifact. The planning and pickup consumer failed during XCTest startup. The comparison and context consumer ran real tests and hit the job step limit."
   }
 }
