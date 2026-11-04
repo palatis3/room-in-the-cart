@@ -4,6 +4,9 @@ on:
   pull_request:
 permissions:
   contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   typescript:
     runs-on: ubuntu-24.04
@@ -75,6 +78,9 @@ jobs:
           OPERATIONS_TEST_ADMIN_DATABASE_URL: postgresql://postgres:fixture-only@127.0.0.1:5432/ritc_operations
   ios:
     runs-on: macos-15
+    timeout-minutes: 100
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
     steps:
       - uses: actions/checkout@v4
       - name: Record toolchain
@@ -87,6 +93,7 @@ jobs:
           python3 scripts/generate_theme.py --check
           python3 scripts/check_localization.py
           python3 scripts/test_check_localization.py
+          python3 scripts/test_app_configuration.py
           python3 scripts/generate_xcode_project.py --check
       - name: Swift package tests
         run: |
@@ -99,17 +106,26 @@ jobs:
           python3 - <<'PY'
           import json, os
           data = json.load(open('/tmp/simulators.json'))
-          devices = [d for runtime, items in data['devices'].items() if 'iOS' in runtime for d in items if d['name'].startswith('iPhone') and d.get('isAvailable')]
+          devices = [
+              (tuple(map(int, runtime.split('.iOS-')[-1].split('-'))), d)
+              for runtime, items in data['devices'].items() if '.iOS-' in runtime
+              for d in items if d['name'].startswith('iPhone') and d.get('isAvailable')
+          ]
           if not devices:
               raise SystemExit('No available iPhone simulator')
+          _, device = max(devices, key=lambda pair: (pair[0], pair[1]['name'] == 'iPhone 17'))
+          print(f"Using {device['name']} simulator ({device['udid']})")
           with open(os.environ['GITHUB_ENV'], 'a') as output:
-              output.write('SIMULATOR_ID=' + devices[0]['udid'] + '\n')
+              output.write('SIMULATOR_ID=' + device['udid'] + '\n')
           PY
       - name: Build and test iPhone app
         run: >-
           xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart
           -configuration Debug -destination "platform=iOS Simulator,id=$SIMULATOR_ID"
           -derivedDataPath .build/DerivedData -resultBundlePath .build/UITests.xcresult
+          -parallel-testing-enabled NO -test-timeouts-enabled YES
+          -default-test-execution-time-allowance 720 -maximum-test-execution-time-allowance 900
+          -collect-test-diagnostics never
           CODE_SIGN_IDENTITY=- test
       - name: Compile unsigned Release for iPhone
         run: >-
@@ -126,4 +142,5 @@ jobs:
         with:
           name: iphone-test-results
           path: .build/UITests.xcresult
+          retention-days: 7
           if-no-files-found: ignore
