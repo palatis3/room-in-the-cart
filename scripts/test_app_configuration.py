@@ -1,10 +1,15 @@
 import json
 from pathlib import Path
+import plistlib
+import shutil
+import subprocess
+import sys
 import tempfile
 import unittest
 
 from app_configuration import (PUBLIC_SETTINGS, build_settings, compiled_metadata,
                                load_configuration, require_release_metadata, valid_page_url, valid_support_email, valid_operator_name)
+from check_built_app import verify_built_app
 
 
 class AppConfigurationTests(unittest.TestCase):
@@ -91,6 +96,146 @@ class AppConfigurationTests(unittest.TestCase):
             info["SupportURL"] = "https://support.invalid"
             with self.assertRaisesRegex(ValueError, "SupportURL"):
                 require_release_metadata(info)
+
+
+class BuiltAppVerificationTests(unittest.TestCase):
+    root = Path(__file__).resolve().parents[1]
+
+    def setUp(self):
+        folder = tempfile.TemporaryDirectory()
+        self.addCleanup(folder.cleanup)
+        self.path = Path(folder.name)
+        self.app = self.make_app("Release", "dev.roominthecart.app", "roominthecart", "iPhoneOS")
+        self.widget = self.app / "PlugIns/RoomInTheCartWidget.appex"
+        self.share = self.app / "PlugIns/RoomInTheCartShare.appex"
+
+    def make_app(self, configuration, bundle_id, scheme, platform):
+        app = self.path / configuration / "RoomInTheCart.app"
+        widget_group = f"group.{bundle_id}.widget"
+        share_group = f"group.{bundle_id}.share-inbox"
+        purpose = {key: "Permission purpose" for key in (
+            "NSFaceIDUsageDescription", "NSCameraUsageDescription",
+            "NSMicrophoneUsageDescription", "NSSpeechRecognitionUsageDescription",
+        )}
+        common = {"CFBundleShortVersionString": "0.1.0", "CFBundleVersion": "1",
+                  "CFBundleSupportedPlatforms": [platform], "UIDeviceFamily": [1], "MinimumOSVersion": "17.0"}
+        bundles = {
+            app: {
+                **compiled_metadata(load_configuration(self.root, configuration), configuration),
+                **purpose,
+                "CFBundleIdentifier": bundle_id,
+                "CFBundleIcons": {"CFBundlePrimaryIcon": {"CFBundleIconName": "AppIcon"}},
+                "CFBundleURLTypes": [{"CFBundleTypeRole": "Editor", "CFBundleURLName": bundle_id + ".surface",
+                                      "CFBundleURLSchemes": [scheme]}],
+                "RITCWidgetAppGroup": widget_group,
+                "RITCShareInboxAppGroup": share_group,
+                "RITCSurfaceURLScheme": scheme,
+            },
+            app / "PlugIns/RoomInTheCartWidget.appex": {
+                "CFBundleIdentifier": bundle_id + ".widget", "CFBundleDisplayName": "Widget",
+                "RITCWidgetAppGroup": widget_group, "RITCSurfaceURLScheme": scheme,
+                "NSExtension": {"NSExtensionPointIdentifier": "com.apple.widgetkit-extension"},
+            },
+            app / "PlugIns/RoomInTheCartShare.appex": {
+                "CFBundleIdentifier": bundle_id + ".share", "CFBundleDisplayName": "Share",
+                "RITCShareInboxAppGroup": share_group,
+                "NSExtension": {"NSExtensionPointIdentifier": "com.apple.share-services",
+                                "NSExtensionAttributes": {"NSExtensionActivationRule": {
+                                    "NSExtensionActivationSupportsText": True}}},
+            },
+        }
+        for bundle, metadata in bundles.items():
+            bundle.mkdir(parents=True)
+            executable = bundle / bundle.stem
+            executable.write_bytes(b"fixture executable")
+            executable.chmod(0o755)
+            (bundle / "Info.plist").write_bytes(plistlib.dumps({
+                **common, **metadata, "CFBundleExecutable": bundle.stem,
+            }))
+        (app / "Assets.car").write_bytes(b"fixture asset catalog")
+        shutil.copyfile(self.root / "ios/Resources/PrivacyInfo.xcprivacy", app / "PrivacyInfo.xcprivacy")
+        for language in ("en", "es"):
+            localized = app / f"{language}.lproj"
+            localized.mkdir()
+            (localized / "InfoPlist.strings").write_bytes(plistlib.dumps(purpose))
+        return app
+
+    def expect_plist_rejected(self, bundle, changes, message):
+        plist = bundle / "Info.plist"
+        original = plist.read_bytes()
+        try:
+            plist.write_bytes(plistlib.dumps({**plistlib.loads(original), **changes}))
+            with self.assertRaisesRegex(ValueError, message):
+                verify_built_app(self.app, "Release")
+        finally:
+            plist.write_bytes(original)
+
+    def test_valid_release_staging_and_debug_test_host(self):
+        verify_built_app(self.app, "Release")
+        staging = self.make_app("Staging", "dev.roominthecart.app.staging", "roominthecart-staging", "iPhoneOS")
+        verify_built_app(staging, "Staging")
+        debug = self.make_app("Debug", "dev.roominthecart.app.debug", "roominthecart-debug", "iPhoneSimulator")
+        (debug / "PlugIns/RoomInTheCartTests.xctest").mkdir()
+        verify_built_app(debug, "Debug")
+
+    def test_rejects_incorrect_device_family_floor_and_platform(self):
+        for bundle in (self.app, self.widget, self.share):
+            with self.subTest(bundle=bundle.name):
+                self.expect_plist_rejected(bundle, {"UIDeviceFamily": [1, 2]}, "must target iPhone only")
+                self.expect_plist_rejected(bundle, {"MinimumOSVersion": "18.0"}, "must support iOS 17.0")
+                self.expect_plist_rejected(bundle, {"CFBundleSupportedPlatforms": ["MacOSX"]}, "must be built for iPhone")
+        self.expect_plist_rejected(self.share, {"CFBundleSupportedPlatforms": ["iPhoneSimulator"]}, "platform mismatch")
+
+    def test_rejects_missing_executables_and_assets_even_with_python_optimization(self):
+        for executable in (self.app / "RoomInTheCart", self.widget / "RoomInTheCartWidget",
+                           self.share / "RoomInTheCartShare"):
+            with self.subTest(executable=executable.name):
+                executable.chmod(0o644)
+                with self.assertRaisesRegex(ValueError, "Missing or nonexecutable bundle executable"):
+                    verify_built_app(self.app, "Release")
+                executable.chmod(0o755)
+        (self.app / "Assets.car").unlink()
+        result = subprocess.run([sys.executable, "-B", "-O", str(self.root / "scripts/check_built_app.py"),
+                                 str(self.app), "--configuration", "Release"], capture_output=True, text=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Missing compiled asset catalog", result.stderr)
+
+    def test_rejects_release_url_scheme_and_group_from_another_environment(self):
+        self.expect_plist_rejected(self.app, {"RITCSurfaceURLScheme": "roominthecart-debug"}, "Wrong app URL scheme")
+        self.expect_plist_rejected(self.app, {"CFBundleURLTypes": [{
+            "CFBundleTypeRole": "Editor", "CFBundleURLName": "dev.roominthecart.app.surface",
+            "CFBundleURLSchemes": ["roominthecart", "roominthecart-debug"],
+        }]}, "Wrong app URL scheme registration")
+        self.expect_plist_rejected(self.widget, {"RITCSurfaceURLScheme": "roominthecart-debug"}, "Wrong Widget extension URL scheme")
+        self.expect_plist_rejected(self.widget, {"RITCShareInboxAppGroup": "group.dev.roominthecart.app.share-inbox"},
+                                   "Widget extension received another surface's container")
+        # Agreement between the host and its extension is insufficient if both use the wrong group.
+        key = "RITCWidgetAppGroup"
+        wrong_group = "group.dev.roominthecart.app.debug.widget"
+        widget_info = self.widget / "Info.plist"
+        widget_info.write_bytes(plistlib.dumps({**plistlib.loads(widget_info.read_bytes()), key: wrong_group}))
+        self.expect_plist_rejected(self.app, {key: wrong_group}, "Wrong app container")
+        with self.assertRaisesRegex(ValueError, "Wrong Widget extension container"):
+            verify_built_app(self.app, "Release")
+
+    def test_rejects_incompatible_extension_version_and_overbroad_share_activation(self):
+        self.expect_plist_rejected(self.widget, {"CFBundleShortVersionString": "0.2.0"}, "Widget extension version mismatch")
+        self.expect_plist_rejected(self.share, {"CFBundleVersion": "999"}, "Share extension version mismatch")
+        for rule in ("TRUEPREDICATE", {"NSExtensionActivationSupportsText": True,
+                                       "NSExtensionActivationSupportsImageWithMaxCount": 1}):
+            with self.subTest(rule=rule):
+                self.expect_plist_rejected(self.share, {"NSExtension": {
+                    "NSExtensionPointIdentifier": "com.apple.share-services",
+                    "NSExtensionAttributes": {"NSExtensionActivationRule": rule},
+                }}, "Share extension must activate for text only")
+
+    def test_rejects_test_bundles_in_release_including_the_known_debug_unit_bundle(self):
+        for bundle in (self.app / "PlugIns/RoomInTheCartTests.xctest", self.share / "LeakedFixture.xctest"):
+            with self.subTest(bundle=bundle.name):
+                bundle.mkdir()
+                with self.assertRaisesRegex(ValueError, "Unexpected test bundle"):
+                    verify_built_app(self.app, "Release")
+                bundle.rmdir()
 
 
 if __name__ == "__main__":
