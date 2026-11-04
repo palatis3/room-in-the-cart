@@ -5,6 +5,7 @@ import DeviceSurfaces
 // The dedicated test build supplies its isolated @main from UITestSupport.
 #else
 @main struct RoomInTheCartApp: App {
+    @UIApplicationDelegateAdaptor private var notificationDelegate: SurfaceNotificationDelegate
     @StateObject private var model = AppModel()
     @StateObject private var ledger = LedgerModel()
     @StateObject private var pickup = PickupModel()
@@ -41,7 +42,14 @@ import DeviceSurfaces
                     } else if !access.unlocked { surfaces.background() }
                     navigation.bind(app: model, ledger: ledger, household: household, access: access)
                     membership.bind(to: household)
-                    surfaces.bind(ledger: ledger, pickup: pickup, household: household, access: access)
+                    surfaces.bind(ledger: ledger, pickup: pickup, household: household, access: access,
+                                  sceneActive: scenePhase == .active && !guardianChild.presented)
+                    let child = guardianChild, routing = navigation, deviceSurfaces = surfaces
+                    notificationDelegate.bind { [weak child, weak routing, weak deviceSurfaces] handle in
+                        guard child?.presented == false else { return }
+                        routing?.preferIncomingLink()
+                        deviceSurfaces?.receiveReminderTap(handle)
+                    }
                     if guardianChild.presented { await guardianChild.resume() }
                     else { await openAdultWorkspace() }
                 }
@@ -59,14 +67,9 @@ import DeviceSurfaces
                         .environmentObject(household).environmentObject(access)
                         .environmentObject(membership).environmentObject(surfaces).environmentObject(navigation)
                 }
-                .onChange(of: household.identity?.subject) { _, subject in
-                    if subject != nil { access.protect() }
-                    surfaces.scopeChanged()
-                }
-                .onChange(of: household.projection?.memberId) { _, id in
-                    if id != nil { access.protect() }
-                    surfaces.scopeChanged()
-                }
+                .onChange(of: household.identity?.subject) { _, subject in if subject != nil { access.protect() } }
+                .onChange(of: household.projection?.memberId) { _, id in if id != nil { access.protect() } }
+                .onChange(of: household.deviceReminderPersona) { _, _ in surfaces.scopeChanged() }
                 .onChange(of: guardianChild.presented) { _, childActive in
                     if childActive {
                         navigation.suspend()
@@ -94,13 +97,13 @@ import DeviceSurfaces
         }
     }
     @MainActor private func openAdultWorkspace() async {
-        guard !guardianChild.presented, access.unlocked else { return }
+        guard scenePhase == .active, !guardianChild.presented, access.unlocked else { return }
         if !model.ready { await model.open() }
         guard !guardianChild.presented, access.unlocked else { return }
         if !ledger.ready { await ledger.open() }
         guard !guardianChild.presented, access.unlocked else { return }
         if !pickup.ready { await pickup.load() }
-        guard !guardianChild.presented, access.unlocked else { return }
+        guard scenePhase == .active, !guardianChild.presented, access.unlocked else { return }
         navigation.resume()
         await surfaces.foreground()
     }

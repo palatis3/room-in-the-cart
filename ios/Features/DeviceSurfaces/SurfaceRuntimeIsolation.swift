@@ -12,13 +12,16 @@ struct SurfaceRuntimeIsolation {
     init(directory: URL?, launchArguments: [String], applicationSupport: URL) {
         ownedTestDirectory = applicationSupport.appendingPathComponent("UITestWorkspace", isDirectory: true)
             .appendingPathComponent("DeviceSurfacesPrivate", isDirectory: true)
-        #if DEBUG
-        isUITesting = launchArguments.contains("--ui-testing")
-        #else
-        isUITesting = false
-        #endif
+        isUITesting = Self.usesUITestWorkspace(launchArguments: launchArguments)
         self.directory = directory ?? (isUITesting ? ownedTestDirectory : applicationSupport.appendingPathComponent("RoomInTheCart/DeviceSurfacesPrivate", isDirectory: true))
         shouldReset = directory == nil && isUITesting && launchArguments.contains("--reset-test-workspace")
+    }
+    static func usesUITestWorkspace(launchArguments: [String]) -> Bool {
+        #if DEBUG
+        launchArguments.contains("--ui-testing")
+        #else
+        false
+        #endif
     }
     func resetOwnedTestDirectory() throws {
         guard isUITesting, directory.standardizedFileURL == ownedTestDirectory.standardizedFileURL else { return }

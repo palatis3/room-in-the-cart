@@ -1,0 +1,52 @@
+{
+  "baseCommit": "073943df6bc1589f7e15b38ce7d9516bdcd0386b",
+  "candidatePatch": ".build/ReminderTap20261104/candidate.patch",
+  "sourceSHA256": {
+    "ios/App/DeviceSurfacesComposition.swift": "55758345959093f6707dbcacc3f0c2d51d72f8e609cff3cea583dc942205ff40",
+    "ios/App/RoomInTheCartApp.swift": "724c7fde16714cdb19a612001de551590ac83fd20d688bbb07d55622942670b4",
+    "ios/Features/DeviceSurfaces/DeviceSurfacesEntry.swift": "723985994143bd23e37a715860f5103f86226eba6f2c07c78267c4c8f362fc0c",
+    "ios/Features/DeviceSurfaces/SurfaceNotificationDelegate.swift": "cf43631cdb97323b505885eaa34ee49a0b7209213e2c88e0cd1e9cabea4ed412",
+    "ios/Features/DeviceSurfaces/SurfaceRuntimeIsolation.swift": "5bbfba565189b75c43e50fddb74d639687d113f9eb92478faac15e8efdfeb7b0",
+    "ios/Features/Household/HouseholdModel.swift": "987ae4214181f024fa297b756401b47f94b43289c7b4da8cab0304238bd597b8",
+    "ios/Features/Pickup/PickupModel.swift": "7495d075a00cd612a3e83a50372c885a1c8df8c1a1d0c2a02d1c970edb506937",
+    "ios/Tests/ContextualReminderTests.swift": "2b492908e8e9271d266b149ab28fc48f4605077308e96252f7adf9ee1c150cf4",
+    "ios/Tests/PickupStockPrivateScopeIntegrationTests.swift": "661c6c51979561213dd310fcd99b643a1e6766fcf0fdc967a6a74fc4d0b290b0"
+  },
+  "iOS17": {
+    "device": "iPhone SE (2nd generation), iOS 17.0 (21A328)",
+    "result": ".build/ReminderTap20261104/ReminderTapCandidate.xcresult",
+    "modelTests": 542,
+    "contextualReminderUITests": 2,
+    "failed": 0,
+    "cases": {
+      "testLaunchDelegateBuffersOnlyTheValidatedDefaultActionUntilBinding": "The launch delegate rejects a dismiss action and an unexpected payload field, retaining one valid opaque handle until the app binds.",
+      "testTapWaitsForForegroundAndOpensTheUnchangedOfferAfterCutoff": "Background callback displays nothing before foregrounding, then opens the exact offer after cutoff without recording a fill.",
+      "testQueuedTapCannotOpenChangedOfferOrExposeItWhileLocked": "A queued tap fails closed after an offer revision change and reveals no destination while the private workspace is locked.",
+      "testObservedOrderLineCannotBeReopenedAsAnUnknownFill": "A committed receipt removes the offer from reminder eligibility and an old tap opens the unavailable state.",
+      "testReminderSurvivesHouseholdSuspensionButSignOutCancelsIt": "A real HouseholdModel with fixture service credentials retains its reminder through ordinary projection concealment and cancels it on sign-out.",
+      "testNextShopDeferralRequestsReminderOnlyAfterExplicitScheduleAndCanCancel": "Existing deferral editor UI retains explicit confirmation and the Cancel path.",
+      "testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending": "Existing offer reminder UI keeps the saved decision pending when reminder editing is cancelled."
+    },
+    "scope": "Actual app composition and stores with isolated scheduling and fixture household transport. The late-tap destination assertion checks the route and unchanged pickup. The two UI cases cover contextual editing and Cancel."
+  },
+  "archive": {
+    "path": ".build/ReminderTap20261104/RoomInTheCart-ReminderTap.xcarchive",
+    "binaryUUID": "8F3B1500-2FB5-35A8-8E8B-1B01FC8B3D45",
+    "executableSHA256": "5be1d87bb3c2b1ad49457596f245b5b6de46cfdbd31361f92906a3bfbaf4fc47",
+    "signed": false,
+    "builtAppVerification": "Compiled Release iPhone app verified: executable, assets, privacy, environment, and embedded extensions.",
+    "strictProductionMetadataResult": "Built app verification failed: Release metadata is incomplete: HouseholdSubscriptionProductID, PrivacyPolicyURL, TermsOfUseURL, SupportURL"
+  },
+  "systemProbeBaseline": {
+    "sourceCommit": "073943df6bc1589f7e15b38ce7d9516bdcd0386b",
+    "result": "/Users/palatis/Documents/Codex/2026-11-04/task-3/notifications/evidence/NotificationBaseline.xcresult",
+    "status": "Real iOS 27 permission and OS scheduling passed their assertions. The overall case failed before the tap because the Notification Center gesture left SpringBoard on Home.",
+    "checks": "The real prompt was accepted and exactly one OS request contained only the generic title/body and opaque handle. Scheduling left the pickup revision unchanged.",
+    "harness": "DEBUG simulator-only overlay creates a fictional offer with production pickup models and confirms an intent through the production ReminderCoordinator. It replaces checkout and date-picker setup. The live iOS scheduler is used."
+  },
+  "remaining": [
+    "Observe actual system delivery and late notification taps in the fixed candidate, including a cold launch.",
+    "Validate protected signed-in unlock on a physical iPhone.",
+    "Verify a confirmed reminder save that finishes during ordinary backgrounding separately from durable authority loss."
+  ]
+}

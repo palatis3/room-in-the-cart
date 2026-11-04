@@ -2,10 +2,12 @@
 
 The new app-owned coordinator is `ios/App/DeviceSurfacesComposition.swift`. Its supporting private journal, actual LedgerModel adapter, route store and UI live in `ios/Features/DeviceSurfaces`. The package change adds serialized reminder erasure. Root/generator/extension Info.plist ownership remains with the parent; preserve the parent’s nonempty extension display names.
 
-Create a retained `@StateObject` with `DeviceSurfacesComposition()` (optional `directory`, `bundle`, and `clock` are test injection points). Bind once, before the model-opening awaits, so the notification delegate and pending launch locators are ready:
+Create a retained `@StateObject` with `DeviceSurfacesComposition()` (optional `directory`, `bundle`, and `clock` are test injection points). The SwiftUI app delegate adaptor installs the notification delegate during launch. Bind the composition and the delegate before opening the workspace so an early notification can wait as an opaque handle:
 
 ```swift
-surfaces.bind(ledger: ledger, pickup: pickup, household: household, access: access)
+surfaces.bind(ledger: ledger, pickup: pickup, household: household, access: access,
+              sceneActive: scenePhase == .active)
+notificationDelegate.bind { handle in surfaces.receiveReminderTap(handle) }
 await model.open()
 await ledger.open()
 await pickup.load()
@@ -24,13 +26,13 @@ Pass it through the root environment or explicitly. Add a navigation entry with 
 }
 ```
 
-Call `background()` before the root locks the workspace; call `foreground()` on active. Call `scopeChanged()` on explicit persona changes/sign-out. The coordinator also observes the live models without replacing the membership-owned `HouseholdModel.onScopeChange`. The notification delegate is retained by the coordinator; if a second delegate is later needed, multiplex it rather than replacing this callback.
+Call `background()` before the root locks the workspace and `foreground()` after the active adult workspace opens. Discard pending adult taps when the child boundary takes over. Call `scopeChanged()` for actual persona changes and sign-out. Ordinary household suspension conceals the projection while retaining its last reminder scope. A signed-in unlock rechecks that scope against the enrolled device before using it again. The coordinator observes the live models without replacing the membership-owned `HouseholdModel.onScopeChange`.
 
 Records cleanup hooks are `eraseLedgerWorkspace(_:) async throws` and `erasePickupRecord(workspaceID:recordID:) async throws`. Pass those into `RecordsErasureCleanup`; await capture-correction cleanup separately in the parent’s combined ledger closure. Do not swallow errors: the existing confirmed-deletion journal must stay pending when any source cleanup fails. Repeated cleanup is idempotent. Startup reconciles retirement IDs and pickup tombstones before showing the inbox; missing raw-text group access during referenced cleanup throws rather than claiming erasure.
 
 The private review stores the full returned preview, edited/original text, digest, scope, decisions and phase before commit. Exact receipt verification precedes inbox acknowledgment. Explicit stale-review recovery reloads the actual ledger and retains up to three previously confirmed attempts under the same operation UUID, so a racing old receipt is recognized without a duplicate import. Exceeding the bound fails closed; discard and submit a new intentional share if another review is needed. Receipt lookup never restages random operation identity after a crash.
 
-Reminders are selected from current saved offers and current unhandled deferrals. A deferral expiry requires explicit review and does not create a meal date. Current source revision gates scheduling. Generic notifications contain only a random handle; opening revalidates the current private target and cutoff, including Await pickup after a late offer. Missing/revoked/expired deferrals fail closed. Foreground reconciliation erases orphan registrations before scheduling; background only clears the generic widget projection and visible private content.
+Reminders are selected from current unfilled offers and unhandled deferrals. A deferral expiry requires explicit review and does not create a meal date. Current source revision gates scheduling and reopening. Generic notifications contain only a random handle. The coordinator consumes it after current authorization and source reconciliation. A late offer opens Await pickup while its fill remains unknown. A recorded receipt removes that offer from reminder eligibility. Missing, revoked or expired deferrals fail closed.
 
 Executed scratch evidence: `integration-tests.log` has 14 passes, including two tests with the real LedgerModel and SQLite store, exact crash/restart receipt recovery, scope loss, interruption, changed replay, stale-review refresh and racing old receipts. `device-surfaces-tests.log` has 25 passes including serialized cancellation and erasure/version checks. `ios-verification.json` records the full app SDK typecheck with staged overrides and exact file hashes. Native tests can be copied from `NativeDeviceSurfacesTests.swift`; they are not claimed executed on iOS until the parent runs them.
 

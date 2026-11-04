@@ -1,5 +1,6 @@
 import XCTest
 import CoreDomain
+import DeviceSurfaces
 import HouseholdClient
 @testable import RoomInTheCart
 
@@ -140,6 +141,44 @@ private final class StockScopeProtocol: URLProtocol, @unchecked Sendable {
             XCTAssertNil(value.scope(presentationID: UUID()), role)
             close(fixture)
         }
+    }
+    func testReminderSurvivesHouseholdSuspensionButSignOutCancelsIt() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let fixture = try await signedIn(role: "organizer", directory: directory)
+        defer { close(fixture) }
+        let (access, defaults, name) = try ownerAccess()
+        defer { defaults.removePersistentDomain(forName: name) }
+        let ledger = LedgerModel(databaseURL: directory.appendingPathComponent("ledger.sqlite"))
+        let pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"), launchArguments: [])
+        await ledger.open(); await pickup.load()
+        let surfaces = DeviceSurfacesComposition(directory: directory.appendingPathComponent("surfaces"), launchArguments: ["--ui-testing"])
+        surfaces.bind(ledger: ledger, pickup: pickup, household: fixture.household, access: access)
+        await surfaces.foreground()
+        let store = try XCTUnwrap(surfaces.reminderStore)
+        let persona = fixture.household.deviceReminderPersona
+        let now = Date(), expires = now.addingTimeInterval(7200)
+        let parts = Calendar(identifier: .gregorian).dateComponents(in: .gmt, from: now.addingTimeInterval(3600))
+        let time = CivilReminderTime(year: try XCTUnwrap(parts.year), month: try XCTUnwrap(parts.month), day: try XCTUnwrap(parts.day),
+            hour: try XCTUnwrap(parts.hour), minute: try XCTUnwrap(parts.minute), timeZoneID: "UTC")
+        let intent = try ReminderIntent(personaID: access.localActorID, targetID: UUID(), subject: .deferral,
+            sourceRevision: 1, routeHandle: .random(), localTime: time, expiresAt: expires, language: .english, now: now)
+        surfaces.background()
+        let desired = try await store.put(intent, expectedVersion: nil, now: now)
+
+        fixture.household.lock()
+        await surfaces.sourceDidChange()
+        XCTAssertNil(fixture.household.projection)
+        XCTAssertEqual(fixture.household.deviceReminderPersona, persona)
+        let suspended = try await store.get(intent.id)
+        XCTAssertEqual(suspended, desired)
+
+        // A real sign-out invalidates the old scope even while the device is still locked.
+        access.protect()
+        await fixture.household.signOut()
+        await surfaces.sourceDidChange()
+        XCTAssertNotEqual(fixture.household.deviceReminderPersona, persona)
+        let signedOut = try await store.get(intent.id)
+        XCTAssertEqual(signedOut?.status, .cancelled)
     }
     func testActualDeviceLockAndChildPresentationRemainDenied() throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)

@@ -1,6 +1,7 @@
 import XCTest
 import CoreDomain
 import DeviceSurfaces
+import UserNotifications
 @testable import RoomInTheCart
 
 #if DEBUG
@@ -15,7 +16,7 @@ import DeviceSurfaces
         let surfaces: DeviceSurfacesComposition
     }
 
-    private func fixture() async throws -> Fixture {
+    private func fixture(clock: (() -> Date)? = nil) async throws -> Fixture {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
         let ledger = LedgerModel(databaseURL: directory.appendingPathComponent("ledger.sqlite"), clock: { self.now })
         await ledger.open()
@@ -44,7 +45,7 @@ import DeviceSurfaces
         addTeardownBlock { defaults.removePersistentDomain(forName: suite) }
         let access = WorkspaceAccess(defaults: defaults)
         let household = HouseholdModel(outboxURL: directory.appendingPathComponent("household.json"))
-        let surfaces = DeviceSurfacesComposition(directory: directory.appendingPathComponent("surfaces"), clock: { self.now }, launchArguments: ["--ui-testing"])
+        let surfaces = DeviceSurfacesComposition(directory: directory.appendingPathComponent("surfaces"), clock: clock ?? { self.now }, launchArguments: ["--ui-testing"])
         surfaces.bind(ledger: ledger, pickup: pickup, household: household, access: access)
         await surfaces.foreground()
         await settle { surfaces.reminderTargets.count == 2 }
@@ -155,6 +156,85 @@ import DeviceSurfaces
         XCTAssertTrue(f.surfaces.reminderTargets.allSatisfy { $0.target != target.target })
         XCTAssertEqual(f.pickup.journeys.first { $0.id == previous.id }?.pickup, originalOrder)
         XCTAssertNil(f.pickup.journey?.pickup)
+    }
+
+    func testLaunchDelegateBuffersOnlyTheValidatedDefaultActionUntilBinding() {
+        let delegate = SurfaceNotificationDelegate(), handle = RouteHandle.random()
+        delegate.acceptTap(actionIdentifier: UNNotificationDefaultActionIdentifier, userInfo: ["surfaceHandle": handle.rawValue])
+        delegate.acceptTap(actionIdentifier: "dismiss", userInfo: ["surfaceHandle": RouteHandle.random().rawValue])
+        delegate.acceptTap(actionIdentifier: UNNotificationDefaultActionIdentifier,
+                           userInfo: ["surfaceHandle": RouteHandle.random().rawValue, "extra": "value"])
+        var received: [RouteHandle] = []
+        delegate.bind { received.append($0) }
+        delegate.bind { received.append($0) }
+        XCTAssertEqual(received, [handle])
+    }
+
+    func testTapWaitsForForegroundAndOpensTheUnchangedOfferAfterCutoff() async throws {
+        var currentTime = now
+        let f = try await fixture(clock: { currentTime })
+        let intent = try await storedOfferReminder(in: f)
+        let before = try XCTUnwrap(f.pickup.journey)
+        f.surfaces.background()
+        currentTime = try XCTUnwrap(intent.cutoff).addingTimeInterval(30)
+        f.surfaces.receiveReminderTap(intent.routeHandle)
+        XCTAssertNil(f.surfaces.destination)
+        await f.surfaces.foreground()
+        await settle { f.surfaces.destination != nil }
+        guard case .offer(let journeyID, let offerID) = f.surfaces.destination else {
+            return XCTFail("The queued notification should open the unchanged offer after cutoff")
+        }
+        XCTAssertEqual(journeyID, before.id)
+        XCTAssertEqual(offerID, intent.targetID)
+        XCTAssertEqual(f.pickup.journey, before, "Opening a late offer must not report a fill")
+    }
+
+    func testQueuedTapCannotOpenChangedOfferOrExposeItWhileLocked() async throws {
+        let f = try await fixture()
+        let intent = try await storedOfferReminder(in: f)
+        f.surfaces.background()
+        f.surfaces.receiveReminderTap(intent.routeHandle)
+        let edited = await f.pickup.change { $0.offers[0].householdPreference = "Review the changed offer" }
+        XCTAssertTrue(edited)
+        await f.surfaces.foreground()
+        await settle { f.surfaces.destination != nil }
+        guard case .unavailable = f.surfaces.destination else { return XCTFail("The stale offer revision opened") }
+
+        let current = try await storedOfferReminder(in: f)
+        f.access.protect()
+        f.surfaces.background()
+        f.surfaces.receiveReminderTap(current.routeHandle)
+        await f.surfaces.foreground()
+        XCTAssertFalse(f.surfaces.privateAuthorized)
+        XCTAssertNil(f.surfaces.destination)
+    }
+
+    func testObservedOrderLineCannotBeReopenedAsAnUnknownFill() async throws {
+        let f = try await fixture()
+        let intent = try await storedOfferReminder(in: f)
+        let line = try XCTUnwrap(f.pickup.journey?.pickup?.orderLines.first)
+        let key = ReceiptKey(sourceEventID: "observed", orderLineID: line.id, branchID: "Main", segmentID: "first")
+        let received = await f.pickup.receive(ReceiptFragment(key: key, itemName: "Wraps",
+            received: Quantity(amount: try Rational(1), unit: .count, originalLiteral: "1"), disposition: .partial, receivedAt: now), usable: nil)
+        XCTAssertTrue(received)
+        XCTAssertFalse(f.surfaces.reminderTargets.contains { $0.id == intent.targetID })
+        f.surfaces.receiveReminderTap(intent.routeHandle)
+        await settle { f.surfaces.destination != nil }
+        guard case .unavailable = f.surfaces.destination else { return XCTFail("A known fill opened as an unknown offer") }
+    }
+
+    private func storedOfferReminder(in fixture: Fixture) async throws -> ReminderIntent {
+        let target = try XCTUnwrap(fixture.surfaces.reminderTargets.first { $0.cutoff != nil })
+        let context = try await fixture.surfaces.reminderContext(target, expiresAt: now.addingTimeInterval(86_400))
+        let utc = Calendar(identifier: .gregorian).dateComponents(in: .gmt, from: now.addingTimeInterval(3600))
+        let time = CivilReminderTime(year: try XCTUnwrap(utc.year), month: try XCTUnwrap(utc.month), day: try XCTUnwrap(utc.day),
+            hour: try XCTUnwrap(utc.hour), minute: try XCTUnwrap(utc.minute), timeZoneID: "UTC")
+        let intent = try ReminderIntent(id: context.reminderID, personaID: context.personaID, targetID: context.targetID,
+            subject: .offer, sourceRevision: context.sourceRevision, routeHandle: context.routeHandle, localTime: time,
+            expiresAt: context.expiresAt, cutoff: context.cutoff, language: .english, now: now)
+        let store = try XCTUnwrap(fixture.surfaces.reminderStore)
+        _ = try await store.put(intent, expectedVersion: nil, now: now)
+        return intent
     }
 
     private func settle(_ condition: () -> Bool) async {

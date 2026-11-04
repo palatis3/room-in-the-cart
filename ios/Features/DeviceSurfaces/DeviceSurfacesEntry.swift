@@ -140,13 +140,13 @@ struct DeviceSurfacesDestination: View {
                 if composition.privateAuthorized, selected, ledger.shop?.id == id { LedgerHomeView(model: ledger) }
                 else { SurfaceUnavailableView() }
             case .offer(let journey, let offerID):
-                if composition.privateAuthorized, selected, pickup.journey?.id == journey, let offer = pickup.journey?.offers.first(where: { $0.id == offerID }) {
+                if composition.privateAuthorized, selected, pickup.journey?.id == journey, let offer = pickup.journey?.unfilledOffers.first(where: { $0.id == offerID }) {
                     Form {
                         Text(offer.replacement)
                         TimelineView(.periodic(from: .now, by: 30)) { context in
                             Text(pTr(context.date >= offer.deadline.cutoff ? "Await pickup · fill still unknown" : "Decision pending before cutoff"))
                         }
-                        Text(offer.deadline.cutoff.formatted())
+                        Text("\(pickupOfferCutoffText(offer)) · \(offer.deadline.timeZoneID)")
                         NavigationLink(tr("Pickup, repairs and handoffs")) { PickupHomeView(model: pickup).environment(\.pickupLedger, ledger) }
                     }
                 } else { SurfaceUnavailableView() }

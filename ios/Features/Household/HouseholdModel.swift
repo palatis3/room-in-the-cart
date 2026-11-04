@@ -3,6 +3,22 @@ import SwiftUI
 import LocalAuthentication
 import HouseholdClient
 
+struct DeviceReminderPersona: Equatable {
+    let subject: String?
+    let householdID: String?
+    let memberID: String?
+    let role: String?
+    let grantID: String?
+
+    init(subject: String?, projection: HouseholdBootstrap?) {
+        self.subject = subject
+        householdID = projection?.household.id
+        memberID = projection?.memberId
+        role = projection?.role
+        grantID = projection?.grantId
+    }
+}
+
 @MainActor final class HouseholdModel: ObservableObject {
     @Published private(set) var identity: VerifiedAdultIdentity?
     @Published private(set) var workspaces: [WorkspaceList.Workspace] = []
@@ -46,6 +62,14 @@ import HouseholdClient
     @Published private(set) var placementEvidenceUnlocked = false
     @Published private(set) var placementEvidenceNotice: String?
     private var placementEvidenceIdentity: (subject: String, householdID: String, memberID: String)?
+    private var suspendedReminderPersona: DeviceReminderPersona?
+    var deviceReminderPersona: DeviceReminderPersona {
+        let subject = identity?.subject
+        if projection == nil, let suspendedReminderPersona, suspendedReminderPersona.subject == subject {
+            return suspendedReminderPersona
+        }
+        return DeviceReminderPersona(subject: subject, projection: projection)
+    }
     private var pending: PendingOperation?
     private var attempts = 0
     private var retryAfter = Date.distantPast
@@ -387,6 +411,7 @@ import HouseholdClient
     }
     /// Scene transitions hide protected projections; returning requires OS owner authentication and fresh authorization.
     func lock() {
+        suspendedReminderPersona = deviceReminderPersona
         placementEvidenceUnlocked = false
         if !guardianChildOnly, let identity, let scope = projection, scope.enrolled, scope.grantId == nil,
            ["organizer", "shopper", "contributor"].contains(scope.role) {
@@ -408,6 +433,16 @@ import HouseholdClient
             guard start == generation else { return }
             let access = try await auth.access(); let list = try await service.workspaces()
             guard start == generation else { return }
+            if let prior = suspendedReminderPersona, let householdID = prior.householdID {
+                var checked: DeviceReminderPersona?
+                if prior.subject == access.identity.subject,
+                   list.workspaces.contains(where: { $0.householdId == householdID && $0.role == prior.role }) {
+                    do { checked = DeviceReminderPersona(subject: access.identity.subject, projection: try await service.bootstrap()) }
+                    catch ClientError.accessEnded { checked = nil }
+                }
+                guard start == generation else { return }
+                if checked != prior { suspendedReminderPersona = nil }
+            }
             identity = access.identity; workspaces = list.workspaces; locked = false; keepLocalPrivate = false
             configureLifecycle(access.identity)
         } catch { await show(error, start: start) }
@@ -510,7 +545,10 @@ import HouseholdClient
         return token
     }
     private func clearProjection(preservePlacementEvidence: Bool = false) {
-        if !preservePlacementEvidence { placementEvidenceIdentity = nil; placementEvidenceUnlocked = false; placementEvidenceNotice = nil }
+        if !preservePlacementEvidence {
+            placementEvidenceIdentity = nil; placementEvidenceUnlocked = false; placementEvidenceNotice = nil
+            suspendedReminderPersona = nil
+        }
         lifecycle?.clearScope()
         shopperInbox?.clear(); shopperInbox = nil; sharedShop?.clear(); sharedShop = nil
         projection = nil; contributorDeviceID = nil; requests = []; nextRequestCursor = nil; pending = nil

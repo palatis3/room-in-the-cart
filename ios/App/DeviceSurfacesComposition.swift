@@ -1,7 +1,6 @@
 import Foundation
 import Combine
 import SwiftUI
-import UserNotifications
 import WidgetKit
 import CryptoKit
 import CoreDomain
@@ -30,14 +29,15 @@ import DeviceSurfaces
     private var subscriptions = Set<AnyCancellable>()
     private var nonce = UUID()
     private var authorityKey: String?
-    private var personaScopeKey: String?
+    private var reminderPersona: DeviceReminderPersona?
+    private var pendingReminderCancellation = false
     private var pickupWorkspaceID: UUID?
     private var active = true
     private var reconciling = false
     private var reconcileAgain = false
-    private var notificationDelegate: SurfaceNotificationDelegate?
     private var pendingURL: URL?
     private var pendingHandle: RouteHandle?
+    private var pendingReminderTap: RouteHandle?
     private let directory: URL
     private let runtime: SurfaceRuntimeIsolation
     private let bundle: Bundle
@@ -49,10 +49,6 @@ import DeviceSurfaces
             applicationSupport: FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0])
         self.runtime = runtime; self.directory = runtime.directory
         self.bundle = bundle; self.clock = clock
-        runtime.performSystemEffect {
-            let delegate = SurfaceNotificationDelegate { [weak self] handle in Task { await self?.open(handle) } }
-            notificationDelegate = delegate; UNUserNotificationCenter.current().delegate = delegate
-        }
     }
     var privateAuthorized: Bool {
         guard active, let access, access.unlocked, let household else { return false }
@@ -67,8 +63,9 @@ import DeviceSurfaces
     var hasPendingSave: Bool { ledger?.hasPendingSave ?? true }
     var shops: [ShoppingLedger] { privateAuthorized ? ledger?.workspace.shops ?? [] : [] }
     func shop(_ id: UUID) -> ShoppingLedger? { guard scope != nil else { return nil }; return ledger?.workspace.shops.first { $0.id == id } }
-    func bind(ledger: LedgerModel, pickup: PickupModel, household: HouseholdModel, access: WorkspaceAccess) {
+    func bind(ledger: LedgerModel, pickup: PickupModel, household: HouseholdModel, access: WorkspaceAccess, sceneActive: Bool = true) {
         guard self.ledger == nil else { return }
+        active = sceneActive
         self.ledger = ledger; self.pickup = pickup; self.household = household; self.access = access
         func changes<Value: Equatable>(_ values: some Publisher<Value, Never>) -> AnyPublisher<Void, Never> {
             values.removeDuplicates().dropFirst().map { _ in () }.eraseToAnyPublisher()
@@ -84,7 +81,7 @@ import DeviceSurfaces
             publisher.receive(on: RunLoop.main).sink { [weak self] in Task { @MainActor in await self?.sourceDidChange() } }.store(in: &subscriptions)
         }
         SurfaceCaptureRequests.shared.$pending.filter { $0 }.receive(on: RunLoop.main).sink { [weak self] _ in self?.openCapture() }.store(in: &subscriptions)
-        Task { await foreground() }
+        Task { await sourceDidChange() }
     }
     private func configure() throws {
         if routes != nil { return }
@@ -126,7 +123,16 @@ import DeviceSurfaces
         // A locked snapshot is generic even if the containing process is then suspended.
         try? projection?.clear(now: clock()); runtime.performSystemEffect { WidgetCenter.shared.reloadTimelines(ofKind: "RoomInTheCartCapture") }
     }
-    func scopeChanged() { nonce = UUID(); entries = []; draft = nil; destination = nil; pendingURL = nil; pendingHandle = nil; authorityKey = nil; Task { await sourceDidChange() } }
+    func scopeChanged() {
+        nonce = UUID(); entries = []; draft = nil; destination = nil; pendingURL = nil; pendingHandle = nil
+        pendingReminderTap = nil; authorityKey = nil
+        Task { await sourceDidChange() }
+    }
+    func receiveReminderTap(_ handle: RouteHandle) {
+        pendingReminderTap = handle
+        pendingURL = nil; pendingHandle = nil
+        Task { await sourceDidChange() }
+    }
     private func sourceSnapshot() -> SurfaceSourceSnapshot {
         SurfaceSourceSnapshot(ledgerReady: ledger?.ready == true, pickupReady: pickup?.ready == true,
             ledgerSaving: ledger?.saving ?? true, pickupSaving: pickup?.saving ?? true,
@@ -140,12 +146,18 @@ import DeviceSurfaces
         defer { reconciling = false; if reconcileAgain { reconcileAgain = false; Task { await sourceDidChange() } } }
         let key = [String(privateAuthorized), household?.identity?.subject ?? "", household?.projection?.memberId ?? "", household?.projection?.role ?? "", ledger?.sourceWorkspaceID?.uuidString ?? ""].joined(separator: "|")
         if key != authorityKey { authorityKey = key; nonce = UUID(); entries = []; draft = nil; destination = nil }
-        let personaKey = [household?.identity?.subject ?? "", household?.projection?.memberId ?? "", household?.projection?.role ?? ""].joined(separator: "|")
-        if let previous = personaScopeKey, previous != personaKey, let persona = access?.localActorID {
-            do { try await reminders?.cancelAll(personaID: persona) }
-            catch { entries = []; draft = nil; destination = nil; message = SurfaceCopy.text("Device shortcuts could not refresh. Try again."); return }
+        let currentReminderPersona = household?.deviceReminderPersona
+        if let previous = reminderPersona, previous != currentReminderPersona {
+            pendingReminderTap = nil
+            pendingReminderCancellation = true
         }
-        personaScopeKey = personaKey
+        reminderPersona = currentReminderPersona
+        if pendingReminderCancellation, let reminders, let persona = access?.localActorID {
+            do { try await reminders.cancelAll(personaID: persona) }
+            catch { entries = []; draft = nil; destination = nil; message = SurfaceCopy.text("Device shortcuts could not refresh. Try again."); return }
+            guard currentReminderPersona == household?.deviceReminderPersona else { return }
+            pendingReminderCancellation = false
+        }
         guard privateAuthorized else { entries = []; draft = nil; destination = nil; try? projection?.clear(now: clock()); return }
         // Root binds before opening either model. No cleanup may treat that
         // incomplete (or uncertain-save) projection as an empty durable workspace.
@@ -153,43 +165,59 @@ import DeviceSurfaces
         guard sources.permitsReconciliation else { entries = []; return }
         let checkpoint = SurfaceReconciliationGate(expected: sources)
         let start = nonce
+        func requireCurrent() throws {
+            try checkpoint.requireCurrent(sourceSnapshot())
+            guard generation == start, currentReminderPersona == household?.deviceReminderPersona else { throw SurfaceError.stale }
+        }
         do {
             try configure()
             guard let ledger, let pickup else { throw SurfaceError.unavailable }
+            if pendingReminderCancellation, let reminders, let persona = access?.localActorID {
+                try await reminders.cancelAll(personaID: persona)
+                try requireCurrent()
+                pendingReminderCancellation = false
+            }
             let retiredIDs = try await ledger.retiredLedgerWorkspaceIDs()
-            try checkpoint.requireCurrent(sourceSnapshot())
+            try requireCurrent()
             let pickupSnapshot = try await pickup.archiveSnapshot()
-            try checkpoint.requireCurrent(sourceSnapshot())
+            try requireCurrent()
             let pickupTombstones = try await pickup.archiveTombstones()
-            try checkpoint.requireCurrent(sourceSnapshot())
-            guard generation == start else { return }
+            try requireCurrent()
             pickupWorkspaceID = pickupSnapshot.workspaceID
             for id in retiredIDs {
-                try checkpoint.requireCurrent(sourceSnapshot())
+                try requireCurrent()
                 try await eraseLedgerWorkspace(id)
             }
             for tombstone in pickupTombstones {
-                try checkpoint.requireCurrent(sourceSnapshot())
+                try requireCurrent()
                 try await erasePickupRecord(workspaceID: tombstone.workspaceID, recordID: tombstone.id)
             }
-            try checkpoint.requireCurrent(sourceSnapshot())
-            guard generation == start else { return }
-            for row in try routes?.all() ?? [] where !validTarget(row, requireRevision: row.reminderID != nil) {
-                try checkpoint.requireCurrent(sourceSnapshot()); try await removeRoute(row)
+            try requireCurrent()
+            for row in try routes?.all() ?? [] {
+                try requireCurrent()
+                if !validTarget(row, requireRevision: row.reminderID != nil) { try await removeRoute(row) }
             }
+            try requireCurrent()
             let referencedReminders = Set(try routes?.all().compactMap(\.reminderID) ?? [])
             for reminder in try await reminderStore?.all() ?? [] where !referencedReminders.contains(reminder.intent.id) {
-                try checkpoint.requireCurrent(sourceSnapshot()); try await reminders?.erase(reminder.intent.id)
+                try requireCurrent(); try await reminders?.erase(reminder.intent.id)
             }
-            try checkpoint.requireCurrent(sourceSnapshot()); try await reminders?.reconcileAll()
+            try requireCurrent(); try await reminders?.reconcileAll()
             let pending = try await inbox?.pending(now: clock()) ?? []
-            try checkpoint.requireCurrent(sourceSnapshot())
+            try requireCurrent()
             if inbox != nil { try journal?.prune(pendingIDs: Set(pending.map(\.id)), now: clock()) }
-            guard generation == start else { return }; entries = pending; message = nil
+            entries = pending; message = nil
+            if let handle = pendingReminderTap {
+                let resolved = try? await resolve(handle, reminderOnly: true)
+                try requireCurrent()
+                guard pendingReminderTap == handle else { return }
+                pendingReminderTap = nil
+                destination = resolved ?? .unavailable(UUID())
+            }
             try publishWidget()
             if let pendingURL { self.pendingURL = nil; handle(url: pendingURL) }
             if let pendingHandle { self.pendingHandle = nil; Task { await open(pendingHandle) } }
-        } catch { guard nonce == start else { return }; entries = []; message = SurfaceCopy.text("Device shortcuts could not refresh. Try again.") }
+        } catch { guard generation == start else { return }; entries = []; message = SurfaceCopy.text("Device shortcuts could not refresh. Try again.") }
     }
     func review(_ entry: SelectedTextEntry, shopID: UUID) async {
         guard !busy, let bridge else { message = SurfaceCopy.text("Selected text is unavailable on this installation."); return }
@@ -268,25 +296,38 @@ import DeviceSurfaces
         guard ledger != nil, ledger?.ready == true, pickup?.ready == true else { pendingHandle = handle; return }
         guard privateAuthorized else { destination = .unavailable(UUID()); return }
         await sourceDidChange()
-        do {
-            guard let row = try routes?.all().first(where: { $0.route.handle == handle }), validTarget(row, requireRevision: false),
-                  let persona = access?.localActorID else { throw SurfaceError.unavailable }
-            let auth = RouteAuthorization(personaID: persona, role: .localAdult, generation: routeGeneration(row.target), unlocked: true, permittedTargetIDs: [row.target.id])
-            guard SurfaceRouter.resolve(row.route, handle: handle, authorization: auth, now: clock()) != nil else { throw SurfaceError.unavailable }
-            if let reminderID = row.reminderID {
-                guard let reminder = try await reminderStore?.get(reminderID), reminder.status != .cancelled else { throw SurfaceError.unavailable }
-                let cutoff: Date?
-                if case .offer(_, let journey, let offerID) = row.target {
-                    cutoff = pickup?.journeys.first(where: { $0.id == journey })?.offers.first(where: { $0.id == offerID })?.deadline.cutoff
-                } else { cutoff = nil }
-                guard ReminderOpening.evaluate(intent: reminder.intent, authorized: privateAuthorized && validTarget(row, requireRevision: false), currentTargetID: row.target.id, currentCutoff: cutoff, now: clock()) != .unavailable else { throw SurfaceError.unavailable }
+        let start = nonce
+        let resolved = try? await resolve(handle, reminderOnly: false)
+        guard nonce == start else { return }
+        destination = resolved ?? .unavailable(UUID())
+    }
+    private func resolve(_ handle: RouteHandle, reminderOnly: Bool) async throws -> SurfacePresentedDestination {
+        guard let row = try routes?.all().first(where: { $0.route.handle == handle }),
+              !reminderOnly || row.reminderID != nil, validTarget(row, requireRevision: row.reminderID != nil),
+              let persona = access?.localActorID else { throw SurfaceError.unavailable }
+        let auth = RouteAuthorization(personaID: persona, role: .localAdult, generation: routeGeneration(row.target), unlocked: true, permittedTargetIDs: [row.target.id])
+        guard SurfaceRouter.resolve(row.route, handle: handle, authorization: auth, now: clock()) != nil else { throw SurfaceError.unavailable }
+        if let reminderID = row.reminderID {
+            guard let reminder = try await reminderStore?.get(reminderID), reminder.status != .cancelled,
+                  !pendingReminderCancellation, reminderPersona == household?.deviceReminderPersona,
+                  reminder.intent.personaID == persona, reminder.intent.routeHandle == handle,
+                  reminder.intent.sourceRevision == row.sourceRevision,
+                  validTarget(row, requireRevision: true) else { throw SurfaceError.unavailable }
+            let cutoff: Date?
+            if case .offer(_, let journey, let offerID) = row.target {
+                guard reminder.intent.subject == .offer else { throw SurfaceError.unavailable }
+                cutoff = pickup?.journeys.first(where: { $0.id == journey })?.offers.first(where: { $0.id == offerID })?.deadline.cutoff
+            } else {
+                guard case .deferral = row.target, reminder.intent.subject == .deferral else { throw SurfaceError.unavailable }
+                cutoff = nil
             }
-            switch row.target {
-            case .shop(_, let shop): destination = .shop(shop)
-            case .offer(_, let journey, let offer): destination = .offer(journey, offer)
-            case .deferral(_, let journey, let need): destination = .deferral(journey, need)
-            }
-        } catch { destination = .unavailable(UUID()) }
+            guard ReminderOpening.evaluate(intent: reminder.intent, authorized: true, currentTargetID: row.target.id, currentCutoff: cutoff, now: clock()) != .unavailable else { throw SurfaceError.unavailable }
+        }
+        switch row.target {
+        case .shop(_, let shop): return .shop(shop)
+        case .offer(_, let journey, let offer): return .offer(journey, offer)
+        case .deferral(_, let journey, let need): return .deferral(journey, need)
+        }
     }
     private func routeGeneration(_ target: SurfacePrivateTarget) -> UUID {
         let workspace: UUID
@@ -296,11 +337,13 @@ import DeviceSurfaces
     }
     private func validTarget(_ row: SurfaceRouteRecord, requireRevision: Bool) -> Bool {
         guard privateAuthorized, row.route.personaID == access?.localActorID, row.route.generation == routeGeneration(row.target) else { return false }
+        if row.reminderID != nil, !reminderRoleAuthorized { return false }
         let eligible = row.reminderID == nil ? pickup?.journeys : pickup?.reminderJourneys
         switch row.target {
         case .shop(let workspace, let shopID): return scope?.workspaceID == workspace && shop(shopID) != nil
         case .offer(let workspace, let journeyID, let offerID):
-            guard pickupWorkspaceID == workspace, let journey = eligible?.first(where: { $0.id == journeyID }), (row.reminderID == nil || journey.closedAt == nil), journey.offers.contains(where: { $0.id == offerID }) else { return false }
+            guard pickupWorkspaceID == workspace, let journey = eligible?.first(where: { $0.id == journeyID }),
+                  journey.unfilledOffers.contains(where: { $0.id == offerID }) else { return false }
             return !requireRevision || journey.revision == row.sourceRevision
         case .deferral(let workspace, let journeyID, let needID):
             guard pickupWorkspaceID == workspace, let journey = eligible?.first(where: { $0.id == journeyID }), journey.deferred.contains(where: { $0.id == needID && $0.status == "review" }) else { return false }
@@ -351,10 +394,14 @@ import DeviceSurfaces
         for row in try routes?.all() ?? [] where row.target.belongsToPickup(workspaceID, recordID) { try await removeRoute(row) }
         try projection?.clear(now: clock()); runtime.performSystemEffect { WidgetCenter.shared.reloadTimelines(ofKind: "RoomInTheCartCapture") }
     }
+    private var reminderRoleAuthorized: Bool {
+        guard let role = household?.deviceReminderPersona.role else { return true }
+        return ["shopper", "organizer"].contains(role)
+    }
     var reminderTargets: [SurfaceReminderTarget] {
-        guard privateAuthorized, let workspace = pickupWorkspaceID else { return [] }
+        guard privateAuthorized, reminderRoleAuthorized, let workspace = pickupWorkspaceID else { return [] }
         return (pickup?.reminderJourneys ?? []).flatMap { journey in
-            (journey.closedAt == nil ? journey.offers : []).map { SurfaceReminderTarget(target: .offer(workspaceID: workspace, journeyID: journey.id, offerID: $0.id), title: $0.replacement, revision: journey.revision, cutoff: $0.deadline.cutoff, timeZoneID: $0.deadline.timeZoneID) }
+            journey.unfilledOffers.map { SurfaceReminderTarget(target: .offer(workspaceID: workspace, journeyID: journey.id, offerID: $0.id), title: $0.replacement, revision: journey.revision, cutoff: $0.deadline.cutoff, timeZoneID: $0.deadline.timeZoneID) }
             + journey.deferred.filter { $0.status == "review" }.map { SurfaceReminderTarget(target: .deferral(workspaceID: workspace, journeyID: journey.id, needID: $0.id), title: $0.line.name, revision: journey.revision, cutoff: nil, timeZoneID: TimeZone.current.identifier) }
         }
     }

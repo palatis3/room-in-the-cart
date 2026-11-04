@@ -156,11 +156,14 @@ struct PickupJourney: Codable, Equatable, Identifiable {
 // New optional local projections can be absent in an earlier version-one document.
 // Required identity/version/date still fail closed, and validate checks all links.
 extension PickupJourney {
-    func nextUnfilledOffer(at date: Date) -> PickupOffer? {
-        guard closedAt == nil else { return nil }
+    var unfilledOffers: [PickupOffer] {
+        guard closedAt == nil else { return [] }
         let observed = Set(pickup?.receipts.map(\.key.orderLineID) ?? [])
-        let outstanding = offers.filter { !observed.contains($0.lineID) }
-            .sorted { $0.deadline.cutoff < $1.deadline.cutoff }
+        return offers.filter { !observed.contains($0.lineID) }
+    }
+
+    func nextUnfilledOffer(at date: Date) -> PickupOffer? {
+        let outstanding = unfilledOffers.sorted { $0.deadline.cutoff < $1.deadline.cutoff }
         return outstanding.first { date < $0.deadline.cutoff } ?? outstanding.last
     }
 
