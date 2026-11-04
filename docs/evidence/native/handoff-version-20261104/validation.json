@@ -61,6 +61,23 @@
     },
     "scope": "The native Settings readback preceded the checkout and system share. After cancellation and relaunch, the Pickup screen showed Frozen · placement unconfirmed and the handoff displayed revision one, two wraps and the recorded cancellation. The scoped iOS 17 app logging accommodation was active. Physical transition timing, interaction cadence and assistive hardware remain open."
   },
+  "currentSimulatorReopenedPickup": {
+    "sourceCommit": "2b8f53c8c2249e9d42101bdb769549af5b0b3589",
+    "configuration": "Ordinary arm64 Debug on iPhone 17e, iOS 27.0 (24A434)",
+    "test": "FreeJourneyUITests/testCancellingSystemShareKeepsTheFrozenPickupUnplaced",
+    "testSourceSHA256": "1c9221ea25df9454c07e6bedff9525b1699248153fc9b951855f990dd4fd6630",
+    "scratchTestSourceSHA256": "0fbca11c628213a26fcbee7c0b9e170cfab379f36b39f925ef7f62bcadd8a971",
+    "appDebugDylibSHA256": "8022092764c17ae0173d8872819ea629866902b135f13c08519ae444f621934a",
+    "result": ".build/MealWeekAccessibilityInline20261104/handoff-reopened-current-os.xcresult",
+    "logSHA256": "8c6e61569e601228d61d34467236659bdf2bf55274bfe864dd9f2edc2000fce7",
+    "summarySHA256": "ae2099e29a995a04314d5edb677a9917df99839547d313e003efde2cd03ea87f",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": [],
+    "seconds": 173.730,
+    "scope": "The ordinary test waited for Pickup and opened the handoff link inside its collection after relaunch. The status showed frozen with placement unconfirmed, and the saved handoff retained revision one, two wraps and the recorded cancellation."
+  },
   "archive": {
     "path": ".build/HandoffVersion20261104/RoomInTheCart-HandoffVersion.xcarchive",
     "binaryUUID": "9BB5422C-9BA6-3EF2-9DBB-22097E34D77C",
