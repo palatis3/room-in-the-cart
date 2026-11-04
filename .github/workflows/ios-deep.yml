@@ -1,10 +1,11 @@
 name: iOS deep checks
 on:
   workflow_dispatch:
+  workflow_call:
 permissions:
   contents: read
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: deep-ios-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   sanitizers:

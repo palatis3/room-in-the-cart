@@ -1,0 +1,85 @@
+name: Pre-release regression checks
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  core:
+    name: Core build and tests
+    permissions:
+      contents: read
+      actions: read
+      security-events: write
+    uses: ./.github/workflows/ci.yml
+  security:
+    name: Source security
+    permissions:
+      contents: read
+      security-events: write
+    uses: ./.github/workflows/security.yml
+  diagnostics:
+    name: Sanitizers and local billing
+    uses: ./.github/workflows/ios-deep.yml
+  fixtures:
+    name: Household and dinner regressions
+    uses: ./.github/workflows/ios-fixtures.yml
+  performance:
+    name: Release performance
+    uses: ./.github/workflows/ios-performance.yml
+    with:
+      enforce_baselines: true
+  dependencies:
+    name: Existing dependencies (${{ matrix.package }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [service, web]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - name: Reject known high or critical vulnerabilities in the entire lockfile
+        working-directory: ${{ matrix.package }}
+        run: npm audit --package-lock-only --audit-level=high
+  release-checks:
+    name: Automated release gate
+    needs: [core, security, diagnostics, fixtures, performance, dependencies]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: read
+    env:
+      JOB_RESULTS: ${{ toJSON(needs) }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require every pre-release job to succeed
+        run: |
+          python3 - <<'PY'
+          import json, os
+          jobs = json.loads(os.environ["JOB_RESULTS"])
+          failures = {name: job["result"] for name, job in jobs.items() if job["result"] != "success"}
+          if failures:
+              raise SystemExit(f"Pre-release checks did not pass: {failures}")
+          PY
+      - name: Require current CodeQL analysis and no serious open findings
+        run: python3 scripts/check_release_code_scanning.py
+      - name: Record the checked commit
+        run: |
+          {
+            echo "Automated regression checks passed for $GITHUB_SHA."
+            echo
+            echo 'Signing, production configuration, live-provider acceptance and physical-device review are separate release requirements. This workflow does not upload to the App Store.'
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -4,10 +4,11 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+  workflow_call:
 permissions:
   contents: read
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: core-ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   typescript:
@@ -106,7 +107,10 @@ jobs:
           python3 scripts/test_app_configuration.py
           python3 scripts/generate_xcode_project.py --check
           python3 scripts/test_plan_ios_tests.py
+          python3 scripts/test_plan_ios_fixture_tests.py
           python3 scripts/test_check_ios_test_results.py
+          python3 scripts/test_check_release_code_scanning.py
+          python3 scripts/test_check_ios_performance.py
           bash -n scripts/run_ios_test_shard.sh
   swift-packages:
     runs-on: macos-15-intel
@@ -189,7 +193,7 @@ jobs:
           test "${#test_runs[@]}" -eq 1
           xcrun simctl bootstatus "$SIMULATOR_ID" -b
           xcodebuild -xctestrun "${test_runs[0]}" \
-            -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
+            -destination "platform=iOS Simulator,id=$SIMULATOR_ID" -parallel-testing-enabled NO \
             -enumerate-tests -test-enumeration-style flat -test-enumeration-format json \
             -test-enumeration-output-path "$PWD/.build/test-enumeration.json" test-without-building
           python3 scripts/plan_ios_tests.py --enumeration .build/test-enumeration.json --output-dir .build/test-plan --ui-shards 10

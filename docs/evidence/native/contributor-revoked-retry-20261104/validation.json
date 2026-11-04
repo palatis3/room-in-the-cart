@@ -1,0 +1,32 @@
+{
+  "baseCommit": "2815a35a594c58c72647420ad5d47d00de70473e",
+  "configuration": "Debug; isolated model fixtures and SQLite storage",
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "8763494B-6784-46D3-8D63-1388127B1B99",
+    "deviceName": "RITC Pickup Facts and Hold 20261104",
+    "modelName": "iPhone SE",
+    "osBuildNumber": "21A328",
+    "osVersion": "17.0",
+    "platform": "iOS Simulator"
+  },
+  "test": "ContributorRequestCaptureTests/testRevokedEnrollmentAfterLostReplyAndRestartClearsRetryAndHidesAcceptedRequest",
+  "resultBundle": ".build/PickupFactsHold20261104/ContributorRevokedRetry.xcresult",
+  "summarySHA256": "20f28fa578c49e17d74e4a524a4cf582b9e3aad2fefbc5308904a3fd5c3214b1",
+  "sourceSHA256": {
+    "ios/Tests/ContributorRequestCaptureTests.swift": "fdb28a5b06bf064f363a282d373399351e885bb291293b713cf9b2eddbc70a0b"
+  },
+  "result": {
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": []
+  },
+  "assertions": [
+    "Lost reply leaves exactly one accepted server request and durable protected pending command.",
+    "Authorized restart shows accepted request and preserves pending identity.",
+    "Enrollment revocation before retry clears private projection and outbox; repeated retry sends no new command or forbidden private read.",
+    "Accepted server row remains unchanged and independent Pickup SQLite records and workspace survive reopening."
+  ],
+  "limits": "Mocked service boundary; no live provider or production access claim."
+}

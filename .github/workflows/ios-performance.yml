@@ -1,0 +1,169 @@
+name: iOS Release performance
+
+on:
+  workflow_dispatch:
+    inputs:
+      enforce_baselines:
+        description: Require approved limits for this Xcode and simulator environment
+        type: boolean
+        default: false
+  workflow_call:
+    inputs:
+      enforce_baselines:
+        description: Require approved limits for this Xcode and simulator environment
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-performance-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+
+jobs:
+  performance-build:
+    name: Build optimized iPhone test products
+    runs-on: macos-15-intel
+    timeout-minutes: 35
+    outputs:
+      artifact: ${{ steps.upload.outputs['artifact-id'] }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check performance evidence validation
+        run: python3 scripts/test_check_ios_performance.py
+      - name: Record Xcode and select an iPhone simulator
+        run: |
+          xcodebuild -version
+          xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+      - name: Build the Release app and dedicated performance tests
+        shell: bash
+        run: |
+          mkdir -p .build
+          xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart-Performance \
+            -configuration Release -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
+            -parallel-testing-enabled NO -derivedDataPath .build/DerivedData \
+            -enableCodeCoverage NO -enableAddressSanitizer NO -enableThreadSanitizer NO \
+            -enableUndefinedBehaviorSanitizer NO CODE_SIGN_IDENTITY=- build-for-testing \
+            2>&1 | tee .build/PerformanceBuild.log
+      - name: Verify and package Release test products
+        run: |
+          python3 scripts/check_built_app.py .build/DerivedData/Build/Products/Release-iphonesimulator/RoomInTheCart.app --configuration Release
+          tar -czf "$RUNNER_TEMP/iphone-performance-products.tar.gz" -C .build/DerivedData/Build Products
+      - uses: actions/upload-artifact@v4
+        id: upload
+        with:
+          name: iphone-performance-products-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/iphone-performance-products.tar.gz
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: error
+      - name: Retain Release build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: iphone-performance-build-log-${{ github.run_attempt }}
+          path: .build/PerformanceBuild.log
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: ignore
+
+  performance-tests:
+    name: Release performance (${{ matrix.case }})
+    needs: performance-build
+    runs-on: macos-15-intel
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        include:
+          - case: launch
+            method: testColdLaunchPerformance
+          - case: rendered
+            method: testRenderedFiveHundredItemPickup
+          - case: scroll
+            method: testScrollingPerformanceOnFiveHundredItemPickup
+    env:
+      PERFORMANCE_CASE: ${{ matrix.case }}
+      TEST_METHOD: ${{ matrix.method }}
+      ENFORCE_BASELINES: ${{ inputs.enforce_baselines }}
+      FIXTURE: ios/UITests/Fixtures/ReleaseLedger500.txt
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ needs.performance-build.outputs.artifact }}
+          path: .build/download
+          merge-multiple: true
+      - name: Restore Release products and record the toolchain
+        run: |
+          mkdir -p .build/DerivedData/Build .build/performance
+          tar -xzf .build/download/iphone-performance-products.tar.gz -C .build/DerivedData/Build
+          xcodebuild -version | tee .build/performance/toolchain.txt
+          printf '%s\n' "RoomInTheCartUITests/ReleasePerformanceUITests/$TEST_METHOD" > .build/performance/selector.txt
+      - name: Select an iPhone simulator
+        run: xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+      - name: Boot and verify a fresh Release installation
+        timeout-minutes: 8
+        run: |
+          xcrun simctl bootstatus "$SIMULATOR_ID" -b
+          if xcrun simctl get_app_container "$SIMULATOR_ID" dev.roominthecart.app app >/dev/null 2>&1; then
+            echo 'Expected a fresh simulator without the Release app.' >&2
+            exit 1
+          fi
+          if [[ "$PERFORMANCE_CASE" != launch ]]; then
+            xcrun simctl pbcopy "$SIMULATOR_ID" < "$FIXTURE"
+          fi
+      - name: Run one Release performance case
+        timeout-minutes: 30
+        shell: bash
+        run: |
+          test_runs=(.build/DerivedData/Build/Products/RoomInTheCart-Performance_iphonesimulator*.xctestrun)
+          test "${#test_runs[@]}" -eq 1
+          test -f "${test_runs[0]}"
+          xcodebuild -xctestrun "${test_runs[0]}" -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
+            -parallel-testing-enabled NO -test-timeouts-enabled YES \
+            -default-test-execution-time-allowance 900 -maximum-test-execution-time-allowance 1200 \
+            -resultBundlePath .build/performance/Performance.xcresult -collect-test-diagnostics never \
+            "-only-testing:$(cat .build/performance/selector.txt)" test-without-building \
+            2>&1 | tee .build/performance/Performance.log
+      - name: Export available XCTest metrics, attachments and test results
+        if: always()
+        run: |
+          evidence=.build/performance
+          result="$evidence/Performance.xcresult"
+          if [[ -d "$result" ]]; then
+            xcrun xcresulttool get test-results summary --path "$result" --compact > "$evidence/test-summary.json" || echo '::warning::XCTest summary export unavailable.'
+            xcrun xcresulttool get test-results tests --path "$result" --compact > "$evidence/test-details.json" || echo '::warning::XCTest details export unavailable.'
+            xcrun xcresulttool get test-results metrics --path "$result" --compact > "$evidence/metrics.json" || echo '::warning::XCTest metric JSON export unavailable.'
+            xcrun xcresulttool export metrics --path "$result" --output-path "$evidence/metrics-csv" || echo '::warning::XCTest metrics CSV export unavailable.'
+            xcrun xcresulttool export attachments --path "$result" --output-path "$evidence/attachments" || echo '::warning::XCTest attachments export unavailable.'
+          fi
+      - name: Require exact test execution and complete performance evidence
+        shell: bash
+        run: |
+          evidence=.build/performance
+          python3 scripts/check_ios_test_results.py --selectors "$evidence/selector.txt" --expected-count 1 \
+            --summary "$evidence/test-summary.json" --tests "$evidence/test-details.json"
+          args=("$PERFORMANCE_CASE" --evidence "$evidence")
+          if [[ "$PERFORMANCE_CASE" != launch ]]; then
+            container=$(xcrun simctl get_app_container "$SIMULATOR_ID" dev.roominthecart.app data)
+            args+=(--fixture "$FIXTURE" --store "$container/Library/Application Support/RoomInTheCart/ledger.sqlite")
+          fi
+          if [[ "$ENFORCE_BASELINES" == true ]]; then
+            args+=(--baseline scripts/ios_performance_baselines.json)
+          fi
+          python3 scripts/check_ios_performance.py "${args[@]}"
+      - name: Retain Release performance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: iphone-performance-${{ matrix.case }}-${{ github.run_attempt }}
+          path: .build/performance/
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: ignore
