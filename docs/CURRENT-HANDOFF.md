@@ -161,7 +161,7 @@ Root owns Git staging/commits and final integration. Completed root lanes remain
 - Read `/Users/palatis/Downloads/Handoff/APP-BASELINE.md` first, then Foundation 2.1 `CODEX-MASTER.md`, detailed requirements and acceptance tests. The repository mirrors them in `docs/product`.
 - Business operator: **Venture House Group LLC**. Support: **hello@roominthecart.com**. Both are implemented in native/public source and canonical `config/public-contact.json`. No mailbox delivery or policy approval is implied.
 - The user authorizes as many **gpt-6.1-sol / xhigh** agents as needed and wants Dot/Lumpy as second in command. Old one-agent/Astra restrictions are superseded.
-- Apple membership and SMTP setup are explicitly deferred. Apple account is `terranceciszek@gmail.com`; only a Personal Team was available. Do not repeatedly prompt for these deferred items.
+- Apple membership and SMTP setup are explicitly deferred. Xcode showed a Personal Team for the owner’s account. Do not repeatedly prompt for these deferred items.
 - The user selected preparing **Epic Kids Web Services** integration, signed in, created its organization and personally accepted its terms. Exact official protocol is documented and implemented locally. The agent has not published Test configuration, provisioned credentials, sent real verification emails or activated child networking.
 - Earlier authorization for backend 009–010 covered local installation, not deployment or enabling provider deletion. No newer staging migrations or deployment were performed during this resumed work.
 
