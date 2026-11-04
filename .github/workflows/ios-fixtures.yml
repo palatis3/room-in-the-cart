@@ -68,9 +68,11 @@ jobs:
           xcodebuild -xctestrun "${test_runs[0]}" \
             -destination "platform=iOS Simulator,id=$SIMULATOR_ID" -parallel-testing-enabled NO \
             -enumerate-tests -test-enumeration-style flat -test-enumeration-format json \
-            -test-enumeration-output-path "$PWD/.build/test-enumeration.json" test-without-building
+            -test-enumeration-output-path "$PWD/.build/test-enumeration.json" test-without-building \
+            2>&1 | tee .build/test-enumeration.log
           python3 scripts/plan_ios_fixture_tests.py plan "$FIXTURE_PROFILE" \
-            --enumeration .build/test-enumeration.json --output-dir .build/test-plan
+            --enumeration .build/test-enumeration.json --output-dir .build/test-plan \
+            2>&1 | tee .build/test-planning.log
           cp .build/test-enumeration.json .build/test-plan/
           tar -czf "$RUNNER_TEMP/iphone-fixture-products.tar.gz" \
             -C .build/DerivedData/Build Products -C "$GITHUB_WORKSPACE/.build" test-plan
@@ -82,6 +84,18 @@ jobs:
           compression-level: 0
           retention-days: 7
           if-no-files-found: error
+      - name: Retain fixture discovery diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: iphone-fixture-discovery-${{ env.FIXTURE_PROFILE }}-${{ github.run_attempt }}
+          include-hidden-files: true
+          path: |
+            .build/test-enumeration.json
+            .build/test-enumeration.log
+            .build/test-planning.log
+          retention-days: 7
+          if-no-files-found: ignore
 
   build-dinner:
     name: Build dinner decision fixture

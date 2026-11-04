@@ -3,8 +3,8 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from plan_ios_fixture_tests import (MICROPHONE_PROBE, UI_SOURCES, UI_TARGET, make_plan, matrix,
-                                    source_inventory, suites_for, write_plan)
+from plan_ios_fixture_tests import (LIBRARY_PRIVACY_HELPER, MICROPHONE_PROBE, UI_SOURCES, UI_TARGET, make_plan,
+                                    matrix, source_inventory, suites_for, write_plan)
 
 
 ORDINARY_TEST = f"{UI_TARGET}/FreeJourneyUITests/testCancellingSystemShareKeepsTheFrozenPickupUnplaced"
@@ -63,6 +63,34 @@ class PlanIOSFixtureTests(unittest.TestCase):
             with self.subTest(tests=len(tests)):
                 with self.assertRaisesRegex(ValueError, f"Compiled fixture tests differ for {suite}"):
                     make_plan(enumeration(tests), "contributor", self.inventory)
+
+    def test_accepts_only_the_known_methodless_contributor_helper_suite(self):
+        enabled = self.enabled_for("contributor")
+        helper = {"identifier": LIBRARY_PRIVACY_HELPER}
+        source = enumeration(enabled)
+        source["values"][0]["enabledTests"].append(helper)
+        self.assertEqual(make_plan(source, "contributor", self.inventory),
+                         make_plan(enumeration(enabled), "contributor", self.inventory))
+
+        source["values"][0]["enabledTests"].append(helper)
+        with self.assertRaisesRegex(ValueError, "Duplicate Xcode test selector"):
+            make_plan(source, "contributor", self.inventory)
+
+        for profile, key, identifier in (("dinner", "enabledTests", LIBRARY_PRIVACY_HELPER),
+                                         ("contributor", "disabledTests", LIBRARY_PRIVACY_HELPER),
+                                         ("contributor", "enabledTests", f"{UI_TARGET}/UnknownUITestCase")):
+            with self.subTest(profile=profile, key=key, identifier=identifier):
+                source = enumeration(self.enabled_for(profile))
+                source["values"][0][key].append({"identifier": identifier})
+                with self.assertRaisesRegex(ValueError, f"Invalid Xcode test identifier in {key}"):
+                    make_plan(source, profile, self.inventory)
+
+    def test_rejects_a_compiled_method_on_the_helper_even_if_disabled(self):
+        enabled = self.enabled_for("contributor")
+        method = f"{LIBRARY_PRIVACY_HELPER}/testUnexpected"
+        for source in (enumeration([*enabled, method]), enumeration(enabled, [STOREKIT_TEST, method])):
+            with self.assertRaisesRegex(ValueError, "fixture helper must not contain test methods"):
+                make_plan(source, "contributor", self.inventory)
 
     def test_rejects_disabled_fixture_even_when_other_methods_in_same_class_run(self):
         enabled = self.enabled_for("contributor")

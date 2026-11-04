@@ -33,6 +33,7 @@ PROFILES = {
     },
     "dinner": {"DINNER_DECISION_UI_FIXTURE": ("DinnerDecisionSheetUITests",)},
 }
+LIBRARY_PRIVACY_HELPER = f"{UI_TARGET}/LibraryPrivacyUITestCase"
 MICROPHONE_PROBE = f"{UI_TARGET}/FreeJourneyUITests/testNativeMicrophoneRefusalLeavesTypedCaptureReviewable"
 CONDITIONAL = re.compile(r"^[ \t]*#(?:if|elseif)\s+([^\n]+)", re.MULTILINE)
 FIXTURE_GATE = re.compile(r"\b[A-Z][A-Z_0-9]*_UI_FIXTURE\b")
@@ -78,6 +79,18 @@ def matrix():
                         for profile in PROFILES for suite in suites_for(profile)]}
 
 
+def read_enabled_identifiers(configuration, profile, seen):
+    cases = configuration.get("enabledTests")
+    if profile == "contributor" and isinstance(cases, list):
+        # Xcode 26.3 lists this methodless base XCTestCase as a flat suite entry.
+        helper = [case for case in cases if isinstance(case, dict) and case.get("identifier") == LIBRARY_PRIVACY_HELPER]
+        if len(helper) > 1:
+            raise ValueError(f"Duplicate Xcode test selector: {LIBRARY_PRIVACY_HELPER}")
+        if helper:
+            configuration = {**configuration, "enabledTests": [case for case in cases if case != helper[0]]}
+    return read_identifiers(configuration, "enabledTests", seen)
+
+
 def make_plan(enumeration, profile, inventory):
     if not isinstance(enumeration, dict) or enumeration.get("errors") != []:
         raise ValueError("Xcode enumeration is invalid or reported errors")
@@ -89,13 +102,15 @@ def make_plan(enumeration, profile, inventory):
     if not isinstance(test_plan, str) or not test_plan:
         raise ValueError("Xcode test configuration is missing its test plan")
     seen = set()
-    enabled = read_identifiers(configuration, "enabledTests", seen)
+    enabled = read_enabled_identifiers(configuration, profile, seen)
     disabled = read_identifiers(configuration, "disabledTests", seen)
 
     suites = suites_for(profile)
     other_suites = set(inventory) - set(suites)
     for identifier in enabled + disabled:
         test_selector = selector(identifier)
+        if test_selector.startswith(LIBRARY_PRIVACY_HELPER + "/"):
+            raise ValueError(f"The library privacy fixture helper must not contain test methods: {identifier}")
         target, suite, _ = test_selector.split("/")
         if test_selector == MICROPHONE_PROBE or (target == UI_TARGET and suite in other_suites):
             raise ValueError(f"Incompatible test compiled for {profile}: {identifier}")
