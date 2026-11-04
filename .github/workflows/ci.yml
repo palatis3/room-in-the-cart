@@ -120,15 +120,8 @@ jobs:
         run: |
           python3 scripts/generate_theme.py --check
           python3 scripts/check_localization.py
-          python3 scripts/test_check_localization.py
-          python3 scripts/test_app_configuration.py
           python3 scripts/generate_xcode_project.py --check
-          python3 scripts/test_plan_ios_tests.py
-          python3 scripts/test_plan_ios_fixture_tests.py
-          python3 scripts/test_plan_ios_performance_tests.py
-          python3 scripts/test_check_ios_test_results.py
-          python3 scripts/test_check_release_code_scanning.py
-          python3 scripts/test_check_ios_performance.py
+          python3 -m unittest discover -s scripts -p 'test_*.py'
           bash -n scripts/run_ios_test_shard.sh
   swift-packages:
     runs-on: macos-15
