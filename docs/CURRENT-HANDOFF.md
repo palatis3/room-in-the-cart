@@ -14,6 +14,8 @@ The latest authorized assignment to Lumpy's `Offer main workflow help` chat retu
 
 The companion web app now saves an opted-in request if the connection drops before the send-time session check. It uses the last checked contributor scope and an unexpired replay window for local storage. The original command still requires an explicit retry under fresh authorization. The compiled app's local browser run covered reload, receipt and revoked-access cleanup. [Offline queue validation](evidence/b11/web-offline-queue-20261104/validation.json)
 
+Native contributor requests now save after a transport failure before send if the current enrollment has an unexpired replay window. The existing protected outbox retains the original command and waits for an authorized retry. All 529 current native model cases passed and the updated unsigned Release archive compiled with both notice languages. The ordinary UI run above retains its earlier frozen source. [Native offline validation](evidence/native/contributor-offline-20261104/validation.json)
+
 ## Previous checkpoint — November 4, quarantine restore window
 
 Migration 029 and the restore operator verify a complete signed archive window before recording its plan in quarantine. Each segment waits for the previous segment's local erasure receipts. The gate checks the entire staged window, and the tool refuses a quarantine that application logins can access.

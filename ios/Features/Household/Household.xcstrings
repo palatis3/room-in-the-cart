@@ -4583,6 +4583,22 @@
         }
       }
     },
+    "Saved on this iPhone. Retry when you are connected.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved on this iPhone. Retry when you are connected."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardada en este iPhone. Vuelve a intentarlo cuando tengas conexión."
+          }
+        }
+      }
+    },
     "Scope": {
       "localizations": {
         "en": {

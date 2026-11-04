@@ -94,6 +94,71 @@ import DeviceSurfaces
         XCTAssertEqual(reopened.requests.first?.originalItem, review.item)
         XCTAssertEqual(fixture.privateReads, 0)
     }
+    func testOfflineBeforeSendQueuesExactRequestUntilAnAuthorizedRetryAfterRestart() async throws {
+        let queue = location(); defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
+        let fixture = ContributorCaptureFixture(), device = ContributorCaptureVault()
+        let first = try await model(fixture, queue: queue, deviceVault: device)
+        first.item = "Rice"; first.quantity = "2 bags"
+        let review = try ContributorRequestReview.typed(scope: XCTUnwrap(first.contributorRequestScope))
+        fixture.windowFailure = .offline
+        await first.sendRequest(reviewed: review, approved: true)
+        guard case .waiting = first.delivery else { return XCTFail("A reviewed offline request must wait in the local outbox") }
+        XCTAssertTrue(fixture.commands.isEmpty)
+        XCTAssertTrue(first.requests.isEmpty)
+        let outbox = OperationOutbox(url: queue)
+        let operations = try await outbox.operations()
+        let pending = try XCTUnwrap(operations.first)
+        XCTAssertEqual(operations.count, 1)
+        let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: pending.bytes)
+        XCTAssertEqual(envelope.replayWindow, fixture.windowID)
+        XCTAssertEqual(envelope.body["originalItem"], .string("Rice"))
+        XCTAssertEqual(envelope.body["ownQuantity"], .string("2 bags"))
+
+        fixture.windowFailure = nil
+        let reopened = try await model(fixture, queue: queue, deviceVault: device)
+        guard case .waiting = reopened.delivery else { return XCTFail("Authorized restart must recover the pending request") }
+        XCTAssertTrue(fixture.commands.isEmpty)
+        await reopened.retry()
+        XCTAssertEqual(fixture.commands, [pending.bytes])
+        XCTAssertEqual(reopened.requests.first?.originalItem, "Rice")
+        let remaining = try await outbox.operations()
+        XCTAssertTrue(remaining.isEmpty)
+    }
+    func testOfflineWithoutUsableWindowAndExplicitDenialNeverQueue() async throws {
+        for failure in [ContributorCaptureFixture.WindowFailure.offline, .revoked] {
+            let queue = location(); defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
+            let fixture = ContributorCaptureFixture()
+            if failure == .offline { fixture.windowExpiry = "2000-01-01T00:00:00.000Z" }
+            let model = try await model(fixture, queue: queue)
+            model.item = "Rice"
+            let review = try ContributorRequestReview.typed(scope: XCTUnwrap(model.contributorRequestScope))
+            fixture.windowFailure = failure
+            await model.sendRequest(reviewed: review, approved: true)
+            XCTAssertTrue(fixture.commands.isEmpty)
+            let operations = try await OperationOutbox(url: queue).operations()
+            XCTAssertTrue(operations.isEmpty)
+            if failure == .revoked { XCTAssertNil(model.projection) }
+            else { XCTAssertEqual(model.item, "Rice") }
+        }
+    }
+    func testRevokedEnrollmentClearsAnOfflineRequestBeforeSending() async throws {
+        let queue = location(); defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
+        let fixture = ContributorCaptureFixture(), model = try await model(fixture, queue: queue)
+        model.item = "Rice"
+        let review = try ContributorRequestReview.typed(scope: XCTUnwrap(model.contributorRequestScope))
+        fixture.windowFailure = .offline
+        await model.sendRequest(reviewed: review, approved: true)
+        guard case .waiting = model.delivery else { return XCTFail("The offline review must be queued first") }
+
+        fixture.windowFailure = nil
+        fixture.enrollmentRevoked = true
+        await model.retry()
+        XCTAssertEqual(model.delivery, .accessEnded)
+        XCTAssertNil(model.projection)
+        XCTAssertTrue(fixture.commands.isEmpty)
+        let remaining = try await OperationOutbox(url: queue).operations()
+        XCTAssertTrue(remaining.isEmpty)
+    }
     func testDraftMutationWhilePreparingCannotSendAnUnreviewedBody() async throws {
         let queue = location(); defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
         let fixture = ContributorCaptureFixture(), model = try await model(fixture, queue: queue)
@@ -140,7 +205,11 @@ import DeviceSurfaces
 }
 
 private final class ContributorCaptureFixture: @unchecked Sendable {
+    enum WindowFailure { case offline, revoked }
     let household = UUID().uuidString.lowercased(), member = UUID().uuidString.lowercased(), shop = UUID().uuidString.lowercased()
+    let windowID = UUID().uuidString.lowercased()
+    var windowExpiry = "2099-01-01T00:00:00.000Z", windowFailure: WindowFailure?
+    var enrollmentRevoked = false
     var commands: [Data] = [], rows: [[String: Any]] = [], receipts: [String: [String: Any]] = [:]
     var loseReply = false, privateReads = 0
     var replayStarted: XCTestExpectation?, replayGate: DispatchSemaphore?
@@ -156,9 +225,17 @@ private final class ContributorCaptureFixture: @unchecked Sendable {
         if path == "/auth/v1/user" { return try response(["id":"sam","email_confirmed_at":"date"]) }
         if path == "/v1/me/workspaces" { return try response(["workspaces":[["householdId":household,"label":"Home","role":"contributor"]]]) }
         if path.hasSuffix("/devices") { return try response(["deviceId":"sam-device","deviceToken":"sam-device-token"],201) }
-        if path.hasSuffix("/bootstrap") { return try response(["household":["id":household,"label":"Home"],"memberId":member,"role":"contributor","shopId":shop,"enrolled":true,"queueConsent":false,"capabilities":["own_requests"]]) }
+        if path.hasSuffix("/bootstrap") {
+            if enrollmentRevoked { return try response(["error": ["code": "access_ended"]], 403) }
+            return try response(["household":["id":household,"label":"Home"],"memberId":member,"role":"contributor","shopId":shop,"enrolled":true,"queueConsent":false,"capabilities":["own_requests"]])
+        }
         if path.hasSuffix("/requests/mine") { return try response(["requests":rows,"nextCursor":NSNull()]) }
-        if path.hasSuffix("/replay-windows") { replayStarted?.fulfill(); _ = replayGate?.wait(timeout: .now() + 5); return try response(["id":UUID().uuidString.lowercased(),"expiresAt":"2099-01-01T00:00:00Z"]) }
+        if path.hasSuffix("/replay-windows") {
+            replayStarted?.fulfill(); _ = replayGate?.wait(timeout: .now() + 5)
+            if windowFailure == .offline { throw URLError(.notConnectedToInternet) }
+            if windowFailure == .revoked { return try response(["error": ["code": "access_ended"]], 403) }
+            return try response(["id":windowID,"expiresAt":windowExpiry])
+        }
         if path.hasSuffix("/commands") {
             commands.append(data)
             let key = json["clientKey"] as! String

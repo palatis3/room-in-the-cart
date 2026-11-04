@@ -52,6 +52,7 @@ import HouseholdClient
     private var generation = UUID()
     private var contributorEnrollmentRevision = UUID()
     private var contributorDeviceID: String?
+    private var contributorReplayWindow: (value: ReplayWindow, expiresAt: Date)?
 
     init(bundle: Bundle = .main, auth: AdultAuth? = nil, service: HouseholdService? = nil, outboxURL: URL? = nil, deletionVault: (any RefreshTokenVault)? = nil, exitVault: (any RefreshTokenVault)? = nil, guardianVault: (any RefreshTokenVault)? = nil, guardianChildOnly: Bool = false) {
         self.guardianChildOnly = guardianChildOnly
@@ -137,6 +138,7 @@ import HouseholdClient
     }
     private func finishEnrollment(_ value: HouseholdBootstrap, start: UUID) async throws {
         contributorEnrollmentRevision = UUID()
+        contributorReplayWindow = nil
         try validateGuardianChildProjection(value)
         guard let service else { throw ClientError.configuration }
             projection = value
@@ -146,6 +148,7 @@ import HouseholdClient
                 let page = try await service.ownRequests()
                 guard start == generation else { return }
                 requests = page.requests; nextRequestCursor = page.nextCursor
+                try await prefetchContributorReplayWindow(service, start: start)
             }
             // Old device-bound operations require review; never attach them to this new enrollment.
             let old = try await outbox.operations()
@@ -212,6 +215,7 @@ import HouseholdClient
                 prior.role != fresh.role || prior.shopId != fresh.shopId || prior.grantId != fresh.grantId ||
                 Set(prior.capabilities) != Set(fresh.capabilities)
             if scopeChanged {
+                contributorReplayWindow = nil
                 onScopeChange?()
                 cancelEdit()
                 requests = []
@@ -225,6 +229,7 @@ import HouseholdClient
                 let page = try await service.ownRequests()
                 guard start == generation else { return }
                 requests = page.requests; nextRequestCursor = page.nextCursor
+                try await prefetchContributorReplayWindow(service, start: start)
             } else { requests = []; nextRequestCursor = nil }
         } catch { await show(error, start: start) }
     }
@@ -253,6 +258,25 @@ import HouseholdClient
             capabilities: projection.capabilities.sorted(), editing: editing, followingUp: followingUp,
             item: item, quantity: quantity, nextShop: forNextShop)
     }
+    private func rememberContributorReplayWindow(_ window: ReplayWindow) {
+        let parser = ISO8601DateFormatter()
+        parser.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let expiresAt = parser.date(from: window.expiresAt) ?? ISO8601DateFormatter().date(from: window.expiresAt)
+        guard UUID(uuidString: window.id) != nil, let expiresAt, expiresAt > Date() else {
+            contributorReplayWindow = nil
+            return
+        }
+        contributorReplayWindow = (window, expiresAt)
+    }
+    private func prefetchContributorReplayWindow(_ service: HouseholdService, start: UUID) async throws {
+        do {
+            let window = try await service.replayWindow()
+            guard start == generation else { throw ClientError.cancelled }
+            rememberContributorReplayWindow(window)
+        } catch let error as ClientError where error != .accessEnded && error != .sessionNeeded && error != .cancelled {
+            // Opening the authorized view still works if the optional offline window cannot be refreshed.
+        }
+    }
     func sendRequest(reviewed: ContributorRequestReview? = nil, approved: Bool = false) async {
         guard let service, let projection, let scope = contributorRequestScope else { return }
         if let reviewed, (!approved || reviewed.scope != scope) {
@@ -263,11 +287,21 @@ import HouseholdClient
         guard !text.isEmpty, text.utf16.count <= 240, amount.utf16.count <= 80 else { notice = ht("Enter an item up to 240 characters and a quantity up to 80 characters."); return }
         busy = true; notice = nil; defer { busy = false }; let start = generation
         do {
-            let window = try await service.replayWindow()
+            let window: ReplayWindow
+            let offline: Bool
+            do {
+                window = try await service.replayWindow()
+                offline = false
+            } catch ClientError.transport {
+                guard let cached = contributorReplayWindow, cached.expiresAt > Date() else { throw ClientError.transport }
+                window = cached.value
+                offline = true
+            }
             let deviceID = try await service.requestReviewDeviceID(bootstrap: projection)
             guard deviceID == scope.deviceID, start == generation, currentContributorRequestScope() == scope else {
                 if start == generation { notice = ht("This request or your access changed. Reopen request review before sending.") }; return
             }
+            if !offline { rememberContributorReplayWindow(window) }
             var body: [String: JSONValue] = ["originalItem": .string(text), "ownQuantity": amount.isEmpty ? .null : .string(amount)]
             let kind: String
             if let editing = scope.editing {
@@ -284,8 +318,9 @@ import HouseholdClient
             guard start == generation, currentContributorRequestScope() == scope else { return }
             try await outbox.append(operation)
             guard start == generation else { return }
-            pending = operation; attempts = 0; delivery = .waiting(operationID: operation.id)
-            await deliver(operation, start: start)
+            pending = operation; attempts = 0; retryAfter = .distantPast; delivery = .waiting(operationID: operation.id)
+            if offline { notice = ht("Saved on this iPhone. Retry when you are connected.") }
+            else { await deliver(operation, start: start) }
         } catch { await show(error, start: start) }
     }
     func edit(_ request: OwnRequest) {
@@ -479,6 +514,7 @@ import HouseholdClient
         lifecycle?.clearScope()
         shopperInbox?.clear(); shopperInbox = nil; sharedShop?.clear(); sharedShop = nil
         projection = nil; contributorDeviceID = nil; requests = []; nextRequestCursor = nil; pending = nil
+        contributorReplayWindow = nil
         delivery = .localDraft; attempts = 0; retryAfter = .distantPast; cancelEdit()
     }
     private func validateGuardianChildProjection(_ value: HouseholdBootstrap) throws {

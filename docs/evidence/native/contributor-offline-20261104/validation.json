@@ -1,0 +1,67 @@
+{
+  "recordedAtUTC": "2026-11-04T09:46:39.398912+00:00",
+  "sourceBaseCommit": "9fe23c0550f81e6bc8c7ecaa754fc454190b8ab8",
+  "referenceSourceManifest": "docs/evidence/native/current-build-20261103/polish/source-manifest.json",
+  "referenceSourceManifestSHA256": "f32b15dcd4992b4d9a23ba4d4546970207ef85aa361994267228e433efeaa001",
+  "sourceInputCount": 470,
+  "sourceInputsChangedSinceReference": {
+    "ios/Features/Household/Household.xcstrings": "b8e1c4fc625c632b3cfd37fbe37c10b6e0afd4470b8b8b69894a9e7f09609b74",
+    "ios/Features/Household/HouseholdModel.swift": "14aaa81e2bab44d4c823141f6e832c4b80da159fe1c20f0819fc79b0b5361a9c",
+    "ios/Resources/PrivacyInfo.xcprivacy": "00a04709e2034eb948b051abc761b2bf7f05693ada0e5c986569dbdaec968d27",
+    "ios/Tests/ContributorRequestCaptureTests.swift": "45c78cbff5879b6cad179762e376ed2226eb16c6838f057c0c517917b5bc389d",
+    "ios/UITests/HouseholdDevicesUITests.swift": "143865e9cc386d3fcea3121058da04c03fc54917178c16438f46998658f8cfb2"
+  },
+  "red": {
+    "resultBundle": ".build/NativeContributorOffline20261104/Red.xcresult",
+    "failure": "failed - A reviewed offline request must wait in the local outbox"
+  },
+  "model": {
+    "resultBundle": ".build/NativeContributorOffline20261104/Green.xcresult",
+    "passed": 529,
+    "failed": 0,
+    "skipped": 0,
+    "configuration": [
+      {
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "6002E6CC-3391-4F26-A1E8-5258860E239C",
+          "deviceName": "RITC Contributor Offline 20261104",
+          "modelName": "iPhone 17e",
+          "osBuildNumber": "24A434",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        },
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "passedTests": 529,
+        "skippedTests": 0,
+        "testPlanConfiguration": {
+          "configurationId": "1",
+          "configurationName": "Test Scheme Action"
+        }
+      }
+    ],
+    "newRegressions": [
+      "No command during offline review. A new model under the same authorized device restores the exact bytes and waits for explicit retry.",
+      "Expired or absent offline window and explicit denial leave the outbox empty.",
+      "Revocation detected on retry clears the pending record and posts no command."
+    ]
+  },
+  "release": {
+    "archive": ".build/NativeContributorOffline20261104/RoomInTheCart-OfflineContributor.xcarchive",
+    "bundleIdentifier": "dev.roominthecart.app",
+    "minimumOS": "17.0",
+    "version": "0.1.0",
+    "build": "1",
+    "executableSHA256": "2d72d96c7adb8cdf711fedb9c1e8ca01fdc3124094e63abf531bdce1709d6f21",
+    "manifestSHA256": "00a04709e2034eb948b051abc761b2bf7f05693ada0e5c986569dbdaec968d27",
+    "metadata": "pass",
+    "localizedOfflineNotice": [
+      "en",
+      "es"
+    ],
+    "architecture": "arm64",
+    "signing": "disabled for the local archive"
+  },
+  "scope": "Current native model suite with synthetic service transports, plus unsigned physical Release compilation and compiled resources. The separately running ordinary UI suite uses an earlier frozen snapshot. Physical iPhone, deployed service and mixed-device acceptance are separate."
+}
