@@ -563,7 +563,7 @@ import XCTest
         fill("Fictional original lunch", into: "Food name", requireDone: true)
         fill("2", into: "Protected amount", requireDone: true)
         fill("Original pickup only", into: "Purpose, such as lunch", requireDone: true)
-        openShoppingList(); tap(element("ledgerShopPicker")); tap(app.buttons["Start another pickup"])
+        openShoppingList(); startAnotherPickupFromList()
         fill("Different reservation pickup", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
         tap(app.tabBars.buttons["Dinners"])
         capture("S25-open-reservation-after-pickup-switch")
@@ -584,7 +584,7 @@ import XCTest
         openMealWeek()
         tap(element("dinnerWeekDisplay").buttons["Grid"])
         openShoppingList()
-        tap(element("ledgerShopPicker")); tap(app.buttons["Start another pickup"])
+        startAnotherPickupFromList()
         fill("Second fictional pickup", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
         tap(app.tabBars.buttons["Dinners"])
         XCTAssertTrue(app.navigationBars["This week"].waitForExistence(timeout: 8))
@@ -1007,6 +1007,22 @@ import XCTest
         // have restored a detail, so use the native Back controls to the root.
         shopRoot()
         tap(element("openPickupList"))
+    }
+    private func startAnotherPickupFromList() {
+        let picker = app.buttons["ledgerShopPicker"]
+        XCTAssertTrue(picker.waitForExistence(timeout: 8) && picker.isEnabled)
+        if ProcessInfo.processInfo.operatingSystemVersion.majorVersion == 17 && !picker.isHittable {
+            // iOS 17 can report no hit point for this visible SwiftUI menu.
+            let frame = picker.frame
+            let navigation = app.navigationBars.firstMatch.frame
+            let tabBar = app.tabBars.firstMatch.frame
+            XCTAssertFalse(frame.isEmpty)
+            XCTAssertTrue(app.frame.contains(frame) && frame.minY >= navigation.maxY && frame.maxY <= tabBar.minY)
+            picker.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        } else {
+            tap(picker)
+        }
+        tap(app.buttons["Start another pickup"])
     }
     private func back(to label: String) {
         returnToVisibleAnchor(app.buttons.matching(identifier: label).firstMatch)

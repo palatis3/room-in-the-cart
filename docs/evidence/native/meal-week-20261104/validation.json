@@ -127,7 +127,39 @@
     },
     "functionalRetests": {
       "spanishIOS27": {"result": ".build/MealWeekAccessibilityInline20261104/MealWeekListContrastDiagnostic.xcresult", "passed": 1, "seconds": 104.810, "scope": "Same meal and lunch IDs in both presentations, native Back and tab return, exact date note, restart and rediscovery with the corrected bidirectional search."},
-      "crossWeekIOS17": {"result": ".build/MealWeekAccessibilityInline20261104/MealWeekInlineMinimumOS.xcresult", "logSHA256": "01ebb83036d37c487dfbf830a611ef0f90a304fd3c10f310829e11aeac03bf9f", "passed": 1, "seconds": 169.671, "scope": "The same dinner moved across weeks and the protected lunch stayed on its original day after relaunch. The test uses the scoped iOS 17 logging accommodation."}
+      "crossWeekIOS17": {"result": ".build/MealWeekAccessibilityInline20261104/MealWeekInlineMinimumOS.xcresult", "logSHA256": "01ebb83036d37c487dfbf830a611ef0f90a304fd3c10f310829e11aeac03bf9f", "passed": 1, "seconds": 169.671, "scope": "The same dinner moved across weeks and the protected lunch stayed on its original day after relaunch. The test uses the scoped iOS 17 logging accommodation."},
+      "pickupScopeIOS17": {
+        "device": "iPhone SE, iOS 17.0 (21A328)",
+        "initialResult": ".build/MealWeekAccessibilityInline20261104/pickup-scope-minimum-os.xcresult",
+        "initialLogSHA256": "0f6553ac660f44685a5bbea7fb9040e649d0b0920f85b1df52c39117bd07192f",
+        "initialFailed": 2,
+        "menuCapture": ".build/MealWeekAccessibilityInline20261104/pickup-scope-menu-visible.png",
+        "menuCaptureSHA256": "8e60b31c768fe2cd78ee4d3e8750a723f3ac7055e04f0eff8594e2beb6a59cdb",
+        "result": ".build/MealWeekAccessibilityInline20261104/pickup-scope-corrected.xcresult",
+        "logSHA256": "87e45659cfd5d8f2cf6d2ed57406497971aaf944348f8c201089d7daab5e4f52",
+        "summarySHA256": "f5b77332974a895370a3452b9b205f0ded98915c2985e7ff3c35df7922c15ca9",
+        "testSourceSHA256": "4417e1b216513eae766e48473e6af3445cfc727b57feb85c6fa8d6f4d5c829e4",
+        "appDebugDylibSHA256BeforeAndAfter": "8022092764c17ae0173d8872819ea629866902b135f13c08519ae444f621934a",
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "runtimeWarnings": [],
+        "weekSeconds": 74.658,
+        "reservationSeconds": 44.079,
+        "scope": "The initial tests stalled because XCTest found the visible, enabled SwiftUI menu without a hit point. The rerun verified its complete frame and tapped its center. Both menus opened and the Start another pickup item worked. After switching, the previous week remained scoped to the original pickup. The former draft and its review action became inaccessible, and the new pickup opened a fresh reservation form."
+      }
+    },
+    "currentModels": {
+      "sourceCommit": "3510eb1d97d51958e80032475cb9a4de54a34805",
+      "configuration": "Ordinary arm64 Debug on iPhone 17e, iOS 27.0 (24A434)",
+      "result": ".build/CurrentOrdinary3510eb1/ordinary-models.xcresult",
+      "logSHA256": "cb3d61f2dc30a7f84b78c7ee3c484871a9cc2f0af7f2fbb59fb0c0b238248d94",
+      "summarySHA256": "077a4dac58c8b0d089cf1705f233349d9ce22267a7bd1738441e1ae4f3f59ab0",
+      "appDebugDylibSHA256": "7270ccca0337bd8c9c00a095953cb2e61cf7c4d05ce6a6b04b02d68f36285e93",
+      "passed": 563,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": []
     },
     "largestSystemText": {
       "result": ".build/MealWeekAccessibilityInline20261104/largest-system-complete-frames.xcresult",
