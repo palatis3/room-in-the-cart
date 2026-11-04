@@ -60,6 +60,45 @@ import Combine
         XCTAssertTrue(model.hasPaidAccess)
     }
 
+    func testSubscribeRecoversAnUnfinishedPurchaseBeforeAskingAppleForAnother() async {
+        let service = FakeMembershipService(snapshot: snapshot())
+        let store = FakeMembershipStorefront()
+        store.unfinished = [.verified(transaction(token: context.appAccountToken))]
+        let model = makeModel(service, store)
+        await model.loadOffer()
+
+        await model.purchase()
+
+        XCTAssertEqual(store.purchaseCount, 0)
+        XCTAssertEqual(service.submissions, 1)
+        XCTAssertEqual(store.finished, ["1001"])
+        XCTAssertTrue(model.hasPaidAccess)
+        XCTAssertFalse(model.canPurchase)
+    }
+
+    func testPendingDeliveryKeepsSubscribeClosedUntilRestoreReconciles() async {
+        let service = FakeMembershipService(snapshot: snapshot())
+        service.error = .deliveryPending
+        let store = FakeMembershipStorefront()
+        let model = makeModel(service, store)
+        let outcome = MembershipPurchaseOutcome.verified(transaction(token: context.appAccountToken))
+        await model.loadOffer()
+        await model.receive(outcome)
+
+        XCTAssertFalse(model.canPurchase)
+        await model.purchase()
+        XCTAssertEqual(store.purchaseCount, 0)
+        XCTAssertTrue(store.finished.isEmpty)
+
+        service.error = nil
+        store.unfinished = [outcome]
+        await model.restore()
+        XCTAssertEqual(service.submissions, 2)
+        XCTAssertEqual(store.finished, ["1001"])
+        XCTAssertEqual(model.notice, .restored)
+        XCTAssertTrue(model.hasPaidAccess)
+    }
+
     func testNonDurableAndMismatchedAcknowledgmentsNeverFinish() async {
         for badReceipt in [MembershipDeliveryReceipt(acceptedTransactionID: "1001", durable: false, snapshot: snapshot()),
                            MembershipDeliveryReceipt(acceptedTransactionID: "9999", durable: true, snapshot: snapshot())] {
@@ -607,6 +646,7 @@ import Combine
     var current: [MembershipPurchaseOutcome] = []
     var unfinished: [MembershipPurchaseOutcome] = []
     var syncCount = 0
+    var purchaseCount = 0
     var onFinish: (() -> Void)?
     var keepsUpdatesOpen = false
     var observerStarts = 0
@@ -616,7 +656,10 @@ import Combine
     func load(productID: String) async throws -> MembershipOffer {
         .init(productID: productID, displayName: "Test Household", displayPrice: "€51,99", periodValue: 1, periodUnit: .year)
     }
-    func purchase(appAccountToken: UUID) async throws -> MembershipPurchaseOutcome { .pending }
+    func purchase(appAccountToken: UUID) async throws -> MembershipPurchaseOutcome {
+        purchaseCount += 1
+        return .pending
+    }
     func currentTransactions() async -> [MembershipPurchaseOutcome] { current }
     func unfinishedTransactions() async -> [MembershipPurchaseOutcome] { unfinished }
     func updates() -> AsyncStream<MembershipPurchaseOutcome> {

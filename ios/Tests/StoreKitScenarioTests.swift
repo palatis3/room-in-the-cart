@@ -81,6 +81,13 @@ import StoreKitTest
         assertFree(model)
         let pending = await storefront.unfinishedTransactions()
         XCTAssertTrue(pending.contains { id($0) == transaction.transactionID })
+        let purchaseIDs = session.allTransactions().map(\.identifier)
+        await model.purchase()
+        XCTAssertEqual(session.allTransactions().map(\.identifier), purchaseIDs)
+        XCTAssertEqual(model.notice, .failed(.notConfigured))
+        let stillUnfinished = await storefront.unfinishedTransactions()
+        XCTAssertTrue(stillUnfinished.contains { id($0) == transaction.transactionID })
+        assertFree(model)
     }
 
     func testRealTransactionObserverAttemptsDeliveryWithoutUnlock() async throws {

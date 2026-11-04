@@ -43,7 +43,13 @@ import SwiftUI
         default: return false
         }
     }
-    var canPurchase: Bool { !isStopped && configuration.isReady && context?.appAccountToken != nil && offer != nil && !isBusy }
+    var canPurchase: Bool {
+        !isStopped && configuration.isReady && context?.appAccountToken != nil && offer != nil && !isBusy && canStartNewPurchase
+    }
+
+    private var canStartNewPurchase: Bool {
+        !canManageSeats && inFlightTransactions.isEmpty && notice != .failed(.deliveryPending)
+    }
 
     /// Retain at app scope; calling this from a settings screen as well is idempotent.
     func start() async {
@@ -139,6 +145,17 @@ import SwiftUI
         isBusy = true
         let session = generation
         defer { isBusy = false }
+        // A previous purchase can still be awaiting service delivery after a relaunch.
+        let unfinished = await storefront.unfinishedTransactions()
+        guard session == generation else { return }
+        if !unfinished.isEmpty {
+            for outcome in unfinished {
+                guard session == generation else { return }
+                await receive(outcome)
+            }
+            return
+        }
+        guard canStartNewPurchase else { return }
         do {
             let result = try await storefront.purchase(appAccountToken: appAccountToken)
             guard session == generation else { return }

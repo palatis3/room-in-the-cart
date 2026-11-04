@@ -698,19 +698,19 @@
         }
       }
     },
-    "We could not confirm delivery to your household. Try again when connected; do not purchase again. Your Free work is preserved.": {
+    "Purchase delivery is pending. Use Restore Purchases when connected. You can use Free while waiting.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "We could not confirm delivery to your household. Try again when connected; do not purchase again. Your Free work is preserved."
+            "value": "Purchase delivery is pending. Use Restore Purchases when connected. You can use Free while waiting."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "No pudimos confirmar la entrega a tu hogar. Inténtalo al conectarte; no vuelvas a comprar. Se conserva tu trabajo gratuito."
+            "value": "La entrega de tu compra está pendiente. Usa Restaurar compras cuando tengas conexión. Puedes usar las funciones gratuitas mientras esperas."
           }
         }
       }

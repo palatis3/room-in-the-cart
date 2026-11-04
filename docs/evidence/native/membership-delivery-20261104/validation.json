@@ -1,0 +1,55 @@
+{
+  "baseCommit": "28965d6ce64f1872e9143a226afa9b78d21ed265",
+  "toolchain": "Xcode 27.1 (27A9275)",
+  "sourceSHA256": {
+    "ios/Features/Membership/MembershipModel.swift": "7f86bdd5b0c76dba3e099ce5dc88a3ce3f98d8c76c660f87f1b96039eaa240b6",
+    "ios/Features/Membership/MembershipView.swift": "b6daf1142608ecd77567cefbb13f86e051c1459836e5cbb5ddf84e47137e0347",
+    "ios/Features/Membership/Membership.xcstrings": "a66f2c29b12edbbe7398970fd61cbb9aea7253110b08e68343f5c6db2ba0fe32",
+    "ios/Tests/MembershipTests.swift": "2df73e7279be342952972a21c7ea9d1ad852ba2177586fbc56021ec1f2db2148",
+    "ios/Tests/StoreKitScenarioTests.swift": "30e16605eed652ab06541b61985cd5a6219d19637a54764fa7b8281528cd21fa"
+  },
+  "beforeFix": {
+    "result": ".build/MembershipDelivery20261104/Red.xcresult",
+    "regressionsFailed": 2,
+    "scope": "Both targeted cases reproduced a call to purchase while an earlier transaction still needed service delivery."
+  },
+  "modelTests": {
+    "result": ".build/MembershipDelivery20261104/Models.xcresult",
+    "os": "iOS 27.0",
+    "passed": 532,
+    "failed": 0
+  },
+  "localStoreKit": {
+    "minimum": {
+      "result": ".build/MembershipDelivery20261104/StoreKitMinimumOS.xcresult",
+      "log": ".build/MembershipDelivery20261104/storekit-minimum.log",
+      "os": "iOS 17.0",
+      "englishPassed": 15,
+      "spanishPassed": 15,
+      "failed": 0,
+      "skipped": 0
+    },
+    "currentFocused": {
+      "result": ".build/MembershipDelivery20261104/StoreKitCurrentFocused.xcresult",
+      "log": ".build/MembershipDelivery20261104/storekit-current.log",
+      "os": "iOS 27.0",
+      "passedExecutions": 5,
+      "failedExecutions": 1,
+      "failure": "The English unavailable-delivery purchase scenario exceeded the one-minute test allowance."
+    },
+    "isolatedRerun": {
+      "result": ".build/MembershipDelivery20261104/StoreKitEnglishRerun.xcresult",
+      "os": "iOS 27.0",
+      "passed": 1,
+      "failed": 0
+    }
+  },
+  "archive": {
+    "path": ".build/MembershipDelivery20261104/RoomInTheCart-MembershipDelivery.xcarchive",
+    "binaryUUID": "3F281D65-8DE5-3076-A09D-02C676A190B3",
+    "executableSHA256": "de00f99461527a03fcd61606311514fa517f360e1cf0d39388f41a545e28f58c",
+    "builtAppMetadataCheck": "passed",
+    "signed": false
+  },
+  "scope": "StoreKit retains the same unfinished transaction and Free access when the service cannot confirm delivery. Actual sandbox lifecycle, signed-device recovery and server acceptance remain separate release gates."
+}

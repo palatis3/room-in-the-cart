@@ -28,7 +28,7 @@ Do not interpret a normal suite's skip as a StoreKit pass. A local plan should e
 ## Scope of the scenarios
 
 - Annual StoreKit product, localized display name and price, one-year term, Family Sharing disabled.
-- Actual purchase has the expected account token; unavailable service delivery grants no paid access and leaves the transaction unfinished.
+- Actual purchase has the expected account token. Unavailable service delivery leaves Free access and the same unfinished transaction after a repeat Subscribe action.
 - Actual transaction updates reach the app's observer but do not grant paid access.
 - New adapter/model and explicit AppStore.sync replay unfinished delivery without restoring a local paid snapshot.
 - Ask to Buy pending, approval, and decline for a fresh customer.
@@ -60,3 +60,5 @@ Both iOS 27 runtimes failed the fresh-customer decline and the same-SKU sequence
 The initial 14-method run also captured the Spanish metadata-locale mismatch. The next full run reproduced the Ask to Buy failure in both languages, and the isolated decline passed in both. [Initial run](../../../docs/evidence/native/local-storekit-initial-summary.json) · [Second full run](../../../docs/evidence/native/local-storekit-second-summary.json) · [Isolated decline](../../../docs/evidence/native/dot-storekit-decline-summary.json)
 
 Apple sandbox purchases, signed-device checks, durable server verification and TestFlight remain separate acceptance gates.
+
+The purchase recovery change passed all 15 iOS 17 scenarios in each locale. On iOS 27, the focused offer, unavailable-delivery purchase and restore checks passed in Spanish. The English offer and restore checks passed, and the English purchase check passed when rerun alone after reaching the initial one-minute timeout. [Purchase recovery evidence](../../../docs/evidence/native/membership-delivery-20261104/validation.json)

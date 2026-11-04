@@ -139,7 +139,7 @@ struct MembershipView: View {
             case .membershipInactive: return mtr("Household access is inactive. Your Free work remains available.")
             case .notPurchaser: return mtr("Your named seat uses this household’s membership. Only its purchaser can subscribe or change seats.")
             case .refreshRequired: return mtr("Membership changed. Refresh its status and review the seat change again.")
-            case .deliveryPending: return mtr("We could not confirm delivery to your household. Try again when connected; do not purchase again. Your Free work is preserved.")
+            case .deliveryPending: return mtr("Purchase delivery is pending. Use Restore Purchases when connected. You can use Free while waiting.")
             }
         }
     }
