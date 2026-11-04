@@ -92,6 +92,51 @@ import XCTest
 }
 
 @MainActor final class RecipeLibraryAcceptanceUITests: LibraryPrivacyUITestCase {
+    func testImportedRecipeQuantityDismissesKeyboardAndRequiresExplicitPickupChoice() {
+        launch("--recipe-library-fixture")
+        XCTAssertTrue(app.navigationBars["Data and recovery"].waitForExistence(timeout: 25))
+        chooseRecipeFile()
+        assertLibraryPreview()
+        tap(element("records.applyImport"))
+        assertSavedRecipes(3)
+
+        tap(button("records.recovered.Arroz sin cambiar"))
+        tap(app.buttons["Open saved recipe"])
+        XCTAssertTrue(app.navigationBars["Saved recipe"].waitForExistence(timeout: 10))
+        assertText("three plates + lunch")
+        assertText("2 cans (15 oz) tomatoes")
+        tap(app.buttons["Review for this pickup"])
+        XCTAssertTrue(app.navigationBars["Dinner for this pickup"].waitForExistence(timeout: 10))
+        enterMealAmount("3", in: app.textFields["ledgerDinnerServings"])
+        enterMealAmount("2", in: app.textFields["Amount, unknown if blank"].firstMatch)
+        tap(element("ledgerReviewDinner"))
+        assertText("Servings: 3")
+        assertText("2 items")
+        XCTAssertTrue(waitForLabel("fixture.library.sourceUnchanged", "E01 local source unchanged: yes"))
+
+        tap(element("ledgerSaveDinner"))
+        XCTAssertTrue(app.navigationBars["Saved recipe"].waitForExistence(timeout: 10))
+        assertText("three plates + lunch")
+        assertText("2 cans (15 oz) tomatoes")
+        XCTAssertTrue(waitForLabel("fixture.library.sourceUnchanged", "E01 local source unchanged: no"))
+        XCTAssertTrue(waitForLabel("fixture.library.recipeCount", "E01 saved recipes: 3"))
+        capture("E01 original recipe after explicit pickup choice")
+    }
+
+    private func enterMealAmount(_ value: String, in field: XCUIElement) {
+        tap(field)
+        XCTAssertTrue(field.value as? String == field.placeholderValue || field.value as? String == "", field.debugDescription)
+        app.typeText(value)
+        XCTAssertEqual(field.value as? String, value)
+        let keyboard = app.keyboards.firstMatch
+        XCTAssertTrue(keyboard.exists)
+        let done = app.buttons["ledgerMealKeyboardDone"]
+        XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable)
+        done.tap()
+        let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: keyboard)
+        XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
+    }
+
     func testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo() {
         launch("--recipe-library-fixture")
         XCTAssertTrue(app.navigationBars["Data and recovery"].waitForExistence(timeout: 25))

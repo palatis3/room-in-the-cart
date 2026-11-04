@@ -230,7 +230,7 @@ struct LedgerMealEditor: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() }.disabled(model.saving) }
             }.interactiveDismissDisabled(model.saving)
-            .keyboardDoneAction(visible: inputFocus != nil, title: ledgerText("Done")) { inputFocus = nil }
+            .keyboardDoneAction(visible: inputFocus != nil, title: ledgerText("Done"), identifier: "ledgerMealKeyboardDone") { inputFocus = nil }
     }
     private func separated(_ text: String) -> [String] {
         text.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }

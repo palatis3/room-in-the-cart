@@ -1,0 +1,21 @@
+{
+  "commit": "b66b134ef65e2c5cd42398736c3164b9db123728",
+  "device": "iPhone 17e, iOS 27.0 (24A434)",
+  "toolchain": "Xcode 27.1 (27A9275)",
+  "result": ".build/NativeIntegratedCurrent20261104/OrdinaryCurrent.xcresult",
+  "summary": ".build/NativeIntegratedCurrent20261104/summary.json",
+  "summarySHA256": "6998fcab0e462725a0f69ca70bfc7baf29c8da8d54229110738acb8071884d88",
+  "totalSeconds": 3691.612,
+  "modelTestsPassed": 529,
+  "uiTestsPassed": 37,
+  "failed": 0,
+  "skipped": 0,
+  "runtimeWarnings": [{"message": "Invalid frame dimension (negative or non-finite).", "count": 15}],
+  "priorFailureRechecks": {
+    "fullyCoveredStock": "passed in 91.353 seconds",
+    "partialStockOnePack": "passed in 106.927 seconds",
+    "savedOfferReopen": "passed in 561.068 seconds",
+    "ownerExportAndRecordsCancellation": "passed in 85.068 seconds"
+  },
+  "scope": "Ordinary Debug combined run on frozen b66b134 source. This build precedes the later handoff and keyboard changes. Fixture-only UI, minimum OS, current hosted acceptance and signed-device checks have separate scopes."
+}

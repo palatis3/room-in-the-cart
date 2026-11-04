@@ -4,6 +4,10 @@ The complete production app remains the objective. The current checkpoint below 
 
 ## Current checkpoint — November 4
 
+The combined ordinary iPhone 17e run passed all 529 model and 37 UI cases on frozen `b66b134`. It preserved the 15 SwiftUI warnings from the earlier keyboard accessory bar. The later checkout and planning changes each have focused passing results. [Combined ordinary result](evidence/native/ordinary-combined-20261104/validation.json)
+
+The Records recipe-to-dinner check passed on iOS 17 and iOS 27. Done dismisses the servings and ingredient keyboards. Preview leaves the existing pickup alone, and explicit choice creates one ledger revision with the entered servings, known amount, and unresolved second ingredient. The original saved recipe survives. The unsigned Release archive passed metadata checks. [Recipe adoption validation](evidence/native/recipe-adoption-20261104/validation.json)
+
 The authenticated Supabase dashboard confirmed exactly eight applied migration checksums and no scheduled backup. The [pinned staging candidate](evidence/b11/staging-upgrade-20261104/candidate.json) includes the exact 21 pending migrations and a local upgrade from a populated 008 baseline. It preserved household data, existing device access and tenant boundaries. The pre-upgrade dump restored into a separate database. The hosted backup remains the rollout gate.
 
 The frozen ordinary iPhone 17e run finished with 526 model passes, 33 UI passes and four UI failures. Separate current runs passed both stock cases, saved offer and Records deletion Cancel. The saved-offer rerun took 480 seconds and preserved the saved response after canceling an edit. The existing preview simulator was preserved. [Frozen and saved-offer results](evidence/native/ordinary-20261104/validation.json)

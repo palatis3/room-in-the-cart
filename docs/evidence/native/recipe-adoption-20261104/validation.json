@@ -1,0 +1,33 @@
+{
+  "baseCommit": "a06b3cab85be3cff6ba0ae2eabbcf555ddd7ef3e",
+  "sourceSHA256": {
+    "ios/Features/Ledger/LedgerMealsView.swift": "257718bbc79ab5d723b47a0544ec931c9db21c4c80019159cd4deefa2aacbbe7",
+    "ios/UITests/LibraryPrivacyUITests.swift": "068b3c6ac0065957cb5468a25f6d61313fa3b035f11b6423048b38d4680fdffe"
+  },
+  "test": "RecipeLibraryAcceptanceUITests/testImportedRecipeQuantityDismissesKeyboardAndRequiresExplicitPickupChoice()",
+  "interruptedAttempt": ".build/RecipeAdoption20261104/RecipeAdoption.xcresult",
+  "interruptionReason": "The test navigation needed to expand the imported copy and then explicitly open the saved recipe. The corrected invocation followed both steps.",
+  "fixtureAppCodeSHA256": "dac35bfdcc1e0a79f69886af04a686dc58bb1b0a3ba66ea587b5e702d3b96efb",
+  "simulators": [
+    {"device": "iPhone 17e, iOS 27.0 (24A434)", "result": ".build/RecipeAdoption20261104/RecipeAdoptionRerun.xcresult", "passed": 1, "failed": 0, "seconds": 99.848},
+    {"device": "iPhone SE (2nd generation), iOS 17.0 (21A328)", "result": ".build/RecipeAdoption20261104/RecipeAdoptionMinimumOS.xcresult", "passed": 1, "failed": 0, "seconds": 114.374}
+  ],
+  "ledgerReadback": {
+    "source": ".build/RecipeAdoption20261104/ledger-proof.json",
+    "sha256": "c6083ee7b34d674c546b5a86592e951c1301b95e50e8fe6030e2063dd05e49ef",
+    "revisions": [1, 2],
+    "chosenMeals": 1,
+    "servings": 3,
+    "enteredItemCount": 2,
+    "secondIngredientRemainsUnknown": true,
+    "originalYieldInstructionsAndSourcePreserved": true
+  },
+  "archive": {
+    "path": ".build/RecipeAdoption20261104/RoomInTheCart-RecipeAdoption.xcarchive",
+    "binaryUUID": "4C8492CD-4A8A-3CD8-A320-3A39C39DFD65",
+    "executableSHA256": "9e6a165aa17e5a90ed2038d98c3a660f1b858c3d95dc7f377ee6a7a7ca0cf1f1",
+    "builtAppMetadataCheck": "passed",
+    "signed": false
+  },
+  "scope": "The guarded fixture supplies the JSON-LD file selection and fictional pickup. Real native import, saved recipe, keyboard, preview and choose screens ran on both simulator versions. The fixture suppresses OS activity logging. A physical Files picker and human language and assistive access checks remain separate."
+}
