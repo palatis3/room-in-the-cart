@@ -37,7 +37,12 @@
       "nextShopSeconds": 3591.639,
       "nextShopAnimationNotificationTimeouts": 58,
       "savedOfferSeconds": 137.009,
-      "scope": "Both contextual reminder cases passed in the older frozen run. The full result was still in progress when these cases were recorded."
+      "scope": "Both contextual reminder cases passed in the older frozen run. The full result was still in progress when these cases were recorded.",
+      "completion": "Interrupted during the Spanish dinner flow, before xcresult finalization.",
+      "modelCasesPassedBeforeInterruption": 534,
+      "uiCasesPassedBeforeInterruption": 16,
+      "replacementSourceCommit": "3e2558c5186173d679adde10903ab7340ce51177",
+      "replacementLog": ".build/NativeCheckpoint20261104-3e2558c/ordinary.log"
     }
   },
   "scope": "Test-only logging configuration. Both UI cases still exercise explicit review, denied schedule under the isolated adapter, cancellation, and preservation of the original deferral or offer. Physical notification permission and delivery remain open."

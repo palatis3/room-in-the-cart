@@ -1,0 +1,71 @@
+{
+  "sourceCommit": "3e2558c5186173d679adde10903ab7340ce51177",
+  "sourceSHA256": {
+    "ios/Extensions/Share/Info.plist": "6666750fcefdfefb1cff2ab7435452553aa0ef2ac25fd13044d8c8d7d6819f60",
+    "ios/Extensions/Share/ShareViewController.swift": "41bfa3ea70f80244a5aa005ac0eda6750f4b3c7f929ec47da6e0c999b07ef405",
+    "ios/App/DeviceSurfacesComposition.swift": "7c64e9f22f8fb8e5a27baaecbf81eec3c5d27ea0b9221e5526bcd9b29f5c0ba5",
+    "ios/Features/DeviceSurfaces/DeviceSurfacesEntry.swift": "14a462163ef4342d1a7911ac8ba0ee52aff589aa7d02bb88118162d3261894e3",
+    "ios/Features/DeviceSurfaces/SurfaceImportBridge.swift": "61b304dfcc7cb3b6964e7b62f2448af370f87aca8fab4df16682dd25547f6051",
+    "ios/Features/DeviceSurfaces/LedgerSelectedTextPort.swift": "ae195d69db9bb6b92f4047b59d1cb32d0b603f214f8da606269a36663a0fc929",
+    "ios/Packages/DeviceSurfaces/Sources/DeviceSurfaces/SelectedTextInbox.swift": "10749848cf150878cf73a102f73a9100796c96f66ac07b9b8ed575d9ca5a5a5b"
+  },
+  "toolchain": "Xcode 27.1 (27A9275)",
+  "device": "iPhone 17e, iOS 27.0 (24A434)",
+  "launch": "Normal Debug containing app and embedded system share extension. App and extension share their configured simulator inbox App Group. The app launches without the isolated UI-test workspace flag.",
+  "sender": {
+    "description": "Disposable UIKit sender app presenting the native UIActivityViewController with two fictional plain-text lists.",
+    "sourceSHA256": "d60a8e93fcade38707271e05dea91243a25741d4df613ea834e24a34e6690a34"
+  },
+  "import": {
+    "result": ".build/SelectedTextSystem20261104/SelectedTextResumed.xcresult",
+    "log": ".build/SelectedTextSystem20261104/selected-text-resumed.log",
+    "passed": 1,
+    "failed": 0,
+    "seconds": 80.463,
+    "harnessSHA256": "aea3520676da85f174faf7857c7ffc7c34fb6f510ad8c7cea62f225de746886c",
+    "checks": "Cancel in the system share extension leaves the inbox empty. Save for review stages one entry at ledger revision 2. The duplicate requires a decision, and cancelling the app review leaves the entry available. Confirming the merge commits revision 3. The original two-wrap quantity and three pears survive relaunch.",
+    "inbox": {
+      "pendingAtLedgerRevision2": 1,
+      "consumedAtLedgerRevision3": 1,
+      "retainedPayloadBytes": 0
+    },
+    "ledger": {
+      "selectedTextBatches": 1,
+      "addedPears": 3,
+      "duplicateWrapUnitsLinked": 2,
+      "originalWrapUnits": 2
+    }
+  },
+  "undo": {
+    "result": ".build/SelectedTextSystem20261104/SelectedTextUndo.xcresult",
+    "log": ".build/SelectedTextSystem20261104/selected-text-undo.log",
+    "passed": 1,
+    "failed": 0,
+    "seconds": 36.61,
+    "harnessSHA256": "2b9c5c0ebcf5939203c743c5736a6cb932008a5df091dc44e1b69f49977ed1c9",
+    "checks": "Undo creates revision 4. After relaunch the two original wraps remain and the imported pears are gone. The same payload-free consumed receipt remains in the inbox database."
+  },
+  "earlierAttempts": [
+    {
+      "result": ".build/SelectedTextSystem20261104/SelectedTextInitial.xcresult",
+      "finding": "iOS 27 rejected the disposable sender because its first build used the pre-scene application lifecycle."
+    },
+    {
+      "result": ".build/SelectedTextSystem20261104/SelectedTextScenes.xcresult",
+      "finding": "The native sheet exposed the extension as an activity cell and the test initially queried it as a button."
+    },
+    {
+      "result": ".build/SelectedTextSystem20261104/SelectedTextCell.xcresult",
+      "finding": "Extension Cancel completed with zero inbox entries. XCTest could not tap the covered sender button after dismissal."
+    },
+    {
+      "result": ".build/SelectedTextSystem20261104/SelectedTextDismissal.xcresult",
+      "finding": "Waiting for the sender button to become hittable timed out. The successful run used a fresh sender launch for the Save scenario."
+    },
+    {
+      "log": ".build/SelectedTextSystem20261104/selected-text-independent.log",
+      "finding": "Execution stopped during the starting list setup when the turn was interrupted."
+    }
+  ],
+  "scope": "System extension activation, app-group persistence, duplicate review and undo on a simulator with a plain-text UIKit sender. Physical iPhone and third-party sender checks remain open."
+}
