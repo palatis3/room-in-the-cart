@@ -35,6 +35,22 @@
     "uiSeconds": 69.322,
     "journey": "Dismiss the inclusive-total number pad, save the checkout, cancel the system share and find the frozen unplaced order after relaunch."
   },
+  "unknownTaxFollowUp": {
+    "sourceCommit": "29b06df9c216dee4fe7edaf777f56efb301816af",
+    "device": "iPhone SE, iOS 17.0 (21A328)",
+    "test": "ContextualNavigationUITests/testUnknownTaxKeepsWeighedPickupUnresolved",
+    "result": ".build/WeightUnknownTax20261104/UnknownTax17.xcresult",
+    "uiTestsPassed": 1,
+    "failed": 0,
+    "runtimeWarnings": [],
+    "uiSeconds": 117.372,
+    "journey": "An ordinary Free pickup saved entered checkout charges with tax still unknown. After selecting apples and entering the rate and billing increment, the whole-pickup weight limit remained unresolved.",
+    "capture": {
+      "path": ".build/WeightUnknownTax20261104/attachments/54503D9A-89B0-4053-8A4D-59FC0A31A303.png",
+      "sha256": "a47a0e859c589c86b7d490082224571a780ad9f5de7e4b297954f01613db03bb"
+    },
+    "priorAttempt": "The broader frozen iOS 27 run at cedbae0 exceeded its execution allowance in the checkout form. The focused iOS 17 pass is a separate result."
+  },
   "archive": {
     "path": ".build/CheckoutFrame20261104/RoomInTheCart-CheckoutKeyboard.xcarchive",
     "binaryUUID": "B4BAE5BF-E98D-3E9B-BEBE-5750BA6C7A1D",
