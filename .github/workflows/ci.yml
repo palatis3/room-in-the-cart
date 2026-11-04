@@ -171,7 +171,7 @@ jobs:
     needs: ios
     if: ${{ !cancelled() && needs.ios.outputs.test_products_artifact != '' }}
     runs-on: macos-15-intel
-    timeout-minutes: 100
+    timeout-minutes: 115
     strategy:
       fail-fast: false
       matrix:
@@ -193,6 +193,9 @@ jobs:
           tar -xzf "$RUNNER_TEMP/iphone-test-products.tar.gz" -C .build/DerivedData/Build
       - name: Select available iPhone simulator
         run: xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+      - name: Wait for iPhone simulator boot
+        timeout-minutes: 12
+        run: xcrun simctl bootstatus "$SIMULATOR_ID" -b
       - name: Test iPhone journeys
         shell: bash
         timeout-minutes: 92

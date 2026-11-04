@@ -21,8 +21,14 @@
     "readback": "The downloaded tar contains the x86_64 simulator app, both test bundles and one format-1 .xctestrun. Both test-host paths, the UI target app path and every dependent-product path resolve in the restored directory.",
     "consumer_jobs": [
       {"name": "ios-ui (comparison-context)", "job_id": 126826550970, "download": "passed", "restore": "passed"},
-      {"name": "ios-ui (planning-pickup)", "job_id": 126826552111, "download": "passed", "restore": "passed"}
+      {"name": "ios-ui (planning-pickup)", "job_id": 126826552111, "download": "passed", "restore": "passed", "result": "XCTest runner received SIGKILL before establishing its test connection. The app UI cases did not start."}
     ],
-    "scope": "Both actual hosted consumers restored the same artifact. Their UI test results were pending when this evidence was recorded."
+    "planning_pickup_failure": {
+      "log": ".build/HostedProducts41898379149/planning-pickup-results/UITests.log",
+      "log_sha256": "6d0564acd2efdbdf1e0e32e221a98bc917d2f26d08ada21098655a37d0f7f1b8",
+      "summary_sha256": "e5cf35d106a136639bf594ee892850350cce4ff13e8ee7ff168b5ea0b11260ec",
+      "follow_up": "The workflow now waits for the simulator to finish booting before launching XCTest. The exact bootstatus command reached Finished on a shut-down local iPhone simulator. Hosted retest remains open."
+    },
+    "scope": "Both actual hosted consumers restored the same artifact. The planning and pickup consumer failed during XCTest startup. The comparison and context consumer was still running."
   }
 }
