@@ -763,14 +763,15 @@ import XCTest
     private func tapWeekRow(_ row: XCUIElement) {
         // XCUI's default activation point can lie above the scrolled content.
         // Use the visible row center, clear of navigation and tab bars.
-        for _ in 0..<24 {
+        for attempt in 0..<24 {
             let area = scrollableArea().insetBy(dx: 0, dy: 12)
             if row.exists && row.isHittable && area.contains(CGPoint(x: row.frame.midX, y: row.frame.midY)) {
                 print("S25_ROW_TAP id=\(row.identifier) frame=\(row.frame) area=\(area)")
                 row.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
                 return
             }
-            scrollContent(upward: row.exists ? row.frame.midY > area.midY : true)
+            // A lazy row outside the viewport can be above or below the current position.
+            scrollContent(upward: row.exists ? row.frame.midY > area.midY : attempt < 12)
         }
         XCTFail("No visible center for week row: \(row.debugDescription)")
     }
