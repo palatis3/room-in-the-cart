@@ -880,18 +880,25 @@ test('overlapping HTTPS writers defer without poisoning the losing app or worker
  }
 });
 
-test('one drained source switches journals, preserves old receipts, and seals a continuous archive window',async()=>{
+test('a backup from before rollover replays both journals in order and preserves unrelated members',async()=>{
  const source=await sourceCluster();
- let sourceClosed=false;
+ let sourceClosed=false,quarantine;
+ const issuer='https://archive.fixture.invalid/auth/v1';
+ const actor=async alias=>{
+  const subject=randomUUID(),sessionId=randomUUID(),householdId=randomUUID(),memberId=randomUUID();
+  await source.owner.query('INSERT INTO auth.sessions(id,user_id) VALUES($1,$2)',[sessionId,subject]);
+  await source.owner.query('INSERT INTO ritc.household(household_id,label) VALUES($1,$2)',[householdId,alias]);
+  await source.owner.query(`INSERT INTO ritc.member(household_id,member_id,issuer,subject,alias,kind,state,organizer)
+   VALUES($1,$2,$3,$4,$5,'adult','active',true)`,[householdId,memberId,issuer,subject,alias]);
+  return {subject,sessionId,householdId,memberId};
+ };
  const publicKeys=f=>({pins:f.pins,writerPublicKey:f.writerKeys.publicKey,authorityPublicKey:f.authorityKeys.publicKey});
  const publicSettings=f=>({pins:f.pins,writerPublicKey:f.writerKeys.publicKeyPEM,authorityPublicKey:f.authorityKeys.publicKeyPEM});
- const append=async(f,{afterAcceptance,beforeAcceptance,afterInterruptedCompletion}={})=>{
+ const append=async(f,{subject,sessionId,householdId},{afterAcceptance,beforeAcceptance,afterInterruptedCompletion}={})=>{
   const ports=await openAuthority(f),runtime=source.pool(source.runtime),worker=source.pool(source.worker);
   const observer=createPostgresCommittedSource({pins:f.pins,authorityPublicKey:f.authorityKeys.publicKey,...source.configuration});
   try{
    const {port:journal}=f.adapter({...ports,source:observer.source});
-   const issuer='https://archive.fixture.invalid/auth/v1',subject=randomUUID(),sessionId=randomUUID();
-   await source.owner.query('INSERT INTO auth.sessions(id,user_id) VALUES($1,$2)',[sessionId,subject]);
    const repo=new HouseholdRepository(runtime,{allowChildNetwork:false,noticeVersion:'fixture',sessionStatus:new SupabaseSessionVerifier(issuer)});
    let providerCalls=0;
    const provider={assertAvailable:async()=>{},deleteAccount:async target=>{assert.equal(target,subject);providerCalls++;}};
@@ -900,7 +907,8 @@ test('one drained source switches journals, preserves old receipts, and seals a 
    const identity={issuer,subject,sessionId,expiresAt:new Date(Date.now()+60_000),authenticatedAt:new Date(),authenticatedMethod:'otp'};
    await beforeAcceptance?.(privacy);
    const statusToken=randomBytes(32).toString('base64url');
-   const receipt=await privacy.request(identity,{clientKey:randomUUID(),statusToken,confirm:true,households:[]});
+   const households=[{householdId,organizer:'archive',shops:[],eraseChildProfiles:[]}];
+   const receipt=await privacy.request(identity,{clientKey:randomUUID(),statusToken,confirm:true,households});
    assert.equal(receipt.status,'pending');
    await afterAcceptance?.(receipt.jobId);
    const maintenance=new PrivacyMaintenance(worker,{provider,journal,issuer});
@@ -921,6 +929,10 @@ test('one drained source switches journals, preserves old receipts, and seals a 
  };
  try{
   const {r,config,operator}=await recoveryFixture(source);
+  const firstActor=await actor('Predecessor fixture'),secondActor=await actor('Successor fixture'),unrelated=await actor('Unrelated fixture');
+  const dumpPath=join(dir,'pre-rollover.dump'),socketDirectory=source.configuration.connection.host;
+  pgTool('pg_dump',['-h',socketDirectory,'-p','55434','-U',ownerRole,'-d','postgres','-Fc','-f',dumpPath]);
+  await chmod(dumpPath,0o600);
   const next=fixture({schemaDigest:source.schemaDigest,sourceIdentity:r.f.pins.sourceIdentity,keyId:'fixture-writer-next',
    authorityKeyId:'fixture-authority-next',recordNamespace:'fixture-namespace-next'});
   const fork=fixture({schemaDigest:source.schemaDigest,sourceIdentity:r.f.pins.sourceIdentity});
@@ -935,7 +947,7 @@ test('one drained source switches journals, preserves old receipts, and seals a 
    assert.equal((await source.owner.query('SELECT fenced FROM ritc.privacy_journal_origin')).rows[0].fenced,false);
    assert.equal((await owner.query("SELECT head->>'mode' AS mode FROM ritc_checkpoint.origin WHERE lineage=$1",[r.f.pins.lineage])).rows[0].mode,'active');
   };
-  const firstJob=await append(r.f,{afterAcceptance:assertDrainBlocked,afterInterruptedCompletion:async()=>{
+  const firstJob=await append(r.f,firstActor,{afterAcceptance:assertDrainBlocked,afterInterruptedCompletion:async()=>{
    assert.equal((await source.owner.query("SELECT count(*)::int AS n FROM ritc.privacy_job WHERE state<>'complete'")).rows[0].n,0);
    await assertDrainBlocked();
   }});
@@ -982,9 +994,9 @@ test('one drained source switches journals, preserves old receipts, and seals a 
   assert.deepEqual((await source.owner.query('SELECT lineage,fenced FROM ritc.privacy_journal_origin')).rows[0],{lineage:next.pins.lineage,fenced:false});
   await assert.rejects(source.owner.query('UPDATE ritc.privacy_journal_rotation SET proof=proof'),/immutable journal/);
   const oldObserver=createPostgresCommittedSource({pins:r.f.pins,authorityPublicKey:r.f.authorityKeys.publicKey,...source.configuration});
- try{await assert.rejects(oldObserver.source.readOrigin(time()),error=>error.cause?.code==='42501'&&error.cause?.message==='journal_source_origin_conflict');}
+  try{await assert.rejects(oldObserver.source.readOrigin(time()),error=>error.cause?.code==='42501'&&error.cause?.message==='journal_source_origin_conflict');}
   finally{await oldObserver.close();}
-  const secondJob=await append(next,{
+  const secondJob=await append(next,secondActor,{
    beforeAcceptance:async privacy=>{
     const old=await privacy.status(firstJob.jobId,firstJob.statusToken);
     assert.equal(old.status,'complete');
@@ -1004,7 +1016,7 @@ test('one drained source switches journals, preserves old receipts, and seals a 
   });
   assert.notEqual(firstJob.jobId,secondJob.jobId);
   assert.equal(cli('journal-recovery.mjs','activate',activationPath).changed,false);
-  assert.equal((await source.owner.query('SELECT count(*)::int AS n FROM ritc.privacy_journal_ack')).rows[0].n,4);
+  assert.equal((await source.owner.query('SELECT count(*)::int AS n FROM ritc.privacy_journal_ack')).rows[0].n,6);
   const successorRecovery=createIndependentRecovery({...config,pins:next.pins,writerPrivateKey:next.writerKeys.privateKey,
    authorityPrivateKey:next.authorityKeys.privateKey});
   const second=await successorRecovery.sealForRollover(time());
@@ -1014,7 +1026,7 @@ test('one drained source switches journals, preserves old receipts, and seals a 
   const trust={startScopeDigest:r.scope,terminalSealDigest:digest(second.proof)};
   const a={...publicKeys(r.f),bytes:first.bytes,seal:first.proof};
   const b={...publicKeys(next),bytes:second.bytes,seal:second.proof,incomingLink:link};
-  assert.deepEqual(await verifyIndependentArchiveWindow([a,b],trust),{...trust,segments:2,events:4});
+  assert.deepEqual(await verifyIndependentArchiveWindow([a,b],trust),{...trust,segments:2,events:6});
   await assert.rejects(verifyIndependentArchiveWindow([a],trust),/trusted final seal/);
   await assert.rejects(verifyIndependentArchiveWindow([b,a],trust),/trusted backup scope/);
   await assert.rejects(verifyIndependentArchiveWindow([a,{...b,incomingLink:{...link,authoritySignature:'A'.repeat(86)}}],trust),/archive continuity/);
@@ -1034,9 +1046,70 @@ test('one drained source switches journals, preserves old receipts, and seals a 
   }
   const windowPath=join(output,'window.json');
   await writeFile(windowPath,JSON.stringify({...trust,segments}),{mode:0o600});
-  assert.deepEqual(cli('journal-recovery.mjs','verify-window',windowPath),{event:'journal_archive_window_verified',...trust,segments:2,events:4});
+  assert.deepEqual(cli('journal-recovery.mjs','verify-window',windowPath),{event:'journal_archive_window_verified',...trust,segments:2,events:6});
   await writeFile(windowPath,JSON.stringify({...trust,segments:segments.slice(0,1)}),{mode:0o600});
   assert.throws(()=>cli('journal-recovery.mjs','verify-window',windowPath),{status:1});
+
+  const database='ritc_quarantine_'+randomBytes(6).toString('hex');
+  await source.owner.query('CREATE DATABASE '+database+' TEMPLATE template0');
+  await source.owner.query('REVOKE CONNECT ON DATABASE '+database+' FROM PUBLIC');
+  await source.owner.query('GRANT CONNECT ON DATABASE '+database+' TO '+source.worker);
+  pgTool('pg_restore',['--exit-on-error','--no-owner','-h',socketDirectory,'-p','55434','-U',ownerRole,'-d',database,dumpPath]);
+  quarantine=source.pool(ownerRole,database);
+  const {oid}=(await quarantine.query('SELECT oid FROM pg_database WHERE datname=current_database()')).rows[0];
+  const destination={database,oid,user:ownerRole,socketDirectory,port:55434};
+  const runId=randomUUID(),segmentRunIds=[randomUUID(),randomUUID()];
+  const restorePath=join(output,'restore-window.json'),dumpSHA256=createHash('sha256').update(await readFile(dumpPath)).digest('hex');
+  const workerSettings={...destination,user:source.worker};
+  await writeFile(restorePath,JSON.stringify({destination,worker:workerSettings,runId,segmentRunIds,dumpPath,dumpSHA256,archiveWindowPath:windowPath}),{mode:0o600});
+  const restore=command=>cli('privacy-journal.mjs',command,restorePath);
+  assert.throws(()=>restore('plan'),{status:1});
+  assert.equal((await quarantine.query('SELECT 1 FROM ritc.privacy_restore_window')).rowCount,0);
+  await writeFile(windowPath,JSON.stringify({...trust,segments}),{mode:0o600});
+  const verification=restore('verify');
+  assert.equal(verification.events,6);
+  await source.owner.query('GRANT CONNECT ON DATABASE '+database+' TO '+source.runtime);
+  assert.throws(()=>restore('plan'),error=>error.status===1&&String(error.stderr).includes('accessible to the application role'));
+  await source.owner.query('REVOKE CONNECT ON DATABASE '+database+' FROM '+source.runtime);
+  assert.throws(()=>restore('gate'),{status:1});
+  const planned=restore('plan');
+  assert.equal(planned.segment,1);
+  assert.deepEqual(restore('plan'),planned);
+  await assert.rejects(quarantine.query('UPDATE ritc.privacy_restore_window SET manifest_digest=manifest_digest'),/immutable journal/);
+  const checkedSecond=verifyIndependentRecovery(second.bytes,second.proof,next.pins,next.writerKeys.publicKey,next.authorityKeys.publicKey);
+  await assert.rejects(quarantine.query('SELECT ritc.privacy_restore_register($1,$2,$3,$4::jsonb,$5::jsonb)',
+   [segmentRunIds[1],oid,checkedSecond.bundleDigest,JSON.stringify(checkedSecond.head),JSON.stringify(checkedSecond.events)]),
+   /restore_window_predecessor_pending/);
+  assert.throws(()=>restore('gate'),{status:1});
+  assert.equal(restore('replay').targetsApplied,1);
+  assert.throws(()=>restore('gate'),{status:1});
+  assert.throws(()=>restore('replay'),{status:1});
+  const checkedFirst=verifyIndependentRecovery(first.bytes,first.proof,r.f.pins,r.f.writerKeys.publicKey,r.f.authorityKeys.publicKey);
+  const singlePath=join(output,'single-restore.json');
+  await writeFile(singlePath,JSON.stringify({destination,worker:workerSettings,runId:segmentRunIds[0],dumpPath,dumpSHA256,
+   journalPath:segments[0].journalPath,headPath:join(output,'head.json'),
+   trust:{lineage:r.f.pins.lineage,schemaDigest:r.f.pins.schemaDigest,configurationId:r.f.pins.configurationId,
+    keyId:r.f.pins.keyId,publicKey:r.f.writerKeys.publicKeyPEM},
+   authoritySeal:{path:segments[0].sealPath,pins:r.f.pins,authorityPublicKey:r.f.authorityKeys.publicKeyPEM}}),{mode:0o600});
+  assert.equal(cli('privacy-journal.mjs','verify',singlePath).bundleDigest,checkedFirst.bundleDigest);
+  assert.throws(()=>cli('privacy-journal.mjs','gate',singlePath),{status:1});
+  assert.equal(restore('plan').segment,2);
+  assert.equal(restore('replay').targetsApplied,1);
+  assert.equal(restore('replay').targetsApplied,0);
+  assert.equal(restore('plan').segment,null);
+  assert.deepEqual(restore('gate'),{runId,localAppErasureApplied:true,syntheticProbePermitted:true,providerReconciliationRequired:true,
+   productionReady:false,segments:2,manifestDigest:verification.manifestDigest});
+  for(const target of [firstActor,secondActor]){
+   const {erased_at}=(await quarantine.query('SELECT erased_at FROM ritc.member WHERE member_id=$1',[target.memberId])).rows[0];
+   assert.ok(erased_at);
+   assert.equal((await quarantine.query('SELECT ritc.identity_blocked($1,$2) AS blocked',[issuer,target.subject])).rows[0].blocked,true);
+  }
+  assert.deepEqual((await quarantine.query('SELECT alias,erased_at FROM ritc.member WHERE member_id=$1',[unrelated.memberId])).rows[0],
+   {alias:'Unrelated fixture',erased_at:null});
+  assert.equal((await quarantine.query('SELECT count(*)::int AS n FROM ritc.privacy_job WHERE provider_erased_at IS NOT NULL')).rows[0].n,0);
+  assert.deepEqual((await quarantine.query('SELECT lineage,fenced FROM ritc.privacy_journal_origin')).rows[0],
+   {lineage:r.f.pins.lineage,fenced:true});
+  await quarantine.end();quarantine=undefined;
 
   await source.close();sourceClosed=true;
   const publicExport=join(dir,'public-successor-export');
@@ -1047,5 +1120,5 @@ test('one drained source switches journals, preserves old receipts, and seals a 
   assert.equal(cli('journal-recovery.mjs','export',exportPath).sealDigest,link.predecessorSealDigest);
   assert.deepEqual(await readFile(join(publicExport,'journal.ndjson')),first.bytes);
   assert.deepEqual(await readFile(join(publicExport,'successor.json')),await readFile(incomingLinkPath));
- }finally{if(!sourceClosed)await source.close();}
+ }finally{await quarantine?.end();if(!sourceClosed)await source.close();}
 });

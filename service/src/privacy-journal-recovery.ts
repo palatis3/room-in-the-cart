@@ -80,10 +80,11 @@ interface ArchiveSegment {
  readonly incomingLink?:unknown;
 }
 
-/** Verify a bounded-memory archive stream against independent backup and final-seal anchors. */
-export async function verifyIndependentArchiveWindow(segments:Iterable<ArchiveSegment>|AsyncIterable<ArchiveSegment>,input:unknown){
+/** Verify each archive in turn and retain only its plan metadata. */
+export async function inspectIndependentArchiveWindow(segments:Iterable<ArchiveSegment>|AsyncIterable<ArchiveSegment>,input:unknown){
  const trust=windowTrustSchema.parse(input),lineages=new Set<string>();
  let previous:{pins:DurableJournalPins;seal:RecoverySeal;authorityPublicKey:KeyObject}|undefined;
+ const archives:{head:PrivacyJournalHead;bundleDigest:string;sealDigest:string;jobs:number}[]=[];
  let events=0;
  for await(const segment of segments){
   const pins=durableJournalPinsSchema.parse(segment.pins);
@@ -99,10 +100,17 @@ export async function verifyIndependentArchiveWindow(segments:Iterable<ArchiveSe
   }
   lineages.add(pins.lineage);
   events+=checked.events.length;
+  archives.push({head:checked.head,bundleDigest:checked.bundleDigest,sealDigest:journalHash(checked.proof),
+   jobs:checked.events.filter(event=>event.payload.kind==='acceptance').length});
   previous={pins,seal:checked.proof,authorityPublicKey:segment.authorityPublicKey};
  }
  if(!previous||journalHash(previous.seal)!==trust.terminalSealDigest)throw Error('Archive window does not reach the trusted final seal');
- return {segments:lineages.size,events,...trust};
+ return {archives,events,...trust,sourceIdentity:previous.pins.sourceIdentity,sourceDatabaseOid:previous.seal.sourceDatabaseOid};
+}
+
+export async function verifyIndependentArchiveWindow(segments:Iterable<ArchiveSegment>|AsyncIterable<ArchiveSegment>,input:unknown){
+ const {archives,events,startScopeDigest,terminalSealDigest}=await inspectIndependentArchiveWindow(segments,input);
+ return {segments:archives.length,events,startScopeDigest,terminalSealDigest};
 }
 
 function compareIds(a:readonly string[],b:readonly string[]){return a[0]!<b[0]!?-1:a[0]===b[0]?0:1;}

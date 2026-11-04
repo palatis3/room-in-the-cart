@@ -1,0 +1,51 @@
+{
+  "sourceSHA256": "382ef4bdae972dd8115c4e75859c06c1245028fb79f653eb18ac2219e6f44e9f",
+  "sourceFiles": 318,
+  "baseCommit": "e1f06e7",
+  "migrations": "001–029",
+  "independentAuthorityMigrations": "001–004",
+  "environment": "Node 22.14 and PostgreSQL 17.11 using private local fixtures",
+  "runs": {
+    "unit": {
+      "tests": 345,
+      "passed": 344,
+      "failed": 0,
+      "skipped": 1,
+      "localLogSHA256": "4789f3c21a2ca1ded10aef6ff645c4b61dc161ca99de3bb06492102a7e4498a4"
+    },
+    "wire": {
+      "tests": 178,
+      "passed": 178,
+      "failed": 0,
+      "skipped": 0,
+      "localLogSHA256": "51dd74c740dc3b8add078b2e6067843e86ada45e9cd00ed1b4408225fd110749"
+    },
+    "authority": {
+      "tests": 14,
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0,
+      "localLogSHA256": "5a68ae91b504e6898644c3402ac444ab34614b9bce2c8a8e8234c9d46e18cd59"
+    },
+    "observer": {
+      "tests": 13,
+      "passed": 13,
+      "failed": 0,
+      "skipped": 0,
+      "localLogSHA256": "d9b4b96f602435c0767cacaf4da48fdac2018f1e05b8cdba46e4537f2fe8f036"
+    }
+  },
+  "observations": [
+    "An actual pre-switch PostgreSQL dump was restored into a separate local database. Two archived deletions had completed on the original source, one on each side of the signed rollover.",
+    "A truncated window was rejected before staging any plan. The application login CONNECT grant blocked planning until it was revoked.",
+    "The manifest and ordered segment plans were immutable. A direct attempt to register the later segment before the earlier erasure failed at the SQL boundary.",
+    "The gate stayed closed after the first segment. A single-archive invocation could not substitute its completed gate for the staged window.",
+    "Both replay batches erased their exact targets, blocked both erased identities and preserved the unrelated member. Repeat plan and replay produced no new effects.",
+    "The completed window allowed a synthetic probe with the source origin still fenced and required provider reconciliation. Neither restored job was recorded as provider-deleted."
+  ],
+  "scope": [
+    "The fixture used a real PostgreSQL dump, original and quarantine databases, signed archives, role checks and the owner CLI. The live deletion provider was simulated.",
+    "This drill used exact preimages from a pre-deletion backup. Hosted backup and provider reconciliation remain separate release work.",
+    "The optional billing PostgreSQL unit skip is covered by the shared integration suite."
+  ]
+}

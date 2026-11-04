@@ -8,31 +8,17 @@ import {journalCanonical,journalHash} from '../dist/privacy-journal.js';
 import {MAX_JOURNAL_BYTES} from '../dist/privacy-journal-limits.js';
 import {activateIndependentSuccessor,createIndependentRecovery,exportIndependentRecovery,registerIndependentSuccessor,verifyIndependentArchiveWindow} from '../dist/privacy-journal-recovery.js';
 import {journalDatabase,journalDatabaseSchema,readPrivateFile} from './journal-authority-config.mjs';
+import {jsonFile,publicKey,publicPins,readArchives,windowSettings} from './journal-archive-window.mjs';
 
 const endpoint=z.object({connection:journalDatabaseSchema,databaseOid:z.string(),ownerOid:z.string()}).strict();
 const settings=z.object({pins:z.unknown(),writerPrivateKey:z.string().min(1).max(8192),authorityPrivateKey:z.string().min(1).max(8192),
  source:endpoint,checkpoint:endpoint,exportDirectory:z.string().min(1)}).strict();
-const publicKey=z.string().max(8192).regex(/^-----BEGIN PUBLIC KEY-----\r?\n/);
 const exportSettings=z.object({pins:z.unknown(),writerPublicKey:publicKey,authorityPublicKey:publicKey,
  checkpoint:endpoint,sourceDatabaseOid:z.string(),exportDirectory:z.string().min(1),includeSuccessor:z.boolean().optional()}).strict();
-const publicPins=z.object({pins:z.unknown(),writerPublicKey:publicKey,authorityPublicKey:publicKey}).strict();
 const linkSettings=exportSettings.omit({authorityPublicKey:true,includeSuccessor:true}).extend({
  authorityPrivateKey:z.string().max(8192).regex(/^-----BEGIN PRIVATE KEY-----\r?\n/),successor:publicPins,
 });
 const activationSettings=publicPins.extend({source:endpoint,checkpoint:endpoint,successor:z.unknown()}).strict();
-const archiveSettings=publicPins.extend({journalPath:z.string().min(1),sealPath:z.string().min(1),incomingLinkPath:z.string().min(1).optional()});
-const windowSettings=z.object({startScopeDigest:z.string(),terminalSealDigest:z.string(),segments:z.array(archiveSettings).min(1)}).strict();
-
-const jsonFile=async(path,maxBytes=1048576)=>JSON.parse(await readPrivateFile(path,maxBytes));
-async function* readArchives(segments){
- for(const segment of segments){
-  yield {
-   pins:segment.pins,writerPublicKey:createPublicKey(segment.writerPublicKey),authorityPublicKey:createPublicKey(segment.authorityPublicKey),
-   bytes:await readPrivateFile(segment.journalPath,MAX_JOURNAL_BYTES),seal:await jsonFile(segment.sealPath,8192),
-   ...(segment.incomingLinkPath?{incomingLink:await jsonFile(segment.incomingLinkPath,8192)}:{}),
-  };
- }
-}
 
 async function writeExact(path,bytes){
  const temporary=path+'.'+randomUUID()+'.pending';

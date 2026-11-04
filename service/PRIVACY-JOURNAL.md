@@ -30,6 +30,21 @@ Normal mode refuses a fenced source or an uncheckpointed tail. `mode:'recover_fe
 
 `scripts/privacy-journal.mjs verify|plan|replay|gate OWNER_CONFIGURATION` requires an explicitly named newly owned local quarantine database, exact destination OID/owner, a hash-pinned dump, an independently supplied fenced head and pinned public key/source identity. Configuration, dump and operational files are owner-only. `verify` checks the entire journal and strict target/effect schemas before staging. Node verifies the Ed25519 signatures. The SQL registration function runs only through the trusted owner.
 
+### Backups that span journal rollover
+
+Restore the pinned dump into a separate quarantine database and apply the reviewed migrations through 029 there. The quarantine must deny effective CONNECT to application logins and have no existing application connection. Grant the reviewed replay worker its separate login.
+
+Use the same command with an owner-only configuration containing `destination`, `worker`, `dumpPath`, `dumpSHA256`, `runId`, `archiveWindowPath` and `segmentRunIds`. The archive window file is the [signed window input](journal-authority/README.md#successor-registration-and-archive-verification) for `verify-window`, including its independent start and final anchors. Set `runId` to the window UUID and provide a distinct UUID for each segment in order.
+
+1. Run `verify` to check the dump and entire signed window.
+2. Run `plan` to record the immutable manifest and register the earliest unfinished segment. Repeating this command with the same configuration resumes the staged segment.
+3. Run `replay` in bounded batches. Run `plan` again before replaying the next segment.
+4. Run `gate` to check every segment and its receipts. The result permits only a synthetic probe and reports that provider reconciliation is still required.
+
+The same exact preimage and target checks apply to each segment. The tool keeps the restored origin fenced and rejects single-archive commands on a staged window. A missing segment, changed proof, or incompatible restored preimage keeps the restore quarantined.
+
+### One sealed archive
+
 For an independent archive, include `authoritySeal` with `path`, `pins` and `authorityPublicKey` alongside the usual writer `trust`, `headPath` and `journalPath`. Both `destination` and `worker` specify the same `database`, `oid`, `socketDirectory`, and `port`, with distinct `user` values. The database name must match `ritc_quarantine_` followed by 8–32 hex digits and the live destination must have a different OID from the sealed source. Restore the pinned dump before running `plan`. The replay worker requires the existing separate worker role. The legacy local rehearsal format retains its fixed `/tmp:55432` and fixture identities.
 
 Migration 025 aligns the restore projection with the verified archive. The signed journal is bounded at 10,000 records and 32 MiB of canonical bytes. SQL accepts its committed-event projection with up to 10,000 events and a 64 MiB JSONB text ceiling to cover formatting expansion. The source emitter, observer and restore input all retain the 1 MiB limit for one payload. The independent authority keeps one slot and enough bytes for a commit or rollback for every unresolved admitted intent.

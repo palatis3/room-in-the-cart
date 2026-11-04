@@ -4,6 +4,12 @@ The complete production app remains the objective. The current checkpoint below 
 
 ## Current checkpoint — November 4
 
+Migration 029 and the restore operator verify a complete signed archive window before recording its plan in quarantine. Each segment waits for the previous segment's local erasure receipts. The gate checks the entire staged window, and the tool refuses a quarantine that application logins can access.
+
+The [restore window validation](evidence/b11/privacy-window-20261104/validation.json) restores a real dump from before rollover, erases the two exact targets in order and preserves a third unrelated member. This rehearsal uses synthetic provider outcomes and an exact preimage backup. Hosted backup, provider reconciliation, retention review and activation remain release work.
+
+## Previous checkpoint — November 4, source rotation
+
 Migration 028 and the operator commands switch the same drained source to a linked successor. The switch checks the predecessor seal, exact source event digests, applied schema and unused successor, then records the link and moves the binding together. Existing receipts remain readable. Old observers and workers cannot use their stale bindings to act on new jobs.
 
 The [rotation validation](evidence/b11/privacy-rotation-20261104/validation.json) completes synthetic deletions on both sides of the switch in one source database. An unfinished job and an unacknowledged completion both prevent sealing. The next release gate is restoring a pre-switch backup and applying the linked journals in quarantine.
