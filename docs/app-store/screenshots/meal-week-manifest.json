@@ -1,0 +1,124 @@
+{
+  "sourceCommit": "075480de14625f54a8f2c7cfa7aa174405203480",
+  "configuration": "Ordinary arm64 Release iPhone Simulator app with a separate scratch UI runner. The full entry flows used locale launch arguments only. The Spanish store readback used the simulator's Spanish (US) language and region with no app launch arguments.",
+  "appExecutableSHA256": "8f10f66903d416958839f48dd0e78599fe5a93d8f94b651c36acc15afd417ac1",
+  "bundleIdentifier": "dev.roominthecart.app",
+  "device": "iPhone 17 simulator, iOS 27.0",
+  "runs": {
+    "en-US": {
+      "result": ".build/StoreMealWeek20261104/MealWeekEnglishUIOnly.xcresult",
+      "testHarnessSHA256": "317f0a75102c41a4b4ce4c0b341a824812f9d511fe2e7581e94f2012863831ed",
+      "simulator": "A4570BC5-E391-4AEC-92A7-718498E520F0",
+      "fixture": {
+        "dinner": "Roasted veggie tacos",
+        "servings": 4,
+        "protectedFood": "Flour tortillas",
+        "protectedUnits": 2,
+        "purpose": "School lunch",
+        "savedCivilDay": {
+          "day": 4,
+          "month": 11,
+          "timeZoneIdentifier": "America/New_York",
+          "year": 2026
+        }
+      },
+      "ledgerHeadRevisionAfterRelaunch": 3
+    },
+    "es-US": {
+      "result": ".build/StoreMealWeek20261104/MealWeekSpanishDeviceLanguage.xcresult",
+      "testHarnessSHA256": "638fc78d25ab7c915885485fa55500f78276180e611bc0e52d404a533f085ba1",
+      "simulator": "5D955627-7BB5-458F-9C46-FFC022D47C69",
+      "fixture": {
+        "dinner": "Tacos de verduras asadas",
+        "servings": 4,
+        "protectedFood": "Tortillas de harina",
+        "protectedUnits": 2,
+        "purpose": "Almuerzo escolar",
+        "savedCivilDay": {
+          "day": 4,
+          "month": 11,
+          "timeZoneIdentifier": "America/New_York",
+          "year": 2026
+        }
+      },
+      "ledgerHeadRevisionAfterRelaunch": 3,
+      "entryAndRelaunchResult": ".build/StoreMealWeek20261104/MealWeekSpanishUIOnly.xcresult",
+      "entryAndRelaunchHarnessSHA256": "65ad308e94afbb1f4f4254d29a5a1336766083338f49861765fefa682aca2034",
+      "systemLanguageReadback": "The simulator's AppleLanguages starts with es-US and AppleLocale is es_US. Both accessibility trees label the native button Selector de fecha, and the dated rows are in Spanish. The compact Nov 4, 2026 matches Foundation's es_US standalone medium-date format.",
+      "systemLanguageAXAttachments": [
+        {
+          "path": ".build/StoreMealWeek20261104/es-device-language-attachments/731CDB16-46FF-46AF-BACC-28D8C029D17A.txt",
+          "sha256": "32eedff84a7793034518320bf806c5b893940d80e0ac3a439a76905b41f85556"
+        },
+        {
+          "path": ".build/StoreMealWeek20261104/es-device-language-attachments/B0418B34-8B70-4553-BB53-65141847234C.txt",
+          "sha256": "85c3adba0cc1965d69aaee18c658eb74108f1ddd9a957376c864554640e108cd"
+        }
+      ]
+    }
+  },
+  "assetProcessing": "Opaque JPEG re-encode at the original simulator dimensions. No cropping, overlays or data substitutions.",
+  "files": [
+    {
+      "path": "en-US/04-meal-week-list.jpg",
+      "appLocale": "en-US",
+      "storeLocale": "en-US",
+      "width": 1206,
+      "height": 2622,
+      "alpha": false,
+      "sha256": "218bb47f9f50c9225a7e15247d87f5638e6f04f3ce70bd705c98f6301f0cb9ba",
+      "rawCaptureSHA256": "96132e4e336f5eee5c502fd8b4623010b36799c8794fe31909ee443275a5b37b",
+      "rawCapture": ".build/StoreMealWeek20261104/en-attachments/1667A422-5FA9-4420-994F-226C1AA7C33D.png"
+    },
+    {
+      "path": "en-US/05-meal-week-grid.jpg",
+      "appLocale": "en-US",
+      "storeLocale": "en-US",
+      "width": 1206,
+      "height": 2622,
+      "alpha": false,
+      "sha256": "308c5bf6025d155ab7801715ba22fa2317917e89f4ad11c64e3a860e691944e9",
+      "rawCaptureSHA256": "8f7aa30046aa78b53b5cc93a87a66e2605e285c52576a1ebb7520103bb69df48",
+      "rawCapture": ".build/StoreMealWeek20261104/en-attachments/C72625EA-4275-4CD9-B1CA-E48A64D6ADEC.png"
+    },
+    {
+      "path": "es-MX/04-meal-week-list.jpg",
+      "appLocale": "es-US",
+      "storeLocale": "es-MX",
+      "width": 1206,
+      "height": 2622,
+      "alpha": false,
+      "sha256": "a974d31451e69efaff153ab63105cc9f48fa20da5f4818088eb8205fe3830439",
+      "rawCaptureSHA256": "e26c37c71b9706fe801824ef6e2dfa1b1a54b39ca77ca3cef93ce6ae7243fcb4",
+      "rawCapture": ".build/StoreMealWeek20261104/es-device-language-attachments/2686A26F-7A92-456B-ABD9-6B9FED5FD65F.png"
+    },
+    {
+      "path": "es-MX/05-meal-week-grid.jpg",
+      "appLocale": "es-US",
+      "storeLocale": "es-MX",
+      "width": 1206,
+      "height": 2622,
+      "alpha": false,
+      "sha256": "b3b87d3fd40d75ceb74bab9f42a4aa6975f3aaa2f7c9bff9a1689fa7b90cfde5",
+      "rawCaptureSHA256": "9369374ceff91483726f828ecf4874c286d3fe665e0e8ee4e06bdffb57b0c06f",
+      "rawCapture": ".build/StoreMealWeek20261104/es-device-language-attachments/58F41DFA-4CDE-4506-83F7-5B32C85DE310.png"
+    }
+  ],
+  "verifiedSource": {
+    "matchingTrackedIOSAndConfigFiles": 451,
+    "inventory": ".build/StoreMealWeek20261104/verified-capture-source.sha256",
+    "inventorySHA256": "2d4c7441a0fefe839722f582c598499a79899244462dece796fcedcae04076ac",
+    "scratchHarnessOverrides": [
+      "ios/RoomInTheCart.xcodeproj/xcshareddata/xcschemes/RoomInTheCart-Release.xcscheme",
+      "ios/UITests/FreeJourneyUITests.swift"
+    ]
+  },
+  "bundleVerification": {
+    "initialCaptureLimitation": "The initial English capture and Spanish entry run inherited an unused hosted unit-test bundle in the simulator build directory from earlier failed builds. The separate UI runner did not execute it.",
+    "finalSpanishCapture": "After removing the stale bundle, the clean simulator app passed bundle verification, installed and launched. The clean bundle was used for the Spanish system-language readback.",
+    "cleanup": "Moved only the unused unit-test bundle. The Release app executable SHA-256 matches before and after cleanup and across the capture runs.",
+    "beforeLog": ".build/StoreMealWeek20261104/pre-clean-bundle.log",
+    "afterLog": ".build/StoreMealWeek20261104/clean-bundle.log",
+    "physicalArchitectureArchiveEvidence": "docs/evidence/native/meal-week-20261104/validation.json"
+  }
+}

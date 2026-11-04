@@ -53,13 +53,15 @@ Apple's currently retrieved [screenshot specifications](https://developer.apple.
 
 The November 4 Release simulator run captured both pack results and the saved Records entry in English and US Spanish. The six 1206×2622 opaque JPEGs retain the original composition from iPhone 17. The app's US-Spanish captures are grouped under Spanish (Mexico) for the US storefront. The manifest records the exact build, entered quantities and prices, source captures and output hashes. [English candidates](app-store/screenshots/en-US) · [Spanish candidates](app-store/screenshots/es-MX) · [Capture manifest](app-store/screenshots/manifest.json)
 
+Four additional iPhone 17 candidates show the same dated dinner and separate school-lunch reservation in List and Grid, in both languages. The meal-week manifest records the Release executable, the saved data read after relaunch, the simulator bundle cleanup and the source and output hashes. The final signed build and human language review remain open. [Meal-week capture manifest](app-store/screenshots/meal-week-manifest.json)
+
 Capture the remaining scenes with fictional data in the ordinary iPhone app. Keep the source/build, device, locale, date and displayed inputs with each asset. Verify every captured claim against the actual product behavior before submission.
 
 | Draft frame | Real screen / visible point | Gate before capture |
 |---|---|---|
 | 1. Compare enough food | Shop → pack comparison, showing whole packs, usable remainder and item-only scope. | Local bilingual draft captures are available. Match the final signed build and retain its known/unknown review evidence. |
 | 2. Review the whole pickup | S24 cereal request with current/proposed inclusive total, overage and two protected lunches. | Promoted current S24 pass plus configured review household. |
-| 3. Plan dinners and keep lunch | Meal week plus actual named lunch reservation; separate chosen and unscheduled dinner. | Final civil-date/localized UI and accepted fictional recipe. |
+| 3. Plan dinners and keep lunch | Meal week with a named lunch reservation and a dated dinner. | Bilingual local List and Grid captures are available. Capture the additional unscheduled dinner if it is included in the final frame, then match the signed build. |
 | 4. Repair what came home | Actual usable amount, dependent shortage preview and current dated cook instruction. | Confirmed stock/arrival fixture; current allocation agrees with text. |
 | 5. Compare two entered trips | Quote comparison showing checkout and additional trip cash separately. | Exact equivalent commitments and known/unknown terms. |
 | 6. Keep and recover records | Records root with a saved fictional comparison, or a separate export/recovery scope capture. | The local bilingual Records captures are available. Check final system export and recovery on the distribution candidate. |
