@@ -8,5 +8,21 @@
   "summary_sha256": "443c8b08a3d16106efa7cd8e9dc205370ac320b3f3c5caccb120eac4f8dab0e2",
   "device": "iPhone 17, iOS 26.2 (23C54), x86_64 simulator",
   "model_tests": {"passed": 563, "failed": 0, "skipped": 0, "runtime_warnings": []},
-  "scope": "The downloaded XCTest artifact proves the native model result. The separate Release step compiled the unsigned iPhone build and passed bundle verification. The earlier workflow's single UI step was still running when this result was recorded. The successor workflow distributes the UI suite across two isolated runner jobs."
+  "scope": "The downloaded XCTest artifact proves the native model result. The separate Release step compiled the unsigned iPhone build and passed bundle verification. The earlier workflow's single UI step was still running when this result was recorded. The successor workflow distributes the UI suite across two isolated runner jobs.",
+  "split_workflow": {
+    "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41898379149",
+    "source_commit": "8049a3108bfb6a60ff1d2e14ea1fdc0118e20f7d",
+    "unsigned_release_and_bundle_verification": "passed",
+    "model_summary": ".build/HostedProducts41898379149/model-summary.json",
+    "model_summary_sha256": "ae8d856b01282bbc64a26083b36613eb67f2f13dfb71a98549f0d670619349cc",
+    "model_tests": {"passed": 563, "failed": 0, "skipped": 0, "runtime_warnings": []},
+    "test_products_artifact": "iphone-test-products-1",
+    "test_products_sha256": "078529544d4cac4bed4fa29bbdb925d0585c7ab933c6b8ab00108f6a3174dc20",
+    "readback": "The downloaded tar contains the x86_64 simulator app, both test bundles and one format-1 .xctestrun. Both test-host paths, the UI target app path and every dependent-product path resolve in the restored directory.",
+    "consumer_jobs": [
+      {"name": "ios-ui (comparison-context)", "job_id": 126826550970, "download": "passed", "restore": "passed"},
+      {"name": "ios-ui (planning-pickup)", "job_id": 126826552111, "download": "passed", "restore": "passed"}
+    ],
+    "scope": "Both actual hosted consumers restored the same artifact. Their UI test results were pending when this evidence was recorded."
+  }
 }

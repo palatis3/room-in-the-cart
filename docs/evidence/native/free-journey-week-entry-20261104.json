@@ -17,6 +17,20 @@
   "skipped": 0,
   "runtime_warnings": [],
   "scope": "The UI opened the pushed meal week for all four saved-dinner checks and found the unscheduled dinner after restart. The journey also exercised pack review, placement, observed short fill, the cook note, settlement, next-shop dinner reuse after restart and saved repair history. The original broader invocation used the old root locator. This separate result establishes the corrected Free journey on iOS 27.",
+  "original_full_ordinary_suite": {
+    "app_source_commit": "08e1e0b6eb16a80c908d5bb9e0a2fd953edd91c6",
+    "device": "iPhone 17e, iOS 27.0 (24A434), arm64 simulator",
+    "result_bundle": ".build/WidgetLifecycleFinal20261104/LatestOrdinaryJourneys.xcresult",
+    "summary": ".build/WidgetLifecycleFinal20261104/latest-ordinary-journeys-summary.json",
+    "summary_sha256": "1d89eb50d34c7c6b1bb374cab47cb7c9b0cc8fcf46935b41401c00e84db87775",
+    "log": ".build/WidgetLifecycleFinal20261104/latest-ordinary-journeys.log",
+    "log_sha256": "067ac2d924f31161f49bee7574417aa89e86aa6f19fa1fcb96cfed5201e34686",
+    "passed": 45,
+    "failed": 1,
+    "skipped": 0,
+    "runtime_warnings": [],
+    "failure": "The original Free journey looked for Unscheduled on the Dinners root, after This week became a pushed route. Both later focused runs passed with the corrected test navigation and the same app source."
+  },
   "minimum_os": {
     "device": "iPhone SE, iOS 17.0 (21A328), arm64 simulator",
     "unmodified_logging": {
