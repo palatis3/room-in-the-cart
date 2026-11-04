@@ -1,0 +1,35 @@
+{
+  "webCandidateRevision": "911343c7b2d274e925421434749e7635a06e18b1",
+  "runtimeBaselineRevision": "1a1a42b390f176b97d47a9b46817cffd6ba8b960",
+  "runtimeMatchesBaseline": true,
+  "migrationChecksums": {"total": 29, "hostedBaseline": 8, "pending": 21, "allMatchCandidateRecord": true},
+  "publicBuildSHA256": {
+    "index.html": "30f57c05d5fcf6f632b3a84bd471287feb4d79b4d0eb22d7cbb541ef11d1112e",
+    "assets/index-B9I61_lh.css": "7cf18dacddae715ef01363daf5f2770fb9562762a10d2d2e4d41daf406224cee",
+    "assets/index-DfcLasv-.js": "474ead6ca42c2d16feaa4bb2fafb755308774e5489b0b81cb02d18401a1f2989"
+  },
+  "localRuns": {
+    "web": {"passed": 109, "failed": 0, "skipped": 0, "log": ".build/StagingCandidate20261104/web.log"},
+    "serviceUnit": {"passed": 344, "failed": 0, "skipped": 1, "log": ".build/StagingCandidate20261104/service.log", "scope": "The PostgreSQL billing case runs in the integration invocation."},
+    "serviceIntegration": {"passed": 174, "failed": 0, "skipped": 0, "log": ".build/StagingCandidate20261104/integration-rerun.log", "scope": "Disposable PostgreSQL database, durable billing and two browser-to-service contracts. An initial invocation omitted the explicit local worker port and one maintenance request returned 503. The corrected invocation uses port 55432 in the connection URL authority."},
+    "upgradeRestore": {"passed": 1, "failed": 0, "log": ".build/StagingCandidate20261104/upgrade.log", "scope": "Populated fictional baseline 008, additive migrations 009–029, device and household access, and a restored pre-upgrade PostgreSQL dump."}
+  },
+  "hostedReadOnly": {
+    "dashboard": "All eight expected migration rows and checksums are present. The Free plan shows no scheduled backups.",
+    "connector": "Permission denied for the exact staging project.",
+    "availableLocalCredential": "The configured application runtime role is scoped to app operations.",
+    "apiChecksPassed": 6,
+    "webCandidateChecksPassed": 2,
+    "webCandidateChecksFailed": 19,
+    "webObservation": "Both icon files match. The root returned different HTML and all sixteen named routes and two candidate bundle assets returned 404.",
+    "report": ".build/StagingCandidate20261104/hosted-candidate-smoke.json"
+  },
+  "verifier": {
+    "sourceSHA256": "88093f21ec5cea7225462597af68ba196c43368834a8e3165b2861d3e660a373",
+    "loopbackPassed": 27,
+    "negativeCasesRejected": ["Wrong HTML with HTTP 200", "Missing no-referrer policy", "Wrong JavaScript MIME type"],
+    "log": ".build/StagingCandidate20261104/verifier-fixture.log"
+  },
+  "remainingGate": "A protected logical backup of the actual staging database and verified private restore are required before rollout review. The current Supabase backup guide describes the logical backup options.",
+  "backupGuide": "https://supabase.com/docs/guides/platform/backups"
+}

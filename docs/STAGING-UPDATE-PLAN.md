@@ -1,6 +1,6 @@
 # Next staging update
 
-The candidate runtime is pinned to `1a1a42b390f176b97d47a9b46817cffd6ba8b960`. Hosted rollout requires a verified private staging backup and owner review.
+The candidate runtime is pinned to `1a1a42b390f176b97d47a9b46817cffd6ba8b960`. The matching deployment source at `911343c7b2d274e925421434749e7635a06e18b1` preserves the runtime and migration inputs and includes the latest web fixes. It passed the [candidate build and restore rehearsal](evidence/b11/staging-candidate-20261104/validation.json). Hosted rollout requires a verified private staging backup and owner review.
 
 ## Exact target
 
@@ -33,6 +33,8 @@ Child enrollment must remain unavailable until the same readiness predicate cove
 The owner-supplied business and support address are Venture House Group LLC and hello@roominthecart.com. Public help/privacy/terms/support source currently contains draft-review boundaries. The November 4 probes returned 404 for the four public pages on the current deployment. Publishing the staging pages and approving final production policies require separate review. Never configure a native policy URL as operational before checking the published route.
 
 ## Final owner decision and hosted verification
+
+Run `python3 scripts/check_staging.py --web-build web/public-build` against the staged deployment using the candidate's compiled output. This checks all six public API boundaries, both URL forms for each web screen, the exact HTML and static assets, content types and the no-referrer policy. Retain the result before testing browser behavior and authenticated flows.
 
 Once the candidate is reviewable, present its revision, actual migration list, backup/rollback details, affected data/functions, proposed secret destinations and any KWS Test publication as one concrete decision. Earlier approval for local backend installation does not authorize hosted migration or provider deletion. No paid plan, unrelated project change, production distribution or provider deletion is part of this plan.
 
