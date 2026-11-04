@@ -52,7 +52,7 @@ Tests use a separate DEBUG-only workspace and typed input, never the user's norm
 
 ## Current verification and staging
 
-Hosted CI compiled the unsigned iPhone Release and passed all 563 native model tests on iOS 26.2. The local build with the accessible meal-week layout also passed 563 model tests on iOS 27. The full native UI regression remains open, with focused simulator results and outstanding checks in the acceptance map. [Hosted CI evidence](docs/evidence/native/hosted-models-20261104.json) · [Local validation](docs/evidence/native/meal-week-20261104/validation.json)
+Hosted CI compiled the unsigned iPhone Release and passed all 563 native model tests on iOS 26.2. The local build with the accessible meal-week layout also passed 563 model tests on iOS 27. A Release build from a clean clone saved and reopened the sample comparison on fresh iOS 17 and iOS 27 simulators. The full native UI regression remains open. [Hosted CI evidence](docs/evidence/native/hosted-models-20261104.json) · [Local model validation](docs/evidence/native/meal-week-20261104/validation.json) · [Fresh-install validation](docs/evidence/native/release-first-install-20261104.json)
 
 Staging has migrations 001–008 applied. The upgrade through 029 passed a local rehearsal. The protected hosted backup and rollout review are pending. Launch also awaits approved policies and support, live provider and recovery checks, physical-device and mixed-phone acceptance, Apple signing, live StoreKit, and App Store review. [Staging plan](docs/STAGING-UPDATE-PLAN.md) · [Release requirements](docs/CURRENT-ACCEPTANCE.md#remaining-production-work-and-release-gates)
 

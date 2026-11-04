@@ -1,0 +1,114 @@
+{
+  "sourceCommit": "1429eeb6ca6c5ab3cd967530d6f12bbe397c6bab",
+  "toolchain": "Xcode 27.1 (27A9275)",
+  "configuration": "Ordinary Release for arm64 iPhone Simulator, built from a clean local clone",
+  "testHarnessOverrides": [
+    "ios/RoomInTheCart.xcodeproj/xcshareddata/xcschemes/RoomInTheCart-Release.xcscheme",
+    "ios/UITests/RoomInTheCartUITests.swift"
+  ],
+  "testHarnessSHA256": "f27b67e757a945343c921d3ef7fb773efc7357106481a1c26afe4da9cdfd9c43",
+  "buildLogSHA256": "3a83d9df2bf97105799a45b67c53908e2948fd82c0cc95c49a22cec5d85f0bd7",
+  "appExecutableSHA256": "0cfe71d3de1d18c684d299f261e1a8f3eff41e6bed19e1da7dc3609c67e83b06",
+  "bundleIdentifier": "dev.roominthecart.app",
+  "minimumOS": "17.0",
+  "bundleVerification": "Compiled Release iPhone app verified: executable, assets, privacy, environment, and embedded extensions.",
+  "strictProductionMetadataResult": "Built app verification failed: Release metadata is incomplete: HouseholdSubscriptionProductID, PrivacyPolicyURL, TermsOfUseURL, SupportURL",
+  "fixture": {
+    "item": "Fictional first-install wraps",
+    "need": 12,
+    "packA": {
+      "size": 8,
+      "unitPackUSD": 3,
+      "packs": 2,
+      "totalUSD": 6
+    },
+    "packB": {
+      "size": 6,
+      "unitPackUSD": 2,
+      "packs": 2,
+      "totalUSD": 4
+    },
+    "itemLimitUSD": 30
+  },
+  "ios27": {
+    "device": {
+      "model": "iPhone 17e",
+      "simulatorId": "EB6355CF-208B-45DF-A734-22B4CA2E5F8C",
+      "osVersion": "27.0",
+      "osBuild": "24A434"
+    },
+    "preinstallInventorySHA256": "5762bbd5cf9307eb2dfb1a0a76f8e711bf9bfee165096877ba2d0ce64974f510",
+    "result": ".build/FirstInstallRelease20261104/FirstInstallRelease.xcresult",
+    "logSHA256": "a7bcc8dd21bd0ee1a1159ba108d0fed0276581311c052d381efdc91a60252dcc",
+    "summarySHA256": "93925818f7cc74f1f5b23341c88c49bbb7b0aaff072a8e0fe4a4a1bf2924d51b",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": [],
+    "seconds": 110.139,
+    "databaseReadback": {
+      "integrity": "ok",
+      "databaseRelativePath": "Library/Application Support/RoomInTheCart/local.sqlite",
+      "records": 1,
+      "title": "Fictional first-install wraps",
+      "headRevision": 1,
+      "savedRevision": 1,
+      "envelopeSHA256": "b20cbc564f21a08f268ad90de824b90c2beb3813a0614914f278b6dc25e618ef"
+    },
+    "captures": {
+      "reopenedComparison": {
+        "path": ".build/FirstInstallRelease20261104/current-os-attachments/CED12185-133A-42B9-9933-43D0FED1DE34.png",
+        "sha256": "94270f5dc58ebbdd0689ff4cc4cbf454e60d65f5655fd70bfcd3a8b804aa81b0"
+      },
+      "savedComparison": {
+        "path": ".build/FirstInstallRelease20261104/current-os-attachments/990F1F8B-527E-412D-99F2-2FA193059194.png",
+        "sha256": "aa71838c070cd7db88058c69aaab626baa27f142373dead4466e3db2edab4bb0"
+      },
+      "emptyRecords": {
+        "path": ".build/FirstInstallRelease20261104/current-os-attachments/4B5352FC-9F2C-428B-A483-68353591DDB8.png",
+        "sha256": "20cae748fec26ec32a6d4e78ffeaaed08feeebb4521e18e6571a5a627f28e3d6"
+      }
+    }
+  },
+  "ios17": {
+    "device": {
+      "model": "iPhone SE",
+      "simulatorId": "5A4D8B17-1832-4C3F-AF96-0D5EDF2BF2F7",
+      "osVersion": "17.0",
+      "osBuild": "21A328"
+    },
+    "preinstallInventorySHA256": "c621e10648a3e43f384115c1cca0e1e3b101bd1d108b38e63dbe4490d06a98de",
+    "result": ".build/FirstInstallRelease20261104/FirstInstallReleaseMinimumOS.xcresult",
+    "logSHA256": "cbfd6a99ddc9bb3dbdd610f43c8ee4ab15cf7b731fc77170bc843cf5ecafc9c0",
+    "summarySHA256": "1365cea4d362bd74fc54661f3b1c9512c8b204583a11f12ba4d89514bb1c03a9",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": [],
+    "seconds": 81.217,
+    "databaseReadback": {
+      "integrity": "ok",
+      "databaseRelativePath": "Library/Application Support/RoomInTheCart/local.sqlite",
+      "records": 1,
+      "title": "Fictional first-install wraps",
+      "headRevision": 1,
+      "savedRevision": 1,
+      "envelopeSHA256": "c00052910664a07970b5911000118e167c8365906625648c0ed83c209fed6d61"
+    },
+    "captures": {
+      "reopenedComparison": {
+        "path": ".build/FirstInstallRelease20261104/minimum-os-attachments/76AD0964-97F6-4C59-859A-9E407BC29A90.png",
+        "sha256": "9c290c863e67cee2fe9ececd2d10ec87730b17a5d26112da280b0abc76b45b16"
+      },
+      "savedComparison": {
+        "path": ".build/FirstInstallRelease20261104/minimum-os-attachments/6FD51955-6B9C-452F-A29B-9305B348788F.png",
+        "sha256": "af06447ec379bfc29e59b0d0199d55b5b2c1c1712031db5cfd158c8b08817d11"
+      },
+      "emptyRecords": {
+        "path": ".build/FirstInstallRelease20261104/minimum-os-attachments/739113CF-EAB4-477C-9DFC-20AFA7C9755D.png",
+        "sha256": "dd57d65c45d7090143089373f8fe64a5a28aa7c722e598438bc8d1cbd19b502a"
+      }
+    }
+  },
+  "scope": "Each new simulator had no Room in the Cart installation. The ordinary app launched with no test arguments and the compiled household service URL was blank. Records started empty. The UI saved and reopened the original item-only result, and the standard app database held one revision-one comparison after relaunch. Normal app logging remained enabled. Physical first install, network-interruption behavior and signed distribution remain separate gates."
+}

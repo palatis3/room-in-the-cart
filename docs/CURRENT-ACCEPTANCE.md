@@ -109,7 +109,7 @@ Results belong to their own immutable source and binary identities. Do not add t
 
 | ID | Current implementation and proof | Remaining acceptance specific to the row |
 |---|---|---|
-| D01 | Offline Shop comparison and SQLite save/reopen; `ComparisonView`, `AppModel`; N518/N526 and earlier minimum-OS UI. | Final candidate first-install/offline and hardware accessibility. |
+| D01 | Offline Shop comparison and SQLite save/reopen; `ComparisonView`, `AppModel`; N518/N526. The [clean Release install](evidence/native/release-first-install-20261104.json) started with empty Records on iOS 17 and iOS 27, saved the same item-only result and reopened one revision-one record on each simulator. | Signed physical first install, network interruption and hardware accessibility. |
 | D02 | Staged typed/paste/selected-text/structured capture, duplicate semantics and batch undo; `LedgerModel`, capture/import ports; N526, SYSTEM-SELECTED-TEXT. | Physical and third-party sender checks, denied permissions and speech task. |
 | D03 | Scoped cap, fees, reserves, mode/slot/zone and dependent review invalidation; ledger facts/checkout; N526. | Final complete/unknown basis scenarios and hardware labels. |
 | D04 | Separate occurrences, contributions, named serving groups and protected allocations; dinner/ledger; N526, PLANNING, MEAL-WEEK. | Mixed-device shared week against deployed grants. |
