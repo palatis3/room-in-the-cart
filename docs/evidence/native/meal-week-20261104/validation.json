@@ -84,6 +84,14 @@
         "ios/Features/Dinners/DinnerPlanningHome.swift": "84b0958f5c902dba339fc5774c7e3d449bb9cef3d2bf102fe57489b360f48735",
         "ios/Features/Dinners/Dinners.xcstrings": "c86564f020522ad4075e6a0507260932423bcb1b4cda3a0fef9754856aa28de8",
         "ios/UITests/FreeJourneyUITests.swift": "339a0f41b4cf0a928993866cd82eb7585fbeba0dbcfcbe8709c2aaffbba8cfd4"
+      },
+      "archive": {
+        "sourceCommit": "e8081daee0940d213fe3b85498926127f9a6f06d",
+        "path": ".build/MealWeekIntegration20261104/RoomInTheCart-MealWeekIntegrated.xcarchive",
+        "executableSHA256": "e444838e4b0d974a050830e6ab6158b74e1b42790150817ed25c18e401cd98f0",
+        "executableUUID": "0D049CD2-DD9D-3E1D-B82D-0B9A50F93F4C",
+        "result": "Unsigned arm64 Release archive passed compiled-app verification.",
+        "strictProductionMetadataResult": "Release metadata is incomplete: HouseholdSubscriptionProductID, PrivacyPolicyURL, TermsOfUseURL, SupportURL"
       }
     }
   },
