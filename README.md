@@ -60,6 +60,8 @@ The **Security checks** workflow scans TypeScript/JavaScript and GitHub Actions 
 
 Use **Pre-release regression checks** on the candidate branch before an App Store submission or update. It runs the ordinary checks together with the additional suites below. Its final gate rejects failures, cancellations, skipped prerequisite jobs, missing performance baselines, incomplete CodeQL language coverage for the exact commit, serious open source findings, and high/critical vulnerabilities anywhere in the dependency lockfiles. The branch must still point to that candidate when the gate finishes. This workflow does not sign or upload an app.
 
+The additional workflows also run on pull requests that change their workflow or selection/measurement scripts, so changes to the checks themselves get hosted validation before merging. Performance pull-request checks enforce approved baselines; only an explicit manual calibration run can omit them. All these macOS jobs share the same five-runner limit.
+
 | Additional lane | What it checks | Execution |
 |---|---|---|
 | iOS deep checks | Memory errors and data races in all five Swift packages; 15 simulated StoreKit purchase, restore, renewal and revocation cases in each configured language | Separate sanitizer and billing jobs |

@@ -1,6 +1,15 @@
 name: iOS Release performance
 
 on:
+  pull_request:
+    paths:
+      - '.github/workflows/ios-performance.yml'
+      - 'scripts/check_ios_performance.py'
+      - 'scripts/test_check_ios_performance.py'
+      - 'scripts/ios_performance_baselines.json'
+      - 'ios/UITests/ReleasePerformanceUITests.swift'
+      - 'ios/UITests/Fixtures/ReleaseLedger500.txt'
+      - 'ios/RoomInTheCart.xcodeproj/xcshareddata/xcschemes/RoomInTheCart-Performance.xcscheme'
   workflow_dispatch:
     inputs:
       enforce_baselines:
@@ -90,7 +99,7 @@ jobs:
     env:
       PERFORMANCE_CASE: ${{ matrix.case }}
       TEST_METHOD: ${{ matrix.method }}
-      ENFORCE_BASELINES: ${{ inputs.enforce_baselines }}
+      ENFORCE_BASELINES: ${{ github.event_name == 'pull_request' || inputs.enforce_baselines }}
       FIXTURE: ios/UITests/Fixtures/ReleaseLedger500.txt
     steps:
       - uses: actions/checkout@v4

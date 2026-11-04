@@ -153,16 +153,33 @@ jobs:
           languages: swift
           build-mode: manual
       - name: Compile unsigned Release for iPhone
-        run: >-
-          xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart-Release
-          -configuration Release -sdk iphoneos -destination 'generic/platform=iOS'
-          -derivedDataPath .build/ReleaseDerivedData CODE_SIGNING_ALLOWED=NO build
+        timeout-minutes: 30
+        shell: bash
+        run: |
+          mkdir -p .build
+          # GitHub's Swift extraction guidance requires uncached compilation and the legacy driver.
+          # https://docs.github.com/en/code-security/tutorials/customize-code-scanning/prepare-code-for-analysis
+          xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart-Release \
+            -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' \
+            -derivedDataPath .build/ReleaseDerivedData ARCHS=arm64 \
+            CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
+            COMPILATION_CACHE_ENABLE_CACHING=NO SWIFT_ENABLE_COMPILE_CACHE=NO \
+            SWIFT_USE_INTEGRATED_DRIVER=NO build 2>&1 | tee .build/ReleaseBuild.log
       - name: Verify the compiled iPhone app and embedded extensions
         run: python3 scripts/check_built_app.py .build/ReleaseDerivedData/Build/Products/Release-iphoneos/RoomInTheCart.app --configuration Release
       - name: Analyze Swift security findings
         uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
         with:
           category: /language:swift
+      - name: Retain Release compilation log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: iphone-release-build-log-${{ github.run_attempt }}
+          path: .build/ReleaseBuild.log
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: ignore
   ios-build:
     runs-on: macos-15-intel
     timeout-minutes: 35

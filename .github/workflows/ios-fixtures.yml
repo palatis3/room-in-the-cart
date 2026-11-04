@@ -1,6 +1,11 @@
 name: iOS fixture checks
 
 on:
+  pull_request:
+    paths:
+      - '.github/workflows/ios-fixtures.yml'
+      - 'scripts/plan_ios_fixture_tests.py'
+      - 'scripts/test_plan_ios_fixture_tests.py'
   workflow_dispatch:
   workflow_call:
 

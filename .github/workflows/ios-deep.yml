@@ -1,5 +1,8 @@
 name: iOS deep checks
 on:
+  pull_request:
+    paths:
+      - '.github/workflows/ios-deep.yml'
   workflow_dispatch:
   workflow_call:
 permissions:
