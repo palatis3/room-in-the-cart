@@ -95,6 +95,67 @@
       }
     }
   },
+  "accessibleWeekLayout": {
+    "baseCommit": "355961bb811f0ec6b9ea3fe04a31ae2716d5a0f9",
+    "productSourceSHA256": "6bdfc4c161ea2ebb93ef37255da9f146d14a01649af41379a88a8e61ff83a187",
+    "baseline": {
+      "result": ".build/MealWeekAccessibility20261104/MealWeekAccessibility.xcresult",
+      "auditReports": {"dynamicType": 16, "contrast": 10},
+      "scope": "Four unfiltered viewports across List and Grid on iPhone 17e with iOS 27. The counts include repeated reports for a control seen in more than one viewport."
+    },
+    "unfilteredFollowUp": {
+      "result": ".build/MealWeekAccessibilityInline20261104/MealWeekAccessibilityInline.xcresult",
+      "logSHA256": "7fdb44561535a3de130f8636b5a660f2c2716f7ee16ce2c05a2c5421f816460b",
+      "auditReports": {"grid": 0, "listContrast": 2, "dynamicType": 0},
+      "scope": "Grid used separately scrollable pairs of days and reflowed the same controls for accessibility sizes. The high-contrast Week heading passed. The inline title remained visible and opaque edges kept scrolled content clear of the tab bar. The original Spanish test then failed to search upward for the week link after returning to a scrolled Dinners root."
+    },
+    "contrastProbe": {
+      "result": ".build/MealWeekAccessibilityInline20261104/MealWeekListContrastDiagnostic.xcresult",
+      "logSHA256": "8ea41b9813e65d3bdad99ccead6ba2e3729ca1b34d188feff52a541743be44e6",
+      "reportsByViewport": {"controls": 1, "scrolledMiddle": 3, "endOfWeek": 0},
+      "edgeFramesInPoints": {
+        "controlsThursdayNote": [742.3, 44.0],
+        "middleWednesdayHeading": [76.3, 42.3],
+        "middleSundayHeading": [736.7, 42.3],
+        "middleSundayNote": [789.0, 44.0]
+      },
+      "middleCapture": ".build/MealWeekAccessibilityInline20261104/contrast-probe-attachments/F01448DA-1C6F-4868-90E6-8B86FEC48B51.png",
+      "middleCaptureSHA256": "4e7446293dcc477f426bab0fabcc4783838c82abe0f6fd2bdb00dacd8fb7ef4e",
+      "endCapture": ".build/MealWeekAccessibilityInline20261104/contrast-probe-attachments/85D041FE-2F69-459A-82BB-C2F467DFC59C.png",
+      "endCaptureSHA256": "fb8675b8797de380f5965f89e76bc5c46af57b97511d0f39e69d30ec33bd0a45",
+      "finding": "All reported frames intersected or fell outside an opaque scroll edge in the captured viewport. The same Sunday heading and note were fully visible at the end of the week, where the contrast audit recorded zero issues. The diagnostic result retains the four original reports."
+    },
+    "functionalRetests": {
+      "spanishIOS27": {"result": ".build/MealWeekAccessibilityInline20261104/MealWeekListContrastDiagnostic.xcresult", "passed": 1, "seconds": 104.810, "scope": "Same meal and lunch IDs in both presentations, native Back and tab return, exact date note, restart and rediscovery with the corrected bidirectional search."},
+      "crossWeekIOS17": {"result": ".build/MealWeekAccessibilityInline20261104/MealWeekInlineMinimumOS.xcresult", "logSHA256": "01ebb83036d37c487dfbf830a611ef0f90a304fd3c10f310829e11aeac03bf9f", "passed": 1, "seconds": 169.671, "scope": "The same dinner moved across weeks and the protected lunch stayed on its original day after relaunch. The test uses the scoped iOS 17 logging accommodation."}
+    },
+    "largestSystemText": {
+      "result": ".build/MealWeekAccessibilityInline20261104/largest-system-complete-frames.xcresult",
+      "logSHA256": "a2af25819a841ad23237c509053dc27ffdb165a3298d53bce3d89a164b06466d",
+      "preferences": {"contentSize": "accessibility-extra-extra-extra-large", "appearance": "dark", "increaseContrast": "enabled"},
+      "preferencesSHA256": "569b30afd6cc4f3e1c05a066eb3149603c4aae807cca1a96b56cf4af1bf1ad31",
+      "passed": 1,
+      "seconds": 76.438,
+      "captureDirectory": ".build/MealWeekAccessibilityInline20261104/largest-system-complete-frames-attachments",
+      "captures": {
+        "dinner": {"filename": "0E7C8F1D-417C-46E4-86F3-6AF82D3C64CD.png", "sha256": "bff1702a6b03bd91a474e0124a61225f6d18ac16d765b9c7f9c80934cc1c11d2"},
+        "lunch": {"filename": "2795CCC4-22DE-45BE-A806-873842E01856.png", "sha256": "ef8d2a7db5bd3a43000665238719100906c63eaa51355c80140d2bca8a0f4d88"},
+        "firstDayNote": {"filename": "74CC2956-5B54-49E9-B710-3DCDC6BC346F.png", "sha256": "9a8f23eb4c782bfe2e0faf60376b2ab7709ecbf47821e9d75d37e7d5865ab769"},
+        "secondDayNote": {"filename": "5D222060-7E5D-478B-8EF7-69F216827292.png", "sha256": "815e399a06ad059dac18f3ebbecc3c748ec5c64968314b751f085dc73fe37187"}
+      },
+      "scope": "Consecutive dates have the same leading column position at the largest system text setting. The test scrolled the full frame of each captured control into the unobscured viewport. The saved dinner and lunch labels retain the original Spanish text and quantity. Tapping the second note opens the exact next civil day. Simulator settings were restored afterward."
+    },
+    "archive": {
+      "baseCommit": "421042d7f9f2fbc23933c52e4c5ec0331025bb29",
+      "path": ".build/MealWeekAccessibilityInline20261104/ReleaseCheck/RoomInTheCart-MealWeekAccessibility.xcarchive",
+      "binaryUUID": "66DBE332-7430-3E6E-A3A3-4BBD396F9B32",
+      "executableSHA256": "7bd152173ee242b467d4fbe371778d62c18ba625991cd787f56b4e4430b3f935",
+      "signed": false,
+      "verification": "Compiled Release iPhone app verified: executable, assets, privacy, environment, and embedded extensions.",
+      "strictProductionMetadataResult": "Built app verification failed: Release metadata is incomplete: HouseholdSubscriptionProductID, PrivacyPolicyURL, TermsOfUseURL, SupportURL"
+    },
+    "remaining": "Physical VoiceOver and Switch Control and the deployed cross-device meal week remain open. The partially visible List audit findings remain recorded."
+  },
   "archive": {
     "path": ".build/MealWeekCorrected20261104/RoomInTheCart-MealWeek.xcarchive",
     "binaryUUID": "405D8E02-B885-30BE-BBAE-BAE7FA3F995E",
