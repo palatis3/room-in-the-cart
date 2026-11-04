@@ -45,5 +45,32 @@
       "replacementLog": ".build/NativeCheckpoint20261104-3e2558c/ordinary.log"
     }
   },
+  "currentDeferralRetest": {
+    "appSourceCommit": "3510eb1d97d51958e80032475cb9a4de54a34805",
+    "appDebugDylibSHA256": "7270ccca0337bd8c9c00a095953cb2e61cf7c4d05ce6a6b04b02d68f36285e93",
+    "uiTestExecutableSHA256": "42c07b12b31d396cce6ae3881a148f65f6b38c967c021c0e1704f1d89e5b69fe",
+    "device": "iPhone 17e, iOS 27.0 (24A434)",
+    "fullSuiteAttempt": {
+      "result": ".build/CurrentOrdinary3510eb1/ordinary-ui.xcresult",
+      "logExcerpt": ".build/CurrentOrdinary3510eb1/deferral-full-suite-timeout-excerpt.log",
+      "logExcerptSHA256": "0dbb0468b3973b68012827292fc2353bac65919b451e4bbaa972a249fa236ff3",
+      "animationNotificationTimeouts": 10,
+      "testAllowanceSeconds": 720,
+      "appSampleSHA256": "c030bbf2de70105268850e1319f6788554a23efd7da9c3be12832eaa47344d6b",
+      "finding": "The case exceeded its execution allowance while XCTest repeatedly waited for the app animation notification. A two-second sample of the app main thread during a wait showed the normal system run loop waiting for a message. XCTest relaunched and continued with the saved-offer case. The sample cannot identify the cause of the missed notifications."
+    },
+    "isolatedRetest": {
+      "result": ".build/CurrentOrdinary3510eb1/isolated-deferral-reminder.xcresult",
+      "logSHA256": "a53d421e8f5a1b92582dd916a5fbd01b662b08c05378cd41d7d92afc8a8813d9",
+      "summarySHA256": "fc8a7d15ddb3fdd40a2b807d6f35832bd648d3e4e3d97be06af843edf8b83b09",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 121.781,
+      "animationNotificationTimeouts": 0,
+      "runtimeWarnings": [],
+      "scope": "The same app and test products ran on a separate simulator with normal app logging. Review did not schedule, explicit confirmation showed the denied-schedule state, and turning the reminder off and cancelling preserved the deferral. The earlier timeout remains part of the full suite result."
+    }
+  },
   "scope": "Test-only logging configuration. Both UI cases still exercise explicit review, denied schedule under the isolated adapter, cancellation, and preservation of the original deferral or offer. Physical notification permission and delivery remain open."
 }
