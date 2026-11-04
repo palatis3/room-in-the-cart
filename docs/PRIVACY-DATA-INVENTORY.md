@@ -16,7 +16,9 @@ The ordinary local Free workflow keeps its workspace on the iPhone. Signing into
 
 All listed data is treated as linked to identity and used for app functionality, and none is used for tracking. User ID, Other user content and Purchase history additionally support optional household outcome and retention analytics. These declarations do not authorize new uploads. Existing authorization and explicit review boundaries still control each transmission.
 
-Raw voice recordings are not retained or uploaded by the app's on-device capture path. Photo/OCR review and local correction data stay local unless the person explicitly submits reviewed text through a sharing feature. Local benchmarks and the app's redacted diagnostic sink are not a remote analytics service. Apple handles payment credentials; the app receives membership transaction evidence, not a payment card or bank account number.
+The capture path processes speech and photo text on the iPhone. Speech capture keeps recognized text for review while microphone audio stays in transient buffers. A contributor can explicitly submit the reviewed request text. The spelling rule stays in the app’s protected local store. The app keeps local benchmarks and redacted diagnostic events on the device. Apple handles payment credentials and sends the app membership transaction evidence.
+
+Optional spelling memory stores the original and corrected product-name fragments in backup-excluded storage. Private workspaces use their own local profile. An enrolled adult contributor uses a separate account, household member and language scope. Access changes hide the prior profile. Forget and opt-out remove the selected spellings, and confirmed account deletion clears the account’s spelling files across memberships and languages.
 
 The app declares `CA92.1` for its UserDefaults and `C617.1` for file-type checks in its private recovery store. Review all shipped targets again after any SDK or framework change. [Required-reason API audit](REQUIRED-REASON-API-AUDIT.md)
 
