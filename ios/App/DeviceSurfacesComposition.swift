@@ -316,9 +316,11 @@ import DeviceSurfaces
             }
             guard privateAuthorized else { destination = .unavailable(UUID()); return }
             guard ledger?.ready == true, pickup?.ready == true else { pendingURL = url; return }
+            let start = nonce
             Task {
-                // A background transition may precede this scheduled task.
-                guard privateAuthorized else { return }
+                // Background cancels this entry even if a later foreground
+                // restores private authority before the task executes.
+                guard nonce == start, privateAuthorized else { return }
                 await open(handle)
             }
         } catch { destination = .unavailable(UUID()) }

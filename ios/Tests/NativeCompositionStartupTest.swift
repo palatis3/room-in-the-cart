@@ -5,6 +5,27 @@ import DeviceSurfaces
 
 #if DEBUG
 @MainActor final class DeviceSurfacesCompositionStartupTests: XCTestCase {
+    func testQueuedOpaqueURLDoesNotSurviveBackgroundThenForeground() async throws {
+        let f = try await coldURLFixture(); defer { f.cleanup() }
+        let saved = f.ledger.workspace, revision = f.ledger.revision
+        let url = f.codec.url(handle: f.handle)
+        f.composition.handle(url: url)
+        // No suspension before background. Legitimate foreground restores
+        // authority before the old URL's scheduled task gets to run.
+        f.composition.background()
+        await f.composition.foreground()
+        try await Task.sleep(for: .milliseconds(200))
+        XCTAssertTrue(f.composition.privateAuthorized, "Legitimate foreground should restore authority")
+        XCTAssertNil(f.composition.destination, "Background must cancel an old queued URL even after foreground")
+        XCTAssertEqual(f.ledger.workspace, saved); XCTAssertEqual(f.ledger.revision, revision)
+        // A new explicit URL in this foreground session must still work.
+        f.composition.destination = nil
+        f.composition.handle(url: url); await waitForSurfaceDestination(f.composition)
+        guard case .shop(let id) = f.composition.destination else { return XCTFail("A fresh current URL should still open") }
+        XCTAssertEqual(id, saved.selectedShopID)
+        XCTAssertEqual(f.ledger.workspace, saved); XCTAssertEqual(f.ledger.revision, revision)
+    }
+
     func testReadyGenericURLDoesNotReactivateAfterBackgroundBeforeTaskRuns() async throws {
         let f = try await coldURLFixture(); defer { f.cleanup() }
         let saved = f.ledger.workspace, revision = f.ledger.revision
