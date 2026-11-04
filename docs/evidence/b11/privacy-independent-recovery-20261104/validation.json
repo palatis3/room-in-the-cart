@@ -1,0 +1,38 @@
+{
+  "sourceSHA256": "3defc94388920d0bd29a6a28d93bb13df894cd64fdc91e001a4be8c938cb17fa",
+  "sourceFiles": 130,
+  "runtime": {
+    "Node": "22.14.0",
+    "PostgreSQL": "17.11"
+  },
+  "serviceBuild": "passed",
+  "authorityAndRecovery": {
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "artifact": "postgres-recovery.tap",
+    "sha256": "a58bdf69e2524f5c65e570aad7fdaab9331e79e524d760319967ccc9fac9df37"
+  },
+  "serviceUnits": {
+    "passed": 344,
+    "failed": 0,
+    "skipped": 1,
+    "localArtifact": ".build/PrivacyIndependentRecovery-verified-unit-20261104.tap",
+    "sha256": "1852f09c5c7913dfabec496e582914088e62f92919c611fe9eb36dc73809e044",
+    "skip": "Optional billing PostgreSQL fixture, covered in the preceding integration checkpoint."
+  },
+  "recoveryScope": [
+    "Two disposable PostgreSQL clusters and actual HTTPS/source roles.",
+    "Wrong source OID rejected before checkpoint mutation. The authority fence blocks old publication and the source fence waits for a real held commit.",
+    "Sealed commit and rollback outcomes, exact source and admission coverage, stale reservation retired, false commit absence remains fenced, signed archive and exact re-export.",
+    "Actual pg_dump/pg_restore into a distinct quarantine database, real verify/plan/replay/gate commands, duplicate replay zero writes, target erased and unrelated member retained.",
+    "Public-key export reproduces the archive after removal of the source cluster."
+  ],
+  "limits": [
+    "Synthetic provider behavior, test credentials, local databases and one host. Hosted failure-domain, backups, deployment, provider erasure and release remain open.",
+    "The SQL replay function retains its existing 1000-event and 16-MiB plan limits. Source observer also has a per-event limit. Align these bounds with the journal before runtime activation.",
+    "A source loss before sealing requires recovering the bound source or proving the exact source outcome. Export after source loss applies to a previously sealed archive.",
+    "The first unit run caught an error-message mismatch introduced by prefix verification. The final run preserves the prior verifier error wording."
+  ],
+  "reproduce": "From service, npm run build, then TEST_POSTGRES_BIN=/path/to/postgres/bin node --test tests/privacy-journal-pg-authority.postgres.mjs."
+}

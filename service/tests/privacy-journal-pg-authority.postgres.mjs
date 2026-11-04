@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
-import {randomUUID,randomBytes,sign} from 'node:crypto';
+import {createHash,randomUUID,randomBytes,sign} from 'node:crypto';
 import {execFileSync,spawn} from 'node:child_process';
 import {once} from 'node:events';
-import {mkdtemp,readFile,rm,writeFile} from 'node:fs/promises';
+import {chmod,mkdir,mkdtemp,readFile,rm,writeFile} from 'node:fs/promises';
 import {join,resolve} from 'node:path';
 import {createInterface} from 'node:readline';
 import {setTimeout as delay} from 'node:timers/promises';
@@ -14,11 +14,12 @@ import {createPostgresJournalAuthority} from '../dist/privacy-journal-pg-authori
 import {createPostgresCommittedSource} from '../dist/privacy-journal-pg-source.js';
 import {durableJournalScopeDigest,verifyDurableAdmissionReceipt} from '../dist/privacy-journal-durable.js';
 import {createHTTPSJournalAuthority} from '../dist/privacy-journal-https.js';
+import {createIndependentRecovery,verifyIndependentRecovery} from '../dist/privacy-journal-recovery.js';
 import {PrivacyMaintenance,PrivacyService} from '../dist/privacy.js';
 import {HouseholdRepository} from '../dist/repository.js';
 import {SupabaseSessionVerifier} from '../dist/auth.js';
 import {fixture} from './durable-authority-fixture.mjs';
-import {call,canonical,digest,progressEvent,zero} from './durable-independent-fixture.mjs';
+import {call,canonical,digest,gate,progressEvent,zero} from './durable-independent-fixture.mjs';
 
 if(!process.env.TEST_POSTGRES_BIN)throw Error('Set TEST_POSTGRES_BIN to the directory containing PostgreSQL executables');
 const bin=resolve(process.env.TEST_POSTGRES_BIN),dir=await mkdtemp('/tmp/ritc-jca-');
@@ -37,6 +38,7 @@ before(async()=>{
   CREATE ROLE ${objectRole} LOGIN; CREATE ROLE ${checkpointRole} LOGIN;
   GRANT ritc_checkpoint_runtime TO ${checkpointRole}; GRANT ritc_record_runtime TO ${objectRole}`);
  await owner.query(await readFile(new URL('../journal-authority/001_checkpoint.sql',import.meta.url),'utf8'));
+ await owner.query(await readFile(new URL('../journal-authority/002_recovery.sql',import.meta.url),'utf8'));
  await owner.query('INSERT INTO ritc_records.store(identity) VALUES($1)',[storeIdentity]);
  const config=join(dir,'tls.cnf'),keyPath=join(dir,'tls.key'),certPath=join(dir,'tls.crt');
  await writeFile(config,'[req]\nprompt=no\ndistinguished_name=dn\nx509_extensions=ext\n[dn]\nCN=127.0.0.1\n[ext]\nbasicConstraints=critical,CA:TRUE\nsubjectAltName=IP:127.0.0.1\n');
@@ -95,7 +97,7 @@ async function startAuthority(configPath){
 async function sourceCluster(){
  const socket=await mkdtemp('/tmp/ritc-jcs-'),cluster=join(socket,'data');
  const runtime='ritc_fixture_app',worker='ritc_fixture_worker',observer='ritc_fixture_observer';
- const sourcePool=user=>new pg.Pool({host:socket,port:55434,database:'postgres',user,password:()=>'',ssl:false,connectionTimeoutMillis:1500,max:2});
+ const sourcePool=(user,database='postgres')=>new pg.Pool({host:socket,port:55434,database,user,password:()=>'',ssl:false,connectionTimeoutMillis:1500,max:2});
  let sourceOwner,started=false;
  const close=async()=>{
   await sourceOwner?.end();
@@ -129,6 +131,26 @@ async function sourceCluster(){
    configuration:{databaseOid:database_oid,observerRoleOid:observer_oid,ownerRoleOid:owner_oid,ownerRole,
     connection:{host:socket,port:55434,database:'postgres',user:observer},applicationName:'ritc-independent-source-fixture'}};
  }catch(error){await close();throw error;}
+}
+
+async function recoveryFixture(source){
+ const r=await register({schemaDigest:source.schemaDigest});
+ const pins=r.f.pins;
+ await source.owner.query('INSERT INTO ritc.privacy_journal_origin(lineage,schema_digest,configuration_id) VALUES($1,$2,$3)',[pins.lineage,pins.schemaDigest,pins.configurationId]);
+ await source.owner.query('INSERT INTO ritc.privacy_journal_source_registration(source_identity,database_oid,observer_oid) VALUES($1,$2,$3)',
+  [pins.sourceIdentity,source.configuration.databaseOid,source.configuration.observerRoleOid]);
+ const {database_oid,owner_oid}=(await owner.query(`SELECT
+  (SELECT oid::text FROM pg_database WHERE datname=current_database()) AS database_oid,
+  (SELECT oid::text FROM pg_roles WHERE rolname=current_user) AS owner_oid`)).rows[0];
+ const config={pins,writerPrivateKey:r.f.writerKeys.privateKey,authorityPrivateKey:r.f.authorityKeys.privateKey,
+  source:{pool:source.owner,identity:{database:'postgres',databaseOid:source.configuration.databaseOid,owner:ownerRole,ownerOid:source.configuration.ownerRoleOid}},
+  checkpoint:{pool:owner,identity:{database:'postgres',databaseOid:database_oid,owner:ownerRole,ownerOid:owner_oid}}};
+ return {r,config,operator:createIndependentRecovery(config)};
+}
+const pem=key=>key.export({format:'pem',type:'pkcs8'}).toString();
+function cli(script,...args){
+ return JSON.parse(execFileSync(process.execPath,[fileURLToPath(new URL('../scripts/'+script,import.meta.url)),...args],
+  {env:environment,stdio:['ignore','pipe','pipe'],timeout:15000}).toString());
 }
 
 test('the two runtime roles cannot replace, delete, or impersonate retained records and admissions',async()=>{
@@ -286,4 +308,135 @@ test('crash restart preserves exact admitted versions, claims, and expired reser
   await assert.rejects(blocked.authority.publish(pending.ticket,orphan,nonce(sameAttempt)),/reservation expired/);
   await assert.rejects(blocked.uncertainty.begin({scopeDigest:uncertain.scope,eventId:uncertain.f.event().eventId,transition:'intent'},time()),/origin is blocked/);
  }finally{await Promise.all([reopened.close(),blocked.close()]);}
+});
+
+test('operator waits for the source, seals exact intents, replays a prior backup, and exports after source loss',async()=>{
+ const source=await sourceCluster(),runtime=source.pool(source.runtime);
+ let ports,observer,destination,recovery,requestPending;
+ let sourceClosed=false;
+ const entered=gate(),resume=gate();
+ try{
+  const {r,config,operator}=await recoveryFixture(source);
+  const keys=r.f,pins=keys.pins;
+  ports=await r.open();
+  observer=createPostgresCommittedSource({pins,authorityPublicKey:keys.authorityKeys.publicKey,...source.configuration});
+  const {port:journal}=keys.adapter({source:observer.source,authority:ports.authority,records:ports.records,uncertainty:ports.uncertainty});
+  const issuer='https://restore.fixture.invalid';
+  const actor=async()=>{
+   const subject=randomUUID(),sessionId=randomUUID();
+   await source.owner.query('INSERT INTO auth.sessions(id,user_id) VALUES($1,$2)',[sessionId,subject]);
+   return {subject,sessionId,issuer,expiresAt:new Date(Date.now()+60000),authenticatedAt:new Date(),authenticatedMethod:'otp'};
+  };
+  const committed=await actor(),rolledBack=await actor(),retained=await actor();
+  const householdId=randomUUID(),otherHousehold=randomUUID(),memberId=randomUUID(),otherMember=randomUUID();
+  await source.owner.query("INSERT INTO ritc.household(household_id,label) VALUES($1,'Restore fixture'),($2,'Retained fixture')",[householdId,otherHousehold]);
+  await source.owner.query(`INSERT INTO ritc.member(household_id,member_id,issuer,subject,alias,kind,state,organizer,can_contribute)
+   VALUES($1,$2,$5,$6,'Remove this member','adult','active',true,true),($3,$4,$5,$7,'Retain this member','adult','active',true,true)`,
+   [householdId,memberId,otherHousehold,otherMember,issuer,committed.subject,retained.subject]);
+  const socket=source.configuration.connection.host,dump=join(dir,'before-deletion.dump');
+  pgTool('pg_dump',['-h',socket,'-p','55434','-U',ownerRole,'-d','postgres','-Fc','-f',dump]);await chmod(dump,0o600);
+  const repo=new HouseholdRepository(runtime,{allowChildNetwork:false,noticeVersion:'fixture',sessionStatus:new SupabaseSessionVerifier(issuer)});
+  let providerDeletes=0;
+  const provider={assertAvailable:async()=>{},deleteAccount:async()=>{providerDeletes++;}};
+  const policy={receiptRetentionDays:1,erasureMarkerRetentionDays:2,verifiedBackupRetentionDays:1};
+  const input=households=>({clientKey:randomUUID(),statusToken:randomBytes(32).toString('base64url'),confirm:true,households});
+  const rolledInput=input([]),committedInput=input([{householdId,organizer:'archive',shops:[],eraseChildProfiles:[]}]);
+  const aborting=new PrivacyService(repo,{provider,policy,journal:{...journal,beforeCommit:async(event,context)=>{
+   await journal.beforeCommit(event,context);throw Error('Synthetic abort after durable intent');
+  }}});
+  await assert.rejects(aborting.request(rolledBack,rolledInput),/Synthetic abort/);
+  const held=new PrivacyService(repo,{provider,policy,journal:{...journal,beforeCommit:async(event,context)=>{
+   await journal.beforeCommit(event,context);entered.resolve();await resume.promise;
+  },afterCommit:async()=>{throw Error('Synthetic lost observation');}}});
+  requestPending=held.request(committed,committedInput);requestPending.catch(()=>{});
+  await Promise.race([entered.promise,requestPending,delay(2000).then(()=>{throw Error('Source never entered held transaction');})]);
+  const uncertainCall=time(),uncertain=await reserve(r,ports,keys.event(),'intent',uncertainCall);
+  const orphan=await ports.records.putExact(uncertain.ticket,uncertain.content,uncertainCall);
+  const wrong=createIndependentRecovery({...config,source:{...config.source,identity:{...config.source.identity,databaseOid:'999999'}}});
+  await assert.rejects(wrong.fence(time()),/Fixed recovery database/);
+  assert.equal((await ports.authority.readCurrent(nonce(time()))).value.mode,'pending');
+  recovery=operator.recover(call({deadlineUnixMs:Date.now()+12000}));recovery.catch(()=>{});
+  const started=Date.now();
+  while((await ports.authority.readCurrent(nonce(time()))).value.mode!=='recovery'){
+   if(Date.now()-started>2000)throw Error('Checkpoint fence did not arrive');await delay(10);
+  }
+  assert.equal((await source.owner.query('SELECT fenced FROM ritc.privacy_journal_origin')).rows[0].fenced,false);
+  await assert.rejects(ports.authority.publish(uncertain.ticket,orphan,nonce(uncertainCall)),/reservation expired or changed/);
+  await assert.rejects(ports.checkpointPool.query('UPDATE ritc_checkpoint.origin SET claim=NULL WHERE lineage=$1',[pins.lineage]),{code:'42501'});
+  resume.resolve();
+  await assert.rejects(requestPending,/Synthetic lost observation/);
+  const bundle=await recovery;
+  const checked=verifyIndependentRecovery(bundle.bytes,bundle.proof,pins,keys.writerKeys.publicKey,keys.authorityKeys.publicKey);
+  assert.equal(checked.events.length,1);
+  assert.equal(checked.events[0].payload.jobId,committedInput.clientKey);
+  assert.deepEqual(bundle.bytes.toString().trim().split('\n').map(line=>JSON.parse(line).kind),['intent','intent','commit','rollback']);
+  assert.equal(bundle.proof.retiredReservation,uncertain.ticket.operationId);
+  assert.equal(bundle.proof.retiredClaim,uncertain.claim.claimId);
+  assert.equal((await ports.authority.readCurrent(nonce(time()))).value.mode,'sealed');
+  await assert.rejects(ports.checkpointPool.query('SELECT proof FROM ritc_checkpoint.recovery_seal WHERE lineage=$1',[pins.lineage]),{code:'42501'});
+  assert.throws(()=>verifyIndependentRecovery(bundle.bytes,{...bundle.proof,sourceDatabaseOid:'42'},pins,keys.writerKeys.publicKey,keys.authorityKeys.publicKey),/signature or scope conflict/);
+  assert.throws(()=>verifyIndependentRecovery(bundle.bytes.subarray(0,bundle.bytes.lastIndexOf(10,bundle.bytes.length-2)+1),bundle.proof,pins,keys.writerKeys.publicKey,keys.authorityKeys.publicKey),/head conflict/);
+  assert.equal((await source.owner.query('SELECT count(*)::int AS n FROM ritc.privacy_journal_ack')).rows[0].n,0);
+  assert.equal(providerDeletes,0);
+
+  const exportDirectory=join(dir,'recovery-export'),operatorPath=join(dir,'operator.json');
+  await mkdir(exportDirectory,{mode:0o700});
+  const endpoint=(identity,host,port)=>({connection:{host,port,database:identity.database,user:identity.owner},databaseOid:identity.databaseOid,ownerOid:identity.ownerOid});
+  await writeFile(operatorPath,JSON.stringify({pins,writerPrivateKey:pem(config.writerPrivateKey),authorityPrivateKey:pem(config.authorityPrivateKey),
+   checkpoint:endpoint(config.checkpoint.identity,dir,55433),source:endpoint(config.source.identity,socket,55434),exportDirectory}),{mode:0o600});
+  const exported=cli('journal-recovery.mjs','recover',operatorPath);
+  assert.equal(exported.bundleDigest,bundle.proof.bundleDigest);
+  assert.deepEqual(await readFile(join(exportDirectory,'journal.ndjson')),bundle.bytes);
+  assert.deepEqual(cli('journal-recovery.mjs','recover',operatorPath),exported);
+
+  const quarantine='ritc_quarantine_'+randomUUID().replaceAll('-','').slice(0,12);
+  await source.owner.query('CREATE DATABASE '+quarantine+' TEMPLATE template0');
+  await source.owner.query('REVOKE CONNECT ON DATABASE '+quarantine+' FROM PUBLIC');
+  await source.owner.query('GRANT CONNECT ON DATABASE '+quarantine+' TO '+source.worker);
+  pgTool('pg_restore',['--exit-on-error','--no-owner','-h',socket,'-p','55434','-U',ownerRole,'-d',quarantine,dump]);
+  destination=source.pool(ownerRole,quarantine);
+  const {oid}=(await destination.query('SELECT oid FROM pg_database WHERE datname=current_database()')).rows[0];
+  const restorePath=join(dir,'restore.json'),binding={database:quarantine,oid,port:55434,socketDirectory:socket};
+  const configuration={destination:{...binding,user:ownerRole},worker:{...binding,user:source.worker},runId:randomUUID(),dumpPath:dump,
+   dumpSHA256:createHash('sha256').update(await readFile(dump)).digest('hex'),headPath:join(exportDirectory,'head.json'),journalPath:join(exportDirectory,'journal.ndjson'),
+   trust:{...keys.origin,keyId:pins.keyId,publicKey:keys.writerKeys.publicKeyPEM},authoritySeal:{path:join(exportDirectory,'seal.json'),pins,authorityPublicKey:keys.authorityKeys.publicKeyPEM}};
+  await writeFile(restorePath,JSON.stringify(configuration),{mode:0o600});
+  assert.equal(cli('privacy-journal.mjs','verify',restorePath).events,1);
+  assert.equal(cli('privacy-journal.mjs','plan',restorePath).quarantined,true);
+  assert.throws(()=>cli('privacy-journal.mjs','gate',restorePath));
+  assert.equal(cli('privacy-journal.mjs','replay',restorePath).targetsApplied,1);
+  assert.equal(cli('privacy-journal.mjs','replay',restorePath).targetsApplied,0);
+  assert.deepEqual(cli('privacy-journal.mjs','gate',restorePath),{runId:configuration.runId,localAppErasureApplied:true,syntheticProbePermitted:true,providerReconciliationRequired:true,productionReady:false});
+  const members=(await destination.query('SELECT member_id,alias,erased_at FROM ritc.member WHERE member_id IN ($1,$2)',[memberId,otherMember])).rows;
+  assert.equal(members.find(member=>member.member_id===memberId).alias,'Removed member');
+  assert.ok(members.find(member=>member.member_id===memberId).erased_at);
+  assert.equal(members.find(member=>member.member_id===otherMember).alias,'Retain this member');
+  assert.equal(members.find(member=>member.member_id===otherMember).erased_at,null);
+  const blocked=(await destination.query('SELECT ritc.identity_blocked($1,$2) AS blocked',[issuer,committed.subject])).rows[0];
+  assert.equal(blocked.blocked,true);
+  await Promise.all([destination.end(),observer.close(),runtime.end()]);await source.close();sourceClosed=true;
+  const exportOnly=join(dir,'independent-export'),exportPath=join(dir,'export.json');
+  await mkdir(exportOnly,{mode:0o700});
+  await writeFile(exportPath,JSON.stringify({pins,writerPublicKey:keys.writerKeys.publicKeyPEM,authorityPublicKey:keys.authorityKeys.publicKeyPEM,
+   sourceDatabaseOid:config.source.identity.databaseOid,checkpoint:endpoint(config.checkpoint.identity,dir,55433),exportDirectory:exportOnly}),{mode:0o600});
+  assert.deepEqual(cli('journal-recovery.mjs','export',exportPath),exported);
+  assert.deepEqual(await readFile(join(exportOnly,'journal.ndjson')),bundle.bytes);
+  assert.deepEqual(JSON.parse(await readFile(join(exportOnly,'seal.json'),'utf8')),bundle.proof);
+ }finally{
+  resume.resolve();await requestPending?.catch(()=>{});await recovery?.catch(()=>{});
+  if(!sourceClosed){await Promise.all([destination?.end(),observer?.close(),runtime.end()]);await source.close();}
+  await ports?.close();
+ }
+});
+
+test('a persisted commit claim without its source event cannot seal or reopen the fenced lineage',async()=>{
+ const source=await sourceCluster();let ports;
+ try{
+  const {r,operator}=await recoveryFixture(source);ports=await r.open();
+  await ports.uncertainty.begin({scopeDigest:r.scope,eventId:r.f.event().eventId,transition:'commit'},time());
+  await assert.rejects(operator.recover(time()),/Uncertain commit is absent/);
+  assert.equal((await ports.authority.readCurrent(nonce(time()))).value.mode,'recovery');
+  assert.equal((await owner.query('SELECT 1 FROM ritc_checkpoint.recovery_seal WHERE lineage=$1',[r.f.pins.lineage])).rowCount,0);
+  assert.equal((await source.owner.query('SELECT fenced FROM ritc.privacy_journal_origin')).rows[0].fenced,true);
+ }finally{await ports?.close();await source.close();}
 });

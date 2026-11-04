@@ -4,6 +4,14 @@ The complete production app remains the objective. The current checkpoint below 
 
 ## Current checkpoint — November 4
 
+The independent journal now has owner-only fencing, recovery and export. The authority closes admission first and the source fence waits for in-flight capture transactions. Recovery verifies retained admissions against the fenced source, records exact outcomes, and seals the archive. A standalone export command reads a previously sealed archive from the independent database using public keys even after the source is gone.
+
+The [eight-case PostgreSQL and HTTPS run](evidence/b11/privacy-independent-recovery-20261104/validation.json) includes a real pre-deletion `pg_dump` and restore. The operator waited for a held source commit, recovered its acceptance, rolled back a separate aborted intent, and prevented an old reservation from publishing. The actual `verify`, `plan`, `replay`, and `gate` commands erased the intended member in quarantine, preserved an unrelated member, blocked the deleted identity, and repeated replay without another erasure. The prior restore command’s stale import is fixed. The export after deleting the source fixture reproduced the exact signed archive.
+
+Before activation, align per-event and aggregate replay bounds with the source observer and SQL restore limits. Run the independent restore drill on the selected hosted infrastructure. Reviewed runtime composition, observer ACLs, key custody, provider verification and the owner-deferred release items remain open. The local quarantine gate explicitly requires provider reconciliation. [Recovery runbook](../service/journal-authority/README.md#operator-recovery)
+
+## Previous checkpoint — November 4, independent authority
+
 The independent deletion journal now has a runnable HTTPS service. It stores exact record versions, the signed admission history and unresolved attempts in a PostgreSQL database outside the app database. The app uses a scoped HTTPS credential and its writer key. The checkpoint service has a separate signing key, and PostgreSQL separates checkpoint and record permissions.
 
 Six dedicated cases passed with two disposable PostgreSQL 17.11 clusters. The actual app service committed a request and lost the acknowledgement step. After the HTTPS authority process restarted, the worker recovered the request, called the fixture provider once and stored acknowledgements that matched the independently persisted receipts. An immediate database stop and restart separately preserved admitted bytes, a claim and a blocked expired reservation. See the [test evidence](evidence/b11/privacy-independent-authority-20261104/validation.json) and [service runbook](../service/journal-authority/README.md).

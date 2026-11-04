@@ -119,7 +119,7 @@ export async function createPostgresJournalAuthority(configuration:PostgresJourn
   if(!row||row.scope_digest!==scopeDigest)throw Error('Independent journal origin is unregistered or pinned to another deployment');
   const head=admittedSchema.parse(row.head),claim=heldSchema.nullable().parse(row.claim),pending=ticketSchema.nullable().parse(row.pending);
   if(head.head.lineage!==pins.lineage||head.head.schemaDigest!==pins.schemaDigest||head.head.configurationId!==pins.configurationId||
-   head.pendingOperation!==(pending?.operationId??null)||pending&&(!claim||!['pending','blocked'].includes(head.mode)))throw Error('Persisted journal origin conflict');
+   head.pendingOperation!==(pending?.operationId??null)||pending&&(!claim||!['pending','blocked','recovery'].includes(head.mode)))throw Error('Persisted journal origin conflict');
   return {head,claim,pending};
  }
  type Origin=Awaited<ReturnType<typeof load>>;

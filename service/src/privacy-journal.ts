@@ -63,11 +63,20 @@ function inspectJournal(bytes:Buffer,pins:JournalPins){
  }
  return{records,states,events:[...committed.values()],seq,hash:previousHash};
 }
+/** Check the complete recorded prefix, preserving unresolved intents for operator recovery. */
+export function verifyPrivacyJournalPrefix(bytes:Buffer,trust:JournalTrust){
+ const head=headSchema.parse(trust.head);
+ if(head.lineage!==trust.lineage||head.schemaDigest!==trust.schemaDigest||head.configurationId!==trust.configurationId)throw Error('Incompatible journal head');
+ if(!bytes.length&&head.seq!==0)throw Error('Missing journal');
+ const checked=inspectJournal(bytes,trust);
+ if(checked.seq!==head.seq||checked.hash!==head.hash)throw Error('Journal prefix, unresolved intent, or head conflict');
+ return checked;
+}
 /** Pure verification: a valid prefix is insufficient without the pinned fenced head. */
 export function verifyPrivacyJournal(bytes:Buffer,trust:JournalTrust){
  const head=headSchema.parse(trust.head);if(!head.fenced||head.lineage!==trust.lineage||head.schemaDigest!==trust.schemaDigest||head.configurationId!==trust.configurationId)throw Error('Unknown or incompatible fenced head');
- if(!bytes.length)throw Error('Missing journal');const checked=inspectJournal(bytes,trust);
- if(checked.seq!==head.seq||checked.hash!==head.hash||[...checked.states.values()].some(s=>s.state==='intent'))throw Error('Journal prefix, unresolved intent, or head conflict');
+ const checked=verifyPrivacyJournalPrefix(bytes,trust);
+ if([...checked.states.values()].some(s=>s.state==='intent'))throw Error('Journal prefix, unresolved intent, or head conflict');
  return{events:checked.events,head,bundleDigest:createHash('sha256').update(bytes).digest('hex')};
 }
 async function ownerFile(path:string,allowMissing=false){
