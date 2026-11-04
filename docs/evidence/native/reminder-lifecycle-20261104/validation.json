@@ -63,6 +63,6 @@
     "durationSeconds": 4172.440,
     "scope": "Ordinary app launch with the real notification scheduler and a scratch-only XCTest probe on the source before the reminder settings fix.",
     "observed": "The next-shop deferral showed the real notification permission prompt, accepted Allow and reported Reminder scheduled. Reopening the scheduled reminder displayed America/New_York instead of the reviewed America/Chicago. The test stopped at that assertion.",
-    "followUp": "The minimumOS scope records the focused settings regression on the corrected source. End-to-end deferral settings readback with a real scheduler on that corrected source remains open."
+    "followUp": "The minimumOS scope records the focused settings regression on the corrected source. The separate deferral-reminder-readback-20261104 validation confirms end-to-end Chicago and quiet-hours persistence with the real scheduler."
   }
 }

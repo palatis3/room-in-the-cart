@@ -1,0 +1,76 @@
+{
+  "sourceCommit": "075480de14625f54a8f2c7cfa7aa174405203480",
+  "sourceInventory": "/Users/palatis/Documents/Codex/2026-11-04/task-3/notifications/deferral-evidence/source-identity.json",
+  "matchedUnmodifiedNativeAndConfigFiles": 449,
+  "simulator": "13C6A52B-41A1-45EA-90D3-A18DC39D2DB5",
+  "runtime": "iPhone 17 Pro, iOS 27.0 (24A434)",
+  "scope": "The simulator-only Debug harness seeds a fictional pickup with production ledger and deferral commands. The ordinary pickup and Next shop reminder views use the real scheduler.",
+  "harnessChanges": [
+    "ios/App/RoomInTheCartApp.swift",
+    "ios/Features/DeviceSurfaces/ContextualReminderEntry.swift",
+    "ios/Tests/ContextualReminderTests.swift",
+    "ios/UITests/ContextualReminderUITests.swift"
+  ],
+  "ui": {
+    "result": "/Users/palatis/Documents/Codex/2026-11-04/task-3/notifications/deferral-evidence/DeferralSettingsOrdinary.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "durationSeconds": 86.46,
+    "observed": "Actual native Allow, successful schedule, America/Chicago and quiet hours off both on immediate reopening and after terminating and relaunching."
+  },
+  "persisted": {
+    "path": "/Users/palatis/Documents/Codex/2026-11-04/task-3/notifications/deferral-evidence/persisted-state.json",
+    "status": "scheduled",
+    "version": 1,
+    "localTime": {
+      "confirmedGMTOffset": -21600,
+      "day": 4,
+      "hour": 11,
+      "minute": 25,
+      "month": 11,
+      "timeZoneID": "America/Chicago",
+      "year": 2026
+    },
+    "quietHoursEnabled": false,
+    "pickupRevision": 4,
+    "pickupPayloadSHA256": "fa88c900a6adc99e9be4095e92ad2a1d5efea44c0e2c0c6981996a2466b68590",
+    "verifiedUnchanged": [
+      "full pickup payload",
+      "ledger payload"
+    ]
+  },
+  "osRequest": {
+    "result": "/Users/palatis/Documents/Codex/2026-11-04/task-3/notifications/deferral-evidence/DeferralOSRequest.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "authorization": "authorized",
+    "pendingRequestCount": 1,
+    "triggerZone": "GMT-0600",
+    "nextTriggerEpoch": 1793813100,
+    "payloadFields": [
+      "surfaceHandle"
+    ],
+    "observed": "The pending request matches the saved ID, chosen civil time and corresponding UTC instant. The generic notification body contains no pickup details."
+  },
+  "priorHarnessAttempts": [
+    {
+      "result": "/Users/palatis/Documents/Codex/2026-11-04/task-3/notifications/deferral-evidence/DeferralSettings.xcresult",
+      "reason": "Compile error in scratch notification trigger readback."
+    },
+    {
+      "result": "/Users/palatis/Documents/Codex/2026-11-04/task-3/notifications/deferral-evidence/DeferralSettingsRetry.xcresult",
+      "reason": "Compile error in scratch ledger fixture quantity lookup."
+    },
+    {
+      "result": "/Users/palatis/Documents/Codex/2026-11-04/task-3/notifications/deferral-evidence/DeferralSettingsRuntime.xcresult",
+      "reason": "Scratch launcher could not be reached by the test's viewport helper."
+    }
+  ],
+  "reviewedScreenshots": [
+    "native Allow prompt",
+    "America/Chicago and quiet hours off after restart"
+  ],
+  "remaining": [
+    "Deferral delivery and interaction on a signed physical iPhone."
+  ]
+}
