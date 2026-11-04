@@ -2129,6 +2129,22 @@
         }
       }
     },
+    "Grid": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grid"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuadrícula"
+          }
+        }
+      }
+    },
     "Group name": {
       "localizations": {
         "en": {
@@ -2589,6 +2605,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Modalidad"
+          }
+        }
+      }
+    },
+    "List": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "List"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lista"
           }
         }
       }
@@ -3549,6 +3581,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Protegido: %@ · %@"
+          }
+        }
+      }
+    },
+    "Purpose: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purpose: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finalidad: %@"
           }
         }
       }
@@ -5629,6 +5677,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Semana"
+          }
+        }
+      }
+    },
+    "Week display": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Week display"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vista semanal"
           }
         }
       }

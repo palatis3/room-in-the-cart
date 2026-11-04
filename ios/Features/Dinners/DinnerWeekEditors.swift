@@ -252,13 +252,15 @@ struct DinnerNoteView: View {
     @ObservedObject var model: DinnerFeatureModel
     let day: MealDay
     @State private var id = UUID()
+    @State private var existingDay: MealDay?
     @State private var kind = DinnerWeekNote.Kind.away
     @State private var text = ""
     @Environment(\.dismiss) private var dismiss
+    private var editingDay: MealDay { existingDay ?? day }
     var body: some View {
         Form {
             Section {
-                Text(dinnerDay(day))
+                Text(dinnerDay(editingDay))
                 Picker(dinnerText("Note type"), selection: $kind) {
                     ForEach([DinnerWeekNote.Kind.away, .guests, .side, .carryoverReview], id: \.self) { Text(dinnerNoteKind($0)).tag($0) }
                 }
@@ -266,15 +268,15 @@ struct DinnerNoteView: View {
                 Text(dinnerText("A day note does not remove or rescale chosen dinners. Review those changes separately."))
                 Button(dinnerText("Save day note")) {
                     guard let shop = model.shop else { return }
-                    Task { if await model.saveNote(DinnerWeekNote(id: id, shopID: shop.id, day: day, kind: kind, text: text)) { dismiss() } }
+                    Task { if await model.saveNote(DinnerWeekNote(id: id, shopID: shop.id, day: editingDay, kind: kind, text: text)) { dismiss() } }
                 }.disabled(!model.editable)
             }
             if kind == .away || kind == .carryoverReview {
-                Section { DinnerAwayCarryoverLink(model: model, day: day) }
+                Section { DinnerAwayCarryoverLink(model: model, day: editingDay) }
             }
             Section(dinnerText("Existing notes")) {
-                ForEach(model.state.weekNotes.filter { $0.shopID == model.shop?.id && $0.day == day }) { note in
-                    Button { id = note.id; kind = note.kind; text = note.text } label: {
+                ForEach(model.state.weekNotes.filter { $0.shopID == model.shop?.id && $0.day.hasSameCivilDate(as: day) }) { note in
+                    Button { id = note.id; existingDay = note.day; kind = note.kind; text = note.text } label: {
                         VStack(alignment: .leading) { Text(dinnerNoteKind(note.kind)); Text(note.text) }
                     }
                 }
@@ -284,7 +286,9 @@ struct DinnerNoteView: View {
     }
 }
 struct DinnerReservationView: View {
+    private enum Field: Hashable { case food, amount, purpose }
     @ObservedObject var model: DinnerFeatureModel
+    @FocusState private var field: Field?
     @State private var name = ""
     @State private var amount = ""
     @State private var unit = UnitOfMeasure.count
@@ -296,10 +300,10 @@ struct DinnerReservationView: View {
     var body: some View {
         Form {
             Section {
-                TextField(dinnerText("Food name"), text: $name)
-                TextField(dinnerText("Protected amount"), text: $amount)
+                TextField(dinnerText("Food name"), text: $name).focused($field, equals: .food)
+                TextField(dinnerText("Protected amount"), text: $amount).focused($field, equals: .amount)
                 DinnerUnitPicker(unit: $unit)
-                TextField(dinnerText("Purpose, such as lunch"), text: $purpose)
+                TextField(dinnerText("Purpose, such as lunch"), text: $purpose).focused($field, equals: .purpose)
                 Toggle(dinnerText("Assign a date"), isOn: $scheduled)
                 if scheduled { DatePicker(dinnerText("Needed date"), selection: $date, displayedComponents: .date) }
             }
@@ -314,6 +318,7 @@ struct DinnerReservationView: View {
             }
             Section {
                 Button(dinnerText("Review protected need")) {
+                    field = nil
                     do {
                         guard let shop = model.shop, let quantity = try DinnerEntry.quantity(amount, unit: unit) else { throw DomainError.invalidNumber }
                         let day = try DinnerEntry.date(date, zone: shop.basis.timeZoneIdentifier, scheduled: scheduled)
@@ -323,6 +328,7 @@ struct DinnerReservationView: View {
             }
             DinnerFeedback(model: model)
         }.navigationTitle(dinnerText("Protect food")).dinnerAccess(model)
+            .keyboardDoneAction(visible: field != nil, title: dinnerText("Done"), identifier: "dinnerReservationKeyboardDone") { field = nil }
             .dinnerApplyPresentation(model, presented: $showPreview)
     }
 }

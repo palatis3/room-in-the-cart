@@ -1,0 +1,67 @@
+{
+  "baseCommit": "5e8cedb11dd68cf4b2b3f2342619514b5400a095",
+  "sourceSHA256": {
+    "ios/Features/Dinners/DinnerPlanningHome.swift": "30b8268babb951fad9d0dff22dc44b66368864ec6e538f1d07698d791bb2befa",
+    "ios/Features/Dinners/DinnerWeekEditors.swift": "f5f04408ef2fe8489988d38ca7580cd0d19f0303f77e6c94d9ae874c66395525",
+    "ios/Features/Dinners/Dinners.xcstrings": "5b28a3e80a9b276027ba64c1e871980a138c8caf969a45658efb7f9ab6884908",
+    "ios/Packages/CoreDomain/Sources/CoreDomain/DinnerPlanning.swift": "674916205d62faf2ebe43227c1077b2b2acc384be0e6dcc98c4c00e17c116a4d",
+    "ios/Packages/CoreDomain/Sources/CoreDomain/ShoppingLedger.swift": "21fe940e954570ea5add265d6b9731bce3aa34c571300e9dc6fc4b2e219239b0",
+    "ios/Packages/CoreDomain/Tests/CoreDomainTests/DinnerPlanningTests.swift": "25e3e639dbffc08a09b4041c0ad4e75f56788af1b1ec79e4af10d7bc504e0bd1",
+    "ios/UITests/FreeJourneyUITests.swift": "98cc15304fe185dd140dcac3929d1c934202c14b9732291f8bc7aca722ee7ba9"
+  },
+  "coreDomain": {
+    "result": ".build/MealWeekCorrected20261104/core.log",
+    "passed": 167,
+    "failed": 0,
+    "regression": "The same saved dinner, lunch and day note stay visible after changing the pickup from America/New_York to America/Toronto. Their saved civil dates and time zones remain unchanged."
+  },
+  "minimumOS": {
+    "device": "iPhone SE (2nd generation), iOS 17.0",
+    "models": {
+      "result": ".build/MealWeekCorrected20261104/MealWeekMinimum.xcresult",
+      "passed": 544,
+      "uiFailure": "The first English run tried Back while the reservation preview was dismissing."
+    },
+    "english": {
+      "result": ".build/MealWeekCorrected20261104/MealWeekBilingualMinimum.xcresult",
+      "passed": 1,
+      "separateFailure": "The Spanish case in this invocation hit the XCTAutomationSupport logging-quarantine crash."
+    },
+    "spanish": {
+      "result": ".build/MealWeekCorrected20261104/MealWeekSpanishMinimumFinal.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "testAccommodation": "OS_ACTIVITY_MODE=disable in the launched app for the focused iOS 17 test. Both Apply actions wait for dismissal before navigating back."
+    },
+    "visibleChecks": "Reservation editor Done works for all three fields. Review includes the selected date and entered purpose. List and Grid preserve the same identities, and the entries reopen after relaunch."
+  },
+  "englishReleaseUI": {
+    "result": ".build/StoreMealWeek20261104/MealWeekEnglishUIOnly.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "device": "iPhone 17, iOS 27.0",
+    "appExecutableSHA256": "8f10f66903d416958839f48dd0e78599fe5a93d8f94b651c36acc15afd417ac1",
+    "testHarnessSHA256": "317f0a75102c41a4b4ce4c0b341a824812f9d511fe2e7581e94f2012863831ed",
+    "scope": "Ordinary Release simulator app and separate UI test runner. The scratch scheme has only the UI test target. The user-facing fixture was entered through the app UI.",
+    "readOnlySQLite": {
+      "headRevision": 3,
+      "dinnerServings": 4,
+      "protectedUnits": 2,
+      "purpose": "School lunch",
+      "civilDay": {
+        "day": 4,
+        "month": 11,
+        "timeZoneIdentifier": "America/New_York",
+        "year": 2026
+      }
+    }
+  },
+  "archive": {
+    "path": ".build/MealWeekCorrected20261104/RoomInTheCart-MealWeek.xcarchive",
+    "binaryUUID": "405D8E02-B885-30BE-BBAE-BAE7FA3F995E",
+    "executableSHA256": "65ebb1e340dfdfc850c6d64e4087cbe718dec9113dd3c228a3167cba05117d46",
+    "signed": false,
+    "verification": "Compiled Release iPhone app verified: executable, assets, privacy, environment, and embedded extensions.",
+    "strictProductionMetadataResult": "Built app verification failed: Release metadata is incomplete: HouseholdSubscriptionProductID, PrivacyPolicyURL, TermsOfUseURL, SupportURL"
+  }
+}

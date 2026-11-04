@@ -29,7 +29,9 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
     @ObservedObject var model: DinnerFeatureModel
     let startPickup: () -> Void
     @ViewBuilder let saveStatus: () -> SaveStatus
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var weekStart = Date()
+    @State private var showWeekGrid = false
     var body: some View {
         List {
             Section {
@@ -66,25 +68,24 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                 }.disabled(!model.editable)
                 Section(dinnerText("Week")) {
                     DatePicker(dinnerText("Week starting"), selection: $weekStart, displayedComponents: .date)
+                    Picker(dinnerText("Week display"), selection: $showWeekGrid) {
+                        Text(dinnerText("List")).tag(false)
+                        Text(dinnerText("Grid")).tag(true)
+                    }.pickerStyle(.segmented).accessibilityIdentifier("dinnerWeekDisplay")
                     if let shop = model.shop, let start = try? MealDay(date: weekStart, timeZoneIdentifier: shop.basis.timeZoneIdentifier),
                        let week = try? model.week(start: start) {
-                        ForEach(week.days, id: \.day) { day in
-                            VStack(alignment: .leading, spacing: 10) {
-                                Text(dinnerDay(day.day)).font(.headline).accessibilityAddTraits(.isHeader)
-                                ForEach(day.meals) { meal in mealLink(meal) }
-                                ForEach(day.notes) { note in
-                                    VStack(alignment: .leading) {
-                                        Text(dinnerNoteKind(note.kind)).font(.subheadline.bold())
-                                        if !note.text.isEmpty { Text(note.text) }
-                                    }.accessibilityElement(children: .combine)
+                        if showWeekGrid {
+                            let column = GridItem(.flexible(), spacing: 12, alignment: .topLeading)
+                            LazyVGrid(columns: dynamicTypeSize.isAccessibilitySize ? [column] : [column, column], spacing: 12) {
+                                ForEach(week.days, id: \.day) { day in
+                                    dayContent(day, in: shop)
+                                        .padding(10)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .background(Theme.canvas, in: RoundedRectangle(cornerRadius: 12))
                                 }
-                                ForEach(day.protectedContributionIDs, id: \.self) { id in
-                                    if let source = shop.contributions.first(where: { $0.id == id && $0.removedAt == nil }) {
-                                        Text(dinnerFormat("Protected: %@ · %@", source.productName, dinnerQuantity(source.quantity)))
-                                    }
-                                }
-                                NavigationLink(dinnerText("Add or edit a day note")) { DinnerNoteView(model: model, day: day.day) }
-                            }.padding(.vertical, 6).fixedSize(horizontal: false, vertical: true)
+                            }.buttonStyle(.borderless).accessibilityIdentifier("dinnerWeekGrid")
+                        } else {
+                            ForEach(week.days, id: \.day) { day in dayContent(day, in: shop).padding(.vertical, 6) }
                         }
                         if !week.unscheduled.isEmpty {
                             Text(dinnerText("Unscheduled")).font(.headline).accessibilityAddTraits(.isHeader)
@@ -100,13 +101,47 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
             Section { saveStatus() }
         }.navigationTitle(dinnerText("Dinners")).listStyle(.insetGrouped)
     }
-    private func mealLink(_ meal: MealOccurrence) -> some View {
+    private func dayContent(_ day: DinnerMealWeek.Day, in shop: ShoppingLedger) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(dinnerDay(day.day)).font(.headline).accessibilityAddTraits(.isHeader)
+            ForEach(day.meals) { meal in mealLink(meal, calendarZone: day.day.timeZoneIdentifier) }
+            ForEach(day.notes) { note in
+                VStack(alignment: .leading) {
+                    Text(dinnerNoteKind(note.kind)).font(.subheadline.bold())
+                    if !note.text.isEmpty { Text(note.text) }
+                    if note.day.timeZoneIdentifier != day.day.timeZoneIdentifier {
+                        Text(note.day.timeZoneIdentifier).font(.caption)
+                    }
+                }.accessibilityElement(children: .combine)
+            }
+            ForEach(day.protectedContributionIDs, id: \.self) { id in
+                if let source = shop.contributions.first(where: { $0.id == id && $0.removedAt == nil }),
+                   case .protectedNeed(let purpose) = source.source {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(dinnerFormat("Protected: %@ · %@", source.productName, dinnerQuantity(source.quantity)))
+                        Text(dinnerFormat("Purpose: %@", purpose)).font(.subheadline)
+                        if let savedDay = model.state.protectedDays.first(where: { $0.shopID == shop.id && $0.contributionID == id })?.day,
+                           savedDay.timeZoneIdentifier != day.day.timeZoneIdentifier {
+                            Text(savedDay.timeZoneIdentifier).font(.caption)
+                        }
+                    }.accessibilityElement(children: .combine).accessibilityIdentifier("dinnerProtected-\(id)")
+                }
+            }
+            NavigationLink { DinnerNoteView(model: model, day: day.day) } label: {
+                Text(dinnerText("Add or edit a day note")).frame(minHeight: 44, alignment: .leading)
+            }
+        }.fixedSize(horizontal: false, vertical: true)
+    }
+    private func mealLink(_ meal: MealOccurrence, calendarZone: String? = nil) -> some View {
         NavigationLink { DinnerOccurrenceView(model: model, occurrenceID: meal.id) } label: {
             VStack(alignment: .leading, spacing: 4) {
                 Text(meal.title).font(.headline)
                 Text(dinnerFormat("Servings: %@", meal.servings.description))
+                if let calendarZone, let savedDay = meal.scheduledDay, savedDay.timeZoneIdentifier != calendarZone {
+                    Text(savedDay.timeZoneIdentifier).font(.caption)
+                }
                 if meal.isHidden { Text(dinnerText("Hidden dinner")) }
-            }
+            }.frame(minHeight: 44, alignment: .leading)
         }.accessibilityIdentifier("dinnerOccurrence-\(meal.id)")
     }
 }
@@ -154,7 +189,16 @@ struct DinnerPreviewView: View {
                                 Text(dinnerFormat("Before: %@", dinnerQuantity(old.quantity)))
                             } else { Text(dinnerText("New need")) }
                             Text(source.removedAt == nil ? dinnerFormat("After: %@", dinnerQuantity(source.quantity)) : dinnerText("Remove this dinner need"))
-                            if source.source.isProtected { Text(dinnerText("Protected need")) }
+                            if case .protectedNeed(let purpose) = source.source {
+                                Text(dinnerText("Protected need"))
+                                Text(dinnerFormat("Purpose: %@", purpose))
+                                if let reservation = preview.proposal.changes.compactMap({ change -> DinnerReservation? in
+                                    if case .reserve(let value) = change, value.contributionID == source.id { return value }
+                                    return nil
+                                }).first {
+                                    Text(reservation.day.map(dinnerDay) ?? dinnerText("Unscheduled"))
+                                }
+                            }
                         }.accessibilityElement(children: .combine).accessibilityIdentifier("dinnerPreviewNeed-\(source.id)")
                     }
                 }

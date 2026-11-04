@@ -643,9 +643,9 @@ public enum DinnerPlanningEngine {
         let meals = ledger.mealOccurrences.filter { $0.removedAt == nil }
         let days = try (0..<7).map { offset -> DinnerMealWeek.Day in
             let day = try dinnerDay(start, adding: offset)
-            return DinnerMealWeek.Day(day: day, meals: meals.filter { $0.scheduledDay == day },
-                protectedContributionIDs: state.protectedDays.filter { $0.shopID == ledger.id && $0.day == day }.map(\.contributionID),
-                notes: state.weekNotes.filter { $0.shopID == ledger.id && $0.day == day })
+            return DinnerMealWeek.Day(day: day, meals: meals.filter { $0.scheduledDay?.hasSameCivilDate(as: day) == true },
+                protectedContributionIDs: state.protectedDays.filter { $0.shopID == ledger.id && $0.day?.hasSameCivilDate(as: day) == true }.map(\.contributionID),
+                notes: state.weekNotes.filter { $0.shopID == ledger.id && $0.day.hasSameCivilDate(as: day) })
         }
         return DinnerMealWeek(days: days, unscheduled: meals.filter { $0.scheduledDay == nil })
     }

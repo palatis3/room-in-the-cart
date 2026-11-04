@@ -145,6 +145,33 @@ final class DinnerPlanningTests: XCTestCase {
         XCTAssertEqual(ledger.contributions, sources); XCTAssertEqual(week.days[3].meals.first?.id, chosen.occurrenceID)
         XCTAssertEqual(week.days[1].protectedContributionIDs, [reservation.contributionID]); XCTAssertEqual(week.days[3].day.iso8601, "2026-11-01")
     }
+    func testCivilWeekKeepsOriginalDatesAfterChangingPickupTimeZone() throws {
+        let start = try MealDay(year: 2026, month: 11, day: 4, timeZoneIdentifier: "America/New_York")
+        let lunchDay = try dinnerDay(start, adding: 1)
+        var ledger = ShoppingLedger(), state = DinnerPlanningState()
+        var basis = ledger.basis
+        basis.timeZoneIdentifier = start.timeZoneIdentifier
+        try ledger.updateBasis(basis, at: now)
+        let dinner = PlannedDinner(template: try meal(), day: start)
+        let lunch = DinnerReservation(name: "wraps", quantity: try q(2), purpose: "School lunch", day: lunchDay)
+        let preview = try DinnerPlanningEngine.preview(changes: [.choose(dinner), .reserve(lunch)], tool: .manual,
+            ledger: ledger, state: state, access: access(ledger), phase: .draft, at: now)
+        try DinnerPlanningEngine.apply(preview.proposal, ledger: &ledger, state: &state, access: access(ledger), phase: .draft, at: now)
+        let note = DinnerWeekNote(shopID: ledger.id, day: lunchDay, kind: .away, text: "Late practice")
+        try state.recordWeekNote(note, access: access(ledger), at: now)
+
+        basis.timeZoneIdentifier = "America/Toronto"
+        try ledger.updateBasis(basis, at: now)
+        let updatedStart = try MealDay(year: start.year, month: start.month, day: start.day, timeZoneIdentifier: basis.timeZoneIdentifier)
+        let week = try DinnerPlanningEngine.week(start: updatedStart, ledger: ledger, state: state, access: access(ledger), at: now)
+        XCTAssertEqual(week.days[0].day, updatedStart)
+        XCTAssertEqual(week.days[0].meals.first?.id, dinner.occurrenceID)
+        XCTAssertEqual(week.days[0].meals.first?.scheduledDay, start)
+        XCTAssertEqual(week.days[1].protectedContributionIDs, [lunch.contributionID])
+        XCTAssertEqual(state.protectedDays.first?.day, lunchDay)
+        XCTAssertEqual(week.days[1].notes, [note])
+        XCTAssertTrue(week.unscheduled.isEmpty)
+    }
     func testPairingRetainsProtectedBindingIdentityAndQuantityAfterReplacingNamedGroup() throws {
         var ledger = ShoppingLedger(), state = DinnerPlanningState()
         let supper = ServingGroup(name: "Supper", servings: try Rational(2))

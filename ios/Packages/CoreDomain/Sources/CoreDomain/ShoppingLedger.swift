@@ -94,6 +94,11 @@ public struct MealDay: Codable, Equatable, Hashable, Sendable {
 
     public var iso8601: String { String(format: "%04d-%02d-%02d", year, month, day) }
 
+    /// Calendar grouping preserves the saved day label across pickup time-zone changes.
+    public func hasSameCivilDate(as other: MealDay) -> Bool {
+        year == other.year && month == other.month && day == other.day
+    }
+
     public func validate() throws {
         guard (1...9999).contains(year), (1...12).contains(month), (1...31).contains(day),
               let zone = TimeZone(identifier: timeZoneIdentifier), let date else {

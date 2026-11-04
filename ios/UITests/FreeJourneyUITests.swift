@@ -461,6 +461,80 @@ import XCTest
         reviewAndApprovePattern(spanish: false)
     }
 
+    func testEnglishMealWeekListAndGridShowDatedProtectedLunch() { verifyDatedMealWeek(spanish: false) }
+    func testSpanishMealWeekListAndGridShowDatedProtectedLunch() { verifyDatedMealWeek(spanish: true) }
+
+    private func verifyDatedMealWeek(spanish: Bool) {
+        func copy(_ english: String, _ translation: String) -> String { spanish ? translation : english }
+        // Xcode's newer accessibility snapshots can trip iOS 17's logging
+        // quarantine inside XCTAutomationSupport while querying these forms.
+        if ProcessInfo.processInfo.operatingSystemVersion.majorVersion == 17 {
+            app.launchEnvironment["OS_ACTIVITY_MODE"] = "disable"
+        }
+        let dinner = copy("Roasted veggie tacos", "Tacos de verduras asadas")
+        let food = copy("Flour tortillas", "Tortillas de harina")
+        let purpose = copy("School lunch", "Almuerzo escolar")
+        let tab = copy("Dinners", "Cenas")
+        let assignDate = copy("Assign a date", "Asignar fecha")
+        func applyFrom(_ editor: String) {
+            let apply = element("dinnerApply")
+            tap(apply)
+            XCTAssertTrue(apply.waitForNonExistence(timeout: 10))
+            let back = app.navigationBars[editor].buttons.firstMatch
+            let backReady = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND hittable == true"), object: back)
+            XCTAssertEqual(XCTWaiter.wait(for: [backReady], timeout: 10), .completed)
+            back.tap()
+            dinnerRoot()
+        }
+        launch(reset: true, spanish: spanish)
+        tap(app.tabBars.buttons[tab]); tap(element("dinnerStartPickup"))
+        fill(copy("Family grocery pickup", "Compra familiar"), into: "ledgerShopName")
+        tap(element("ledgerCreateShop")); tap(element("dinnerManual"))
+        fill(dinner, into: "ledgerDinnerTitle")
+        fill("4", into: "ledgerDinnerServings", replacing: true)
+        fill(copy("Corn tortillas", "Tortillas"), into: copy("Ingredient name", "Nombre del ingrediente"))
+        fill("8", into: copy("Amount, optional", "Cantidad, opcional"))
+        enableSwitch(assignDate)
+        tap(element("ledgerReviewDinner")); applyFrom(copy("Manual dinner", "Cena manual"))
+
+        tap(app.buttons[copy("Protect a lunch or side", "Proteger un almuerzo o acompañamiento")])
+        fill(food, into: copy("Food name", "Nombre del alimento"), requireDone: true)
+        fill("2", into: copy("Protected amount", "Cantidad protegida"), requireDone: true)
+        fill(purpose, into: copy("Purpose, such as lunch", "Finalidad, por ejemplo almuerzo"), requireDone: true)
+        enableSwitch(assignDate)
+        tap(app.buttons[copy("Review protected need", "Revisar necesidad protegida")])
+        let reviewed = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "dinnerPreviewNeed-")).firstMatch
+        reveal(reviewed)
+        XCTAssertTrue(reviewed.label.contains(copy("Purpose: ", "Finalidad: ") + purpose), reviewed.label)
+        let date = DateFormatter(); date.locale = Locale(identifier: spanish ? "es_US" : "en_US"); date.dateStyle = .full
+        XCTAssertTrue(reviewed.label.contains(date.string(from: Date())), reviewed.label)
+        applyFrom(copy("Protect food", "Proteger alimentos"))
+
+        let chosen = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "dinnerOccurrence-")).firstMatch
+        let protected = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "dinnerProtected-")).firstMatch
+        let display = element("dinnerWeekDisplay")
+        reveal(protected)
+        let dinnerID = chosen.identifier, lunchID = protected.identifier
+        XCTAssertTrue(dinnerID.hasPrefix("dinnerOccurrence-") && lunchID.hasPrefix("dinnerProtected-"))
+        for mode in [copy("List", "Lista"), copy("Grid", "Cuadrícula")] {
+            let control = display.buttons[mode]
+            tap(control)
+            XCTAssertTrue(control.isSelected)
+            reveal(protected)
+            if !chosen.isHittable { reveal(chosen) }
+            XCTAssertTrue(chosen.isHittable && protected.isHittable, "Meal and lunch should both be visible")
+            XCTAssertEqual(chosen.identifier, dinnerID)
+            XCTAssertEqual(protected.identifier, lunchID)
+            XCTAssertTrue(chosen.label.contains(dinner), chosen.label)
+            XCTAssertTrue(protected.label.contains(food) && protected.label.contains(purpose), protected.label)
+            XCTAssertTrue(protected.label.contains(copy("2 units", "2 unidades")), protected.label)
+            capture((spanish ? "es-US" : "en-US") + "-meal-week-" + mode)
+        }
+        app.terminate(); launch(reset: false, spanish: spanish)
+        tap(app.tabBars.buttons[tab]); dinnerRoot()
+        reveal(element(lunchID)); reveal(element(dinnerID))
+    }
+
     func testListCaptureOpensWithTypedDraftAndReopensAfterCancel() {
         launch(reset: true)
         openShoppingList()
