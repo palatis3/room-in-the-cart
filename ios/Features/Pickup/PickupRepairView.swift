@@ -34,12 +34,7 @@ struct UrgentRepairView: View {
         }.navigationTitle(pTr("Something is missing"))
             .onChange(of: [food, meal, required, available, unit.rawValue]) { _, _ in confirmedAt = nil }
             .scrollDismissesKeyboard(.interactively)
-            .toolbar {
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    Button(tr("Done")) { field = nil }
-                }
-            }
+            .keyboardDoneAction(visible: field != nil, title: tr("Done")) { field = nil }
             .task { await model.load() }
             .navigationDestination(isPresented: $showRepair) { PickupRepairView(model: model) }
             .disabled(model.saving)
@@ -168,14 +163,9 @@ struct PickupRepairView: View {
             NavigationLink(pTr("Preview a dated cook instruction")) { PickupCookView(model: model) }
         }.navigationTitle(pTr("Repair the meal"))
             .scrollDismissesKeyboard(.interactively)
-            .keyboardDoneAction(visible: stockField != nil, title: tr("Done")) { stockField = nil }
-            .toolbar {
-                ToolbarItemGroup(placement: .keyboard) {
-                    if field != nil {
-                        Spacer()
-                        Button(tr("Done")) { field = nil }
-                    }
-                }
+            .keyboardDoneAction(visible: field != nil || stockField != nil, title: tr("Done")) {
+                field = nil
+                stockField = nil
             }
     }
     private func rationalText(_ value: Rational?) -> String { value?.description ?? pTr("Unresolved") }

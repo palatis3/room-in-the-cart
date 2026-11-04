@@ -36,7 +36,7 @@ import XCTest
         fill("Tuesday 5 PM", into: "Pickup or delivery slot", replacing: true)
         fill("Test checkout", into: "Source of these prices", replacing: true)
         enableSwitch("Retailer total already includes all charges")
-        fill("3.00", into: "Inclusive total")
+        fill("3.00", into: "Inclusive total", requireDone: true)
         tap(app.buttons["Save and evaluate checkout"])
         back(to: "Prepare retailer handoff")
         tap(app.buttons["Prepare retailer handoff"])
@@ -498,11 +498,12 @@ import XCTest
         }
         XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
     }
-    private func fill(_ text: String, into id: String, replacing: Bool = false) {
+    private func fill(_ text: String, into id: String, replacing: Bool = false, requireDone: Bool = false) {
         let field = element(id); tap(field)
         if replacing, let old = field.value as? String, old != field.placeholderValue { app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
         app.typeText(text)
         let done = app.buttons.matching(NSPredicate(format: "label IN %@", ["Done", "Listo"])).firstMatch
+        if requireDone { XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable, "Done must be reachable from \(id)") }
         if done.exists && done.isHittable { done.tap() }
     }
     private func reveal(_ target: XCUIElement) {

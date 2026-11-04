@@ -1,0 +1,46 @@
+{
+  "baseCommit": "d42f032d01ce8c62f2342e545965267a01ac48ec",
+  "sourceSHA256": {
+    "ios/Features/Pickup/PickupHomeView.swift": "81c3d460629ee6f34094763f501fee54316bf53502c4cbdf2b285bde65ef6a45",
+    "ios/Features/Pickup/PickupRepairView.swift": "ac38145befdfaf8fb8be13f77aa2993a58be0186ecc56d54f7131257e42c4631",
+    "ios/Features/Pickup/PickupSavedStockSection.swift": "a0a1ebdf9e2cdc32e6a60dc8d71e4d161fe4ba4abd5052167a486580b48e6542",
+    "ios/Features/Ledger/LedgerPackChoiceView.swift": "02a8f27255231194b5439e0b85adf873efb7ae6763c3d85da33eb4c6e738c534",
+    "ios/UITests/FreeJourneyUITests.swift": "710d692aac21264e5b94498c29457fe31305bfc11919d368a567219e38e6b21a"
+  },
+  "diagnosis": {
+    "warning": "Invalid frame dimension (negative or non-finite).",
+    "sampleEventsWithMatchingTopNineFrames": 15,
+    "sourceLog": ".build/CheckoutFrame20261104/simulator-log.json",
+    "symbolication": ".build/CheckoutFrame20261104/symbols.txt",
+    "matchingFrames": ["SwiftUICore._FrameLayout.init(width:height:alignment:)", "SwiftUI.InputAccessoryBar View.body getter"],
+    "change": "Use the existing bottom inset Done control with a per-field focus binding in checkout, price by weight, urgent repair, repair details, freezer-batch corrections and the ledger pack editor.",
+    "appleFocusStateReference": "https://developer.apple.com/documentation/swiftui/focusstate"
+  },
+  "debugAppCodeSHA256": "a5c3d115caaa4383d5dc0abaea06f490416eb167cbd3d76a3189b8b058ca1b26",
+  "currentSimulator": {
+    "device": "iPhone 17e, iOS 27.0 (24A434)",
+    "result": ".build/CheckoutFrame20261104/CheckoutKeyboardRerun.xcresult",
+    "modelTestsPassed": 530,
+    "uiTestsPassed": 4,
+    "failed": 0,
+    "runtimeWarnings": [],
+    "journeys": ["Whole checkout and billing increment", "Inclusive-total Done, frozen retailer share cancellation and relaunch", "Freezer-batch correction and saved reservations", "Confirmed-stock pack entry, review and restart"]
+  },
+  "minimumSimulator": {
+    "device": "iPhone SE (2nd generation), iOS 17.0 (21A328)",
+    "result": ".build/CheckoutFrame20261104/CheckoutKeyboardMinimumOS.xcresult",
+    "uiTestsPassed": 1,
+    "failed": 0,
+    "runtimeWarnings": [],
+    "uiSeconds": 69.322,
+    "journey": "Dismiss the inclusive-total number pad, save the checkout, cancel the system share and find the frozen unplaced order after relaunch."
+  },
+  "archive": {
+    "path": ".build/CheckoutFrame20261104/RoomInTheCart-CheckoutKeyboard.xcarchive",
+    "binaryUUID": "B4BAE5BF-E98D-3E9B-BEBE-5750BA6C7A1D",
+    "executableSHA256": "3339ed0d3a796501ae604b86f9dd8430e983cbec5dbad0be9a03f86e4ca32909",
+    "builtAppMetadataCheck": "passed",
+    "signed": false
+  },
+  "scope": "The four focused journeys cover the updated purchase and repair editors. The separate store-quote, meal-idea and reusable-dinner editors still have system keyboard toolbars. Physical iPhone input and assistive access remain separate gates."
+}

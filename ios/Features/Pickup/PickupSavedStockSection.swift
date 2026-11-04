@@ -162,11 +162,7 @@ private struct PickupBatchReview: View {
             .onChange(of: model.journey?.revision) { _, _ in effectsConfirmed = false }
             .onChange(of: scenePhase) { _, phase in if phase != .active { cancelPreview() } }
             .scrollDismissesKeyboard(.interactively)
-            .toolbar {
-                ToolbarItemGroup(placement: .keyboard) {
-                    if amountFocused { Spacer(); Button(tr("Done")) { amountFocused = false } }
-                }
-            }
+            .keyboardDoneAction(visible: amountFocused, title: tr("Done")) { amountFocused = false }
     }
 
     private var presentation: PickupStockReviewPresentation {

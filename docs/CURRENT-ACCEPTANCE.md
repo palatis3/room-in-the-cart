@@ -64,6 +64,7 @@ Results belong to their own immutable source and binary identities. Do not add t
 | MINIMUM-OS-20261104 | [Current iOS 17 simulator validation](evidence/native/minimum-os-current-20261104/validation.json) | Seven iPhone SE UI cases passed, including both stock routes, English and Spanish save/reopen, dark appearance at the largest text size, complete saved details above the tabs, and the unfiltered Shop and comparison accessibility audit. The later Records alert change and physical assistive testing have separate scopes. |
 | RECORDS-CANCEL | [Records deletion validation](evidence/native/records-cancel-20261104/validation.json) | The current alert gives Cancel and Delete distinct reachable actions. Both focused cases pass. Cancel retains the record through owner-file preview, discard and restart. Explicit deletion survives restart. The updated unsigned Release archive also passed metadata checks. |
 | HANDOFF-VERSION | [Handoff version validation](evidence/native/handoff-version-20261104/validation.json) | All 530 model cases pass. The iOS 27 iPhone 17e and iOS 17 iPhone SE share-sheet cases retain the exact frozen unplaced basket and cancellation through relaunch. The first SE automation attempt stopped before share. The unsigned Release archive passes metadata checks. |
+| CHECKOUT-KEYBOARD | [Checkout keyboard validation](evidence/native/checkout-keyboard-20261104/validation.json) | The frame warning traces to the SwiftUI keyboard accessory bar. The checkout, pack and repair forms now use the focus-driven Done control. Four iOS 27 UI cases, one iOS 17 UI case and all 530 model cases pass. Both result bundles report zero runtime warnings. The unsigned Release archive passes metadata checks. |
 
 ## Launch requirement traceability
 
@@ -76,7 +77,7 @@ Results belong to their own immutable source and binary identities. Do not add t
 | D03 | Scoped cap, fees, reserves, mode/slot/zone and dependent review invalidation; ledger facts/checkout; N526. | Final complete/unknown basis scenarios and hardware labels. |
 | D04 | Separate occurrences, contributions, named serving groups and protected allocations; dinner/ledger; N526, PLANNING. | Mixed-device shared week against deployed grants. |
 | D05 | Pure comparison plus durable stock-evidence pack selection and zero-purchase result; `LedgerPackStockReview`, checkout bridge; N526, ORDINARY. | Current promoted screen artifacts; source changes must invalidate reviewed stock before checkout. |
-| D06 | Equivalent checkout repricing, unknowns and explicit overage; checkout/request models; N526, B175, REQUEST-UI. | Verify configured deployed household and final hardware task. |
+| D06 | Equivalent checkout repricing, unknowns and explicit overage; checkout/request models; N526, B175, REQUEST-UI, CHECKOUT-KEYBOARD. | Verify configured deployed household and final hardware task. |
 | D07 | Required/flexible/undecided needs, explicit deferral/handled disposition; checkout/next shop; N526, ORDINARY. | Final contextual reminder/next-trip hardware task. |
 | D08 | Base-bound previews, apply-once, compensating undo and locked-order proposals; N526, B175, PLANNING. | Cross-device current-grant race and final UI candidate. |
 | D09 | Frozen dated retailer handoff, action receipts and separate placed report; placement/pickup; N526, B175, HANDOFF-VERSION. | Physical iPhone share/open and retailer roundtrip. |
@@ -92,7 +93,7 @@ Results belong to their own immutable source and binary identities. Do not add t
 | F03 | Independent templates, drafts, snapshots, placed originals, proposals and fills; N526, B175. | Final real OS external-action/retry journey. |
 | F04 | Scoped dated price evidence; expected/hold/pending/posted/included-credit/top-up separation; N526, B175, QUOTES. | Real manually entered evidence and final receipt/settlement task. |
 | F05 | Distinct principal/member/device/grant/seat/shopper; 023 enrollment fence and scoped device revocation; B175, G29, DEVICE. | S21 native rerun, hosted and mixed-device authority. |
-| F06 | Catalogs/formatting, independent UI/recipient locale, access/focus controls; N526, LIBRARY, GUARDIAN-UI, REQUEST-UI, CAPTION, DEVICE. | Human en-US/es-US, physical VoiceOver/Switch Control, RTL/large-text full route pass. |
+| F06 | Catalogs/formatting, independent UI/recipient locale, access/focus controls; N526, LIBRARY, GUARDIAN-UI, REQUEST-UI, CAPTION, DEVICE, CHECKOUT-KEYBOARD. | Human en-US/es-US, physical VoiceOver/Switch Control, RTL/large-text full route pass. |
 | F07 | Versioned bounded archive/media staging, siblings, canonical identity and scoped cleanup; N526, F07. | Final system Files/photo flow, production deletion recovery. |
 | F08 | Actor-keyed outboxes and authoritative local service receipts; separate draft/waiting/received/conflict/placed states; N526, B175, WEB, WEB-OFFLINE, NATIVE-OFFLINE. | Deployed offline/refresh/device-loss task. |
 | F09 | StoreKit/server purchase binding, seats and separate measurement consent; N526, B175, MEASUREMENT, PRIVACY. | Final privacy questionnaire; owner-deferred actual Apple product/team and sandbox lifecycle. |

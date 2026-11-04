@@ -22,7 +22,8 @@ struct LedgerPackChoiceView: View {
     @State private var validation: String?
     @State private var initialized = false
     @Environment(\.dismiss) private var dismiss
-    @FocusState private var focused: Bool
+    private enum Field { case firstLabel, firstAmount, firstPrice, secondLabel, secondAmount, secondPrice, source, cap }
+    @FocusState private var field: Field?
 
     var body: some View {
         Form {
@@ -85,21 +86,21 @@ struct LedgerPackChoiceView: View {
                     }
                 } else {
                 Section(ledgerText("First pack")) {
-                    TextField(ledgerText("First pack label"), text: $firstLabel).focused($focused)
-                    TextField(ledgerText("First pack usable amount"), text: $firstAmount).keyboardType(.decimalPad).focused($focused)
+                    TextField(ledgerText("First pack label"), text: $firstLabel).focused($field, equals: .firstLabel)
+                    TextField(ledgerText("First pack usable amount"), text: $firstAmount).keyboardType(.decimalPad).focused($field, equals: .firstAmount)
                     unitPicker($firstUnit)
-                    TextField(ledgerText("First pack price, USD"), text: $firstPrice).keyboardType(.decimalPad).focused($focused)
+                    TextField(ledgerText("First pack price, USD"), text: $firstPrice).keyboardType(.decimalPad).focused($field, equals: .firstPrice)
                 }
                 Section(ledgerText("Second pack")) {
-                    TextField(ledgerText("Second pack label"), text: $secondLabel).focused($focused)
-                    TextField(ledgerText("Second pack usable amount"), text: $secondAmount).keyboardType(.decimalPad).focused($focused)
+                    TextField(ledgerText("Second pack label"), text: $secondLabel).focused($field, equals: .secondLabel)
+                    TextField(ledgerText("Second pack usable amount"), text: $secondAmount).keyboardType(.decimalPad).focused($field, equals: .secondAmount)
                     unitPicker($secondUnit)
-                    TextField(ledgerText("Second pack price, USD"), text: $secondPrice).keyboardType(.decimalPad).focused($focused)
+                    TextField(ledgerText("Second pack price, USD"), text: $secondPrice).keyboardType(.decimalPad).focused($field, equals: .secondPrice)
                 }
                 Section(ledgerText("Reviewed price evidence")) {
-                    TextField(ledgerText("Where you checked these packs and prices"), text: $source).focused($focused)
+                    TextField(ledgerText("Where you checked these packs and prices"), text: $source).focused($field, equals: .source)
                     DatePicker(ledgerText("Checked at"), selection: $observedAt)
-                    TextField(ledgerText("Item-only spending limit, optional"), text: $cap).keyboardType(.decimalPad).focused($focused)
+                    TextField(ledgerText("Item-only spending limit, optional"), text: $cap).keyboardType(.decimalPad).focused($field, equals: .cap)
                     Text(ledgerText("Blank amount or price stays unresolved. A resolved pack can be selected even when the other pack is unknown."))
                     Button(ledgerText("Review whole packs"), action: prepare).buttonStyle(PrimaryAction()).accessibilityIdentifier("ledgerReviewPacks")
                 }
@@ -115,8 +116,8 @@ struct LedgerPackChoiceView: View {
             .disabled(model.saving || !model.ready)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() }.disabled(model.saving) }
-                ToolbarItemGroup(placement: .keyboard) { Spacer(); Button(ledgerText("Done")) { focused = false } }
             }
+            .keyboardDoneAction(visible: field != nil, title: ledgerText("Done")) { field = nil }
             .task { await pickup.load() }
             .onAppear {
                 guard !initialized else { return }; initialized = true
@@ -184,7 +185,8 @@ struct LedgerPackChoiceView: View {
                 offerA: PackOffer(id: "a", label: firstLabel, usableQuantity: ComparisonModel.quantity(firstAmount, firstUnit), price: ComparisonModel.money(firstPrice)),
                 offerB: PackOffer(id: "b", label: secondLabel, usableQuantity: ComparisonModel.quantity(secondAmount, secondUnit), price: ComparisonModel.money(secondPrice)),
                 itemCap: ComparisonModel.money(cap), at: observedAt, source: source, pickup: pickup)
-            focused = false; validation = nil
+            field = nil
+            validation = nil
         } catch LedgerPackError.staleSource { validation = ledgerText("The list or confirmed stock changed. Review the current checkout copy and allocation, then review packs again.") }
         catch DinnerPlanningError.reviewRequired { validation = dinnerText("Review the current ingredient portions") }
         catch { validation = ledgerText("Enter the pack labels, checked source and valid amounts. Unknown amounts stay blank.") }
