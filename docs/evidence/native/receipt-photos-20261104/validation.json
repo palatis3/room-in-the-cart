@@ -1,0 +1,28 @@
+{
+  "sourceCommit": "ea2b36c",
+  "toolchain": "Xcode 27.1 (27A9275)",
+  "device": "iPhone 17e, iOS 27.0 (24A434)",
+  "fixture": "Fictional bilingual receipt JPEG with an ambiguous printed digit, loaded into system Photos using simctl addmedia.",
+  "fixtureSHA256": "c2f827255d3c3ca9c3e098acdc97df663ffb8fd3bd32090947d40008f48f7a8e",
+  "harnessSHA256": "4076b3df2489b4f7e6589bef3dd332627002146ea4c2c544f455f3d355f86e84",
+  "result": ".build/ActualPhotoReview20261104/ReceiptSystemRerun.xcresult",
+  "log": ".build/ActualPhotoReview20261104/receipt-system-rerun.log",
+  "passed": 1,
+  "failed": 0,
+  "seconds": 129.296,
+  "earlierAttempt": {
+    "result": ".build/ActualPhotoReview20261104/ReceiptSystem.xcresult",
+    "failure": "The app selected and recognized the correct photo. The test expected the merchant on one line but OCR split it into two lines."
+  },
+  "checks": "The real Photos picker delivered the JPEG. OCR guessed $4.39 from the ambiguous printed item amount. Save required explicit evidence-only review. The manually entered unclear-amount note, blank quantity note, original words and reduced reference persisted after relaunch. The closeout still showed $0.00 paid.",
+  "persisted": {
+    "receiptEvidenceRecords": 1,
+    "settlementEntries": 0,
+    "arrivalReceipts": 0,
+    "usableObservations": 0,
+    "ordered": [
+      "2 Wraps"
+    ]
+  },
+  "scope": "System Photos selection and on-device OCR on a simulator. A saved source image is private evidence. Physical camera capture remains separate."
+}
