@@ -56,7 +56,13 @@
   "realSystemPermissionProbe": {
     "sourceCommit": "9539f3ec435552fc2b4b3ff594aa9b04c813473b",
     "result": ".build/ReminderSystem20261104/ReminderBefore.xcresult",
-    "statusAtCheckpoint": "Live on the original app source. No system permission or delivery claim at this checkpoint.",
-    "scope": "Disposable iOS 27 iPhone simulator, ordinary app launch with a scratch-only XCTest probe. The scheduler is not substituted."
+    "log": ".build/ReminderSystem20261104/reminder-before.log",
+    "device": "iPhone 17e, iOS 27.0 (24A434)",
+    "passed": 0,
+    "failed": 1,
+    "durationSeconds": 4172.440,
+    "scope": "Ordinary app launch with the real notification scheduler and a scratch-only XCTest probe on the source before the reminder settings fix.",
+    "observed": "The next-shop deferral showed the real notification permission prompt, accepted Allow and reported Reminder scheduled. Reopening the scheduled reminder displayed America/New_York instead of the reviewed America/Chicago. The test stopped at that assertion.",
+    "followUp": "The minimumOS scope records the focused settings regression on the corrected source. End-to-end deferral settings readback with a real scheduler on that corrected source remains open."
   }
 }
