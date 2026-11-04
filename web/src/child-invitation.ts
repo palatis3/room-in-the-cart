@@ -19,6 +19,7 @@ export interface ChildInvitationBrowserPort extends ChildClaimPort {
   startSignin(input:Readonly<ChildInvitationAuthStart>,csrf:string):Promise<void>;
   verifySignin(code:string,csrf:string):Promise<BrowserAuthState>;
   logoutIdentity(csrf:string):Promise<{providerRevoked:boolean}>;
+  logout(scope:Session):Promise<{providerRevoked:boolean|null}>;
   scopedSession():Promise<Session|null>;
 }
 const bad = ():never => { throw new ApiError('invalid_response',502); };
@@ -68,6 +69,7 @@ export class ChildInvitationAPI implements ChildInvitationBrowserPort {
   }
   verifySignin(code:string,csrf:string):Promise<BrowserAuthState>{return this.auth.verifyEmailCode(code,csrf);}
   logoutIdentity(csrf:string):Promise<{providerRevoked:boolean}>{return this.auth.logoutIdentity(csrf);}
+  logout(scope:Session):Promise<{providerRevoked:boolean|null}>{return this.auth.logout(scope);}
   scopedSession():Promise<Session|null>{return this.auth.session();}
   async claim(access:ChildClaimAccess,input:Readonly<ChildInvitationClaim>):Promise<ChildInvitationClaimReceipt> {
     const body={clientKey:uuid(input.clientKey),token:invitation(input.token),pairingCode:pairing(input.pairingCode)};

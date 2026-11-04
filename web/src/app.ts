@@ -1,6 +1,7 @@
 import { API, ApiError, isContributorSession, type BrowserAuthState,type Session, type OwnRequest, type Command, type CookView, type InviteRedemption, prepareProposal, type ProposalIntent, type ProposalReceipt, type OwnProposal } from './api.js';
 import { Outbox, scopeFor, type Pending } from './outbox.js';
 import { languageFor, translate, type Language } from './i18n.js';
+import {browserSignOutPending,resumeBrowserSignOut,setBrowserSignOutPending} from './browser-sign-out.js';
 
 type Draft = {item:string; amount:string; route:'current'|'next'; editing:OwnRequest|null; followup:string|null};
 const blank = ():Draft => ({item:'',amount:'',route:'current',editing:null,followup:null});
@@ -15,9 +16,8 @@ export class WebApp {
   private loginEmail='';
   private loginCode='';
   private codeRequested=false;
-  private identityLogoutPending:string|null=null;
   private reviewedScope:string|null = null;
-  private logoutPending:Session|null = null;
+  private logoutPending = false;
   private requests:OwnRequest[] = [];
   private view:CookView|null = null;
   private pending:Pending[] = [];
@@ -55,13 +55,18 @@ export class WebApp {
   private button(key:string,action:()=>void,primary=false):HTMLButtonElement {
     const b=this.el('button',this.t(key)); b.type='button'; b.disabled=this.busy; if(primary)b.className='primary'; b.addEventListener('click',action); return b;
   }
-  private async run(action:()=>Promise<void>,purpose:'load'|'mutation'='mutation'):Promise<void> {
-    if(this.busy)return; this.busy=true; this.render();
+  private async run(action:()=>Promise<void>,purpose:'load'|'mutation'='mutation',retryingSignOut=false):Promise<void> {
+    if(this.busy||(this.signOutPending&&!retryingSignOut))return; this.busy=true; this.render();
     try { await action(); if(purpose==='load'&&this.failurePurpose==='load'){this.notice='';this.failurePurpose=null;} } catch(error) { await this.fail(error,purpose); }
     finally {this.busy=false;this.render();this.root.querySelector<HTMLElement>('[role="status"]')?.focus();}
   }
   private supportedRoute():boolean {return ['/', '/requests', '/invite', '/view'].includes(this.root.ownerDocument.defaultView?.location.pathname??'/');}
-  async start():Promise<void> { if(!this.supportedRoute()){this.render();return;} if(this.logoutPending){this.render();return;} await this.run(async()=>{await this.load();},'load'); }
+  private get signOutPending():boolean {return this.logoutPending||browserSignOutPending(this.root.ownerDocument.defaultView);}
+  async start():Promise<void> {
+    if(!this.supportedRoute()){this.render();return;}
+    if(this.signOutPending){this.hideWhileSigningOut();this.render();return;}
+    await this.run(()=>this.load(),'load');
+  }
   private clearPrivate():void {
     this.session=null;this.reviewedScope=null;this.requests=[];this.view=null;this.pending=[];this.draft=blank();
     this.retryCommand=null;this.uncertainSend=false;this.consent=false;this.review=false;this.correction='';
@@ -75,6 +80,7 @@ export class WebApp {
     }
   }
   private async load():Promise<void> {
+    if(this.signOutPending)return;
     const start=this.proposalGeneration,fresh=await this.api.session();
     if(start!==this.proposalGeneration)return;
     if(this.reviewedScope && fresh && this.reviewedScope!==reviewScope(fresh)) {
@@ -101,19 +107,30 @@ export class WebApp {
   }
   private async reauthenticate(command?:Command, grantId?:string):Promise<Session> {
     const fresh=await this.api.session();
+    if(this.signOutPending)throw new ApiError('access_ended',403);
     if(!fresh)throw new ApiError('session_needed',401);
     if(!this.reviewedScope||reviewScope(fresh)!==this.reviewedScope)throw new ApiError('access_ended',403);
     if(grantId ? fresh.role!=='editor'||fresh.grantId!==grantId : !isContributorSession(fresh))throw new ApiError('access_ended',403);
     if(command&&(fresh.replayWindow.id!==command.replayWindow||Date.parse(fresh.replayWindow.expiresAt)<=Date.now()))throw new ApiError('stale_replay_window',409);
     this.session=fresh;return fresh;
   }
-  private async signOut():Promise<void> {
-    const old=this.logoutPending??this.session;
-    if(!old)return;
-    this.logoutPending=old;this.clearPrivate();this.invitation=null;this.redemption=null;this.adultAttestation=false;this.inviteAlias='';this.render();
+  private hideWhileSigningOut():void {
+    this.logoutPending=true;this.clearPrivate();this.browserAuth=null;this.loginEmail='';this.loginCode='';this.codeRequested=false;
+    this.invitation=null;this.redemption=null;this.adultAttestation=false;this.inviteAlias='';
+    this.notice='Sign-out could not be confirmed. Retry before sharing this browser.';
+  }
+  private async signOut(scope?:Session,identityCSRF?:string):Promise<void> {
+    const window=this.root.ownerDocument.defaultView;
+    setBrowserSignOutPending(window,true);this.hideWhileSigningOut();this.render();
     let cleared=true;try{await this.outbox.clear();}catch{cleared=false;}
-    try {const result=await this.api.logout(old);this.logoutPending=null;this.browserAuth=null;this.notice=result?.providerRevoked===false?'Signed out of this browser. Provider sign-out could not be confirmed.':cleared?'You are signed out.':'You are signed out, but browser storage could not be cleared. Clear site data before sharing this browser.';}
-    catch {this.notice='Sign-out could not be confirmed. Retry before sharing this browser.';}
+    try {
+      const revoked=scope?(await this.api.logout(scope))?.providerRevoked:identityCSRF?
+        (await this.api.logoutIdentity(identityCSRF)).providerRevoked:await resumeBrowserSignOut(()=>this.api.session(),this.api);
+      setBrowserSignOutPending(window,false);this.logoutPending=false;
+      this.notice=revoked===false?'Signed out of this browser. Provider sign-out could not be confirmed.':cleared?'You are signed out.':
+        'You are signed out, but browser storage could not be cleared. Clear site data before sharing this browser.';
+      if(identityCSRF)this.browserAuth=await this.api.authState().catch(()=>null);
+    } catch { /* Keep the private view closed until a confirmed retry. */ }
   }
   private async fail(error:unknown,purpose:'load'|'mutation'='mutation'):Promise<void> {
     this.failurePurpose=purpose;
@@ -146,22 +163,13 @@ export class WebApp {
     const main=this.el('main');main.setAttribute('aria-busy',String(this.busy));this.root.append(main);
     const status=this.el('p',this.busy?this.t('Loading…'):this.t(this.notice));status.className='notice';status.setAttribute('role','status');status.setAttribute('tabindex','-1');main.append(status);
     if(!this.supportedRoute()){main.append(this.el('h1',this.t('This page is not available.')));const link=this.el('a',this.t('Open your requests'));link.href='/requests';main.append(link);return;}
-    if(this.identityLogoutPending){main.append(this.el('h1',this.t('Finish signing out')),this.button('Retry sign-out',()=>void this.run(()=>this.signOutIdentity()),true));return;}
-    if(this.logoutPending){main.append(this.el('h1',this.t('Finish signing out')),this.button('Retry sign-out',()=>void this.run(()=>this.signOut()),true));return;}
+    if(this.signOutPending){main.append(this.el('h1',this.t('Finish signing out')),this.button('Retry sign-out',()=>void this.run(()=>this.signOut(),'mutation',true),true));return;}
     if(this.invitation!==null || !this.session) {this.renderInvite(main);return;}
     const context=this.el('section');context.append(this.el('p',this.session.household.label));
-    const actions=this.el('div');actions.className='actions';actions.append(this.button('Refresh',()=>void this.run(()=>this.load(),'load')),this.button('Sign out',()=>void this.run(()=>this.signOut())));context.append(actions);main.append(context);
+    const actions=this.el('div');actions.className='actions';actions.append(this.button('Refresh',()=>void this.run(()=>this.load(),'load')),this.button('Sign out',()=>void this.run(()=>this.signOut(this.session??undefined))));context.append(actions);main.append(context);
     if(this.session.role==='helper'||this.session.role==='editor'){
       if(this.view)this.renderCook(main);else main.append(this.el('p',this.t('No instructions are available.')));
     } else this.renderContributor(main);
-  }
-  private async signOutIdentity():Promise<void>{
-    const csrf=this.identityLogoutPending??this.browserAuth?.csrf;if(!csrf)return;
-    this.identityLogoutPending=csrf;this.clearPrivate();this.browserAuth=null;this.loginEmail='';this.loginCode='';this.codeRequested=false;this.invitation=null;this.redemption=null;
-    await this.outbox.clear().catch(()=>{});
-    const result=await this.api.logoutIdentity(csrf);this.identityLogoutPending=null;
-    this.notice=result.providerRevoked?'You are signed out.':'Signed out of this browser. Provider sign-out could not be confirmed.';
-    this.browserAuth=await this.api.authState();
   }
   private renderLogin(main:HTMLElement):void{
     main.append(this.el('h1',this.t('Sign in to continue')));
@@ -204,7 +212,7 @@ export class WebApp {
       if(accepted.grantId&&opened.grantId!==accepted.grantId){this.view=null;this.requests=[];throw new ApiError('grant_context_changed',409);}
       this.invitation=null;this.redemption=null;this.adultAttestation=false;this.inviteAlias='';
     });});main.append(form,this.el('p',this.t('An internet connection is needed to open an invitation.')),this.button('Refresh',()=>void this.run(()=>this.load(),'load')));
-    if(!this.session&&this.browserAuth?.authenticated)main.append(this.button('Sign out',()=>void this.run(()=>this.signOutIdentity())));
+    if(!this.session&&this.browserAuth?.authenticated)main.append(this.button('Sign out',()=>void this.run(()=>this.signOut(undefined,this.browserAuth?.csrf??undefined))));
   }
   private field(form:HTMLElement,key:string,id:string,value:string,update:(value:string)=>void,multiline=false):void {
     const label=this.el('label',this.t(key));label.htmlFor=id;const input=multiline?this.el('textarea'):this.el('input');input.id=id;input.value=value;input.maxLength=id==='item'?240:id==='amount'?80:1000;
@@ -279,6 +287,7 @@ export class WebApp {
     const p:Pending={id:command.clientKey,scope:scopeFor(s),command,createdAt:new Date().toISOString()};
     let persisted=false;
     if(this.consent&&s.queueConsent&&s.enrolled){try{await this.outbox.put(p,s,true);persisted=true;}catch{this.notice='Browser storage is unavailable. Requests will remain editable but will not be saved offline.';}}
+    if(this.signOutPending)throw new ApiError('access_ended',403);
     if(offlineError){
       if(!persisted)throw offlineError;
       this.showQueued(p);
@@ -305,7 +314,7 @@ export class WebApp {
   }
   private async retry(p:Pending):Promise<void>{
     const fresh=await this.api.session();
-    if(!fresh||reviewScope(fresh)!==this.reviewedScope||scopeFor(fresh)!==p.scope||!isContributorSession(fresh)||!fresh.enrolled||!fresh.queueConsent)throw new ApiError('access_ended',403);
+    if(this.signOutPending||!fresh||reviewScope(fresh)!==this.reviewedScope||scopeFor(fresh)!==p.scope||!isContributorSession(fresh)||!fresh.enrolled||!fresh.queueConsent)throw new ApiError('access_ended',403);
     if(fresh.replayWindow.id!==p.command.replayWindow||Date.parse(fresh.replayWindow.expiresAt)<=Date.now()) {this.notice='This queued request needs a new review. It was not resent.';return;}
     await this.api.command(fresh,p.command);await this.outbox.remove(p.id);this.session=fresh;this.pending=this.pending.filter(x=>x.id!==p.id);this.notice='Received by the shopper.';await this.load();
   }

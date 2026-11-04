@@ -2,6 +2,8 @@ import type { ChildBrowserEnrollmentReceipt, ChildInvitationAuthStart } from '..
 import { consumeInvitation, ApiError, type BrowserAuthState } from './api.js';
 import { ChildClaimController, ChildInvitationAPI, type ChildClaimAccess, type ChildInvitationBrowserPort, type ChildInvitationSession } from './child-invitation.js';
 import { languageFor, type Language } from './i18n.js';
+import {browserSignOutKey,browserSignOutPending,resumeBrowserSignOut,setBrowserSignOutPending} from './browser-sign-out.js';
+import {Outbox} from './outbox.js';
 
 export const childInvitationCopy = {
   title:{en:'Child invitation',es:'Invitación para menores'},
@@ -48,15 +50,15 @@ export class ChildInvitationPage {
   private email=''; private code=''; private requested=false; private nextSendAt=0; private verificationUncertain=false;
   private intent:Readonly<ChildInvitationAuthStart>|null=null; private auth:BrowserAuthState|null=null;
   private child:ChildInvitationSession|null=null; private scope:string|null=null; private controller:ChildClaimController|null=null;
-  private expected:ChildBrowserEnrollmentReceipt|null=null; private logoutCSRF:string|null=null;
+  private expected:ChildBrowserEnrollmentReceipt|null=null; private logoutPending=false;
   constructor(private readonly root:HTMLElement,private readonly api:ChildInvitationBrowserPort=new ChildInvitationAPI(),private token:string|null=null) {this.language=languageFor(root.ownerDocument.defaultView?.navigator.language??'en');}
   private check(generation:number):void {if(generation!==this.generation)throw new ApiError('access_ended',403);}
   clear():void {this.generation++;this.controller?.clear(true);this.controller=null;this.scope=null;this.child=null;this.token=null;this.email='';this.code='';this.intent=null;this.requested=false;this.verificationUncertain=false;this.expected=null;}
-  private async run(action:(generation:number)=>Promise<void>):Promise<void> {
-    if(this.busy)return;this.busy=true;this.render();
+  private async run(action:(generation:number)=>Promise<void>,retryingSignOut=false):Promise<void> {
+    if(this.busy||(this.logoutPending&&!retryingSignOut))return;this.busy=true;this.render();
     try {await action(this.generation);}catch(error){this.fail(error);}finally{this.busy=false;this.render();}
   }
-  async start():Promise<void>{if(this.logoutCSRF)return;await this.run(generation=>this.load(generation));}
+  async start():Promise<void>{if(this.logoutPending)return;await this.run(generation=>this.load(generation));}
   private async live(generation:number):Promise<LiveChild|null> {
     const auth=await this.api.authState();this.check(generation);
     if(!auth.available||!auth.authenticated||!auth.csrf)return null;
@@ -83,6 +85,7 @@ export class ChildInvitationPage {
   private async load(generation:number):Promise<void> {
     const availability=await this.api.availability(this.language);this.check(generation);
     if(!availability.available){this.clear();this.phase='unavailable';this.notice=null;return;}
+    if(browserSignOutPending(this.root.ownerDocument.defaultView)){this.requireSignOut();return;}
     const auth=await this.api.authState();this.check(generation);
     if(!auth.available){this.clear();this.phase='unavailable';this.notice=null;return;}
     if(!auth.authenticated){
@@ -131,17 +134,24 @@ export class ChildInvitationPage {
     const after=await this.live(generation);if(!after||after.access.scope!==live.access.scope)throw new ApiError('access_ended',403);
     if(!await this.scoped(generation,after)){this.phase='active_missing';this.notice='activeMissing';}
   }
-  private async signout():Promise<void> {
-    const csrf=this.logoutCSRF??this.auth?.csrf;if(!csrf)return;
-    this.logoutCSRF=csrf;this.clear();this.phase='blocked';this.notice='signoutFailed';this.render();
-    await this.api.logoutIdentity(csrf);this.logoutCSRF=null;this.auth=null;this.notice=null;await this.load(this.generation);
+  requireSignOut():void {
+    this.logoutPending=true;this.clear();this.auth=null;this.phase='blocked';this.notice='signoutFailed';this.render();
+  }
+  private async signout(csrf?:string):Promise<void> {
+    const window=this.root.ownerDocument.defaultView;
+    setBrowserSignOutPending(window,true);this.requireSignOut();
+    try { await new Outbox().clear(); } catch { /* Continue server sign-out when storage is unavailable. */ }
+    if(csrf)await this.api.logoutIdentity(csrf);
+    else await resumeBrowserSignOut(()=>this.api.scopedSession(),this.api);
+    setBrowserSignOutPending(window,false);this.logoutPending=false;this.notice=null;
+    await this.load(this.generation);
   }
   checkExpiry():void {
     if(this.controller?.checkExpiry()||this.child&&this.child.status!=='active'&&this.child.expiresAt&&Date.parse(this.child.expiresAt)<=Date.now()) {this.clear();this.phase='blocked';this.notice='ended';this.render();}
     else if(this.phase==='code'&&this.nextSendAt&&Date.now()>=this.nextSendAt){this.nextSendAt=0;this.render();}
   }
   private fail(error:unknown):void {
-    if(this.logoutCSRF){this.notice='signoutFailed';return;}
+    if(this.logoutPending){this.notice='signoutFailed';return;}
     const e=error instanceof ApiError?error:new ApiError('unavailable',500);
     if(e.status===401||e.status===403||e.status===410){this.clear();this.phase='blocked';this.notice='ended';}
     else if(e.code==='consent_unavailable'||e.code==='login_unavailable'||e.code==='child_setup_unavailable'){this.clear();this.phase='unavailable';this.notice=null;}
@@ -164,8 +174,8 @@ export class ChildInvitationPage {
     const main=el('main');main.setAttribute('aria-busy',String(this.busy));main.append(el('h1',t('title')));
     const status=el('p',this.busy?t('loading'):this.notice?t(this.notice):'');status.setAttribute('role','status');main.append(status);
     const message=(key:CopyKey)=>{if(status.textContent!==t(key))main.append(el('p',t(key)));};
-    if(this.phase==='unavailable'){status.textContent=t('unavailable');main.append(el('p',t('explanation')),el('p',t('account')),el('p',t('secret')));}
-    else if(this.logoutCSRF)main.append(button('signoutRetry',()=>void this.run(()=>this.signout())));
+    if(this.logoutPending)main.append(button('signoutRetry',()=>void this.run(()=>this.signout(),true)));
+    else if(this.phase==='unavailable'){status.textContent=t('unavailable');main.append(el('p',t('explanation')),el('p',t('account')),el('p',t('secret')));}
     else if(this.phase==='signin'){
       main.append(el('p',t('signin')),el('p',t('account')));const form=el('form');
       const token=field(form,'token','child-invitation',this.token??'','password',value=>{this.token=value;});token.maxLength=4096;
@@ -186,8 +196,8 @@ export class ChildInvitationPage {
     }else if(this.phase==='recovered')main.append(el('p',t('recoveryExplanation')));
     else if(this.phase==='active_missing')message('activeMissing');
     else if(this.phase==='active'){const link=el('a',t('open'));link.href='/requests';main.append(link);}
-    if(this.phase!=='unavailable'&&this.phase!=='loading'&&!this.logoutCSRF)main.append(button('refresh',()=>void this.start()));
-    if(this.auth?.authenticated&&!this.logoutCSRF)main.append(button('signout',()=>void this.run(()=>this.signout())));
+    if(this.phase!=='unavailable'&&this.phase!=='loading'&&!this.logoutPending)main.append(button('refresh',()=>void this.start()));
+    if(this.auth?.authenticated&&!this.logoutPending)main.append(button('signout',()=>void this.run(()=>this.signout(this.auth?.csrf??undefined))));
     const help=el('a',t('help'));help.href='/help';main.append(help);this.root.append(header,main);
   }
 }
@@ -201,6 +211,7 @@ export function mountChildInvitationPage(root:HTMLElement,api:ChildInvitationBro
   const page=new ChildInvitationPage(root,api,token);void page.start();
   const timer=window.setInterval(()=>page.checkExpiry(),1000);
   window.addEventListener('online',()=>void page.start());
+  window.addEventListener('storage',event=>{if(event.key===browserSignOutKey&&event.newValue==='1')page.requireSignOut();});
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')void page.start();});
   window.addEventListener('pagehide',()=>{page.clear();window.clearInterval(timer);},{once:true});return true;
 }

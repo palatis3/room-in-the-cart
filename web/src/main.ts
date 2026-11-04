@@ -4,6 +4,7 @@ import './theme.css';
 import './style.css';
 import { mountPublicPage } from './public-pages.js';
 import { mountChildInvitationPage } from './child-invitation-page.js';
+import { browserSignOutKey } from './browser-sign-out.js';
 import './public-pages.css';
 const root=document.getElementById('app');
 if(root && !mountPublicPage(root) && !mountChildInvitationPage(root)) {
@@ -12,5 +13,6 @@ if(root && !mountPublicPage(root) && !mountChildInvitationPage(root)) {
   void app.start();
   window.setInterval(()=>app.checkExpiry(),1000);
   window.addEventListener('online',()=>void app.start());
+  window.addEventListener('storage',event=>{if(event.key===browserSignOutKey&&event.newValue==='1')void app.start();});
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')void app.start();});
 }

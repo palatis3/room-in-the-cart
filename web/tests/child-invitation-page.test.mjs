@@ -10,9 +10,10 @@ async function ready(root){for(let count=0;count<20&&root.querySelector('main')?
 function input(dom,id,value){const element=dom.window.document.getElementById(id);assert.ok(element,`Missing field ${id}`);element.value=value;element.dispatchEvent(new dom.window.Event('input',{bubbles:true}));}
 async function submit(dom,root){root.querySelector('form').dispatchEvent(new dom.window.Event('submit',{bubbles:true,cancelable:true}));await tick();await ready(root);}
 async function click(root,text){const button=[...root.querySelectorAll('button')].find(item=>item.textContent===text);assert.ok(button,`Missing button ${text}`);assert.equal(button.disabled,false);button.click();await tick();await ready(root);}
-async function setup(t,fixture=createChildFixture({configured:true}),token=fixtureInput.token){
+async function setup(t,fixture=createChildFixture({configured:true}),token=fixtureInput.token,allowLocalStorage=false){
   const dom=new JSDOM('<div id="app"></div>',{url:'https://fixture.invalid/child-invite'});t.after(()=>dom.window.close());Object.defineProperty(dom.window,'crypto',{value:webcrypto});
-  for(const name of ['localStorage','sessionStorage','indexedDB'])Object.defineProperty(dom.window,name,{get(){throw new Error('Enrollment private store touched');}});
+  const stores=allowLocalStorage?['sessionStorage','indexedDB']:['localStorage','sessionStorage','indexedDB'];
+  for(const name of stores)Object.defineProperty(dom.window,name,{get(){throw new Error('Enrollment private store touched');}});
   const api=new ChildInvitationAPI(fixture.fetcher),root=dom.window.document.getElementById('app'),page=new ChildInvitationPage(root,api,token);await page.start();
   return{dom,root,page,api,fixture};
 }
@@ -34,6 +35,27 @@ test('configured covered flow uses guardian-approved auth, server pairing confir
 test('generic authenticated account cannot display covered OTP, claim or own-request access',async t=>{
   const f=await setup(t);f.fixture.control('generic');await f.page.start();
   assert.match(f.root.textContent,/no current child admission/);assert.equal(f.root.querySelector('form'),null);assert.equal(f.root.querySelector('a[href="/requests"]'),null);assert.equal(f.fixture.counts.starts,0);assert.equal(f.fixture.counts.claimPosts,0);
+});
+
+test('interrupted child sign-out hides pairing after reload and retries using current identity',async t=>{
+  const fixture=createChildFixture({configured:true}),fetcher=fixture.fetcher;
+  let offline=false;
+  fixture.fetcher=async(path,options)=>{
+    if(offline&&path==='/v1/auth/session'&&options.method==='DELETE')throw new TypeError('disconnected');
+    return fetcher(path,options);
+  };
+  const f=await setup(t,fixture,fixtureInput.token,true);await paired(f);
+  offline=true;await click(f.root,'Sign out');
+  assert.equal(f.root.querySelector('#pairing-code'),null);
+  assert.equal(f.dom.window.localStorage.length,1);
+  const before=fixture.requests.filter(row=>row.path==='/v1/auth/session').length;
+  const reloaded=new ChildInvitationPage(f.root,f.api);await reloaded.start();
+  assert.equal(f.root.querySelector('#pairing-code'),null);
+  assert.equal(fixture.requests.filter(row=>row.path==='/v1/auth/session').length,before);
+  offline=false;await click(f.root,'Retry sign-out');
+  assert.equal(f.dom.window.localStorage.length,0);
+  assert.ok(f.root.querySelector('#child-email'));
+  assert.equal(f.root.querySelector('#pairing-code'),null);
 });
 
 test('wrong guardian-approved email cannot claim that an OTP was sent',async t=>{

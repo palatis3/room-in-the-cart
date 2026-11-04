@@ -1,0 +1,82 @@
+{
+  "recordedAtUTC": "2026-11-04T10:20:21.454095+00:00",
+  "baseCommit": "e4ed3ca7989491337e8cefc8df9d1da03e61771b",
+  "sourceSHA256": {
+    "web/src/browser-sign-out.ts": "465269f619e1ad67b51366bf178bbc935f79a682381f6d86e33c975e676753c3",
+    "web/src/app.ts": "04fd3c2fc3870690e135afec209b8cf72e49134a6004712378528936b63e13a8",
+    "web/src/child-invitation-page.ts": "b3cf24c37911445043ac6b8080a332c37daa0e1b107119497d49fc99026adbf5",
+    "web/src/child-invitation.ts": "1d2f26a723c818344138b3776c6bc63f5ebf79d59bccd4d919059b294fe431db",
+    "web/src/main.ts": "e67039b610bab7a73d4f31a1684a37d51922ad9165f78b2df0c49bf9a7315a61",
+    "web/tests/client.test.mjs": "093041105db4213e535e72817fa6878980e00587e5a7c992d48571a252ec6d22",
+    "web/tests/child-invitation-page.test.mjs": "22e51fa4a6ba1f6f2d343ebf19a6fb921a15012ac4df3d5ce84913b14eb51362"
+  },
+  "bundleSHA256": {
+    "web/public-build/assets/index-r5awJXJn.js": "19a82d00e77e29e4dec7c615f3331e3f15da8a0b7ede45dc1334c684a1d3a0fb"
+  },
+  "beforeFix": "Both cold-reload regressions failed. An unprocessed logout restored private content and a processed logout with a lost response gave the reloaded page no retry state.",
+  "webTests": {
+    "passed": 107,
+    "failed": 0,
+    "cases": [
+      "Retain only the pending flag across reload and refresh the authorization before retry",
+      "Confirm an already-ended session without another logout",
+      "Hide child pairing on cold reload until sign-out completes"
+    ]
+  },
+  "localBrowser": {
+    "fixture": "Loopback synthetic HttpOnly cookie with a failed DELETE transport and rotated fixture CSRF on reconnect",
+    "beforeRetryAfterReload": {
+      "scopeReads": 1,
+      "ownReads": 1,
+      "authReads": 0,
+      "logouts": [
+        {
+          "mode": "offline-delete",
+          "usesCurrentCSRF": true,
+          "sessionPresent": true
+        },
+        {
+          "mode": "offline-delete",
+          "usesCurrentCSRF": true,
+          "sessionPresent": true
+        },
+        {
+          "mode": "offline-delete",
+          "usesCurrentCSRF": true,
+          "sessionPresent": true
+        }
+      ],
+      "confirmed": 0
+    },
+    "afterRetryAndFinalReload": {
+      "scopeReads": 3,
+      "ownReads": 1,
+      "authReads": 1,
+      "logouts": [
+        {
+          "mode": "offline-delete",
+          "usesCurrentCSRF": true,
+          "sessionPresent": true
+        },
+        {
+          "mode": "offline-delete",
+          "usesCurrentCSRF": true,
+          "sessionPresent": true
+        },
+        {
+          "mode": "offline-delete",
+          "usesCurrentCSRF": true,
+          "sessionPresent": true
+        },
+        {
+          "mode": "online",
+          "usesCurrentCSRF": true,
+          "sessionPresent": true
+        }
+      ],
+      "confirmed": 1
+    },
+    "observed": "The cold reload retained Finish signing out without requesting private content. Explicit retry completed one logout using the current authorization. The following reload returned to sign-in."
+  },
+  "scope": "Desktop in-app browser and local web tests. Synthetic service and cookie. Deployed auth and mobile-browser acceptance remain separate."
+}

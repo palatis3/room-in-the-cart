@@ -226,6 +226,40 @@ test('failed sign-out clears private content and background reload cannot restor
  logoutFails=false;click(root,'Retry sign-out');await waitForIdle(root);assert.match(root.textContent,/You are signed out/);
 });
 
+test('an interrupted sign-out stays private across a cold reload and retries with the current session',async()=>{
+ let current=session(),offline=false,sessionReads=0;const logoutCSRF=[];
+ const api=fakeAPI({session:async()=>{sessionReads++;return current;},requests:async()=>[own()],logout:async s=>{
+  logoutCSRF.push(s.csrf);if(offline)throw new ApiError('network',0);current=null;return {providerRevoked:true};
+ }});
+ const {root,dom}=await setup(api);
+ offline=true;click(root,'Sign out');await waitForIdle(root);
+ const reloaded=new WebApp(root,api,new Outbox(new IDBFactory()));await reloaded.start();
+ assert.doesNotMatch(root.textContent,/No-salt frijoles|Family A/);
+ assert.match(root.textContent,/Finish signing out/);assert.equal(sessionReads,1);
+ assert.equal(dom.window.localStorage.length,1);
+ assert.equal(dom.window.localStorage.getItem(dom.window.localStorage.key(0)),'1');
+ offline=false;current={...session(),csrf:'rotated-csrf'};
+ click(root,'Retry sign-out');await waitForIdle(root);
+ assert.deepEqual(logoutCSRF,['csrf-test','rotated-csrf']);
+ assert.match(root.textContent,/You are signed out/);assert.equal(dom.window.localStorage.length,0);
+});
+
+test('a lost successful sign-out response can be confirmed after reload without posting a second logout',async()=>{
+ let active=true,posts=0;
+ const api=fakeAPI({session:async()=>{
+  if(!active)throw new ApiError('session_needed',401);
+  return session();
+ },authState:async()=>({available:true,authenticated:false,csrf:'anonymous-challenge'}),logout:async()=>{
+  posts++;active=false;throw new ApiError('network',0);
+ }});
+ const {root,dom}=await setup(api);
+ click(root,'Sign out');await waitForIdle(root);
+ const reloaded=new WebApp(root,api,new Outbox(new IDBFactory()));await reloaded.start();
+ click(root,'Retry sign-out');await waitForIdle(root);
+ assert.equal(posts,1);assert.match(root.textContent,/You are signed out/);
+ assert.equal(dom.window.localStorage.length,0);
+});
+
 test('failed helper loading never falls back to the contributor form',async()=>{
  const {root}=await setup(fakeAPI({session:async()=>({...session(),role:'helper',grantId:'grant-a'}),view:async()=>{throw new ApiError('network',0);}}));
  assert.doesNotMatch(root.textContent,/Ask the shopper|Review request|Send proposal/);assert.match(root.textContent,/No instructions are available/);
