@@ -172,16 +172,19 @@ struct LargePrintList: View {
         return text
     }
     private func printList(_ groups: [LedgerListLayout.Group]) {
-        guard groups.contains(where: { !$0.lines.isEmpty }),UIPrintInteractionController.isPrintingAvailable,
-              let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first(where: { $0.activationState == .foregroundActive }),
-              let view = scene.keyWindow?.rootViewController?.view else { printError = true; return }
+        guard groups.contains(where: { !$0.lines.isEmpty }), UIPrintInteractionController.isPrintingAvailable else {
+            printError = true
+            return
+        }
         let controller = UIPrintInteractionController.shared
         let info = UIPrintInfo(dictionary:nil); info.jobName = shop.title; info.outputType = .grayscale
         controller.printInfo = info
         let formatter = UISimpleTextPrintFormatter(attributedText: printText())
         formatter.perPageContentInsets = UIEdgeInsets(top:32,left:32,bottom:32,right:32)
         controller.printFormatter = formatter
-        if !controller.present(from: CGRect(x:view.bounds.midX,y:view.bounds.midY,width:1,height:1), in:view, animated:true,
-            completionHandler:{ _,_,error in if error != nil { printError = true } }) { printError = true }
+        let presented = controller.present(animated: true) { _, _, error in
+            if error != nil { printError = true }
+        }
+        if !presented { printError = true }
     }
 }

@@ -1,0 +1,72 @@
+{
+  "baseCommit": "1733323237867ae09966b50425c3f0a2cbeab069",
+  "toolchain": "Xcode 27.1 (27A9275)",
+  "sourceSHA256": {
+    "ios/Features/Ledger/LedgerListLayoutViews.swift": "f06de1fac8d3170498e76045b1d1d2597b5680166c7804e4c6c8c9296697d52d",
+    "ios/UITests/FreeJourneyUITests.swift": "c89ba48b14a16df6b5b5a09652d571f3b6d5acbdcc934b08c46ef75478e9e4a4"
+  },
+  "baselinePresentation": {
+    "result": ".build/SystemPrint20261104/PrintPresentationBaseline.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "log": ".build/SystemPrint20261104/print-presentation-baseline.log",
+    "seconds": 27.378,
+    "finding": "The iOS 27 simulator opened the old rectangle-anchored presenter. UIKit\u2019s SDK header describes that overload for iPad and the unanchored presenter for iPhone."
+  },
+  "iOS27": {
+    "result": ".build/SystemPrint20261104/PrintIPhone.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "log": ".build/SystemPrint20261104/print-iphone.log",
+    "seconds": 150.555,
+    "device": "iPhone 17e, iOS 27.0 (24A434)",
+    "harnessSHA256": "9d7386b252f2948c2fe8be6238f5224999540dfe6446b0ce876b70c87ae69a95",
+    "checks": "The documented iPhone presenter opened native Print Options. Cancel returned to the large-print list. Relaunch preserved milk before apples, the original private note and the checked soap in history.",
+    "ledgerHeadRevisionAfterCancel": 5
+  },
+  "pdfExport": {
+    "result": ".build/SystemPrint20261104/PrintFiles.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "log": ".build/SystemPrint20261104/print-files.log",
+    "seconds": 51.74,
+    "harnessSHA256": "a280bd6660fbaba13e8d628f234ae7cd0b6c85c2b826ba794623763dab797617",
+    "exportedPath": ".build/SystemPrint20261104/tmp/pdfs/system-print-preview.pdf",
+    "pdfSHA256": "927e356a5668d9601a316c4bfcf697cadfe9869d492fca68f5954a926c37e536",
+    "renderedPath": ".build/SystemPrint20261104/tmp/pdfs/page-1.png",
+    "renderedSHA256": "00e6c5fe391774549f6208f37faf9d81f5e559c9e85b8b7df263f387f834f49e",
+    "paper": "One US Letter page, 612 \u00d7 792 points",
+    "verifiedText": [
+      "Fictional print pickup",
+      "Milk",
+      "3 US cups",
+      "Apples",
+      "2 items"
+    ],
+    "visualChecks": "Read the complete rendered page. The title, item names and quantities are aligned and legible. Milk precedes apples, and neither the private note nor checked soap appears."
+  },
+  "iOS17": {
+    "result": ".build/SystemPrint20261104/MinimumPrintRerun.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "log": ".build/SystemPrint20261104/minimum-print-rerun.log",
+    "seconds": 49.953,
+    "device": "iPhone SE, iOS 17.0 (21A328)",
+    "earlierResult": ".build/SystemPrint20261104/MinimumPrint.xcresult",
+    "modelTests": 536,
+    "modelFailures": 0,
+    "earlierFinding": "The first run passed all models and stopped before printing. XCTest exposed the visible list options Menu with a nested button and no computed hit point. The rerun taps the control\u2019s center."
+  },
+  "archive": {
+    "path": ".build/SystemPrint20261104/RoomInTheCart-SystemPrint.xcarchive",
+    "binaryUUID": "190007A9-706F-3480-9F01-75D40D5AA10B",
+    "executableSHA256": "99265ed353afd6b15ac1eb1d23c1c71f4e227603ac70077029a52155a3f17121",
+    "builtAppMetadataCheck": "passed",
+    "signed": false
+  },
+  "scope": "Simulator print preview, PDF export, local list state and supported iPhone presenter. Physical AirPrint remains a device acceptance check.",
+  "initialHarness": {
+    "result": ".build/SystemPrint20261104/PrintBaseline.xcresult",
+    "finding": "Before the print action, XCTest found the saved note in the app accessibility hierarchy with the large-print sheet open. The successful checks inspect the actual system-rendered page and the saved ledger separately."
+  }
+}

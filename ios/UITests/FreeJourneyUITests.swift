@@ -425,23 +425,35 @@ import XCTest
     }
 
     func testManualListOrderSurvivesRestartAndOpensLargePrint() throws {
+        func chooseListOption(_ label: String) {
+            let menu = app.buttons.matching(identifier: "ledgerListOptions").firstMatch
+            XCTAssertTrue(menu.waitForExistence(timeout: 8))
+            // iOS 17 can expose a nested Menu button with no computed XCTest hit point.
+            menu.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+            tap(app.buttons[label])
+        }
         launch(reset: true)
         openShoppingList(); tap(element("ledgerStartShop"))
         fill("Market walk", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
         tap(element("ledgerImport")); fill("Apples\nMilk", into: "ledgerImportText")
         tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
-        tap(element("ledgerListOptions")); tap(app.buttons["List order and aisles"])
+        chooseListOption("List order and aisles")
         choose("List order", value: "Manual item order")
         tap(app.buttons["Move Milk up"]); tap(element("saveListOrder"))
         restart(); openShoppingList()
         let items = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "ledgerInspect-"))
         XCTAssertTrue(items.firstMatch.waitForExistence(timeout: 10))
         XCTAssertTrue(items.firstMatch.label.contains("Milk"))
-        tap(element("ledgerListOptions")); tap(app.buttons["Large-print list"])
+        chooseListOption("Large-print list")
         XCTAssertTrue(element("printShoppingList").waitForExistence(timeout: 8))
         XCTAssertTrue(element("printShoppingList").isEnabled)
         assertText("Milk"); assertText("Apples")
         capture("Large-print-shopping-list")
+        tap(element("printShoppingList"))
+        let cancelPrint = app.buttons["Cancel"]
+        XCTAssertTrue(cancelPrint.waitForExistence(timeout: 12), app.debugDescription)
+        tap(cancelPrint)
+        XCTAssertTrue(cancelPrint.waitForNonExistence(timeout: 8), app.debugDescription)
         tap(app.buttons["Done"]); XCTAssertTrue(element("ledgerListOptions").exists)
     }
 
