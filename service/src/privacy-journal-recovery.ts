@@ -127,6 +127,26 @@ async function assertOwner(db:Transaction,expected:DatabaseIdentity,schema:'ritc
  if(!allowed||!equal(actual,expected))throw Error('Fixed recovery database or owner does not match');
 }
 
+async function registeredSource(db:Transaction,owner:DatabaseIdentity,sourceIdentity:string,lock:'none'|'share'|'write'){
+ await assertOwner(db,owner,'ritc','privacy_journal_origin');
+ const suffix=lock==='write'?' FOR UPDATE OF o':lock==='share'?' FOR SHARE OF o':'';
+ const row=(await db.query(`SELECT o.lineage,o.schema_digest,o.configuration_id,o.fenced,r.source_identity,r.database_oid::text
+  FROM ritc.privacy_journal_origin o JOIN ritc.privacy_journal_source_registration r USING(singleton)
+  WHERE o.singleton${suffix}`)).rows[0];
+ if(!row||row.source_identity!==sourceIdentity||row.database_oid!==owner.databaseOid)throw Error('Recovery source registration conflict');
+ return row;
+}
+function sourceMatches(row:{lineage:string;schema_digest:string;configuration_id:string},pins:DurableJournalPins){
+ return row.lineage===pins.lineage&&row.schema_digest===pins.schemaDigest&&row.configuration_id===pins.configurationId;
+}
+async function requireDrained(db:Transaction){
+ if((await db.query('SELECT ritc.privacy_journal_drained() AS drained')).rows[0]?.drained!==true)
+  throw Error('Journal source has unfinished jobs, unacknowledged events, or a restore plan');
+}
+// Ignore only previously installed, immutable rotations. An unexplained
+// lineage is still visible and fails the source event binding checks.
+const unarchivedSource='NOT EXISTS(SELECT 1 FROM ritc.privacy_journal_rotation r WHERE r.predecessor=e.lineage)';
+
 async function checkpointState(db:Transaction,lock:boolean,owner:DatabaseIdentity,pins:DurableJournalPins,scopeDigest:string){
  await assertOwner(db,owner,'ritc_checkpoint','origin');
  const installed=(await db.query(`SELECT to_regclass('ritc.privacy_journal_origin') IS NULL
@@ -251,6 +271,57 @@ export async function registerIndependentSuccessor(configuration:{
  });
 }
 
+/** Switch the same drained source to its registered successor in one source transaction. */
+export async function activateIndependentSuccessor(configuration:{
+ readonly pins:DurableJournalPins;
+ readonly writerPublicKey:KeyObject;
+ readonly authorityPublicKey:KeyObject;
+ readonly source:RecoveryConfiguration['source'];
+ readonly checkpoint:RecoveryConfiguration['checkpoint'];
+ readonly successor:DurableJournalPins;
+},call:JournalCall){
+ const pins=durableJournalPinsSchema.parse(configuration.pins);
+ const next=durableJournalPinsSchema.parse(configuration.successor);
+ const {writerPublicKey,authorityPublicKey}=configuration;
+ const source={pool:configuration.source.pool,identity:identity.parse(configuration.source.identity)};
+ const checkpoint={pool:configuration.checkpoint.pool,identity:identity.parse(configuration.checkpoint.identity)};
+ const nextScope=durableJournalScopeDigest(next);
+ const archive=await exportIndependentRecovery({pins,writerPublicKey,authorityPublicKey,
+  sourceDatabaseOid:source.identity.databaseOid,checkpoint,includeSuccessor:true},call);
+ const link=verifySuccessor('successor' in archive?archive.successor:undefined,successorBody(pins,archive.proof,{
+  lineage:next.lineage,sourceIdentity:next.sourceIdentity,scopeDigest:nextScope,
+ }),authorityPublicKey);
+ const ready=await transaction(checkpoint.pool,call,async db=>{
+  const {head,claim,pending}=await checkpointState(db,false,checkpoint.identity,next,nextScope);
+  return head.mode==='active'&&!head.head.fenced&&head.generation===1&&head.authorityRevision===0&&head.head.seq===0&&
+   head.head.hash==='0'.repeat(64)&&head.totalBytes===0&&!claim&&!pending;
+ });
+
+ return transaction(source.pool,call,async db=>{
+  const current=await registeredSource(db,source.identity,pins.sourceIdentity,'write');
+  const installed=(await db.query('SELECT proof FROM ritc.privacy_journal_rotation WHERE predecessor=$1',[pins.lineage])).rows[0];
+  if(installed){
+   if(!sourceMatches(current,next)||current.fenced||!equal(installed.proof,link))throw Error('Source successor conflicts with a recorded rotation');
+   return {changed:false,successorScopeDigest:nextScope};
+  }
+  if(!current.fenced||!sourceMatches(current,pins)||!ready)throw Error('Rotation requires the fenced predecessor and an unused successor');
+  await requireDrained(db);
+  const migrations=(await db.query('SELECT version,checksum FROM public.ritc_schema_migration ORDER BY version')).rows;
+  if(journalHash(migrations)!==next.schemaDigest)throw Error('Successor schema digest does not match the source registry');
+  const events=(await db.query(`SELECT e.event_id,e.lineage,e.payload_digest FROM ritc.privacy_journal_outbox e
+   WHERE ${unarchivedSource} ORDER BY e.event_id LIMIT 10001`)).rows;
+  if(events.length>MAX_RECORDS||events.some(row=>row.lineage!==pins.lineage)||
+   journalHash(events.map(row=>[row.event_id,row.payload_digest]).sort(compareIds))!==archive.proof.sourceEventsDigest){
+   throw Error('Fenced source no longer matches the predecessor seal');
+  }
+  await db.query(`INSERT INTO ritc.privacy_journal_rotation(predecessor,successor,successor_schema_digest,successor_configuration_id,proof)
+   VALUES($1,$2,$3,$4,$5)`,[pins.lineage,next.lineage,next.schemaDigest,next.configurationId,link]);
+  await db.query('UPDATE ritc.privacy_journal_origin SET lineage=$1,schema_digest=$2,configuration_id=$3,fenced=false WHERE singleton',
+   [next.lineage,next.schemaDigest,next.configurationId]);
+  return {changed:true,successorScopeDigest:nextScope};
+ });
+}
+
 /** Offline owner operation. No ordinary journal route accepts a recovery command or target list. */
 export function createIndependentRecovery(configuration:RecoveryConfiguration){
  const pins=Object.freeze(structuredClone(configuration.pins)),scopeDigest=durableJournalScopeDigest(pins);
@@ -261,19 +332,15 @@ export function createIndependentRecovery(configuration:RecoveryConfiguration){
  const checkpoint={pool:configuration.checkpoint.pool,identity:identity.parse(configuration.checkpoint.identity)};
  if(source.pool===checkpoint.pool)throw Error('Separate source and checkpoint connections required');
 
- async function sourceOrigin(db:Transaction,lock:boolean){
-  await assertOwner(db,source.identity,'ritc','privacy_journal_origin');
-  const row=(await db.query(`SELECT o.lineage,o.schema_digest,o.configuration_id,o.fenced,r.source_identity,r.database_oid::text
-   FROM ritc.privacy_journal_origin o JOIN ritc.privacy_journal_source_registration r USING(singleton)
-   WHERE o.singleton${lock?' FOR UPDATE OF o':''}`)).rows[0];
-  if(!row||row.lineage!==pins.lineage||row.schema_digest!==pins.schemaDigest||row.configuration_id!==pins.configurationId||
-   row.source_identity!==pins.sourceIdentity||row.database_oid!==source.identity.databaseOid)throw Error('Recovery source registration conflict');
+ async function sourceOrigin(db:Transaction,lock:'none'|'share'|'write'){
+  const row=await registeredSource(db,source.identity,pins.sourceIdentity,lock);
+  if(!sourceMatches(row,pins))throw Error('Recovery source registration conflict');
   return row.fenced===true;
  }
 
  async function fence(call:JournalCall){
   // Prove the source binding before making the first irreversible change.
-  await transaction(source.pool,call,db=>sourceOrigin(db,false));
+  await transaction(source.pool,call,db=>sourceOrigin(db,'none'));
   await transaction(checkpoint.pool,call,async db=>{
    const {head}=await checkpointState(db,true,checkpoint.identity,pins,scopeDigest);
    if(head.mode==='recovery'||head.mode==='sealed')return;
@@ -284,20 +351,20 @@ export function createIndependentRecovery(configuration:RecoveryConfiguration){
   // Source capture and progress transactions hold SHARE on this row through
   // commit. The FOR UPDATE waits for their actual outcomes before fencing it.
   await transaction(source.pool,call,async db=>{
-   if(!await sourceOrigin(db,true))await db.query('UPDATE ritc.privacy_journal_origin SET fenced=true WHERE singleton');
+   if(!await sourceOrigin(db,'write'))await db.query('UPDATE ritc.privacy_journal_origin SET fenced=true WHERE singleton');
   });
  }
 
  async function sourceSnapshot(call:JournalCall){
   return transaction(source.pool,call,async db=>{
-   if(!await sourceOrigin(db,false))throw Error('Recovery requires a committed source fence');
+   if(!await sourceOrigin(db,'share'))throw Error('Recovery requires a committed source fence');
    const size=(await db.query(`SELECT count(*)::int AS n,COALESCE(sum(bytes),0)::text AS bytes,COALESCE(max(bytes),0) AS largest
-    FROM (SELECT octet_length(payload::text) AS bytes FROM ritc.privacy_journal_outbox) events`)).rows[0];
+    FROM (SELECT octet_length(e.payload::text) AS bytes FROM ritc.privacy_journal_outbox e WHERE ${unarchivedSource}) events`)).rows[0];
    if(!size||size.n>MAX_RECORDS||Number(size.bytes)>MAX_RESTORE_JSON_BYTES||size.largest>MAX_SOURCE_EVENT_BYTES)throw Error('Committed recovery source exceeds bounds');
    const {rows}=await db.query(`SELECT e.event_id,e.lineage,e.job_id,e.kind,e.payload,e.payload_digest,
     a.payload_digest AS ack_digest,a.head_seq::text AS ack_seq,a.head_hash AS ack_hash
     FROM ritc.privacy_journal_outbox e LEFT JOIN ritc.privacy_journal_ack a USING(event_id)
-    ORDER BY e.created_at,e.event_id`);
+    WHERE ${unarchivedSource} ORDER BY e.created_at,e.event_id`);
    if(rows.length!==size.n)throw Error('Fenced source snapshot changed');
    return rows.map(row=>{
     const event=eventSchema.parse({eventId:row.event_id,payloadDigest:row.payload_digest,payload:row.payload});
@@ -398,5 +465,17 @@ export function createIndependentRecovery(configuration:RecoveryConfiguration){
    return {bytes,proof};
   });
  }
- return Object.freeze({fence,recover});
+ async function sealForRollover(call:JournalCall){
+  // Validate both endpoint bindings before fencing the source.
+  await transaction(checkpoint.pool,call,db=>checkpointState(db,false,checkpoint.identity,pins,scopeDigest));
+  // Fence the drained source first. If the process exits here, a retry can
+  // safely finish sealing; the source cannot accept new work in the meantime.
+  await transaction(source.pool,call,async db=>{
+   const fenced=await sourceOrigin(db,'write');
+   await requireDrained(db);
+   if(!fenced)await db.query('UPDATE ritc.privacy_journal_origin SET fenced=true WHERE singleton');
+  });
+  return recover(call);
+ }
+ return Object.freeze({fence,recover,sealForRollover});
 }

@@ -252,7 +252,7 @@ export function createDurablePrivacyJournal(configuration:DurablePrivacyJournalC
    throw error;
   }
  }
- const port:DurablePrivacyJournalPort=Object.freeze({configurationId:pins.configurationId,
+ const port:DurablePrivacyJournalPort=Object.freeze({configurationId:pins.configurationId,lineage:pins.lineage,
   reserveWorkerCapacity(jobId:string,kinds:readonly WorkerJournalKind[],call:JournalCall):Promise<boolean>{
    const id=uuid.parse(jobId),requested=workerKindsSchema.parse(kinds),reserve=authority.reserveWorkerCapacity;
    if(!reserve)return Promise.reject(Error('Durable worker capacity is unavailable'));

@@ -173,6 +173,7 @@ export interface FixedCommittedSource {
 }
 export interface DurablePrivacyJournalPort {
  readonly configurationId:string;
+ readonly lineage:string;
  beforeCommit(candidate:PrivacyJournalEvent,call:JournalCall):Promise<void>;
  afterCommit(eventId:string,call:JournalCall):Promise<void>;
  acknowledgeJob(jobId:string,call:JournalCall):Promise<void>;

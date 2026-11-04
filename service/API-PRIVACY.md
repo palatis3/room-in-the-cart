@@ -1,6 +1,6 @@
 # Account lifecycle and operational jobs
 
-The application and operations worker load deletion configuration independently. Enable them only after the source is migrated through 027, the independent journal is provisioned and the deployment owner has approved the retention policy and restore drill.
+The application and operations worker load deletion configuration independently. Enable them only after the source is migrated through 028, the independent journal is provisioned and the deployment owner has approved the retention policy and restore drill.
 
 ## Authentication and scope
 

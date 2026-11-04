@@ -6,7 +6,7 @@ import {z} from 'zod';
 import {PrivacyCall} from '../dist/privacy-call.js';
 import {journalCanonical,journalHash} from '../dist/privacy-journal.js';
 import {MAX_JOURNAL_BYTES} from '../dist/privacy-journal-limits.js';
-import {createIndependentRecovery,exportIndependentRecovery,registerIndependentSuccessor,verifyIndependentArchiveWindow} from '../dist/privacy-journal-recovery.js';
+import {activateIndependentSuccessor,createIndependentRecovery,exportIndependentRecovery,registerIndependentSuccessor,verifyIndependentArchiveWindow} from '../dist/privacy-journal-recovery.js';
 import {journalDatabase,journalDatabaseSchema,readPrivateFile} from './journal-authority-config.mjs';
 
 const endpoint=z.object({connection:journalDatabaseSchema,databaseOid:z.string(),ownerOid:z.string()}).strict();
@@ -19,6 +19,7 @@ const publicPins=z.object({pins:z.unknown(),writerPublicKey:publicKey,authorityP
 const linkSettings=exportSettings.omit({authorityPublicKey:true,includeSuccessor:true}).extend({
  authorityPrivateKey:z.string().max(8192).regex(/^-----BEGIN PRIVATE KEY-----\r?\n/),successor:publicPins,
 });
+const activationSettings=publicPins.extend({source:endpoint,checkpoint:endpoint,successor:z.unknown()}).strict();
 const archiveSettings=publicPins.extend({journalPath:z.string().min(1),sealPath:z.string().min(1),incomingLinkPath:z.string().min(1).optional()});
 const windowSettings=z.object({startScopeDigest:z.string(),terminalSealDigest:z.string(),segments:z.array(archiveSettings).min(1)}).strict();
 
@@ -49,8 +50,8 @@ async function syncDirectory(path){
 }
 async function run(){
  const [command,configPath]=process.argv.slice(2);
- if(!['fence','recover','export','link','verify-window'].includes(command)||process.argv.length!==4)
-  throw Error('Use fence, recover, export, link or verify-window with an owner configuration');
+ if(!['fence','recover','seal-for-rollover','export','link','activate','verify-window'].includes(command)||process.argv.length!==4)
+  throw Error('Use fence, recover, seal-for-rollover, export, link, activate or verify-window with an owner configuration');
  const input=await jsonFile(configPath);
  if(command==='verify-window'){
   const {segments,...trust}=windowSettings.parse(input);
@@ -58,9 +59,6 @@ async function run(){
   console.log(JSON.stringify({event:'journal_archive_window_verified',...verified}));
   return;
  }
- const config=(command==='link'?linkSettings:command==='export'?exportSettings:settings).parse(input);
- const directory=await lstat(config.exportDirectory);
- if(!directory.isDirectory()||directory.isSymbolicLink()||directory.uid!==process.getuid?.()||(directory.mode&0o077)!==0)throw Error('Owner-only recovery export directory required');
  const endpoints=[];
  const connect=endpoint=>{
   const pool=journalDatabase(endpoint.connection,'ritc-journal-recovery');endpoints.push(pool);
@@ -69,6 +67,18 @@ async function run(){
  };
  const scope=new PrivacyCall(undefined,25000);
  try{
+  if(command==='activate'){
+   const config=activationSettings.parse(input);
+   const result=await scope.run(call=>activateIndependentSuccessor({
+    pins:config.pins,writerPublicKey:createPublicKey(config.writerPublicKey),authorityPublicKey:createPublicKey(config.authorityPublicKey),
+    source:connect(config.source),checkpoint:connect(config.checkpoint),successor:config.successor,
+   },call));
+   console.log(JSON.stringify({event:'journal_successor_activated',...result}));
+   return;
+  }
+  const config=(command==='link'?linkSettings:command==='export'?exportSettings:settings).parse(input);
+  const directory=await lstat(config.exportDirectory);
+  if(!directory.isDirectory()||directory.isSymbolicLink()||directory.uid!==process.getuid?.()||(directory.mode&0o077)!==0)throw Error('Owner-only recovery export directory required');
   const checkpoint=connect(config.checkpoint);
   if(command==='link'){
    const proof=await scope.run(call=>registerIndependentSuccessor({
@@ -95,7 +105,7 @@ async function run(){
    if(command==='fence'){
     await scope.run(operator.fence);console.log(JSON.stringify({event:'journal_recovery_fenced'}));return;
    }
-   archive=await scope.run(operator.recover);
+   archive=await scope.run(command==='seal-for-rollover'?operator.sealForRollover:operator.recover);
   }
   const {bytes,proof}=archive;
   await writeExact(join(config.exportDirectory,'journal.ndjson'),bytes);

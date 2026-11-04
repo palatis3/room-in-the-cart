@@ -102,16 +102,18 @@ export class PrivacyService {
  }
  async status(jobId:string,statusToken:string,parent?:JournalCall){const scope=new PrivacyCall(parent);try{return await scope.run(async call=>{
   id.parse(jobId);secret.parse(statusToken);
+  const journal=this.options.journal;
   const read=async()=>{
-   const value=(await this.query(call,'SELECT ritc.privacy_status($1,$2) AS value',[jobId,tokenHash(statusToken)])).rows[0].value;
-   if(!value)throw new ServiceError(404,'unavailable','Use the deletion receipt from this device.');
-   return value;
+   const query=journal?'SELECT * FROM ritc.privacy_status_for_journal($1,$2)':'SELECT ritc.privacy_status($1,$2) AS value';
+   const row=(await this.query(call,query,[jobId,tokenHash(statusToken)])).rows[0];
+   if(!row?.value)throw new ServiceError(404,'unavailable','Use the deletion receipt from this device.');
+   return row;
   };
-  const value=await read();
-  if(!this.options.journal)return value;
+  const receipt=await read();
+  if(!journal||receipt.archived)return receipt.value;
   await this.options.assertSource?.(call);
-  await privacyPhase(call,child=>this.options.journal!.acknowledgeJob(jobId,child));
-  return read();
+  await privacyPhase(call,child=>journal.acknowledgeJob(jobId,child));
+  return (await read()).value;
  });}finally{scope.dispose();}}
  async leave(identity:VerifiedIdentity,householdId:string,input:z.infer<typeof exitSchema>,parent?:JournalCall){const scope=new PrivacyCall(parent);try{return await scope.run(async call=>{recent(identity);await this.authenticated(identity,call);if(input.disposition.householdId!==householdId||input.disposition.eraseChildProfiles.length)throw new ServiceError(422,'invalid_candidate','Leaving a household does not erase child profiles. Resolve guardian responsibility first.');
   try{await this.query(call,'SELECT ritc.leave_household($1,$2,$3::uuid,$4::uuid,$5::uuid,$6,$7::jsonb)',[identity.issuer,identity.subject,identity.sessionId,householdId,input.clientKey,digest(input),JSON.stringify(input.disposition)]);return{householdId,left:true as const,accountDeleted:false as const};}catch(e){return mapped(e);}
@@ -143,6 +145,9 @@ export class PrivacyMaintenance {
   if(!journal)throw unavailable();
   const batch=z.number().int().min(1).max(100).parse(input.batchSize??25);
   const budget=z.number().int().min(1000).max(25000).parse(input.timeBudgetMs??20000);
+  const lineage='lineage' in journal?journal.lineage:undefined;
+  const reconciliationSQL=lineage?'SELECT ritc.privacy_claim_reconciliation($1,$2) AS job_id':'SELECT ritc.privacy_claim_reconciliation($1) AS job_id';
+  const claimSQL=lineage?'SELECT * FROM ritc.privacy_claim($1,$2)':'SELECT * FROM ritc.privacy_claim($1)';
   return this.bounded(input.signal,budget,async scope=>{
    const {call}=scope;
    const result={completed:0,retryScheduled:0,leaseLost:0,capacityDeferred:0,issuerMismatch:0,journalDeferred:0,receiptsCleared:0,jobsPurged:0};
@@ -158,7 +163,7 @@ export class PrivacyMaintenance {
    // worker. A reconciliation lease cannot erase targets or finish a job.
    for(let i=0;i<batch;i++){
     const lease=randomUUID();
-    const {job_id:jobId}=(await privacyQuery(this.pool,call,'SELECT ritc.privacy_claim_reconciliation($1) AS job_id',[lease])).rows[0];
+    const {job_id:jobId}=(await privacyQuery(this.pool,call,reconciliationSQL,lineage?[lease,lineage]:[lease])).rows[0];
     if(!jobId)break;
     const acknowledged=await acknowledge(jobId);
     await privacyQuery(this.pool,call,'SELECT ritc.privacy_release_reconciliation($1,$2)',[jobId,lease]);
@@ -180,7 +185,7 @@ export class PrivacyMaintenance {
    // End the batch on contention. Capacity refusals still let later jobs use
    // their already reserved space.
    jobs:for(let i=0;i<batch&&result.journalDeferred===0;i++){
-    const lease=randomUUID(),job=(await privacyQuery(this.pool,call,'SELECT * FROM ritc.privacy_claim($1)',[lease])).rows[0];
+    const lease=randomUUID(),job=(await privacyQuery(this.pool,call,claimSQL,lineage?[lease,lineage]:[lease])).rows[0];
     if(!job)break;
     if(this.options.issuer&&job.issuer!==this.options.issuer){result.issuerMismatch++;continue;}
     let deleted=false,failure:string|null=null;

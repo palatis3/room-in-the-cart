@@ -6,7 +6,7 @@ With the default settings, privacy maintenance retires completed receipts at the
 
 ## Credentials and deployment configuration
 
-Apply the reviewed migrations with the migration administrator. Deletion processing requires migration 027 and a registered source and authority. Provision a dedicated login that inherits `ritc_worker`; it must not inherit `ritc_app`, own the database/schema/tables, be superuser, or bypass RLS. Do not grant it raw table privileges. Store its URL separately as `WORKER_DATABASE_URL`, and keep the application login in `DATABASE_URL`. The runtime rejects a matching application username and independently verifies the connected role.
+Apply the reviewed migrations with the migration administrator. Deletion processing requires migration 028 and a registered source and authority. Provision a dedicated login that inherits `ritc_worker`; it must not inherit `ritc_app`, own the database/schema/tables, be superuser, or bypass RLS. Do not grant it raw table privileges. Store its URL separately as `WORKER_DATABASE_URL`, and keep the application login in `DATABASE_URL`. The runtime rejects a matching application username and independently verifies the connected role.
 
 Remote worker connections verify the TLS certificate and hostname. Supply `WORKER_DATABASE_CA_PEM` only when the deployment needs a private CA. PostgreSQL URL query options cannot override TLS, host, credentials, startup role, or timeouts. An explicit local loopback URL may use `?host=%2Ftmp` for a disposable Unix-socket fixture; that socket exception is rejected in Vercel. An empty URL password does not inherit `PGPASSWORD`.
 

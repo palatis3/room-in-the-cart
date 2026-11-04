@@ -91,9 +91,11 @@ export function createPrivacyRuntime(pool:Database,environment:NodeJS.ProcessEnv
      const [binding]=await Promise.all([
       withPrivacyClient(pool,phase,async db=>{
        const {rows}=await db.query(`SELECT ritc.privacy_runtime_binding() AS binding,
-        current_user=session_user AND pg_has_role(session_user,$1,'MEMBER') AND NOT pg_has_role(session_user,$2,'MEMBER') AS permitted`,
+        current_user=session_user AND pg_has_role(session_user,$1,'MEMBER') AND NOT pg_has_role(session_user,$2,'MEMBER') AS permitted,
+        to_regprocedure('ritc.privacy_status_for_journal(uuid,text)') IS NOT NULL AS rotation_schema`,
         [allowed,excluded]);
        if(!rows[0]?.permitted)throw Error('Privacy connection role mismatch');
+       if(!rows[0].rotation_schema)throw Error('Privacy receipt schema is incomplete');
        return bindingSchema.parse(rows[0].binding);
       }),
       observerSource.readOrigin(phase),

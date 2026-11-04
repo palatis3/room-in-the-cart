@@ -1,0 +1,58 @@
+{
+  "sourceSHA256": "974e188b99a362a31989abb88047bccb027aa8e58738c534b13d12dccc7463d1",
+  "sourceFiles": 316,
+  "baseCommit": "df5b703",
+  "migrations": "001–028",
+  "independentAuthorityMigrations": "001–004",
+  "environment": "Node 22.14 and PostgreSQL 17.11 using private local fixtures",
+  "runs": {
+    "unit": {
+      "tests": 345,
+      "passed": 344,
+      "failed": 0,
+      "skipped": 1,
+      "localLogSHA256": "59165b5ca4348facdc5ac348da61f7a90c4efda2237bb6b90a89e7fca70d7836"
+    },
+    "wire": {
+      "tests": 178,
+      "passed": 178,
+      "failed": 0,
+      "skipped": 0,
+      "localLogSHA256": "db37024b8df4efd6a05007d84ab0dfd06f7c01ce5a0d1e69c70e71197881ec11"
+    },
+    "authority": {
+      "tests": 14,
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0,
+      "localLogSHA256": "fb5d01c893c624e2329b147242c88f170e11563b01434631d2d0cf351c132ff1"
+    },
+    "observer": {
+      "tests": 13,
+      "passed": 13,
+      "failed": 0,
+      "skipped": 0,
+      "localLogSHA256": "594439a3873266b6cc13c1319f373c879e1dbc59b0c1ccca9ad58be525ee3b29"
+    },
+    "operations": {
+      "tests": 15,
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0,
+      "localLogSHA256": "3307c5b2f6f1ad911f8ac8a771e7fcd9553e8d0e177355228aa53fe3754df9d5"
+    }
+  },
+  "observations": [
+    "Wrong checkpoint identity, an accepted pending job and a completed job missing its independent acknowledgement all refused rollover before fencing either endpoint.",
+    "Normal worker reconciliation recorded the interrupted completion without a second provider call. The sealed predecessor still recovered through the protected CLI.",
+    "The activation CLI verified the retained signed link and switched the same source with an immutable rotation receipt. A wrong successor and a direct source reopening were denied.",
+    "The successor accepted and completed a second request. The old receipt remained readable with its original token, and the old observer and worker binding could not act on new work.",
+    "Activation could be repeated after new work without changing state. The successor sealed only its own new events, while both sets of source acknowledgements remained present.",
+    "The offline tool verified both linked archives. The owner recovered the old archive and its link using public keys after source loss."
+  ],
+  "scope": [
+    "The provider was simulated. The source switch, both source and authority databases, observer, app service, worker and owner CLI were exercised locally.",
+    "Quarantined replay from a backup across the switch, operation after capacity exhaustion with unfinished jobs and hosted activation remain separate release work.",
+    "The optional billing PostgreSQL unit skip is covered by the shared integration suite."
+  ]
+}

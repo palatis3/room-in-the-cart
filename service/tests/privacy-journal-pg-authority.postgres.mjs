@@ -15,7 +15,7 @@ import {createPostgresJournalAuthority} from '../dist/privacy-journal-pg-authori
 import {createPostgresCommittedSource} from '../dist/privacy-journal-pg-source.js';
 import {durableJournalScopeDigest,verifyDurableAdmissionReceipt} from '../dist/privacy-journal-durable.js';
 import {createHTTPSJournalAuthority} from '../dist/privacy-journal-https.js';
-import {createIndependentRecovery,registerIndependentSuccessor,verifyIndependentArchiveWindow,verifyIndependentRecovery} from '../dist/privacy-journal-recovery.js';
+import {activateIndependentSuccessor,createIndependentRecovery,registerIndependentSuccessor,verifyIndependentArchiveWindow,verifyIndependentRecovery} from '../dist/privacy-journal-recovery.js';
 import {validatePrivacyRestoreEvents,verifyPrivacyJournal} from '../dist/privacy-journal.js';
 import {MAX_JOURNAL_BYTES,MAX_JOURNAL_RECORDS,MAX_INTENT_RESOLUTION_OVERHEAD,MAX_SOURCE_EVENT_BYTES} from '../dist/privacy-journal-limits.js';
 import {PrivacyMaintenance,PrivacyService} from '../dist/privacy.js';
@@ -880,28 +880,43 @@ test('overlapping HTTPS writers defer without poisoning the losing app or worker
  }
 });
 
-test('a sealed predecessor links one successor and archive verification rejects missing or substituted segments',async()=>{
+test('one drained source switches journals, preserves old receipts, and seals a continuous archive window',async()=>{
  const source=await sourceCluster();
- let later;
  let sourceClosed=false;
  const publicKeys=f=>({pins:f.pins,writerPublicKey:f.writerKeys.publicKey,authorityPublicKey:f.authorityKeys.publicKey});
  const publicSettings=f=>({pins:f.pins,writerPublicKey:f.writerKeys.publicKeyPEM,authorityPublicKey:f.authorityKeys.publicKeyPEM});
- const append=async(f,current)=>{
-  const ports=await openAuthority(f),runtime=current.pool(current.runtime),worker=current.pool(current.worker);
-  const observer=createPostgresCommittedSource({pins:f.pins,authorityPublicKey:f.authorityKeys.publicKey,...current.configuration});
+ const append=async(f,{afterAcceptance,beforeAcceptance,afterInterruptedCompletion}={})=>{
+  const ports=await openAuthority(f),runtime=source.pool(source.runtime),worker=source.pool(source.worker);
+  const observer=createPostgresCommittedSource({pins:f.pins,authorityPublicKey:f.authorityKeys.publicKey,...source.configuration});
   try{
    const {port:journal}=f.adapter({...ports,source:observer.source});
    const issuer='https://archive.fixture.invalid/auth/v1',subject=randomUUID(),sessionId=randomUUID();
-   await current.owner.query('INSERT INTO auth.sessions(id,user_id) VALUES($1,$2)',[sessionId,subject]);
+   await source.owner.query('INSERT INTO auth.sessions(id,user_id) VALUES($1,$2)',[sessionId,subject]);
    const repo=new HouseholdRepository(runtime,{allowChildNetwork:false,noticeVersion:'fixture',sessionStatus:new SupabaseSessionVerifier(issuer)});
-   const provider={assertAvailable:async()=>{},deleteAccount:async target=>assert.equal(target,subject)};
+   let providerCalls=0;
+   const provider={assertAvailable:async()=>{},deleteAccount:async target=>{assert.equal(target,subject);providerCalls++;}};
    const policy={receiptRetentionDays:1,erasureMarkerRetentionDays:2,verifiedBackupRetentionDays:1};
    const privacy=new PrivacyService(repo,{provider,policy,journal});
    const identity={issuer,subject,sessionId,expiresAt:new Date(Date.now()+60_000),authenticatedAt:new Date(),authenticatedMethod:'otp'};
-   const receipt=await privacy.request(identity,{clientKey:randomUUID(),statusToken:randomBytes(32).toString('base64url'),confirm:true,households:[]});
+   await beforeAcceptance?.(privacy);
+   const statusToken=randomBytes(32).toString('base64url');
+   const receipt=await privacy.request(identity,{clientKey:randomUUID(),statusToken,confirm:true,households:[]});
    assert.equal(receipt.status,'pending');
-   assert.equal((await new PrivacyMaintenance(worker,{provider,journal,issuer}).run({batchSize:1})).completed,1);
-   return receipt.jobId;
+   await afterAcceptance?.(receipt.jobId);
+   const maintenance=new PrivacyMaintenance(worker,{provider,journal,issuer});
+   if(afterInterruptedCompletion){
+    const interrupted=new PrivacyMaintenance(worker,{provider,issuer,journal:{...journal,async acknowledgeJob(jobId,context){
+     const {state}=(await source.owner.query('SELECT state FROM ritc.privacy_job WHERE job_id=$1',[jobId])).rows[0];
+     if(state==='complete')throw Error('Fixture lost the completion acknowledgement');
+     return journal.acknowledgeJob(jobId,context);
+    }}});
+    await assert.rejects(interrupted.run({batchSize:1}),/lost the completion acknowledgement/);
+    await afterInterruptedCompletion();
+    assert.equal((await maintenance.run({batchSize:1})).completed,0);
+    assert.equal((await privacy.status(receipt.jobId,statusToken)).status,'complete');
+   }else assert.equal((await maintenance.run({batchSize:1})).completed,1);
+   assert.equal(providerCalls,1);
+   return {jobId:receipt.jobId,statusToken};
   }finally{await Promise.all([ports.close(),observer.close(),runtime.end(),worker.end()]);}
  };
  try{
@@ -912,8 +927,19 @@ test('a sealed predecessor links one successor and archive verification rejects 
   const linkInput={...publicKeys(r.f),authorityPrivateKey:r.f.authorityKeys.privateKey,
    sourceDatabaseOid:config.source.identity.databaseOid,checkpoint:config.checkpoint,successor:publicKeys(next)};
   await assert.rejects(registerIndependentSuccessor(linkInput,time()),/no sealed archive/);
-  const firstJob=await append(r.f,source);
-  const first=await operator.recover(time());
+  const badEndpoint=createIndependentRecovery({...config,checkpoint:{...config.checkpoint,identity:{...config.checkpoint.identity,databaseOid:'999999999'}}});
+  await assert.rejects(badEndpoint.sealForRollover(time()),/Fixed recovery database/);
+  assert.equal((await source.owner.query('SELECT fenced FROM ritc.privacy_journal_origin')).rows[0].fenced,false);
+  const assertDrainBlocked=async()=>{
+   await assert.rejects(operator.sealForRollover(time()),/unfinished jobs/);
+   assert.equal((await source.owner.query('SELECT fenced FROM ritc.privacy_journal_origin')).rows[0].fenced,false);
+   assert.equal((await owner.query("SELECT head->>'mode' AS mode FROM ritc_checkpoint.origin WHERE lineage=$1",[r.f.pins.lineage])).rows[0].mode,'active');
+  };
+  const firstJob=await append(r.f,{afterAcceptance:assertDrainBlocked,afterInterruptedCompletion:async()=>{
+   assert.equal((await source.owner.query("SELECT count(*)::int AS n FROM ritc.privacy_job WHERE state<>'complete'")).rows[0].n,0);
+   await assertDrainBlocked();
+  }});
+  const first=await operator.sealForRollover(time());
   const links=await Promise.all([registerIndependentSuccessor(linkInput,time()),registerIndependentSuccessor(linkInput,time())]);
   const [link]=links;
   assert.deepEqual(links[1],link);
@@ -928,20 +954,62 @@ test('a sealed predecessor links one successor and archive verification rejects 
   finally{await checkpointReader.end();}
   const previousBinding=(await source.owner.query('SELECT lineage,fenced FROM ritc.privacy_journal_origin')).rows[0];
   assert.deepEqual(previousBinding,{lineage:r.f.pins.lineage,fenced:true});
+  const activation={...publicKeys(r.f),source:config.source,checkpoint:config.checkpoint,successor:next.pins};
+  await assert.rejects(activateIndependentSuccessor({...activation,successor:fork.pins},time()),/archive continuity/);
+  await assert.rejects(source.owner.query('UPDATE ritc.privacy_journal_origin SET fenced=false'),/immutable journal origin/);
+  await assert.rejects(source.owner.query('UPDATE ritc.privacy_journal_origin SET lineage=$1,fenced=false',[next.pins.lineage]),/immutable journal origin/);
+  assert.equal((await source.owner.query('SELECT 1 FROM ritc.privacy_journal_rotation')).rowCount,0);
+  const runtime=source.pool(source.runtime),worker=source.pool(source.worker);
+  try{
+   await assert.rejects(runtime.query('SELECT proof FROM ritc.privacy_journal_rotation'),{code:'42501'});
+   await assert.rejects(worker.query('SELECT ritc.privacy_journal_drained()'),{code:'42501'});
+  }finally{await Promise.all([runtime.end(),worker.end()]);}
 
-  // A separately seeded source fixture exercises the second archive against
-  // the same logical binding. This test does not activate a successor in-place.
-  later=await sourceCluster();
-  assert.equal(later.configuration.databaseOid,link.sourceDatabaseOid);
-  await later.owner.query('INSERT INTO ritc.privacy_journal_origin(lineage,schema_digest,configuration_id) VALUES($1,$2,$3)',
-   [next.pins.lineage,next.pins.schemaDigest,next.pins.configurationId]);
-  await later.owner.query('INSERT INTO ritc.privacy_journal_source_registration(source_identity,database_oid,observer_oid) VALUES($1,$2,$3)',
-   [next.pins.sourceIdentity,later.configuration.databaseOid,later.configuration.observerRoleOid]);
-  const secondJob=await append(next,later);
-  assert.notEqual(firstJob,secondJob);
+  const output=join(dir,'successor-fixture');
+  await mkdir(output,{mode:0o700});
+  const endpoint=(identity,host,port)=>({connection:{host,port,database:identity.database,user:identity.owner},
+   databaseOid:identity.databaseOid,ownerOid:identity.ownerOid});
+  const checkpoint=endpoint(config.checkpoint.identity,dir,55433);
+  const sourceEndpoint=endpoint(config.source.identity,source.configuration.connection.host,55434);
+  const operatorPath=join(output,'rollover-seal.json');
+  await writeFile(operatorPath,JSON.stringify({pins:r.f.pins,writerPrivateKey:pem(config.writerPrivateKey),
+   authorityPrivateKey:pem(config.authorityPrivateKey),checkpoint,source:sourceEndpoint,exportDirectory:output}),{mode:0o600});
+  assert.equal(cli('journal-recovery.mjs','seal-for-rollover',operatorPath).sealDigest,link.predecessorSealDigest);
+  const activationPath=join(output,'activate.json');
+  await writeFile(activationPath,JSON.stringify({...publicSettings(r.f),checkpoint,source:sourceEndpoint,successor:next.pins}),{mode:0o600});
+  assert.deepEqual(cli('journal-recovery.mjs','activate',activationPath),{event:'journal_successor_activated',changed:true,
+   successorScopeDigest:link.successorScopeDigest});
+  assert.deepEqual((await source.owner.query('SELECT lineage,fenced FROM ritc.privacy_journal_origin')).rows[0],{lineage:next.pins.lineage,fenced:false});
+  await assert.rejects(source.owner.query('UPDATE ritc.privacy_journal_rotation SET proof=proof'),/immutable journal/);
+  const oldObserver=createPostgresCommittedSource({pins:r.f.pins,authorityPublicKey:r.f.authorityKeys.publicKey,...source.configuration});
+ try{await assert.rejects(oldObserver.source.readOrigin(time()),error=>error.cause?.code==='42501'&&error.cause?.message==='journal_source_origin_conflict');}
+  finally{await oldObserver.close();}
+  const secondJob=await append(next,{
+   beforeAcceptance:async privacy=>{
+    const old=await privacy.status(firstJob.jobId,firstJob.statusToken);
+    assert.equal(old.status,'complete');
+    assert.equal(old.providerAccountDeleted,true);
+    assert.equal(Object.hasOwn(old,'archived'),false);
+    await assert.rejects(privacy.status(firstJob.jobId,randomBytes(32).toString('base64url')),{status:404});
+   },
+   afterAcceptance:async jobId=>{
+    const stalePool=source.pool(source.worker);
+    try{
+     const stale=new PrivacyMaintenance(stalePool,{journal:r.f.adapter().port});
+     assert.equal((await stale.run({batchSize:1})).completed,0);
+     assert.deepEqual((await source.owner.query('SELECT state,lease_id,app_erased_at FROM ritc.privacy_job WHERE job_id=$1',[jobId])).rows[0],
+      {state:'pending',lease_id:null,app_erased_at:null});
+    }finally{await stalePool.end();}
+   },
+  });
+  assert.notEqual(firstJob.jobId,secondJob.jobId);
+  assert.equal(cli('journal-recovery.mjs','activate',activationPath).changed,false);
+  assert.equal((await source.owner.query('SELECT count(*)::int AS n FROM ritc.privacy_journal_ack')).rows[0].n,4);
   const successorRecovery=createIndependentRecovery({...config,pins:next.pins,writerPrivateKey:next.writerKeys.privateKey,
-   authorityPrivateKey:next.authorityKeys.privateKey,source:{pool:later.owner,identity:{...config.source.identity,ownerOid:later.configuration.ownerRoleOid}}});
-  const second=await successorRecovery.recover(time());
+   authorityPrivateKey:next.authorityKeys.privateKey});
+  const second=await successorRecovery.sealForRollover(time());
+  assert.equal(verifyIndependentRecovery(second.bytes,second.proof,next.pins,next.writerKeys.publicKey,next.authorityKeys.publicKey)
+   .events.every(event=>event.payload.jobId===secondJob.jobId),true);
 
   const trust={startScopeDigest:r.scope,terminalSealDigest:digest(second.proof)};
   const a={...publicKeys(r.f),bytes:first.bytes,seal:first.proof};
@@ -952,10 +1020,6 @@ test('a sealed predecessor links one successor and archive verification rejects 
   await assert.rejects(verifyIndependentArchiveWindow([a,{...b,incomingLink:{...link,authoritySignature:'A'.repeat(86)}}],trust),/archive continuity/);
   await assert.rejects(verifyIndependentArchiveWindow([a,{...b,authorityPublicKey:r.f.authorityKeys.publicKey}],trust),/pinned public keys/);
 
-  const output=join(dir,'successor-fixture');
-  await mkdir(output,{mode:0o700});
-  const checkpoint={connection:{host:dir,port:55433,database:'postgres',user:ownerRole},
-   databaseOid:config.checkpoint.identity.databaseOid,ownerOid:config.checkpoint.identity.ownerOid};
   const linkPath=join(output,'register.json'),incomingLinkPath=join(output,'successor.json');
   await writeFile(linkPath,JSON.stringify({pins:r.f.pins,writerPublicKey:r.f.writerKeys.publicKeyPEM,authorityPrivateKey:pem(config.authorityPrivateKey),
    sourceDatabaseOid:config.source.identity.databaseOid,checkpoint,successor:publicSettings(next),exportDirectory:output}),{mode:0o600});
@@ -975,7 +1039,6 @@ test('a sealed predecessor links one successor and archive verification rejects 
   assert.throws(()=>cli('journal-recovery.mjs','verify-window',windowPath),{status:1});
 
   await source.close();sourceClosed=true;
-  await later.close();later=undefined;
   const publicExport=join(dir,'public-successor-export');
   await mkdir(publicExport,{mode:0o700});
   const exportPath=join(publicExport,'config.json');
@@ -984,5 +1047,5 @@ test('a sealed predecessor links one successor and archive verification rejects 
   assert.equal(cli('journal-recovery.mjs','export',exportPath).sealDigest,link.predecessorSealDigest);
   assert.deepEqual(await readFile(join(publicExport,'journal.ndjson')),first.bytes);
   assert.deepEqual(await readFile(join(publicExport,'successor.json')),await readFile(incomingLinkPath));
- }finally{await later?.close();if(!sourceClosed)await source.close();}
+ }finally{if(!sourceClosed)await source.close();}
 });

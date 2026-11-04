@@ -4,6 +4,12 @@ The complete production app remains the objective. The current checkpoint below 
 
 ## Current checkpoint — November 4
 
+Migration 028 and the operator commands switch the same drained source to a linked successor. The switch checks the predecessor seal, exact source event digests, applied schema and unused successor, then records the link and moves the binding together. Existing receipts remain readable. Old observers and workers cannot use their stale bindings to act on new jobs.
+
+The [rotation validation](evidence/b11/privacy-rotation-20261104/validation.json) completes synthetic deletions on both sides of the switch in one source database. An unfinished job and an unacknowledged completion both prevent sealing. The next release gate is restoring a pre-switch backup and applying the linked journals in quarantine.
+
+## Previous checkpoint — November 4, successor verification
+
 The independent checkpoint now records one immutable signed successor for a sealed journal. The link binds the exact seal and complete successor configuration. The owner can recover the link with public keys after source loss. The offline verifier checks a stream of archives against independent backup and final-seal anchors and rejects missing, reordered or substituted segments.
 
 The [succession validation](evidence/b11/privacy-succession-20261104/validation.json) uses real independently sealed archives from two separately seeded source fixtures. Live source activation and ordered quarantine replay across the transition remain open. The existing single-archive restore drill retains its own scope.
