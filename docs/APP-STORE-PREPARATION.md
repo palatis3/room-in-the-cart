@@ -15,10 +15,21 @@ Source: [launch/listing.json](product/foundation-gen2.1/launch/listing.json), dr
 | Name | `Room in the Cart: Grocery List` — 30 characters | Fits Apple's current 30-character limit; ownership, name availability and seller identity remain owner checks. |
 | Subtitle | `Family Meal Planner & Budget` — 28 characters | Fits Apple's current 30-character limit. Evidence must cover meals and whole-shop budgeting on the submitted build. |
 | Keywords | `shared,shopping,dinner,weekly,pantry,pickup,menu,voice,household,cost,freezer,organizer,portion` — 95 UTF-8 bytes | Fits the 100-byte field. Terms still need final feature/rights review. |
-| Spanish metadata | Three candidate phrases only | No final localized name, subtitle, description, keywords or screenshot copy is supplied. Native catalog parity does not approve marketing Spanish. |
+| Spanish metadata | Three supplied candidate phrases | The localized draft below is ready for human language review. |
 | Search priority scores | Six recorded phrase/volume/difficulty hypotheses | Historical research inputs. Do not represent them as current search volume, ranking or acquisition results. |
 
 Name/subtitle limits are documented in [App information](https://developer.apple.com/help/app-store-connect/reference/app-information/app-information). Apple's [platform version fields](https://developer.apple.com/help/app-store-connect/reference/app-information/platform-version-information) require screenshots, a description, keywords, a support URL and copyright. Description is limited to 4,000 characters, optional promotional text to 170, and keywords to 100 bytes. The supplied file contains no description, promotional text, review contact, copyright, category, age rating or operational URLs; these remain inputs to prepare. Pricing text and unverifiable claims should not be added to metadata. [Metadata guidance](https://developer.apple.com/app-store/review/guidelines/)
+
+## Localized listing draft
+
+The [review draft](APP-STORE-LISTING-DRAFT.json) preserves the supplied English name, subtitle and keywords and adds plain-text descriptions and promotional text in both languages. The Spanish copy targets US readers and uses App Store Connect's Spanish (Mexico) localization for the US storefront. [App Store localizations](https://developer.apple.com/help/app-store-connect/reference/app-information/app-store-localizations)
+
+| Localization | Name characters | Subtitle characters | Keyword bytes | Promotional characters | Description characters |
+|---|---:|---:|---:|---:|---:|
+| English (US) | 30 | 28 | 95 | 134 | 1334 |
+| Spanish (Mexico) | 25 | 26 | 91 | 146 | 1534 |
+
+Both drafts fit the current field limits. Review the Spanish wording and confirm that the submitted build supports every shared and paid claim. Support and privacy URLs still need verified publication, and the operator must supply the submission contact and copyright. [Version information](https://developer.apple.com/help/app-store-connect/reference/app-information/platform-version-information), [app information](https://developer.apple.com/help/app-store-connect/reference/app-information/app-information)
 
 ## Feature claim ledger
 

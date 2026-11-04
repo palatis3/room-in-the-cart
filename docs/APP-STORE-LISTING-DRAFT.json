@@ -1,0 +1,21 @@
+{
+  "status": "Review draft for the full iPhone release",
+  "storefront": "US",
+  "platform": "iPhone",
+  "localizations": {
+    "en-US": {
+      "name": "Room in the Cart: Grocery List",
+      "subtitle": "Family Meal Planner & Budget",
+      "keywords": "shared,shopping,dinner,weekly,pantry,pickup,menu,voice,household,cost,freezer,organizer,portion",
+      "promotionalText": "Plan the pickup around what your family will eat. Compare packs, see what fits your grocery budget, and keep dinner and lunch covered.",
+      "description": "Before you place a grocery order, see what fits your budget and whether you’ll have enough for the dinners and lunches you planned.\n\nStart with two packs of the same food. Enter the prices and usable amounts to see how many packs you need and what they’ll cost. You can start this comparison offline without an account.\n\nBuild a grocery list and add the meals you’re shopping for. Count pantry or freezer food you’ve checked, set aside lunch portions, and review how a change affects the whole pickup. Include known fees, discounts, and other charges. Missing prices and amounts stay visible so you can finish the estimate when you have the details.\n\nCollect family requests and decide what goes into the shared list. Compare two store quotes you enter yourself, including fees and extra travel. Share a dated list, place the order with your retailer, then record what actually came home. If you’re short, adjust a meal or make a plan to pick up what’s missing. Send the cook an updated note with what to use and what to save.\n\nFree includes grocery lists, basic budget checks, one reusable dinner, and manual meal planning and pickup review. The optional annual Household subscription adds saved meal rotations, pack planning across meals, guest and budget scenarios, and expanded spending history for up to two named adult planners."
+    },
+    "es-MX": {
+      "name": "Room in the Cart: Compras",
+      "subtitle": "Lista, cenas y presupuesto",
+      "keywords": "supermercado,menú,almuerzo,despensa,congelador,recoger,familia,porciones,precios,compartir",
+      "promotionalText": "Planea el pedido según lo que va a comer tu familia. Compara paquetes, revisa el presupuesto y aparta lo necesario para las cenas y los almuerzos.",
+      "description": "Antes de hacer el pedido del súper, revisa qué cabe en tu presupuesto y si tendrás suficiente para las cenas y los almuerzos que planeaste.\n\nEmpieza comparando dos paquetes del mismo alimento. Ingresa el precio y la cantidad que puedes usar para saber cuántos paquetes necesitas y cuánto cuestan. Puedes hacer la primera comparación sin conexión y sin crear una cuenta.\n\nArma tu lista de compras y agrega las comidas que quieres preparar. Cuenta lo que ya revisaste en la despensa o el congelador, aparta las porciones para el almuerzo y revisa cómo afecta cada cambio al pedido completo. Incluye los cargos y descuentos que conozcas. Los precios y las cantidades que falten quedan pendientes hasta que puedas confirmarlos.\n\nReúne las solicitudes de tu familia y decide qué va en la lista compartida. Compara los precios que ingresaste de dos tiendas, con los cargos y el costo de un viaje adicional. Comparte la lista con fecha, haz el pedido en la tienda y registra lo que de verdad llegó a casa. Si algo falta, cambia una comida o planea cómo conseguirlo. Envía a quien cocina una nota actualizada con lo que puede usar y lo que debe guardar.\n\nLa versión gratis incluye listas de compras, revisión básica del presupuesto, una cena que puedes volver a usar y planeación manual de comidas y pedidos. La suscripción anual opcional Household agrega rotaciones de comidas, planeación de paquetes para varias comidas, opciones para invitados y presupuestos, y un historial de gastos más amplio para hasta dos personas adultas designadas."
+    }
+  }
+}
