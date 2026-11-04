@@ -1,5 +1,4 @@
 import XCTest
-import SwiftUI
 import DeviceSurfaces
 @testable import RoomInTheCart
 
@@ -214,22 +213,31 @@ import DeviceSurfaces
 
     func testResolvedWidgetDestinationDoesNotReselectAfterPickupChanges() async throws {
         let base = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        defer { try? FileManager.default.removeItem(at: base) }
         let surfaceDirectory = base.appendingPathComponent("surfaces")
         var now = Date(timeIntervalSince1970: 1_793_664_000)
-        let ledger = LedgerModel(databaseURL: base.appendingPathComponent("ledger.sqlite")); await ledger.open()
-        let madeA = await ledger.startShop(title: "Fictional widget A"); XCTAssertTrue(madeA)
-        let shopA = try XCTUnwrap(ledger.shop?.id)
-        let pickup = PickupModel(databaseURL: base.appendingPathComponent("pickup.sqlite"), launchArguments: []); await pickup.load()
+        let ledger = LedgerModel(databaseURL: base.appendingPathComponent("ledger.sqlite"))
+        let pickup = PickupModel(databaseURL: base.appendingPathComponent("pickup.sqlite"), launchArguments: [])
         let bundle = Bundle(for: DeviceSurfacesCompositionStartupTests.self)
         let household = HouseholdModel(bundle: bundle, outboxURL: base.appendingPathComponent("outbox.json"))
         let suite = "WidgetPresentation." + UUID().uuidString
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
         let access = WorkspaceAccess(defaults: defaults)
-        let widget = try WidgetProjectionFile(directory: surfaceDirectory.appendingPathComponent("TestWidget"))
         let composition = DeviceSurfacesComposition(directory: surfaceDirectory, bundle: bundle,
             clock: { now }, launchArguments: ["--ui-testing"])
+        addTeardownBlock { [weak composition, weak ledger, weak pickup] in
+            // Reconciliation may still retain the SQLite owners when the test returns.
+            let deadline = ContinuousClock.now + .seconds(5)
+            while composition != nil || ledger != nil || pickup != nil {
+                guard ContinuousClock.now < deadline else { return XCTFail("Widget fixture stores did not release before teardown") }
+                try await Task.sleep(for: .milliseconds(20))
+            }
+            if FileManager.default.fileExists(atPath: base.path) { try FileManager.default.removeItem(at: base) }
+        }
+        await ledger.open(); await pickup.load()
+        let madeA = await ledger.startShop(title: "Fictional widget A"); XCTAssertTrue(madeA)
+        let shopA = try XCTUnwrap(ledger.shop?.id)
+        let widget = try WidgetProjectionFile(directory: surfaceDirectory.appendingPathComponent("TestWidget"))
         composition.bind(ledger: ledger, pickup: pickup, household: household, access: access)
         let projectionA = try await publishedWidget(widget, at: now)
         await composition.open(try XCTUnwrap(projectionA.routeHandle))
@@ -237,26 +245,24 @@ import DeviceSurfaces
         guard case .shop(let resolvedID) = resolvedA else { return XCTFail("A must resolve while it is current") }
         XCTAssertEqual(resolvedID, shopA)
 
-        // Deliberately change selection after successful resolution, before the
-        // real SwiftUI destination mounts and runs its presentation task.
+        // Change selection after successful resolution but before the destination's
+        // presentation action runs.
         now += 60
         let madeB = await ledger.startShop(title: "Fictional widget B"); XCTAssertTrue(madeB)
         _ = try await publishedWidget(widget, at: now)
         let saved = ledger.workspace, revision = ledger.revision
-        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
-        let previous = scene.windows.first(where: \.isKeyWindow)
-        let window = UIWindow(windowScene: scene)
-        let appeared = expectation(description: "Resolved widget destination appeared")
-        let view = DeviceSurfacesDestination(composition: composition, destination: resolvedA,
-            ledger: ledger, pickup: pickup, household: household).onAppear { appeared.fulfill() }
-        window.rootViewController = UIHostingController(rootView: view)
-        window.makeKeyAndVisible()
-        defer { window.isHidden = true; window.rootViewController = nil; previous?.makeKeyAndVisible() }
-        await fulfillment(of: [appeared], timeout: 5)
-        // Permit the real destination's asynchronous presentation task to run.
-        try await Task.sleep(for: .seconds(1))
+        let presentation = DeviceSurfacesDestination(composition: composition, destination: resolvedA,
+            ledger: ledger, pickup: pickup, household: household)
+        let began = await presentation.prepareForPresentation()
+        XCTAssertTrue(began)
         XCTAssertEqual(ledger.workspace, saved, "Presentation must not reselect the formerly current pickup")
         XCTAssertEqual(ledger.revision, revision, "Opening a widget must not create a ledger commit")
+
+        composition.background()
+        let beganAfterBackground = await presentation.prepareForPresentation()
+        XCTAssertFalse(beganAfterBackground, "The retained destination must lose presentation authority in the background")
+        XCTAssertEqual(ledger.workspace, saved)
+        XCTAssertEqual(ledger.revision, revision)
     }
 
     func testLargeListSearchLeavesWidgetAloneAndCommittedChangesRefreshIt() async throws {
