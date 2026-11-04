@@ -65,6 +65,20 @@
       "activeEnglishSpellingFileDeleted": true
     }
   },
+  "archive": {
+    "sourceCommit": "297490c248d5e48308888514907353bb73e5b240",
+    "xcode": "27.1 (27A9275)",
+    "path": ".build/SpellingMemory20261104/RoomInTheCart-SpellingMemoryFinal.xcarchive",
+    "result": "Unsigned Release archive succeeded. The compiled app passed executable, asset, privacy, environment and embedded extension checks.",
+    "executableSHA256": "7e36106bfcc91ac381d470f02d910bfbb5483c4b5cd7bfebbad0f599d9ef24e8",
+    "executableUUID": "C74433E5-AE78-340C-860B-008B8940F817",
+    "missingDistributionMetadata": [
+      "HouseholdSubscriptionProductID",
+      "PrivacyPolicyURL",
+      "TermsOfUseURL",
+      "SupportURL"
+    ]
+  },
   "otherAttempts": [
     {
       "result": ".build/SpellingMemory20261104/SpellingMemory.xcresult",
