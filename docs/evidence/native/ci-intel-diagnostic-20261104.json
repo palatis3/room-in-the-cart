@@ -1,0 +1,30 @@
+{
+  "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41922121507",
+  "headCommit": "6977b00165dec2138e41a4d58550017bbb4ddc72",
+  "configuration": "macos-15-intel; Xcode26.3; ordinary Debug UI, traced unsigned Release device build",
+  "completedChecks": [
+    "source-checks",
+    "typescript (web)",
+    "typescript (service)",
+    "service-postgres",
+    "swift-packages",
+    "ios-build"
+  ],
+  "models": {
+    "passed": 562,
+    "failed": 1,
+    "total": 563,
+    "failure": "DeviceSurfacesCompositionStartupTests/testResolvedWidgetDestinationDoesNotReselectAfterPickupChanges: onAppear expectation timeout; revised action-based regression passes focused local suite and detects a deliberately restored mutation.",
+    "logSHA256": "61ae3d6c8267959a8fd75d2a49250ea9fd8c7517d36aedc88f01b02927172fa2"
+  },
+  "release": {
+    "result": "Job time limit reached; no compiler error diagnostic observed before cancellation. Swift CodeQL analysis did not run.",
+    "logSHA256": "f9cb390cbac3a84c5c12e3afb1d30e0c82ea7f68f1d110a96a7f4b8d009217cf",
+    "lastProgress": "EmitSwiftModule22:24:29; further SwiftCompile output22:50:20; cancellation22:50:49UTC."
+  },
+  "ui": {
+    "result": "Partial, not accepted as passing.",
+    "observedFailure": "Live authenticated job126908196157 showed PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart exceed720seconds while still progressing through checkout-form input.",
+    "remaining": "Cancelled obsolete Intel execution after preserving model/build diagnostics; corrected native-runner validation required."
+  }
+}
