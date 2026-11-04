@@ -97,6 +97,8 @@ jobs:
     timeout-minutes: 100
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+    outputs:
+      test_products_artifact: ${{ steps.upload_ios_products.outputs['artifact-id'] }}
     steps:
       - uses: actions/checkout@v4
       - name: Record toolchain
@@ -117,23 +119,7 @@ jobs:
             swift test --package-path "$(dirname "$manifest")"
           done
       - name: Select available iPhone simulator
-        run: |
-          xcrun simctl list devices available -j > /tmp/simulators.json
-          python3 - <<'PY'
-          import json, os
-          data = json.load(open('/tmp/simulators.json'))
-          devices = [
-              (tuple(map(int, runtime.split('.iOS-')[-1].split('-'))), d)
-              for runtime, items in data['devices'].items() if '.iOS-' in runtime
-              for d in items if d['name'].startswith('iPhone') and d.get('isAvailable')
-          ]
-          if not devices:
-              raise SystemExit('No available iPhone simulator')
-          _, device = max(devices, key=lambda pair: (pair[0], pair[1]['name'] == 'iPhone 17'))
-          print(f"Using {device['name']} simulator ({device['udid']})")
-          with open(os.environ['GITHUB_ENV'], 'a') as output:
-              output.write('SIMULATOR_ID=' + device['udid'] + '\n')
-          PY
+        run: xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
       - name: Build iPhone simulator test products
         id: build_ios_tests
         run: >-
@@ -149,6 +135,20 @@ jobs:
         run: |
           python3 scripts/check_built_app.py .build/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app --configuration Debug
           python3 scripts/check_built_app.py .build/ReleaseDerivedData/Build/Products/Release-iphoneos/RoomInTheCart.app --configuration Release
+      - name: Package iPhone test products
+        id: package_ios_products
+        if: ${{ !cancelled() && steps.build_ios_tests.outcome == 'success' }}
+        run: tar -czf "$RUNNER_TEMP/iphone-test-products.tar.gz" -C .build/DerivedData/Build Products
+      - name: Upload iPhone test products
+        id: upload_ios_products
+        if: ${{ !cancelled() && steps.package_ios_products.outcome == 'success' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: iphone-test-products-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/iphone-test-products.tar.gz
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: error
       - name: Test iPhone models
         if: ${{ !cancelled() && steps.build_ios_tests.outcome == 'success' }}
         run: >-
@@ -163,25 +163,77 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: iphone-model-results
+          name: iphone-model-results-${{ github.run_attempt }}
           path: .build/ModelTests.xcresult
           retention-days: 7
           if-no-files-found: ignore
+  ios-ui:
+    needs: ios
+    if: ${{ !cancelled() && needs.ios.outputs.test_products_artifact != '' }}
+    runs-on: macos-15-intel
+    timeout-minutes: 100
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [planning-pickup, comparison-context]
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+      UI_SHARD: ${{ matrix.shard }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download iPhone test products
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ needs.ios.outputs.test_products_artifact }}
+          path: ${{ runner.temp }}
+          merge-multiple: true
+      - name: Restore iPhone test products
+        run: |
+          mkdir -p .build/DerivedData/Build
+          tar -xzf "$RUNNER_TEMP/iphone-test-products.tar.gz" -C .build/DerivedData/Build
+      - name: Select available iPhone simulator
+        run: xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
       - name: Test iPhone journeys
-        if: ${{ !cancelled() && steps.build_ios_tests.outcome == 'success' }}
-        run: >-
-          xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart
-          -configuration Debug -destination "platform=iOS Simulator,id=$SIMULATOR_ID"
-          -derivedDataPath .build/DerivedData -resultBundlePath .build/UITests.xcresult
-          -parallel-testing-enabled NO -test-timeouts-enabled YES
-          -default-test-execution-time-allowance 720 -maximum-test-execution-time-allowance 900
-          -collect-test-diagnostics never -only-testing:RoomInTheCartUITests
-          CODE_SIGN_IDENTITY=- test-without-building
+        shell: bash
+        timeout-minutes: 92
+        run: |
+          test_runs=(.build/DerivedData/Build/Products/RoomInTheCart_iphonesimulator*.xctestrun)
+          test "${#test_runs[@]}" -eq 1
+          test -f "${test_runs[0]}"
+          planning_suites=(
+            FreeJourneyUITests
+            PickupOfferUITests
+            LedgerConfirmedStockPackUITests
+            ContextualReminderUITests
+            NavigationRestorationUITests
+          )
+          selectors=()
+          case "$UI_SHARD" in
+            planning-pickup) mode=only ;;
+            comparison-context)
+              mode=skip
+              selectors+=('-skip-testing:RoomInTheCartTests')
+              ;;
+            *) exit 1 ;;
+          esac
+          # The second shard also picks up future UI suites.
+          for suite in "${planning_suites[@]}"; do
+            selectors+=("-${mode}-testing:RoomInTheCartUITests/$suite")
+          done
+          xcodebuild -xctestrun "${test_runs[0]}" \
+            -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
+            -resultBundlePath .build/UITests.xcresult \
+            -parallel-testing-enabled NO -test-timeouts-enabled YES \
+            -default-test-execution-time-allowance 720 -maximum-test-execution-time-allowance 900 \
+            -collect-test-diagnostics never "${selectors[@]}" test-without-building \
+            2>&1 | tee .build/UITests.log
       - name: Upload iPhone journey test evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: iphone-ui-results
-          path: .build/UITests.xcresult
+          name: iphone-ui-results-${{ matrix.shard }}-${{ github.run_attempt }}
+          path: |
+            .build/UITests.xcresult
+            .build/UITests.log
           retention-days: 7
           if-no-files-found: ignore
