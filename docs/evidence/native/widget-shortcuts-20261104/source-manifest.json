@@ -1,0 +1,30 @@
+{
+  "base_commit": "1733323237867ae09966b50425c3f0a2cbeab069",
+  "scratch_source": "/Users/palatis/Documents/Codex/2026-11-04/task-3/source",
+  "simulator": {
+    "id": "245ECF36-F368-4037-9A8D-2F1CA37D8C8C",
+    "name": "RITC Dot Widget E07 20261104",
+    "runtime": "iOS 27.0 (24A434)",
+    "device": "iPhone 17 Pro"
+  },
+  "xcode": "27.1 (27A9275)",
+  "product_source_sha256": {
+    "ios/Extensions/Widget/RoomInTheCartWidget.swift": "d8e304a026fab1b489c1a18987b245747956e1214b501db7d164118449febdd0",
+    "ios/App/DeviceSurfacesComposition.swift": "7c64e9f22f8fb8e5a27baaecbf81eec3c5d27ea0b9221e5526bcd9b29f5c0ba5",
+    "ios/App/RoomInTheCartApp.swift": "dfd54165f2abe662b601594e92e25b4b3ef345de0851a58e2a6562f0530f03d3",
+    "ios/Features/DeviceSurfaces/CaptureAppIntent.swift": "057f825fc67523f9b810c18044e85aa3b24d74ec75955f0e1718a6237db903ad",
+    "ios/Packages/DeviceSurfaces/Sources/DeviceSurfaces/IOSAdapters.swift": "8e00a1e3b8411afac78a523b21af25f237b04c0cb72a0f32250dc6857f95be74",
+    "ios/Packages/DeviceSurfaces/Sources/DeviceSurfaces/SurfaceContracts.swift": "28b67b7e58be626c7b0438de10c1a2ee974ceef251577387921a7da3fb9ece58",
+    "ios/Configuration/Widget.entitlements": "175a864b7707b0ac1230db00d43bcd4539f4ad53370e008ab5bfe9a0bf9b1044"
+  },
+  "scratch_only_test_changes": [
+    "ios/Tests/NativeCompositionStartupTest.swift",
+    "ios/UITests/FreeJourneyUITests.swift"
+  ],
+  "status": "completed",
+  "changed_tracked_files": [
+    "ios/Tests/NativeCompositionStartupTest.swift",
+    "ios/UITests/FreeJourneyUITests.swift"
+  ],
+  "all_other_tracked_files_match_commit": true
+}

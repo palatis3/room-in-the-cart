@@ -1,0 +1,185 @@
+{
+  "assignment": "Foundation 2.1 E07 widget and App Intent acceptance",
+  "source_commit": "1733323237867ae09966b50425c3f0a2cbeab069",
+  "product_source_unchanged": true,
+  "test_only_changes": [
+    "ios/Tests/NativeCompositionStartupTest.swift",
+    "ios/UITests/FreeJourneyUITests.swift"
+  ],
+  "environment": {
+    "id": "245ECF36-F368-4037-9A8D-2F1CA37D8C8C",
+    "name": "RITC Dot Widget E07 20261104",
+    "runtime": "iOS 27.0 (24A434)",
+    "device": "iPhone 17 Pro",
+    "xcode": "27.1 (27A9275)",
+    "signing": "ad-hoc simulator build; not signed physical-device acceptance"
+  },
+  "passes": [
+    {
+      "scope": "DeviceSurfaces macOS package",
+      "count": 25,
+      "failures": 0,
+      "evidence": "device-surfaces-package.log"
+    },
+    {
+      "scope": "Existing iOS route, startup, child, contributor and isolation tests",
+      "count": 20,
+      "failures": 0,
+      "evidence": "E07Initial.xcresult",
+      "note": "Original invocation also contains one new probe timing failure, retained below."
+    },
+    {
+      "scope": "New intent and retained route authority probe",
+      "count": 1,
+      "failures": 0,
+      "evidence": "E07System.xcresult",
+      "case": "DeviceSurfacesCompositionStartupTests/testE07IntentAndSavedRouteRespectCurrentAuthorityWithoutWritingLedger",
+      "checks": [
+        "Authorized opaque route opens exact pickup",
+        "Direct intent opens review entry without ledger write",
+        "After access.protect(), widget projection clears and retained route denies",
+        "Direct intent after authority loss routes unavailable"
+      ]
+    },
+    {
+      "scope": "Normal app data setup through actual UI, without --ui-testing",
+      "count": 1,
+      "evidence": "E07Initial.xcresult",
+      "case": "FreeJourneyUITests/testE07SystemWidgetPreparation",
+      "saved_pickup": "Dot E07 current pickup",
+      "saved_lines": 2,
+      "saved_import_batches": 1
+    },
+    {
+      "scope": "Actual Home Screen widget placement and tap",
+      "count": 1,
+      "evidence": "E07WidgetAndShortcuts.xcresult",
+      "case": "FreeJourneyUITests/testE07HomeScreenWidgetPlacementAndTap",
+      "checks": [
+        "Added from system widget gallery",
+        "Rendered cart icon and Open grocery entry only",
+        "No item names, budget, notes or counts on widget",
+        "Tap opened intended Dot E07 current pickup with its two fictional lines"
+      ],
+      "screenshots": [
+        "E07-actual-Home-Screen-widget.png",
+        "E07-widget-tap-destination.png"
+      ]
+    },
+    {
+      "scope": "AppIntentsTesting system infrastructure",
+      "count": 1,
+      "evidence": "E07System.xcresult",
+      "case": "FreeJourneyUITests/testE07SystemIntentInfrastructure",
+      "checks": [
+        "OpenShoppingCaptureIntent resolved by system metadata",
+        "Run opened ledgerImportText review-entry screen"
+      ]
+    },
+    {
+      "scope": "Actual Shortcuts UI",
+      "count": 1,
+      "evidence": "E07ShortcutsFinal.xcresult",
+      "case": "FreeJourneyUITests/testE07ShortcutsDiscovery",
+      "steps": [
+        "Shortcuts > Library > Apps > Room in the Cart",
+        "Tap Grocery entry cart control",
+        "App foregrounds on review-entry screen"
+      ],
+      "screenshots": [
+        "E07-Shortcuts-discovery.png",
+        "E07-Shortcuts-UI-opened-reviewed-entry.png"
+      ]
+    },
+    {
+      "scope": "No unintended data writes",
+      "evidence": [
+        "normal-app-ledger.json",
+        "normal-app-ledger-after.json"
+      ],
+      "identical_payload_sha256": "64407f99e89acdb49a4d4871725362ac78a24aefee8c88278b74431494fbb57f",
+      "note": "Saved pickup payload remained byte-identical across widget and Shortcuts UI checks."
+    }
+  ],
+  "original_invocations": [
+    {
+      "bundle": "E07Initial.xcresult",
+      "passed": 21,
+      "failed": 1,
+      "failure": "New test read widget projection before asynchronous reconciliation completed. Probe corrected to wait for observable cleared state. Product unchanged."
+    },
+    {
+      "bundle": "E07System.xcresult",
+      "passed": 3,
+      "failed": 1,
+      "failure": "Widget test tried hidden app icon on first Home Screen page. Corrected to navigate to observed second page."
+    },
+    {
+      "bundle": "E07WidgetPlacement.xcresult",
+      "passed": 1,
+      "failed": 1,
+      "failure": "Gallery Add Widget button has leading whitespace; exact-label test did not match. Corrected query from observed tree."
+    },
+    {
+      "bundle": "E07WidgetAndShortcuts.xcresult",
+      "passed": 1,
+      "failed": 1,
+      "failure": "Widget case passed. Shortcuts control has button label Shopping Cart and adjacent text Grocery entry; initial button query used the text label."
+    },
+    {
+      "bundle": "E07ShortcutsFinal.xcresult",
+      "passed": 1,
+      "failed": 0
+    }
+  ],
+  "findings": [
+    {
+      "status": "no confirmed product defect",
+      "detail": "Backgrounding writes generic capture with no routeHandle. Initially suspected this would prevent current-pickup access. Actual placed-widget tap opened the intended pickup; do not report the initial hypothesis as a reproduced bug. Refresh-budget and stale-timeline variations remain outside this narrow runtime proof."
+    },
+    {
+      "status": "privacy boundary supported",
+      "detail": "Projection permits only version/generation/writtenAt/opaque routeHandle/destination. Widget view always renders generic label. Source declares complete file protection and App Intent requiresAuthentication; simulator does not establish physical enforcement."
+    }
+  ],
+  "remaining_physical_device_checks": [
+    "Install a team-signed app and extensions with matching registered App Groups on a passcode-protected iPhone.",
+    "Add Home Screen and supported Lock Screen widget families; use fictional pickup items, a spending cap, and private notes. Verify only generic content or protected placeholder before unlock, after lock, and after reboot before first unlock.",
+    "Tap widget and run Grocery entry in Shortcuts while locked; verify device authentication, no private display before authorization, and intended current pickup/review destination afterward.",
+    "Revoke or change household role/enrollment and re-open retained widget routes; confirm unavailable state until valid current authorization. Existing tests use local synthetic boundaries, not deployed revocation.",
+    "Repeat after selected pickup changes and across delayed WidgetKit timeline refresh; verify intended destination and no stale private disclosure."
+  ],
+  "recommended_fixes": {
+    "product": "None justified by a reproduced defect in this scope. Keep authentication and complete file-protection policies.",
+    "tests": "Promote the bounded coordinator probe and separate system widget/Shortcuts acceptance cases if useful; keep real App Group checks off shared simulators and omit --ui-testing only on disposable installations."
+  },
+  "official_sources": [
+    "https://developer.apple.com/documentation/widgetkit/creating-a-widget-extension",
+    "https://developer.apple.com/documentation/widgetkit/keeping-a-widget-up-to-date",
+    "https://developer.apple.com/documentation/appintents/appintent/authenticationpolicy",
+    "https://developer.apple.com/documentation/AppIntentsTesting/testing-your-app-intents-code"
+  ],
+  "main_thread_notified": true,
+  "shared_checkout_modified": false,
+  "protected_simulators_used": false,
+  "artifact_directory": "/Users/palatis/Documents/Codex/2026-11-04/task-3/evidence",
+  "sealed_artifact_directory": "/Users/palatis/Documents/Codex/2026-11-04/task-3/evidence/sealed",
+  "acceptance_record_review": {
+    "result_bundles": "Independent xcresulttool check matched every original invocation count.",
+    "source": "Seven product input hashes matched the pinned repository revision.",
+    "ledger": "Read-only before and after export files matched each other and the reported SHA-256.",
+    "visual": "Independently inspected widget placement and exact saved list screenshots. Shortcuts capture was during a transition, so UI accessibility and test result are the destination evidence."
+  },
+  "artifact_sha256": {
+    "acceptance-report.json": "2609595b782b239c45b398886ca84f274dabb3ff0d3b85ac295dde89af08e2d8",
+    "source-manifest.json": "1323557efe59ec554adf4e186540862e892c2f94c2341986dc1d003cb475581e",
+    "acceptance-probes.patch": "cee3da1d8d6d75d26c2ba5aedf70834d72153ad4a2a1166e8604a5d183f42e57",
+    "commands.txt": "3c93f157cd6fd8e62bbd5e10630ff6d3eff679e161568b51bc6d5b312b0c3689",
+    "E07-actual-Home-Screen-widget.png": "41520ed2b3fb215f89a68ff9d647e8d78aa26d209454c7088ddefb4898deb1ca",
+    "E07-widget-tap-destination.png": "4d333835d8a3f12d6d4f9e3e036aeb09c9f296cadba53e9285ba9c68d3fcd151",
+    "E07-Shortcuts-discovery.png": "c8a4e0aa8d5fd097ffc9568d4134cf015217c3d2f74d753fb47bfc481e9c1e0b",
+    "E07-Shortcuts-UI-opened-reviewed-entry.png": "70c03388cfdd7f9a024e91ef327724ec2f70d71b00b4c6f1ac9767ea746bf30e",
+    "app-intents-metadata.json": "7598a3a7cc11454984c0d0ca519fc4afa5fa2cc648515fd8220edb32a00df62a",
+    "widget-after-home.json": "cd3b2f40dd36653d58bbdca9826d5998fb708c778e8569acef1a40ed8015c408"
+  }
+}
