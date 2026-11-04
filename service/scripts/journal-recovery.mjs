@@ -4,8 +4,9 @@ import {link,lstat,open,unlink} from 'node:fs/promises';
 import {join} from 'node:path';
 import {z} from 'zod';
 import {PrivacyCall} from '../dist/privacy-call.js';
-import {journalCanonical} from '../dist/privacy-journal.js';
-import {createIndependentRecovery,exportIndependentRecovery} from '../dist/privacy-journal-recovery.js';
+import {journalCanonical,journalHash} from '../dist/privacy-journal.js';
+import {MAX_JOURNAL_BYTES} from '../dist/privacy-journal-limits.js';
+import {createIndependentRecovery,exportIndependentRecovery,registerIndependentSuccessor,verifyIndependentArchiveWindow} from '../dist/privacy-journal-recovery.js';
 import {journalDatabase,journalDatabaseSchema,readPrivateFile} from './journal-authority-config.mjs';
 
 const endpoint=z.object({connection:journalDatabaseSchema,databaseOid:z.string(),ownerOid:z.string()}).strict();
@@ -13,7 +14,24 @@ const settings=z.object({pins:z.unknown(),writerPrivateKey:z.string().min(1).max
  source:endpoint,checkpoint:endpoint,exportDirectory:z.string().min(1)}).strict();
 const publicKey=z.string().max(8192).regex(/^-----BEGIN PUBLIC KEY-----\r?\n/);
 const exportSettings=z.object({pins:z.unknown(),writerPublicKey:publicKey,authorityPublicKey:publicKey,
- checkpoint:endpoint,sourceDatabaseOid:z.string(),exportDirectory:z.string().min(1)}).strict();
+ checkpoint:endpoint,sourceDatabaseOid:z.string(),exportDirectory:z.string().min(1),includeSuccessor:z.boolean().optional()}).strict();
+const publicPins=z.object({pins:z.unknown(),writerPublicKey:publicKey,authorityPublicKey:publicKey}).strict();
+const linkSettings=exportSettings.omit({authorityPublicKey:true,includeSuccessor:true}).extend({
+ authorityPrivateKey:z.string().max(8192).regex(/^-----BEGIN PRIVATE KEY-----\r?\n/),successor:publicPins,
+});
+const archiveSettings=publicPins.extend({journalPath:z.string().min(1),sealPath:z.string().min(1),incomingLinkPath:z.string().min(1).optional()});
+const windowSettings=z.object({startScopeDigest:z.string(),terminalSealDigest:z.string(),segments:z.array(archiveSettings).min(1)}).strict();
+
+const jsonFile=async(path,maxBytes=1048576)=>JSON.parse(await readPrivateFile(path,maxBytes));
+async function* readArchives(segments){
+ for(const segment of segments){
+  yield {
+   pins:segment.pins,writerPublicKey:createPublicKey(segment.writerPublicKey),authorityPublicKey:createPublicKey(segment.authorityPublicKey),
+   bytes:await readPrivateFile(segment.journalPath,MAX_JOURNAL_BYTES),seal:await jsonFile(segment.sealPath,8192),
+   ...(segment.incomingLinkPath?{incomingLink:await jsonFile(segment.incomingLinkPath,8192)}:{}),
+  };
+ }
+}
 
 async function writeExact(path,bytes){
  const temporary=path+'.'+randomUUID()+'.pending';
@@ -21,14 +39,26 @@ async function writeExact(path,bytes){
  try{
   try{await file.writeFile(bytes);await file.sync();}finally{await file.close();}
   try{await link(temporary,path);}catch(error){
-   if(error.code!=='EEXIST'||!(await readPrivateFile(path,32*1024*1024)).equals(bytes))throw error;
+   if(error.code!=='EEXIST'||!(await readPrivateFile(path,MAX_JOURNAL_BYTES)).equals(bytes))throw error;
   }
  }finally{await unlink(temporary);}
 }
+async function syncDirectory(path){
+ const handle=await open(path,constants.O_RDONLY|constants.O_NOFOLLOW);
+ try{await handle.sync();}finally{await handle.close();}
+}
 async function run(){
  const [command,configPath]=process.argv.slice(2);
- if(!['fence','recover','export'].includes(command)||process.argv.length!==4)throw Error('Use fence, recover or export with an owner configuration');
- const config=(command==='export'?exportSettings:settings).parse(JSON.parse(await readPrivateFile(configPath,1048576)));
+ if(!['fence','recover','export','link','verify-window'].includes(command)||process.argv.length!==4)
+  throw Error('Use fence, recover, export, link or verify-window with an owner configuration');
+ const input=await jsonFile(configPath);
+ if(command==='verify-window'){
+  const {segments,...trust}=windowSettings.parse(input);
+  const verified=await verifyIndependentArchiveWindow(readArchives(segments),trust);
+  console.log(JSON.stringify({event:'journal_archive_window_verified',...verified}));
+  return;
+ }
+ const config=(command==='link'?linkSettings:command==='export'?exportSettings:settings).parse(input);
  const directory=await lstat(config.exportDirectory);
  if(!directory.isDirectory()||directory.isSymbolicLink()||directory.uid!==process.getuid?.()||(directory.mode&0o077)!==0)throw Error('Owner-only recovery export directory required');
  const endpoints=[];
@@ -40,10 +70,25 @@ async function run(){
  const scope=new PrivacyCall(undefined,25000);
  try{
   const checkpoint=connect(config.checkpoint);
+  if(command==='link'){
+   const proof=await scope.run(call=>registerIndependentSuccessor({
+    pins:config.pins,writerPublicKey:createPublicKey(config.writerPublicKey),authorityPrivateKey:createPrivateKey(config.authorityPrivateKey),
+    sourceDatabaseOid:config.sourceDatabaseOid,checkpoint,successor:{
+     pins:config.successor.pins,writerPublicKey:createPublicKey(config.successor.writerPublicKey),
+     authorityPublicKey:createPublicKey(config.successor.authorityPublicKey),
+    },
+   },call));
+   await writeExact(join(config.exportDirectory,'successor.json'),Buffer.from(journalCanonical(proof)+'\n'));
+   await syncDirectory(config.exportDirectory);
+   console.log(JSON.stringify({event:'journal_successor_registered',predecessorSealDigest:proof.predecessorSealDigest,
+    successorScopeDigest:proof.successorScopeDigest}));
+   return;
+  }
   let archive;
   if(command==='export'){
    archive=await scope.run(call=>exportIndependentRecovery({pins:config.pins,sourceDatabaseOid:config.sourceDatabaseOid,checkpoint,
-    writerPublicKey:createPublicKey(config.writerPublicKey),authorityPublicKey:createPublicKey(config.authorityPublicKey)},call));
+    writerPublicKey:createPublicKey(config.writerPublicKey),authorityPublicKey:createPublicKey(config.authorityPublicKey),
+    includeSuccessor:config.includeSuccessor},call));
   }else{
    const operator=createIndependentRecovery({pins:config.pins,writerPrivateKey:createPrivateKey(config.writerPrivateKey),
     authorityPrivateKey:createPrivateKey(config.authorityPrivateKey),source:connect(config.source),checkpoint});
@@ -56,9 +101,9 @@ async function run(){
   await writeExact(join(config.exportDirectory,'journal.ndjson'),bytes);
   await writeExact(join(config.exportDirectory,'head.json'),Buffer.from(journalCanonical(proof.head)+'\n'));
   await writeExact(join(config.exportDirectory,'seal.json'),Buffer.from(journalCanonical(proof)+'\n'));
-  const handle=await open(config.exportDirectory,constants.O_RDONLY|constants.O_NOFOLLOW);
-  try{await handle.sync();}finally{await handle.close();}
-  console.log(JSON.stringify({event:'journal_recovery_exported',sequence:proof.head.seq,bundleDigest:proof.bundleDigest}));
+  if(archive.successor)await writeExact(join(config.exportDirectory,'successor.json'),Buffer.from(journalCanonical(archive.successor)+'\n'));
+  await syncDirectory(config.exportDirectory);
+  console.log(JSON.stringify({event:'journal_recovery_exported',sequence:proof.head.seq,bundleDigest:proof.bundleDigest,sealDigest:journalHash(proof)}));
  }finally{scope.dispose();await Promise.all(endpoints.map(pool=>pool.end()));}
 }
 

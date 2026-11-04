@@ -4,9 +4,15 @@ The complete production app remains the objective. The current checkpoint below 
 
 ## Current checkpoint — November 4
 
+The independent checkpoint now records one immutable signed successor for a sealed journal. The link binds the exact seal and complete successor configuration. The owner can recover the link with public keys after source loss. The offline verifier checks a stream of archives against independent backup and final-seal anchors and rejects missing, reordered or substituted segments.
+
+The [succession validation](evidence/b11/privacy-succession-20261104/validation.json) uses real independently sealed archives from two separately seeded source fixtures. Live source activation and ordered quarantine replay across the transition remain open. The existing single-archive restore drill retains its own scope.
+
+## Previous checkpoint — November 4, writer contention
+
 Concurrent journal writers now distinguish a definite refusal from a lost response. The second app request rolls back and can retry using its saved operation key. The worker defers without advancing a blocked step and reports `journalDeferred`. A pre-aborted call leaves its writer usable. Lost responses after a dispatched mutation still retain the original recovery boundary.
 
-The [contention validation](evidence/b11/privacy-contention-20261104/validation.json) covers a PostgreSQL lock timeout, an overlapping HTTPS reservation, receipt polling during that reservation and worker reconciliation after it clears. The app and worker complete the retry using the same writer instances. The next journal release gate is succession for a lineage approaching capacity, including backup replay across the transition.
+The [contention validation](evidence/b11/privacy-contention-20261104/validation.json) covers a PostgreSQL lock timeout, an overlapping HTTPS reservation, receipt polling during that reservation and worker reconciliation after it clears. The app and worker complete the retry using the same writer instances. The next journal release gate is a safe source switch and backup replay across the transition.
 
 ## Previous checkpoint — November 4, opt-in runtime
 

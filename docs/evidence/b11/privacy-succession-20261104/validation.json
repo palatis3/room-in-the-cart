@@ -1,0 +1,43 @@
+{
+  "sourceSHA256": "0cb0eb4206596a8f77114cf6b8fcfbc273c1498850d28af4eb9d0bc3a74aba60",
+  "sourceFiles": 315,
+  "baseCommit": "8ec5948",
+  "migrations": "001–027",
+  "independentAuthorityMigrations": "001–004",
+  "environment": "Node 22.14 and PostgreSQL 17.11 using private local fixtures",
+  "runs": {
+    "unit": {
+      "tests": 345,
+      "passed": 344,
+      "failed": 0,
+      "skipped": 1,
+      "localLogSHA256": "5d802b027848d03e9c35be3aed9a6f6dedefa671fc97bd396fe626e3c549dcc0"
+    },
+    "wire": {
+      "tests": 178,
+      "passed": 178,
+      "failed": 0,
+      "skipped": 0,
+      "localLogSHA256": "021d6c2ec260a5798eaada3261253ace1d4fb48c824183f491691dc8f70521f2"
+    },
+    "authority": {
+      "tests": 14,
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0,
+      "localLogSHA256": "77fe7615e8ffac57a649ae9e9dbea058f507aad490b9b5211c46f88594e2e613"
+    }
+  },
+  "observations": [
+    "The checkpoint rejected registration before sealing. Two concurrent attempts to register the exact same successor returned the identical signed link.",
+    "A competing successor was refused without creating its origin. The checkpoint runtime role could not read the link table and the immutable trigger rejected updates.",
+    "Each separately seeded source fixture admitted and completed a synthetic account deletion. The independent owner sealed both archive segments with their own writer and authority keys.",
+    "The real offline verifier accepted the ordered linked window and rejected a missing final archive, reordered inputs, a changed link signature and a substituted public key.",
+    "The operator exported the exact old bytes and successor link using public keys after both source clusters were removed."
+  ],
+  "scope": [
+    "The second fixture was seeded separately at the successor binding. This is archive-link verification and does not establish an in-place source switch or multi-segment restore application.",
+    "The provider was simulated. Independent PostgreSQL registration, archive sealing, source checks and operator CLI were exercised.",
+    "The optional billing PostgreSQL unit skip is exercised in the wire suite. Hosted services were not modified."
+  ]
+}

@@ -15,7 +15,7 @@ import {createPostgresJournalAuthority} from '../dist/privacy-journal-pg-authori
 import {createPostgresCommittedSource} from '../dist/privacy-journal-pg-source.js';
 import {durableJournalScopeDigest,verifyDurableAdmissionReceipt} from '../dist/privacy-journal-durable.js';
 import {createHTTPSJournalAuthority} from '../dist/privacy-journal-https.js';
-import {createIndependentRecovery,verifyIndependentRecovery} from '../dist/privacy-journal-recovery.js';
+import {createIndependentRecovery,registerIndependentSuccessor,verifyIndependentArchiveWindow,verifyIndependentRecovery} from '../dist/privacy-journal-recovery.js';
 import {validatePrivacyRestoreEvents,verifyPrivacyJournal} from '../dist/privacy-journal.js';
 import {MAX_JOURNAL_BYTES,MAX_JOURNAL_RECORDS,MAX_INTENT_RESOLUTION_OVERHEAD,MAX_SOURCE_EVENT_BYTES} from '../dist/privacy-journal-limits.js';
 import {PrivacyMaintenance,PrivacyService} from '../dist/privacy.js';
@@ -46,6 +46,7 @@ before(async()=>{
  await owner.query(await readFile(new URL('../journal-authority/001_checkpoint.sql',import.meta.url),'utf8'));
  await owner.query(await readFile(new URL('../journal-authority/002_recovery.sql',import.meta.url),'utf8'));
  await owner.query(await readFile(new URL('../journal-authority/003_worker_capacity.sql',import.meta.url),'utf8'));
+ await owner.query(await readFile(new URL('../journal-authority/004_successor.sql',import.meta.url),'utf8'));
  await owner.query('INSERT INTO ritc_records.store(identity) VALUES($1)',[storeIdentity]);
  const config=join(dir,'tls.cnf'),keyPath=join(dir,'tls.key'),certPath=join(dir,'tls.crt');
  await writeFile(config,'[req]\nprompt=no\ndistinguished_name=dn\nx509_extensions=ext\n[dn]\nCN=127.0.0.1\n[ext]\nbasicConstraints=critical,CA:TRUE\nsubjectAltName=IP:127.0.0.1\n');
@@ -60,19 +61,19 @@ after(async()=>{
 
 const nonce=context=>({...context,requestNonce:randomBytes(32).toString('hex')});
 const time=()=>call({deadlineUnixMs:Date.now()+5000});
+async function openAuthority(f,changes={}){
+ const checkpointPool=pool(checkpointRole),recordPool=pool(objectRole);
+ try{
+  const ports=await createPostgresJournalAuthority({pins:f.pins,writerPublicKey:f.writerKeys.publicKey,
+   authorityPrivateKey:f.authorityKeys.privateKey,checkpointPool,recordPool,...changes});
+  return {...ports,checkpointPool,recordPool,close:()=>Promise.all([checkpointPool.end(),recordPool.end()])};
+ }catch(error){await Promise.all([checkpointPool.end(),recordPool.end()]);throw error;}
+}
 async function register(pins){
  const f=fixture(pins),scope=durableJournalScopeDigest(f.pins);
  const head={head:{version:1,...f.origin,seq:0,hash:zero,fenced:false},generation:1,authorityRevision:0,mode:'active',pendingOperation:null,totalBytes:0};
  await owner.query('INSERT INTO ritc_checkpoint.origin(lineage,scope_digest,head) VALUES($1,$2,$3)',[f.pins.lineage,scope,head]);
- const configuration={pins:f.pins,writerPublicKey:f.writerKeys.publicKey,authorityPrivateKey:f.authorityKeys.privateKey};
- async function open(changes={}){
-  const checkpointPool=pool(checkpointRole),recordPool=pool(objectRole);
-  try{
-   const ports=await createPostgresJournalAuthority({...configuration,checkpointPool,recordPool,...changes});
-   return {...ports,checkpointPool,recordPool,close:()=>Promise.all([checkpointPool.end(),recordPool.end()])};
-  }catch(error){await Promise.all([checkpointPool.end(),recordPool.end()]);throw error;}
- }
- return {f,head,scope,open};
+ return {f,head,scope,open:changes=>openAuthority(f,changes)};
 }
 function signed(f,head,event,transition){
  const body={version:1,keyId:f.pins.keyId,seq:head.head.seq+1,previousHash:head.head.hash,kind:transition,event};
@@ -877,4 +878,111 @@ test('overlapping HTTPS writers defer without poisoning the losing app or worker
   await Promise.all([observer?.close(),runtime.end(),workerPool.end()]);
   await source.close();
  }
+});
+
+test('a sealed predecessor links one successor and archive verification rejects missing or substituted segments',async()=>{
+ const source=await sourceCluster();
+ let later;
+ let sourceClosed=false;
+ const publicKeys=f=>({pins:f.pins,writerPublicKey:f.writerKeys.publicKey,authorityPublicKey:f.authorityKeys.publicKey});
+ const publicSettings=f=>({pins:f.pins,writerPublicKey:f.writerKeys.publicKeyPEM,authorityPublicKey:f.authorityKeys.publicKeyPEM});
+ const append=async(f,current)=>{
+  const ports=await openAuthority(f),runtime=current.pool(current.runtime),worker=current.pool(current.worker);
+  const observer=createPostgresCommittedSource({pins:f.pins,authorityPublicKey:f.authorityKeys.publicKey,...current.configuration});
+  try{
+   const {port:journal}=f.adapter({...ports,source:observer.source});
+   const issuer='https://archive.fixture.invalid/auth/v1',subject=randomUUID(),sessionId=randomUUID();
+   await current.owner.query('INSERT INTO auth.sessions(id,user_id) VALUES($1,$2)',[sessionId,subject]);
+   const repo=new HouseholdRepository(runtime,{allowChildNetwork:false,noticeVersion:'fixture',sessionStatus:new SupabaseSessionVerifier(issuer)});
+   const provider={assertAvailable:async()=>{},deleteAccount:async target=>assert.equal(target,subject)};
+   const policy={receiptRetentionDays:1,erasureMarkerRetentionDays:2,verifiedBackupRetentionDays:1};
+   const privacy=new PrivacyService(repo,{provider,policy,journal});
+   const identity={issuer,subject,sessionId,expiresAt:new Date(Date.now()+60_000),authenticatedAt:new Date(),authenticatedMethod:'otp'};
+   const receipt=await privacy.request(identity,{clientKey:randomUUID(),statusToken:randomBytes(32).toString('base64url'),confirm:true,households:[]});
+   assert.equal(receipt.status,'pending');
+   assert.equal((await new PrivacyMaintenance(worker,{provider,journal,issuer}).run({batchSize:1})).completed,1);
+   return receipt.jobId;
+  }finally{await Promise.all([ports.close(),observer.close(),runtime.end(),worker.end()]);}
+ };
+ try{
+  const {r,config,operator}=await recoveryFixture(source);
+  const next=fixture({schemaDigest:source.schemaDigest,sourceIdentity:r.f.pins.sourceIdentity,keyId:'fixture-writer-next',
+   authorityKeyId:'fixture-authority-next',recordNamespace:'fixture-namespace-next'});
+  const fork=fixture({schemaDigest:source.schemaDigest,sourceIdentity:r.f.pins.sourceIdentity});
+  const linkInput={...publicKeys(r.f),authorityPrivateKey:r.f.authorityKeys.privateKey,
+   sourceDatabaseOid:config.source.identity.databaseOid,checkpoint:config.checkpoint,successor:publicKeys(next)};
+  await assert.rejects(registerIndependentSuccessor(linkInput,time()),/no sealed archive/);
+  const firstJob=await append(r.f,source);
+  const first=await operator.recover(time());
+  const links=await Promise.all([registerIndependentSuccessor(linkInput,time()),registerIndependentSuccessor(linkInput,time())]);
+  const [link]=links;
+  assert.deepEqual(links[1],link);
+  assert.equal(link.predecessorSealDigest,digest(first.proof));
+  assert.equal(link.successorScopeDigest,durableJournalScopeDigest(next.pins));
+  await assert.rejects(registerIndependentSuccessor({...linkInput,successor:publicKeys(fork)},time()),/different successor/);
+  assert.equal((await owner.query('SELECT 1 FROM ritc_checkpoint.origin WHERE lineage=$1',[fork.pins.lineage])).rowCount,0);
+  await assert.rejects(owner.query('UPDATE ritc_checkpoint.successor SET proof=proof WHERE predecessor=$1',[r.f.pins.lineage]),/immutable journal successor/);
+
+  const checkpointReader=pool(checkpointRole);
+  try{await assert.rejects(checkpointReader.query('SELECT proof FROM ritc_checkpoint.successor'),{code:'42501'});}
+  finally{await checkpointReader.end();}
+  const previousBinding=(await source.owner.query('SELECT lineage,fenced FROM ritc.privacy_journal_origin')).rows[0];
+  assert.deepEqual(previousBinding,{lineage:r.f.pins.lineage,fenced:true});
+
+  // A separately seeded source fixture exercises the second archive against
+  // the same logical binding. This test does not activate a successor in-place.
+  later=await sourceCluster();
+  assert.equal(later.configuration.databaseOid,link.sourceDatabaseOid);
+  await later.owner.query('INSERT INTO ritc.privacy_journal_origin(lineage,schema_digest,configuration_id) VALUES($1,$2,$3)',
+   [next.pins.lineage,next.pins.schemaDigest,next.pins.configurationId]);
+  await later.owner.query('INSERT INTO ritc.privacy_journal_source_registration(source_identity,database_oid,observer_oid) VALUES($1,$2,$3)',
+   [next.pins.sourceIdentity,later.configuration.databaseOid,later.configuration.observerRoleOid]);
+  const secondJob=await append(next,later);
+  assert.notEqual(firstJob,secondJob);
+  const successorRecovery=createIndependentRecovery({...config,pins:next.pins,writerPrivateKey:next.writerKeys.privateKey,
+   authorityPrivateKey:next.authorityKeys.privateKey,source:{pool:later.owner,identity:{...config.source.identity,ownerOid:later.configuration.ownerRoleOid}}});
+  const second=await successorRecovery.recover(time());
+
+  const trust={startScopeDigest:r.scope,terminalSealDigest:digest(second.proof)};
+  const a={...publicKeys(r.f),bytes:first.bytes,seal:first.proof};
+  const b={...publicKeys(next),bytes:second.bytes,seal:second.proof,incomingLink:link};
+  assert.deepEqual(await verifyIndependentArchiveWindow([a,b],trust),{...trust,segments:2,events:4});
+  await assert.rejects(verifyIndependentArchiveWindow([a],trust),/trusted final seal/);
+  await assert.rejects(verifyIndependentArchiveWindow([b,a],trust),/trusted backup scope/);
+  await assert.rejects(verifyIndependentArchiveWindow([a,{...b,incomingLink:{...link,authoritySignature:'A'.repeat(86)}}],trust),/archive continuity/);
+  await assert.rejects(verifyIndependentArchiveWindow([a,{...b,authorityPublicKey:r.f.authorityKeys.publicKey}],trust),/pinned public keys/);
+
+  const output=join(dir,'successor-fixture');
+  await mkdir(output,{mode:0o700});
+  const checkpoint={connection:{host:dir,port:55433,database:'postgres',user:ownerRole},
+   databaseOid:config.checkpoint.identity.databaseOid,ownerOid:config.checkpoint.identity.ownerOid};
+  const linkPath=join(output,'register.json'),incomingLinkPath=join(output,'successor.json');
+  await writeFile(linkPath,JSON.stringify({pins:r.f.pins,writerPublicKey:r.f.writerKeys.publicKeyPEM,authorityPrivateKey:pem(config.authorityPrivateKey),
+   sourceDatabaseOid:config.source.identity.databaseOid,checkpoint,successor:publicSettings(next),exportDirectory:output}),{mode:0o600});
+  assert.equal(cli('journal-recovery.mjs','link',linkPath).successorScopeDigest,link.successorScopeDigest);
+  assert.deepEqual(JSON.parse(await readFile(incomingLinkPath,'utf8')),link);
+  const segments=[];
+  for(const [f,archive] of [[r.f,first],[next,second]]){
+   const journalPath=join(output,f.pins.lineage+'.ndjson'),sealPath=join(output,f.pins.lineage+'.json');
+   await writeFile(journalPath,archive.bytes,{mode:0o600});
+   await writeFile(sealPath,JSON.stringify(archive.proof),{mode:0o600});
+   segments.push({...publicSettings(f),journalPath,sealPath,...(f===next?{incomingLinkPath}:{})});
+  }
+  const windowPath=join(output,'window.json');
+  await writeFile(windowPath,JSON.stringify({...trust,segments}),{mode:0o600});
+  assert.deepEqual(cli('journal-recovery.mjs','verify-window',windowPath),{event:'journal_archive_window_verified',...trust,segments:2,events:4});
+  await writeFile(windowPath,JSON.stringify({...trust,segments:segments.slice(0,1)}),{mode:0o600});
+  assert.throws(()=>cli('journal-recovery.mjs','verify-window',windowPath),{status:1});
+
+  await source.close();sourceClosed=true;
+  await later.close();later=undefined;
+  const publicExport=join(dir,'public-successor-export');
+  await mkdir(publicExport,{mode:0o700});
+  const exportPath=join(publicExport,'config.json');
+  await writeFile(exportPath,JSON.stringify({...publicSettings(r.f),checkpoint,includeSuccessor:true,
+   sourceDatabaseOid:link.sourceDatabaseOid,exportDirectory:publicExport}),{mode:0o600});
+  assert.equal(cli('journal-recovery.mjs','export',exportPath).sealDigest,link.predecessorSealDigest);
+  assert.deepEqual(await readFile(join(publicExport,'journal.ndjson')),first.bytes);
+  assert.deepEqual(await readFile(join(publicExport,'successor.json')),await readFile(incomingLinkPath));
+ }finally{await later?.close();if(!sourceClosed)await source.close();}
 });

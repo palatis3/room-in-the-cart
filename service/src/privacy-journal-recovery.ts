@@ -7,7 +7,7 @@ import {
  type PrivacyJournalEvent,type PrivacyJournalHead,
 } from './privacy-journal.js';
 import {
- admittedSchema,durableJournalPublicKeyFingerprint,durableJournalScopeDigest,recordSchema,storedSchema,ticketSchema,verifyDurableAdmissionReceipt,
+ admittedSchema,durableJournalPinsSchema,durableJournalPublicKeyFingerprint,durableJournalScopeDigest,recordSchema,storedSchema,ticketSchema,verifyDurableAdmissionReceipt,
 } from './privacy-journal-durable.js';
 import type {DurableJournalPins,JournalCall,StoredRecord} from './privacy-journal-durable-contract.js';
 import {MAX_JOURNAL_BYTES as MAX_BYTES,MAX_JOURNAL_RECORDS as MAX_RECORDS,MAX_RESTORE_JSON_BYTES,MAX_SOURCE_EVENT_BYTES} from './privacy-journal-limits.js';
@@ -22,6 +22,11 @@ const sealSchema=z.object({version:z.literal(1),domain:z.literal('ritc-privacy-j
  authorityKeyId:z.string().min(1).max(100),generation:z.number().int().min(2),head:admittedSchema.shape.head,
  bundleDigest:hash,sourceEventsDigest:hash,sourceDatabaseOid:databaseOid,retiredReservation:hash.nullable(),
  retiredClaim:uuid.nullable(),authoritySignature:z.string().regex(/^[A-Za-z0-9_-]{86}$/)}).strict();
+const successorSchema=z.object({version:z.literal(1),domain:z.literal('ritc-privacy-journal-successor-v1'),
+ predecessorLineage:uuid,predecessorScopeDigest:hash,predecessorSealDigest:hash,
+ successorLineage:uuid,successorScopeDigest:hash,sourceIdentity:z.string().min(1).max(200),sourceDatabaseOid:databaseOid,
+ authoritySignature:sealSchema.shape.authoritySignature}).strict();
+const windowTrustSchema=z.object({startScopeDigest:hash,terminalSealDigest:hash}).strict();
 type DatabaseIdentity=z.infer<typeof identity>;
 type RecoverySeal=z.infer<typeof sealSchema>;
 type Record=z.infer<typeof recordSchema>;
@@ -44,6 +49,60 @@ export function verifyIndependentRecovery(bytes:Buffer,input:unknown,pins:Durabl
  if(checked.bundleDigest!==proof.bundleDigest||journalHash(checked.events.map(event=>[event.eventId,event.payloadDigest]).sort(compareIds))!==proof.sourceEventsDigest)throw Error('Independent recovery bundle or source digest conflict');
  validatePrivacyRestoreEvents(checked.events);
  return {...checked,proof};
+}
+
+function successorBody(predecessor:DurableJournalPins,seal:RecoverySeal,successor:{lineage:string;sourceIdentity:string;scopeDigest:string}){
+ if(predecessor.lineage===successor.lineage||predecessor.sourceIdentity!==successor.sourceIdentity)
+  throw Error('A successor must use a fresh lineage of the same source');
+ return {
+  version:1 as const,domain:'ritc-privacy-journal-successor-v1' as const,
+  predecessorLineage:predecessor.lineage,predecessorScopeDigest:seal.scopeDigest,predecessorSealDigest:journalHash(seal),
+  successorLineage:successor.lineage,successorScopeDigest:successor.scopeDigest,
+  sourceIdentity:predecessor.sourceIdentity,sourceDatabaseOid:seal.sourceDatabaseOid,
+ };
+}
+
+function verifySuccessor(input:unknown,expected:ReturnType<typeof successorBody>,authority:KeyObject){
+ const proof=successorSchema.parse(input);
+ const {authoritySignature,...body}=proof;
+ const signature=Buffer.from(authoritySignature,'base64url');
+ if(!equal(body,expected)||signature.toString('base64url')!==authoritySignature||
+  !verify(null,Buffer.from(journalCanonical(body)),authority,signature))throw Error('Journal successor signature or archive continuity conflict');
+ return proof;
+}
+
+interface ArchiveSegment {
+ readonly pins:DurableJournalPins;
+ readonly writerPublicKey:KeyObject;
+ readonly authorityPublicKey:KeyObject;
+ readonly bytes:Buffer;
+ readonly seal:unknown;
+ readonly incomingLink?:unknown;
+}
+
+/** Verify a bounded-memory archive stream against independent backup and final-seal anchors. */
+export async function verifyIndependentArchiveWindow(segments:Iterable<ArchiveSegment>|AsyncIterable<ArchiveSegment>,input:unknown){
+ const trust=windowTrustSchema.parse(input),lineages=new Set<string>();
+ let previous:{pins:DurableJournalPins;seal:RecoverySeal;authorityPublicKey:KeyObject}|undefined;
+ let events=0;
+ for await(const segment of segments){
+  const pins=durableJournalPinsSchema.parse(segment.pins);
+  const checked=verifyIndependentRecovery(segment.bytes,segment.seal,pins,segment.writerPublicKey,segment.authorityPublicKey);
+  if(lineages.has(pins.lineage))throw Error('Repeated journal lineage');
+  if(!previous){
+   if(checked.proof.scopeDigest!==trust.startScopeDigest||segment.incomingLink!==undefined)throw Error('Archive window does not start at the trusted backup scope');
+  }else{
+   if(checked.proof.sourceDatabaseOid!==previous.seal.sourceDatabaseOid)throw Error('Journal successor source database conflict');
+   verifySuccessor(segment.incomingLink,successorBody(previous.pins,previous.seal,{
+    lineage:pins.lineage,sourceIdentity:pins.sourceIdentity,scopeDigest:checked.proof.scopeDigest,
+   }),previous.authorityPublicKey);
+  }
+  lineages.add(pins.lineage);
+  events+=checked.events.length;
+  previous={pins,seal:checked.proof,authorityPublicKey:segment.authorityPublicKey};
+ }
+ if(!previous||journalHash(previous.seal)!==trust.terminalSealDigest)throw Error('Archive window does not reach the trusted final seal');
+ return {segments:lineages.size,events,...trust};
 }
 
 function compareIds(a:readonly string[],b:readonly string[]){return a[0]!<b[0]!?-1:a[0]===b[0]?0:1;}
@@ -130,7 +189,8 @@ export interface RecoveryConfiguration {
 
 /** Re-export the independently retained sealed archive after source loss. */
 export async function exportIndependentRecovery(configuration:{readonly pins:DurableJournalPins;readonly writerPublicKey:KeyObject;
- readonly authorityPublicKey:KeyObject;readonly sourceDatabaseOid:string;readonly checkpoint:RecoveryConfiguration['checkpoint']},call:JournalCall){
+ readonly authorityPublicKey:KeyObject;readonly sourceDatabaseOid:string;readonly checkpoint:RecoveryConfiguration['checkpoint'];
+ readonly includeSuccessor?:boolean},call:JournalCall){
  const pins=Object.freeze(structuredClone(configuration.pins)),scopeDigest=durableJournalScopeDigest(pins);
  const {writerPublicKey,authorityPublicKey,checkpoint}=configuration;
  publicTrust(pins,writerPublicKey,authorityPublicKey);
@@ -138,7 +198,56 @@ export async function exportIndependentRecovery(configuration:{readonly pins:Dur
  return transaction(checkpoint.pool,call,async db=>{
   const {head,claim,pending}=await checkpointState(db,false,owner,pins,scopeDigest);
   if(head.mode!=='sealed'||!head.head.fenced||claim||pending)throw Error('Independent journal has no sealed archive');
-  return sealed(db,head.head,head.generation,sourceOid,pins,writerPublicKey,authorityPublicKey,scopeDigest);
+  const archive=await sealed(db,head.head,head.generation,sourceOid,pins,writerPublicKey,authorityPublicKey,scopeDigest);
+  if(!configuration.includeSuccessor)return archive;
+  const row=(await db.query(`SELECT s.successor,s.proof,o.scope_digest
+   FROM ritc_checkpoint.successor s JOIN ritc_checkpoint.origin o ON o.lineage=s.successor WHERE s.predecessor=$1`,[pins.lineage])).rows[0];
+  if(!row)throw Error('The sealed archive has no registered successor');
+  const successor=verifySuccessor(row.proof,successorBody(pins,archive.proof,{
+   lineage:uuid.parse(row.successor),sourceIdentity:pins.sourceIdentity,scopeDigest:hash.parse(row.scope_digest),
+  }),authorityPublicKey);
+  return {...archive,successor};
+ });
+}
+
+/** Reserve one successor in the independent database. Source activation is a separate operation. */
+export async function registerIndependentSuccessor(configuration:{
+ readonly pins:DurableJournalPins;
+ readonly writerPublicKey:KeyObject;
+ readonly authorityPrivateKey:KeyObject;
+ readonly sourceDatabaseOid:string;
+ readonly checkpoint:RecoveryConfiguration['checkpoint'];
+ readonly successor:{readonly pins:DurableJournalPins;readonly writerPublicKey:KeyObject;readonly authorityPublicKey:KeyObject};
+},call:JournalCall){
+ const pins=durableJournalPinsSchema.parse(configuration.pins);
+ const successor=durableJournalPinsSchema.parse(configuration.successor.pins);
+ const {authorityPrivateKey,writerPublicKey,sourceDatabaseOid}=configuration;
+ if(authorityPrivateKey.type!=='private')throw Error('The predecessor authority signing key is required');
+ const authorityPublicKey=createPublicKey(authorityPrivateKey);
+ const checkpoint={pool:configuration.checkpoint.pool,identity:identity.parse(configuration.checkpoint.identity)};
+ publicTrust(successor,configuration.successor.writerPublicKey,configuration.successor.authorityPublicKey);
+ if(pins.recordStoreIdentity!==successor.recordStoreIdentity)throw Error('Successor requires the same registered record store');
+ const {proof:seal}=await exportIndependentRecovery({pins,writerPublicKey,authorityPublicKey,sourceDatabaseOid,checkpoint},call);
+ const body=successorBody(pins,seal,{
+  lineage:successor.lineage,sourceIdentity:successor.sourceIdentity,scopeDigest:durableJournalScopeDigest(successor),
+ });
+ const proof={...body,authoritySignature:sign(null,Buffer.from(journalCanonical(body)),authorityPrivateKey).toString('base64url')};
+ return transaction(checkpoint.pool,call,async db=>{
+  const {head}=await checkpointState(db,true,checkpoint.identity,pins,body.predecessorScopeDigest);
+  await assertOwner(db,checkpoint.identity,'ritc_checkpoint','successor');
+  const persisted=(await db.query('SELECT proof FROM ritc_checkpoint.recovery_seal WHERE lineage=$1',[pins.lineage])).rows[0];
+  if(head.mode!=='sealed'||!equal(persisted?.proof,seal))throw Error('Predecessor seal changed during registration');
+  const existing=(await db.query('SELECT successor,proof FROM ritc_checkpoint.successor WHERE predecessor=$1',[pins.lineage])).rows[0];
+  if(existing){
+   if(existing.successor!==successor.lineage||!equal(existing.proof,proof))throw Error('Predecessor already has a different successor');
+   await checkpointState(db,false,checkpoint.identity,successor,body.successorScopeDigest);
+   return proof;
+  }
+  const genesis={head:{version:1,lineage:successor.lineage,schemaDigest:successor.schemaDigest,configurationId:successor.configurationId,
+   seq:0,hash:'0'.repeat(64),fenced:false},generation:1,authorityRevision:0,mode:'active',pendingOperation:null,totalBytes:0};
+  await db.query('INSERT INTO ritc_checkpoint.origin(lineage,scope_digest,head) VALUES($1,$2,$3)',[successor.lineage,body.successorScopeDigest,genesis]);
+  await db.query('INSERT INTO ritc_checkpoint.successor(predecessor,successor,proof) VALUES($1,$2,$3)',[pins.lineage,successor.lineage,proof]);
+  return proof;
  });
 }
 
