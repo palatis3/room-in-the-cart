@@ -50,7 +50,7 @@ Tests use a separate DEBUG-only workspace and typed input, never the user's norm
 - `shared/contracts`: fictional pack vectors and accepted Foundation semantic color tokens.
 - `service`: PostgreSQL/RLS-backed household and billing service, verified provider sessions, narrow projections and a reusable runtime/HTTP adapter. Browser authentication is implemented but provider enablement is deliberately off; new privacy/maintenance migrations require separate deployment review.
 - `web`: invite, own-request and narrow helper clients with reviewed requests and identity-bound retries; the deployed client correctly reports unavailable email sign-in until provider configuration is enabled.
-- `.github/workflows/ci.yml` runs on pushes, pull requests and manual dispatch. It tests the web and service packages, runs PostgreSQL integration and maintenance checks against disposable data, verifies generated sources, and builds and tests the iPhone app. The [first hosted run with all Linux jobs passing](https://github.com/palatis3/room-in-the-cart/actions/runs/41871381064) includes the web, service and PostgreSQL results. Check its iOS job for the hosted simulator and unsigned Release results.
+- `.github/workflows/ci.yml` runs on pushes, pull requests and manual dispatch in the private Room in the Cart repository. It tests the web and service packages, runs PostgreSQL integration and maintenance checks against disposable data, verifies generated sources, and builds and tests the iPhone app. The [GitHub Actions history](https://github.com/palatis3/room-in-the-cart/actions/workflows/ci.yml) shows each job’s result for each commit.
 
 ## Current verification and staging
 

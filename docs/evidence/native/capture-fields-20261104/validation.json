@@ -39,6 +39,16 @@
     "executableSHA256": "d7c5065db9a36bd25161dd3077833d4537833698fdd1fa0c747a6aca2e2e453f",
     "scope": "Ordinary arm64 Debug, with the independently reviewed widget guard included. Executable, assets, privacy, environment and embedded extensions passed verification."
   },
+  "compiledRelease": {
+    "sourceCommit": "31add63618887357bc19b11fb500825009e7cbe1",
+    "archive": ".build/IntegratedCaptureWidget20261104/RoomInTheCart-CaptureWidget.xcarchive",
+    "buildLog": ".build/IntegratedCaptureWidget20261104/archive.log",
+    "verificationLog": ".build/IntegratedCaptureWidget20261104/archive-verification.log",
+    "executableSHA256": "1a3f3334a9c33be1e0528e6edf802e63e5641159104ade7d94dc2ba24b3ed42b",
+    "executableUUID": "99F14E87-CE0A-3C0A-B9E6-521A966CEF31",
+    "scope": "The unsigned arm64 Release archive includes the capture field edits and widget guard. Executable, assets, privacy, environment and embedded extensions passed bundle checks.",
+    "missingReleaseMetadata": ["HouseholdSubscriptionProductID", "PrivacyPolicyURL", "TermsOfUseURL", "SupportURL"]
+  },
   "spanishLargeTextFirstAttempt": {
     "device": "iPhone SE, iOS 17.0 (21A328)",
     "result": ".build/CaptureFieldReview20261104/SpanishLarge17.xcresult",
@@ -48,6 +58,18 @@
     "viewportCapture": {
       "path": ".build/CaptureFieldReview20261104/spanish-large17-attachments/29849B9F-0A0D-4547-A332-BC1C24BF46CC.png",
       "sha256": "7e99ac36d25be3e086f09a0be570dafcea205a7dc2d38a18c3ffe47fba52bc38"
+    }
+  },
+  "spanishLargeTextFollowUp": {
+    "device": "iPhone SE, iOS 17.0 (21A328)",
+    "result": ".build/CaptureFieldReview20261104/SpanishLarge17Scroll.xcresult",
+    "harnessSHA256": "8386313c2db70b7d904c6855968f158fc03153070b9be59f5fe7421b09fb7a36",
+    "failed": 1,
+    "testSeconds": 100.904,
+    "scope": "A collection-scoped scroll in the test harness ended on the Spanish request warning at the largest accessibility text size. XCTest could not find the per-pack field at that position. Editing and keyboard dismissal remain unverified on this device and text setting.",
+    "viewportCapture": {
+      "path": ".build/CaptureFieldReview20261104/spanish-large17-scroll-attachments/D10DB5C8-D599-483B-9067-D283BAE4AD5E.png",
+      "sha256": "b8814898580e725fd6dc71fceafda37b0f4b26e58f3a78ed90a829ff3e0a5015"
     }
   },
   "remaining": ["US Spanish device and large-text verification", "Physical VoiceOver and Switch Control"]
