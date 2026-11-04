@@ -1,0 +1,131 @@
+{
+  "sourceCommit": "1fd2b962d77a7459ffe2a73db6d3d8a0557cda45",
+  "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41930998637",
+  "attempt": 1,
+  "cases": {
+    "launch": {
+      "job": 126933923990,
+      "functionalTestResult": "Passed",
+      "jobResult": "Failed as intended: reviewed baseline absent",
+      "environment": {
+        "osVersion": "26.2",
+        "osBuildNumber": "23C54",
+        "modelName": "iPhone 17",
+        "architecture": "arm64",
+        "xcode": "Xcode 26.3\nBuild version 17C529",
+        "buildConfiguration": "Release",
+        "testConfiguration": "Test Scheme Action"
+      },
+      "baselineValues": {
+        "responsiveLaunchMedianSeconds": 4.156887292
+      },
+      "evidenceSHA256": {
+        "calibration.json": "a0de93a88d4adcf577fae87d5015a54abaf96f10b8c4753541cb553928f26e3b",
+        "test-summary.json": "1b19900ea3f9dc80dd1f6477980f59b0328de748148e7aeb716260103422be6b",
+        "test-details.json": "0fe0f052211028b17379763561fa2007b2e958529e3ade6b769c58702204ee9f",
+        "Performance.log": "4c6325489b9f80ec00c142f267f51cf7a20ffd8b281f1899936df9cacfb0f90f"
+      },
+      "persistedPickup": null,
+      "simulatorHitches": null
+    },
+    "rendered": {
+      "job": 126933923946,
+      "functionalTestResult": "Passed",
+      "jobResult": "Failed as intended: reviewed baseline absent",
+      "environment": {
+        "osVersion": "26.2",
+        "osBuildNumber": "23C54",
+        "modelName": "iPhone 17",
+        "architecture": "arm64",
+        "xcode": "Xcode 26.3\nBuild version 17C529",
+        "buildConfiguration": "Release",
+        "testConfiguration": "Test Scheme Action"
+      },
+      "baselineValues": {
+        "searchP95Milliseconds": 3710.1076666666586,
+        "checkP95Milliseconds": 2859.961958333315
+      },
+      "evidenceSHA256": {
+        "calibration.json": "a922a68a1e1100db4578d3ac086cedd47192a27b5a3d959f22170ddc01a3d936",
+        "test-summary.json": "740961311ae341ed8bd471de6cea3712db5de23f24b1e5d468e73bf4cac8ef06",
+        "test-details.json": "178c843411b4b1b2933844de82c8678300bbe94bb5ac29a2213334b0101a3304",
+        "Performance.log": "2af0c6a2bdedc51101dd4cb88108ec53d42deb4a44b30f01aa27b2167f098c9a"
+      },
+      "persistedPickup": {
+        "sqliteQuickCheck": "ok",
+        "revision": 22,
+        "payloadSHA256": "987dad394cdacad29da28cf7a7420083eea8a956be52beea5e8f359a6670adc5",
+        "lineCount": 500,
+        "contributionCount": 500,
+        "importCount": 1,
+        "source": "paste",
+        "checkedCount": 20,
+        "checkedRowIDs": [
+          "0e2fdfaa-6694-4d02-bec1-b7e50472ffe9",
+          "0eb4f115-9ab4-4eb6-ab5e-36b89f462791",
+          "1436c1b0-0dd4-4d9e-89a8-847447e9b8fb",
+          "1d6c30d6-5fb0-4f3f-9a00-a951ce35038a",
+          "2a3fe377-3819-42e9-abc3-5ef1c1cceea9",
+          "3af0030d-7aa0-4178-9174-bd0cf301fac8",
+          "44d927e2-59bf-477f-a378-d9a575f0ee45",
+          "4a962bdc-8690-409a-87e7-091558c0f080",
+          "5daa4c3a-849c-493a-9038-d63ed37517fd",
+          "6686b6ef-ed8e-4541-8729-93baa3ac42ea",
+          "99dc37a9-204f-429d-9d67-60a81622e618",
+          "a7a8ddff-efa1-455f-98d6-cbeae89cc898",
+          "ac5be828-243b-4ec6-be62-0b6792637928",
+          "b3683d86-0d67-40d3-9a82-a132478cfd12",
+          "b3822f74-be2d-49bd-b59c-59729f389b2e",
+          "c7a88155-bddc-4ec6-88fa-da3e012b6af6",
+          "e01adec2-8047-480b-8307-a9f1bf50c5c0",
+          "f8155f37-b838-4959-bba9-df60c1989e48",
+          "fad0fba3-4ae4-4b45-9a46-db09d5f02f0f",
+          "fe8547ba-818d-4508-a489-5e1d21ec14a8"
+        ]
+      },
+      "simulatorHitches": null
+    },
+    "scroll": {
+      "job": 126933923966,
+      "functionalTestResult": "Passed",
+      "jobResult": "Failed as intended: reviewed baseline absent",
+      "environment": {
+        "osVersion": "26.2",
+        "osBuildNumber": "23C54",
+        "modelName": "iPhone 17",
+        "architecture": "arm64",
+        "xcode": "Xcode 26.3\nBuild version 17C529",
+        "buildConfiguration": "Release",
+        "testConfiguration": "Test Scheme Action"
+      },
+      "baselineValues": {
+        "scrollMedianSeconds": 2.583409541,
+        "absoluteMemoryMedianKilobytes": 108928.896,
+        "peakMemoryMedianKilobytes": 109256.576
+      },
+      "evidenceSHA256": {
+        "calibration.json": "88e4018c05e1e930d5b6dbafb266086f7cea605c2244c4aae68305a2c2088783",
+        "test-summary.json": "8ac73baff55cb29fa27d7b31f8094fa80fd759a4ace8240e1db2126f1fb4eb26",
+        "test-details.json": "7a7e67269e352c1b970da3861a40ba8ae634995346e96816c3f72a6e351b8a07",
+        "Performance.log": "eaecffc583251b379d45a435d101a285206c3341e0c1ad6a0a395bd6cd90defe"
+      },
+      "persistedPickup": {
+        "sqliteQuickCheck": "ok",
+        "revision": 2,
+        "payloadSHA256": "16fb65f10cc17b3ac19ab0b533f2b2db9dc92900e89d1b4ea4f988bd69e49a89",
+        "lineCount": 500,
+        "contributionCount": 500,
+        "importCount": 1,
+        "source": "paste",
+        "checkedCount": 0,
+        "checkedRowIDs": []
+      },
+      "simulatorHitches": {
+        "status": "unavailable",
+        "detail": "XCTest emitted scroll duration and memory, but no animation hitch samples on this simulator. This run cannot evaluate frame hitches."
+      }
+    }
+  },
+  "baselineStatus": "No limits adopted yet. The same three jobs were queued for a second hosted calibration using the same compiled products.",
+  "limits": "Simulator XCTest timing includes host/input/idle overhead, not physical iPhone response or animation-frame latency. No hitch samples were emitted."
+}

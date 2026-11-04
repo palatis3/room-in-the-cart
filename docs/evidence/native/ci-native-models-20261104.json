@@ -1,0 +1,16 @@
+{
+  "sourceCommit": "1fd2b962d77a7459ffe2a73db6d3d8a0557cda45",
+  "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41930998628",
+  "job": 126937759056,
+  "toolchain": "Xcode 26.3 on macos-15 arm64",
+  "passedTests": 564,
+  "failedTests": 0,
+  "skippedTests": 0,
+  "expectedFailures": 0,
+  "xctestDurationSeconds": 81.373,
+  "evidenceSHA256": {
+    "test-summary.json": "4bce3d68451b8c308041e10db0a7f9ca748e2142efe047012a28ad7b16e644ea",
+    "test-details.json": "c8ca565544375a75b2eed19720da3633e79af9fd6ba518670882fc147aa85c73"
+  },
+  "scope": "Native app-hosted model job only. The full UI matrix and Swift CodeQL are not certified by this result. Later local recipe-import and Reduce Motion additions are not in this published source."
+}
