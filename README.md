@@ -1,8 +1,8 @@
 # Room in the Cart
 
-Native iPhone implementation of Foundation 2.1, with an account-free offline comparison and shopping ledger, pickup workflows, recovery tools, and connected household and membership modules. The full launch product is still under implementation; [the requirement tracker](docs/IMPLEMENTATION.md) records evidence and remaining acceptance gates.
+Native iPhone implementation of Foundation 2.1, with an account-free pack comparison and shopping list, meal planning, pickup workflows, recovery tools, and connected household and membership modules. The [current acceptance map](docs/CURRENT-ACCEPTANCE.md) tracks verified behavior and remaining release work.
 
-Open [ios/RoomInTheCart.xcodeproj](ios/RoomInTheCart.xcodeproj), choose **RoomInTheCart**, and run on an iPhone simulator. Deployment target: **iOS 17.0**. No signing team is needed for simulator builds. Device distribution requires real bundle identifiers and signing configuration.
+Open [RoomInTheCart.xcodeproj](ios/RoomInTheCart.xcodeproj) in Xcode, choose **RoomInTheCart-Release**, select an iPhone simulator, and run. The simulator preview runs without a signing team, account, or backend setup. Use **RoomInTheCart** for Debug development. The deployment target is **iOS 17.0** and hosted CI builds with Xcode 26.3.
 
 The app has Shop, Dinners and Records tab roots. Shop includes staged list import, distinct manual/meal/protected contributions, exact comparison, checkout review and pickup reconciliation. Meals retain stable identities and dates; reviewed dinner planning and optional on-device capture are integrated in source, with additional acceptance work underway. Records supports comparison reopen and scoped encrypted export/recovery into isolated workspaces. Household and StoreKit membership adapters are integrated in source, with role-aware routing and a local device-owner gate after shared use. This is not a claim that every launch requirement or live provider flow has passed acceptance.
 
@@ -13,10 +13,10 @@ In **Records → Family decision history**, review the pickup evidence and recor
 
 ## First task
 
-1. Open Shop → Compare packs.
-2. Enter an item, total need, units, and two pack quotes. Optional confirmed stock is already available for this need; protected portions partition the total.
-3. Compare enough food. Blank quantities/prices remain unresolved.
-4. Save comparison, terminate the app, reopen and select the saved comparison.
+1. Open **Shop → Compare packs** and enter 12 wraps.
+2. Enter two quotes. Pack A has 8 wraps for $3 and Pack B has 6 for $2. Set an optional $30 item limit.
+3. Tap **Compare enough food**. Either quote needs two packs, costing $6 for A or $4 for B. Blank quantities and prices stay unresolved.
+4. Tap **Save comparison** and wait for **Saved on this iPhone**. Relaunch, open **Records**, and choose the saved comparison.
 
 Costs and limits apply only to the item. They exclude other groceries, fees and taxes. There are no network calls in this flow and no sample household data on a fresh install.
 
@@ -25,14 +25,12 @@ Costs and limits apply only to the item. They exclude other groceries, fees and 
 Requirements: macOS, Xcode with an installed iPhone simulator, Python 3.9+, Node 22.14.0/npm. The handoff reference verifier separately requires Python 3.13+.
 
 ```sh
-python3 scripts/generate_theme.py
-python3 scripts/generate_xcode_project.py
 bash scripts/check.sh
 ```
 
-Project files and generated assets are committed; ordinary Xcode builds need no generator installation. Regenerate the project when adding/removing Swift files. `--check` verifies reproducibility. The scripts automatically use `.tools/node-v22.14.0-darwin-arm64` if present locally; clean environments should install the pinned Node version.
+The script checks generated files, runs Swift package and web/service tests, and verifies the Debug simulator bundle. Project files and assets are committed. Regenerate the project when adding or removing Swift files.
 
-To run app unit/UI tests, select the scheme's Test action in Xcode or:
+Run the app model and UI tests through the **RoomInTheCart** scheme’s Test action or use the command below. Get the simulator UUID from `xcrun simctl list devices available`. Use the **RoomInTheCart-LocalStoreKit** scheme for the simulated billing cases.
 
 ```sh
 RUN_UI_TESTS=1 IOS_SIMULATOR_DESTINATION='platform=iOS Simulator,id=YOUR_SIMULATOR_UUID' bash scripts/check.sh
@@ -54,14 +52,8 @@ Tests use a separate DEBUG-only workspace and typed input, never the user's norm
 
 ## Current verification and staging
 
-Checkpoint `967df15` passed **140 native model tests with zero skips and unchanged source hashes**, CoreDomain 115 tests, LocalStore 73 tests, and unsigned Release/compiled-metadata checks. The parent also tested that checkpoint plus the new large-list fixture on an iPhone SE (2nd generation) simulator running iOS 17.0: 141 model tests passed. Five minimum-iOS functional/viewport scenarios passed across two runs; the unfiltered accessibility audit still fails. The large-list Debug fixture found slow behavior under test; it is not a physical-device Release latency measurement.
+Hosted CI compiled the unsigned iPhone Release and passed all 563 native model tests on iOS 26.2. The local build with the accessible meal-week layout also passed 563 model tests on iOS 27. The full native UI regression remains open, with focused simulator results and outstanding checks in the acceptance map. [Hosted CI evidence](docs/evidence/native/hosted-models-20261104.json) · [Local validation](docs/evidence/native/meal-week-20261104/validation.json)
 
-The [integrated native suite](docs/evidence/native/integrated-helper-review-summary.json) passed all 255 tests on an ad-hoc-signed iPhone 17e simulator running iOS 27. The [Free pickup journey](docs/evidence/native/free-pickup-through-next-shop-summary.json) exercised protected lunch portions, checkout, short fill, meal repair, a dated cook note, settlement and reuse of the saved dinner in a fresh shop. A [separate fresh-install journey](docs/evidence/native/urgent-repair-two-meals-summary.json) saved two meal needs before any order and reopened both after restart. Both UI journeys reported a frame-dimension warning during text entry. The [local billing matrix](docs/evidence/native/local-storekit-full-matrix.json) passed 30/30 on iOS 17.0, 26/30 on iOS 27.0 and 25/30 on iOS 27.1. The broad accessibility audit, billing acceptance and signed-device distribution remain open.
+Staging has migrations 001–008 applied. The upgrade through 029 passed a local rehearsal. The protected hosted backup and rollout review are pending. Launch also awaits approved policies and support, live provider and recovery checks, physical-device and mixed-phone acceptance, Apple signing, live StoreKit, and App Store review. [Staging plan](docs/STAGING-UPDATE-PLAN.md) · [Release requirements](docs/CURRENT-ACCEPTANCE.md#remaining-production-work-and-release-gates)
 
-Staging is deployed at [room-in-the-cart-staging.vercel.app](https://room-in-the-cart-staging.vercel.app). [Public smoke evidence](docs/evidence/staging-public-smoke.json) records six checks, and real browser verification confirms fresh English/Spanish loads without a false save-error banner. Supabase migrations 001–008 are applied with preserved checksums; staging advisor checks reported no warnings or errors. Local migrations 009–012 cover authentication maintenance, account deletion, helper review and budget history. Staging deployment of those migrations remains pending. No live email, consent, account-deletion-provider or real StoreKit entitlement flow is claimed by these checks.
-
-The owner has deferred email-provider configuration and Apple membership/signing. Email sign-in remains explicitly unavailable, and child consent remains disabled pending its own actual provider configuration. No credentials belong in the repository.
-
-Debug/Staging/Release have separate provisional bundle IDs, the same product display name, and no embedded credentials. Logs accept enumerated structural failure events only. All food and financial data stay out of logs.
-
-See [implementation status](docs/IMPLEMENTATION.md) and [provenance](docs/PROVENANCE.md). [APP-BASELINE](docs/product/APP-BASELINE.md) is the initial orientation; the accepted Foundation and master generation are preserved beside it in `docs/product/`. Original handoff files remain unchanged in `/Users/palatis/Downloads/Handoff/`.
+The original product baseline, Foundation 2.1 requirements, and master generation are in [docs/product](docs/product). Start with [APP-BASELINE](docs/product/APP-BASELINE.md).
