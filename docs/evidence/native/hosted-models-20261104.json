@@ -1,0 +1,12 @@
+{
+  "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41891529030",
+  "source_commit": "6972cb597a2351ae8f08a094c09ef7acdd0a70a4",
+  "verified_jobs": ["typescript (web)", "typescript (service)", "service-postgres"],
+  "verified_ios_steps": ["Swift package tests", "Build iPhone simulator test products", "Compile unsigned Release for iPhone", "Verify compiled app configuration", "Test iPhone models", "Upload iPhone model test evidence"],
+  "artifact": "iphone-model-results",
+  "local_summary": ".build/HostedModels41891529030/summary.json",
+  "summary_sha256": "443c8b08a3d16106efa7cd8e9dc205370ac320b3f3c5caccb120eac4f8dab0e2",
+  "device": "iPhone 17, iOS 26.2 (23C54), x86_64 simulator",
+  "model_tests": {"passed": 563, "failed": 0, "skipped": 0, "runtime_warnings": []},
+  "scope": "The downloaded XCTest artifact proves the native model result. The separate Release step compiled the unsigned iPhone build and passed bundle verification. The earlier workflow's single UI step was still running when this result was recorded. The successor workflow distributes the UI suite across two isolated runner jobs."
+}
