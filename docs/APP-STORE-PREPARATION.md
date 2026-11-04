@@ -47,23 +47,25 @@ The following are draft claim boundaries, not permission to publish them while r
 | Two-store comparison | Two entered quotes and separate trip cash/time; [five scoped native cases](evidence/native/connected-store-quotes/acceptance.json). | Say manually entered quotes. No fetched prices, universal cheapest-store finder or automatic routing. |
 | Household annual membership | StoreKit2 localized product, restore/manage, verified server entitlement and up to two named adult seats. | Actual Apple product and signed sandbox/TestFlight lifecycle. `$49.99/year` is a US research hypothesis, not the current storefront offer. |
 
-## Screenshots to capture from the final app
+## Screenshot candidates and remaining scenes
 
 Apple's currently retrieved [screenshot specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications) require at least one iPhone screenshot for the Dynamic Island medium display and allow 1–10 per device size. Accepted portrait sizes for that class include 1179×2556 and 1206×2622; use the exact final device/output size accepted by App Store Connect. Files must be JPEG/JPG/PNG without transparency. iPad assets are needed only if iPad support is added. Recheck the live specification at upload; do not reuse an old size checklist.
 
-Existing SE/17e QA captures and DEBUG fixture screenshots are evidence, not a finished store asset set. Capture fictional data in an ordinary app with no test footer, synthetic counters, DEBUG controls, personal household names, tokens or private records. Keep its source/build, device, locale, date and displayed inputs alongside the asset. Never fabricate a covered meal or affordable checkout. Use iPhone UI for this iPhone listing; helper browser compatibility can be explained after its acceptance rather than illustrated with another platform's product artwork.
+The November 4 Release simulator run captured both pack results and the saved Records entry in English and US Spanish. The six 1206×2622 opaque JPEGs retain the original composition from iPhone 17. The app's US-Spanish captures are grouped under Spanish (Mexico) for the US storefront. The manifest records the exact build, entered quantities and prices, source captures and output hashes. [English candidates](app-store/screenshots/en-US) · [Spanish candidates](app-store/screenshots/es-MX) · [Capture manifest](app-store/screenshots/manifest.json)
+
+Capture the remaining scenes with fictional data in the ordinary iPhone app. Keep the source/build, device, locale, date and displayed inputs with each asset. Verify every captured claim against the actual product behavior before submission.
 
 | Draft frame | Real screen / visible point | Gate before capture |
 |---|---|---|
-| 1. Compare enough food | Shop → pack comparison, showing whole packs, usable remainder and item-only scope. | Final ordinary app; known/unknown fixture reviewed. |
+| 1. Compare enough food | Shop → pack comparison, showing whole packs, usable remainder and item-only scope. | Local bilingual draft captures are available. Match the final signed build and retain its known/unknown review evidence. |
 | 2. Review the whole pickup | S24 cereal request with current/proposed inclusive total, overage and two protected lunches. | Promoted current S24 pass plus configured review household. |
 | 3. Plan dinners and keep lunch | Meal week plus actual named lunch reservation; separate chosen and unscheduled dinner. | Final civil-date/localized UI and accepted fictional recipe. |
 | 4. Repair what came home | Actual usable amount, dependent shortage preview and current dated cook instruction. | Confirmed stock/arrival fixture; current allocation agrees with text. |
 | 5. Compare two entered trips | Quote comparison showing checkout and additional trip cash separately. | Exact equivalent commitments and known/unknown terms. |
-| 6. Keep and recover records | Records export/recovery scope or saved dated pickup. | No private payload/key in image; final system interaction checked. |
+| 6. Keep and recover records | Records root with a saved fictional comparison, or a separate export/recovery scope capture. | The local bilingual Records captures are available. Check final system export and recovery on the distribution candidate. |
 | Optional 7. Household | Actual named-seat offer with real localized price/term, Restore and Manage. | Actual product/account configuration. A local `.storekit` price or unavailable offer is not a storefront screenshot. |
 
-Prepare independently reviewed en-US and US-Spanish asset/copy sets. The intended sequence is a reviewable storyboard; no screenshot has been newly created or uploaded here. Apple's [product-page guidance](https://developer.apple.com/app-store/product-page/) describes screenshots as demonstrations of the actual experience; an app preview is optional.
+Review the two localized asset and copy sets against the signed candidate. An app preview is optional. [Apple product-page guidance](https://developer.apple.com/app-store/product-page/)
 
 ## Privacy answers: draft inputs, not final checkboxes
 

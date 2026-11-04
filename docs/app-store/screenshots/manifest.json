@@ -1,0 +1,96 @@
+{
+  "recordedAtUTC": "2026-11-04T10:04:36.654403+00:00",
+  "sourceCommit": "ddbb2974bd71656e9000e600f2f1e79c98eac084",
+  "configuration": "Release iPhone Simulator build with locale launch arguments and no app fixture flags",
+  "appExecutableSHA256": "36b64c15e5406569cafbcac106229ab613a3e0bc7ef3be3f3fe9b0c050617869",
+  "bundleIdentifier": "dev.roominthecart.app",
+  "version": "0.1.0",
+  "build": "1",
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "622F9F0F-5922-40B8-AB68-B8B91A3ECE98",
+    "deviceName": "RITC Store Capture 20261104",
+    "modelName": "iPhone 17",
+    "osBuildNumber": "24A434",
+    "osVersion": "27.0",
+    "platform": "iOS Simulator"
+  },
+  "testResultBundle": ".build/StoreCapture20261104/StoreCapture.xcresult",
+  "testHarnessSHA256": "2e57edc3aeba65fc803cf455afd1173ee34f3ab674c29ee5b534998c23c94a3e",
+  "fixture": {
+    "item": "Tortillas",
+    "needed": 12,
+    "packA": {
+      "usable": 8,
+      "priceUSD": 3
+    },
+    "packB": {
+      "usable": 6,
+      "priceUSD": 2
+    }
+  },
+  "assetProcessing": "Raw simulator captures were re-encoded as opaque JPEG at original dimensions. No cropping, UI overlays or data substitutions.",
+  "files": [
+    {
+      "path": "en-US/01-comparison-top.jpg",
+      "appLocale": "en-US",
+      "storeLocale": "en-US",
+      "width": 1206,
+      "height": 2622,
+      "alpha": false,
+      "sha256": "fa2760bb71a15b2f9dc88f4bfa99dfdf96c00913278e49f63f04a6a5415c1a87",
+      "rawCaptureSHA256": "e79fed0f64eb41e457e760ac5d9fbaf071826403277d182e4befe50b4b27fc39"
+    },
+    {
+      "path": "en-US/02-comparison-detail.jpg",
+      "appLocale": "en-US",
+      "storeLocale": "en-US",
+      "width": 1206,
+      "height": 2622,
+      "alpha": false,
+      "sha256": "905f6a386d77bd76de94e85b2a1a37a1636f5037146e6345f993217d1ccaf1ff",
+      "rawCaptureSHA256": "1ce119347b8dd2c9c0a394fdd0f53670830738ba4fc0fd8460f53c0e75037662"
+    },
+    {
+      "path": "en-US/03-records.jpg",
+      "appLocale": "en-US",
+      "storeLocale": "en-US",
+      "width": 1206,
+      "height": 2622,
+      "alpha": false,
+      "sha256": "4907f411477fb0bf55211186b21daf33cd50d5bea5f20f6dfc3b0d63b3e64e2b",
+      "rawCaptureSHA256": "163af83f691b5ef2ed0f638c6f5402ef5ec0090561feb972bf3066aa2b11b2f8"
+    },
+    {
+      "path": "es-MX/01-comparison-top.jpg",
+      "appLocale": "es-US",
+      "storeLocale": "es-MX",
+      "width": 1206,
+      "height": 2622,
+      "alpha": false,
+      "sha256": "abde412656a43e5a4f08f86e02cc6ed9136c87837812f3e58f01ad88f69ec6ac",
+      "rawCaptureSHA256": "d18188795079288530cfdefc61376a13edf7cd21a965c08e2327b5a05239248c"
+    },
+    {
+      "path": "es-MX/02-comparison-detail.jpg",
+      "appLocale": "es-US",
+      "storeLocale": "es-MX",
+      "width": 1206,
+      "height": 2622,
+      "alpha": false,
+      "sha256": "6a6145c239d1903e39e17255f2a93afeb3a7c591384ca0e606806779e1d07652",
+      "rawCaptureSHA256": "7a30389787df126bb8281f757ecc867afa96345138dd98f3882915f6472bdcd0"
+    },
+    {
+      "path": "es-MX/03-records.jpg",
+      "appLocale": "es-US",
+      "storeLocale": "es-MX",
+      "width": 1206,
+      "height": 2622,
+      "alpha": false,
+      "sha256": "65178dfe7580181f1012a44a3dbcf114daf7953088376bb96ee0f053627e351b",
+      "rawCaptureSHA256": "af06fab0cd1e4d89a0614e8ff223b8f1f1f93c331a96a3068b6ff10726cbc708"
+    }
+  ],
+  "scope": "Local draft assets from a visually reviewed simulator run. Signed submission and other product scenes have separate acceptance gates."
+}
