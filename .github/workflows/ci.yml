@@ -134,15 +134,12 @@ jobs:
           with open(os.environ['GITHUB_ENV'], 'a') as output:
               output.write('SIMULATOR_ID=' + device['udid'] + '\n')
           PY
-      - name: Build and test iPhone app
+      - name: Build iPhone simulator test products
+        id: build_ios_tests
         run: >-
           xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart
           -configuration Debug -destination "platform=iOS Simulator,id=$SIMULATOR_ID"
-          -derivedDataPath .build/DerivedData -resultBundlePath .build/UITests.xcresult
-          -parallel-testing-enabled NO -test-timeouts-enabled YES
-          -default-test-execution-time-allowance 720 -maximum-test-execution-time-allowance 900
-          -collect-test-diagnostics never
-          CODE_SIGN_IDENTITY=- test
+          -derivedDataPath .build/DerivedData CODE_SIGN_IDENTITY=- build-for-testing
       - name: Compile unsigned Release for iPhone
         run: >-
           xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart-Release
@@ -152,11 +149,39 @@ jobs:
         run: |
           python3 scripts/check_built_app.py .build/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app --configuration Debug
           python3 scripts/check_built_app.py .build/ReleaseDerivedData/Build/Products/Release-iphoneos/RoomInTheCart.app --configuration Release
-      - name: Upload test evidence
+      - name: Test iPhone models
+        if: ${{ !cancelled() && steps.build_ios_tests.outcome == 'success' }}
+        run: >-
+          xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart
+          -configuration Debug -destination "platform=iOS Simulator,id=$SIMULATOR_ID"
+          -derivedDataPath .build/DerivedData -resultBundlePath .build/ModelTests.xcresult
+          -parallel-testing-enabled NO -test-timeouts-enabled YES
+          -default-test-execution-time-allowance 720 -maximum-test-execution-time-allowance 900
+          -collect-test-diagnostics never -only-testing:RoomInTheCartTests
+          CODE_SIGN_IDENTITY=- test-without-building
+      - name: Upload iPhone model test evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: iphone-test-results
+          name: iphone-model-results
+          path: .build/ModelTests.xcresult
+          retention-days: 7
+          if-no-files-found: ignore
+      - name: Test iPhone journeys
+        if: ${{ !cancelled() && steps.build_ios_tests.outcome == 'success' }}
+        run: >-
+          xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart
+          -configuration Debug -destination "platform=iOS Simulator,id=$SIMULATOR_ID"
+          -derivedDataPath .build/DerivedData -resultBundlePath .build/UITests.xcresult
+          -parallel-testing-enabled NO -test-timeouts-enabled YES
+          -default-test-execution-time-allowance 720 -maximum-test-execution-time-allowance 900
+          -collect-test-diagnostics never -only-testing:RoomInTheCartUITests
+          CODE_SIGN_IDENTITY=- test-without-building
+      - name: Upload iPhone journey test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: iphone-ui-results
           path: .build/UITests.xcresult
           retention-days: 7
           if-no-files-found: ignore
