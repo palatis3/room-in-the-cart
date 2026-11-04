@@ -39,5 +39,16 @@
     "executableSHA256": "d7c5065db9a36bd25161dd3077833d4537833698fdd1fa0c747a6aca2e2e453f",
     "scope": "Ordinary arm64 Debug, with the independently reviewed widget guard included. Executable, assets, privacy, environment and embedded extensions passed verification."
   },
+  "spanishLargeTextFirstAttempt": {
+    "device": "iPhone SE, iOS 17.0 (21A328)",
+    "result": ".build/CaptureFieldReview20261104/SpanishLarge17.xcresult",
+    "harnessSHA256": "06892531dc6926219a3822f39fd1ffdb3d678fdb6c76b58ee9cac8e521783342",
+    "failed": 1,
+    "scope": "The app exposed the localized per-pack field with value 8 at the largest accessibility text size. The harness’s scroll gesture left that control outside the viewport, so the edit and keyboard checks did not run.",
+    "viewportCapture": {
+      "path": ".build/CaptureFieldReview20261104/spanish-large17-attachments/29849B9F-0A0D-4547-A332-BC1C24BF46CC.png",
+      "sha256": "7e99ac36d25be3e086f09a0be570dafcea205a7dc2d38a18c3ffe47fba52bc38"
+    }
+  },
   "remaining": ["US Spanish device and large-text verification", "Physical VoiceOver and Switch Control"]
 }

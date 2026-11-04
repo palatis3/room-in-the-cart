@@ -22,7 +22,16 @@
       ]
     },
     "compiled_debug_sha256": "d7c5065db9a36bd25161dd3077833d4537833698fdd1fa0c747a6aca2e2e453f",
-    "remaining": ["System Home Screen tap on the guard build", "Direct cold current-link navigation", "Physical signed-device and lock-state checks"]
+    "system_widget": {
+      "evidence_directory": ".build/IntegratedCaptureWidget20261104/actual-widget-readback",
+      "manifest_sha256": "0575e20e5d5748c90725a57fd66ba5d3730e8721fca7272f3693691f0aa2b121",
+      "sealed_report_sha256": "d332d22b56a6f6798537f244002c4c6906494b1a067430f772ded218c468b2a4",
+      "placement": "FixedWidgetPlacementFinal.xcresult passed with one test. The generic tile was added through the system gallery while A was selected.",
+      "warm_tap": "WarmActualWidget.xcresult passed with one test. After the ordinary app selected B, tapping the existing Home Screen tile opened Bring the list. The selection, revision 8 and workspace hash matched before and after.",
+      "cold_tap": "ColdActualWidget.xcresult failed with one test. After app termination the system tile launched Shop and the expected route content stayed absent. The selection, revision 8 and workspace hash matched before and after.",
+      "scope": "The saved URL probes establish stale-handle behavior. The system widget tests establish delivery from the Home Screen. The sealed report preserves the original placement harness failures and keyboard-service recovery on the disposable simulator."
+    },
+    "remaining": ["Direct cold current-link navigation", "Physical signed-device and lock-state checks"]
   },
   "source_commit": "1733323237867ae09966b50425c3f0a2cbeab069",
   "product_source_unchanged": true,
