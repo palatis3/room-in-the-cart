@@ -4,6 +4,12 @@ The complete production app remains the objective. The current checkpoint below 
 
 ## Current checkpoint — November 4
 
+The authenticated Supabase dashboard confirmed exactly eight applied migration checksums and no scheduled backup. The [pinned staging candidate](evidence/b11/staging-upgrade-20261104/candidate.json) includes the exact 21 pending migrations and a local upgrade from a populated 008 baseline. It preserved household data, existing device access and tenant boundaries. The pre-upgrade dump restored into a separate database. The hosted backup remains the rollout gate.
+
+The ordinary native run uses a newly created iPhone 17e on iOS 27.0. Its log and result bundle are under `.build/NativeAcceptance-20261104`. The 526 model tests passed and the UI run began. Check its live process and final result before using the UI result as acceptance evidence. The existing preview simulator was preserved.
+
+## Previous checkpoint — November 4, quarantine restore window
+
 Migration 029 and the restore operator verify a complete signed archive window before recording its plan in quarantine. Each segment waits for the previous segment's local erasure receipts. The gate checks the entire staged window, and the tool refuses a quarantine that application logins can access.
 
 The [restore window validation](evidence/b11/privacy-window-20261104/validation.json) restores a real dump from before rollover, erases the two exact targets in order and preserves a third unrelated member. This rehearsal uses synthetic provider outcomes and an exact preimage backup. Hosted backup, provider reconciliation, retention review and activation remain release work.

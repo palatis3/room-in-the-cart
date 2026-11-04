@@ -1,0 +1,232 @@
+{
+  "candidateRuntimeRevision": "1a1a42b390f176b97d47a9b46817cffd6ba8b960",
+  "supabase": {
+    "project": "uwjxrotnocxxomqdetzk",
+    "organization": "ybzztipzreurtjtjhmbo",
+    "observationDate": "2026-11-04",
+    "method": "Authenticated read-only dashboard table and backup pages",
+    "connector": "Permission denied",
+    "appliedRegistry": [
+      {
+        "version": "001_household_requests.sql",
+        "sha256": "e919302e353eae03f5cf63425ad82924c3c6315321b8b4b07e1253185e79ef5b"
+      },
+      {
+        "version": "002_apple_billing.sql",
+        "sha256": "2f819c06c49f47e32c0093c636bacdfd95ad299ed159337b39041d173385ca6e"
+      },
+      {
+        "version": "003_web_session.sql",
+        "sha256": "dd2b9967be0364bf313afba035e8a60fec948a94aa1cf182e9fea14e269888cb"
+      },
+      {
+        "version": "004_household_lock.sql",
+        "sha256": "65fef08a239f4ea122133c335d56918e9d2ef2c4455418f36e18b6442a473250"
+      },
+      {
+        "version": "005_session_and_policy_hardening.sql",
+        "sha256": "3504fec9398d40cad639aa50c931d7cbe6b585e7cf2dc5059f227b3e87727d45"
+      },
+      {
+        "version": "006_household_lifecycle.sql",
+        "sha256": "7f293a0b681627cccb2d5bdc943eb3ea5c6e1436b063857f4a33f981cced296c"
+      },
+      {
+        "version": "007_selected_helper_session.sql",
+        "sha256": "422f3b0cafc482adb3708689c11bbbab1d026aac69555a8dafcbd3a525f2fca5"
+      },
+      {
+        "version": "008_browser_email_auth.sql",
+        "sha256": "5ad8c46d4146e1ce980e4f8809afa00512b9ed6ae6e41fd76637e0d86a713e1e"
+      }
+    ],
+    "baselineMatchesLocal": true,
+    "scheduledBackupsIncluded": false,
+    "registryURL": "https://supabase.com/dashboard/project/uwjxrotnocxxomqdetzk/editor/17616?schema=public",
+    "backupURL": "https://supabase.com/dashboard/project/uwjxrotnocxxomqdetzk/database/backups/scheduled"
+  },
+  "pendingMigrations": [
+    {
+      "version": "009_auth_maintenance.sql",
+      "sha256": "b4e33a77bc0a9576a763062e8f3dddf00c019ecbe5464ad300b1e5fa0e872b6e"
+    },
+    {
+      "version": "010_account_lifecycle.sql",
+      "sha256": "e35ebbc6a2d1fcc3f7d03420542eb4ce588c3708e8bb31fcfc3ec0cc283daa22"
+    },
+    {
+      "version": "011_helper_review_and_shop_selection.sql",
+      "sha256": "23457cac7c614eb8794ec0268641cd1130558ce8d8c576c4ce8bd994253d07b9"
+    },
+    {
+      "version": "012_price_budget_history.sql",
+      "sha256": "dad295084f43a58cd15f58524575e98df66a77bdb0a17bd0f9555b3eac05c5c2"
+    },
+    {
+      "version": "013_shared_meal_occurrences.sql",
+      "sha256": "f574ff8a6b73f0959c622053b9ebd3408d05629d653709a40d631cc58259e1d5"
+    },
+    {
+      "version": "014_shared_meal_moves.sql",
+      "sha256": "2673ea349e6a7cd4df823e4128e4059533049b46071b03a1a1dc90a0d6e90a95"
+    },
+    {
+      "version": "015_family_decisions.sql",
+      "sha256": "c9779d5c19bcbb2e2bc5b3f4ffe0793e459375892d9616d5c0db2ac82686def1"
+    },
+    {
+      "version": "016_shared_meal_changes.sql",
+      "sha256": "362138035995832cc6b1bbffb6e9c0528ee2576945a908a14db03104355da6b0"
+    },
+    {
+      "version": "017_shared_meal_ideas.sql",
+      "sha256": "fe61e6528a38cc9c6c4315587d12ee540ea624422a8e89f8933f05e75addab63"
+    },
+    {
+      "version": "018_shared_store_quotes.sql",
+      "sha256": "ad18c9602e2f3c16d30f1f504ed833995bd2d09231ec405d50c7db592622b849"
+    },
+    {
+      "version": "019_optional_measurement.sql",
+      "sha256": "11cf0700dd146331a6997cca80b011a04fc8028c403745dd9e6b1d8121e959a2"
+    },
+    {
+      "version": "020_operations_health.sql",
+      "sha256": "daa858b576a969c5c8297a87ed88deeb4cda5c24a0b9f588f5a3429e92a0c2e7"
+    },
+    {
+      "version": "021_guardian_enrollment.sql",
+      "sha256": "73e33d596776a1874aeb4715b16abed3f18829d1415ed6b0dd2799e356df4c04"
+    },
+    {
+      "version": "022_privacy_journal.sql",
+      "sha256": "d64716764dd1e9b1131c7aab53faa1e67cf518875011271452ee0120d4ead5cb"
+    },
+    {
+      "version": "023_device_enrollment_fence.sql",
+      "sha256": "16f737590b2d90c6ae2942b2e4983d1455f42077d477382320773b15a6629b5d"
+    },
+    {
+      "version": "024_privacy_journal_source.sql",
+      "sha256": "98733f9b4a8fd8c7f7804d9be2c42a2d8a351f931a4ee820b62540c48b270185"
+    },
+    {
+      "version": "025_privacy_restore_capacity.sql",
+      "sha256": "2b1788b53ee26a88d9d4e5036993e0746544c2e9b4b263449e944ff4938a2bbc"
+    },
+    {
+      "version": "026_privacy_worker_capacity.sql",
+      "sha256": "5816ae80de618870134f77eefcc8cf5cdf2d667a48c8c2f25f2aa57f14a1da6c"
+    },
+    {
+      "version": "027_privacy_runtime_binding.sql",
+      "sha256": "adeb438a0699c73759fc1323282efdbb416f2cef887684466dbe0b2bc02d3d0d"
+    },
+    {
+      "version": "028_privacy_journal_rotation.sql",
+      "sha256": "52811aa4db7295e947c870578f1b1ba50560f43ba2dc54fc25565cb0f2f6baac"
+    },
+    {
+      "version": "029_privacy_restore_window.sql",
+      "sha256": "b43b876b1da041d4cea234f6834255c7c5e7584597da2b61f67d7d0134e85ef2"
+    }
+  ],
+  "candidateInputSHA256": {
+    "web/package-lock.json": "99ba1ac81dc5d05df1dc18e97200ce9a23e550feeec1db021f191b08a1ff9856",
+    "service/package-lock.json": "ca1179584c49cf291a45bf19ca3c30cd3ce08aece0e69bfd73db932da640542d",
+    "vercel.json": "8b703b4ab3d29d1a9bc10b604ac12210a6d57bc725e5f8571cf35a5b70f1262d",
+    "api/index.js": "e3cc2aa3fb34c44d1f734b2f03c44189b947c64fae09476bfb72333aa69b0ce7",
+    "api/maintenance.js": "37743f1829602e8f0227d2dab56f377898d80c05e8a48e107a3aff9e11da9162"
+  },
+  "localUpgrade": {
+    "source": "Private disposable PostgreSQL 17.11 cluster seeded after migration 008 with fictional household, request, device, browser challenge and provider-session rows.",
+    "preserved": "Both households, original request identity and text, legacy device token bindings and browser challenge rows.",
+    "runtime": "The existing device read its own request via the upgraded HTTP app and could not read the other household. Worker reads remained aggregate and deletion stayed disabled.",
+    "rollback": "Restored an actual pre-upgrade dump to a separate database and compared its original rows and eight migration checksums.",
+    "testSHA256": "42776bdb2fc6615b3902f929830b84a4475878742993fd39a1da04160878a184",
+    "logSHA256": "afe7a8112cd6d002bbaea1e4103be87297b2330eda828079f73d6ae9a808b4fc",
+    "passed": 1
+  },
+  "publicHttp": {
+    "observedAtUTC": "2026-11-04T09:16:21.786471+00:00",
+    "origin": "https://room-in-the-cart-staging.vercel.app",
+    "checks": [
+      {
+        "check": "health",
+        "path": "/health",
+        "status": "running",
+        "contentType": "application/json",
+        "httpStatus": 200,
+        "recheckedAtUTC": "2026-11-04T09:17:22.355001+00:00"
+      },
+      {
+        "check": "session",
+        "path": "/v1/session",
+        "contentType": "application/json",
+        "authenticated": false,
+        "httpStatus": 200
+      },
+      {
+        "check": "email-availability",
+        "path": "/v1/auth/session",
+        "contentType": "application/json",
+        "available": false,
+        "authenticated": false,
+        "httpStatus": 200
+      },
+      {
+        "check": "unauthenticated-workspaces",
+        "path": "/v1/me/workspaces",
+        "contentType": "application/json",
+        "httpStatus": 401
+      },
+      {
+        "check": "invalid-token",
+        "path": "/v1/me/workspaces",
+        "contentType": "application/json",
+        "httpStatus": 401
+      },
+      {
+        "check": "foreign-origin",
+        "path": "/v1/session",
+        "contentType": "application/json",
+        "httpStatus": 403
+      },
+      {
+        "check": "guardian-availability",
+        "path": "/v1/guardian/availability",
+        "contentType": "application/json",
+        "httpStatus": 401
+      },
+      {
+        "check": "help",
+        "path": "/help",
+        "contentType": "text/plain",
+        "httpStatus": 404
+      },
+      {
+        "check": "privacy",
+        "path": "/privacy",
+        "contentType": "text/plain",
+        "httpStatus": 404
+      },
+      {
+        "check": "terms",
+        "path": "/terms",
+        "contentType": "text/plain",
+        "httpStatus": 404
+      },
+      {
+        "check": "support",
+        "path": "/support",
+        "contentType": "text/plain",
+        "httpStatus": 404
+      }
+    ]
+  },
+  "remaining": [
+    "Capture and verify an owner-protected backup of the actual staging database.",
+    "Review the pinned candidate and activate it on the approved staging project.",
+    "Verify published information pages and configured provider flows on the hosted candidate."
+  ]
+}
