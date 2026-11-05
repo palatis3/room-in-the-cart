@@ -160,7 +160,8 @@ jobs:
         run: |
           evidence=.build/performance
           python3 scripts/check_ios_test_results.py --selectors "$evidence/selector.txt" --expected-count 1 \
-            --summary "$evidence/test-summary.json" --tests "$evidence/test-details.json"
+            --summary "$evidence/test-summary.json" --tests "$evidence/test-details.json" \
+            --result-bundle "$evidence/Performance.xcresult"
           args=("$PERFORMANCE_CASE" --evidence "$evidence")
           if [[ "$PERFORMANCE_CASE" != launch ]]; then
             container=$(xcrun simctl get_app_container "$SIMULATOR_ID" dev.roominthecart.app data)

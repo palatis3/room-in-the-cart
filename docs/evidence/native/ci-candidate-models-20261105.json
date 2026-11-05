@@ -17,5 +17,6 @@
     "test-plan/models.txt": "f3a3b2d12f392725f2f54dacdbe37be3a1fa78914627e1bf3315d891e297e6b3"
   },
   "scope": "Ordinary native model tests only. UI, fixtures, strict scrolling performance and Swift security extraction remain separate gates.",
-  "runtimeWarningVerification": "Pending detailed-tree verification. Hosted summary omits runtimeWarnings, so its absence is not a zero-warning result."
+  "runtimeWarningVerification": "All565 per-test details were independently exported and audited, agreeing with the clean test tree. The original summary does not expose runtimeWarnings. See ci-runtime-warnings-20261105/full-model-detail-audit.json.",
+  "runtimeWarningOccurrences": 0
 }

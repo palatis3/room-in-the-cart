@@ -1,0 +1,6 @@
+reexported-summary-ui-02 verified 2 warning occurrences; summary count 2
+reexported-summary-ui-04 verified 1 warning occurrences; summary count 1
+orphan-warning rejected: XCTest recorded a runtime warning without a selected test
+unknown-node rejected: Unknown XCTest result node type: Future runtime diagnosis
+unexamined-test rejected: XCTest runtime warning scan did not examine every test case
+mismatched-warning rejected: Runtime warning details disagree with test tree: RoomInTheCartUITests/FreeJourneyUITests/testManualListOrderSurvivesRestartAndOpensLargePrint

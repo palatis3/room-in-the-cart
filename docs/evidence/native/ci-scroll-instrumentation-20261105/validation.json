@@ -1,0 +1,21 @@
+{
+  "sourceCommits": [
+    "1fd2b962d77a7459ffe2a73db6d3d8a0557cda45",
+    "f0e2ac37383e76ac3812407384bf2eda968de3c4"
+  ],
+  "localHost": "Xcode27.1/27A9275, macOS27.2, iPhone17/iOS26.2 build23C52, arm64",
+  "hostedProfile": "Xcode26.3/17C529, macOS15.8.2/24H232, iPhone17/iOS26.2 build23C54, arm64",
+  "result": "Both unchanged hosted product archives passed their exact local scrolling test and retained500rows; UIKit emitted five matched animation signpost intervals, but XCTest reported memory only. Strict checker rejected both missing duration series.",
+  "diagnosticMedianSeconds": {
+    "candidate": 2.582,
+    "control": 2.583
+  },
+  "scope": "Raw UIKit signpost durations explain the local collection gap and do not replace required XCTest measurements or certify frame smoothness. Both local profiles differ from hosted calibration. No app/test/baseline/gate changes, no automatic retries.",
+  "pending": "One controlled hosted same-product repeat, job126987417052. No complete strict scroll pass yet.",
+  "workerComparisonSHA256": "1594c1be172f9e61964d677368e823936d773d92733d6c3d57953292021fbbda",
+  "files": {
+    "candidate-signpost-windows.json": "2a404230062cff1518415ad0405c3963c304ad40a6454e7e2c76c096f246b06e",
+    "comparison.json": "1594c1be172f9e61964d677368e823936d773d92733d6c3d57953292021fbbda",
+    "control-signpost-windows.json": "e8005efc889ecb57c939df71190d11fb831936420741d82f2c30f40edaab1c26"
+  }
+}

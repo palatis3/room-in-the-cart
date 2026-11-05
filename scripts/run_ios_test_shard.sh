@@ -40,5 +40,5 @@ fi
 xcrun xcresulttool get test-results summary --path "$result" --compact > .build/test-summary.json
 xcrun xcresulttool get test-results tests --path "$result" --compact > .build/test-details.json
 python3 scripts/check_ios_test_results.py --selectors "$selection" --expected-count "$EXPECTED_TEST_COUNT" \
-    --summary .build/test-summary.json --tests .build/test-details.json
+    --summary .build/test-summary.json --tests .build/test-details.json --result-bundle "$result"
 exit "$test_status"

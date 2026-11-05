@@ -1,0 +1,275 @@
+{
+  "ui-01": [
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "0d99d87ce43ec3907ce7822ad441c82fe7f104cdc00c4e0cb3634d0ee3508f4b"
+    },
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/RoomInTheCartUITests/testAccountDeletionSettingsExplainsScopeInEnglishAndSpanishBeforeSignIn",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "df3aa4ffeeec3bac59218d6005872f2aca386ac1c57fa15bef744013f6b2d194"
+    }
+  ],
+  "ui-02": [
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "176c5ab74bc4ec4fa1fc0a109a0d8d692b23ff0a7259c62703bf077c0da9197c"
+    },
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges",
+      "markers": [
+        "Multiple Runtime Warnings"
+      ],
+      "warnings": [
+        "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+        "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead."
+      ],
+      "detailSHA256": "a01caea565355adc974bf352f1e2877a8aff6e3d2871f89561c4899d2abcbe5e"
+    }
+  ],
+  "ui-03": [
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/ContextualNavigationUITests/testEnteredStoreQuotesKeepTripCostsSeparateAndAdoptOnlyReviewedSavedProof",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "807a349026e24530db33c740f41f0d5c103062870e5299d9e45deb1e4a5e47a0"
+    },
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testListCaptureOpensWithTypedDraftAndReopensAfterCancel",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "f18f2857a9afcbab2965aa72a7b9f064fb189e27e0d4d2982badaadc6baf47d5"
+    },
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/RoomInTheCartUITests/testComparisonSaveStaysInsideViewportAboveTabBar",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "2969b2dbb79ad627947bc77103d1bcae77e4f008d33dcb7d1dd760485f4e6fb5"
+    },
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextShopRepairShortcutRemainsInsideViewportAndOpens",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "3e50e2ae28b5d821407d8d5f0a5e1ab95c0238aaf9b3c0f12a69afd8d90179b3"
+    },
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "2e9b9f922fac53e1a506c1f96fc6006aac4a1c63e5370d8e31ca38f90a771e09"
+    }
+  ],
+  "ui-04": [
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareKeepsTheFrozenPickupUnplaced",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "09205e5dcf02f96abcc9401bdc988f4046d733566f5675b563300359b92978b0"
+    },
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testManualListOrderSurvivesRestartAndOpensLargePrint",
+      "markers": [
+        "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead."
+      ],
+      "warnings": [
+        "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead."
+      ],
+      "detailSHA256": "fd3e6d16984caacdb679a7090b69af4ab3b26547e1348fec766dd8c82802250f"
+    },
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testTypedBarcodeNeedsACodeAndFreshMatchConfirmation",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "78120693bcdcf8779e9525064439cfed298a1d6b08b5f48900d7165116eeaef3"
+    },
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "054d22b825d37b7ba8bf65150b421b66b502a76130c13afdfacf8d774a99cc02"
+    },
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/RoomInTheCartUITests/testConfirmedComparisonDeletionSurvivesRestart",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "1b04d0034c4286bbb794d30ee722d8a5d88919b1c43ddad0143e6fb703ad1a3b"
+    }
+  ],
+  "ui-05": [
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testDinnerMoveAcrossDisplayedWeeksKeepsLunchAndOccurrence",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "24eef26444af245a01a51d710e64584b20a4b2dc551d03c391ea4e7c4068fb81"
+    },
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testFirstPickupCanStartFromDinnersAndReviewAnEditablePattern",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "546a39b3c86d342236b234df55186e7600f7e31037ad7a3b4363842e40fd61de"
+    },
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "df06fe823de6955fae870d2c7895c61747b9b8eb169ce044e75bdee80ebc01b7"
+    },
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresSelectedDinnersTabWithoutRestoringUnsavedComparison",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "e8c675e96fc5dabd5a41b6b4732ac28901f8d0e2c953deb77cc35a5528430b03"
+    },
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/RoomInTheCartUITests/testShopPhoneShortcutsHaveACompleteTouchTargetAndReturnToShop",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "5be104c463390b75afb2346618b7827b2b0b1fc7294c9a676a3ea1674f0b4b3a"
+    },
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/RoomInTheCartUITests/testUnknownPackAmountRemainsUnresolvedAfterSaveAndRestart",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "117631878c1ecb42439c2c61523873ace7aa13e550db9a959055bb238900c265"
+    }
+  ],
+  "ui-07": [
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testFreeCookCorrectionAndExplicitRecipientAcknowledgment",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "cf266837fd00e98330c86ee3301ddfc4c404e93451a894fef53261f21dc2a9f9"
+    },
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testNextShopCanCancelThenOpenOneFreshShoppingList",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "63a5ecb4de82ed28eb5e9ace1f609d1b6cdc7761f83f8915883e019e6975d516"
+    },
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testSpanishMealWeekListAndGridShowDatedProtectedLunch",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "feddebf9234324d19e9b6216098605b2a8483be059d6be82ae3c3cc9f4a00dac"
+    },
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/RoomInTheCartUITests/testLargestDynamicTypeAndDarkAppearanceComparisonSmoke",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "d1436dbf6824b363ba639094b7dc2e0456d23350ca6ac2cc03ef76844c1575ac"
+    },
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextEditActionGrowsInContentAndReturnsToEntry",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "965cd5b5154806cf5cba6da87666a8f779b708debd839e17f962ac357069a14c"
+    }
+  ],
+  "ui-08": [
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/ContextualNavigationUITests/testUnknownProduceWeightUsesSavedWholePickupCapAndBillingIncrement",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "786a83683a5e41c355abe5fe6e7a919583a9c3101f317ffc7a5ad1e3974c8a11"
+    },
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testStagedListCanReturnToOriginalAndMergeADuplicateAfterRestart",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "929baca2b1584357cec2431f69e2e40f4b341736c262b3b65ea2ee9b7ef5cad2"
+    },
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testUrgentRepairWithoutAnOrderPersistsAcrossRestart",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "8dda4b80a32d09bd7c66533e942f4903c0e43c00b95d41b75d6ec417f030e70b"
+    },
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresRecordsDetailAndIndependentShoppingList",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "75cfe2851107da967dce808f019d2a468412eabf86cd1df37f064d4b71902944"
+    },
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/RoomInTheCartUITests/testOwnerExportReviewAndCancelledDeletionPreserveComparisonAfterRestart",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "824eea651efa0fdca4ebd27fc07e960813cd09b5ad686087455f5d33896bb750"
+    }
+  ],
+  "ui-09": [
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/ContextualNavigationUITests/testFreeContextualRoutesKeepPrivateAndSharedWorkSeparate",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "6d163e38bf4afc36d30a5508d7bfb523fe9579d002ce747a9d6e9147d7729a25"
+    },
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testFreePickupRepairKeepsTheNeedOpenWhenAcceptedFallbackToolsAreUnavailable",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "583f44f87e94db4bb72d666c964e1fbef1ba3755f13bcdf2caf6e2263161886a"
+    },
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testRecipeCaptureOpensOnFirstAttemptAndReopensAfterCancel",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "0560a682b7edbd6fc30a74fe2bc4ce03e86581cb5f8a9b23d4829700f5af94e2"
+    },
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testFullyCoveredSavesUseAtHomePlanWithoutPurchasedItemOrRetailerOrder",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "cd07bdb77b0d32afba53c7f2eef8a58d6c887f40b652d180e656a7909b66568a"
+    },
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/RoomInTheCartUITests/testKnownComparisonSavesAndReopensWithItemOnlyLimit",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "7af0a35eba7e9872235f9341d78403df7fea9e3818ebb97c9df07537c03ab0da"
+    },
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/RoomInTheCartUITests/testShopRepairShortcutRemainsInsideViewportAndOpens",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "2099c9b3c55adbc8830e427b7c73f880db7d36ee8ba7e3c4397f9ffce341315f"
+    }
+  ],
+  "ui-10": [
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/ContextualNavigationUITests/testMissingStorePricesAndAvailabilityRemainConditionalAfterSaving",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "a7f99925281c2e8c4f97518d63731171e4e1fbed9ec4fcb4c64972b29e85eb04"
+    },
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/ContextualNavigationUITests/testUnknownTaxKeepsWeighedPickupUnresolved",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "25cf60b40c87190ee6c8c315a2a1f2b26f3f5818ce93aa5fe904e7c7462e905e"
+    },
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/ContextualReminderUITests/testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "a9c8ff2be963930ff263018dbb849bc42b0968eda5ea48d8977917461a4b11ba"
+    },
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testCorrectFreezerBatchAndReadReservationsAfterRestart",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "92aad823d5472b1097a834df7812ab07661c82544451dae7fcd8c21ca853d3f4"
+    },
+    {
+      "selector": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/RoomInTheCartUITests/testAutomatedAccessibilityAuditOnShopAndKnownResults",
+      "markers": [],
+      "warnings": [],
+      "detailSHA256": "282d0545ad625a304bca6cdefd853d9ac9a76d76eeed2f758655176e3e4d7a0f"
+    }
+  ]
+}

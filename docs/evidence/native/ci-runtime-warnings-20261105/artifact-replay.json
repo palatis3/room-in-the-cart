@@ -1,0 +1,202 @@
+{
+  "original-ui-01": {
+    "executionResult": "Failed",
+    "warningEvidence": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 0,
+      "examinedTestCount": 2,
+      "detailExportCount": 0,
+      "warnings": []
+    }
+  },
+  "original-ui-02": {
+    "executionResult": "Failed",
+    "warningEvidence": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 2,
+      "examinedTestCount": 2,
+      "detailExportCount": 1,
+      "warnings": [
+        {
+          "selector": "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges",
+          "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+          "count": 2,
+          "maximum": 2
+        }
+      ]
+    }
+  },
+  "original-ui-03": {
+    "executionResult": "Passed",
+    "warningEvidence": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 0,
+      "examinedTestCount": 5,
+      "detailExportCount": 0,
+      "warnings": []
+    }
+  },
+  "original-ui-04": {
+    "executionResult": "Failed",
+    "warningEvidence": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 1,
+      "examinedTestCount": 5,
+      "detailExportCount": 1,
+      "warnings": [
+        {
+          "selector": "RoomInTheCartUITests/FreeJourneyUITests/testManualListOrderSurvivesRestartAndOpensLargePrint",
+          "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+          "count": 1,
+          "maximum": 1
+        }
+      ]
+    }
+  },
+  "original-ui-05": {
+    "executionResult": "Passed",
+    "warningEvidence": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 0,
+      "examinedTestCount": 6,
+      "detailExportCount": 0,
+      "warnings": []
+    }
+  },
+  "original-ui-07": {
+    "executionResult": "Passed",
+    "warningEvidence": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 0,
+      "examinedTestCount": 5,
+      "detailExportCount": 0,
+      "warnings": []
+    }
+  },
+  "original-ui-08": {
+    "executionResult": "Passed",
+    "warningEvidence": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 0,
+      "examinedTestCount": 5,
+      "detailExportCount": 0,
+      "warnings": []
+    }
+  },
+  "original-ui-09": {
+    "executionResult": "Passed",
+    "warningEvidence": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 0,
+      "examinedTestCount": 6,
+      "detailExportCount": 0,
+      "warnings": []
+    }
+  },
+  "original-ui-10": {
+    "executionResult": "Passed",
+    "warningEvidence": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 0,
+      "examinedTestCount": 5,
+      "detailExportCount": 0,
+      "warnings": []
+    }
+  },
+  "candidate-ui-02": {
+    "executionResult": "Passed",
+    "warningEvidence": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 0,
+      "examinedTestCount": 1,
+      "detailExportCount": 0,
+      "warnings": []
+    },
+    "guardExit": 0
+  },
+  "candidate-models": {
+    "executionResult": "Passed",
+    "warningEvidence": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 0,
+      "examinedTestCount": 565,
+      "detailExportCount": 0,
+      "warnings": []
+    }
+  },
+  "candidate-performance-launch": {
+    "executionResult": "Passed",
+    "warningEvidence": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 0,
+      "examinedTestCount": 1,
+      "detailExportCount": 0,
+      "warnings": []
+    }
+  },
+  "candidate-performance-rendered": {
+    "executionResult": "Passed",
+    "warningEvidence": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 0,
+      "examinedTestCount": 1,
+      "detailExportCount": 0,
+      "warnings": []
+    }
+  },
+  "candidate-performance-scroll": {
+    "executionResult": "Passed",
+    "warningEvidence": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 0,
+      "examinedTestCount": 1,
+      "detailExportCount": 0,
+      "warnings": []
+    }
+  },
+  "candidate-ui-03": {
+    "executionResult": "Passed",
+    "warningEvidence": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 0,
+      "examinedTestCount": 5,
+      "detailExportCount": 0,
+      "warnings": []
+    },
+    "guardExit": 0
+  },
+  "candidate-ui-04": {
+    "executionResult": "Passed",
+    "warningEvidence": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 1,
+      "examinedTestCount": 6,
+      "detailExportCount": 1,
+      "warnings": [
+        {
+          "selector": "RoomInTheCartUITests/FreeJourneyUITests/testManualListOrderSurvivesRestartAndOpensLargePrint",
+          "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+          "count": 1,
+          "maximum": 1
+        }
+      ]
+    },
+    "guardExit": 0
+  }
+}
