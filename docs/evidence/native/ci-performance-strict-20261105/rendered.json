@@ -1,0 +1,143 @@
+{
+  "case": "rendered",
+  "status": "baseline-passed",
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "8C9F4118-331E-4250-B1FC-194972BA6726",
+    "deviceName": "iPhone 17",
+    "modelName": "iPhone 17",
+    "osBuildNumber": "23C54",
+    "osVersion": "26.2",
+    "platform": "iOS Simulator"
+  },
+  "environment": {
+    "osVersion": "26.2",
+    "osBuildNumber": "23C54",
+    "modelName": "iPhone 17",
+    "architecture": "arm64",
+    "xcode": "Xcode 26.3\nBuild version 17C529",
+    "buildConfiguration": "Release",
+    "testConfiguration": "Test Scheme Action"
+  },
+  "renderedMeasurements": {
+    "checkedRowIDs": [
+      "3DAEABA4-E6C9-457E-95C8-B16497082A95",
+      "87B66702-2AF3-4AD2-A872-6492B6231FEF",
+      "B0C873C6-572A-4AEC-BE6B-6A72206964BB",
+      "D21EED10-4250-4E78-9EEF-8C301B8F8053",
+      "CE9E64C7-0CAF-4C37-B37F-123855EB0BE6",
+      "B2E75B50-F6FE-46F6-A91F-8B68D9DAEA1B",
+      "E70B97B1-00B3-4EA8-AA3D-59D2DC851DEF",
+      "6CF1ADDF-B1C2-4059-9DCC-884331F0A051",
+      "F7B0F720-A216-479E-B149-99C3D0C883B3",
+      "4725F3B8-54A9-4DC8-AA6D-EB90B1FBAE50",
+      "328CC81D-4BB7-40C6-B3D8-8E769A140A20",
+      "F4C03DCF-E18F-45A6-BF11-9AC994843458",
+      "77487622-856C-44BF-94E1-E2D13DB12F77",
+      "A04C8963-9B07-4D11-BDC4-7C494212EFF5",
+      "93C78293-E153-4D7A-8522-E34316632ACC",
+      "2ADA4891-61B6-4A2E-A9B4-3F53BB976481",
+      "9FC9670B-A78C-4AC0-B9F5-ED9466D20069",
+      "7810362C-06CD-41FC-B9DA-663DA66F78CF",
+      "925AEB7E-D088-4FF5-B132-B0AFDDB6133A",
+      "EAB0E2E3-9EB5-4C52-B2E3-D12462A4DC13"
+    ],
+    "checkP95Milliseconds": 2211.9987500000207,
+    "checkToResultRemovalMilliseconds": [
+      1957.0778749999818,
+      1855.257791666645,
+      1994.3801666665877,
+      1991.1326666666582,
+      1953.8979166667332,
+      1852.7824166666278,
+      1973.1526250000115,
+      1746.168083333373,
+      2247.2326666667186,
+      1985.7838750000383,
+      1847.4566249999498,
+      2152.9813750000812,
+      2211.9987500000207,
+      1865.5756666667003,
+      1882.0614583333963,
+      2001.1095416666649,
+      1918.8416250000273,
+      2047.5176666667494,
+      1902.7355833333104,
+      1906.9654583333886
+    ],
+    "fixtureLineCount": 500,
+    "limits": "Simulator XCTest round trips include input synthesis, keyboard dismissal, idle waits and accessibility polling.",
+    "sampleCount": 20,
+    "searchP95Milliseconds": 2935.127375000093,
+    "searchToAccessibleResultMilliseconds": [
+      2866.454958333293,
+      2935.127375000093,
+      2458.8856249999935,
+      2464.05900000002,
+      2277.689124999938,
+      2809.860833333346,
+      2389.979750000066,
+      2375.3323750000845,
+      3112.406333333297,
+      2478.620458333239,
+      2419.477458333404,
+      2430.9377499999982,
+      2703.325583333367,
+      2132.760249999933,
+      2576.216666666596,
+      2356.508000000076,
+      2425.774041666614,
+      2582.4536666667655,
+      2134.3074166666156,
+      2188.239500000009
+    ]
+  },
+  "persistedPickup": {
+    "sqliteQuickCheck": "ok",
+    "revision": 22,
+    "payloadSHA256": "f29aac17e8389d8f9b07473905b1fb276184baa919a924d71e36d8d3f6715be7",
+    "lineCount": 500,
+    "contributionCount": 500,
+    "importCount": 1,
+    "source": "paste",
+    "checkedCount": 20,
+    "checkedRowIDs": [
+      "2ada4891-61b6-4a2e-a9b4-3f53bb976481",
+      "328cc81d-4bb7-40c6-b3d8-8e769a140a20",
+      "3daeaba4-e6c9-457e-95c8-b16497082a95",
+      "4725f3b8-54a9-4dc8-aa6d-eb90b1fbae50",
+      "6cf1addf-b1c2-4059-9dcc-884331f0a051",
+      "77487622-856c-44bf-94e1-e2d13db12f77",
+      "7810362c-06cd-41fc-b9da-663da66f78cf",
+      "87b66702-2af3-4ad2-a872-6492b6231fef",
+      "925aeb7e-d088-4ff5-b132-b0afddb6133a",
+      "93c78293-e153-4d7a-8522-e34316632acc",
+      "9fc9670b-a78c-4ac0-b9f5-ed9466d20069",
+      "a04c8963-9b07-4d11-bdc4-7c494212eff5",
+      "b0c873c6-572a-4aec-be6b-6a72206964bb",
+      "b2e75b50-f6fe-46f6-a91f-8b68d9daea1b",
+      "ce9e64c7-0caf-4c37-b37f-123855eb0be6",
+      "d21eed10-4250-4e78-9eef-8c301b8f8053",
+      "e70b97b1-00b3-4ea8-aa3d-59d2dc851def",
+      "eab0e2e3-9eb5-4c52-b2e3-d12462a4dc13",
+      "f4c03dcf-e18f-45a6-bf11-9ac994843458",
+      "f7b0f720-a216-479e-b149-99c3d0c883b3"
+    ]
+  },
+  "baselineValues": {
+    "searchP95Milliseconds": 2935.127375000093,
+    "checkP95Milliseconds": 2211.9987500000207
+  },
+  "comparisons": {
+    "searchP95Milliseconds": {
+      "measured": 2935.127375000093,
+      "maximum": 4750,
+      "passed": true
+    },
+    "checkP95Milliseconds": {
+      "measured": 2211.9987500000207,
+      "maximum": 3750,
+      "passed": true
+    }
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "sourceCommit": "f0e2ac37383e76ac3812407384bf2eda968de3c4",
+  "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41944207879",
+  "cases": {
+    "launch": {
+      "job": 126976693832,
+      "artifact": 13379660581,
+      "artifactSHA256": "721fa504d7bd0d664bd35ca963bf645d4474966babb8f01d5c84026ae6f187e5",
+      "reportSHA256": "191b05fd2847bb1f77541f88929d8b013c48fe26cd64297b6a4344d8b50fc7d5",
+      "passed": true,
+      "measuredMedianSeconds": 3.8923289590000003,
+      "maximumMedianSeconds": 5.5
+    },
+    "rendered": {
+      "job": 126976693877,
+      "artifact": 13379136556,
+      "artifactSHA256": "1a6564a0b0fa24aed19fc246bba01a76b11d9f513b00b11f489d6fed1778dbd4",
+      "reportSHA256": "58e71aed829bcd23a0a409cce37cec9772ecf68090dc712352b1a1810349690d",
+      "passed": true,
+      "comparisons": {
+        "searchP95Milliseconds": {
+          "measured": 2935.127375000093,
+          "maximum": 4750,
+          "passed": true
+        },
+        "checkP95Milliseconds": {
+          "measured": 2211.9987500000207,
+          "maximum": 3750,
+          "passed": true
+        }
+      },
+      "persisted": "500 exact rows, one paste batch,20 exact checked identities after relaunch; SQLite quick_check ok."
+    },
+    "scroll-attempt-1": {
+      "job": 126976693791,
+      "artifact": 13380020233,
+      "artifactSHA256": "7b3fa0c77bd1a91809b99a9e348b90b7c46f89ff7c824ee6967540e78035a4bc",
+      "metricsSHA256": "af0edb313e3dc7890b36cb98bbfe7f2eafea5baf3272659a03277e1e6eae2636",
+      "testSummarySHA256": "3d846d445addd7e929560dc662f0293bb380e44a1a21ef09229ab7efdee6b999",
+      "testPassed": true,
+      "testSeconds": 321.533,
+      "evidenceCheckPassed": false,
+      "reason": "Required scroll-dragging/deceleration duration metric is absent from exported metrics, CSV and the XCTest text measurement lines.",
+      "available": "Five samples each for physical memory, absolute physical memory and peak physical memory. All five measured scroll gestures completed and their movement assertions passed.",
+      "missing": [
+        "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.duration"
+      ],
+      "hitchSamplesAvailable": false,
+      "scope": "No scroll duration or complete strict-performance pass can be claimed. Instrumentation cause remains unproven."
+    }
+  },
+  "pending": [
+    "Diagnose missing scroll metric using unchanged binaries; preserve original failed result."
+  ],
+  "scope": "Strict hosted launch and rendered500-row cases. The launch gate checks its five-sample median; rendered times include XCTest input and idle/accessibility round trips. No real-device latency or animation smoothness is claimed.",
+  "diagnosticRepeat": {
+    "requestedJob": 126976693791,
+    "newScrollJob": 126987417052,
+    "state": "queued",
+    "reason": "One unchanged-product repeat after preserving the missing-metric first attempt; not a retry-until-green policy."
+  }
+}

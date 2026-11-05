@@ -1,0 +1,21 @@
+{
+  "sourceCommit": "f0e2ac37383e76ac3812407384bf2eda968de3c4",
+  "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41944207882",
+  "job": 126977497555,
+  "artifact": 13380030352,
+  "result": "Passed",
+  "selected": 565,
+  "passed": 565,
+  "failed": 0,
+  "skipped": 0,
+  "expectedFailures": 0,
+  "verification": "Root replayed check_ios_test_results.py against the retained exact selectors, test details and summary; all565 selected identities executed once.",
+  "sha256": {
+    "results.zip": "a55164dbee978dff1f8debc009f83f06f6b592a6e95966c48ca9d67f68b1f502",
+    "test-summary.json": "2db1844ddbcf5569c27223cd6e966f144f7bf75563818f5fc1770a14ee665b21",
+    "test-details.json": "d317b5f7d2268b01826da78aad07547587a7bc859373ce2688a7bcda484db5b7",
+    "test-plan/models.txt": "f3a3b2d12f392725f2f54dacdbe37be3a1fa78914627e1bf3315d891e297e6b3"
+  },
+  "scope": "Ordinary native model tests only. UI, fixtures, strict scrolling performance and Swift security extraction remain separate gates.",
+  "runtimeWarningVerification": "Pending detailed-tree verification. Hosted summary omits runtimeWarnings, so its absence is not a zero-warning result."
+}
