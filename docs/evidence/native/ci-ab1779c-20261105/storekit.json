@@ -1,0 +1,45 @@
+{
+  "candidate": "ab1779c515f925b51ffdf8dabbaf65ae2bbee3d0",
+  "runID": 42071959284,
+  "locales": {
+    "es": {
+      "artifactID": 13436354745,
+      "sha256": "47fa2e7f6b1792a6972a6cb0f839d1eada3457912ec9cf3747d681c9fbd27798",
+      "digestVerified": true,
+      "passed": 14,
+      "failed": 1,
+      "skipped": 0,
+      "strictReplayExit": 1,
+      "runtimeWarnings": 0,
+      "configurations": [
+        "US Spanish app \u00b7 Spanish (Mexico) offer \u00b7 USA storefront"
+      ],
+      "failures": [
+        {
+          "failureText": "failed - Approval completes the purchase flow and attempts durable delivery",
+          "targetName": "RoomInTheCartTests",
+          "testIdentifier": 1,
+          "testIdentifierString": "StoreKitScenarioTests/testAskToBuyApprovalRemainsUndelivered()",
+          "testIdentifierURL": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/StoreKitScenarioTests/testAskToBuyApprovalRemainsUndelivered",
+          "testName": "testAskToBuyApprovalRemainsUndelivered()"
+        }
+      ],
+      "hostedJSONExportsPresent": false
+    },
+    "en": {
+      "artifactID": 13438705227,
+      "sha256": "4635b92712857d1e0c21ef5f9a4ae30b90178fc16606ec6d2296d86f812efcc2",
+      "digestVerified": true,
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "configurations": [
+        "US English \u2014 local StoreKit"
+      ],
+      "failures": [],
+      "hostedJSONExportsPresent": true
+    }
+  }
+}

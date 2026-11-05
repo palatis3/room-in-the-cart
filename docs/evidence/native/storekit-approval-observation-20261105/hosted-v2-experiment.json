@@ -1,0 +1,34 @@
+{
+  "candidate": "9792d4e41b6aba39ceb1f3cbdd85f4645d2b33d0",
+  "runID": 42083971808,
+  "locales": {
+    "es": {
+      "artifactID": 13444428086,
+      "sha256": "788cfe181e4f3928402ec9221c148b4f72bd5f598ed419a7d1623e749ee20107",
+      "digestVerified": true,
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "configurations": [
+        "US Spanish app \u00b7 Spanish (Mexico) offer \u00b7 USA storefront"
+      ],
+      "failures": [],
+      "hostedJSONExportsPresent": true
+    }
+  },
+  "baseRuntimeSource": "ab1779c515f925b51ffdf8dabbaf65ae2bbee3d0",
+  "countsAsRequiredCandidateAcceptance": false,
+  "observations": {
+    "attachmentSHA256": "fafca5bb4a24279c96f016cbaad4ea3220d15540d291f54a16563ed2edf6335d",
+    "samples": 6,
+    "sampleLimit": 128,
+    "collectionLimit": 8,
+    "droppedSamples": 0,
+    "firstFinished": "0.125200084 seconds stage=current-read finished=true busy=false report=pending deliveryTotal=0 deliverySample=[] deliveryTruncated=false callbackTotal=0 callbackSample=[] callbacksTruncated=false currentRead=true currentTotal=0 sampleCount=0 sampleTruncated=false sampleVerified=0 sampleProductMatches=0 sampleTokenMatches=0 sampleNilTokens=0 sampleUnverified=0 approvedCount=0 matchingOutcome=non-unique",
+    "firstSatisfiedPredicate": "0.464866875 seconds stage=current-read finished=true busy=false report=pending deliveryTotal=1 deliverySample=[failed.not-configured] deliveryTruncated=false callbackTotal=0 callbackSample=[] callbacksTruncated=false currentRead=true currentTotal=1 sampleCount=1 sampleTruncated=false sampleVerified=1 sampleProductMatches=1 sampleTokenMatches=1 sampleNilTokens=0 sampleUnverified=0 approvedCount=1 matchingOutcome=failed.not-configured",
+    "interpretation": "Instrumented hosted nonreproduction. The purchase finishes pending before the current matching entitlement and failed-not-configured delivery appear; exact original predicate becomes true about0.465seconds after observation start. No original failed-run branch or locale cause established."
+  },
+  "rawEvidence": ".build/CIResearch20261105/experiments/storekit-9792d4e"
+}

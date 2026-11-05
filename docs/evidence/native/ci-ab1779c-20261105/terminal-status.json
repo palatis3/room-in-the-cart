@@ -1,0 +1,152 @@
+{
+  "candidate": "ab1779c515f925b51ffdf8dabbaf65ae2bbee3d0",
+  "status": "terminal; acceptance failed",
+  "workflowRuns": [
+    {
+      "attempt": 1,
+      "conclusion": "failure",
+      "createdAt": "2026-11-05T17:10:19Z",
+      "databaseId": 42071958899,
+      "headSha": "ab1779c515f925b51ffdf8dabbaf65ae2bbee3d0",
+      "name": "Build and test",
+      "status": "completed",
+      "updatedAt": "2026-11-05T19:28:42Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42071958899"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "success",
+      "createdAt": "2026-11-05T17:10:20Z",
+      "databaseId": 42071959131,
+      "headSha": "ab1779c515f925b51ffdf8dabbaf65ae2bbee3d0",
+      "name": "iOS fixture checks",
+      "status": "completed",
+      "updatedAt": "2026-11-05T19:40:48Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42071959131"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "failure",
+      "createdAt": "2026-11-05T17:10:20Z",
+      "databaseId": 42071959284,
+      "headSha": "ab1779c515f925b51ffdf8dabbaf65ae2bbee3d0",
+      "name": "iOS deep checks",
+      "status": "completed",
+      "updatedAt": "2026-11-05T18:03:14Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42071959284"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "success",
+      "createdAt": "2026-11-05T17:10:20Z",
+      "databaseId": 42071959282,
+      "headSha": "ab1779c515f925b51ffdf8dabbaf65ae2bbee3d0",
+      "name": "Security checks",
+      "status": "completed",
+      "updatedAt": "2026-11-05T17:11:51Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42071959282"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "success",
+      "createdAt": "2026-11-05T17:10:19Z",
+      "databaseId": 42071959013,
+      "headSha": "ab1779c515f925b51ffdf8dabbaf65ae2bbee3d0",
+      "name": "Native Swift HTTPS and PostgreSQL",
+      "status": "completed",
+      "updatedAt": "2026-11-05T17:12:45Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42071959013"
+    },
+    {
+      "attempt": 2,
+      "conclusion": "success",
+      "createdAt": "2026-11-05T17:10:19Z",
+      "databaseId": 42071959058,
+      "headSha": "ab1779c515f925b51ffdf8dabbaf65ae2bbee3d0",
+      "name": "iOS Release performance",
+      "status": "completed",
+      "updatedAt": "2026-11-05T19:26:20Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42071959058"
+    }
+  ],
+  "modelTests": {
+    "passed": 599,
+    "failed": 0,
+    "runtimeWarnings": 0
+  },
+  "ordinaryUI": {
+    "selected": 51,
+    "passed": 49,
+    "failed": 2,
+    "skipped": 0,
+    "strictSuccessGroups": 8,
+    "strictSuccessGroupCases": 40,
+    "allowedRuntimeWarnings": 5
+  },
+  "fixtures": {
+    "independentlyReplayedNonRecordsPassed": 43,
+    "failed": 0,
+    "skipped": 0,
+    "strictSuccessGroups": 13,
+    "allowedRuntimeWarnings": 6,
+    "recordsSeparatelyReportedPassed": 1,
+    "recordsRuntimeWarnings": 0,
+    "recordsRawReplay": false
+  },
+  "totalAllowedWarnings": 11,
+  "storekit": {
+    "englishPassed": 15,
+    "spanishPassed": 14,
+    "spanishFailed": 1,
+    "runtimeWarnings": 0
+  },
+  "performance": {
+    "launchAttempt1": "pass",
+    "scrollAttempt1": "pass",
+    "renderedAttempt1": "runner never acquired; zero tests",
+    "renderedAttempt2": "pass",
+    "allMeasurementsIndependentlyRecomputed": true,
+    "runtimeWarnings": 0,
+    "simulatorHitchSamplesAvailable": false
+  },
+  "packagesAndSanitizers": "Ordinary, Address and Thread lanes each verify389passes+3expected opt-in wire skips. Native wire separately verifies4Node integration+6Swift scenarios.",
+  "failures": [
+    {
+      "scope": "core Swift CodeQL",
+      "reason": "traced build exceeded30minutes; analysis skipped"
+    },
+    {
+      "scope": "UI05 comparison",
+      "reason": "keyboard-dismissal quiescence timeout before viewport assertion"
+    },
+    {
+      "scope": "UI10 Reduce Motion share",
+      "reason": "Settings launch timeout before preference setup/sharing flow"
+    },
+    {
+      "scope": "Spanish StoreKit approval",
+      "reason": "original10second compound predicate timed out"
+    }
+  ],
+  "security": "Actions/JavaScript workflow success does not clear the original open high alert on the malformed test fixture. Separately published17758ae scan validates that followup with0findings; original candidate remains unchanged.",
+  "allExpectedResultArtifactsAccountedFor": true,
+  "proofSHA256": {
+    "ordinary-ui.json": "d669dab15618a2ed83145863b6c8767e3aa9f379fcbb7f5e1a1168dc649d3632",
+    "models.json": "550cf448f07087b5592f291a448e2475ca768035b245d81c642a5fae8c40e115",
+    "storekit.json": "a21a85dba1dce56010778b1c3f8a0cc1eb3484d0417b8cdf7ef3dad283c5db57",
+    "packages-sanitizers.json": "54309865f21109523a263ca1241e22dc939a4a5e3374e46b8834867e0e0b37bc",
+    "performance.json": "d7e9e59eec66e7c2f7a14a349e14f1c41ce96ca5a32070e9eea61fa884bed084",
+    "swift-codeql-timeout.json": "9e91f404111ed62b96b3b0cfd63c6f3c748c83013f3f19350304b6d996bb4fe9",
+    "reduce-motion-settings-launch.json": "095c5c833cb02cbf67486e896a1c19aa0c9b8743b32ed7a0064497bf878d1e39",
+    "compiled-plan.json": "cdb7c7120400f2686b30348093d11e187aece12ad5a84e5a0805faf2bf27d797",
+    "records.json": "9a5c6743f6efc9bad8372a0facc1567f3738a1b7261aacb5e661b403f7f7ce0e",
+    "fixture-progress.json": "646e8b0ace07d920a28ed2a5547858c530f635002e123253f4bf79757a4c2a0d",
+    "viewport-timeout.json": "217e70296a02f2d1ceef6f64a14a0ce666de20d871acb00118fd55b4a7cd045e",
+    "native-wire.json": "e62fe84cfbc1c38e0efeefc15b7bed0fa88e1a48d08c4824459bad8abfa444f1"
+  },
+  "scopeLimits": [
+    "Separate diagnostic branches and local nonreproductions do not replace failed candidate results.",
+    "Records artifact contains only validated redacted report/plan; no raw Records payload downloaded or replayed.",
+    "App remains draft and not launch-certified; no merge, deployment or distribution."
+  ]
+}

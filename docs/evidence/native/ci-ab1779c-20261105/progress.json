@@ -1,0 +1,198 @@
+{
+  "candidate": "ab1779c515f925b51ffdf8dabbaf65ae2bbee3d0",
+  "workflowRuns": [
+    {
+      "attempt": 1,
+      "conclusion": "failure",
+      "createdAt": "2026-11-05T17:10:19Z",
+      "databaseId": 42071958899,
+      "headSha": "ab1779c515f925b51ffdf8dabbaf65ae2bbee3d0",
+      "name": "Build and test",
+      "status": "completed",
+      "updatedAt": "2026-11-05T19:28:42Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42071958899"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "success",
+      "createdAt": "2026-11-05T17:10:20Z",
+      "databaseId": 42071959131,
+      "headSha": "ab1779c515f925b51ffdf8dabbaf65ae2bbee3d0",
+      "name": "iOS fixture checks",
+      "status": "completed",
+      "updatedAt": "2026-11-05T19:40:48Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42071959131"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "failure",
+      "createdAt": "2026-11-05T17:10:20Z",
+      "databaseId": 42071959284,
+      "headSha": "ab1779c515f925b51ffdf8dabbaf65ae2bbee3d0",
+      "name": "iOS deep checks",
+      "status": "completed",
+      "updatedAt": "2026-11-05T18:03:14Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42071959284"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "success",
+      "createdAt": "2026-11-05T17:10:20Z",
+      "databaseId": 42071959282,
+      "headSha": "ab1779c515f925b51ffdf8dabbaf65ae2bbee3d0",
+      "name": "Security checks",
+      "status": "completed",
+      "updatedAt": "2026-11-05T17:11:51Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42071959282"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "success",
+      "createdAt": "2026-11-05T17:10:19Z",
+      "databaseId": 42071959013,
+      "headSha": "ab1779c515f925b51ffdf8dabbaf65ae2bbee3d0",
+      "name": "Native Swift HTTPS and PostgreSQL",
+      "status": "completed",
+      "updatedAt": "2026-11-05T17:12:45Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42071959013"
+    },
+    {
+      "attempt": 2,
+      "conclusion": "success",
+      "createdAt": "2026-11-05T17:10:19Z",
+      "databaseId": 42071959058,
+      "headSha": "ab1779c515f925b51ffdf8dabbaf65ae2bbee3d0",
+      "name": "iOS Release performance",
+      "status": "completed",
+      "updatedAt": "2026-11-05T19:26:20Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42071959058"
+    }
+  ],
+  "status": "All original candidate workflows terminal and artifacts retained; acceptance failed. See terminal-status.json.",
+  "expectedInventory": {
+    "models": 599,
+    "ordinaryUI": 51,
+    "fixtures": 44
+  },
+  "previousCandidate": "4a0f7f3a25ae01b6efba5e984ceb464c4ca1d157",
+  "securityFinding": {
+    "alert": 1,
+    "rule": "js/incomplete-sanitization",
+    "securitySeverity": "high",
+    "path": "service/tests/privacy-journal.test.mjs",
+    "classification": "Intentional malformed JSON negative-test construction, not a production sanitizer.",
+    "localFollowup": "17758ae",
+    "localTestsPassed": 90,
+    "requiresFreshScan": true,
+    "dismissed": false,
+    "followupHostedVerification": {
+      "candidate": "17758aee1cad97aa09ae3665468c667a21b1cf46",
+      "runID": 42093789432,
+      "actionsFindings": 0,
+      "javascriptFindings": 0,
+      "countsAsRequiredCandidateAcceptance": false
+    }
+  },
+  "compiledInventoryVerified": {
+    "models": 599,
+    "ordinaryUI": 51,
+    "unique": 650,
+    "planByteIdentical": true
+  },
+  "storekit": {
+    "enPassed": 15,
+    "esPassed": 14,
+    "esFailed": 1,
+    "runtimeWarnings": 0,
+    "failedCase": "testAskToBuyApprovalRemainsUndelivered",
+    "diagnostic": "V1 and bounded V2 local instrumented controls each passed both15-case configurations. V2source committed locally4cdcb15. Isolated hosted Spanish diagnostic42083971808 independently verifies15pass, strict0,0warnings,6bounded observations with original predicate satisfied. Original failure remains failed; no causal fix established."
+  },
+  "models": {
+    "passed": 599,
+    "failed": 0,
+    "strictReplayExit": 0,
+    "runtimeWarnings": 0
+  },
+  "swiftCodeQL": {
+    "status": "failed",
+    "jobID": 127401986014,
+    "reason": "30-minute traced-build timeout; analysis skipped",
+    "proof": "swift-codeql-timeout.json",
+    "fixVerified": false,
+    "experiment": "Whole-module diagnostic42083442419 also exceeded the original30-minute compile limit; analysis skipped. Proposed main-workflow change withdrawn; final evidence review underway."
+  },
+  "packagesAndSanitizers": {
+    "ordinary": {
+      "passed": 389,
+      "expectedWireSkips": 3
+    },
+    "address": {
+      "passed": 389,
+      "expectedWireSkips": 3
+    },
+    "thread": {
+      "passed": 389,
+      "expectedWireSkips": 3
+    },
+    "independentlyVerified": true
+  },
+  "performance": {
+    "launch": "independently verified within pinned limits",
+    "scroll": "independently verified within pinned duration/memory limits; no hitch samples available",
+    "rendered": "Attempt2 independently verified within pinned search/check limits with0warnings. Attempt1 never acquired runner/executed no steps; retained separately."
+  },
+  "isolatedExperiments": [
+    {
+      "purpose": "whole-module Swift security extraction",
+      "branch": "codex/swift-codeql-wholemodule",
+      "commit": "1fbfacaae919d780af7bceff3101a6fdad815f20",
+      "runID": 42083442419,
+      "baseRuntimeSource": "ab1779c",
+      "countsAsRequiredCandidateAcceptance": false,
+      "compileConclusion": "failure",
+      "analysisConclusion": "skipped",
+      "proposedMainChangeInstalled": false
+    },
+    {
+      "purpose": "bounded Spanish Ask to Buy observations",
+      "branch": "codex/storekit-approval-diagnostics",
+      "commit": "9792d4e41b6aba39ceb1f3cbdd85f4645d2b33d0",
+      "runID": 42083971808,
+      "baseRuntimeSource": "ab1779c",
+      "countsAsRequiredCandidateAcceptance": false,
+      "status": "completed",
+      "conclusion": "success",
+      "proof": "../storekit-approval-observation-20261105/hosted-v2-experiment.json"
+    },
+    {
+      "purpose": "explicit malformed-fixture security followup",
+      "branch": "codex/privacy-fixture-security",
+      "commit": "17758aee1cad97aa09ae3665468c667a21b1cf46",
+      "runID": 42093789432,
+      "status": "completed",
+      "conclusion": "success",
+      "countsAsRequiredCandidateAcceptance": false
+    }
+  ],
+  "ordinaryUI": {
+    "selected": 51,
+    "passed": 49,
+    "failed": 2,
+    "skipped": 0,
+    "allowedRuntimeWarnings": 5,
+    "remaining": 0,
+    "strictSuccessGroups": 8,
+    "strictSuccessGroupCases": 40,
+    "failureProofs": [
+      "viewport-timeout.json",
+      "reduce-motion-settings-launch.json"
+    ]
+  },
+  "fixtures": {
+    "independentlyVerifiedPassed": 43,
+    "failed": 0,
+    "allowedRuntimeWarnings": 6,
+    "recordsSeparatelyReportedPassed": 1,
+    "remaining": 0
+  }
+}
