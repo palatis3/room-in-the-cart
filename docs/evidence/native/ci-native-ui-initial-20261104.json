@@ -36,7 +36,7 @@
         "test-details.json": "fcf7169249c9390c04696775a030d6876b18547a8f25d894b88ae235921296f9",
         "Tests.log": "8ff699123e1c1b59b71500bfaf607aa10e7e505c5c5ca5602a39e405b9a1a067"
       },
-      "diagnosis": "Ten waits for the app animation-completion signal consumed approximately 600.44 seconds after a multiline keyboard Done action. The app main thread was idle in the sampled trace. This is not proof of a busy app loop or of a particular framework bug. An untouched hosted-artifact reproduction is prepared on local iOS26.2."
+      "diagnosis": "Ten waits for the app animation-completion signal consumed approximately600.44s after multiline Done. Sampled main thread was idle. Exact hosted app/test binaries passed the complete local journey1/1 in460.376s with no idle timeouts; local driver27.1/runtime23C52 differ from hosted26.3/23C54. No source workaround. Next hosted run must verify the unchanged selector. See dinner-quiescence-diagnostic-20261105/comparison.json."
     },
     "ui-03": {
       "job": 126937759010,
@@ -59,8 +59,19 @@
         "test-details.json": "01b794957af890275387e3ba7e25aed4250a8c132105bb7b0fdf8f120e52f52b",
         "Tests.log": "9f93fea86af0119ac4f6818a84008d9539424b9d064db85d7b986ebd04f3dff1"
       },
-      "diagnosis": "Manual-order/large-print journey failed waiting for app.buttons[Cancel] after requesting the system print dialog. Ordering survived restart and large-print content assertions passed. Four other cases passed, including share cancellation. Print presentation and test query are under investigation; cause not yet established."
+      "diagnosis": "System print preview rendered successfully in Milk/Apples order. Hosted AX hierarchy exposes Close in the native Options navigation bar, but the test waited for Cancel. An isolated Close-or-Cancel query scoped to that native bar is prepared; local execution is pending. Other four cases passed."
+    },
+    "ui-05": {
+      "job": 126937759217,
+      "passedTests": 6,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "evidenceSHA256": {
+        "test-summary.json": "35fb60861b2d5c1335bce24093bed4e054cd8ec5827e6fce1764ada8e595ea06",
+        "test-details.json": "85845ba5f5e934966836a4b04b4413500f9e5e018c2b2a3cd507ba7546ced589",
+        "Tests.log": "afdbd1cd71f8007cf4d618dd1746c0ace8daf520f75d13a6b097c9b8863550a5"
+      }
     }
   },
-  "scope": "First four completed ordinary UI groups. Remaining groups still active; open failures are not relabeled by isolated local passes."
+  "scope": "First five completed ordinary UI groups; groups06\u201310 remain active. Original hosted failures are preserved separately from focused local verification."
 }
