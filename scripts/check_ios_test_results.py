@@ -1,12 +1,66 @@
 #!/usr/bin/env python3
 """Require complete XCTest execution and verify recorded runtime warnings."""
 import argparse
-from collections import Counter
+from collections import Counter, defaultdict
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 from urllib.parse import unquote, urlparse
+
+
+XCTEST_CASE_ID = r"(?P<target>[^.\s]+)\.(?P<suite>[^\s\]]+) (?P<method>[^\s\]]+)"
+XCTEST_CASE_LINE = re.compile(rf"Test Case '-\[{XCTEST_CASE_ID}\]' (?P<event>.+)")
+XCTEST_CASE_ERROR = re.compile(rf".+:\d+(?::\d+)?: error: -\[{XCTEST_CASE_ID}\] : ")
+XCTEST_CASE_PASSED = re.compile(r"passed \([0-9]+(?:\.[0-9]+)? seconds\)\.")
+XCTEST_RESULT_BANNER = re.compile(r"\*\* TEST (?:EXECUTE )?(SUCCEEDED|FAILED) \*\*")
+XCTEST_RESTART = "Restarting after unexpected exit, crash, or test timeout;"
+
+
+def execution_log_failures(lines, expected):
+    """Verify the serial XCTest lifecycle, which the result bundle may collapse."""
+    events = defaultdict(list)
+    failures = []
+    banners = []
+    for number, raw_line in enumerate(lines, 1):
+        line = raw_line.rstrip("\r\n")
+        if line.startswith(XCTEST_RESTART):
+            failures.append(f"XCTest restarted its runner at log line {number}.")
+        banner = XCTEST_RESULT_BANNER.fullmatch(line)
+        if banner:
+            banners.append(banner[1])
+        error = XCTEST_CASE_ERROR.match(line)
+        if error:
+            selector = "/".join(error.group("target", "suite", "method"))
+            failures.append(f"XCTest logged a failure for {selector} at log line {number}.")
+        if not line.startswith("Test Case "):
+            continue
+        case = XCTEST_CASE_LINE.fullmatch(line)
+        if case is None or banners:
+            failures.append(f"Unrecognized or out-of-order XCTest case record at log line {number}.")
+            continue
+        selector = "/".join(case.group("target", "suite", "method"))
+        event = case["event"]
+        if event == "started.":
+            events[selector].append("start")
+        elif XCTEST_CASE_PASSED.fullmatch(event):
+            events[selector].append("pass")
+        elif event.startswith("exceeded execution time allowance "):
+            events[selector].append("timeout")
+        else:
+            events[selector].append("non-passing or unrecognized completion")
+
+    missing = set(expected) - events.keys()
+    unexpected = events.keys() - set(expected)
+    if missing or unexpected:
+        failures.append(f"XCTest log inventory mismatch. Missing {sorted(missing)}; extra {sorted(unexpected)}.")
+    for selector, lifecycle in sorted(events.items()):
+        if lifecycle != ["start", "pass"]:
+            failures.append(f"XCTest log requires one start then one pass for {selector}; found {lifecycle}.")
+    if banners != ["SUCCEEDED"]:
+        failures.append(f"XCTest log requires one successful result banner; found {banners}.")
+    return failures
 
 
 def test_cases(nodes):
@@ -182,6 +236,7 @@ def main():
     parser.add_argument("--summary", type=Path, required=True)
     parser.add_argument("--tests", type=Path, required=True)
     parser.add_argument("--result-bundle", type=Path, help="verify runtime warnings in this XCTest result bundle")
+    parser.add_argument("--test-log", type=Path, help="verify the selected XCTest attempt's serial execution log")
     parser.add_argument("--expected-count", type=int, required=True)
     args = parser.parse_args()
     expected = args.selectors.read_text().splitlines()
@@ -203,6 +258,16 @@ def main():
     report = [f"Executed {len(actual)} of {len(expected)} selected tests.", "", "| Test | Result | Seconds |", "|---|---|---|"]
     for identifier, node in sorted(cases, key=lambda item: item[1].get("durationInSeconds", 0), reverse=True):
         report.append(f"| {identifier} | {node.get('result', 'Unknown')} | {node.get('durationInSeconds', 0):.2f} |")
+    if args.test_log is not None:
+        try:
+            with args.test_log.open(encoding="utf-8") as log:
+                log_failures = execution_log_failures(log, expected)
+        except (OSError, UnicodeError) as error:
+            log_failures = [f"XCTest execution log is unavailable. {error}"]
+        if log_failures:
+            failures.extend(log_failures)
+        else:
+            report.append("The XCTest log confirms one start and one passing completion per selected test.")
     append_runtime_warning_report(args, summary, nodes, cases, report, failures)
     report.extend(failures)
     output = "\n".join(report) + "\n"

@@ -8,14 +8,15 @@ import tempfile
 import unittest
 
 from check_ios_test_results import (
-    MULTIPLE_WARNINGS, OBSERVED_DEVICE, OBSERVED_LIMITS, OBSERVED_WARNING, inspect_runtime_warnings, test_cases,
+    MULTIPLE_WARNINGS, OBSERVED_DEVICE, OBSERVED_LIMITS, OBSERVED_WARNING, execution_log_failures,
+    inspect_runtime_warnings, test_cases,
 )
 
 SCRIPT = Path(__file__).with_name('check_ios_test_results.py')
 
 
 class ExecutionInventoryTests(unittest.TestCase):
-    def check_case(self, identifiers, *, selected=None, skipped=0, result='Passed', expected_failures=0, case_result='Passed'):
+    def check_case(self, identifiers, *, selected=None, skipped=0, result='Passed', expected_failures=0, case_result='Passed', log=None):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / 'selection.txt').write_text('\n'.join(selected or ['Target/Suite/testOne']) + '\n')
@@ -29,9 +30,15 @@ class ExecutionInventoryTests(unittest.TestCase):
             ]}))
             env = dict(os.environ)
             env.pop('GITHUB_STEP_SUMMARY', None)
-            return subprocess.run([sys.executable, str(SCRIPT), '--selectors', str(root / 'selection.txt'),
-                '--expected-count', str(len(selected or ['Target/Suite/testOne'])), '--summary', str(root / 'summary.json'), '--tests', str(root / 'tests.json')],
-                env=env, capture_output=True, text=True).returncode
+            args = [sys.executable, str(SCRIPT), '--selectors', str(root / 'selection.txt'),
+                    '--expected-count', str(len(selected or ['Target/Suite/testOne'])),
+                    '--summary', str(root / 'summary.json'), '--tests', str(root / 'tests.json')]
+            if log is not None:
+                path = root / 'XCTest.log'
+                if log != 'missing':
+                    path.write_text(log)
+                args += ['--test-log', str(path)]
+            return subprocess.run(args, env=env, capture_output=True, text=True).returncode
 
     def test_exact_execution_passes(self):
         self.assertEqual(self.check_case(['Target/Suite/testOne']), 0)
@@ -52,6 +59,57 @@ class ExecutionInventoryTests(unittest.TestCase):
         for status in ('Failed', 'Skipped', 'Expected Failure', 'Unknown', None):
             with self.subTest(status=status):
                 self.assertNotEqual(self.check_case(['Target/Suite/testOne'], case_result=status), 0)
+
+
+    def test_passed_bundle_cannot_hide_missing_log_or_repeat_start(self):
+        start = "Test Case '-[Target.Suite testOne]' started.\n"
+        done = "Test Case '-[Target.Suite testOne]' passed (0.013 seconds).\n"
+        banner = "** TEST EXECUTE SUCCEEDED **\n"
+        self.assertEqual(self.check_case(['Target/Suite/testOne'], log=start + done + banner), 0)
+        self.assertEqual(self.check_case(['Target/Suite/testOne'], log=start + done + start + done + banner), 1)
+        self.assertEqual(self.check_case(['Target/Suite/testOne'], log='missing'), 1)
+
+
+class ExecutionLogTests(unittest.TestCase):
+    selector = "RoomInTheCartUITests/FreeJourneyUITests/testOne"
+    case = "Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testOne]' "
+    start = case + "started."
+    done = case + "passed (71.217 seconds)."
+    success = "** TEST EXECUTE SUCCEEDED **"
+
+    def test_exact_pass_and_case_inventory(self):
+        other = "RoomInTheCartTests/ModelTests/testOther"
+        other_case = "Test Case '-[RoomInTheCartTests.ModelTests testOther]' "
+        log = [other_case + "started.", other_case + "passed (0.002 seconds).",
+               self.start, "    t =     5.00s Relaunch the app within the test", self.done, self.success]
+        self.assertEqual(execution_log_failures(log, [self.selector, other]), [])
+        self.assertIn("inventory mismatch", execution_log_failures(log, [self.selector])[0])
+        self.assertIn("inventory mismatch", execution_log_failures(log[-4:], [self.selector, other])[0])
+
+    def test_hidden_retry_timeout_failure_and_repeated_completion(self):
+        for log, reason in (
+            ([self.start, self.done, self.start, self.done, self.success], "one start then one pass"),
+            ([self.start, self.done, self.done, self.success], "one start then one pass"),
+            ([self.start, self.case + "exceeded execution time allowance of 1 minute.", self.done, self.success], "timeout"),
+            ([self.start, self.case + "failed (61.030 seconds).", self.done, self.success], "non-passing"),
+            ([self.start, self.case + "skipped (0.000 seconds).", self.success], "non-passing"),
+            ([self.start, self.done, self.success, "Restarting after unexpected exit, crash, or test timeout; summary will include totals from previous launches."], "restarted"),
+            ([self.start, "<unknown>:0: error: -[RoomInTheCartUITests.FreeJourneyUITests testOne] : App terminated", self.done, self.success], "logged a failure"),
+        ):
+            with self.subTest(log=log):
+                self.assertTrue(any(reason in error for error in execution_log_failures(log, [self.selector])))
+
+    def test_unrecognized_incomplete_or_unsuccessful_log(self):
+        for log, reason in (
+            ([self.start, self.done], "successful result banner"),
+            ([self.start, self.done, "** TEST EXECUTE FAILED **"], "successful result banner"),
+            ([self.start, self.done, self.success, self.success], "successful result banner"),
+            ([self.done, self.start, self.success], "one start then one pass"),
+            ([self.success, self.start, self.done], "out-of-order"),
+            ([self.start, "Test Case malformed record", self.done, self.success], "Unrecognized"),
+        ):
+            with self.subTest(log=log):
+                self.assertTrue(any(reason in error for error in execution_log_failures(log, [self.selector])))
 
 
 class RuntimeWarningTests(unittest.TestCase):
