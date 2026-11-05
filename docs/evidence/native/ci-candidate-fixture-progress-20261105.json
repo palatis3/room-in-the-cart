@@ -387,7 +387,7 @@
       "job": 126980954160,
       "passed": 0,
       "failed": 1,
-      "status": "Original assertion location unavailable by privacy design. Unchanged hosted-app local replay failed at the Save wait; bounded visibility candidate currently under full original-selector validation."
+      "status": "Original hosted assertion location is unavailable by privacy design. Unchanged hosted-app local replay failed at Save wait. The first visibility candidate passed Save, encryption, import cancel and apply, then failed on an offscreen recovered caption. A video-supported v2 reveals that same caption before scrolling to image and wording. Full v2 validation is queued; no Records product or test patch installed."
     },
     "DinnerDecisionSheetUITests": {
       "job": 126980957450,
