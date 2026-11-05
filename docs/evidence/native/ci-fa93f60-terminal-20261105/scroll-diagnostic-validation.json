@@ -180,5 +180,9 @@
     "Capture starts with explicit incomplete status; missing/errors/zero/unparsed evidence remain distinguishable.",
     "Reject invalid windows, extra endpoints and mixed-process ambiguity."
   ],
-  "limits": "Actual hosted capture command compatibility and resulting signposts remain unverified until next hosted run. Local replay establishes parser compatibility only. Raw signpost durations are diagnostic, not release performance measurements."
+  "limits": "Actual hosted capture command compatibility and resulting signposts remain unverified until next hosted run. Local replay establishes parser compatibility only. Raw signpost durations are diagnostic, not release performance measurements.",
+  "independentReviews": {
+    "Astra": "Read-only final review found no remaining concrete defect; no edits or native run.",
+    "Dot": "Personal final review found no remaining concrete defect and independently passed all7 self-contained tests. Review relayed through managed chat. Hosted capture remains unverified."
+  }
 }
