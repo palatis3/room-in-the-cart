@@ -1,5 +1,11 @@
 # Room in the Cart current handoff
 
+## Hosted integration and sanitizer checkpoint — November 4, 2026 (America/New_York)
+
+`fa93f60` passed the first hosted native HTTPS lane: four real-service/PostgreSQL integration cases, six exact compiled Swift scenarios and zero skips. Root verified the artifact digest, scenario identities/counts and database shutdown. [Native wire evidence](evidence/native/ci-native-wire-hosted-20261105.json). Both package sanitizer jobs also passed389 cases each with exactly three approved wire skips. Root verified artifact digests and replayed all five compiled/reviewed inventories against actual outcomes. [Sanitizer evidence](evidence/native/ci-sanitizers-fa93f60-20261105.json). These skips are not passes; the dedicated native lane covers their six scenario invocations separately.
+
+Security, source, web/service unit, PostgreSQL and fixture planning jobs are successful. Billing and performance build continue; Swift analysis and ordinary package jobs have started. Ordinary/Release and fixture producers remain queued. No failed hosted job observed in the latest poll. No merge, deployment or goal completion claimed. Local evidence commits afterfa93f60 are intentionally unpushed to avoid cancelling this candidate.
+
 ## Published candidate — November 4, 2026 (America/New_York)
 
 Candidate `fa93f60534918ce8e040c706e80163e5d6959153` is published in [draft PR #1](https://github.com/palatis3/room-in-the-cart/pull/1), with an updated description. Six fresh workflows are confirmed live or queued: [core](https://github.com/palatis3/room-in-the-cart/actions/runs/41968854906), [security](https://github.com/palatis3/room-in-the-cart/actions/runs/41968854866), [deep](https://github.com/palatis3/room-in-the-cart/actions/runs/41968854930), [fixtures](https://github.com/palatis3/room-in-the-cart/actions/runs/41968854891), [performance](https://github.com/palatis3/room-in-the-cart/actions/runs/41968854879), [native wire](https://github.com/palatis3/room-in-the-cart/actions/runs/41968854936). Initial source checks, service/web unit jobs, fixture planning and dependency review passed. Native wire, both sanitizers and both billing jobs are running; simulator/Release/Swift analysis and fixture/performance producers are queued behind the five-Mac account limit. This is a verified wait, not full acceptance.
