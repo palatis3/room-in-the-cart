@@ -75,8 +75,33 @@
         "RoomInTheCartUITests/HistoryGrantReadUITests/testRevokedBudgetGrantClearsPreviouslyOpenedRawPeriodAndRememberedSource"
       ],
       "rawLogSHA256": "7ce8f7131e26562f5a83e07646db1904bd5f0df15e591304e0004d0864ff56d9"
+    },
+    "GuardianEnrollmentUITests": {
+      "artifactID": 13416428523,
+      "jobID": 127238287712,
+      "sha256": "4ae3e2684c7ab42627e52f6608052e3171cb0db6e0533f04368006bf11256746",
+      "digestVerified": true,
+      "planByteIdentical": true,
+      "strictReplayExit": 0,
+      "selected": 8,
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "warningScope": [],
+      "selectors": [
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testCancelSetupDialogHasExplicitCancelAndForegroundRestoresStatus",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testChildForgetCancelAndForegroundKeepTheSamePairingWithoutActivation",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testNoticeDeclarationVerificationPermissionPairingAndDialogCancellation",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootColdChildMarkerAndSyntheticVaultCleanupPreserveAdultData",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootLeaveCancelAndConfirmedExitRestoreLockedAdultAccess",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testSpanishLargestTextUnavailableGateRemainsReadableAndClosed",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testUnavailableNeverOffersCreationOrAdultVerification",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testUncertainAttemptCanRefreshButCannotSendAnotherVerification"
+      ],
+      "rawLogSHA256": "f4c2a8aaa2ccbe98588e5d2cef01da5cb10a18a6ee08a1869f66be8d60344ae3"
     }
   },
-  "observedAt": "2026-11-05T13:01:20.389866+00:00",
-  "independentlyVerifiedPassingCases": 6
+  "observedAt": "2026-11-05T13:07:10.779390+00:00",
+  "independentlyVerifiedPassingCases": 14
 }
