@@ -134,6 +134,10 @@ import XCTest
         XCTAssertEqual(field.value as? String, text, "Typed input must exactly replace the draft before review")
         if id == "capture.editor" {
             dismissCaptureKeyboard()
+            // Large text can move this Form row offscreen during dismissal.
+            // Reveal it again before reading the virtualized editor's value.
+            reveal(field)
+            XCTAssertFalse(app.keyboards.firstMatch.exists, "Revealing the editor must not reopen the keyboard")
             XCTAssertEqual(field.value as? String, text, "Dismissing the keyboard must preserve the draft")
         }
         let done = app.buttons.matching(NSPredicate(format: "label == %@", "Done")).firstMatch
