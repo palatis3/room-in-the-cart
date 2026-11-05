@@ -1,0 +1,24 @@
+{
+  "patchSHA256": "07420f0e31cdaf213b0665ea6146d7107681754b58ebde5a3dcc6c2280330898",
+  "reviewedSourceInventory": 15,
+  "savedHostedBundleReplays": {
+    "en": {
+      "strictVerifierExit": 0,
+      "selectors": 15,
+      "warnings": 0,
+      "details": 15,
+      "executionLogSHA256": "02e9720652885de9b438de776ffdf2aecc77e8048945e066440a7141de052542",
+      "rootReportSHA256": "22114972a9ec7475c7cc9044f7e2611828c18b13237bbeb2b7b751c51af75805"
+    },
+    "es": {
+      "strictVerifierExit": 0,
+      "selectors": 15,
+      "warnings": 0,
+      "details": 15,
+      "executionLogSHA256": "b782212ee494e2f25576af960c9630ec17bef0828cfb5253d17b655e63898f27",
+      "rootReportSHA256": "d04fd2ff2bf07dec694a412ad412bfa1422f3155cb37ce670e287e50316e79df"
+    }
+  },
+  "negativeReplaysPerLocale": 7,
+  "scope": "Saved retained StoreKit bundles and logs replayed; no new native app execution. Hosted workflow validation pending."
+}

@@ -4,6 +4,9 @@ on:
   pull_request:
     paths:
       - '.github/workflows/ios-fixtures.yml'
+      - 'scripts/check_ios_test_results.py'
+      - 'scripts/test_check_ios_test_results.py'
+      - 'scripts/run_ios_test_shard.sh'
       - 'scripts/plan_ios_fixture_tests.py'
       - 'scripts/test_plan_ios_fixture_tests.py'
   workflow_dispatch:

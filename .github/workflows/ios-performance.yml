@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - '.github/workflows/ios-performance.yml'
+      - 'scripts/check_ios_test_results.py'
+      - 'scripts/test_check_ios_test_results.py'
       - 'scripts/check_ios_performance.py'
       - 'scripts/test_check_ios_performance.py'
       - 'scripts/plan_ios_performance_tests.py'
