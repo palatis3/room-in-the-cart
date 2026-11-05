@@ -1,5 +1,16 @@
 # Room in the Cart current handoff
 
+## Billing proposal and Swift analysis follow-up — November 5, 2026
+
+Ordinary groups ui-01/ui-02/ui-03 now provide10 independently verified passing cases. Saved-offer and normal share/cancel pass; the pickup-selection case retains exactly its two allowed Menu warnings. The fresh normal sharing pass does not explain f20's original animation/switch failure. [Partial UI proof](evidence/native/ci-23a73a8-20261105/ordinary-progress.json). Other UI groups, fixtures and performance continue on the existing23a73a8 handles; do not push or cancel them.
+
+Swift CodeQL job127226433096 failed its instrumented build at the30-minute limit, while ordinary optimized Release compiled. The post action uploaded an explicitly failed analysis; it is not a clean security result. [Failure record](evidence/native/ci-23a73a8-20261105/swift-codeql-timeout.json). New Sol6.1xhigh helper `swift_codeql_timeout` owns read-only comparison against prior successful extraction and current official guidance. Scratch root `.build/CIResearch20261105/swift-codeql-timeout/`; no native jobs, source exclusion, timeout increase or rerun authorized by root. Root must review findings.
+
+Lumpy is second in command for billing review. Existing Sol6.1xhigh helper `history_fixture_triage` is preparing a complete scratch-only separate-evidence option: independent raw purchase result and per-admitted-transaction delivering/delivered/failed observations, with truthful neutral combined UI and preserved authoritative access. Both the broad epoch guard and failure-only precedence were rejected because they can hide genuine pending evidence for another same-account purchase. The first patch in `.build/CIResearch20261105/membership-order-review/` is provisional and must not ship. Await the revised path/hash and Lumpy/root review before installing. The native approval test must check actual delivery evidence for its approved test transaction rather than accepting an initial fetch error; any identifier mapping must be verified. No production membership change is installed yet.
+
+Both diagnostic locales are terminal, baseline proof retained, all owned diagnostic simulators shut down. No local native lane is active. Local HEAD includes retained evidence and the unpushed standalone diagnostic Xcode-selection fix; remote remains23a73a8. Two helpers are active, neither edits shared source or runs native work. Full52-requirement/27-route goal remains active. Backend project access/real backup, providers, signing, SMTP and physical/human gates remain open.
+
+
 ## Ask to Buy notice-order reproduction retained — November 5, 2026
 
 The local diagnostic driver83110 is terminal exit1. Spanish14/15, native65/strict1, reproduces the same approval assertion. Its trace is `finished=true; busy=false; pendingAskToBuyCount=0` and notice order nil → failed(notConfigured) → pending. English15/15, native0/strict0, records nil → pending → failed(notConfigured). Both have zero runtime warnings. This establishes a local stale-pending overwrite, not retrospective proof of the unrecorded hosted callback sequence or a language-specific cause. [Pinned baseline proof](evidence/native/storekit-approval-20261105/baseline.json). Both owned simulators are shut down; preview untouched. No local native lane is active.

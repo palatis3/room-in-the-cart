@@ -1,9 +1,9 @@
 {
   "candidate": "23a73a890afbaa23d3c58ae6b0cf63a8b2e2fb71",
-  "observedAt": "2026-11-05T12:28:21.372567+00:00",
+  "observedAt": "2026-11-05T12:34:45.778160+00:00",
   "run": 42021894668,
   "coverageComplete": false,
-  "independentlyVerifiedPassingCases": 6,
+  "independentlyVerifiedPassingCases": 10,
   "shards": {
     "ui-01": {
       "artifactID": 13413598318,
@@ -38,6 +38,36 @@
         "RoomInTheCartUITests/RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer"
       ],
       "rawLogSHA256": "d056a227699f19bfa5fbc238483ceda030c81c663a0d1e8278f9bbe75b2a3f24"
+    },
+    "ui-02": {
+      "artifactID": 13414367829,
+      "sha256": "ed5a6283e42feb6fbdcfe00d8fd292224a73fcb7753911dd3e4a30831b19471b",
+      "githubDigestVerified": true,
+      "selected": 4,
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 2,
+      "warningScope": [
+        {
+          "selector": "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges",
+          "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+          "count": 2,
+          "maximum": 2,
+          "menuActivity": {
+            "tap": "Tap \"ledgerShopPicker\" Button",
+            "phase": "Synthesize event"
+          }
+        }
+      ],
+      "selectors": [
+        "RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareKeepsTheFrozenPickupUnplaced",
+        "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges",
+        "RoomInTheCartUITests/PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testShopPhoneShortcutsHaveACompleteTouchTargetAndReturnToShop"
+      ],
+      "rawLogSHA256": "968652d3738391f2db6fea0a5211ffcb409b262bc47dd86446c49d5fe2acce56"
     }
   },
   "limits": "Only these terminal artifacts are independently verified. Other ordinary UI groups remain queued/running. Original f20 failures remain recorded; no full green candidate claim."
