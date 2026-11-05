@@ -1,0 +1,37 @@
+{
+  "sourceBase": "28d0b5b",
+  "filesSHA256": {
+    "scripts/report_records_media_test.py": "8aac4dc7e94f6fe6d6f1d17ccbde521d5f36bfe8a286d30256c309ab1d248cc2",
+    "scripts/test_report_records_media_test.py": "6cca3f0f57c460943d1853e0f9facaea74a23033a372ebb4ce1641d02802a8a0",
+    ".github/workflows/ios-fixtures.yml": "a9d13cb86c9ecb92b121a9098c7939bfdba9b4e06d2185214ac3d0335ba93fbd"
+  },
+  "patchSHA256": "f191cbc6da967fda2b3e32b364a7ba74fbdf908083f6c33a8f4b621ec03c21fa",
+  "rootActualBundleReplays": [
+    {
+      "fixture": "safe-replay-pass",
+      "runnerStatus": 0,
+      "safeReporterStatus": 0
+    },
+    {
+      "fixture": "safe-replay-failure",
+      "runnerStatus": 1,
+      "safeReporterStatus": 1
+    }
+  ],
+  "validation": {
+    "allPythonTests": 103,
+    "workflowLint": "passed",
+    "privateFieldNegativeTests": [
+      "failure/warning/identifier/error strings never appear in public output",
+      "unknown or malformed fields fail with fixed text",
+      "source location must match the exact known Swift file and valid numeric line",
+      "nonzero runner result cannot become a pass",
+      "nonzero warning count cannot become a pass"
+    ],
+    "workflowShellHarness": "Worker verified private stdout remains private; original statuses7/2 preserved, missing evidence changes otherwise-green result to1.",
+    "strictRuntimeWarningGuard": "Unchanged; raw output stays private.",
+    "scope": "No raw screenshots, AX trees, exception strings or warning text are published for RecordsMedia. Fixed selector, enum status, bounded counts and optional exact validated source line only. First hosted invocation pending."
+  },
+  "evidenceDirectory": ".build/CIResearch20261104/candidate-f0e2ac3/records-media-20261105",
+  "shellHarnessLogSHA256": "4231b8fd4bbbe3796c6a75178c4cf1de6fef3ff2aec7ce9e39bacb2b83310523"
+}

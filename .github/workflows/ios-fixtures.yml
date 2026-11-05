@@ -156,10 +156,16 @@ jobs:
           if [[ "$TEST_SHARD" == RecordsMediaUITests ]]; then
             # The synthetic recovery key can appear in screenshots and UI trees.
             status=0
-            GITHUB_STEP_SUMMARY=.build/records-test-report.md bash scripts/run_ios_test_shard.sh \
-              > "$RUNNER_TEMP/records-fixture.log" 2>&1 || status=$?
+            private_log="$RUNNER_TEMP/records-fixture.log"
+            GITHUB_STEP_SUMMARY= bash scripts/run_ios_test_shard.sh > "$private_log" 2>&1 || status=$?
+            report_status=0
+            python3 scripts/report_records_media_test.py .build "$status" \
+              > .build/records-test-report.md 2>> "$private_log" || report_status=$?
             if [[ -s .build/records-test-report.md ]]; then
               tee -a "$GITHUB_STEP_SUMMARY" < .build/records-test-report.md
+            fi
+            if (( status == 0 )); then
+              status=$report_status
             fi
             if (( status != 0 )); then
               echo '::error::Records media fixture failed. Raw output contains private fixture material.'
