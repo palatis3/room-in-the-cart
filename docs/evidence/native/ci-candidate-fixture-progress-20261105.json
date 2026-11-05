@@ -414,6 +414,12 @@
         "examinedTestCount": 5,
         "detailExportCount": 0,
         "warnings": []
+      },
+      "localCorrection": {
+        "commit": "2c1ff46",
+        "result": "All five original selectors passed locally with zero recorded warnings. Existing chosen-dinner destination and back navigation are exercised; all original package, fee, cancellation, replacement and protected-lunch assertions remain.",
+        "evidence": "dinner-decision-navigation-20261105/validation.json",
+        "hostedConfirmation": "Pending"
       }
     },
     "SharedMealIdeaUITests": {
