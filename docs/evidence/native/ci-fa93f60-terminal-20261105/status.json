@@ -1,0 +1,437 @@
+{
+  "candidate": "fa93f60534918ce8e040c706e80163e5d6959153",
+  "observedAt": "2026-11-05T07:53:22.612Z",
+  "runs": [
+    {
+      "id": 41968854906,
+      "jobs": [
+        {
+          "id": 127052107709,
+          "name": "ios-swift-codeql",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127052107878,
+          "name": "typescript (service)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127052107919,
+          "name": "typescript (web)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127052107942,
+          "name": "swift-packages",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127052107962,
+          "name": "source-checks",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127052108000,
+          "name": "service-postgres",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127052108025,
+          "name": "ios-release",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127052108147,
+          "name": "ios-build",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127058915514,
+          "name": "ios-tests (ui-10, 6)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127058915527,
+          "name": "ios-tests (ui-08, 5)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127058915529,
+          "name": "ios-tests (ui-02, 4)",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "id": 127058915531,
+          "name": "ios-tests (ui-06, 5)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127058915580,
+          "name": "ios-tests (ui-01, 3)",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "id": 127058915594,
+          "name": "ios-tests (ui-07, 5)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127058915599,
+          "name": "ios-tests (ui-03, 5)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127058915605,
+          "name": "ios-tests (ui-05, 6)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127058915628,
+          "name": "ios-tests (ui-04, 5)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127058915646,
+          "name": "ios-tests (models, 565)",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "id": 127058915750,
+          "name": "ios-tests (ui-09, 6)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127090990976,
+          "name": "CI gate",
+          "status": "completed",
+          "conclusion": "failure"
+        }
+      ]
+    },
+    {
+      "id": 41968854879,
+      "jobs": [
+        {
+          "id": 127052107196,
+          "name": "Build optimized iPhone test products",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127055882294,
+          "name": "Release performance (scroll)",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "id": 127055882378,
+          "name": "Release performance (launch)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127055882387,
+          "name": "Release performance (rendered)",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 41968854891,
+      "jobs": [
+        {
+          "id": 127052107568,
+          "name": "fixture-plan",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127052157816,
+          "name": "Build dinner decision fixture",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127052157864,
+          "name": "Build contributor, stock and carryover fixtures",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127058645262,
+          "name": "Fixture (HistoryGrantReadUITests)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127058645300,
+          "name": "Fixture (CorrectionPrivacyAcceptanceUITests)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127058645301,
+          "name": "Fixture (HouseholdRequestPackUITests)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127058645308,
+          "name": "Fixture (RecordsMediaUITests)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127058645322,
+          "name": "Fixture (ContributorRequestUITests)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127058645327,
+          "name": "Fixture (SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127058645337,
+          "name": "Fixture (RecipeLibraryAcceptanceUITests)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127058645338,
+          "name": "Fixture (SharedMealCivilDateUITests)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127058645352,
+          "name": "Fixture (HouseholdDevicesUITests)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127058645362,
+          "name": "Fixture (DinnerAwayCarryoverUITests)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127058645365,
+          "name": "Fixture (SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127058645380,
+          "name": "Fixture (GuardianEnrollmentUITests)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127058645382,
+          "name": "Fixture (RequestDuplicateComparisonUITests)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127058645385,
+          "name": "Fixture (SharedMealChangeUITests)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127058645423,
+          "name": "Fixture (MeasurementUITests)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127058647073,
+          "name": "Fixture (SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127058647135,
+          "name": "Fixture (SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127058647237,
+          "name": "Fixture (StockReviewUITests)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127058647286,
+          "name": "Fixture (SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127058647288,
+          "name": "Fixture (SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127058647316,
+          "name": "Fixture (SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 127058647390,
+          "name": "Fixture (DinnerDecisionSheetUITests)",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "failedArtifacts": [
+    {
+      "id": 13391392240,
+      "name": "iphone-results-ui-01-1",
+      "size_in_bytes": 24647176,
+      "url": "https://api.github.com/repos/palatis3/room-in-the-cart/actions/artifacts/13391392240",
+      "archive_download_url": "https://api.github.com/repos/palatis3/room-in-the-cart/actions/artifacts/13391392240/zip",
+      "expired": false,
+      "created_at": "2026-11-05T05:40:57Z",
+      "expires_at": "2026-11-12T05:40:54Z",
+      "updated_at": "2026-11-05T05:40:57Z",
+      "digest": "sha256:04614695f357a83f145d81b073781d07a03de22460461ea8010bcad4d9cd3ccc",
+      "workflow_run": {
+        "id": 41968854906,
+        "repository_id": 1445928007,
+        "head_repository_id": 1445928007,
+        "head_branch": "codex/parallel-ios-ci",
+        "head_sha": "fa93f60534918ce8e040c706e80163e5d6959153"
+      }
+    },
+    {
+      "id": 13391023081,
+      "name": "iphone-results-ui-02-1",
+      "size_in_bytes": 23659134,
+      "url": "https://api.github.com/repos/palatis3/room-in-the-cart/actions/artifacts/13391023081",
+      "archive_download_url": "https://api.github.com/repos/palatis3/room-in-the-cart/actions/artifacts/13391023081/zip",
+      "expired": false,
+      "created_at": "2026-11-05T05:33:07Z",
+      "expires_at": "2026-11-12T05:32:59Z",
+      "updated_at": "2026-11-05T05:33:07Z",
+      "digest": "sha256:648fc29029002bcb68db587c59f4d9e8e0a0c051e1fe9b3fcdfec324aebe2561",
+      "workflow_run": {
+        "id": 41968854906,
+        "repository_id": 1445928007,
+        "head_repository_id": 1445928007,
+        "head_branch": "codex/parallel-ios-ci",
+        "head_sha": "fa93f60534918ce8e040c706e80163e5d6959153"
+      }
+    },
+    {
+      "id": 13390956384,
+      "name": "iphone-results-models-1",
+      "size_in_bytes": 1193053,
+      "url": "https://api.github.com/repos/palatis3/room-in-the-cart/actions/artifacts/13390956384",
+      "archive_download_url": "https://api.github.com/repos/palatis3/room-in-the-cart/actions/artifacts/13390956384/zip",
+      "expired": false,
+      "created_at": "2026-11-05T05:18:55Z",
+      "expires_at": "2026-11-12T05:18:51Z",
+      "updated_at": "2026-11-05T05:18:55Z",
+      "digest": "sha256:2a2041f7bf2a7dfdffc638ebf588a26a81becce1be826ef0fd631346d4c41f23",
+      "workflow_run": {
+        "id": 41968854906,
+        "repository_id": 1445928007,
+        "head_repository_id": 1445928007,
+        "head_branch": "codex/parallel-ios-ci",
+        "head_sha": "fa93f60534918ce8e040c706e80163e5d6959153"
+      }
+    },
+    {
+      "id": 13390260635,
+      "name": "iphone-performance-launch-1",
+      "size_in_bytes": 85903,
+      "url": "https://api.github.com/repos/palatis3/room-in-the-cart/actions/artifacts/13390260635",
+      "archive_download_url": "https://api.github.com/repos/palatis3/room-in-the-cart/actions/artifacts/13390260635/zip",
+      "expired": false,
+      "created_at": "2026-11-05T05:03:16Z",
+      "expires_at": "2026-11-12T05:03:14Z",
+      "updated_at": "2026-11-05T05:03:16Z",
+      "digest": "sha256:e55c0358de68a92ffc0d1b4ab5ae3560ba21375c19afcd7b8c354c58c8031d2b",
+      "workflow_run": {
+        "id": 41968854879,
+        "repository_id": 1445928007,
+        "head_repository_id": 1445928007,
+        "head_branch": "codex/parallel-ios-ci",
+        "head_sha": "fa93f60534918ce8e040c706e80163e5d6959153"
+      }
+    },
+    {
+      "id": 13389938048,
+      "name": "iphone-performance-rendered-1",
+      "size_in_bytes": 7343129,
+      "url": "https://api.github.com/repos/palatis3/room-in-the-cart/actions/artifacts/13389938048",
+      "archive_download_url": "https://api.github.com/repos/palatis3/room-in-the-cart/actions/artifacts/13389938048/zip",
+      "expired": false,
+      "created_at": "2026-11-05T05:12:17Z",
+      "expires_at": "2026-11-12T05:12:15Z",
+      "updated_at": "2026-11-05T05:12:17Z",
+      "digest": "sha256:511ee40c6d4255ae14391ed6a5f3a978d94fa656e3d50fc95d6ef2de880aed83",
+      "workflow_run": {
+        "id": 41968854879,
+        "repository_id": 1445928007,
+        "head_repository_id": 1445928007,
+        "head_branch": "codex/parallel-ios-ci",
+        "head_sha": "fa93f60534918ce8e040c706e80163e5d6959153"
+      }
+    },
+    {
+      "id": 13388919350,
+      "name": "iphone-performance-scroll-1",
+      "size_in_bytes": 4926504,
+      "url": "https://api.github.com/repos/palatis3/room-in-the-cart/actions/artifacts/13388919350",
+      "archive_download_url": "https://api.github.com/repos/palatis3/room-in-the-cart/actions/artifacts/13388919350/zip",
+      "expired": false,
+      "created_at": "2026-11-05T05:01:00Z",
+      "expires_at": "2026-11-12T05:00:59Z",
+      "updated_at": "2026-11-05T05:01:00Z",
+      "digest": "sha256:ae8bd1604b2d20bf108ce36cf6b3949eaaacaed089a10adad1e7219e16218c3b",
+      "workflow_run": {
+        "id": 41968854879,
+        "repository_id": 1445928007,
+        "head_repository_id": 1445928007,
+        "head_branch": "codex/parallel-ios-ci",
+        "head_sha": "fa93f60534918ce8e040c706e80163e5d6959153"
+      }
+    }
+  ],
+  "findings": {
+    "models": "565 XCTest cases passed; strict log rejected interleaved SQLite unlink warnings corrupting two lifecycle records. Original job remains failed.",
+    "ordinaryUI": "Two 720-second journey timeouts; UI01 also exceeds scoped Menu warning count. No restart or warning limit relaxed.",
+    "performance": "Launch and rendered jobs pass. Scroll journey passes, but required scroll signpost metric absent from raw JSON/CSV/log; strict performance job fails.",
+    "fixtures": "All22 consumer jobs successful. Root verified22 artifact digests and44 disjoint selectors:43 raw XCTest outcomes plus1 redacted Records report. See fixtures.json."
+  }
+}

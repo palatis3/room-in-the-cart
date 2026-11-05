@@ -1,0 +1,3542 @@
+{
+  "candidate": "fa93f60534918ce8e040c706e80163e5d6959153",
+  "runs": [
+    {
+      "id": 41968854906,
+      "jobs": [
+        {
+          "id": 127052107709,
+          "name": "ios-swift-codeql",
+          "createdAt": "2026-11-05T04:36:28Z",
+          "startedAt": "2026-11-05T04:39:59Z",
+          "completedAt": "2026-11-05T05:04:20Z",
+          "queueSeconds": 211,
+          "durationSeconds": 1461,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T04:39:59Z",
+              "completedAt": "2026-11-05T04:40:01Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T04:40:01Z",
+              "completedAt": "2026-11-05T04:40:04Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Record Swift analysis toolchain",
+              "startedAt": "2026-11-05T04:40:04Z",
+              "completedAt": "2026-11-05T04:40:08Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Initialize Swift security analysis",
+              "startedAt": "2026-11-05T04:40:08Z",
+              "completedAt": "2026-11-05T04:40:25Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Compile Release Swift sources for CodeQL",
+              "startedAt": "2026-11-05T04:40:25Z",
+              "completedAt": "2026-11-05T05:02:19Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Analyze Swift security findings",
+              "startedAt": "2026-11-05T05:02:19Z",
+              "completedAt": "2026-11-05T05:04:06Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain Swift analysis compilation logs",
+              "startedAt": "2026-11-05T05:04:06Z",
+              "completedAt": "2026-11-05T05:04:08Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Analyze Swift security findings",
+              "startedAt": "2026-11-05T05:04:08Z",
+              "completedAt": "2026-11-05T05:04:08Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Initialize Swift security analysis",
+              "startedAt": "2026-11-05T05:04:08Z",
+              "completedAt": "2026-11-05T05:04:09Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:04:09Z",
+              "completedAt": "2026-11-05T05:04:12Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T05:04:12Z",
+              "completedAt": "2026-11-05T05:04:15Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127052107878,
+          "name": "typescript (service)",
+          "createdAt": "2026-11-05T04:36:28Z",
+          "startedAt": "2026-11-05T04:36:31Z",
+          "completedAt": "2026-11-05T04:36:55Z",
+          "queueSeconds": 3,
+          "durationSeconds": 24,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T04:36:32Z",
+              "completedAt": "2026-11-05T04:36:33Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T04:36:33Z",
+              "completedAt": "2026-11-05T04:36:36Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+              "startedAt": "2026-11-05T04:36:36Z",
+              "completedAt": "2026-11-05T04:36:37Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run npm ci --ignore-scripts",
+              "startedAt": "2026-11-05T04:36:37Z",
+              "completedAt": "2026-11-05T04:36:38Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run npm test",
+              "startedAt": "2026-11-05T04:36:38Z",
+              "completedAt": "2026-11-05T04:36:51Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+              "startedAt": "2026-11-05T04:36:51Z",
+              "completedAt": "2026-11-05T04:36:53Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T04:36:53Z",
+              "completedAt": "2026-11-05T04:36:53Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T04:36:53Z",
+              "completedAt": "2026-11-05T04:36:53Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127052107919,
+          "name": "typescript (web)",
+          "createdAt": "2026-11-05T04:36:28Z",
+          "startedAt": "2026-11-05T04:36:31Z",
+          "completedAt": "2026-11-05T04:36:51Z",
+          "queueSeconds": 3,
+          "durationSeconds": 20,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T04:36:32Z",
+              "completedAt": "2026-11-05T04:36:33Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T04:36:33Z",
+              "completedAt": "2026-11-05T04:36:37Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+              "startedAt": "2026-11-05T04:36:37Z",
+              "completedAt": "2026-11-05T04:36:38Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run npm ci --ignore-scripts",
+              "startedAt": "2026-11-05T04:36:38Z",
+              "completedAt": "2026-11-05T04:36:40Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run npm test",
+              "startedAt": "2026-11-05T04:36:40Z",
+              "completedAt": "2026-11-05T04:36:46Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+              "startedAt": "2026-11-05T04:36:46Z",
+              "completedAt": "2026-11-05T04:36:48Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T04:36:48Z",
+              "completedAt": "2026-11-05T04:36:48Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T04:36:48Z",
+              "completedAt": "2026-11-05T04:36:48Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127052107942,
+          "name": "swift-packages",
+          "createdAt": "2026-11-05T04:36:28Z",
+          "startedAt": "2026-11-05T04:41:36Z",
+          "completedAt": "2026-11-05T04:44:01Z",
+          "queueSeconds": 308,
+          "durationSeconds": 145,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T04:41:36Z",
+              "completedAt": "2026-11-05T04:41:37Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T04:41:37Z",
+              "completedAt": "2026-11-05T04:41:41Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Test Swift packages and collect coverage",
+              "startedAt": "2026-11-05T04:41:41Z",
+              "completedAt": "2026-11-05T04:43:54Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+              "startedAt": "2026-11-05T04:43:54Z",
+              "completedAt": "2026-11-05T04:43:57Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T04:43:57Z",
+              "completedAt": "2026-11-05T04:43:58Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T04:43:58Z",
+              "completedAt": "2026-11-05T04:43:59Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127052107962,
+          "name": "source-checks",
+          "createdAt": "2026-11-05T04:36:28Z",
+          "startedAt": "2026-11-05T04:36:31Z",
+          "completedAt": "2026-11-05T04:36:41Z",
+          "queueSeconds": 3,
+          "durationSeconds": 10,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T04:36:32Z",
+              "completedAt": "2026-11-05T04:36:32Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T04:36:32Z",
+              "completedAt": "2026-11-05T04:36:35Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Validate workflow syntax and expression references",
+              "startedAt": "2026-11-05T04:36:35Z",
+              "completedAt": "2026-11-05T04:36:35Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Verify the pinned Node release is supported and security-current",
+              "startedAt": "2026-11-05T04:36:35Z",
+              "completedAt": "2026-11-05T04:36:35Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Validate generated files, localization and CI test selection",
+              "startedAt": "2026-11-05T04:36:35Z",
+              "completedAt": "2026-11-05T04:36:39Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T04:36:39Z",
+              "completedAt": "2026-11-05T04:36:39Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T04:36:39Z",
+              "completedAt": "2026-11-05T04:36:39Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127052108000,
+          "name": "service-postgres",
+          "createdAt": "2026-11-05T04:36:28Z",
+          "startedAt": "2026-11-05T04:36:31Z",
+          "completedAt": "2026-11-05T04:37:48Z",
+          "queueSeconds": 3,
+          "durationSeconds": 77,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T04:36:32Z",
+              "completedAt": "2026-11-05T04:36:33Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Initialize containers",
+              "startedAt": "2026-11-05T04:36:33Z",
+              "completedAt": "2026-11-05T04:36:47Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T04:36:47Z",
+              "completedAt": "2026-11-05T04:36:49Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+              "startedAt": "2026-11-05T04:36:49Z",
+              "completedAt": "2026-11-05T04:36:50Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run npm ci --ignore-scripts",
+              "startedAt": "2026-11-05T04:36:50Z",
+              "completedAt": "2026-11-05T04:36:52Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Build the web client for the PostgreSQL browser retry tests",
+              "startedAt": "2026-11-05T04:36:52Z",
+              "completedAt": "2026-11-05T04:36:55Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Prepare disposable provider-session and maintenance fixtures",
+              "startedAt": "2026-11-05T04:36:55Z",
+              "completedAt": "2026-11-05T04:36:55Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run npm run migrate",
+              "startedAt": "2026-11-05T04:36:55Z",
+              "completedAt": "2026-11-05T04:36:56Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Create restricted app, guardian verification and worker roles",
+              "startedAt": "2026-11-05T04:36:56Z",
+              "completedAt": "2026-11-05T04:36:56Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run npm test && npm run test:integration",
+              "startedAt": "2026-11-05T04:36:56Z",
+              "completedAt": "2026-11-05T04:37:43Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Verify maintenance with a separate database and worker role",
+              "startedAt": "2026-11-05T04:37:43Z",
+              "completedAt": "2026-11-05T04:37:44Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+              "startedAt": "2026-11-05T04:37:44Z",
+              "completedAt": "2026-11-05T04:37:45Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T04:37:45Z",
+              "completedAt": "2026-11-05T04:37:45Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Stop containers",
+              "startedAt": "2026-11-05T04:37:45Z",
+              "completedAt": "2026-11-05T04:37:45Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T04:37:45Z",
+              "completedAt": "2026-11-05T04:37:45Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127052108025,
+          "name": "ios-release",
+          "createdAt": "2026-11-05T04:36:28Z",
+          "startedAt": "2026-11-05T04:44:04Z",
+          "completedAt": "2026-11-05T04:49:41Z",
+          "queueSeconds": 456,
+          "durationSeconds": 337,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T04:44:04Z",
+              "completedAt": "2026-11-05T04:44:05Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T04:44:05Z",
+              "completedAt": "2026-11-05T04:44:09Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Compile unsigned Release for iPhone",
+              "startedAt": "2026-11-05T04:44:09Z",
+              "completedAt": "2026-11-05T04:49:35Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Verify the compiled iPhone app and embedded extensions",
+              "startedAt": "2026-11-05T04:49:35Z",
+              "completedAt": "2026-11-05T04:49:36Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain Release compilation log",
+              "startedAt": "2026-11-05T04:49:36Z",
+              "completedAt": "2026-11-05T04:49:37Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T04:49:37Z",
+              "completedAt": "2026-11-05T04:49:38Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T04:49:38Z",
+              "completedAt": "2026-11-05T04:49:39Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127052108147,
+          "name": "ios-build",
+          "createdAt": "2026-11-05T04:36:28Z",
+          "startedAt": "2026-11-05T04:47:44Z",
+          "completedAt": "2026-11-05T04:57:40Z",
+          "queueSeconds": 676,
+          "durationSeconds": 596,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T04:47:44Z",
+              "completedAt": "2026-11-05T04:47:45Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T04:47:45Z",
+              "completedAt": "2026-11-05T04:47:52Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Record toolchain and select iPhone",
+              "startedAt": "2026-11-05T04:47:52Z",
+              "completedAt": "2026-11-05T04:49:29Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Build iPhone simulator test products once",
+              "startedAt": "2026-11-05T04:49:29Z",
+              "completedAt": "2026-11-05T04:52:42Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Verify the compiled simulator app",
+              "startedAt": "2026-11-05T04:52:42Z",
+              "completedAt": "2026-11-05T04:52:43Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Discover compiled tests and balance UI groups",
+              "startedAt": "2026-11-05T04:52:43Z",
+              "completedAt": "2026-11-05T04:56:59Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Package test products and exact selection",
+              "startedAt": "2026-11-05T04:56:59Z",
+              "completedAt": "2026-11-05T04:57:10Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+              "startedAt": "2026-11-05T04:57:10Z",
+              "completedAt": "2026-11-05T04:57:15Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T04:57:15Z",
+              "completedAt": "2026-11-05T04:57:16Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T04:57:16Z",
+              "completedAt": "2026-11-05T04:57:38Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127058915514,
+          "name": "ios-tests (ui-10, 6)",
+          "createdAt": "2026-11-05T04:57:41Z",
+          "startedAt": "2026-11-05T06:13:00Z",
+          "completedAt": "2026-11-05T06:26:17Z",
+          "queueSeconds": 4519,
+          "durationSeconds": 797,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T06:13:00Z",
+              "completedAt": "2026-11-05T06:13:01Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T06:13:01Z",
+              "completedAt": "2026-11-05T06:13:06Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T06:13:06Z",
+              "completedAt": "2026-11-05T06:13:10Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore iPhone test products and selection",
+              "startedAt": "2026-11-05T06:13:10Z",
+              "completedAt": "2026-11-05T06:13:11Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select and boot iPhone simulator",
+              "startedAt": "2026-11-05T06:13:11Z",
+              "completedAt": "2026-11-05T06:13:31Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Wait for simulator boot",
+              "startedAt": "2026-11-05T06:13:31Z",
+              "completedAt": "2026-11-05T06:14:26Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run selected tests and verify complete execution",
+              "startedAt": "2026-11-05T06:14:26Z",
+              "completedAt": "2026-11-05T06:25:56Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain result bundles, screenshots, logs and timing",
+              "startedAt": "2026-11-05T06:25:56Z",
+              "completedAt": "2026-11-05T06:26:00Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T06:26:00Z",
+              "completedAt": "2026-11-05T06:26:01Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T06:26:01Z",
+              "completedAt": "2026-11-05T06:26:15Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127058915527,
+          "name": "ios-tests (ui-08, 5)",
+          "createdAt": "2026-11-05T04:57:41Z",
+          "startedAt": "2026-11-05T06:01:59Z",
+          "completedAt": "2026-11-05T06:25:54Z",
+          "queueSeconds": 3858,
+          "durationSeconds": 1435,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T06:01:59Z",
+              "completedAt": "2026-11-05T06:02:01Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T06:02:01Z",
+              "completedAt": "2026-11-05T06:02:06Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T06:02:06Z",
+              "completedAt": "2026-11-05T06:02:07Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore iPhone test products and selection",
+              "startedAt": "2026-11-05T06:02:07Z",
+              "completedAt": "2026-11-05T06:02:08Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select and boot iPhone simulator",
+              "startedAt": "2026-11-05T06:02:08Z",
+              "completedAt": "2026-11-05T06:02:18Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Wait for simulator boot",
+              "startedAt": "2026-11-05T06:02:18Z",
+              "completedAt": "2026-11-05T06:04:24Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run selected tests and verify complete execution",
+              "startedAt": "2026-11-05T06:04:26Z",
+              "completedAt": "2026-11-05T06:25:32Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain result bundles, screenshots, logs and timing",
+              "startedAt": "2026-11-05T06:25:32Z",
+              "completedAt": "2026-11-05T06:25:36Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T06:25:36Z",
+              "completedAt": "2026-11-05T06:25:37Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T06:25:37Z",
+              "completedAt": "2026-11-05T06:25:51Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127058915529,
+          "name": "ios-tests (ui-02, 4)",
+          "createdAt": "2026-11-05T04:57:41Z",
+          "startedAt": "2026-11-05T05:04:23Z",
+          "completedAt": "2026-11-05T05:33:35Z",
+          "queueSeconds": 402,
+          "durationSeconds": 1752,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T05:04:23Z",
+              "completedAt": "2026-11-05T05:04:25Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:04:25Z",
+              "completedAt": "2026-11-05T05:04:30Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T05:04:30Z",
+              "completedAt": "2026-11-05T05:04:36Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore iPhone test products and selection",
+              "startedAt": "2026-11-05T05:04:36Z",
+              "completedAt": "2026-11-05T05:04:36Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select and boot iPhone simulator",
+              "startedAt": "2026-11-05T05:04:36Z",
+              "completedAt": "2026-11-05T05:05:26Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Wait for simulator boot",
+              "startedAt": "2026-11-05T05:05:26Z",
+              "completedAt": "2026-11-05T05:07:13Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run selected tests and verify complete execution",
+              "startedAt": "2026-11-05T05:07:15Z",
+              "completedAt": "2026-11-05T05:32:56Z",
+              "conclusion": "failure"
+            },
+            {
+              "name": "Retain result bundles, screenshots, logs and timing",
+              "startedAt": "2026-11-05T05:32:56Z",
+              "completedAt": "2026-11-05T05:33:07Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:33:07Z",
+              "completedAt": "2026-11-05T05:33:11Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T05:33:11Z",
+              "completedAt": "2026-11-05T05:33:31Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127058915531,
+          "name": "ios-tests (ui-06, 5)",
+          "createdAt": "2026-11-05T04:57:41Z",
+          "startedAt": "2026-11-05T05:53:47Z",
+          "completedAt": "2026-11-05T06:12:57Z",
+          "queueSeconds": 3366,
+          "durationSeconds": 1150,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T05:53:47Z",
+              "completedAt": "2026-11-05T05:53:48Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:53:48Z",
+              "completedAt": "2026-11-05T05:53:54Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T05:53:54Z",
+              "completedAt": "2026-11-05T05:53:55Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore iPhone test products and selection",
+              "startedAt": "2026-11-05T05:53:55Z",
+              "completedAt": "2026-11-05T05:53:56Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select and boot iPhone simulator",
+              "startedAt": "2026-11-05T05:53:56Z",
+              "completedAt": "2026-11-05T05:54:23Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Wait for simulator boot",
+              "startedAt": "2026-11-05T05:54:23Z",
+              "completedAt": "2026-11-05T05:55:53Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run selected tests and verify complete execution",
+              "startedAt": "2026-11-05T05:55:55Z",
+              "completedAt": "2026-11-05T06:12:30Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain result bundles, screenshots, logs and timing",
+              "startedAt": "2026-11-05T06:12:30Z",
+              "completedAt": "2026-11-05T06:12:34Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T06:12:34Z",
+              "completedAt": "2026-11-05T06:12:35Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T06:12:35Z",
+              "completedAt": "2026-11-05T06:12:45Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127058915580,
+          "name": "ios-tests (ui-01, 3)",
+          "createdAt": "2026-11-05T04:57:41Z",
+          "startedAt": "2026-11-05T05:19:13Z",
+          "completedAt": "2026-11-05T05:41:09Z",
+          "queueSeconds": 1292,
+          "durationSeconds": 1316,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T05:19:13Z",
+              "completedAt": "2026-11-05T05:19:15Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:19:15Z",
+              "completedAt": "2026-11-05T05:19:19Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T05:19:19Z",
+              "completedAt": "2026-11-05T05:19:21Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore iPhone test products and selection",
+              "startedAt": "2026-11-05T05:19:21Z",
+              "completedAt": "2026-11-05T05:19:21Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select and boot iPhone simulator",
+              "startedAt": "2026-11-05T05:19:21Z",
+              "completedAt": "2026-11-05T05:19:50Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Wait for simulator boot",
+              "startedAt": "2026-11-05T05:19:50Z",
+              "completedAt": "2026-11-05T05:21:26Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run selected tests and verify complete execution",
+              "startedAt": "2026-11-05T05:21:29Z",
+              "completedAt": "2026-11-05T05:40:53Z",
+              "conclusion": "failure"
+            },
+            {
+              "name": "Retain result bundles, screenshots, logs and timing",
+              "startedAt": "2026-11-05T05:40:53Z",
+              "completedAt": "2026-11-05T05:40:56Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:40:56Z",
+              "completedAt": "2026-11-05T05:40:57Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T05:40:57Z",
+              "completedAt": "2026-11-05T05:41:07Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127058915594,
+          "name": "ios-tests (ui-07, 5)",
+          "createdAt": "2026-11-05T04:57:41Z",
+          "startedAt": "2026-11-05T05:58:21Z",
+          "completedAt": "2026-11-05T06:28:03Z",
+          "queueSeconds": 3640,
+          "durationSeconds": 1782,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T05:58:22Z",
+              "completedAt": "2026-11-05T05:58:25Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:58:25Z",
+              "completedAt": "2026-11-05T05:58:31Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T05:58:31Z",
+              "completedAt": "2026-11-05T05:58:32Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore iPhone test products and selection",
+              "startedAt": "2026-11-05T05:58:32Z",
+              "completedAt": "2026-11-05T05:58:33Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select and boot iPhone simulator",
+              "startedAt": "2026-11-05T05:58:33Z",
+              "completedAt": "2026-11-05T05:59:43Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Wait for simulator boot",
+              "startedAt": "2026-11-05T05:59:43Z",
+              "completedAt": "2026-11-05T06:02:06Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run selected tests and verify complete execution",
+              "startedAt": "2026-11-05T06:02:09Z",
+              "completedAt": "2026-11-05T06:27:34Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain result bundles, screenshots, logs and timing",
+              "startedAt": "2026-11-05T06:27:34Z",
+              "completedAt": "2026-11-05T06:27:38Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T06:27:38Z",
+              "completedAt": "2026-11-05T06:27:40Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T06:27:40Z",
+              "completedAt": "2026-11-05T06:28:02Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127058915599,
+          "name": "ios-tests (ui-03, 5)",
+          "createdAt": "2026-11-05T04:57:41Z",
+          "startedAt": "2026-11-05T05:31:40Z",
+          "completedAt": "2026-11-05T05:53:44Z",
+          "queueSeconds": 2039,
+          "durationSeconds": 1324,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T05:31:41Z",
+              "completedAt": "2026-11-05T05:31:43Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:31:43Z",
+              "completedAt": "2026-11-05T05:31:48Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T05:31:48Z",
+              "completedAt": "2026-11-05T05:31:54Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore iPhone test products and selection",
+              "startedAt": "2026-11-05T05:31:54Z",
+              "completedAt": "2026-11-05T05:31:55Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select and boot iPhone simulator",
+              "startedAt": "2026-11-05T05:31:55Z",
+              "completedAt": "2026-11-05T05:32:55Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Wait for simulator boot",
+              "startedAt": "2026-11-05T05:32:55Z",
+              "completedAt": "2026-11-05T05:34:31Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run selected tests and verify complete execution",
+              "startedAt": "2026-11-05T05:34:33Z",
+              "completedAt": "2026-11-05T05:53:21Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain result bundles, screenshots, logs and timing",
+              "startedAt": "2026-11-05T05:53:21Z",
+              "completedAt": "2026-11-05T05:53:25Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:53:25Z",
+              "completedAt": "2026-11-05T05:53:26Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T05:53:26Z",
+              "completedAt": "2026-11-05T05:53:42Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127058915605,
+          "name": "ios-tests (ui-05, 6)",
+          "createdAt": "2026-11-05T04:57:41Z",
+          "startedAt": "2026-11-05T05:33:38Z",
+          "completedAt": "2026-11-05T05:53:46Z",
+          "queueSeconds": 2157,
+          "durationSeconds": 1208,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T05:33:38Z",
+              "completedAt": "2026-11-05T05:33:40Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:33:40Z",
+              "completedAt": "2026-11-05T05:33:44Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T05:33:44Z",
+              "completedAt": "2026-11-05T05:33:50Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore iPhone test products and selection",
+              "startedAt": "2026-11-05T05:33:50Z",
+              "completedAt": "2026-11-05T05:33:50Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select and boot iPhone simulator",
+              "startedAt": "2026-11-05T05:33:50Z",
+              "completedAt": "2026-11-05T05:35:00Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Wait for simulator boot",
+              "startedAt": "2026-11-05T05:35:00Z",
+              "completedAt": "2026-11-05T05:36:34Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run selected tests and verify complete execution",
+              "startedAt": "2026-11-05T05:36:35Z",
+              "completedAt": "2026-11-05T05:53:20Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain result bundles, screenshots, logs and timing",
+              "startedAt": "2026-11-05T05:53:20Z",
+              "completedAt": "2026-11-05T05:53:24Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:53:24Z",
+              "completedAt": "2026-11-05T05:53:25Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T05:53:25Z",
+              "completedAt": "2026-11-05T05:53:44Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127058915628,
+          "name": "ios-tests (ui-04, 5)",
+          "createdAt": "2026-11-05T04:57:41Z",
+          "startedAt": "2026-11-05T05:19:38Z",
+          "completedAt": "2026-11-05T05:40:59Z",
+          "queueSeconds": 1317,
+          "durationSeconds": 1281,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T05:19:39Z",
+              "completedAt": "2026-11-05T05:19:40Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:19:40Z",
+              "completedAt": "2026-11-05T05:19:43Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T05:19:43Z",
+              "completedAt": "2026-11-05T05:19:48Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore iPhone test products and selection",
+              "startedAt": "2026-11-05T05:19:48Z",
+              "completedAt": "2026-11-05T05:19:49Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select and boot iPhone simulator",
+              "startedAt": "2026-11-05T05:19:49Z",
+              "completedAt": "2026-11-05T05:20:06Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Wait for simulator boot",
+              "startedAt": "2026-11-05T05:20:06Z",
+              "completedAt": "2026-11-05T05:21:33Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run selected tests and verify complete execution",
+              "startedAt": "2026-11-05T05:21:34Z",
+              "completedAt": "2026-11-05T05:40:33Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain result bundles, screenshots, logs and timing",
+              "startedAt": "2026-11-05T05:40:33Z",
+              "completedAt": "2026-11-05T05:40:36Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:40:36Z",
+              "completedAt": "2026-11-05T05:40:37Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T05:40:37Z",
+              "completedAt": "2026-11-05T05:40:58Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127058915646,
+          "name": "ios-tests (models, 565)",
+          "createdAt": "2026-11-05T04:57:41Z",
+          "startedAt": "2026-11-05T05:12:35Z",
+          "completedAt": "2026-11-05T05:19:35Z",
+          "queueSeconds": 894,
+          "durationSeconds": 420,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T05:12:35Z",
+              "completedAt": "2026-11-05T05:12:37Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:12:37Z",
+              "completedAt": "2026-11-05T05:12:40Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T05:12:40Z",
+              "completedAt": "2026-11-05T05:12:46Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore iPhone test products and selection",
+              "startedAt": "2026-11-05T05:12:46Z",
+              "completedAt": "2026-11-05T05:12:46Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select and boot iPhone simulator",
+              "startedAt": "2026-11-05T05:12:46Z",
+              "completedAt": "2026-11-05T05:13:02Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Wait for simulator boot",
+              "startedAt": "2026-11-05T05:13:02Z",
+              "completedAt": "2026-11-05T05:14:30Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run selected tests and verify complete execution",
+              "startedAt": "2026-11-05T05:14:31Z",
+              "completedAt": "2026-11-05T05:18:50Z",
+              "conclusion": "failure"
+            },
+            {
+              "name": "Retain result bundles, screenshots, logs and timing",
+              "startedAt": "2026-11-05T05:18:50Z",
+              "completedAt": "2026-11-05T05:19:04Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:19:04Z",
+              "completedAt": "2026-11-05T05:19:06Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T05:19:06Z",
+              "completedAt": "2026-11-05T05:19:32Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127058915750,
+          "name": "ios-tests (ui-09, 6)",
+          "createdAt": "2026-11-05T04:57:41Z",
+          "startedAt": "2026-11-05T06:07:23Z",
+          "completedAt": "2026-11-05T06:32:07Z",
+          "queueSeconds": 4182,
+          "durationSeconds": 1484,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T06:07:24Z",
+              "completedAt": "2026-11-05T06:07:26Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T06:07:26Z",
+              "completedAt": "2026-11-05T06:07:30Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T06:07:30Z",
+              "completedAt": "2026-11-05T06:07:35Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore iPhone test products and selection",
+              "startedAt": "2026-11-05T06:07:35Z",
+              "completedAt": "2026-11-05T06:07:35Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select and boot iPhone simulator",
+              "startedAt": "2026-11-05T06:07:35Z",
+              "completedAt": "2026-11-05T06:09:31Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Wait for simulator boot",
+              "startedAt": "2026-11-05T06:09:31Z",
+              "completedAt": "2026-11-05T06:11:22Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run selected tests and verify complete execution",
+              "startedAt": "2026-11-05T06:11:22Z",
+              "completedAt": "2026-11-05T06:31:49Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain result bundles, screenshots, logs and timing",
+              "startedAt": "2026-11-05T06:31:49Z",
+              "completedAt": "2026-11-05T06:31:52Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T06:31:52Z",
+              "completedAt": "2026-11-05T06:31:53Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T06:31:53Z",
+              "completedAt": "2026-11-05T06:32:04Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127090990976,
+          "name": "CI gate",
+          "createdAt": "2026-11-05T06:32:07Z",
+          "startedAt": "2026-11-05T06:32:10Z",
+          "completedAt": "2026-11-05T06:32:13Z",
+          "queueSeconds": 3,
+          "durationSeconds": 3,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T06:32:11Z",
+              "completedAt": "2026-11-05T06:32:11Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Require every build and test job to succeed",
+              "startedAt": "2026-11-05T06:32:11Z",
+              "completedAt": "2026-11-05T06:32:11Z",
+              "conclusion": "failure"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T06:32:11Z",
+              "completedAt": "2026-11-05T06:32:11Z",
+              "conclusion": "success"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 41968854891,
+      "jobs": [
+        {
+          "id": 127052107568,
+          "name": "fixture-plan",
+          "createdAt": "2026-11-05T04:36:28Z",
+          "startedAt": "2026-11-05T04:36:31Z",
+          "completedAt": "2026-11-05T04:36:37Z",
+          "queueSeconds": 3,
+          "durationSeconds": 6,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T04:36:32Z",
+              "completedAt": "2026-11-05T04:36:32Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T04:36:32Z",
+              "completedAt": "2026-11-05T04:36:35Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Validate fixture coverage and plan isolated shared journeys",
+              "startedAt": "2026-11-05T04:36:35Z",
+              "completedAt": "2026-11-05T04:36:35Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T04:36:35Z",
+              "completedAt": "2026-11-05T04:36:35Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T04:36:35Z",
+              "completedAt": "2026-11-05T04:36:35Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127052157816,
+          "name": "Build dinner decision fixture",
+          "createdAt": "2026-11-05T04:36:37Z",
+          "startedAt": "2026-11-05T04:47:34Z",
+          "completedAt": "2026-11-05T04:56:48Z",
+          "queueSeconds": 657,
+          "durationSeconds": 554,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T04:47:34Z",
+              "completedAt": "2026-11-05T04:47:35Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T04:47:35Z",
+              "completedAt": "2026-11-05T04:47:40Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Record Xcode and select an iPhone simulator",
+              "startedAt": "2026-11-05T04:47:40Z",
+              "completedAt": "2026-11-05T04:48:08Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Build fixture app and UI tests for iPhone",
+              "startedAt": "2026-11-05T04:48:08Z",
+              "completedAt": "2026-11-05T04:51:22Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Enumerate compiled tests and package fixture products",
+              "startedAt": "2026-11-05T04:51:22Z",
+              "completedAt": "2026-11-05T04:56:21Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+              "startedAt": "2026-11-05T04:56:21Z",
+              "completedAt": "2026-11-05T04:56:25Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain fixture discovery diagnostics on failure",
+              "startedAt": "2026-11-05T04:56:25Z",
+              "completedAt": "2026-11-05T04:56:25Z",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T04:56:25Z",
+              "completedAt": "2026-11-05T04:56:26Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T04:56:26Z",
+              "completedAt": "2026-11-05T04:56:46Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127052157864,
+          "name": "Build contributor, stock and carryover fixtures",
+          "createdAt": "2026-11-05T04:36:37Z",
+          "startedAt": "2026-11-05T04:48:13Z",
+          "completedAt": "2026-11-05T04:56:23Z",
+          "queueSeconds": 696,
+          "durationSeconds": 490,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T04:48:13Z",
+              "completedAt": "2026-11-05T04:48:14Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T04:48:14Z",
+              "completedAt": "2026-11-05T04:48:19Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Record Xcode and select an iPhone simulator",
+              "startedAt": "2026-11-05T04:48:19Z",
+              "completedAt": "2026-11-05T04:48:48Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Build fixture app and UI tests for iPhone",
+              "startedAt": "2026-11-05T04:48:48Z",
+              "completedAt": "2026-11-05T04:51:22Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Enumerate compiled tests and package fixture products",
+              "startedAt": "2026-11-05T04:51:22Z",
+              "completedAt": "2026-11-05T04:55:53Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+              "startedAt": "2026-11-05T04:55:53Z",
+              "completedAt": "2026-11-05T04:55:56Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain fixture discovery diagnostics on failure",
+              "startedAt": "2026-11-05T04:55:56Z",
+              "completedAt": "2026-11-05T04:55:56Z",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T04:55:57Z",
+              "completedAt": "2026-11-05T04:55:58Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T04:55:58Z",
+              "completedAt": "2026-11-05T04:56:21Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127058645262,
+          "name": "Fixture (HistoryGrantReadUITests)",
+          "createdAt": "2026-11-05T04:56:49Z",
+          "startedAt": "2026-11-05T05:01:30Z",
+          "completedAt": "2026-11-05T05:16:08Z",
+          "queueSeconds": 281,
+          "durationSeconds": 878,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T05:01:31Z",
+              "completedAt": "2026-11-05T05:01:32Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:01:33Z",
+              "completedAt": "2026-11-05T05:01:37Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T05:01:37Z",
+              "completedAt": "2026-11-05T05:01:43Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore matching fixture products and selector list",
+              "startedAt": "2026-11-05T05:01:43Z",
+              "completedAt": "2026-11-05T05:01:44Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select an iPhone simulator",
+              "startedAt": "2026-11-05T05:01:44Z",
+              "completedAt": "2026-11-05T05:05:05Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Boot the iPhone simulator",
+              "startedAt": "2026-11-05T05:05:05Z",
+              "completedAt": "2026-11-05T05:06:52Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "startedAt": "2026-11-05T05:06:54Z",
+              "completedAt": "2026-11-05T05:15:40Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain fixture results and timing",
+              "startedAt": "2026-11-05T05:15:40Z",
+              "completedAt": "2026-11-05T05:15:46Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain Records media result counts and timing",
+              "startedAt": "2026-11-05T05:15:46Z",
+              "completedAt": "2026-11-05T05:15:46Z",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:15:46Z",
+              "completedAt": "2026-11-05T05:15:46Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T05:15:46Z",
+              "completedAt": "2026-11-05T05:16:05Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127058645300,
+          "name": "Fixture (CorrectionPrivacyAcceptanceUITests)",
+          "createdAt": "2026-11-05T04:56:49Z",
+          "startedAt": "2026-11-05T05:11:28Z",
+          "completedAt": "2026-11-05T05:19:10Z",
+          "queueSeconds": 879,
+          "durationSeconds": 462,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T05:11:28Z",
+              "completedAt": "2026-11-05T05:11:30Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:11:30Z",
+              "completedAt": "2026-11-05T05:11:36Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T05:11:36Z",
+              "completedAt": "2026-11-05T05:11:39Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore matching fixture products and selector list",
+              "startedAt": "2026-11-05T05:11:39Z",
+              "completedAt": "2026-11-05T05:11:40Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select an iPhone simulator",
+              "startedAt": "2026-11-05T05:11:40Z",
+              "completedAt": "2026-11-05T05:12:11Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Boot the iPhone simulator",
+              "startedAt": "2026-11-05T05:12:11Z",
+              "completedAt": "2026-11-05T05:13:53Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "startedAt": "2026-11-05T05:13:55Z",
+              "completedAt": "2026-11-05T05:18:45Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain fixture results and timing",
+              "startedAt": "2026-11-05T05:18:45Z",
+              "completedAt": "2026-11-05T05:18:49Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain Records media result counts and timing",
+              "startedAt": "2026-11-05T05:18:49Z",
+              "completedAt": "2026-11-05T05:18:49Z",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:18:49Z",
+              "completedAt": "2026-11-05T05:18:50Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T05:18:50Z",
+              "completedAt": "2026-11-05T05:19:08Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127058645301,
+          "name": "Fixture (HouseholdRequestPackUITests)",
+          "createdAt": "2026-11-05T04:56:49Z",
+          "startedAt": "2026-11-05T05:32:17Z",
+          "completedAt": "2026-11-05T05:45:21Z",
+          "queueSeconds": 2128,
+          "durationSeconds": 784,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T05:32:18Z",
+              "completedAt": "2026-11-05T05:32:20Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:32:20Z",
+              "completedAt": "2026-11-05T05:32:24Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T05:32:24Z",
+              "completedAt": "2026-11-05T05:32:25Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore matching fixture products and selector list",
+              "startedAt": "2026-11-05T05:32:25Z",
+              "completedAt": "2026-11-05T05:32:26Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select an iPhone simulator",
+              "startedAt": "2026-11-05T05:32:26Z",
+              "completedAt": "2026-11-05T05:32:36Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Boot the iPhone simulator",
+              "startedAt": "2026-11-05T05:32:36Z",
+              "completedAt": "2026-11-05T05:34:23Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "startedAt": "2026-11-05T05:34:24Z",
+              "completedAt": "2026-11-05T05:44:47Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain fixture results and timing",
+              "startedAt": "2026-11-05T05:44:47Z",
+              "completedAt": "2026-11-05T05:44:50Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain Records media result counts and timing",
+              "startedAt": "2026-11-05T05:44:50Z",
+              "completedAt": "2026-11-05T05:44:50Z",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:44:50Z",
+              "completedAt": "2026-11-05T05:44:51Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T05:44:51Z",
+              "completedAt": "2026-11-05T05:45:19Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127058645308,
+          "name": "Fixture (RecordsMediaUITests)",
+          "createdAt": "2026-11-05T04:56:49Z",
+          "startedAt": "2026-11-05T05:45:24Z",
+          "completedAt": "2026-11-05T05:58:18Z",
+          "queueSeconds": 2915,
+          "durationSeconds": 774,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T05:45:25Z",
+              "completedAt": "2026-11-05T05:45:27Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:45:27Z",
+              "completedAt": "2026-11-05T05:45:31Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T05:45:31Z",
+              "completedAt": "2026-11-05T05:45:36Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore matching fixture products and selector list",
+              "startedAt": "2026-11-05T05:45:36Z",
+              "completedAt": "2026-11-05T05:45:37Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select an iPhone simulator",
+              "startedAt": "2026-11-05T05:45:37Z",
+              "completedAt": "2026-11-05T05:45:45Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Boot the iPhone simulator",
+              "startedAt": "2026-11-05T05:45:45Z",
+              "completedAt": "2026-11-05T05:46:52Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "startedAt": "2026-11-05T05:46:53Z",
+              "completedAt": "2026-11-05T05:58:04Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain fixture results and timing",
+              "startedAt": "2026-11-05T05:58:04Z",
+              "completedAt": "2026-11-05T05:58:04Z",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Retain Records media result counts and timing",
+              "startedAt": "2026-11-05T05:58:04Z",
+              "completedAt": "2026-11-05T05:58:07Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:58:07Z",
+              "completedAt": "2026-11-05T05:58:07Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T05:58:07Z",
+              "completedAt": "2026-11-05T05:58:15Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127058645322,
+          "name": "Fixture (ContributorRequestUITests)",
+          "createdAt": "2026-11-05T04:56:49Z",
+          "startedAt": "2026-11-05T04:57:44Z",
+          "completedAt": "2026-11-05T05:11:24Z",
+          "queueSeconds": 55,
+          "durationSeconds": 820,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T04:57:45Z",
+              "completedAt": "2026-11-05T04:57:47Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T04:57:47Z",
+              "completedAt": "2026-11-05T04:57:51Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T04:57:51Z",
+              "completedAt": "2026-11-05T04:57:54Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore matching fixture products and selector list",
+              "startedAt": "2026-11-05T04:57:54Z",
+              "completedAt": "2026-11-05T04:57:55Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select an iPhone simulator",
+              "startedAt": "2026-11-05T04:57:55Z",
+              "completedAt": "2026-11-05T04:58:05Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Boot the iPhone simulator",
+              "startedAt": "2026-11-05T04:58:05Z",
+              "completedAt": "2026-11-05T04:59:36Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "startedAt": "2026-11-05T04:59:36Z",
+              "completedAt": "2026-11-05T05:11:02Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain fixture results and timing",
+              "startedAt": "2026-11-05T05:11:02Z",
+              "completedAt": "2026-11-05T05:11:05Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain Records media result counts and timing",
+              "startedAt": "2026-11-05T05:11:05Z",
+              "completedAt": "2026-11-05T05:11:05Z",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:11:05Z",
+              "completedAt": "2026-11-05T05:11:07Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T05:11:07Z",
+              "completedAt": "2026-11-05T05:11:23Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127058645327,
+          "name": "Fixture (SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview)",
+          "createdAt": "2026-11-05T04:56:49Z",
+          "startedAt": "2026-11-05T06:13:03Z",
+          "completedAt": "2026-11-05T06:26:23Z",
+          "queueSeconds": 4574,
+          "durationSeconds": 800,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T06:13:04Z",
+              "completedAt": "2026-11-05T06:13:05Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T06:13:05Z",
+              "completedAt": "2026-11-05T06:13:09Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T06:13:09Z",
+              "completedAt": "2026-11-05T06:13:15Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore matching fixture products and selector list",
+              "startedAt": "2026-11-05T06:13:15Z",
+              "completedAt": "2026-11-05T06:13:16Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select an iPhone simulator",
+              "startedAt": "2026-11-05T06:13:16Z",
+              "completedAt": "2026-11-05T06:14:03Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Boot the iPhone simulator",
+              "startedAt": "2026-11-05T06:14:03Z",
+              "completedAt": "2026-11-05T06:16:04Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "startedAt": "2026-11-05T06:16:05Z",
+              "completedAt": "2026-11-05T06:25:56Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain fixture results and timing",
+              "startedAt": "2026-11-05T06:25:56Z",
+              "completedAt": "2026-11-05T06:26:01Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain Records media result counts and timing",
+              "startedAt": "2026-11-05T06:26:01Z",
+              "completedAt": "2026-11-05T06:26:01Z",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T06:26:01Z",
+              "completedAt": "2026-11-05T06:26:02Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T06:26:02Z",
+              "completedAt": "2026-11-05T06:26:20Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127058645337,
+          "name": "Fixture (RecipeLibraryAcceptanceUITests)",
+          "createdAt": "2026-11-05T04:56:49Z",
+          "startedAt": "2026-11-05T05:41:13Z",
+          "completedAt": "2026-11-05T05:54:49Z",
+          "queueSeconds": 2664,
+          "durationSeconds": 816,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T05:41:13Z",
+              "completedAt": "2026-11-05T05:41:14Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:41:14Z",
+              "completedAt": "2026-11-05T05:41:18Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T05:41:18Z",
+              "completedAt": "2026-11-05T05:41:21Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore matching fixture products and selector list",
+              "startedAt": "2026-11-05T05:41:21Z",
+              "completedAt": "2026-11-05T05:41:22Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select an iPhone simulator",
+              "startedAt": "2026-11-05T05:41:22Z",
+              "completedAt": "2026-11-05T05:42:01Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Boot the iPhone simulator",
+              "startedAt": "2026-11-05T05:42:01Z",
+              "completedAt": "2026-11-05T05:43:37Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "startedAt": "2026-11-05T05:43:37Z",
+              "completedAt": "2026-11-05T05:54:28Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain fixture results and timing",
+              "startedAt": "2026-11-05T05:54:28Z",
+              "completedAt": "2026-11-05T05:54:35Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain Records media result counts and timing",
+              "startedAt": "2026-11-05T05:54:35Z",
+              "completedAt": "2026-11-05T05:54:35Z",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:54:35Z",
+              "completedAt": "2026-11-05T05:54:36Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T05:54:36Z",
+              "completedAt": "2026-11-05T05:54:47Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127058645338,
+          "name": "Fixture (SharedMealCivilDateUITests)",
+          "createdAt": "2026-11-05T04:56:49Z",
+          "startedAt": "2026-11-05T05:54:53Z",
+          "completedAt": "2026-11-05T06:01:57Z",
+          "queueSeconds": 3484,
+          "durationSeconds": 424,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T05:54:53Z",
+              "completedAt": "2026-11-05T05:54:55Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:54:55Z",
+              "completedAt": "2026-11-05T05:54:58Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T05:54:58Z",
+              "completedAt": "2026-11-05T05:55:01Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore matching fixture products and selector list",
+              "startedAt": "2026-11-05T05:55:01Z",
+              "completedAt": "2026-11-05T05:55:02Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select an iPhone simulator",
+              "startedAt": "2026-11-05T05:55:02Z",
+              "completedAt": "2026-11-05T05:55:28Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Boot the iPhone simulator",
+              "startedAt": "2026-11-05T05:55:28Z",
+              "completedAt": "2026-11-05T05:56:46Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "startedAt": "2026-11-05T05:56:46Z",
+              "completedAt": "2026-11-05T06:01:36Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain fixture results and timing",
+              "startedAt": "2026-11-05T06:01:36Z",
+              "completedAt": "2026-11-05T06:01:40Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain Records media result counts and timing",
+              "startedAt": "2026-11-05T06:01:40Z",
+              "completedAt": "2026-11-05T06:01:40Z",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T06:01:40Z",
+              "completedAt": "2026-11-05T06:01:41Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T06:01:41Z",
+              "completedAt": "2026-11-05T06:01:55Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127058645352,
+          "name": "Fixture (HouseholdDevicesUITests)",
+          "createdAt": "2026-11-05T04:56:49Z",
+          "startedAt": "2026-11-05T05:16:22Z",
+          "completedAt": "2026-11-05T05:32:15Z",
+          "queueSeconds": 1173,
+          "durationSeconds": 953,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T05:16:23Z",
+              "completedAt": "2026-11-05T05:16:24Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:16:24Z",
+              "completedAt": "2026-11-05T05:16:30Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T05:16:30Z",
+              "completedAt": "2026-11-05T05:16:33Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore matching fixture products and selector list",
+              "startedAt": "2026-11-05T05:16:33Z",
+              "completedAt": "2026-11-05T05:16:33Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select an iPhone simulator",
+              "startedAt": "2026-11-05T05:16:33Z",
+              "completedAt": "2026-11-05T05:17:37Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Boot the iPhone simulator",
+              "startedAt": "2026-11-05T05:17:37Z",
+              "completedAt": "2026-11-05T05:19:17Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "startedAt": "2026-11-05T05:19:18Z",
+              "completedAt": "2026-11-05T05:31:53Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain fixture results and timing",
+              "startedAt": "2026-11-05T05:31:53Z",
+              "completedAt": "2026-11-05T05:31:57Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain Records media result counts and timing",
+              "startedAt": "2026-11-05T05:31:57Z",
+              "completedAt": "2026-11-05T05:31:57Z",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:31:57Z",
+              "completedAt": "2026-11-05T05:31:58Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T05:31:58Z",
+              "completedAt": "2026-11-05T05:32:14Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127058645362,
+          "name": "Fixture (DinnerAwayCarryoverUITests)",
+          "createdAt": "2026-11-05T04:56:49Z",
+          "startedAt": "2026-11-05T05:03:32Z",
+          "completedAt": "2026-11-05T05:16:19Z",
+          "queueSeconds": 403,
+          "durationSeconds": 767,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T05:03:33Z",
+              "completedAt": "2026-11-05T05:03:35Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:03:35Z",
+              "completedAt": "2026-11-05T05:03:40Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T05:03:40Z",
+              "completedAt": "2026-11-05T05:03:47Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore matching fixture products and selector list",
+              "startedAt": "2026-11-05T05:03:47Z",
+              "completedAt": "2026-11-05T05:03:48Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select an iPhone simulator",
+              "startedAt": "2026-11-05T05:03:48Z",
+              "completedAt": "2026-11-05T05:04:03Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Boot the iPhone simulator",
+              "startedAt": "2026-11-05T05:04:03Z",
+              "completedAt": "2026-11-05T05:06:19Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "startedAt": "2026-11-05T05:06:21Z",
+              "completedAt": "2026-11-05T05:15:40Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain fixture results and timing",
+              "startedAt": "2026-11-05T05:15:40Z",
+              "completedAt": "2026-11-05T05:15:46Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain Records media result counts and timing",
+              "startedAt": "2026-11-05T05:15:46Z",
+              "completedAt": "2026-11-05T05:15:46Z",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:15:46Z",
+              "completedAt": "2026-11-05T05:15:48Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T05:15:48Z",
+              "completedAt": "2026-11-05T05:16:17Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127058645365,
+          "name": "Fixture (SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn)",
+          "createdAt": "2026-11-05T04:56:49Z",
+          "startedAt": "2026-11-05T06:25:57Z",
+          "completedAt": "2026-11-05T06:35:48Z",
+          "queueSeconds": 5348,
+          "durationSeconds": 591,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T06:25:58Z",
+              "completedAt": "2026-11-05T06:26:00Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T06:26:00Z",
+              "completedAt": "2026-11-05T06:26:04Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T06:26:04Z",
+              "completedAt": "2026-11-05T06:26:07Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore matching fixture products and selector list",
+              "startedAt": "2026-11-05T06:26:07Z",
+              "completedAt": "2026-11-05T06:26:08Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select an iPhone simulator",
+              "startedAt": "2026-11-05T06:26:08Z",
+              "completedAt": "2026-11-05T06:26:17Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Boot the iPhone simulator",
+              "startedAt": "2026-11-05T06:26:17Z",
+              "completedAt": "2026-11-05T06:27:48Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "startedAt": "2026-11-05T06:27:48Z",
+              "completedAt": "2026-11-05T06:35:22Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain fixture results and timing",
+              "startedAt": "2026-11-05T06:35:22Z",
+              "completedAt": "2026-11-05T06:35:24Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain Records media result counts and timing",
+              "startedAt": "2026-11-05T06:35:24Z",
+              "completedAt": "2026-11-05T06:35:24Z",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T06:35:24Z",
+              "completedAt": "2026-11-05T06:35:25Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T06:35:25Z",
+              "completedAt": "2026-11-05T06:35:46Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127058645380,
+          "name": "Fixture (GuardianEnrollmentUITests)",
+          "createdAt": "2026-11-05T04:56:49Z",
+          "startedAt": "2026-11-05T05:16:11Z",
+          "completedAt": "2026-11-05T05:31:37Z",
+          "queueSeconds": 1162,
+          "durationSeconds": 926,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T05:16:11Z",
+              "completedAt": "2026-11-05T05:16:13Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:16:13Z",
+              "completedAt": "2026-11-05T05:16:21Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T05:16:21Z",
+              "completedAt": "2026-11-05T05:16:24Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore matching fixture products and selector list",
+              "startedAt": "2026-11-05T05:16:24Z",
+              "completedAt": "2026-11-05T05:16:25Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select an iPhone simulator",
+              "startedAt": "2026-11-05T05:16:25Z",
+              "completedAt": "2026-11-05T05:18:38Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Boot the iPhone simulator",
+              "startedAt": "2026-11-05T05:18:38Z",
+              "completedAt": "2026-11-05T05:20:10Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "startedAt": "2026-11-05T05:20:11Z",
+              "completedAt": "2026-11-05T05:31:19Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain fixture results and timing",
+              "startedAt": "2026-11-05T05:31:19Z",
+              "completedAt": "2026-11-05T05:31:22Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain Records media result counts and timing",
+              "startedAt": "2026-11-05T05:31:22Z",
+              "completedAt": "2026-11-05T05:31:22Z",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:31:22Z",
+              "completedAt": "2026-11-05T05:31:23Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T05:31:23Z",
+              "completedAt": "2026-11-05T05:31:35Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127058645382,
+          "name": "Fixture (RequestDuplicateComparisonUITests)",
+          "createdAt": "2026-11-05T04:56:49Z",
+          "startedAt": "2026-11-05T05:50:47Z",
+          "completedAt": "2026-11-05T06:12:59Z",
+          "queueSeconds": 3238,
+          "durationSeconds": 1332,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T05:50:48Z",
+              "completedAt": "2026-11-05T05:50:50Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:50:50Z",
+              "completedAt": "2026-11-05T05:50:59Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T05:50:59Z",
+              "completedAt": "2026-11-05T05:51:03Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore matching fixture products and selector list",
+              "startedAt": "2026-11-05T05:51:04Z",
+              "completedAt": "2026-11-05T05:51:06Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select an iPhone simulator",
+              "startedAt": "2026-11-05T05:51:06Z",
+              "completedAt": "2026-11-05T05:51:41Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Boot the iPhone simulator",
+              "startedAt": "2026-11-05T05:51:41Z",
+              "completedAt": "2026-11-05T05:53:29Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "startedAt": "2026-11-05T05:53:32Z",
+              "completedAt": "2026-11-05T06:12:35Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain fixture results and timing",
+              "startedAt": "2026-11-05T06:12:35Z",
+              "completedAt": "2026-11-05T06:12:40Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain Records media result counts and timing",
+              "startedAt": "2026-11-05T06:12:40Z",
+              "completedAt": "2026-11-05T06:12:40Z",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T06:12:40Z",
+              "completedAt": "2026-11-05T06:12:41Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T06:12:41Z",
+              "completedAt": "2026-11-05T06:12:57Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127058645385,
+          "name": "Fixture (SharedMealChangeUITests)",
+          "createdAt": "2026-11-05T04:56:49Z",
+          "startedAt": "2026-11-05T05:53:49Z",
+          "completedAt": "2026-11-05T06:07:19Z",
+          "queueSeconds": 3420,
+          "durationSeconds": 810,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T05:53:50Z",
+              "completedAt": "2026-11-05T05:53:52Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:53:53Z",
+              "completedAt": "2026-11-05T05:54:01Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T05:54:01Z",
+              "completedAt": "2026-11-05T05:54:05Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore matching fixture products and selector list",
+              "startedAt": "2026-11-05T05:54:05Z",
+              "completedAt": "2026-11-05T05:54:06Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select an iPhone simulator",
+              "startedAt": "2026-11-05T05:54:06Z",
+              "completedAt": "2026-11-05T05:54:35Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Boot the iPhone simulator",
+              "startedAt": "2026-11-05T05:54:35Z",
+              "completedAt": "2026-11-05T05:56:35Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "startedAt": "2026-11-05T05:56:37Z",
+              "completedAt": "2026-11-05T06:06:43Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain fixture results and timing",
+              "startedAt": "2026-11-05T06:06:43Z",
+              "completedAt": "2026-11-05T06:06:47Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain Records media result counts and timing",
+              "startedAt": "2026-11-05T06:06:47Z",
+              "completedAt": "2026-11-05T06:06:47Z",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T06:06:47Z",
+              "completedAt": "2026-11-05T06:06:48Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T06:06:48Z",
+              "completedAt": "2026-11-05T06:07:18Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127058645423,
+          "name": "Fixture (MeasurementUITests)",
+          "createdAt": "2026-11-05T04:56:49Z",
+          "startedAt": "2026-11-05T05:41:03Z",
+          "completedAt": "2026-11-05T05:50:44Z",
+          "queueSeconds": 2654,
+          "durationSeconds": 581,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T05:41:03Z",
+              "completedAt": "2026-11-05T05:41:04Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:41:04Z",
+              "completedAt": "2026-11-05T05:41:08Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T05:41:08Z",
+              "completedAt": "2026-11-05T05:41:14Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore matching fixture products and selector list",
+              "startedAt": "2026-11-05T05:41:14Z",
+              "completedAt": "2026-11-05T05:41:14Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select an iPhone simulator",
+              "startedAt": "2026-11-05T05:41:14Z",
+              "completedAt": "2026-11-05T05:41:55Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Boot the iPhone simulator",
+              "startedAt": "2026-11-05T05:41:55Z",
+              "completedAt": "2026-11-05T05:43:31Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "startedAt": "2026-11-05T05:43:32Z",
+              "completedAt": "2026-11-05T05:50:16Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain fixture results and timing",
+              "startedAt": "2026-11-05T05:50:16Z",
+              "completedAt": "2026-11-05T05:50:21Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain Records media result counts and timing",
+              "startedAt": "2026-11-05T05:50:21Z",
+              "completedAt": "2026-11-05T05:50:21Z",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:50:21Z",
+              "completedAt": "2026-11-05T05:50:23Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T05:50:23Z",
+              "completedAt": "2026-11-05T05:50:42Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127058647073,
+          "name": "Fixture (SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult)",
+          "createdAt": "2026-11-05T04:56:49Z",
+          "startedAt": "2026-11-05T06:26:20Z",
+          "completedAt": "2026-11-05T06:34:22Z",
+          "queueSeconds": 5371,
+          "durationSeconds": 482,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T06:26:19Z",
+              "completedAt": "2026-11-05T06:26:21Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T06:26:21Z",
+              "completedAt": "2026-11-05T06:26:29Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T06:26:29Z",
+              "completedAt": "2026-11-05T06:26:30Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore matching fixture products and selector list",
+              "startedAt": "2026-11-05T06:26:30Z",
+              "completedAt": "2026-11-05T06:26:30Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select an iPhone simulator",
+              "startedAt": "2026-11-05T06:26:30Z",
+              "completedAt": "2026-11-05T06:26:38Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Boot the iPhone simulator",
+              "startedAt": "2026-11-05T06:26:38Z",
+              "completedAt": "2026-11-05T06:27:52Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "startedAt": "2026-11-05T06:27:54Z",
+              "completedAt": "2026-11-05T06:34:09Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain fixture results and timing",
+              "startedAt": "2026-11-05T06:34:09Z",
+              "completedAt": "2026-11-05T06:34:11Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain Records media result counts and timing",
+              "startedAt": "2026-11-05T06:34:11Z",
+              "completedAt": "2026-11-05T06:34:11Z",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T06:34:11Z",
+              "completedAt": "2026-11-05T06:34:12Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T06:34:12Z",
+              "completedAt": "2026-11-05T06:34:20Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127058647135,
+          "name": "Fixture (SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption)",
+          "createdAt": "2026-11-05T04:56:49Z",
+          "startedAt": "2026-11-05T06:26:26Z",
+          "completedAt": "2026-11-05T06:42:55Z",
+          "queueSeconds": 5377,
+          "durationSeconds": 989,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T06:26:26Z",
+              "completedAt": "2026-11-05T06:26:28Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T06:26:28Z",
+              "completedAt": "2026-11-05T06:26:31Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T06:26:31Z",
+              "completedAt": "2026-11-05T06:26:33Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore matching fixture products and selector list",
+              "startedAt": "2026-11-05T06:26:33Z",
+              "completedAt": "2026-11-05T06:26:33Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select an iPhone simulator",
+              "startedAt": "2026-11-05T06:26:33Z",
+              "completedAt": "2026-11-05T06:26:57Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Boot the iPhone simulator",
+              "startedAt": "2026-11-05T06:26:57Z",
+              "completedAt": "2026-11-05T06:28:39Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "startedAt": "2026-11-05T06:28:41Z",
+              "completedAt": "2026-11-05T06:42:31Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain fixture results and timing",
+              "startedAt": "2026-11-05T06:42:31Z",
+              "completedAt": "2026-11-05T06:42:36Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain Records media result counts and timing",
+              "startedAt": "2026-11-05T06:42:36Z",
+              "completedAt": "2026-11-05T06:42:36Z",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T06:42:36Z",
+              "completedAt": "2026-11-05T06:42:37Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T06:42:37Z",
+              "completedAt": "2026-11-05T06:42:54Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127058647237,
+          "name": "Fixture (StockReviewUITests)",
+          "createdAt": "2026-11-05T04:56:49Z",
+          "startedAt": "2026-11-05T06:35:51Z",
+          "completedAt": "2026-11-05T06:44:38Z",
+          "queueSeconds": 5942,
+          "durationSeconds": 527,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T06:35:52Z",
+              "completedAt": "2026-11-05T06:35:53Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T06:35:53Z",
+              "completedAt": "2026-11-05T06:35:59Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T06:35:59Z",
+              "completedAt": "2026-11-05T06:36:02Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore matching fixture products and selector list",
+              "startedAt": "2026-11-05T06:36:02Z",
+              "completedAt": "2026-11-05T06:36:02Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select an iPhone simulator",
+              "startedAt": "2026-11-05T06:36:02Z",
+              "completedAt": "2026-11-05T06:36:30Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Boot the iPhone simulator",
+              "startedAt": "2026-11-05T06:36:30Z",
+              "completedAt": "2026-11-05T06:37:54Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "startedAt": "2026-11-05T06:37:57Z",
+              "completedAt": "2026-11-05T06:44:07Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain fixture results and timing",
+              "startedAt": "2026-11-05T06:44:07Z",
+              "completedAt": "2026-11-05T06:44:11Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain Records media result counts and timing",
+              "startedAt": "2026-11-05T06:44:11Z",
+              "completedAt": "2026-11-05T06:44:11Z",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T06:44:11Z",
+              "completedAt": "2026-11-05T06:44:12Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T06:44:12Z",
+              "completedAt": "2026-11-05T06:44:37Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127058647286,
+          "name": "Fixture (SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction)",
+          "createdAt": "2026-11-05T04:56:49Z",
+          "startedAt": "2026-11-05T06:34:25Z",
+          "completedAt": "2026-11-05T06:48:09Z",
+          "queueSeconds": 5856,
+          "durationSeconds": 824,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T06:34:26Z",
+              "completedAt": "2026-11-05T06:34:28Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T06:34:28Z",
+              "completedAt": "2026-11-05T06:34:34Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T06:34:34Z",
+              "completedAt": "2026-11-05T06:34:39Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore matching fixture products and selector list",
+              "startedAt": "2026-11-05T06:34:39Z",
+              "completedAt": "2026-11-05T06:34:40Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select an iPhone simulator",
+              "startedAt": "2026-11-05T06:34:40Z",
+              "completedAt": "2026-11-05T06:35:12Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Boot the iPhone simulator",
+              "startedAt": "2026-11-05T06:35:12Z",
+              "completedAt": "2026-11-05T06:36:58Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "startedAt": "2026-11-05T06:36:59Z",
+              "completedAt": "2026-11-05T06:47:38Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain fixture results and timing",
+              "startedAt": "2026-11-05T06:47:38Z",
+              "completedAt": "2026-11-05T06:47:42Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain Records media result counts and timing",
+              "startedAt": "2026-11-05T06:47:42Z",
+              "completedAt": "2026-11-05T06:47:42Z",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T06:47:42Z",
+              "completedAt": "2026-11-05T06:47:44Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T06:47:44Z",
+              "completedAt": "2026-11-05T06:48:07Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127058647288,
+          "name": "Fixture (SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave)",
+          "createdAt": "2026-11-05T04:56:49Z",
+          "startedAt": "2026-11-05T06:28:06Z",
+          "completedAt": "2026-11-05T06:38:34Z",
+          "queueSeconds": 5477,
+          "durationSeconds": 628,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T06:28:07Z",
+              "completedAt": "2026-11-05T06:28:08Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T06:28:08Z",
+              "completedAt": "2026-11-05T06:28:11Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T06:28:11Z",
+              "completedAt": "2026-11-05T06:28:16Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore matching fixture products and selector list",
+              "startedAt": "2026-11-05T06:28:16Z",
+              "completedAt": "2026-11-05T06:28:17Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select an iPhone simulator",
+              "startedAt": "2026-11-05T06:28:17Z",
+              "completedAt": "2026-11-05T06:28:24Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Boot the iPhone simulator",
+              "startedAt": "2026-11-05T06:28:24Z",
+              "completedAt": "2026-11-05T06:29:36Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "startedAt": "2026-11-05T06:29:36Z",
+              "completedAt": "2026-11-05T06:38:15Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain fixture results and timing",
+              "startedAt": "2026-11-05T06:38:15Z",
+              "completedAt": "2026-11-05T06:38:18Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain Records media result counts and timing",
+              "startedAt": "2026-11-05T06:38:18Z",
+              "completedAt": "2026-11-05T06:38:18Z",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T06:38:18Z",
+              "completedAt": "2026-11-05T06:38:20Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T06:38:20Z",
+              "completedAt": "2026-11-05T06:38:32Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127058647316,
+          "name": "Fixture (SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable)",
+          "createdAt": "2026-11-05T04:56:49Z",
+          "startedAt": "2026-11-05T06:32:11Z",
+          "completedAt": "2026-11-05T06:43:55Z",
+          "queueSeconds": 5722,
+          "durationSeconds": 704,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T06:32:12Z",
+              "completedAt": "2026-11-05T06:32:15Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T06:32:15Z",
+              "completedAt": "2026-11-05T06:32:20Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T06:32:20Z",
+              "completedAt": "2026-11-05T06:32:25Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore matching fixture products and selector list",
+              "startedAt": "2026-11-05T06:32:25Z",
+              "completedAt": "2026-11-05T06:32:27Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select an iPhone simulator",
+              "startedAt": "2026-11-05T06:32:27Z",
+              "completedAt": "2026-11-05T06:34:08Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Boot the iPhone simulator",
+              "startedAt": "2026-11-05T06:34:08Z",
+              "completedAt": "2026-11-05T06:36:03Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "startedAt": "2026-11-05T06:36:04Z",
+              "completedAt": "2026-11-05T06:43:02Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain fixture results and timing",
+              "startedAt": "2026-11-05T06:43:02Z",
+              "completedAt": "2026-11-05T06:43:09Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain Records media result counts and timing",
+              "startedAt": "2026-11-05T06:43:09Z",
+              "completedAt": "2026-11-05T06:43:09Z",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T06:43:09Z",
+              "completedAt": "2026-11-05T06:43:12Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T06:43:12Z",
+              "completedAt": "2026-11-05T06:43:52Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127058647390,
+          "name": "Fixture (DinnerDecisionSheetUITests)",
+          "createdAt": "2026-11-05T04:56:49Z",
+          "startedAt": "2026-11-05T06:38:36Z",
+          "completedAt": "2026-11-05T06:46:11Z",
+          "queueSeconds": 6107,
+          "durationSeconds": 455,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T06:38:36Z",
+              "completedAt": "2026-11-05T06:38:38Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T06:38:38Z",
+              "completedAt": "2026-11-05T06:38:43Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T06:38:43Z",
+              "completedAt": "2026-11-05T06:38:44Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore matching fixture products and selector list",
+              "startedAt": "2026-11-05T06:38:44Z",
+              "completedAt": "2026-11-05T06:38:45Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select an iPhone simulator",
+              "startedAt": "2026-11-05T06:38:45Z",
+              "completedAt": "2026-11-05T06:39:08Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Boot the iPhone simulator",
+              "startedAt": "2026-11-05T06:39:08Z",
+              "completedAt": "2026-11-05T06:40:16Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run selected fixture tests and require complete execution",
+              "startedAt": "2026-11-05T06:40:17Z",
+              "completedAt": "2026-11-05T06:45:55Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain fixture results and timing",
+              "startedAt": "2026-11-05T06:45:55Z",
+              "completedAt": "2026-11-05T06:45:58Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain Records media result counts and timing",
+              "startedAt": "2026-11-05T06:45:58Z",
+              "completedAt": "2026-11-05T06:45:58Z",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T06:45:58Z",
+              "completedAt": "2026-11-05T06:45:58Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T06:45:58Z",
+              "completedAt": "2026-11-05T06:46:10Z",
+              "conclusion": "success"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 41968854879,
+      "jobs": [
+        {
+          "id": 127052107196,
+          "name": "Build optimized iPhone test products",
+          "createdAt": "2026-11-05T04:36:28Z",
+          "startedAt": "2026-11-05T04:38:24Z",
+          "completedAt": "2026-11-05T04:48:10Z",
+          "queueSeconds": 116,
+          "durationSeconds": 586,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T04:38:25Z",
+              "completedAt": "2026-11-05T04:38:25Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T04:38:25Z",
+              "completedAt": "2026-11-05T04:38:29Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Check performance evidence validation",
+              "startedAt": "2026-11-05T04:38:29Z",
+              "completedAt": "2026-11-05T04:38:30Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Record Xcode and select an iPhone simulator",
+              "startedAt": "2026-11-05T04:38:30Z",
+              "completedAt": "2026-11-05T04:38:39Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Build the Release app and dedicated performance tests",
+              "startedAt": "2026-11-05T04:38:39Z",
+              "completedAt": "2026-11-05T04:47:44Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Check the compiled XCTest inventory and plan performance jobs",
+              "startedAt": "2026-11-05T04:47:44Z",
+              "completedAt": "2026-11-05T04:47:49Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Verify and package Release test products",
+              "startedAt": "2026-11-05T04:47:49Z",
+              "completedAt": "2026-11-05T04:48:01Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+              "startedAt": "2026-11-05T04:48:01Z",
+              "completedAt": "2026-11-05T04:48:04Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain Release build log",
+              "startedAt": "2026-11-05T04:48:04Z",
+              "completedAt": "2026-11-05T04:48:06Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T04:48:06Z",
+              "completedAt": "2026-11-05T04:48:06Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T04:48:06Z",
+              "completedAt": "2026-11-05T04:48:08Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127055882294,
+          "name": "Release performance (scroll)",
+          "createdAt": "2026-11-05T04:48:10Z",
+          "startedAt": "2026-11-05T04:49:43Z",
+          "completedAt": "2026-11-05T05:01:27Z",
+          "queueSeconds": 93,
+          "durationSeconds": 704,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T04:49:44Z",
+              "completedAt": "2026-11-05T04:49:45Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T04:49:45Z",
+              "completedAt": "2026-11-05T04:49:49Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T04:49:49Z",
+              "completedAt": "2026-11-05T04:49:51Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore Release products and record the toolchain",
+              "startedAt": "2026-11-05T04:49:51Z",
+              "completedAt": "2026-11-05T04:49:55Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select an iPhone simulator",
+              "startedAt": "2026-11-05T04:49:55Z",
+              "completedAt": "2026-11-05T04:50:20Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Boot and verify a fresh Release installation",
+              "startedAt": "2026-11-05T04:50:20Z",
+              "completedAt": "2026-11-05T04:53:40Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run one Release performance case",
+              "startedAt": "2026-11-05T04:53:40Z",
+              "completedAt": "2026-11-05T05:00:46Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Export available XCTest metrics, attachments and test results",
+              "startedAt": "2026-11-05T05:00:46Z",
+              "completedAt": "2026-11-05T05:00:52Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Require exact test execution and complete performance evidence",
+              "startedAt": "2026-11-05T05:00:52Z",
+              "completedAt": "2026-11-05T05:00:57Z",
+              "conclusion": "failure"
+            },
+            {
+              "name": "Retain Release performance evidence",
+              "startedAt": "2026-11-05T05:00:57Z",
+              "completedAt": "2026-11-05T05:01:00Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:01:01Z",
+              "completedAt": "2026-11-05T05:01:02Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T05:01:02Z",
+              "completedAt": "2026-11-05T05:01:26Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127055882378,
+          "name": "Release performance (launch)",
+          "createdAt": "2026-11-05T04:48:10Z",
+          "startedAt": "2026-11-05T04:56:51Z",
+          "completedAt": "2026-11-05T05:03:29Z",
+          "queueSeconds": 521,
+          "durationSeconds": 398,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T04:56:52Z",
+              "completedAt": "2026-11-05T04:56:54Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T04:56:54Z",
+              "completedAt": "2026-11-05T04:56:58Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T04:56:58Z",
+              "completedAt": "2026-11-05T04:57:05Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore Release products and record the toolchain",
+              "startedAt": "2026-11-05T04:57:05Z",
+              "completedAt": "2026-11-05T04:57:10Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select an iPhone simulator",
+              "startedAt": "2026-11-05T04:57:10Z",
+              "completedAt": "2026-11-05T04:57:31Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Boot and verify a fresh Release installation",
+              "startedAt": "2026-11-05T04:57:31Z",
+              "completedAt": "2026-11-05T04:59:46Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run one Release performance case",
+              "startedAt": "2026-11-05T04:59:46Z",
+              "completedAt": "2026-11-05T05:03:07Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Export available XCTest metrics, attachments and test results",
+              "startedAt": "2026-11-05T05:03:07Z",
+              "completedAt": "2026-11-05T05:03:13Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Require exact test execution and complete performance evidence",
+              "startedAt": "2026-11-05T05:03:13Z",
+              "completedAt": "2026-11-05T05:03:14Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain Release performance evidence",
+              "startedAt": "2026-11-05T05:03:14Z",
+              "completedAt": "2026-11-05T05:03:16Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:03:16Z",
+              "completedAt": "2026-11-05T05:03:17Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T05:03:17Z",
+              "completedAt": "2026-11-05T05:03:27Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 127055882387,
+          "name": "Release performance (rendered)",
+          "createdAt": "2026-11-05T04:48:10Z",
+          "startedAt": "2026-11-05T04:56:26Z",
+          "completedAt": "2026-11-05T05:12:31Z",
+          "queueSeconds": 496,
+          "durationSeconds": 965,
+          "steps": [
+            {
+              "name": "Set up job",
+              "startedAt": "2026-11-05T04:56:27Z",
+              "completedAt": "2026-11-05T04:56:29Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T04:56:29Z",
+              "completedAt": "2026-11-05T04:56:32Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+              "startedAt": "2026-11-05T04:56:32Z",
+              "completedAt": "2026-11-05T04:56:37Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Restore Release products and record the toolchain",
+              "startedAt": "2026-11-05T04:56:37Z",
+              "completedAt": "2026-11-05T04:56:43Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Select an iPhone simulator",
+              "startedAt": "2026-11-05T04:56:43Z",
+              "completedAt": "2026-11-05T04:58:35Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Boot and verify a fresh Release installation",
+              "startedAt": "2026-11-05T04:58:35Z",
+              "completedAt": "2026-11-05T05:01:40Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run one Release performance case",
+              "startedAt": "2026-11-05T05:01:40Z",
+              "completedAt": "2026-11-05T05:12:02Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Export available XCTest metrics, attachments and test results",
+              "startedAt": "2026-11-05T05:12:02Z",
+              "completedAt": "2026-11-05T05:12:09Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Require exact test execution and complete performance evidence",
+              "startedAt": "2026-11-05T05:12:09Z",
+              "completedAt": "2026-11-05T05:12:14Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Retain Release performance evidence",
+              "startedAt": "2026-11-05T05:12:14Z",
+              "completedAt": "2026-11-05T05:12:17Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "startedAt": "2026-11-05T05:12:17Z",
+              "completedAt": "2026-11-05T05:12:18Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "startedAt": "2026-11-05T05:12:18Z",
+              "completedAt": "2026-11-05T05:12:29Z",
+              "conclusion": "success"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "interpretation": "Split jobs completed individually in under30minutes, but shared runner capacity left some fixture jobs queued about102minutes. Parallelization does not eliminate aggregate work. Test-query optimization is being validated; no suite or release coverage was removed."
+}

@@ -1,0 +1,39 @@
+{
+  "candidate": "fa93f60534918ce8e040c706e80163e5d6959153",
+  "job": 127058915580,
+  "artifactID": 13391392240,
+  "originalJob": "failure",
+  "originalWarningMaximum": 1,
+  "reviewedMaximum": 2,
+  "review": "Root accepts the two separately identified occurrences at the exact reviewed menu tap/phase/device after Dot review and prior standalone Menu-open controls. Framework causation is not established. An identical new issue in this exact scope cannot be distinguished by signature alone. All other restrictions remain.",
+  "warningReplay": {
+    "status": "passed",
+    "summaryWarningCount": null,
+    "runtimeWarningCount": 2,
+    "examinedTestCount": 3,
+    "detailExportCount": 3,
+    "activityExportCount": 1,
+    "warnings": [
+      {
+        "selector": "RoomInTheCartUITests/FreeJourneyUITests/testManualListOrderSurvivesRestartAndOpensLargePrint",
+        "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+        "count": 2,
+        "maximum": 2,
+        "menuActivity": {
+          "tap": "Tap \"ledgerListOptions\" Button[0.50, 0.50]",
+          "phase": "Synthesize event"
+        }
+      }
+    ]
+  },
+  "executionFailuresRetained": [
+    "XCTest restarted its runner at log line 2985.",
+    "XCTest log requires one start then one pass for RoomInTheCartUITests/PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart; found ['start', 'timeout'].",
+    "XCTest log requires one successful result banner; found ['FAILED']."
+  ],
+  "sourceEvidenceHashes": {
+    "manual-order-details.json": "2f398a98400345df59f6e1085aa3a500e1175f3ac23b7d576c5865ed6920ef9c",
+    "manual-order-activities.json": "b89de4c15597ee2ef1cc5c804850c76a1fcb443ed2837eb12d653dd511c81aa0"
+  },
+  "negativeChecks": "Count3, different message, selector, tap, phase and OS build rejected by focused tests; full122 Python suite passed."
+}

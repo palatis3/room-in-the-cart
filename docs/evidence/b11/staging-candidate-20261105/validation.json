@@ -184,5 +184,16 @@
     "https://supabase.com/changelog/supabase-cli-v3",
     "https://supabase.com/changelog/cbc-tls-ciphers-deprecated"
   ],
-  "documentationReview": "CLI v3 defaults local and requires explicit remote targeting. No Supabase CLI installed or upgraded and no CLI mutation performed. SQL migration runner is unchanged. Hosted HTTP cipher deprecation does not apply to direct PostgreSQL connections; this review does not certify live client TLS acceptance."
+  "documentationReview": "CLI v3 defaults local and requires explicit remote targeting. No Supabase CLI installed or upgraded and no CLI mutation performed. SQL migration runner is unchanged. Hosted HTTP cipher deprecation does not apply to direct PostgreSQL connections; this review does not certify live client TLS acceptance.",
+  "dotReview": {
+    "result": "No concrete discrepancy in supplied candidate comparison",
+    "verified": [
+      "All29 migration filenames and bytes match both revisions and manifest",
+      "Lockfiles match after excluding only root engine metadata",
+      "Both public builds byte-identical,all5 hashes match",
+      "Only config/README.md changed in compared production roots",
+      "Supplied local TAP,toolchain and proof hashes match"
+    ],
+    "scope": "Personal review of exported evidence; no independent compile, database run or hosted access. Hosted backup and registry remain unverified."
+  }
 }

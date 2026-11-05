@@ -1,0 +1,87 @@
+{
+  "candidate": "fa93f60534918ce8e040c706e80163e5d6959153",
+  "run": 41968854879,
+  "results": [
+    {
+      "case": "launch",
+      "artifactID": 13390260635,
+      "artifactSHA256": "e55c0358de68a92ffc0d1b4ab5ae3560ba21375c19afcd7b8c354c58c8031d2b",
+      "testPassed": true,
+      "status": "baseline-passed",
+      "values": {
+        "responsiveLaunchMedianSeconds": 3.9251589160000004
+      },
+      "comparisons": {
+        "responsiveLaunchMedianSeconds": {
+          "measured": 3.9251589160000004,
+          "maximum": 5.5,
+          "passed": true
+        }
+      }
+    },
+    {
+      "case": "rendered",
+      "artifactID": 13389938048,
+      "artifactSHA256": "511ee40c6d4255ae14391ed6a5f3a978d94fa656e3d50fc95d6ef2de880aed83",
+      "testPassed": true,
+      "status": "baseline-passed",
+      "values": {
+        "searchP95Milliseconds": 3007.9282083333965,
+        "checkP95Milliseconds": 2439.58125000006
+      },
+      "comparisons": {
+        "searchP95Milliseconds": {
+          "measured": 3007.9282083333965,
+          "maximum": 4750,
+          "passed": true
+        },
+        "checkP95Milliseconds": {
+          "measured": 2439.58125000006,
+          "maximum": 3750,
+          "passed": true
+        }
+      },
+      "persistedPickup": {
+        "sqliteQuickCheck": "ok",
+        "revision": 22,
+        "payloadSHA256": "0724905fdf0f977e8b9a144639f3358ae47a322ef41c2f364f6ba177882082a6",
+        "lineCount": 500,
+        "contributionCount": 500,
+        "importCount": 1,
+        "source": "paste",
+        "checkedCount": 20,
+        "checkedRowIDs": [
+          "0383cdd7-fe9e-4d27-815c-92dcc3ac7bb8",
+          "213a66da-4e04-4c21-bfc6-9694c7e65977",
+          "284790e6-1347-4d20-a892-6aed6cb078a7",
+          "2cc995ef-a066-44d3-a767-8fd8cb95a382",
+          "3a85f6c4-37f9-4544-9717-5713fd467b44",
+          "40ec1f1b-2887-4a30-bde3-9c71ec532a5a",
+          "41989a7e-a783-4742-96c5-272810b17a79",
+          "483cb583-0a09-43cb-9f95-6188ee014f1f",
+          "4d89c40c-e096-433d-a57d-2cab810ea731",
+          "66f4f773-10b3-4057-83a1-7d71f4792d9a",
+          "697ce914-3f33-49e7-b55a-2e70f7ef34d3",
+          "8c5d6509-5757-4520-a9ac-c20caa2fdcb7",
+          "a4a47c40-b159-4df3-b45b-3af43b133e88",
+          "a9d9e8e9-c71c-4cb2-8d0d-56417b3eceaf",
+          "b96e0b6a-8cd7-4092-99e8-19fc067d0f9f",
+          "bca53bbb-8500-4886-a907-e2411c1ad754",
+          "c59347c4-a903-408e-ae7b-5a2339ad7b34",
+          "c9cf39ec-5d84-448b-8ec5-250aa1105df6",
+          "e277bce9-f88e-4d51-bf2e-f4ba637f27fc",
+          "e971f9ac-d7c8-4214-b218-40bfa8ad2626"
+        ]
+      },
+      "readbackLimit": "Root verified attachment samples and exact IDs against hosted report; ephemeral hosted SQLite itself is not in artifact and was not reread locally."
+    },
+    {
+      "case": "scroll",
+      "artifactID": 13388919350,
+      "artifactSHA256": "ae8bd1604b2d20bf108ce36cf6b3949eaaacaed089a10adad1e7219e16218c3b",
+      "testPassed": true,
+      "status": "failed-missing-required-metric",
+      "error": "Missing required performance metric: com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.duration"
+    }
+  ]
+}
