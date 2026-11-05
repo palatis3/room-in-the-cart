@@ -32,6 +32,11 @@ jobs:
         working-directory: ${{ matrix.package }}
       - run: npm test
         working-directory: ${{ matrix.package }}
+      - name: Check contributor outbox eviction in Chrome
+        if: matrix.package == 'web'
+        timeout-minutes: 2
+        run: npm run test:browser
+        working-directory: web
   service-postgres:
     runs-on: ubuntu-24.04
     services:
