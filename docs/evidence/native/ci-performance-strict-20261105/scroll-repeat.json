@@ -1,0 +1,111 @@
+{
+  "case": "scroll",
+  "status": "baseline-passed",
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "8C9F4118-331E-4250-B1FC-194972BA6726",
+    "deviceName": "iPhone 17",
+    "modelName": "iPhone 17",
+    "osBuildNumber": "23C54",
+    "osVersion": "26.2",
+    "platform": "iOS Simulator"
+  },
+  "environment": {
+    "osVersion": "26.2",
+    "osBuildNumber": "23C54",
+    "modelName": "iPhone 17",
+    "architecture": "arm64",
+    "xcode": "Xcode 26.3\nBuild version 17C529",
+    "buildConfiguration": "Release",
+    "testConfiguration": "Test Scheme Action"
+  },
+  "metrics": {
+    "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.duration": {
+      "unit": "s",
+      "samples": [
+        2.5502858330000002,
+        2.583596625,
+        2.591149917,
+        2.566847333,
+        2.581956459
+      ],
+      "median": 2.581956459
+    },
+    "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical": {
+      "unit": "kB",
+      "samples": [
+        -196.608,
+        475.136,
+        49.152,
+        -163.84,
+        -98.304
+      ],
+      "median": -98.304
+    },
+    "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute": {
+      "unit": "kB",
+      "samples": [
+        103374.784,
+        104603.584,
+        104964.032,
+        104783.808,
+        104964.032
+      ],
+      "median": 104783.808
+    },
+    "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak": {
+      "unit": "kB",
+      "samples": [
+        103882.688,
+        104603.584,
+        105242.56,
+        105258.944,
+        105373.632
+      ],
+      "median": 105242.56
+    }
+  },
+  "simulatorHitches": {
+    "status": "unavailable",
+    "detail": "XCTest emitted scroll duration and memory, but no animation hitch samples on this simulator. This run cannot evaluate frame hitches."
+  },
+  "persistedPickup": {
+    "sqliteQuickCheck": "ok",
+    "revision": 2,
+    "payloadSHA256": "3863e7cafd7c7db06f18a4d11e07ca18aceae068940819c43ccc8df10189172b",
+    "lineCount": 500,
+    "contributionCount": 500,
+    "importCount": 1,
+    "source": "paste",
+    "checkedCount": 0,
+    "checkedRowIDs": []
+  },
+  "baselineValues": {
+    "scrollMedianSeconds": 2.581956459,
+    "absoluteMemoryMedianKilobytes": 104783.808,
+    "peakMemoryMedianKilobytes": 105242.56,
+    "maximumPeakMemoryKilobytes": 105373.632
+  },
+  "comparisons": {
+    "scrollMedianSeconds": {
+      "measured": 2.581956459,
+      "maximum": 3.25,
+      "passed": true
+    },
+    "absoluteMemoryMedianKilobytes": {
+      "measured": 104783.808,
+      "maximum": 150000,
+      "passed": true
+    },
+    "peakMemoryMedianKilobytes": {
+      "measured": 105242.56,
+      "maximum": 155000,
+      "passed": true
+    },
+    "maximumPeakMemoryKilobytes": {
+      "measured": 105373.632,
+      "maximum": 160000,
+      "passed": true
+    }
+  }
+}

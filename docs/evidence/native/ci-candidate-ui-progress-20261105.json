@@ -3,7 +3,7 @@
   "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41944207882",
   "completeMatrix": false,
   "selectedUIInProducer": 50,
-  "verifiedPassedSoFar": 12,
+  "verifiedPassedSoFar": 13,
   "shards": {
     "ui-02": {
       "job": 126977497544,
@@ -107,7 +107,37 @@
         "test-runtime-warnings.json": "ada30c1e11085ab58dd21e2130b254f790cf01328d56a002e3e1be77501cf997",
         "root-verification.txt": "ae0dd757c91b13de92cc1c427c4219499d7f736039597e4c9edaebe00f64e51f"
       }
+    },
+    "ui-01": {
+      "job": 126977497657,
+      "artifact": 13379594678,
+      "selectors": [
+        "RoomInTheCartUITests/PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart"
+      ],
+      "counts": {
+        "totalTestCount": 1,
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      },
+      "durationSeconds": 714.8037250041962,
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 1,
+        "detailExportCount": 0,
+        "warnings": []
+      },
+      "sha256": {
+        "results.zip": "f60c036c86c258922afb3ac961946bd13d8c6505395f04e66abc6ecbced548e0",
+        "test-summary.json": "f29f958f28d420a0dee9f82e36811abbfc989e7ff487593fd9cdbfa864786f80",
+        "test-details.json": "e363daa1163843860bfe8cf9cc89e8c520d37a29d459bb8ca9a9868c60d4ad22",
+        "test-runtime-warnings.json": "8d9c0044b0fa67989c83d6463e3f433df5e5d8a288bddfc20e6cc278ac231c77",
+        "root-verification.txt": "6f9f8bbd6765f19e2da972325e0d3be875037078f636f31849065ab5bc50938c"
+      }
     }
   },
-  "scope": "12 completed ordinary UI cases from the still-running matrix. Root replayed exact test inventory and runtime-warning checks; one explicitly recorded known print warning remains. Other UI and fixture results remain separate and unvalidated."
+  "scope": "13 completed ordinary UI cases from the still-running matrix. Root replayed exact test inventory and runtime-warning checks; one explicitly recorded known print warning remains. Other UI and fixture results remain separate and unvalidated."
 }

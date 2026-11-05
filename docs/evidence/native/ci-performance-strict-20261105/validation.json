@@ -47,16 +47,50 @@
       ],
       "hitchSamplesAvailable": false,
       "scope": "No scroll duration or complete strict-performance pass can be claimed. Instrumentation cause remains unproven."
+    },
+    "scroll-attempt-2": {
+      "job": 126987417052,
+      "artifact": 13380907059,
+      "artifactSHA256": "d23734c310eb3aeef86f465172888578927dd64528c0da8b02809352be66946f",
+      "reportSHA256": "bc6da5dee618aaf983ca61072b1dba0708af5c61f748e629e0b8432601dadfb9",
+      "passed": true,
+      "testSeconds": 333.389,
+      "productArtifact": 13378137522,
+      "productSHA256": "f3bcefa0f3e5748bc6189e67f60b3305c0c9f03d1f67c736687a3529edca82e6",
+      "comparisons": {
+        "scrollMedianSeconds": {
+          "measured": 2.581956459,
+          "maximum": 3.25,
+          "passed": true
+        },
+        "absoluteMemoryMedianKilobytes": {
+          "measured": 104783.808,
+          "maximum": 150000,
+          "passed": true
+        },
+        "peakMemoryMedianKilobytes": {
+          "measured": 105242.56,
+          "maximum": 155000,
+          "passed": true
+        },
+        "maximumPeakMemoryKilobytes": {
+          "measured": 105373.632,
+          "maximum": 160000,
+          "passed": true
+        }
+      },
+      "rootVerification": "Exact XCTest inventory and structured warnings passed; independently replayed report limits. SQLite readback was performed on the hosted simulator and retained in the calibration report."
     }
   },
   "pending": [
-    "Diagnose missing scroll metric using unchanged binaries; preserve original failed result."
+    "Instrumentation reliability remains unresolved: original hosted attempt and both local controls omitted duration. No automatic retry or baseline weakening introduced.",
+    "Physical-device frame-hitch/smoothness acceptance remains separate; no simulator hitch samples."
   ],
-  "scope": "Strict hosted launch and rendered500-row cases. The launch gate checks its five-sample median; rendered times include XCTest input and idle/accessibility round trips. No real-device latency or animation smoothness is claimed.",
+  "scope": "Strict launch/rendered passed attempt1 and strict scrolling passed one controlled attempt2 using unchanged products. Original missing-metric failure remains retained. This establishes passing simulator budgets for this candidate across the stated attempts, not repeatable measurement collection or physical-device smoothness.",
   "diagnosticRepeat": {
     "requestedJob": 126976693791,
     "newScrollJob": 126987417052,
-    "state": "queued",
+    "state": "success with complete five-sample duration and memory series; same original product archive verified in job log",
     "reason": "One unchanged-product repeat after preserving the missing-metric first attempt; not a retry-until-green policy."
   }
 }

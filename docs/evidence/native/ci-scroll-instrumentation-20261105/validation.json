@@ -11,7 +11,7 @@
     "control": 2.583
   },
   "scope": "Raw UIKit signpost durations explain the local collection gap and do not replace required XCTest measurements or certify frame smoothness. Both local profiles differ from hosted calibration. No app/test/baseline/gate changes, no automatic retries.",
-  "pending": "One controlled hosted same-product repeat, job126987417052. No complete strict scroll pass yet.",
+  "pending": "Hosted repeat126987417052 passed with complete metrics and unchanged limits; see ../ci-performance-strict-20261105/validation.json. Original missing-metric failure remains an instrumentation reliability issue; physical frame-hitch acceptance remains separate.",
   "workerComparisonSHA256": "1594c1be172f9e61964d677368e823936d773d92733d6c3d57953292021fbbda",
   "files": {
     "candidate-signpost-windows.json": "2a404230062cff1518415ad0405c3963c304ad40a6454e7e2c76c096f246b06e",
