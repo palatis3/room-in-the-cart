@@ -1,8 +1,8 @@
 {
   "candidate": "f20feb685f95e7da1c7a23f26eff499d2696329f",
   "run": 41994028672,
-  "observedAt": "2026-11-05T10:06:58.794226+00:00",
-  "completedVerifiedPasses": 18,
+  "observedAt": "2026-11-05T10:33:32.563699+00:00",
+  "completedVerifiedPasses": 30,
   "expectedFixtureCases": 44,
   "coverageComplete": false,
   "shards": [
@@ -97,7 +97,123 @@
       "runtimeWarnings": 0,
       "independentGuardExit": 0,
       "verification": "Sol6.1xhigh independently checked89 archive entries,22 exact plan files and fresh compiled enumeration replay; root reviewed scratch proof."
+    },
+    {
+      "suite": "HouseholdRequestPackUITests",
+      "job": 127143124038,
+      "artifact": 13406091767,
+      "artifactSHA256": "45afe6b3c9faf9bd8e1319117cb89af1aeb5442bfc3fa88781ab35e2efe5331d",
+      "githubDigestVerified": true,
+      "compiledPlanIndependentlyMatched": true,
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "independentGuardExit": 0,
+      "verification": "Sol 6.1 xhigh replayed exact selectors, raw execution and detailed warnings; root verified every retained evidence digest and reviewed the results."
+    },
+    {
+      "suite": "SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview",
+      "job": 127143124109,
+      "artifact": 13407170338,
+      "artifactSHA256": "1fc08143ebfc03fd8b9343900a3e211bf79d7be235d42812a3eb7e7a80cf54a5",
+      "githubDigestVerified": true,
+      "compiledPlanIndependentlyMatched": true,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "independentGuardExit": 0,
+      "verification": "Sol 6.1 xhigh replayed exact selectors, raw execution and detailed warnings; root verified every retained evidence digest and reviewed the results."
+    },
+    {
+      "suite": "SharedMealChangeUITests",
+      "job": 127143124200,
+      "artifact": 13406502003,
+      "artifactSHA256": "63812a840c76803d870e3c97f89b420fe9f455f0339d3ee5c9036c683f9b107a",
+      "githubDigestVerified": true,
+      "compiledPlanIndependentlyMatched": true,
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "independentGuardExit": 0,
+      "verification": "Sol 6.1 xhigh replayed exact selectors, raw execution and detailed warnings; root verified every retained evidence digest and reviewed the results."
+    },
+    {
+      "suite": "RequestDuplicateComparisonUITests",
+      "job": 127143124207,
+      "artifact": 13405034977,
+      "artifactSHA256": "75478ec6583e5c503f64621e85dd72d94ac8af4d8609c887ea6d074bb4ff11f6",
+      "githubDigestVerified": true,
+      "compiledPlanIndependentlyMatched": true,
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "independentGuardExit": 0,
+      "verification": "Sol 6.1 xhigh replayed exact selectors, raw execution and detailed warnings; root verified every retained evidence digest and reviewed the results."
+    },
+    {
+      "suite": "SharedMealCivilDateUITests",
+      "job": 127143124272,
+      "artifact": 13406600948,
+      "artifactSHA256": "c0e20fc6290fbe65700b784d7b11e3f0422e28c29ff89a602e675160123764ad",
+      "githubDigestVerified": true,
+      "compiledPlanIndependentlyMatched": true,
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "independentGuardExit": 0,
+      "verification": "Sol 6.1 xhigh replayed exact selectors, raw execution and detailed warnings; root verified every retained evidence digest and reviewed the results."
+    },
+    {
+      "suite": "SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn",
+      "job": 127143124127,
+      "artifact": 13406916672,
+      "artifactSHA256": "83199f75b3d28852e22ffb72a5b4d323f37f0bb4a44e5cd3908a24116067753a",
+      "githubDigestVerified": true,
+      "compiledPlanIndependentlyMatched": true,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "independentGuardExit": 0,
+      "selectors": [
+        "RoomInTheCartUITests/SharedMealIdeaUITests/testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn"
+      ],
+      "verification": "Sol 6.1 xhigh independently replayed execution, exact plans and detailed warnings. Root verified retained hashes and reviewed the results."
+    },
+    {
+      "suite": "SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult",
+      "job": 127143126870,
+      "artifact": 13406642217,
+      "artifactSHA256": "ca8bf6e287909a65d22acf660abbed8fbd77185b8f4c4c6cfdc6521fa713a16a",
+      "githubDigestVerified": true,
+      "compiledPlanIndependentlyMatched": true,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "independentGuardExit": 0,
+      "selectors": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult"
+      ],
+      "verification": "Sol 6.1 xhigh independently replayed execution, exact plans and detailed warnings. Root verified retained hashes and reviewed the results."
     }
   ],
-  "limits": "Partial passes only. HistoryGrantRead failed and is investigated separately; other jobs remain pending. No real provider activation or physical-device acceptance follows from these guarded fixtures."
+  "limits": "Partial verification: 30 independently replayed passing cases plus one redacted Records report pass. HistoryGrantRead failed; remaining results are pending verification or execution. These fixtures do not establish live provider or physical-device acceptance.",
+  "redactedRecordsReport": {
+    "job": 127143124209,
+    "artifact": 13405780845,
+    "artifactSHA256": "4711627bd07a6811b95286c42031e2530b0dcce878f741c1de6a17a01685ed72",
+    "githubDigestVerified": true,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "rawEvidenceAccessed": false,
+    "verification": "Only allowlisted report and plan artifact downloaded. Report says strict hosted verification passed. This is reported separately from independently replayed raw results."
+  }
 }

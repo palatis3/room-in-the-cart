@@ -1,8 +1,8 @@
 {
   "candidate": "f20feb685f95e7da1c7a23f26eff499d2696329f",
   "run": 41994028642,
-  "observedAt": "2026-11-05T10:22:29.876995+00:00",
-  "completedOrdinaryUIPassed": 26,
+  "observedAt": "2026-11-05T10:33:32.563699+00:00",
+  "completedOrdinaryUIPassed": 32,
   "expectedOrdinaryUI": 50,
   "coverageComplete": false,
   "shards": [
@@ -125,7 +125,29 @@
       ],
       "rawLogSHA256": "74a119c4c7ccf0598b3236578abe45efec62351060b1b68a6a8004d87f4caf40",
       "verification": "Sol6.1xhigh verified77 archive entries, all12 plan files, exact one start/pass per selector and five detailed warning exports; root reviewed proof."
+    },
+    {
+      "shard": "ui-10",
+      "job": 127139509851,
+      "artifact": 13407285093,
+      "artifactSHA256": "aaff8f5e417853a087113f4c003b6bb6962938e237c02c26f78a1ce8859e90dd",
+      "githubDigestVerified": true,
+      "compiledPlanIndependentlyMatched": true,
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "independentGuardExit": 0,
+      "selectors": [
+        "RoomInTheCartUITests/ContextualNavigationUITests/testFreeContextualRoutesKeepPrivateAndSharedWorkSeparate",
+        "RoomInTheCartUITests/FreeJourneyUITests/testCorrectFreezerBatchAndReadReservationsAfterRestart",
+        "RoomInTheCartUITests/FreeJourneyUITests/testPairingEnumerationUsesTheChosenScheduleAndDoesNotOfferItAgain",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testComparisonSaveStaysInsideViewportAboveTabBar",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextEditActionGrowsInContentAndReturnsToEntry",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testShopPhoneShortcutsHaveACompleteTouchTargetAndReturnToShop"
+      ],
+      "verification": "Sol 6.1 xhigh independently replayed execution, exact plans and detailed warnings. Root verified retained hashes and reviewed the results."
     }
   ],
-  "scope": "Wholly passing shards independently checked against replayed compiled plan, exact raw lifecycle and detailed warnings. ui06 has two existing narrowly allowed Menu warnings. Separate failed-shard evidence remains failed; other UI jobs pending."
+  "scope": "All six wholly passing ordinary UI shards independently checked against replayed compiled plan, exact raw lifecycle and detailed warnings: 32 cases. ui06 has two existing narrowly allowed Menu warnings. The four other shards failed and are recorded separately; core CI is terminal and failed."
 }
