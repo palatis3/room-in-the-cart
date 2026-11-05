@@ -21,8 +21,17 @@ import XCTest
         shopRoot()
         tap(app.buttons["Review checkout"])
         tap(app.buttons["Continue to checkout review"])
-        tap(app.buttons["Apply reviewed checkout copy"])
-        tap(app.buttons["Review whole checkout"])
+        let apply = app.buttons["Apply reviewed checkout copy"]
+        reveal(apply)
+        // XCTest can report a partly clipped row as hittable and tap its edge.
+        // Scroll the action's center above the bottom tab bar before applying.
+        if apply.frame.midY > scrollableArea().maxY { scrollContent(upward: true) }
+        let center = CGPoint(x: apply.frame.midX, y: apply.frame.midY)
+        XCTAssertTrue(apply.isHittable && scrollableArea().contains(center), apply.debugDescription)
+        apply.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        let checkout = app.buttons["Review whole checkout"]
+        XCTAssertTrue(checkout.waitForExistence(timeout: 8), "Applying the reviewed copy should open the pickup")
+        tap(checkout)
         fill("Family market", into: "Store", replacing: true)
         fill("Main branch", into: "Branch", replacing: true)
         fill("Tuesday 5 PM", into: "Pickup or delivery slot", replacing: true)

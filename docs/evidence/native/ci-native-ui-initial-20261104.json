@@ -18,7 +18,7 @@
         "test-details.json": "c8b03232fe7c9257deead0b6f5115333dab98dcb811a1dd5ab2024aaa1c18217",
         "Tests.log": "d69b92360709a5fe7fcdb15b1a2ad6acd95a30e4128e5a53c82d1dda9c81782b"
       },
-      "diagnosis": "Synthesized Apply tap landed below the helper\u2019s unobscured viewport. The checkout-copy preview remained visible; downstream checkout route was never reached. A test hit-area correction is being validated in an isolated worktree."
+      "diagnosis": "Synthesized Apply tap landed below the helper\u2019s unobscured viewport. The checkout-copy preview remained visible; downstream checkout was never reached. Visible-center correction passed the full isolated iOS27 journey (507.232s); hosted validation is pending. See checkout-apply-hitarea-regression-20261105/validation.json."
     },
     "ui-02": {
       "job": 126937759017,
@@ -37,7 +37,30 @@
         "Tests.log": "8ff699123e1c1b59b71500bfaf607aa10e7e505c5c5ca5602a39e405b9a1a067"
       },
       "diagnosis": "Ten waits for the app animation-completion signal consumed approximately 600.44 seconds after a multiline keyboard Done action. The app main thread was idle in the sampled trace. This is not proof of a busy app loop or of a particular framework bug. An untouched hosted-artifact reproduction is prepared on local iOS26.2."
+    },
+    "ui-03": {
+      "job": 126937759010,
+      "passedTests": 5,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "evidenceSHA256": {
+        "test-summary.json": "669c9c056f99b747b79052d0e429aef24729558011d78f031d4f9a6f73410e42",
+        "test-details.json": "2862e230e1e5855246bdd51e28bbfb7aef7cbb958066598a3e7f69260244228b",
+        "Tests.log": "b021feff9328df61407368844cb25d67c7c684798d18fb3ab9b9df49714d33df"
+      }
+    },
+    "ui-04": {
+      "job": 126937759073,
+      "passedTests": 4,
+      "failedTests": 1,
+      "skippedTests": 0,
+      "evidenceSHA256": {
+        "test-summary.json": "70bba71adb1da8d29c5d5243266f31e2b379879c5b74bd5860d237c4ffd1cbe6",
+        "test-details.json": "01b794957af890275387e3ba7e25aed4250a8c132105bb7b0fdf8f120e52f52b",
+        "Tests.log": "9f93fea86af0119ac4f6818a84008d9539424b9d064db85d7b986ebd04f3dff1"
+      },
+      "diagnosis": "Manual-order/large-print journey failed waiting for app.buttons[Cancel] after requesting the system print dialog. Ordering survived restart and large-print content assertions passed. Four other cases passed, including share cancellation. Print presentation and test query are under investigation; cause not yet established."
     }
   },
-  "scope": "First two completed ordinary UI groups only; other groups remain active. Failures remain open pending validated corrections."
+  "scope": "First four completed ordinary UI groups. Remaining groups still active; open failures are not relabeled by isolated local passes."
 }

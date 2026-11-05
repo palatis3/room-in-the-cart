@@ -1,0 +1,67 @@
+{
+  "hostedRun": 41930998628,
+  "hostedJob": 126937759026,
+  "hostedSource": "1fd2b96",
+  "hostedRuntime": "iOS 26.2 (23C54)",
+  "selector": "RoomInTheCartUITests/PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart",
+  "hostedLog": "/Users/palatis/Room in the Cart/.build/CIResearch20261104/native-ui-results/ui-01/Tests.log",
+  "hostedResultBundle": "/Users/palatis/Room in the Cart/.build/CIResearch20261104/native-ui-results/ui-01/Tests.xcresult",
+  "hostedFailureImage": "/tmp/room-cart-ui01.RhngUh/hosted-attachments/8E93BE37-5BDD-4E34-B002-AD3C82FA2A90.png",
+  "hostedFailureImageSHA256": "48a416c6bdc616dccd17978596fb4322d3bb7c2767729c90e054b70d4bb49846",
+  "applyTapAttachment": "/tmp/room-cart-ui01.RhngUh/hosted-attachments/5BA53F4A-E1A9-4F1A-8C0D-77C287D14773",
+  "applyTapAttachmentSHA256": "feb925e0b7c78add530a793a716135310b922691ebfb7e75559ba4c920c02ddd",
+  "applyTapCoordinates": [
+    {
+      "x": 17.0,
+      "y": 790.6666666666666
+    },
+    {
+      "x": 17.0,
+      "y": 790.6666666666666
+    }
+  ],
+  "windowSize": {
+    "width": 402,
+    "height": 874
+  },
+  "testViewportBottom": 774,
+  "hostedFailureSeconds": 294.38,
+  "observation": "Failure screenshot retained Reviewed checkout basis and showed no earlier checkout copy between the list and review. The initial synthesized action hit the clipped edge below the test viewport.",
+  "patch": "/tmp/room-cart-ui01.RhngUh/ui01-regression.patch",
+  "patchSHA256": "028603fc2c7f93d6dbd2a3ade9d019ef556ea426fccd8ab94a72e12dc6050f6b",
+  "candidateSourceGitBlob": "bfdca343138468a96cd62f3ea99989369133e6d0",
+  "candidateBase": "117180152acde2bd8d38fe6f92c7a0fc03e8b110",
+  "localXcode": [
+    "Xcode 27.1",
+    "Build version 27A9275"
+  ],
+  "localDevice": {
+    "architecture": "arm64",
+    "deviceId": "5B02B41F-F571-4997-A24B-DA01465C6AAE",
+    "deviceName": "RITC UI01 Offer Checkout Regression",
+    "modelName": "iPhone 17",
+    "osBuildNumber": "24A434",
+    "osVersion": "27.0",
+    "platform": "iOS Simulator"
+  },
+  "localResult": "Passed",
+  "localTests": 1,
+  "localFailures": 0,
+  "localTestSeconds": 507.232,
+  "localExitCode": 0,
+  "localLog": "/tmp/room-cart-ui01.RhngUh/UI01-local.log",
+  "localResultBundle": "/tmp/room-cart-ui01.RhngUh/UI01-local.xcresult",
+  "verifiedLocalSequenceSeconds": {
+    "applyFirstRevealed": 52.45,
+    "extraScrollClearOfTabBar": 53.32,
+    "centerApplyTap": 55.86,
+    "checkoutRouteTap": 58.02,
+    "savedOffer": 259.13,
+    "offerAfterFirstRestart": 269.9,
+    "arrivalRoute": 272.37,
+    "editedOfferSaved": 401.34,
+    "cancelPreservedResponse": 505.08
+  },
+  "installedSourceSHA256": "d928251e498b5fda8cd2bfe39a69d4d2435a1c46f00ded1c8823bc4b3073385e",
+  "scope": "Test interaction correction only. Product code unchanged. Local full exact-selector pass on iOS27.0 does not certify hosted iOS26.2; next hosted source run remains required."
+}
