@@ -14,10 +14,10 @@ import XCTest
 
     func testSavedOfferReopensAndUpdatesResponseAfterRestart() throws {
         launch(reset: true)
-        tap(element("openPickupList")); tap(element("ledgerStartShop"))
-        fill("Offer review pickup", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
-        tap(element("ledgerImport")); fill("2 wraps", into: "ledgerImportText")
-        tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
+        tap(app.buttons["openPickupList"]); tap(app.buttons["ledgerStartShop"])
+        fill("Offer review pickup", into: "ledgerShopName"); tap(app.buttons["ledgerCreateShop"])
+        tap(app.buttons["ledgerImport"]); fill("2 wraps", into: "ledgerImportText", fieldType: .textView)
+        tap(app.buttons["ledgerReviewImport"]); tap(app.buttons["ledgerCommitImport"])
         shopRoot()
         tap(app.buttons["Review checkout"])
         tap(app.buttons["Continue to checkout review"])
@@ -45,7 +45,7 @@ import XCTest
         tap(app.buttons["I placed this order"])
         back(to: "Review a store offer")
         tap(app.buttons["Review a store offer"])
-        tap(element("pickup.offer.new"))
+        tap(app.buttons["pickup.offer.new"])
         choose("Original line", value: "wraps")
         fill("Large wrap pack", into: "pickup.offer.replacement")
         fill("2", into: "pickup.offer.required")
@@ -53,17 +53,17 @@ import XCTest
         fill("4.00", into: "pickup.offer.price")
         fill("3.00", into: "pickup.offer.ceiling")
         fill("1", into: "pickup.offer.usable")
-        tap(element("pickup.offer.retained.kind")); tap(app.buttons["Exact price"])
+        tap(app.buttons["pickup.offer.retained.kind"]); tap(app.buttons["Exact price"])
         fill("0.00", into: "pickup.offer.retained.lower")
         fill("3.00", into: "pickup.offer.lineAllowance")
         let dish = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "pickup.offer.dish.")).firstMatch
         tap(dish); tap(app.buttons["Approved for this dish"])
-        tap(element("pickup.offer.otherCost.kind")); tap(app.buttons["Exact price"])
+        tap(app.buttons["pickup.offer.otherCost.kind"]); tap(app.buttons["Exact price"])
         fill("3.00", into: "pickup.offer.otherCost.lower")
         fill("6.00", into: "pickup.offer.wholeCap")
         fill("Reviewed retained checkout charges excluding replacement", into: "pickup.offer.checkoutSource", replacing: true)
         fill("Please leave unresolved", into: "pickup.offer.preference")
-        tap(element("pickup.offer.review"))
+        tap(app.buttons["pickup.offer.review"])
         assertElementContains("pickup.offer.forecast.combined", "$7.00")
         assertElementContains("pickup.offer.forecast.checkout", "exceeds")
         assertElementContains("pickup.offer.forecast.overage", "$1.00")
@@ -73,7 +73,7 @@ import XCTest
         reveal(shortfall); XCTAssertTrue(shortfall.label.contains(": 1 "), shortfall.label)
         capture("Offer-reviewed-uncovered-quantity")
         approveOffer()
-        tap(element("pickup.offer.save"))
+        tap(app.buttons["pickup.offer.save"])
         let edit = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "pickup.offer.edit.")).firstMatch
         reveal(edit)
         let editID = edit.identifier
@@ -84,47 +84,47 @@ import XCTest
         // The untouched editor cutoff is past by restart; arrival remains a separate review.
         assertElementContains("shop.resumeOfferStatus", "Await pickup")
         assertText("Large wrap pack")
-        assertText("Cutoff:")
+        assertText("Cutoff:", hasPrefix: true)
         capture("Offer-expired-resume-card-after-restart")
-        tap(element("shop.resumeOffer"))
+        tap(app.buttons["shop.resumeOffer"])
         XCTAssertTrue(app.navigationBars["What came home"].waitForExistence(timeout: 8))
         capture("Offer-resume-opens-actual-arrival")
         tap(app.navigationBars["What came home"].buttons["BackButton"])
         XCTAssertTrue(app.navigationBars["Shop"].waitForExistence(timeout: 8))
         tap(app.buttons["Pickup, repairs and handoffs"])
         tap(app.buttons["Review a store offer"])
-        // The saved facts container has its own accessibility identifier; read
-        // the rendered child labels instead of relying on nested identifiers.
+        // Match each rendered fact directly. A containing query selects the
+        // much taller saved-facts ancestor and tests the wrong visible frame.
         assertText("Combined expected cost: $7.00")
         assertText("Reviewed maximum in the retailer note: $3.00")
-        tap(element(editID))
-        XCTAssertEqual(element("pickup.offer.replacement").value as? String, "Large wrap pack")
+        tap(app.buttons[editID])
+        XCTAssertEqual(app.textFields["pickup.offer.replacement"].value as? String, "Large wrap pack")
         fill("Retailer response still pending", into: "pickup.offer.response")
-        tap(element("pickup.offer.review"))
+        tap(app.buttons["pickup.offer.review"])
         approveOffer()
-        tap(element("pickup.offer.save"))
-        reveal(element(editID))
+        tap(app.buttons["pickup.offer.save"])
+        reveal(app.buttons[editID])
         XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "pickup.offer.edit.")).count, 1)
-        assertText("Retailer response still pending")
+        assertText("Retailer response: Retailer response still pending")
         tap(app.buttons["Copy retailer note without changing decision"])
-        reveal(element(editID))
+        reveal(app.buttons[editID])
         capture("Offer-updated-after-restart-and-copied")
         restart()
         tap(app.buttons["Pickup, repairs and handoffs"])
         tap(app.buttons["Review a store offer"])
-        tap(element(editID))
-        reveal(element("pickup.offer.response"))
-        XCTAssertEqual(element("pickup.offer.response").value as? String, "Retailer response still pending")
+        tap(app.buttons[editID])
+        reveal(app.textFields["pickup.offer.response"])
+        XCTAssertEqual(app.textFields["pickup.offer.response"].value as? String, "Retailer response still pending")
         fill("Discard this edit", into: "pickup.offer.response", replacing: true)
-        tap(element("pickup.offer.cancel"))
-        tap(element(editID))
-        reveal(element("pickup.offer.response"))
-        XCTAssertEqual(element("pickup.offer.response").value as? String, "Retailer response still pending")
+        tap(app.buttons["pickup.offer.cancel"])
+        tap(app.buttons[editID])
+        reveal(app.textFields["pickup.offer.response"])
+        XCTAssertEqual(app.textFields["pickup.offer.response"].value as? String, "Retailer response still pending")
         capture("Offer-cancel-keeps-saved-response")
     }
 
     private func approveOffer() {
-        let control = element("pickup.offer.approve")
+        let control = app.switches["pickup.offer.approve"]
         reveal(control)
         if control.value as? String == "0" { control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap() }
         XCTAssertEqual(control.value as? String, "1")
@@ -137,7 +137,7 @@ import XCTest
     }
     private func restart() { app.terminate(); launch(reset: false) }
     private func element(_ id: String) -> XCUIElement { app.descendants(matching: .any).matching(identifier: id).firstMatch }
-    private func tap(_ target: XCUIElement) { reveal(target); XCTAssertTrue(target.isHittable, target.debugDescription); target.tap() }
+    private func tap(_ target: XCUIElement) { reveal(target); target.tap() }
     private func enableSwitch(_ label: String) {
         let control = app.switches[label]
         reveal(control)
@@ -147,29 +147,33 @@ import XCTest
         }
         XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
     }
-    private func fill(_ text: String, into id: String, replacing: Bool = false) {
-        let field = element(id); tap(field)
+    private func fill(_ text: String, into id: String, replacing: Bool = false, fieldType: XCUIElement.ElementType = .textField) {
+        let field = app.descendants(matching: fieldType).matching(identifier: id).firstMatch
+        tap(field)
         if replacing, let old = field.value as? String, old != field.placeholderValue { app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
         app.typeText(text)
         let done = app.buttons.matching(NSPredicate(format: "label == %@", "Done")).firstMatch
-        if done.exists && done.isHittable { done.tap() }
+        if done.isHittable { done.tap() }
     }
     private func reveal(_ target: XCUIElement) {
         for attempt in 0..<64 {
-            if target.exists && target.isHittable { return }
+            // isHittable also checks existence. Avoid resolving the same query
+            // again before every visible action in this long restart journey.
+            if target.isHittable { return }
             let area = scrollableArea()
             let upward: Bool
-            if target.exists && !target.frame.isEmpty {
-                upward = target.frame.midY > area.midY
+            if target.exists {
+                let frame = target.frame
+                upward = frame.isEmpty ? attempt < 32 : frame.midY > area.midY
             } else { upward = attempt < 32 }
             scrollContent(upward: upward, area: area)
         }
-        XCTAssertTrue(target.exists && target.isHittable, "Missing actionable UI element: \(target.debugDescription)")
+        XCTAssertTrue(target.isHittable, "Missing actionable UI element: \(target.debugDescription)")
     }
     private func scrollableArea() -> CGRect {
         let bounds = app.frame
         let keyboardTop = app.keyboards.allElementsBoundByIndex.filter { $0.exists }.map { $0.frame.minY }.min() ?? bounds.maxY
-        let barBottom = app.navigationBars.allElementsBoundByIndex.filter { $0.exists && $0.isHittable }.map { $0.frame.maxY }.max() ?? bounds.minY + 88
+        let barBottom = app.navigationBars.allElementsBoundByIndex.filter { $0.isHittable }.map { $0.frame.maxY }.max() ?? bounds.minY + 88
         let top = max(bounds.minY + 88, min(barBottom + 12, keyboardTop - 140))
         let bottom = min(bounds.maxY - 100, keyboardTop - 16)
         return CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))
@@ -184,9 +188,9 @@ import XCTest
         let end = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: (upward ? high : low) - bounds.minY))
         start.press(forDuration: 0.05, thenDragTo: end)
     }
-    private func assertText(_ text: String) {
-        let target = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
-        reveal(target); XCTAssertTrue(target.exists && target.isHittable, "Missing visible text: \(text)")
+    private func assertText(_ text: String, hasPrefix: Bool = false) {
+        let predicate = NSPredicate(format: hasPrefix ? "label BEGINSWITH %@" : "label == %@", text)
+        reveal(app.staticTexts.matching(predicate).firstMatch)
     }
     private func assertElementContains(_ id: String, _ text: String) {
         let target = element(id); reveal(target); XCTAssertTrue(target.label.contains(text), target.label)
