@@ -1,0 +1,44 @@
+{
+  "baseline": "b95a1796b684b0f52c1188b4d2d26aafb2c9ec2d",
+  "fix": "4d29dd6d03dff8443e194294028d99a5f6e8043c",
+  "fixture": "Loopback synthetic contributor session. Opt into local storage, enter an item, review, send with a lost response, delete the IndexedDB outbox, refresh and inspect the queue and status.",
+  "platforms": {
+    "ios": {
+      "before": {
+        "queued": "Waiting to send from this browser",
+        "afterEviction": "Waiting to send from this browser",
+        "pendingRowVisible": false,
+        "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.0 Mobile/15E148 Safari/604.1"
+      },
+      "after": {
+        "queued": "Waiting to send from this browser",
+        "afterEviction": "A pending request is no longer stored on this browser. Check Your requests for its status.",
+        "pendingRowVisible": false,
+        "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.0 Mobile/15E148 Safari/604.1"
+      }
+    },
+    "android": {
+      "before": {
+        "queued": "Waiting to send from this browser",
+        "afterEviction": "Waiting to send from this browser",
+        "pendingRowVisible": false,
+        "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Mobile Safari/537.36"
+      },
+      "after": {
+        "queued": "Waiting to send from this browser",
+        "afterEviction": "A pending request is no longer stored on this browser. Check Your requests for its status.",
+        "pendingRowVisible": false,
+        "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Mobile Safari/537.36"
+      }
+    }
+  },
+  "limitations": [
+    "Simulated devices, fixture identity and network. OS storage loss was exercised via IndexedDB.deleteDatabase.",
+    "Android Chrome was the installed version 149.0.7827.5 on API 34. Current stable Android acceptance remains open.",
+    "Initial Safari attempts to open the updated build timed out before a result. A separate fresh iPhone 17 simulator on iOS 27.0 build 24A434 completed the scenario."
+  ],
+  "testedBuiltJS": {
+    "index-DfcLasv-.js": "474ead6ca42c2d16feaa4bb2fafb755308774e5489b0b81cb02d18401a1f2989",
+    "index-LZfuXMbi.js": "fa7bf849b8132c6c3672a6531a98fa12c6d27ce524d9a04d7c1ee187ce367284"
+  }
+}
