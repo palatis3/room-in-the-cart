@@ -119,7 +119,8 @@ import XCTest
     private func tap(_ target: XCUIElement) { reveal(target); XCTAssertTrue(target.isHittable, target.debugDescription); target.tap() }
     private func enableSwitch(_ label: String) {
         let control = app.switches[label]
-        reveal(control)
+        dismissKeyboardIfPresent()
+        reveal(control, fullyVisible: true)
         if control.value as? String == "0" {
             // The accessibility frame includes the Form label. Tap the trailing switch itself.
             control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
@@ -133,17 +134,32 @@ import XCTest
         let done = app.buttons.matching(NSPredicate(format: "label == %@", "Done")).firstMatch
         if done.exists && done.isHittable { done.tap() }
     }
-    private func reveal(_ target: XCUIElement) {
+    private func dismissKeyboardIfPresent() {
+        let keyboard = app.keyboards.firstMatch
+        guard keyboard.exists else { return }
+        let bounds = app.frame, area = scrollableArea()
+        let origin = app.coordinate(withNormalizedOffset: .zero)
+        let start = origin.withOffset(CGVector(dx: 8, dy: area.minY + area.height * 0.25 - bounds.minY))
+        let end = origin.withOffset(CGVector(dx: 8, dy: bounds.height - 30))
+        start.press(forDuration: 0.05, thenDragTo: end)
+        let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: keyboard)
+        XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
+    }
+    private func reveal(_ target: XCUIElement, fullyVisible: Bool = false) {
         for attempt in 0..<24 {
-            if target.exists && target.isHittable { return }
             let area = scrollableArea()
+            if target.exists && target.isHittable &&
+                (!fullyVisible || (target.frame.minY >= area.minY && target.frame.maxY <= area.maxY)) { return }
             let upward: Bool
             if target.exists && !target.frame.isEmpty {
                 upward = target.frame.midY > area.midY
             } else { upward = attempt < 16 }
             scrollContent(upward: upward)
         }
-        XCTAssertTrue(target.exists && target.isHittable, "Missing actionable UI element: \(target.debugDescription)")
+        let area = scrollableArea()
+        XCTAssertTrue(target.exists && target.isHittable &&
+            (!fullyVisible || (target.frame.minY >= area.minY && target.frame.maxY <= area.maxY)),
+            "Missing fully actionable UI element: \(target.debugDescription)")
     }
     private func revealTogether(_ targets: [XCUIElement]) {
         guard let first = targets.first, let last = targets.last else { return }
