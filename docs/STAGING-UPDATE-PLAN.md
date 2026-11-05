@@ -1,6 +1,8 @@
 # Next staging update
 
-The candidate runtime is pinned to `1a1a42b390f176b97d47a9b46817cffd6ba8b960`. The matching deployment source at `911343c7b2d274e925421434749e7635a06e18b1` preserves the runtime and migration inputs and includes the latest web fixes. It passed the [candidate build and restore rehearsal](evidence/b11/staging-candidate-20261104/validation.json). Hosted rollout requires a verified private staging backup and owner review.
+The current review candidate is `fa93f60534918ce8e040c706e80163e5d6959153`, with Node22.23.4. Its production service/API/web/configuration logic and all29 migration files match the earlier prepared `911343c7b2d274e925421434749e7635a06e18b1` candidate; the only change in those compared source roots is configuration documentation. Dependency resolutions are unchanged; engine metadata and CI/test harness files changed separately. The newly compiled web HTML/CSS/JavaScript matches the earlier candidate exactly. The populated008→029 upgrade, authorization and isolated dump restore passed again under the new Node version. [Current candidate proof](evidence/b11/staging-candidate-20261105/validation.json)
+
+The latest read-only public probe passes all six API boundaries but still rejects19 web checks: older root HTML, sixteen missing named route forms and two missing candidate assets. Both icons match. The Supabase connector still denies access to this exact project, so the hosted registry and actual backup have not been freshly verified. The older dashboard observation below remains dated evidence. Hosted rollout requires a verified private staging backup and owner review.
 
 ## Exact target
 
@@ -19,6 +21,12 @@ The [native scoped evidence](evidence/native/integrated-local-20261103/evidence.
 3. Apply the 21 reviewed additive migrations from the candidate record in order, each transaction and checksum recorded with the existing migration runner. Application runtime credentials never become migration credentials. Verify RLS, role privileges, functions and isolation after application.
 4. Prepare separate least-privilege worker and guardian-verifier logins. The worker must not inherit application access or own schema/database/tables. The verifier receives only its reviewed verification functions. Keep role passwords in protected server configuration, never app/web bundles, command arguments or evidence output.
 5. Build the same service and web source for the dedicated staging project. Preserve the previous deployment identifier for application rollback. If a migration cannot safely reverse, rollback means the previous compatible application plus disabled affected network paths; it does not mean dropping new data or inventing a down migration.
+
+## Backup tooling preflight
+
+Supabase CLI v3 changed database commands to target local by default. Before capturing the actual staging backup, inspect the installed version and command help, record the exact target, and use that version's explicit remote targeting. Do not rely on an unpinned latest CLI or infer a hosted backup from a local dump. The app's existing checksum-based SQL migration runner remains unchanged. [CLI change](https://supabase.com/changelog/supabase-cli-v3)
+
+A restorable Supabase backup must preserve the required schema, data, roles and auth customizations; storage object bytes and provider configuration require separate coverage. Custom login passwords require protected reprovisioning. Verify those pieces in the isolated restore rather than publishing credentials or treating a successful file export as sufficient. [Backup and restore guide](https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore)
 
 ## Runtime configuration boundaries
 
