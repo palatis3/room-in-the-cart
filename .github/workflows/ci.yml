@@ -1,5 +1,5 @@
 name: Build and test
-run-name: SwiftUI Menu diagnostic only
+run-name: Isolated SwiftUI Menu scenarios
 
 on:
   workflow_dispatch:
@@ -13,14 +13,21 @@ on:
 permissions:
   contents: read
 
+env:
+  DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+
 jobs:
-  swiftui-menu-diagnostic:
-    name: SwiftUI Menu runtime warning diagnostic
+  build-menu-diagnostic:
+    name: Build one Menu diagnostic app and runner
     runs-on: macos-15
-    timeout-minutes: 18
+    timeout-minutes: 15
     env:
-      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
-      EVIDENCE: .build/menu-runtime-diagnostic
+      EVIDENCE: .build/menu-build-evidence
+    outputs:
+      artifact_id: ${{ steps.upload.outputs.artifact-id }}
+      artifact_digest: ${{ steps.upload.outputs.artifact-digest }}
+      products_sha256: ${{ steps.package.outputs.products_sha256 }}
+      source_sha256: ${{ steps.package.outputs.source_sha256 }}
     steps:
       - name: Reject release use of this diagnostic branch
         if: ${{ inputs.require_release_metadata }}
@@ -31,57 +38,166 @@ jobs:
         with:
           persist-credentials: false
       - name: Require the original hosted toolchain and simulator profile
-        shell: bash
-        run: |
-          mkdir -p "$EVIDENCE"
-          xcodebuild -version | tee "$EVIDENCE/toolchain.txt"
-          test "$(cat "$EVIDENCE/toolchain.txt")" = $'Xcode 26.3\nBuild version 17C529'
-          test "$(uname -m)" = arm64
-          sw_vers > "$EVIDENCE/host.txt"
-          xcrun simctl list -j > "$EVIDENCE/simulator-inventory.json"
-          python3 - <<'PY'
-          import json, os
-          from pathlib import Path
-
-          data = json.loads((Path(os.environ['EVIDENCE']) / 'simulator-inventory.json').read_text())
-          runtime_id = 'com.apple.CoreSimulator.SimRuntime.iOS-26-2'
-          runtime, = [item for item in data['runtimes'] if item['identifier'] == runtime_id and item['isAvailable']]
-          if runtime['buildversion'] != '23C54':
-              raise SystemExit('Expected hosted iOS 26.2 runtime build 23C54')
-          device, = [item for item in data['devices'][runtime_id] if item['name'] == 'iPhone 17' and item['isAvailable']]
-          with open(os.environ['GITHUB_ENV'], 'a') as output:
-              print(f"SIMULATOR_ID={device['udid']}", file=output)
-          PY
-      - name: Boot the pinned iPhone simulator
-        timeout-minutes: 5
-        run: xcrun simctl bootstatus "$SIMULATOR_ID" -b
-      - name: Run the isolated Menu and no-menu scenarios once
+        run: bash diagnostics/swiftui-menu/require-environment.sh
+      - name: Build the tiny project once without starting any test
         timeout-minutes: 8
         shell: bash
         run: |
           xcodebuild -project diagnostics/swiftui-menu/MenuRuntimeDiagnostic.xcodeproj \
             -scheme MenuRuntimeDiagnostic -configuration Debug \
             -destination "platform=iOS Simulator,id=$SIMULATOR_ID" -parallel-testing-enabled NO -jobs 2 \
+            -derivedDataPath "$RUNNER_TEMP/menu-derived" CODE_SIGN_IDENTITY=- build-for-testing \
+            2>&1 | tee "$EVIDENCE/build.log"
+      - name: Archive the complete products and diagnostic source
+        id: package
+        shell: bash
+        run: |
+          tar -czf "$EVIDENCE/menu-products.tar.gz" -C "$RUNNER_TEMP/menu-derived/Build" Products
+          git archive --format=tar "$GITHUB_SHA" .github/workflows/ci.yml \
+            diagnostics/swiftui-menu scripts/check_ios_test_results.py > "$EVIDENCE/menu-source.tar"
+          products=$(shasum -a 256 "$EVIDENCE/menu-products.tar.gz" | awk '{print $1}')
+          source=$(shasum -a 256 "$EVIDENCE/menu-source.tar" | awk '{print $1}')
+          printf 'products_sha256=%s\nsource_sha256=%s\n' "$products" "$source" >> "$GITHUB_OUTPUT"
+      - name: Upload producer evidence
+        if: ${{ always() && !inputs.require_release_metadata }}
+        id: upload
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: swiftui-menu-diagnostic-inputs-${{ github.run_attempt }}
+          path: .build/menu-build-evidence/
+          compression-level: 0
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
+  menu-scenario:
+    name: SwiftUI Menu (${{ matrix.method }})
+    needs: build-menu-diagnostic
+    runs-on: macos-15
+    timeout-minutes: 14
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        method:
+          - testPickupControlWithoutOpeningMenu
+          - testFixtureControlWithoutOpeningMenu
+          - testOpenAndCancelSinglePickupMenu
+          - testOpenAndCancelFixtureControlsMenu
+    env:
+      EVIDENCE: .build/menu-runtime-diagnostic
+      METHOD: ${{ matrix.method }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Require the original hosted toolchain and simulator profile
+        run: bash diagnostics/swiftui-menu/require-environment.sh
+      - name: Verify and restore the same build and source archives
+        timeout-minutes: 3
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUILD_ARTIFACT_ID: ${{ needs.build-menu-diagnostic.outputs.artifact_id }}
+          BUILD_ARTIFACT_DIGEST: ${{ needs.build-menu-diagnostic.outputs.artifact_digest }}
+          PRODUCTS_SHA256: ${{ needs.build-menu-diagnostic.outputs.products_sha256 }}
+          SOURCE_SHA256: ${{ needs.build-menu-diagnostic.outputs.source_sha256 }}
+        run: |
+          [[ "$BUILD_ARTIFACT_ID" =~ ^[0-9]+$ ]]
+          archive_digest=${BUILD_ARTIFACT_DIGEST#sha256:}
+          for digest in "$archive_digest" "$PRODUCTS_SHA256" "$SOURCE_SHA256"; do
+            [[ "$digest" =~ ^[a-f0-9]{64}$ ]]
+          done
+          archive="$RUNNER_TEMP/menu-inputs.zip"
+          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$BUILD_ARTIFACT_ID/zip" > "$archive"
+          printf '%s  %s\n' "$archive_digest" "$archive" | shasum -a 256 -c -
+          inputs="$RUNNER_TEMP/menu-inputs"
+          unzip -q "$archive" -d "$inputs"
+          printf '%s  %s\n' "$PRODUCTS_SHA256" "$inputs/menu-products.tar.gz" \
+            "$SOURCE_SHA256" "$inputs/menu-source.tar" | shasum -a 256 -c -
+          git archive --format=tar "$GITHUB_SHA" .github/workflows/ci.yml \
+            diagnostics/swiftui-menu scripts/check_ios_test_results.py > "$RUNNER_TEMP/menu-checked-source.tar"
+          cmp "$inputs/menu-source.tar" "$RUNNER_TEMP/menu-checked-source.tar"
+          tar -xzf "$inputs/menu-products.tar.gz" -C "$inputs"
+          test_runs=("$inputs"/Products/MenuRuntimeDiagnostic_iphonesimulator*.xctestrun)
+          test "${#test_runs[@]}" -eq 1
+          test -f "${test_runs[0]}"
+          echo "TEST_RUN_PATH=${test_runs[0]}" >> "$GITHUB_ENV"
+          debug="$inputs/Products/Debug-iphonesimulator"
+          shasum -a 256 "${test_runs[0]}" "$debug/MenuRuntimeDiagnostic.app/MenuRuntimeDiagnostic" \
+            "$debug/MenuRuntimeDiagnostic.app/MenuRuntimeDiagnostic.debug.dylib" \
+            "$debug/MenuRuntimeDiagnosticUITests-Runner.app/MenuRuntimeDiagnosticUITests-Runner" \
+            "$debug/MenuRuntimeDiagnosticUITests-Runner.app/PlugIns/MenuRuntimeDiagnosticUITests.xctest/MenuRuntimeDiagnosticUITests" \
+            > "$EVIDENCE/product-sha256.txt"
+          python3 - "$archive_digest" "${test_runs[0]}" <<'PY'
+          import json, os, plistlib, sys
+          from pathlib import Path
+
+          with open(sys.argv[2], 'rb') as handle:
+              target = plistlib.load(handle)['MenuRuntimeDiagnosticUITests']
+          if (target['UITargetAppPath'] != '__TESTROOT__/Debug-iphonesimulator/MenuRuntimeDiagnostic.app' or
+                  target['TestHostPath'] != '__TESTROOT__/Debug-iphonesimulator/MenuRuntimeDiagnosticUITests-Runner.app' or
+                  target['TestBundlePath'] != '__TESTHOST__/PlugIns/MenuRuntimeDiagnosticUITests.xctest'):
+              raise SystemExit('The archived xctestrun does not point at the expected diagnostic products')
+          record = {
+              'commit': os.environ['GITHUB_SHA'],
+              'buildArtifactId': os.environ['BUILD_ARTIFACT_ID'],
+              'buildArtifactZIPSHA256': sys.argv[1],
+              'productsTarSHA256': os.environ['PRODUCTS_SHA256'],
+              'sourceTarSHA256': os.environ['SOURCE_SHA256'],
+          }
+          (Path(os.environ['EVIDENCE']) / 'input-provenance.json').write_text(json.dumps(record, indent=2) + '\n')
+          PY
+      - name: Boot the pinned iPhone with no diagnostic app installed
+        timeout-minutes: 5
+        shell: bash
+        run: |
+          xcrun simctl bootstatus "$SIMULATOR_ID" -b
+          if xcrun simctl get_app_container "$SIMULATOR_ID" org.roominthecart.diagnostics.menu app >/dev/null 2>&1; then
+            echo 'Expected a fresh simulator for this diagnostic scenario.' >&2
+            exit 1
+          fi
+      - name: Execute exactly one scenario with the original allowances
+        timeout-minutes: 5
+        shell: bash
+        run: |
+          status=0
+          xcodebuild -xctestrun "$TEST_RUN_PATH" \
+            -destination "platform=iOS Simulator,id=$SIMULATOR_ID" -parallel-testing-enabled NO \
             -test-timeouts-enabled YES -default-test-execution-time-allowance 60 \
             -maximum-test-execution-time-allowance 90 -collect-test-diagnostics never \
-            -derivedDataPath "$RUNNER_TEMP/menu-runtime-derived" \
-            -resultBundlePath "$EVIDENCE/MenuDiagnostic.xcresult" CODE_SIGN_IDENTITY=- test \
-            2>&1 | tee "$EVIDENCE/XCTest.log"
+            -resultBundlePath "$EVIDENCE/MenuDiagnostic.xcresult" \
+            "-only-testing:MenuRuntimeDiagnosticUITests/MenuRuntimeDiagnosticUITests/$METHOD" \
+            test-without-building 2>&1 | tee "$EVIDENCE/XCTest.log" || status=$?
+          printf '%s\n' "$status" > "$EVIDENCE/xcodebuild-status.txt"
+          exit "$status"
       - name: Retain and correlate exact XCTest runtime warnings
-        if: ${{ always() && !inputs.require_release_metadata }}
+        if: always()
+        timeout-minutes: 2
         shell: bash
         run: |
           bundle="$EVIDENCE/MenuDiagnostic.xcresult"
           test -d "$bundle"
           xcrun xcresulttool get test-results summary --path "$bundle" --compact > "$EVIDENCE/test-summary.json"
           xcrun xcresulttool get test-results tests --path "$bundle" --compact > "$EVIDENCE/test-tree.json"
-          python3 diagnostics/swiftui-menu/report.py "$EVIDENCE" | tee -a "$GITHUB_STEP_SUMMARY"
-      - name: Upload the diagnostic bundle and exact warning evidence
-        if: ${{ always() && !inputs.require_release_metadata }}
+          python3 diagnostics/swiftui-menu/report.py "$EVIDENCE" "$METHOD" "$SIMULATOR_ID" "$GITHUB_SHA" \
+            | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Upload the scenario bundle and exact warning evidence
+        if: always()
+        id: evidence
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: swiftui-menu-runtime-diagnostic
+          name: swiftui-menu-${{ matrix.method }}-${{ github.run_attempt }}
           path: .build/menu-runtime-diagnostic/
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 7
+      - name: Record the scenario archive identity
+        if: ${{ always() && steps.evidence.outputs.artifact-id != '' }}
+        env:
+          RESULT_ARTIFACT_ID: ${{ steps.evidence.outputs.artifact-id }}
+          RESULT_ARTIFACT_DIGEST: ${{ steps.evidence.outputs.artifact-digest }}
+        run: printf 'Scenario artifact %s, ZIP SHA-256 %s\n' "$RESULT_ARTIFACT_ID" "$RESULT_ARTIFACT_DIGEST" >> "$GITHUB_STEP_SUMMARY"
