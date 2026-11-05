@@ -140,9 +140,82 @@ import StoreKitTest
         else { XCTAssertTrue(model.isBusy) }
         assertFree(model)
         XCTAssertEqual(session.allTransactions().count, 1, "The fresh approval fixture contains only its pending request")
+        // Bounded structural diagnostics only. No transaction identity, token,
+        // signature, payload, or arbitrary error description enters this log.
+        // Observation work can affect scheduling; this is an instrumented run.
+        let observationStart = ContinuousClock.now
+        let sampleLimit = 128
+        let collectionLimit = 8
+        var observations: [String] = []
+        var droppedSamples = 0
+        func failureLabel(_ issue: MembershipFailure) -> String {
+            switch issue {
+            case .notConfigured: return "not-configured"
+            case .signInRequired: return "sign-in-required"
+            case .unavailable: return "unavailable"
+            case .unverified: return "unverified"
+            case .wrongHousehold: return "wrong-household"
+            case .invalidSnapshot: return "invalid-snapshot"
+            case .invalidReceipt: return "invalid-receipt"
+            case .deliveryPending: return "delivery-pending"
+            case .serverRejected: return "server-rejected"
+            case .accountMismatch: return "account-mismatch"
+            case .refreshRequired: return "refresh-required"
+            case .notPurchaser: return "not-purchaser"
+            case .membershipInactive: return "membership-inactive"
+            }
+        }
+        func deliveryLabel(_ outcome: MembershipModel.DeliveryOutcome) -> String {
+            switch outcome {
+            case .inFlight: return "in-flight"
+            case .delivered: return "delivered"
+            case .failed(let issue): return "failed." + failureLabel(issue)
+            }
+        }
+        func observe(_ stage: String, current: [MembershipPurchaseOutcome]? = nil,
+                     approved: [SignedMembershipTransaction]? = nil) {
+            guard observations.count < sampleLimit else { droppedSamples += 1; return }
+            let report: String
+            switch model.purchaseReport {
+            case .some(.awaitingResult): report = "awaiting-result"
+            case .some(.pending): report = "pending"
+            case .some(.cancelled): report = "cancelled"
+            case .some(.unverified): report = "unverified"
+            case .some(.verified): report = "verified"
+            case .some(.failed(let issue)): report = "failed." + failureLabel(issue)
+            case .none: report = "none"
+            }
+            let currentEvidence: String
+            if let current, let approved {
+                let sample = current.prefix(collectionLimit)
+                let verified = sample.compactMap { outcome -> SignedMembershipTransaction? in
+                    if case .verified(let value) = outcome { return value }; return nil
+                }
+                let matchingOutcome = approved.count == 1
+                    ? model.deliveryOutcomes[approved[0].transactionID].map(deliveryLabel) ?? "absent"
+                    : "non-unique"
+                let unverifiedCount = sample.filter { if case .unverified = $0 { return true }; return false }.count
+                currentEvidence = "currentRead=true currentTotal=\(current.count) sampleCount=\(sample.count) sampleTruncated=\(current.count > collectionLimit) sampleVerified=\(verified.count) sampleProductMatches=\(verified.filter { $0.productID == self.productID }.count) sampleTokenMatches=\(verified.filter { $0.appAccountToken == self.accountToken }.count) sampleNilTokens=\(verified.filter { $0.appAccountToken == nil }.count) sampleUnverified=\(unverifiedCount) approvedCount=\(approved.count) matchingOutcome=\(matchingOutcome)"
+            } else {
+                currentEvidence = "currentRead=false currentCounts=not-read approvedCount=not-read matchingOutcome=not-read"
+            }
+            let delivery = model.deliveryOutcomes.values.prefix(collectionLimit).map(deliveryLabel).sorted().joined(separator: ",")
+            let callbacks = model.callbackRejections.prefix(collectionLimit).map(failureLabel).sorted().joined(separator: ",")
+            observations.append("\(observationStart.duration(to: .now)) stage=\(stage) finished=\(purchase.finished) busy=\(model.isBusy) report=\(report) deliveryTotal=\(model.deliveryOutcomes.count) deliverySample=[\(delivery)] deliveryTruncated=\(model.deliveryOutcomes.count > collectionLimit) callbackTotal=\(model.callbackRejections.count) callbackSample=[\(callbacks)] callbacksTruncated=\(model.callbackRejections.count > collectionLimit) \(currentEvidence)")
+        }
+        defer {
+            observe("test-exit")
+            let header = "sampleLimit=\(sampleLimit) collectionLimit=\(collectionLimit) droppedSamples=\(droppedSamples)"
+            let attachment = XCTAttachment(string: ([header] + observations).joined(separator: "\n"))
+            attachment.name = "AskToBuy-predicate-observations"
+            attachment.lifetime = .keepAlways
+            add(attachment)
+        }
+        observe("before-approval")
         try session.approveAskToBuyTransaction(identifier: request.identifier)
+        observe("after-approval")
         try await eventually("Approval completes the purchase flow and attempts durable delivery") {
-            guard purchase.finished else { return false }
+            guard purchase.finished else { observe("purchase-open"); return false }
             // Read the identity from StoreKit 2 itself; do not assume that an
             // SKTestTransaction.identifier equals a StoreKit.Transaction.id.
             let current = await storefront.currentTransactions()
@@ -152,6 +225,7 @@ import StoreKitTest
                       transaction.appAccountToken == self.accountToken else { return nil }
                 return transaction
             }
+            observe("current-read", current: current, approved: approved)
             guard approved.count == 1, let transaction = approved.first else { return false }
             return model.deliveryOutcomes[transaction.transactionID] == .failed(.notConfigured)
         }
