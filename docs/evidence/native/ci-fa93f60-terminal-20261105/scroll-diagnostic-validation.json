@@ -1,0 +1,184 @@
+{
+  "purpose": "Collect diagnostic-only UIKit signpost pairs during the next already-needed hosted run. Never substitute for required XCTest metrics or baseline limits.",
+  "source": "Dot scratch proposal, refined and independently verified by root",
+  "dotArchiveSHA256": "66ebaf19e93a18e3ab5e29b06d5713f1b83f3efaed894646418a6f6b96f1e924",
+  "sourceHashes": {
+    "scripts/scroll_signpost_diagnostic.py": "d3112dbffa04fa13ea34538c4b82bc2fa6e86d1c49723c5e1846293abdd4d4ce",
+    "scripts/test_scroll_signpost_diagnostic.py": "a2060e295633057e9ede61ee90be59b5f36b3a73c69b243a26fa596b32e3b243",
+    ".github/workflows/ios-performance.yml": "ad01e2e518c5968c9c4b0348e024d0ceb5378478cbfda1a914f83ca17f5fe072"
+  },
+  "validation": {
+    "pythonTests": 129,
+    "skipped": 0,
+    "actionlint": "passed",
+    "retainedReplays": [
+      {
+        "source": "replay",
+        "report": {
+          "schemaVersion": 1,
+          "diagnosticOnly": true,
+          "captureStatus": "ok",
+          "activityStatus": "ok",
+          "metric": "com.apple.UIKit:ScrollView Scroll_DraggingAndDeceleration",
+          "windows": [
+            {
+              "case": "warm-up",
+              "eventCount": 2,
+              "pairCount": 1,
+              "pairs": [
+                {
+                  "durationSeconds": 2.567
+                }
+              ]
+            },
+            {
+              "case": "measured swipe 1",
+              "eventCount": 2,
+              "pairCount": 1,
+              "pairs": [
+                {
+                  "durationSeconds": 2.582
+                }
+              ]
+            },
+            {
+              "case": "measured swipe 2",
+              "eventCount": 2,
+              "pairCount": 1,
+              "pairs": [
+                {
+                  "durationSeconds": 2.6
+                }
+              ]
+            },
+            {
+              "case": "measured swipe 3",
+              "eventCount": 2,
+              "pairCount": 1,
+              "pairs": [
+                {
+                  "durationSeconds": 2.567
+                }
+              ]
+            },
+            {
+              "case": "measured swipe 4",
+              "eventCount": 2,
+              "pairCount": 1,
+              "pairs": [
+                {
+                  "durationSeconds": 2.582
+                }
+              ]
+            },
+            {
+              "case": "measured swipe 5",
+              "eventCount": 2,
+              "pairCount": 1,
+              "pairs": [
+                {
+                  "durationSeconds": 2.581
+                }
+              ]
+            }
+          ],
+          "parsedEventCount": 104,
+          "candidateLineCount": 104,
+          "unparsedCandidateCount": 0,
+          "timeZoneOfLog": "UTC",
+          "matchedProcessCount": 1,
+          "status": "captured"
+        }
+      },
+      {
+        "source": "control",
+        "report": {
+          "schemaVersion": 1,
+          "diagnosticOnly": true,
+          "captureStatus": "ok",
+          "activityStatus": "ok",
+          "metric": "com.apple.UIKit:ScrollView Scroll_DraggingAndDeceleration",
+          "windows": [
+            {
+              "case": "warm-up",
+              "eventCount": 2,
+              "pairCount": 1,
+              "pairs": [
+                {
+                  "durationSeconds": 2.533
+                }
+              ]
+            },
+            {
+              "case": "measured swipe 1",
+              "eventCount": 2,
+              "pairCount": 1,
+              "pairs": [
+                {
+                  "durationSeconds": 2.583
+                }
+              ]
+            },
+            {
+              "case": "measured swipe 2",
+              "eventCount": 2,
+              "pairCount": 1,
+              "pairs": [
+                {
+                  "durationSeconds": 2.583
+                }
+              ]
+            },
+            {
+              "case": "measured swipe 3",
+              "eventCount": 2,
+              "pairCount": 1,
+              "pairs": [
+                {
+                  "durationSeconds": 2.584
+                }
+              ]
+            },
+            {
+              "case": "measured swipe 4",
+              "eventCount": 2,
+              "pairCount": 1,
+              "pairs": [
+                {
+                  "durationSeconds": 2.583
+                }
+              ]
+            },
+            {
+              "case": "measured swipe 5",
+              "eventCount": 2,
+              "pairCount": 1,
+              "pairs": [
+                {
+                  "durationSeconds": 2.567
+                }
+              ]
+            }
+          ],
+          "parsedEventCount": 84,
+          "candidateLineCount": 84,
+          "unparsedCandidateCount": 0,
+          "timeZoneOfLog": "UTC",
+          "matchedProcessCount": 1,
+          "status": "captured"
+        }
+      }
+    ],
+    "localCommandChecks": [
+      "Simulator log show help confirms --timezone support.",
+      "Exact class/method() activity identifier successfully reads untouched hosted scroll bundle; target/class/method form fails."
+    ]
+  },
+  "safetyProperties": [
+    "Raw logs/activities retained only in temporary folder, not uploaded.",
+    "Two-minute optional diagnostic step cannot replace or suppress the required metric gate.",
+    "Capture starts with explicit incomplete status; missing/errors/zero/unparsed evidence remain distinguishable.",
+    "Reject invalid windows, extra endpoints and mixed-process ambiguity."
+  ],
+  "limits": "Actual hosted capture command compatibility and resulting signposts remain unverified until next hosted run. Local replay establishes parser compatibility only. Raw signpost durations are diagnostic, not release performance measurements."
+}

@@ -6,6 +6,8 @@ on:
       - '.github/workflows/ios-performance.yml'
       - 'scripts/check_ios_test_results.py'
       - 'scripts/test_check_ios_test_results.py'
+      - 'scripts/scroll_signpost_diagnostic.py'
+      - 'scripts/test_scroll_signpost_diagnostic.py'
       - 'scripts/check_ios_performance.py'
       - 'scripts/test_check_ios_performance.py'
       - 'scripts/plan_ios_performance_tests.py'
@@ -48,7 +50,9 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Check performance evidence validation
-        run: python3 scripts/test_check_ios_performance.py
+        run: |
+          python3 scripts/test_check_ios_performance.py
+          python3 scripts/test_scroll_signpost_diagnostic.py
       - name: Record Xcode and select an iPhone simulator
         run: |
           xcodebuild -version
@@ -157,6 +161,39 @@ jobs:
             xcrun xcresulttool export metrics --path "$result" --output-path "$evidence/metrics-csv" || echo '::warning::XCTest metrics CSV export unavailable.'
             xcrun xcresulttool export attachments --path "$result" --output-path "$evidence/attachments" || echo '::warning::XCTest attachments export unavailable.'
           fi
+      - name: Capture scroll signpost diagnostic
+        if: always() && matrix.case == 'scroll'
+        timeout-minutes: 2
+        continue-on-error: true
+        shell: bash
+        run: |
+          # Diagnostic only. Raw filtered logs and activities remain temporary.
+          evidence=.build/performance
+          mkdir -p "$evidence"
+          printf '%s\n' '{"schemaVersion":1,"diagnosticOnly":true,"status":"capture_incomplete"}' > "$evidence/scroll-signpost-diagnostic.json"
+          tmp=$(mktemp -d)
+          trap 'rm -rf "$tmp"' EXIT
+          capture=unavailable
+          activity=unavailable
+          if [[ -n "${SIMULATOR_ID:-}" ]]; then
+            if xcrun simctl spawn "$SIMULATOR_ID" log show --last 35m --signpost --info --debug --style compact --timezone UTC \
+              --predicate 'process == "RoomInTheCart" AND subsystem == "com.apple.UIKit" AND category == "ScrollView" AND signpostName == "Scroll_DraggingAndDeceleration"' > "$tmp/signposts.log" 2> "$tmp/log-error"; then
+              capture=ok
+            else
+              capture=error
+            fi
+          fi
+          if [[ -d "$evidence/Performance.xcresult" && -s "$evidence/selector.txt" ]]; then
+            if xcrun xcresulttool get test-results activities --path "$evidence/Performance.xcresult" --compact \
+              --test-id 'ReleasePerformanceUITests/testScrollingPerformanceOnFiveHundredItemPickup()' > "$tmp/activities.json" 2> "$tmp/activity-error"; then
+              activity=ok
+            else
+              activity=error
+            fi
+          fi
+          python3 scripts/scroll_signpost_diagnostic.py --log "$tmp/signposts.log" --activities "$tmp/activities.json" \
+            --capture-status "$capture" --activity-status "$activity" --output "$evidence/scroll-signpost-diagnostic.json" || \
+            printf '%s\n' '{"schemaVersion":1,"diagnosticOnly":true,"status":"collector_error"}' > "$evidence/scroll-signpost-diagnostic.json"
       - name: Require exact test execution and complete performance evidence
         shell: bash
         run: |
