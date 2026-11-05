@@ -1,0 +1,43 @@
+{
+  "sourceCommit": "1fd2b962d77a7459ffe2a73db6d3d8a0557cda45",
+  "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41930998628",
+  "jobs": {
+    "ui-01": {
+      "job": 126937759026,
+      "passedTests": 1,
+      "failedTests": 1,
+      "skippedTests": 0,
+      "failures": [
+        {
+          "test": "PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart()",
+          "message": "XCTAssertTrue failed - Missing actionable UI element: Query chain:\n \u2192Find: Target Application 'dev.roominthecart.app.debug'\n  \u21aa\ufe0eFind: Descendants matching type Button\n    \u21aa\ufe0eFind: Elements matching predicate '\"Review whole checkout\" IN identifiers'\nNo matches found for Elements matching predicate '\"Review whole checkout\" IN identifiers' from input {(\n    Button, {{68.0, 795.0}, {94.0, 54.0}}, identifier: 'cart', label: 'Shop', Selected,\n    Button, {{154.0, 795.0}, {94.0, 54.0}}, identifier: 'fork.knife', label: 'Dinners',\n    Button, {{240.0, 795.0}, {94.0, 54.0}}, identifier: 'clock.arrow.circlepath', label: 'Records',\n    Button, {{16.0, 62.0}, {44.0, 44.0}}, identifier: 'BackButton', label: 'Shop',\n    Button, {{16.0, 301.7}, {370.0, 52.0}}, label: 'Review store, slot and budget',\n    Button, {{16.0, 411.7}, {370.0, 72.7}}, label: 'wraps, 2 units'\n)}\n"
+        }
+      ],
+      "evidenceSHA256": {
+        "test-summary.json": "108e271c5321207ecf55c052afe725142c768316cf6a34aeb8f863b2434bd2df",
+        "test-details.json": "c8b03232fe7c9257deead0b6f5115333dab98dcb811a1dd5ab2024aaa1c18217",
+        "Tests.log": "d69b92360709a5fe7fcdb15b1a2ad6acd95a30e4128e5a53c82d1dda9c81782b"
+      },
+      "diagnosis": "Synthesized Apply tap landed below the helper\u2019s unobscured viewport. The checkout-copy preview remained visible; downstream checkout route was never reached. A test hit-area correction is being validated in an isolated worktree."
+    },
+    "ui-02": {
+      "job": 126937759017,
+      "passedTests": 1,
+      "failedTests": 1,
+      "skippedTests": 0,
+      "failures": [
+        {
+          "test": "FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop()",
+          "message": "Test exceeded execution time allowance of 12 minutes"
+        }
+      ],
+      "evidenceSHA256": {
+        "test-summary.json": "06d69dbcc613e4c89073a71648458be332223001e1e971a1acdb560fdc64400b",
+        "test-details.json": "fcf7169249c9390c04696775a030d6876b18547a8f25d894b88ae235921296f9",
+        "Tests.log": "8ff699123e1c1b59b71500bfaf607aa10e7e505c5c5ca5602a39e405b9a1a067"
+      },
+      "diagnosis": "Ten waits for the app animation-completion signal consumed approximately 600.44 seconds after a multiline keyboard Done action. The app main thread was idle in the sampled trace. This is not proof of a busy app loop or of a particular framework bug. An untouched hosted-artifact reproduction is prepared on local iOS26.2."
+    }
+  },
+  "scope": "First two completed ordinary UI groups only; other groups remain active. Failures remain open pending validated corrections."
+}
