@@ -1,0 +1,16 @@
+{
+  "sourceBase": "f0e2ac37383e76ac3812407384bf2eda968de3c4",
+  "hostedJob": 126977497657,
+  "observedTestSeconds": 714.8037250041962,
+  "duplicateViewportAcquisitions": 80,
+  "observedDuplicateAcquisitionSeconds": 47.016,
+  "candidateFile": "ios/UITests/PickupOfferUITests.swift",
+  "candidateSHA256": "70bdda7c3a301eebedd135cf7bf3bd39a1b2aa81341ba9e18e29c7c6eb181bc1",
+  "patchSHA256": "dd9d28c42e9cefe489fa5d89a8559e0487e1cf5a9bb2472e2f85b27b47eca5c5",
+  "validation": {
+    "patchCheck": "passed",
+    "SwiftParse": "passed",
+    "nativeCandidateJourney": "pending local native lane release from ContributorRequest worker"
+  },
+  "scope": "Reuse the viewport sampled by reveal for the immediately following scroll. Independent callers still sample their own viewport. Original gestures, assertions, navigation, and restarts remain. Observed duplicate-query wall time is not a measured candidate speedup."
+}

@@ -162,7 +162,7 @@ import XCTest
             if target.exists && !target.frame.isEmpty {
                 upward = target.frame.midY > area.midY
             } else { upward = attempt < 32 }
-            scrollContent(upward: upward)
+            scrollContent(upward: upward, area: area)
         }
         XCTAssertTrue(target.exists && target.isHittable, "Missing actionable UI element: \(target.debugDescription)")
     }
@@ -174,10 +174,10 @@ import XCTest
         let bottom = min(bounds.maxY - 100, keyboardTop - 16)
         return CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))
     }
-    private func scrollContent(upward: Bool) {
+    private func scrollContent(upward: Bool, area: CGRect? = nil) {
         // Whole-app swipes can start on the software keyboard. Drag only in
         // the observed unobscured content, and still require real hittability.
-        let area = scrollableArea(), bounds = app.frame
+        let area = area ?? scrollableArea(), bounds = app.frame
         let high = area.minY + area.height * 0.2, low = area.minY + area.height * 0.8
         let origin = app.coordinate(withNormalizedOffset: .zero)
         let start = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: (upward ? low : high) - bounds.minY))
