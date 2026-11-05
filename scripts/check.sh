@@ -11,6 +11,7 @@ if ! command -v node >/dev/null 2>&1 || [ "$(node --version)" != "v$node_version
   exit 1
 fi
 python3 scripts/generate_theme.py --check
+python3 scripts/test_theme_contrast.py
 python3 scripts/check_localization.py
 python3 scripts/test_check_localization.py
 python3 scripts/test_app_configuration.py
