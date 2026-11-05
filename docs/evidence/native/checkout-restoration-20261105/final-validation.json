@@ -1,0 +1,103 @@
+{
+  "purpose": "Final lossless checkout restoration plus dirty/transient-draft preservation.",
+  "compiledInventory": {
+    "models": 580,
+    "ordinaryUI": 51
+  },
+  "sourceManifestSHA256": "5726ea9d5ae5cdd7983821c7dc22fbaed87b4836b3f241fc6c631ea26cf1f00e",
+  "priorComparativeProof": "initial-validation.json",
+  "phases": {
+    "models": {
+      "result": "Passed",
+      "executed": 36,
+      "passed": 36,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "guardExit": 0,
+      "selectors": [
+        "RoomInTheCartTests/LedgerCheckoutAdapterTests/testBasisOnlyChangeRequiresReviewClearsQuoteAndLeavesOldSnapshotImmutable",
+        "RoomInTheCartTests/LedgerCheckoutAdapterTests/testCalendarMoveUpdatesCookCorrectionWithoutChangingPlacedPickup",
+        "RoomInTheCartTests/LedgerCheckoutAdapterTests/testGuestApplyCarriesFiveBoundPeppersThroughPackAndCheckoutWithoutChangingReportedPurchase",
+        "RoomInTheCartTests/LedgerCheckoutAdapterTests/testGuestCheckoutReviewRequiresSameLedgerBasketAndBranch",
+        "RoomInTheCartTests/LedgerCheckoutAdapterTests/testNamedServingGroupsPartitionOneMealAndKeepStableNeedIdentities",
+        "RoomInTheCartTests/LedgerCheckoutAdapterTests/testNextShopBridgeAndRepeatedOriginActionCreateOneEditableShop",
+        "RoomInTheCartTests/LedgerCheckoutAdapterTests/testSameLinesStillReviewRetailerSourceAndZoneChanges",
+        "RoomInTheCartTests/LedgerCheckoutAdapterTests/testSourceChangesAfterPreviewAreRejectedEvenWhenQuantitiesStayTheSame",
+        "RoomInTheCartTests/LedgerCheckoutAdapterTests/testTwelveExistingWrapsProjectSixFourTwoExactlyOnce",
+        "RoomInTheCartTests/LedgerCheckoutAdapterTests/testUnknownAmountsBlockProjectionAndMissingContextStaysMissing",
+        "RoomInTheCartTests/PickupCheckoutDraftTests/testComponentHydrationUsesSavedQuoteCostsAndEveryEditableCharge",
+        "RoomInTheCartTests/PickupCheckoutDraftTests/testDirtyDraftCannotFollowAnotherSelectedPickupAndCanReturnToItsOriginalSource",
+        "RoomInTheCartTests/PickupCheckoutDraftTests/testDirtyDraftKeepsEditsAndOriginalDisplayLinesWhenBasketRevisionChanges",
+        "RoomInTheCartTests/PickupCheckoutDraftTests/testEachUnsupportedComponentShapeRequiresReviewBeforeReplacement",
+        "RoomInTheCartTests/PickupCheckoutDraftTests/testEditingOnePricePreservesOtherUnknownReasonsAndRuleIdentities",
+        "RoomInTheCartTests/PickupCheckoutDraftTests/testEditingPriceDoesNotInventMissingFeesOrDiscounts",
+        "RoomInTheCartTests/PickupCheckoutDraftTests/testEverySourcePricingAndCapEditPreventsAutomaticRefresh",
+        "RoomInTheCartTests/PickupCheckoutDraftTests/testInclusiveHydrationKeepsQuoteAndCapScopesAndCommitmentsIndependent",
+        "RoomInTheCartTests/PickupCheckoutDraftTests/testPristineDraftRefreshesForRevisionSelectionAndSavedSourceChanges",
+        "RoomInTheCartTests/PickupCheckoutDraftTests/testRichPricingRoundTripsAndRequiresExplicitReplacementBeforeScalarEdits",
+        "RoomInTheCartTests/PickupCheckoutDraftTests/testScreenPrivateReviewBlocksRefreshUntilExplicitDiscard",
+        "RoomInTheCartTests/PickupCheckoutDraftTests/testStaleQuoteDoesNotHydrateAndChangedSourceCannotBeOverwritten",
+        "RoomInTheCartTests/PickupCheckoutDraftTests/testUnchangedEditorSavePreservesInclusiveAndComponentQuotesThroughTwoRestarts",
+        "RoomInTheCartTests/PickupCheckoutDraftTests/testUnchangedLargeMoneyDoesNotRequireReparsingThroughTheEntryParser",
+        "RoomInTheCartTests/PickupCheckoutDraftTests/testUnknownInclusiveReasonAndObservedZeroRemainDistinct",
+        "RoomInTheCartTests/PickupModelTests/testArchivedDeletionIsDurableAndExactRetrySafe",
+        "RoomInTheCartTests/PickupModelTests/testConfirmedFreezerLotCoversOrderNeedsAndNextShopCarriesOnlyShortfall",
+        "RoomInTheCartTests/PickupModelTests/testFailedPersistenceNeverPublishesCandidateAndRetryKeepsIdentity",
+        "RoomInTheCartTests/PickupModelTests/testFeedbackRequiresClosedPlacedPickupAndConsentAndSurvivesRestart",
+        "RoomInTheCartTests/PickupModelTests/testInvalidPersistedJourneyDoesNotReplaceReadableState",
+        "RoomInTheCartTests/PickupModelTests/testKnownAndUnknownQuoteSurviveRestart",
+        "RoomInTheCartTests/PickupModelTests/testLegacyFeedbackDecodePreservesChoicesWithoutManufacturingConsent",
+        "RoomInTheCartTests/PickupModelTests/testLocalFeedbackConsentIsVersionedWorkspaceScopedAndCannotComeFromLegacyBoolean",
+        "RoomInTheCartTests/PickupModelTests/testRevisionOverflowRejectsCandidateAndArchiveContainsDurableRecord",
+        "RoomInTheCartTests/PickupModelTests/testUrgentCarryRebuildsDemandWithoutAssumingOldStock",
+        "RoomInTheCartTests/PickupModelTests/testUrgentOfflineHasNoOrderReceiptOrMoneyAfterRestart"
+      ],
+      "hashes": {
+        ".build/CIResearch20261105/checkout-restoration/final/models/Tests.log": "56099a3cbaa4914a722fd161f338315a8eb2a0a8b760c52539f6a65424bd4d7d",
+        ".build/CIResearch20261105/checkout-restoration/final/models/test-summary.json": "561c341936989015af4c81deb071d59e26473f875ea28f01612705e5c2441cda",
+        ".build/CIResearch20261105/checkout-restoration/final/models/test-details.json": "2aee4866a84d6215a0504f56844d2be74dc107e3208080a12fe67e1bc03d107a",
+        ".build/CIResearch20261105/checkout-restoration/final/models/test-runtime-warnings.json": "2ea77f2761a66333ca42d1bff6592956dc94be33f28e101efd9d1f0a4837e921",
+        ".build/CIResearch20261105/checkout-restoration/final/models/verification.txt": "0017c181fedf39e297da5e83c742ad56c30031e57e759219781af7a0e2e42e3e"
+      }
+    },
+    "fixed-ui": {
+      "result": "Passed",
+      "executed": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "guardExit": 0,
+      "selectors": [
+        "RoomInTheCartUITests/PickupCheckoutRestoreUITests/testInclusiveCheckoutFieldsAndResultSurviveRestartAndUnchangedSave"
+      ],
+      "hashes": {
+        ".build/CIResearch20261105/checkout-restoration/final/fixed-ui/Tests.log": "ae6ae11af0bc1de91bb4dd7ddc4cb89a5e7056499c236e29639c3a4286c6759e",
+        ".build/CIResearch20261105/checkout-restoration/final/fixed-ui/test-summary.json": "e7836fada4188423b3ba7913001c9e4c9f6f6dca42c5a2eb1ab345467e92c3ac",
+        ".build/CIResearch20261105/checkout-restoration/final/fixed-ui/test-details.json": "6b565c9d73ce740445732adac549c45b248c313cc53f4a01cbf09ac676cf8777",
+        ".build/CIResearch20261105/checkout-restoration/final/fixed-ui/test-runtime-warnings.json": "ce5f63a49527481ca5704f8996eb8eea682d8688c3381353dd8f23ad6759bffb",
+        ".build/CIResearch20261105/checkout-restoration/final/fixed-ui/verification.txt": "ae1a8fdb8cc195bd631ea432cb38bc14a88b90ad2376846e0f9b683f84b09aff"
+      },
+      "seconds": 249.203
+    }
+  },
+  "review": "Lumpy independently identified dirty-draft loss in the first implementation, then reviewed the correction without another concrete finding. Root hid stale global retry actions as well. Fifteen new model tests include lossless no-op, scope/identity preservation, bounded/unknown evidence, richer rules, changed source/selection, every draft input and private review state. Original preserved app fails the same UI regression; both initial and final fixed implementations pass.",
+  "limits": "Local Xcode27.1/iOS26.2 build23C52; no hosted or physical acceptance. Dirty/pristine source-change policy is model-tested and source-reviewed; the native UI case covers normal save/reopen flow, not an external source change while the screen is open. Initial related hold/cap UI passes remain tied to their earlier frozen source. Sharing-animation cause remains unexplained.",
+  "productHashes": {
+    ".build/CIResearch20261105/checkout-restoration/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart": "6143ee73af42b0f44b984f64a9f796165599eac889c491a693d10ab5b157c654",
+    ".build/CIResearch20261105/checkout-restoration/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/PlugIns/RoomInTheCartUITests.xctest/RoomInTheCartUITests": "a51e9cbbb42f6d38f5012786cc931729e8d65bcb6677f17d3141a16e2732ab63",
+    ".build/CIResearch20261105/checkout-restoration/DerivedData/Build/Products/RoomInTheCart_iphonesimulator27.1-arm64.xctestrun": "d959d8e1e0d23733c2ad501eeda8508db48225106bb6df72e0d04ce0fdd760ae"
+  },
+  "scheduling": {
+    "localSecondsRoundedUp": 250,
+    "existingLocalMultiplier": 4,
+    "estimatedShardSeconds": 1000,
+    "assignedAlone": true,
+    "compiledPlanModels": 580,
+    "compiledPlanOrdinaryUI": 51,
+    "plannerTestsPassed": 6,
+    "planSHA256": "cc670b494745a54ba882a185204705b3e2b7b7cd1a1d41e85284fc3284337991",
+    "limits": "Scheduling weight only; native720/900 allowances unchanged and no hosted timing claim."
+  }
+}

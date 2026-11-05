@@ -3,7 +3,8 @@
     "hosted_seconds": "49 completed passing XCTest cases from candidate f0e2ac3, GitHub Actions run41944207882, Xcode26.3/macOS15 arm64, iPhone17/iOS26.2 build23C54. Rounded up from digest-verified xcresult exports. The failed large-paste case is excluded. Runtime-warning acceptance is independent: the new guard rejects the two UI10 warnings even though XCTest passed; these durations are scheduling evidence only.",
     "local_seconds": "The iPhone 17e iOS 27 runs in .build/CurrentOrdinary3510eb1/ordinary-ui.log and .build/WidgetLifecycleFinal20261104/latest-ordinary-journeys.log. Prefer the newer completed pass when available. Scale local durations by four to budget for observed Intel runner slowdown.",
     "default_seconds": "Five minutes for cases without a prior duration.",
-    "runner_transition": "Current native hosted passes supersede Intel/local estimates for the same selectors. Other cases retain conservative fallback estimates until a complete native passing sample exists. No whole-pipeline speedup is inferred from these scheduling weights."
+    "runner_transition": "Current native hosted passes supersede Intel/local estimates for the same selectors. Other cases retain conservative fallback estimates until a complete native passing sample exists. No whole-pipeline speedup is inferred from these scheduling weights.",
+    "checkout_restoration": "Final checkout-restoration local UI case passed249.203s on iPhone17/iOS26.2 build23C52 with Xcode27.1. Rounded up and kept under the existing conservative local multiplier; not a hosted measurement. Evidence: docs/evidence/native/checkout-restoration-20261105/final-validation.json."
   },
   "default_seconds": 300,
   "local_multiplier": 4,
@@ -91,6 +92,7 @@
     "RoomInTheCartUITests/RoomInTheCartUITests/testShopPhoneShortcutsHaveACompleteTouchTargetAndReturnToShop": 14,
     "RoomInTheCartUITests/RoomInTheCartUITests/testShopRepairShortcutRemainsInsideViewportAndOpens": 14,
     "RoomInTheCartUITests/RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer": 80,
-    "RoomInTheCartUITests/RoomInTheCartUITests/testUnknownPackAmountRemainsUnresolvedAfterSaveAndRestart": 99
+    "RoomInTheCartUITests/RoomInTheCartUITests/testUnknownPackAmountRemainsUnresolvedAfterSaveAndRestart": 99,
+    "RoomInTheCartUITests/PickupCheckoutRestoreUITests/testInclusiveCheckoutFieldsAndResultSurviveRestartAndUnchangedSave": 250
   }
 }

@@ -74,7 +74,7 @@
     "diagnostics/swiftui-toggle/FormToggleDiagnostic.xcodeproj/project.pbxproj": "13df653056a22044a758843c251e55b22ddc38d5302abdb143654f2eafb4da43",
     "diagnostics/swiftui-toggle/FormToggleDiagnostic.xcodeproj/xcshareddata/xcschemes/FormToggleDiagnostic.xcscheme": "ce22287233b3c19bb351ca9f92c7261d7bf25a13943f9ec8d8e1ce13702327f9",
     "diagnostics/swiftui-toggle/FormToggleDiagnosticUITests.swift": "cd6b9a5517a063c9a0a1b3b4638882333938f00fcaa299d5906e5076eb85bde1",
-    "diagnostics/swiftui-toggle/README.md": "b9f36855e5d8e0d6ae7b59aa0aa10ea4476b9d720ef8d007ec123595ada0e28e",
+    "diagnostics/swiftui-toggle/README.md": "7e9ccddb50f0f08ee980589769e42023ae83e924f0bbd887a5c130098d05f775",
     "diagnostics/swiftui-toggle/require-environment.sh": "5b8e4ab210cf176bfda4148ab76843ef5c75b053ca63adb9ba289444b95db304",
     "diagnostics/swiftui-toggle/run-test.sh": "7feb2c91dd7130bdf41f6d6a5627cad008ce603935a658fc55b5f50d633969ea",
     "diagnostics/swiftui-toggle/verify-captures.py": "c4f5a099e989eb940f5b06e8a5d444d7cac763b6c4d06dd8cc51222531d7c329",

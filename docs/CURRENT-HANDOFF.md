@@ -1,6 +1,16 @@
 # Room in the Cart current handoff
 
 
+## Checkout restoration verified locally — November 5, 2026
+
+Final product fix compiled and passed 36 targeted model cases plus the new complete UI restoration case (249.203s), all with zero runtime warnings and strict execution checks. The identical new UI test failed against the preserved pre-fix app at the reopened inclusive switch (78.512s). Initial fixed source also passed the two existing hold/cap UI cases. [Initial comparative proof](evidence/native/checkout-restoration-20261105/initial-validation.json) · [Final proof](evidence/native/checkout-restoration-20261105/final-validation.json).
+
+Lumpy identified and reviewed the dirty-draft follow-up: changing source/selection cannot silently discard edits or carry private hold/funds into another pickup. Pristine forms refresh; dirty forms retain original rows read-only and require explicit discard/reopen. Current saved evidence remains lossless. Opaque fee/discount IDs stay preserved in data; the UI uses stable numbering and full financial details. This is source/model coverage for external changes; a live mid-edit source change was not independently exercised in SwiftUI.
+
+Compiled inventory is now 580 models and 51 ordinary UI cases. The new249.203s local case gets a conservative250-second scheduling entry with the existing multiplier; the fresh ten-shard plan assigns it alone. Six planner tests pass. Native720/900 limits and release gates are unchanged. All checkout native sessions are terminal, including final driver63204. Source snapshots are `.build/CIResearch20261105/checkout-restoration/source-initial` and `source`; initial products are `products-initial`, preserved original app is in `baseline-products`, final products in `DerivedData/Build/Products`. The final arm64 xctestrun is selected explicitly; an earlier universal plan also remains there. All owned checkout/control simulators are shut down; preview remains untouched.
+
+Next native work is the uncommitted SharedStoreQuote driver correction against the two retained failed fixture journeys. Use contributor compilation conditions and fresh owned simulators, one native lane. No hosted run remains active, but do not push the pending driver until validated. Full launch goal and previously listed production gates remain open.
+
 ## Completed hosted results and checkout restoration — November 5, 2026
 
 The user requests continued work without model-change pauses. Full 52-requirement/27-route app goal remains active. All `f20feb6` workflows are now terminal. Core failed ui01/ui02/ui05/ui07; six successful shards independently cover 32 ordinary cases. Fixtures failed HistoryGrantRead, known-trip and lost-reply. Thirty-nine successful fixture cases have independently replayed proof, plus one separately labeled Records redacted-report pass. The lost-reply XCTest passed but its original warning guard failed. Original hosted failures remain failed. [Fixture proof](evidence/native/ci-f20feb6-20261105/fixture-progress.json) · [Final failures](evidence/native/ci-f20feb6-20261105/final-fixture-failures.json).
