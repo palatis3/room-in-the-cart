@@ -1,17 +1,17 @@
-name: Swift security build experiment
+name: Swift security completion measurement
 on:
   push:
-    branches: [codex/swift-codeql-wholemodule]
+    branches: [codex/swift-codeql-completion]
   workflow_dispatch:
 permissions:
   contents: read
 concurrency:
-  group: swift-security-experiment-${{ github.ref }}
+  group: swift-security-completion-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   ios-swift-codeql:
     runs-on: macos-15
-    timeout-minutes: 45
+    timeout-minutes: 60
     permissions:
       contents: read
       security-events: write
@@ -140,7 +140,7 @@ jobs:
           build-mode: manual
           debug: true
       - name: Compile Release Swift sources for CodeQL
-        timeout-minutes: 30
+        timeout-minutes: 45
         shell: bash
         run: |
           source .build/SwiftCodeQLBuildArgs.sh
