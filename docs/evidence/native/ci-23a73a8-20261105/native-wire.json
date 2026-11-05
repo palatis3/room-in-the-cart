@@ -1,0 +1,29 @@
+{
+  "candidate": "23a73a890afbaa23d3c58ae6b0cf63a8b2e2fb71",
+  "observedAt": "2026-11-05T11:55:35.378733+00:00",
+  "run": 42021894581,
+  "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42021894581",
+  "hostedConclusion": "success",
+  "artifact": {
+    "id": 13412116830,
+    "name": "native-wire-results-1",
+    "sha256": "aad1dd0333dcabb9241216a223991f7f10d8cc07307f28dc11fac5c181218cbb",
+    "githubDigestVerified": true
+  },
+  "independentArtifactReadback": {
+    "integrationCases": 4,
+    "swiftPassedInvocations": 6,
+    "exactScenarios": [
+      "history-free HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres",
+      "history-paid HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres",
+      "meal-planner HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres",
+      "meal-shopper HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres",
+      "quote-adult HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres",
+      "quote-shopper HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres"
+    ],
+    "failed": 0,
+    "skipped": 0,
+    "databaseStopped": true
+  },
+  "scope": "Actual Swift transport over pinned loopback HTTPS and disposable PostgreSQL; identity/provider fixtures remain synthetic. No deployed-provider or production acceptance."
+}

@@ -1,5 +1,14 @@
 # Room in the Cart current handoff
 
+## Early hosted results and diagnostic configuration fix — November 5, 2026
+
+Candidate23a73a8 has passed source checks (including136 Python validator tests), web/service tests, PostgreSQL integration, Swift packages and the independent unsigned iPhone Release build. Simulator compilation completed and inventory discovery is in progress; the complete ordinary/fixture/deep/performance result remains pending. Native HTTPS/PostgreSQL passed; root verified the archive digest and all four integration cases plus six exact Swift scenarios, with zero failures/skips and database shutdown. [Native proof](evidence/native/ci-23a73a8-20261105/native-wire.json).
+
+Optional diagnostic42021958365 failed before build, simulator creation or test execution: its workflow omitted `DEVELOPER_DIR`, selecting default Xcode16.4/16F6 instead of required26.3/17C529. The environment guard correctly rejected it. Root verified the artifact contains only `toolchain.txt` and its GitHub digest. A one-line local workflow fix now selects `/Applications/Xcode_26.3.app/Contents/Developer`, consistent with required native jobs; actionlint passes. **Do not push this follow-up while the required candidate is still collecting results.** No hosted diagnostic rerun yet, and this failure says nothing about the original switch bug. [Failure proof](evidence/native/ci-23a73a8-20261105/toggle-environment-failure.json).
+
+All required23a73a8 runs keep their original handles below. No local native lane is active. Supabase project access is still denied; `.env.local` contains no database login (only its pre-existing Vercel identity variable name was inspected, no values exposed). Actual protected hosted backup/restore remains unavailable. No merge, provider activation, deployment or distribution.
+
+
 ## Published consolidated candidate — November 5, 2026
 
 Candidate `23a73a890afbaa23d3c58ae6b0cf63a8b2e2fb71` is pushed to draft [PR1](https://github.com/palatis3/room-in-the-cart/pull/1). Fresh required workflow handles are core42021894668, fixtures42021894739, security42021894555, deep42021894579, native-wire42021894581 and strict performance42021894768. Optional standalone Form toggle diagnostic42021958365 was triggered once with `diagnostic:form-toggle`. All seven runs are authoritatively confirmed on the exact candidate. Dependency review and Actions/JavaScript CodeQL have passed; Swift CodeQL is a separate core job and remains pending. Root owns monitoring. Do not push another change or cancel these runs without a concrete finding; retain each terminal artifact first.

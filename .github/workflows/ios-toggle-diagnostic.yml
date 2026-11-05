@@ -19,6 +19,7 @@ jobs:
     runs-on: macos-15
     timeout-minutes: 45
     env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
       EXPECTED_SHA: ${{ github.event.pull_request.head.sha || inputs.candidate_sha }}
       EVENT_SHA: ${{ github.sha }}
       EVENT_NAME: ${{ github.event_name }}
