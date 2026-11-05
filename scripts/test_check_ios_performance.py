@@ -83,6 +83,12 @@ class CheckIOSPerformanceTests(unittest.TestCase):
             check_metrics(measurements("scroll", *required[:-1]), "scroll", DEVICE, CONFIG)
         with self.assertRaisesRegex(ValueError, "exactly 5 samples"):
             check_metrics(measurements("scroll", *required, metric("hitch.duration", "s", [0] * 4)), "scroll", DEVICE, CONFIG)
+        for suffix in ("_absolute", "_peak"):
+            with self.subTest(suffix=suffix), self.assertRaisesRegex(ValueError, "zero measurement"):
+                invalid = [metric(row["identifier"], row["unitOfMeasurement"],
+                                  [0] + row["measurements"][1:] if row["identifier"] == MEMORY_METRIC + suffix
+                                  else row["measurements"]) for row in required]
+                check_metrics(measurements("scroll", *invalid), "scroll", DEVICE, CONFIG)
 
     def test_rendered_requires_exact_attachments_finite_timings_and_relaunch(self):
         with tempfile.TemporaryDirectory() as folder:

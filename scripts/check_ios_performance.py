@@ -74,8 +74,8 @@ def check_metrics(entries, case, device_id, configuration_id):
         metric = metrics[identifier]
         require(metric["unitOfMeasurement"] == unit, f"Unexpected unit for {identifier}")
         samples = sample_series(metric["measurements"], XCTEST_ITERATIONS, identifier, minimum=minimum)
-        if unit == "s":
-            require(all(samples), f"{identifier} contains a zero duration")
+        if identifier != MEMORY_METRIC:
+            require(all(samples), f"{identifier} contains a zero measurement")
         report[identifier] = {"unit": unit, "samples": samples, "median": median(samples)}
 
     result = {"metrics": report}
