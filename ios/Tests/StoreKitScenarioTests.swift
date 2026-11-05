@@ -139,10 +139,24 @@ import StoreKitTest
         if purchase.finished { XCTAssertEqual(model.notice, .pending) }
         else { XCTAssertTrue(model.isBusy) }
         assertFree(model)
+        XCTAssertEqual(session.allTransactions().count, 1, "The fresh approval fixture contains only its pending request")
         try session.approveAskToBuyTransaction(identifier: request.identifier)
         try await eventually("Approval completes the purchase flow and attempts durable delivery") {
-            purchase.finished && model.notice == .failed(.notConfigured)
+            guard purchase.finished else { return false }
+            // Read the identity from StoreKit 2 itself; do not assume that an
+            // SKTestTransaction.identifier equals a StoreKit.Transaction.id.
+            let current = await storefront.currentTransactions()
+            let approved = current.compactMap { outcome -> SignedMembershipTransaction? in
+                guard case .verified(let transaction) = outcome,
+                      transaction.productID == self.productID,
+                      transaction.appAccountToken == self.accountToken else { return nil }
+                return transaction
+            }
+            guard approved.count == 1, let transaction = approved.first else { return false }
+            return model.deliveryOutcomes[transaction.transactionID] == .failed(.notConfigured)
         }
+        XCTAssertTrue(model.statusMessages.contains(.deliveryFailure(.notConfigured)),
+                      "The exact verified transaction's service-delivery failure remains visible")
         try await eventually("Approved transaction appears in current entitlements") {
             await storefront.currentTransactions().contains { self.id($0) != nil }
         }

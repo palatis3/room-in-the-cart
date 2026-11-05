@@ -1,9 +1,9 @@
 {
   "candidate": "23a73a890afbaa23d3c58ae6b0cf63a8b2e2fb71",
-  "observedAt": "2026-11-05T12:57:48.884824+00:00",
+  "observedAt": "2026-11-05T13:23:45.007820+00:00",
   "run": 42021894668,
   "coverageComplete": false,
-  "independentlyVerifiedPassingCases": 21,
+  "independentlyVerifiedPassingCases": 33,
   "shards": {
     "ui-01": {
       "artifactID": 13413598318,
@@ -122,6 +122,50 @@
         "RoomInTheCartUITests/RoomInTheCartUITests/testConfirmedComparisonDeletionSurvivesRestart"
       ],
       "rawLogSHA256": "57379b67224cd4c4ed223cf46f18b739aae9d785200ffb10d72072975c1fdfb5"
+    },
+    "ui-08": {
+      "jobID": 127231601867,
+      "artifactID": 13417737159,
+      "sha256": "b78f6821527a1cf12280b45ae80ef408b8b0986b1c813d2a2918a4aadb57129d",
+      "githubDigestVerified": true,
+      "selected": 6,
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "warningScope": [],
+      "selectors": [
+        "RoomInTheCartUITests/ContextualNavigationUITests/testUnknownProduceWeightUsesSavedWholePickupCapAndBillingIncrement",
+        "RoomInTheCartUITests/FreeJourneyUITests/testEnglishMealWeekListAndGridShowDatedProtectedLunch",
+        "RoomInTheCartUITests/FreeJourneyUITests/testFreePickupRepairKeepsTheNeedOpenWhenAcceptedFallbackToolsAreUnavailable",
+        "RoomInTheCartUITests/FreeJourneyUITests/testRecipeCaptureOpensOnFirstAttemptAndReopensAfterCancel",
+        "RoomInTheCartUITests/FreeJourneyUITests/testStagedListCanReturnToOriginalAndMergeADuplicateAfterRestart",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextSourceAndSavedDetailsAreFullyReadableAboveTabs"
+      ],
+      "rawLogSHA256": "ba552ce4388c596254e6a34e78349ae9fd4fbbe15feb857f18e85bb2b92c18d9"
+    },
+    "ui-09": {
+      "jobID": 127231601812,
+      "artifactID": 13418541517,
+      "sha256": "fca72f5f38c7c3afe6737c3c9946bb3e42eea480f1b6688caec8c6979494570e",
+      "githubDigestVerified": true,
+      "selected": 6,
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "warningScope": [],
+      "selectors": [
+        "RoomInTheCartUITests/ContextualReminderUITests/testNextShopDeferralRequestsReminderOnlyAfterExplicitScheduleAndCanCancel",
+        "RoomInTheCartUITests/FreeJourneyUITests/testFirstPickupCanStartFromDinnersAndReviewAnEditablePattern",
+        "RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval",
+        "RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresRecordsDetailAndIndependentShoppingList",
+        "RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresSelectedDinnersTabWithoutRestoringUnsavedComparison",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextEditActionGrowsInContentAndReturnsToEntry"
+      ],
+      "rawLogSHA256": "5637c0e7b918dea8cd5480deccc66e256eb33ffcc63e0c393b6ad70a522462ff"
     }
   },
   "limits": "Only these terminal artifacts are independently verified. Other ordinary UI groups remain queued/running. Original f20 failures remain recorded; no full green candidate claim."

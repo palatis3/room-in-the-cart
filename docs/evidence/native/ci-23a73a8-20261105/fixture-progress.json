@@ -100,8 +100,27 @@
         "RoomInTheCartUITests/GuardianEnrollmentUITests/testUncertainAttemptCanRefreshButCannotSendAnotherVerification"
       ],
       "rawLogSHA256": "f4c2a8aaa2ccbe98588e5d2cef01da5cb10a18a6ee08a1869f66be8d60344ae3"
+    },
+    "HouseholdDevicesUITests": {
+      "artifactID": 13416953237,
+      "jobID": 127238287463,
+      "sha256": "7209dfffa3185da32b57d5bce87cc186692d9cbc161d1df3313bf7fc1c443377",
+      "digestVerified": true,
+      "planByteIdentical": true,
+      "strictReplayExit": 0,
+      "selected": 2,
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "warningScope": [],
+      "selectors": [
+        "RoomInTheCartUITests/HouseholdDevicesUITests/testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess",
+        "RoomInTheCartUITests/HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke"
+      ],
+      "rawLogSHA256": "0e268e06e77fce75da7fdfdab69e8262e0f8308008aa07506f22775783fb29d6"
     }
   },
-  "observedAt": "2026-11-05T13:07:10.779390+00:00",
-  "independentlyVerifiedPassingCases": 14
+  "observedAt": "2026-11-05T13:19:43.677355+00:00",
+  "independentlyVerifiedPassingCases": 16
 }

@@ -6,6 +6,16 @@ import SwiftUI
     @Published private(set) var offer: MembershipOffer?
     @Published private(set) var isBusy = false
     @Published private(set) var notice: Notice?
+    // Apple does not identify a request/transaction in a pending purchase result.
+    // Keep that report separate from the service outcome of each admitted update.
+    @Published private(set) var purchaseReport: PurchaseReport?
+    // Latest admitted attempt per verified identity, retained only in this model
+    // session. Generic reconciliation cannot erase another transaction's failure.
+    // A same-transaction retry updates its own outcome; stop clears all evidence.
+    @Published private(set) var deliveryOutcomes: [String: DeliveryOutcome] = [:]
+    // Distinct historical callback rejections in this session, coalesced by
+    // reason. They neither describe a later purchase call nor prove delivery.
+    @Published private(set) var callbackRejections: [MembershipFailure] = []
     let configuration: MembershipConfiguration
     let context: MembershipContext?
     @Published private(set) var eligibleAdults: [MembershipSeat]
@@ -17,8 +27,100 @@ import SwiftUI
     private var started = false
     private(set) var isStopped = false
     private var generation = 0
+    private var purchaseRejection: MembershipFailure?
 
     enum Notice: Equatable { case pending, cancelled, restored, delivered, failed(MembershipFailure) }
+
+    enum PurchaseReport: Equatable {
+        case awaitingResult, pending, cancelled, unverified, verified(transactionID: String), failed(MembershipFailure)
+    }
+    enum DeliveryOutcome: Equatable {
+        case inFlight // Current admitted attempt is awaiting service/finish.
+        case delivered // Historical durable acknowledgement; never current access.
+        case failed(MembershipFailure) // Unresolved latest observation for this transaction.
+    }
+    enum StatusMessage: Equatable, Identifiable {
+        case pendingReport, cancelledReport, unverifiedReport, purchaseFailure(MembershipFailure)
+        case deliveryInFlight, deliverySaved, deliveryFailure(MembershipFailure), callbackRejection(MembershipFailure), otherNotice(Notice)
+
+        var id: String {
+            switch self {
+            case .pendingReport: return "membership.status.purchase.pending"
+            case .cancelledReport: return "membership.status.purchase.cancelled"
+            case .unverifiedReport: return "membership.status.purchase.unverified"
+            case .purchaseFailure(let issue): return "membership.status.purchase.failure." + Self.failureID(issue)
+            case .deliveryInFlight: return "membership.status.delivery.in-flight"
+            case .deliverySaved: return "membership.status.delivery.saved"
+            case .deliveryFailure(let issue): return "membership.status.delivery.failure." + Self.failureID(issue)
+            case .callbackRejection(let issue): return "membership.status.callback.rejection." + Self.failureID(issue)
+            case .otherNotice(let notice):
+                switch notice {
+                case .pending: return "membership.status.notice.pending"
+                case .cancelled: return "membership.status.notice.cancelled"
+                case .restored: return "membership.status.notice.restored"
+                case .delivered: return "membership.status.notice.delivered"
+                case .failed(let issue): return "membership.status.notice.failure." + Self.failureID(issue)
+                }
+            }
+        }
+        private static func failureID(_ issue: MembershipFailure) -> String {
+            switch issue {
+            case .notConfigured: return "not-configured"
+            case .signInRequired: return "sign-in-required"
+            case .unavailable: return "unavailable"
+            case .unverified: return "unverified"
+            case .wrongHousehold: return "wrong-household"
+            case .invalidSnapshot: return "invalid-snapshot"
+            case .invalidReceipt: return "invalid-receipt"
+            case .deliveryPending: return "delivery-pending"
+            case .serverRejected: return "server-rejected"
+            case .accountMismatch: return "account-mismatch"
+            case .refreshRequired: return "refresh-required"
+            case .notPurchaser: return "not-purchaser"
+            case .membershipInactive: return "membership-inactive"
+            }
+        }
+    }
+
+    /// User-facing projection of independent observations; never infer that a
+    /// transaction update resolves the request that returned pending.
+    var statusMessages: [StatusMessage] {
+        var messages: [StatusMessage] = []
+        switch purchaseReport {
+        case .pending: messages.append(.pendingReport)
+        case .cancelled: messages.append(.cancelledReport)
+        case .unverified: messages.append(.unverifiedReport)
+        case .failed(let issue): messages.append(.purchaseFailure(issue))
+        case .awaitingResult, .verified, nil: break
+        }
+        if let purchaseRejection, purchaseReport != .unverified {
+            messages.append(.purchaseFailure(purchaseRejection))
+        }
+        var deliveryIssues: [MembershipFailure] = []
+        for outcome in deliveryOutcomes.values {
+            if case .failed(let issue) = outcome, !deliveryIssues.contains(issue) { deliveryIssues.append(issue) }
+        }
+        for issue in deliveryIssues.sorted(by: { String(describing: $0) < String(describing: $1) }) {
+            messages.append(.deliveryFailure(issue))
+        }
+        if deliveryOutcomes.values.contains(.inFlight) { messages.append(.deliveryInFlight) }
+        if deliveryOutcomes.values.contains(.delivered) { messages.append(.deliverySaved) }
+        for issue in callbackRejections.sorted(by: { String(describing: $0) < String(describing: $1) }) {
+            messages.append(.callbackRejection(issue))
+        }
+        if let notice {
+            switch notice {
+            case .pending where purchaseReport == .pending: break
+            case .cancelled where purchaseReport == .cancelled: break
+            case .delivered where deliveryOutcomes.values.contains(.delivered): break
+            case .failed(let issue) where deliveryIssues.contains(issue) || callbackRejections.contains(issue)
+                || purchaseRejection == issue || purchaseReport == .failed(issue)
+                || (issue == .unverified && purchaseReport == .unverified): break
+            default: messages.append(.otherNotice(notice))
+            }
+        }
+        return messages
+    }
 
     init(configuration: MembershipConfiguration = .fromBundle(), context: MembershipContext? = nil, eligibleAdults: [MembershipSeat] = [],
          service: (any MembershipEntitlementService)? = nil,
@@ -49,6 +151,7 @@ import SwiftUI
 
     private var canStartNewPurchase: Bool {
         !canManageSeats && inFlightTransactions.isEmpty && notice != .failed(.deliveryPending)
+            && !deliveryOutcomes.values.contains(.failed(.deliveryPending))
     }
 
     /// Retain at app scope; calling this from a settings screen as well is idempotent.
@@ -80,6 +183,8 @@ import SwiftUI
         state.clear()
         eligibleAdults = []
         notice = nil
+        purchaseRejection = nil
+        purchaseReport = nil; deliveryOutcomes = [:]; callbackRejections = []
         offer = nil
         inFlightTransactions.removeAll()
     }
@@ -156,13 +261,26 @@ import SwiftUI
             return
         }
         guard canStartNewPurchase else { return }
+        // Only a new actual StoreKit purchase call resets its report. Observer
+        // updates, restores and unrelated rejections cannot resolve this request.
+        purchaseRejection = nil
+        notice = nil
+        purchaseReport = .awaitingResult
         do {
             let result = try await storefront.purchase(appAccountToken: appAccountToken)
             guard session == generation else { return }
-            await receive(result)
+            switch result {
+            case .pending: purchaseReport = .pending
+            case .cancelled: purchaseReport = .cancelled
+            case .unverified: purchaseReport = .unverified
+            case .verified(let transaction): purchaseReport = .verified(transactionID: transaction.transactionID)
+            }
+            await receive(result, origin: .purchase)
         } catch {
             guard session == generation else { return }
-            notice = .failed(error as? MembershipFailure ?? .unavailable)
+            let issue = error as? MembershipFailure ?? .unavailable
+            purchaseReport = .failed(issue)
+            notice = .failed(issue)
         }
     }
 
@@ -204,15 +322,28 @@ import SwiftUI
         }
     }
 
-    // Internal for deterministic tests of callbacks without Apple account UI.
+    // External observer/reconciliation/direct callbacks are not the return value
+    // of the model-owned purchase call. Preserve rejection evidence separately.
+    private enum OutcomeOrigin { case callback, purchase }
     @discardableResult func receive(_ outcome: MembershipPurchaseOutcome) async -> MembershipFailure? {
+        await receive(outcome, origin: .callback)
+    }
+    @discardableResult private func receive(_ outcome: MembershipPurchaseOutcome, origin: OutcomeOrigin) async -> MembershipFailure? {
         guard !isStopped else { return nil }
         switch outcome {
         case .pending: notice = .pending; return nil
         case .cancelled: notice = .cancelled; return nil
-        case .unverified: return reject(.unverified)
-        case .verified(let transaction): return await deliver(transaction)
+        case .unverified: return rejectOutcome(.unverified, origin: origin)
+        case .verified(let transaction): return await deliver(transaction, origin: origin)
         }
+    }
+    private func rejectOutcome(_ issue: MembershipFailure, origin: OutcomeOrigin) -> MembershipFailure {
+        switch origin {
+        case .callback:
+            if !callbackRejections.contains(issue) { callbackRejections.append(issue) }
+        case .purchase: purchaseRejection = issue
+        }
+        return reject(issue)
     }
 
     private func reject(_ issue: MembershipFailure) -> MembershipFailure {
@@ -222,15 +353,16 @@ import SwiftUI
         return issue
     }
 
-    private func deliver(_ transaction: SignedMembershipTransaction) async -> MembershipFailure? {
-        guard let context else { return reject(.signInRequired) }
-        guard context.appAccountToken != nil else { return reject(.notPurchaser) }
-        guard transaction.productID == configuration.productID else { return reject(.unverified) }
+    private func deliver(_ transaction: SignedMembershipTransaction, origin: OutcomeOrigin) async -> MembershipFailure? {
+        guard let context else { return rejectOutcome(.signInRequired, origin: origin) }
+        guard context.appAccountToken != nil else { return rejectOutcome(.notPurchaser, origin: origin) }
+        guard transaction.productID == configuration.productID else { return rejectOutcome(.unverified, origin: origin) }
         // Older purchases without a token are server-reconciled; mismatched tokens are never rebound.
         if let token = transaction.appAccountToken, token != context.appAccountToken {
-            return reject(.accountMismatch)
+            return rejectOutcome(.accountMismatch, origin: origin)
         }
         guard inFlightTransactions.insert(transaction.transactionID).inserted else { return nil }
+        deliveryOutcomes[transaction.transactionID] = .inFlight
         let session = generation
         defer { inFlightTransactions.remove(transaction.transactionID) }
         do {
@@ -242,6 +374,7 @@ import SwiftUI
             // Server commit is durable before finish; failed delivery remains in Transaction.unfinished.
             await storefront.finish(transactionID: transaction.transactionID)
             guard session == generation else { return nil }
+            deliveryOutcomes[transaction.transactionID] = .delivered
             notice = .delivered
             if canManageSeats, let adults = try? await service.seatCandidates(context: context), session == generation {
                 eligibleAdults = adults.filter { $0.isAdult }
@@ -249,7 +382,9 @@ import SwiftUI
             return nil
         } catch {
             guard session == generation else { return nil }
-            return reject(failure(error))
+            let issue = failure(error)
+            deliveryOutcomes[transaction.transactionID] = .failed(issue)
+            return reject(issue)
         }
     }
 

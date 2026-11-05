@@ -1,0 +1,28 @@
+{
+  "candidate": "23a73a890afbaa23d3c58ae6b0cf63a8b2e2fb71",
+  "runID": 42021894668,
+  "shard": "ui-07",
+  "artifactID": 13418855013,
+  "sha256": "121bf5de5200969eacf0a86188837229d0af808ffb585b5da609c73e5b95b1e3",
+  "digestVerified": true,
+  "selected": 6,
+  "passed": 5,
+  "failed": 1,
+  "skipped": 0,
+  "strictReplayExit": 1,
+  "runtimeWarnings": 0,
+  "failure": [
+    {
+      "failureText": "Test exceeded execution time allowance of 12 minutes",
+      "targetName": "RoomInTheCartUITests",
+      "testIdentifier": 2,
+      "testIdentifierString": "FreeJourneyUITests/testNextShopCanCancelThenOpenOneFreshShoppingList()",
+      "testIdentifierURL": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testNextShopCanCancelThenOpenOneFreshShoppingList",
+      "testName": "testNextShopCanCancelThenOpenOneFreshShoppingList()"
+    }
+  ],
+  "rawLogSHA256": "04159d1fae43774a67dd507127885196848bd0ff44221ea8f4e67c531d5b699a",
+  "strictReportSHA256": "d9c0056e318788d47ba75d783d65bf236a6022af21a3123c229547ce6a7d3011",
+  "status": "failed-preserved-no-rerun",
+  "interpretation": "Repeated60-second XCTest animation-idle waits observed before720-second timeout; root/Lumpy read-only triage ongoing, cause not established. Original gate remains failed."
+}
