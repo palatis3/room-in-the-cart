@@ -1,5 +1,11 @@
 # Room in the Cart current handoff
 
+## Published follow-up candidate — November 5, 2026 (America/New_York)
+
+Candidate `f20feb685f95e7da1c7a23f26eff499d2696329f` is pushed to draft [PR#1](https://github.com/palatis3/room-in-the-cart/pull/1). All six fresh workflows are authoritatively confirmed live/queued: core41994028642, security41994028632, deep41994028656, fixtures41994028672, performance41994028865 and native-wire41994028772. Root owns monitoring. Do not restart or push another candidate without a concrete finding while results are being collected. The updated PR distinguishes prior failed hosted results, passing local follow-ups and pending fresh acceptance.
+
+No local native lane remains. Local565 models and both full UI journeys pass with strict guards and zero runtime warnings;129 Python checks/actionlint/project consistency pass. Dot's collector plus root refinements passed final Astra review and retained-data replay. Hosted collection and full hosted acceptance remain unproven. Dot may still return optional final review through relay01a1a6f5-0d06-724d-b8f8-57526604c010. GitHub connector reads temporarily returned internal errors; authenticated `.tools/github-cli/bin/gh` worked as fallback. No merge, deployment or distribution. This evidence-only handoff commit should remain local until the candidate completes.
+
 ## Validated follow-ups ready for hosted CI — November 5, 2026 (America/New_York)
 
 Local follow-up code through `ae20256` passes all565 model tests and both complete previously timed-out journeys under unchanged720/900-second limits: Free dinner492.50s and saved offer536.623s. Every raw execution guard passes, with zero runtime warnings and no SQLite API-misuse diagnostics. [Models](evidence/native/ci-fa93f60-terminal-20261105/sqlite-cleanup-validation.json), [Free journey](evidence/native/ci-fa93f60-terminal-20261105/free-dinner-validation.json), [saved offer](evidence/native/ci-fa93f60-terminal-20261105/pickup-offer-validation.json). Local23C52 differs from hosted23C54; no original hosted failure is relabeled.
