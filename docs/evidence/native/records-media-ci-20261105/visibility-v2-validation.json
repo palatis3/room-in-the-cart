@@ -1,0 +1,77 @@
+{
+  "sourceCommit": "f0e2ac37383e76ac3812407384bf2eda968de3c4",
+  "testPatchSHA256": "2a4d7d17779739c9fba479874e20ba17f15ec7e511feaca8d9a559abbb5f1bd9",
+  "producerArtifact": 13378004520,
+  "sourceArtifactZIPSHA256": "182ab493623f4124c7456ab0655c38c4a161ea5cb3a54733ca43ba761fdf5604",
+  "appBundleCopyAndInstalledBytesVerified": true,
+  "identities": {
+    "xctestrun": "d959d8e1e0d23733c2ad501eeda8508db48225106bb6df72e0d04ce0fdd760ae",
+    "runner": "1c3f36fc27f9ad4344d34742679b199d3af530815c3a8bb2d3464bf401e71b64",
+    "testBundle": "7394eeae2604405d07a582f6e65bc4ec067b6a6dbda9fc920b80151315a3ddf3",
+    "hostedAppLauncher": "34fe1baab2c38f4cef58b307012de11afd66b4ed16c69856748055b18522c87d",
+    "hostedAppDebugDylib": "1823687d7404519ad96469dab2a92d96995fa012c118b7a1f378461f62898d4a"
+  },
+  "localEnvironment": {
+    "xcode": "27.1 (27A9275)",
+    "simulator": {
+      "architecture": "arm64",
+      "deviceId": "94758C81-54B7-4509-9BAA-EA60EBD1BB7D",
+      "deviceName": "RITC Records Media Visibility V2",
+      "modelName": "iPhone 17",
+      "osBuildNumber": "23C52",
+      "osVersion": "26.2",
+      "platform": "iOS Simulator"
+    },
+    "ownedSimulatorShutdownVerified": true
+  },
+  "hostedEnvironment": {
+    "xcode": "26.3 (17C529)",
+    "simulator": "iPhone 17, iOS 26.2 build 23C54"
+  },
+  "selector": "RoomInTheCartUITests/RecordsMediaUITests/testSelectedPhotoDisclosureEncryptedPreviewCancelSiblingRecoveryAndReadablePhoto",
+  "counts": {
+    "totalTestCount": 1,
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "expectedFailures": 0
+  },
+  "seconds": 287.4231230020523,
+  "xcodebuildExit": 0,
+  "runtimeWarningEvidence": {
+    "currentGuardPassed": true,
+    "fullSelectedTestDetailsVerified": true,
+    "exactWarningCount": 0,
+    "detailExportCount": 1,
+    "checkerSHA256": "c8c5dcf31054f7c5f2791de7cf524f99cb6f0fd121a9df078c53bb1610f372f3"
+  },
+  "prepareWindow": {
+    "nativeFormDrags": 1,
+    "secondsFromTapStartToSaveWaitStart": 4.157,
+    "reportedRemainingWaitSeconds": 8.5,
+    "deadlineSeconds": 12
+  },
+  "verifiedJourney": [
+    "Explicit selected source photo and privacy disclosure",
+    "Ready owner file and encrypted save that excludes plain source wording",
+    "Cancel review without mutation and visible cancellation result",
+    "Apply sibling recovery and visible result",
+    "Recovered Package reference caption, image and exact source wording",
+    "Delete recovered copy and visible permanent deletion result"
+  ],
+  "previousEvidence": [
+    "Original unchanged test failed the Save file existence query locally",
+    "V1 cleared Save and reached recovery but queried the caption after it left the viewport",
+    "Original hosted assertion location is unavailable"
+  ],
+  "evidenceSHA256": {
+    "Tests.log": "355503236a064594ed4901925fec78c18c8ec4826f010e1a93c662c2f81d1aac",
+    "test-summary.json": "ddd426c692db66bdddc8c31c922408b81a98ad015807862c2962d5895b892e04",
+    "test-details.json": "b006fc7d05a3b2280c50ae73b7541232cce1f335fd04c36bffaeda1c36a7d7b1",
+    "activities.json": "b5f47d5ee1d1072cd5efc5d62e1df971f23dea1815bbdf70f45bcbd3777fc942",
+    "test-runtime-warnings.json": "11c8e1a0a18ebc7acffac896540e18c51600e1afb610f08daeff4ac250bab67e",
+    "private-selected-test-details.json": "0c16d13710e1e899d3f2a02ecc5d410e2443e83f22eb6234837e289db45bfbc9",
+    "safe-report.md": "c67d2e46f00ad827219757db8a4be5e0ad5085705b693e968df4dbe8a933d924"
+  },
+  "testSourceSHA256": "7ba8e67e407e938e54e483d7fa6f613be390104787610b3ae25815cbea416385"
+}
