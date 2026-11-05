@@ -315,10 +315,22 @@ import XCTest
         assertText("Lunch")
         tap(app.buttons["Apply reviewed checkout copy"])
         tap(app.buttons["Review whole checkout"])
-        fill("Family market", into: "Store", replacing: true)
-        fill("Main branch", into: "Branch", replacing: true)
-        fill("Tuesday 5 PM", into: "Pickup or delivery slot", replacing: true)
-        fill("Retailer preview reviewed by shopper", into: "Source of these prices", replacing: true)
+        // These adjacent checkout fields share one keyboard. Type into each
+        // field directly, then dismiss before moving to the charge controls.
+        for (name, value) in [("Store", "Family market"), ("Branch", "Main branch"),
+                              ("Pickup or delivery slot", "Tuesday 5 PM"),
+                              ("Source of these prices", "Retailer preview reviewed by shopper")] {
+            let field = app.textFields[name]
+            tap(field)
+            XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), "Show the keyboard for \(name)")
+            if let old = field.value as? String, !old.isEmpty, old != field.placeholderValue {
+                field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count))
+            }
+            field.typeText(value)
+            XCTAssertEqual(field.value as? String, value, name)
+        }
+        tap(app.buttons["Done"])
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
         enableSwitch("Retailer total already includes all charges")
         fill("3.00", into: "Inclusive total")
         tap(app.buttons["Save and evaluate checkout"])
@@ -738,11 +750,25 @@ import XCTest
         tap(app.tabBars.buttons[tab]); tap(element("dinnerStartPickup"))
         fill(copy("Family grocery pickup", "Compra familiar"), into: "ledgerShopName")
         tap(element("ledgerCreateShop")); tap(element("dinnerManual"))
-        fill(dinner, into: "ledgerDinnerTitle")
-        fill("4", into: "ledgerDinnerServings", replacing: true)
-        fill(copy("Corn tortillas", "Tortillas"), into: copy("Ingredient name", "Nombre del ingrediente"))
-        fill("8", into: copy("Amount, optional", "Cantidad, opcional"))
-        if !moveAcrossWeek {
+        let ingredient = copy("Corn tortillas", "Tortillas")
+        let ingredientField = copy("Ingredient name", "Nombre del ingrediente")
+        let amountField = copy("Amount, optional", "Cantidad, opcional")
+        if moveAcrossWeek {
+            // Start with a blank manual dinner. Enter each value directly,
+            // then scroll to Review, as a person completing the form can.
+            let fields = [("ledgerDinnerTitle", dinner), ("ledgerDinnerServings", "4"),
+                          (ingredientField, ingredient), (amountField, "8")]
+            for (identifier, value) in fields {
+                let field = app.textFields[identifier]
+                tap(field)
+                field.typeText(value)
+                XCTAssertEqual(field.value as? String, value, "Manual dinner field: \(identifier)")
+            }
+        } else {
+            fill(dinner, into: "ledgerDinnerTitle")
+            fill("4", into: "ledgerDinnerServings", replacing: true)
+            fill(ingredient, into: ingredientField)
+            fill("8", into: amountField)
             enableSwitch(assignDate)
             chooseMealWeekDate(originalDay, from: Date(), in: app.datePickers.firstMatch, formatter: dateFormatter)
         }
