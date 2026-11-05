@@ -10,7 +10,39 @@
   "validation": {
     "patchCheck": "passed",
     "SwiftParse": "passed",
-    "nativeCandidateJourney": "pending local native lane release from ContributorRequest worker"
+    "nativeCandidateJourney": {
+      "result": "Passed",
+      "count": 1,
+      "failures": 0,
+      "skips": 0,
+      "expectedFailures": 0,
+      "selector": "RoomInTheCartUITests/PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart",
+      "seconds": 491.504,
+      "wallSeconds": 511.42423362500006,
+      "sourceCommit": "1654106ac1c64fff4f1da1b439d332e43f3aa8a9",
+      "sourceSHA256": "70bdda7c3a301eebedd135cf7bf3bd39a1b2aa81341ba9e18e29c7c6eb181bc1",
+      "toolchain": "Xcode27.1 build27A9275 / iOS26.2 build23C52 / iPhone17",
+      "runtimeWarningGuard": {
+        "status": "passed",
+        "summaryWarningCount": 0,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 1,
+        "detailExportCount": 0,
+        "warnings": []
+      },
+      "cleanup": "Owned simulator1197161F-E1F6-4710-A974-2817F071AE75 confirmed Shutdown; preview untouched.",
+      "evidenceSHA256": {
+        "build-command.json": "8f1e3017402a00623deb53e5da015a38eb1305faf885b641438e8b8ef7759af8",
+        "test-command.json": "cef916ca13f051ade3180853ad243a7a4333f874ea33058fa77b476bd29370e1",
+        "run-context.json": "cbfff4557cb12e30501bc4ac1c427fd6f5a1c0aa7962cbecfdb2e8b22f0645f2",
+        "test.log": "646e32efdad1049a883f991c8ea08f26e4ca88205d71b1b284384c82d17c4c27",
+        "test-summary.json": "45c42cc225c9c802fcca978802eea81993de57476c7f4ab83791cc8f9f261994",
+        "test-details.json": "3f22679cca77d8aeee39c91ad76d02da0f68da278c2f2d890e23b7af10861ab3",
+        "test-runtime-warnings.json": "955556fd81a165e62da2e42608590d8317dbef54adabef42fc53467066088a55",
+        "root-verification.txt": "9a6c2b19721d021bb8dd078a70a15d8924f5d5c545a837233cc316c3b723702e",
+        "shutdown.json": "6d620d1c454a90e41ee536109b1fee6ba5177ac2ee9d3aeb3a9f1e108bf3f044"
+      }
+    }
   },
-  "scope": "Reuse the viewport sampled by reveal for the immediately following scroll. Independent callers still sample their own viewport. Original gestures, assertions, navigation, and restarts remain. Observed duplicate-query wall time is not a measured candidate speedup."
+  "scope": "Reuse the viewport sampled by reveal for the immediately following scroll. Independent callers still sample their own viewport. Original gestures, assertions, navigation, and restarts remain. Observed duplicate-query wall time is not a measured candidate speedup. Full local candidate journey passed. Different hosted/local driver and OS builds prevent interpreting the timing difference as measured patch savings; next hosted run required."
 }
