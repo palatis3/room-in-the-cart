@@ -1,5 +1,11 @@
 # Room in the Cart current handoff
 
+## Published candidate — November 4, 2026 (America/New_York)
+
+Candidate `fa93f60534918ce8e040c706e80163e5d6959153` is published in [draft PR #1](https://github.com/palatis3/room-in-the-cart/pull/1), with an updated description. Six fresh workflows are confirmed live or queued: [core](https://github.com/palatis3/room-in-the-cart/actions/runs/41968854906), [security](https://github.com/palatis3/room-in-the-cart/actions/runs/41968854866), [deep](https://github.com/palatis3/room-in-the-cart/actions/runs/41968854930), [fixtures](https://github.com/palatis3/room-in-the-cart/actions/runs/41968854891), [performance](https://github.com/palatis3/room-in-the-cart/actions/runs/41968854879), [native wire](https://github.com/palatis3/room-in-the-cart/actions/runs/41968854936). Initial source checks, service/web unit jobs, fixture planning and dependency review passed. Native wire, both sanitizers and both billing jobs are running; simulator/Release/Swift analysis and fixture/performance producers are queued behind the five-Mac account limit. This is a verified wait, not full acceptance.
+
+Root owns hosted monitoring; no local native process remains. Lumpy/Dot is reviewing release-gate wiring personally through the relay. Astra finished. Avoid another push while these exact candidate results are being collected. Preserve original failures, inspect current run/job handles on resume, and require complete green hosted evidence before main protection/merge. No deployment or distribution occurred. Full app goal remains active.
+
 ## Resumed CI work — November 4, 2026 (America/New_York)
 
 Goal remains active. Lumpy/Dot is assisting first and has personally completed the nested identity/result checker; one Astra High assistant reconciled it and replayed ten retained bundles plus119 actual-export checks. Dot reviewed the fixture-job split with no concrete findings. No native lane is active; both owned SharedMeal simulators are confirmed Shutdown. Preserve the user's preview5FDE1E82-1FF7-4556-9C14-0746F6295944.
