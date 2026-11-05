@@ -21,6 +21,7 @@ export class WebApp {
   private requests:OwnRequest[] = [];
   private view:CookView|null = null;
   private pending:Pending[] = [];
+  private queueState:'ready'|'unavailable'|'missing' = 'ready';
   private confirmedOperations = new Set<string>();
   private draft = blank();
   private review = false;
@@ -72,7 +73,7 @@ export class WebApp {
     await this.run(()=>this.load(),'load');
   }
   private clearPrivate():void {
-    this.session=null;this.reviewedScope=null;this.requests=[];this.view=null;this.pending=[];this.draft=blank();
+    this.session=null;this.reviewedScope=null;this.requests=[];this.view=null;this.pending=[];this.queueState='ready';this.draft=blank();
     this.retryCommand=null;this.uncertainSend=false;this.consent=false;this.review=false;this.correction='';
     this.receivedSuggestions=[];this.suggestionsCursor=null;this.suggestionsState='unchecked';
     this.proposalGeneration++;this.proposalIntent=null;this.proposalReceipt=null;this.proposalStatus=null;this.proposalConflict=false;this.withdrawn=null;this.withdrawalCommand=null;this.confirmedOperations.clear();
@@ -104,10 +105,21 @@ export class WebApp {
       if(Date.parse(view.expiresAt)<=Date.now())throw new ApiError('access_ended',403);
       await this.readReceivedSuggestions(fresh,null);
     } else {this.view=null;this.requests=await this.api.requests(fresh);}
+    this.queueState='ready';
     if(isContributorSession(fresh)&&fresh.queueConsent&&fresh.enrolled) {
-      try {await this.outbox.retainScope(scopeFor(fresh));this.pending=await this.outbox.list(scopeFor(fresh));}
-      catch {this.pending=[];this.notice='Stored pending requests could not be opened.';}
+      try {
+        await this.outbox.retainScope(scopeFor(fresh));
+        const stored=await this.outbox.list(scopeFor(fresh));
+        const storedIDs=new Set(stored.map(row=>row.id));
+        if(this.pending.some(row=>!this.confirmedOperations.has(row.id)&&!storedIDs.has(row.id))) {
+          this.queueState='missing';
+        }
+        this.pending=stored;
+      } catch {
+        this.pending=[];this.queueState='unavailable';
+      }
     } else {this.pending=[];await this.outbox.clear().catch(()=>{});}
+    if(!this.pending.length&&this.notice==='Waiting to send from this browser')this.notice='';
   }
   private async reauthenticate(command?:Command, grantId?:string):Promise<Session> {
     const fresh=await this.api.session();
@@ -173,7 +185,11 @@ export class WebApp {
     const actions=this.el('div');actions.className='actions';actions.append(this.button('Refresh',()=>void this.run(()=>this.load(),'load')),this.button('Sign out',()=>void this.run(()=>this.signOut(this.session??undefined))));context.append(actions);main.append(context);
     if(this.session.role==='helper'||this.session.role==='editor'){
       if(this.view)this.renderCook(main);else main.append(this.el('p',this.t('No instructions are available.')));
-    } else this.renderContributor(main);
+    } else {
+      if(!this.busy&&this.queueState==='unavailable')status.append(' ',this.t('Stored pending requests could not be opened.'));
+      if(!this.busy&&this.queueState==='missing')status.append(' ',this.t('A pending request is no longer stored on this browser. Check Your requests for its status.'));
+      this.renderContributor(main);
+    }
   }
   private renderLogin(main:HTMLElement):void{
     main.append(this.el('h1',this.t('Sign in to continue')));
@@ -305,9 +321,21 @@ export class WebApp {
       }
       if(persisted)await this.outbox.remove(p.id);throw error;
     }
-    this.confirmedOperations.add(command.clientKey);
-    let cleanupFailed=false;if(persisted){try{await this.outbox.remove(p.id);}catch{cleanupFailed=true;}}
-    this.draft=blank();this.retryCommand=null;this.uncertainSend=false;this.review=false;this.notice=cleanupFailed?'Received by the shopper. A local pending copy remains; retry it to confirm and clear it.':'Received by the shopper.';
+    this.draft=blank();this.retryCommand=null;this.uncertainSend=false;this.review=false;
+    await this.finishReceived(p,persisted);
+  }
+  private async finishReceived(p:Pending,persisted:boolean):Promise<void> {
+    this.notice='Received by the shopper.';
+    if(persisted) {
+      try {
+        await this.outbox.remove(p.id);
+        this.pending=this.pending.filter(row=>row.id!==p.id);
+        this.confirmedOperations.delete(p.id);
+      } catch {
+        this.confirmedOperations.add(p.id);
+        this.notice='Received by the shopper. Retry to clear the copy on this browser.';
+      }
+    }
     // A successful command is received even if the subsequent refresh disconnects.
     try{await this.load();}catch(error){if(error instanceof ApiError&&(error.status===401||error.status===403))throw error;}
   }
@@ -319,8 +347,11 @@ export class WebApp {
   private async retry(p:Pending):Promise<void>{
     const fresh=await this.api.session();
     if(this.signOutPending||!fresh||reviewScope(fresh)!==this.reviewedScope||scopeFor(fresh)!==p.scope||!isContributorSession(fresh)||!fresh.enrolled||!fresh.queueConsent)throw new ApiError('access_ended',403);
-    if(fresh.replayWindow.id!==p.command.replayWindow||Date.parse(fresh.replayWindow.expiresAt)<=Date.now()) {this.notice='This queued request needs a new review. It was not resent.';return;}
-    await this.api.command(fresh,p.command);await this.outbox.remove(p.id);this.session=fresh;this.pending=this.pending.filter(x=>x.id!==p.id);this.notice='Received by the shopper.';await this.load();
+    if(!this.confirmedOperations.has(p.id)) {
+      if(fresh.replayWindow.id!==p.command.replayWindow||Date.parse(fresh.replayWindow.expiresAt)<=Date.now()) {this.notice='This queued request needs a new review. It was not resent.';return;}
+      await this.api.command(fresh,p.command);
+    }
+    this.session=fresh;await this.finishReceived(p,true);
   }
   private resetProposal():void {
     this.proposalGeneration++;this.proposalIntent=null;this.proposalReceipt=null;this.proposalStatus=null;this.proposalConflict=false;

@@ -198,6 +198,108 @@ test('storage quota errors never turn an offline request into saved or received'
  type(dom,'item','Milk');submit(root,dom);submit(root,dom);await waitForIdle(root);assert.match(root.textContent,/Not saved/);assert.match(root.textContent,/Milk/);assert.doesNotMatch(root.textContent,/Waiting to send from this browser|Received by the shopper/);
 });
 
+test('denying access to indexedDB itself still lets an invite open and a contributor send online',async(t)=>{
+ const previous=Object.getOwnPropertyDescriptor(globalThis,'indexedDB');
+ Object.defineProperty(globalThis,'indexedDB',{configurable:true,get(){throw new DOMException('Storage denied','SecurityError');}});
+ t.after(()=>{if(previous)Object.defineProperty(globalThis,'indexedDB',previous);else delete globalThis.indexedDB;});
+ const dom=new JSDOM('<div id="app"></div>',{url:'https://food.example/invite#token=invite-code'});
+ t.after(()=>dom.window.close());
+ const root=dom.window.document.getElementById('app');
+ const joined={...session(),queueConsent:true};
+ let current=null;const sent=[];
+ const api=fakeAPI({session:async()=>current,redeem:async token=>{
+  assert.equal(token,'invite-code');return {householdId:joined.household.id,memberId:joined.memberId,role:'contributor'};
+ },activateSession:async()=>{current=joined;},command:async(_s,c)=>sent.push(c)});
+ const token=consumeInvitation(dom.window.location,dom.window.history);
+ const app=new WebApp(root,api,undefined,token);
+ await app.start();assert.equal(dom.window.location.hash,'');
+ root.querySelector('#adult-attestation').click();submit(root,dom);await waitForIdle(root);
+ assert.match(root.textContent,/Ask the shopper/);assert.match(root.textContent,/pending requests could not be opened/);
+ root.querySelector('input[type=checkbox]').click();
+ type(dom,'item','Rolled oats');submit(root,dom);submit(root,dom);await waitForIdle(root);
+ assert.equal(sent.length,1);assert.equal(sent[0].body.originalItem,'Rolled oats');
+ assert.match(root.textContent,/Received by the shopper/);
+});
+
+test('eviction during an open session replaces the waiting notice after refresh',async()=>{
+ const s={...session(),queueConsent:true},factory=new IDBFactory(),outbox=new Outbox(factory);
+ let attempts=0;
+ const api=fakeAPI({session:async()=>s,command:async()=>{attempts++;throw new ApiError('network',0);}});
+ const {dom,root,app}=await setup(api,'en',outbox);
+ root.querySelector('input[type=checkbox]').click();
+ type(dom,'item','Queued oats');submit(root,dom);submit(root,dom);await waitForIdle(root);
+ assert.match(root.textContent,/Waiting to send from this browser/);
+ const [database]=await factory.databases();
+ await new Promise((resolve,reject)=>{
+  const deletion=factory.deleteDatabase(database.name);
+  deletion.onsuccess=resolve;deletion.onerror=()=>reject(deletion.error);
+ });
+ await app.start();assert.match(root.textContent,/no longer stored on this browser/);
+ assert.doesNotMatch(root.textContent,/Waiting to send|Queued oats|Received by the shopper/);
+ const reloaded=await setup(api,'en',outbox);
+ assert.doesNotMatch(reloaded.root.textContent,/Waiting to send|Queued oats|Received by the shopper/);
+ assert.equal(attempts,1);
+});
+
+test('a cold reload under a different contributor cannot recover the previous queue',async()=>{
+ const original={...session(),queueConsent:true},outbox=new Outbox(new IDBFactory());
+ let current=original,attempts=0;
+ const api=fakeAPI({session:async()=>current,command:async()=>{attempts++;throw new ApiError('network',0);}});
+ const {root,dom}=await setup(api,'en',outbox);
+ root.querySelector('input[type=checkbox]').click();
+ type(dom,'item','Private oats');submit(root,dom);submit(root,dom);await waitForIdle(root);
+ assert.equal((await outbox.list(scopeFor(original))).length,1);
+ current={...original,memberId:'second-member'};
+ const reloaded=await setup(api,'en',outbox);
+ assert.match(reloaded.root.textContent,/Ask the shopper/);
+ assert.doesNotMatch(reloaded.root.textContent,/Private oats|Waiting to send|Pending requests/);
+ assert.equal(reloaded.root.querySelector('input[type=checkbox]').checked,false);
+ assert.deepEqual(await outbox.list(scopeFor(original)),[]);assert.equal(attempts,1);
+});
+
+test('a confirmed queued retry keeps its receipt if browser storage fails during cleanup',async()=>{
+ const s={...session(),queueConsent:true},outbox=new Outbox(new IDBFactory());
+ let attempts=0;
+ const api=fakeAPI({session:async()=>s,command:async()=>{if(++attempts===1)throw new ApiError('network',0);}});
+ const {dom,root}=await setup(api,'en',outbox);
+ root.querySelector('input[type=checkbox]').click();
+ type(dom,'item','Queued rice');submit(root,dom);submit(root,dom);await waitForIdle(root);
+ outbox.remove=async()=>{throw new DOMException('Storage denied','SecurityError');};
+ click(root,'Retry');await waitForIdle(root);
+ assert.match(root.textContent,/Received by the shopper/);
+ assert.match(root.textContent,/Received; local cleanup pending/);
+ assert.doesNotMatch(root.textContent,/Not saved|Waiting to send from this browser/);
+});
+
+for(const scenario of ['live replay window','expired replay window','changed member']){
+ test(`retrying local cleanup after a confirmed receipt: ${scenario}`,async()=>{
+  const original={...session(),queueConsent:true},outbox=new Outbox(new IDBFactory());
+  let current=original,posts=0,removals=0;
+  const remove=outbox.remove.bind(outbox);
+  outbox.remove=async id=>{
+   if(++removals===1)throw new DOMException('Storage denied','SecurityError');
+   await remove(id);
+  };
+  const api=fakeAPI({session:async()=>current,command:async()=>{posts++;}});
+  const {dom,root}=await setup(api,'en',outbox);
+  root.querySelector('input[type=checkbox]').click();
+  type(dom,'item','Confirmed rice');submit(root,dom);submit(root,dom);await waitForIdle(root);
+  assert.match(root.textContent,/Received; local cleanup pending/);
+  if(scenario==='expired replay window')current={...original,replayWindow:{...original.replayWindow,expiresAt:'2020-01-01T00:00:00Z'}};
+  if(scenario==='changed member')current={...original,memberId:'second-member'};
+  click(root,'Retry');await waitForIdle(root);
+  assert.equal(posts,1);
+  if(scenario==='changed member'){
+   assert.equal(removals,1);assert.match(root.textContent,/Access has ended/);
+   assert.doesNotMatch(root.textContent,/Confirmed rice|Received by the shopper/);
+  }else{
+   assert.equal(removals,2);assert.match(root.textContent,/Received by the shopper/);
+   assert.doesNotMatch(root.textContent,/Confirmed rice|needs a new review|local cleanup pending/);
+  }
+  assert.deepEqual(await outbox.list(scopeFor(original)),[]);
+ });
+}
+
 test('expired helper content is removed without requiring a network response',async()=>{
  const view={grantId:'grant-a',shopId:'shop-a',shopLabel:'Private shop',revision:1,asOf:'2026-01-01T12:00:00Z',expiresAt:'2099-01-01T00:00:00Z',canPropose:false,instructions:[{item:'Private ingredient',amount:'one',action:'Use today'}]};
  const {root,app}=await setup(fakeAPI({session:async()=>({...session(),role:'helper',grantId:'grant-a'}),view:async()=>view}));
