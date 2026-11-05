@@ -1,0 +1,40 @@
+{
+  "sourceCommit": "f0e2ac37383e76ac3812407384bf2eda968de3c4",
+  "sourceRun": 41944207882,
+  "observedXCTestPasses": 49,
+  "failedCaseExcluded": [
+    "RoomInTheCartUITests/ContextualNavigationUITests/testLargeTextKeepsLongNativePasteEditableAndReviewReachable"
+  ],
+  "weightsSHA256": "8f09a70c55f76a04a9da52aed90d4100af52d7604fd181d2c1cfa973f219d386",
+  "ordinaryInventory": {
+    "models": 565,
+    "UI": 50,
+    "missing": 0,
+    "duplicated": 0
+  },
+  "newEstimatedSeconds": {
+    "ui-01": 844,
+    "ui-02": 858,
+    "ui-03": 845,
+    "ui-04": 855,
+    "ui-05": 855,
+    "ui-06": 846,
+    "ui-07": 846,
+    "ui-08": 834,
+    "ui-09": 843,
+    "ui-10": 845
+  },
+  "newCaseCounts": {
+    "ui-01": 3,
+    "ui-02": 4,
+    "ui-03": 5,
+    "ui-04": 5,
+    "ui-05": 6,
+    "ui-06": 5,
+    "ui-07": 5,
+    "ui-08": 5,
+    "ui-09": 6,
+    "ui-10": 6
+  },
+  "scope": "Scheduling weights only, not performance limits or measured end-to-end speedup. Exact compiled test coverage is unchanged. The original UI09 failure and unexpected UI10 warnings remain blocking under current guards. Updated assignments still require hosted validation."
+}
