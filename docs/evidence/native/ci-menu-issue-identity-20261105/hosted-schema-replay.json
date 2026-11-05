@@ -1,0 +1,66 @@
+[
+  {
+    "scenario": "pickup-open",
+    "hostedWarningActivityPaths": [
+      [
+        "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+        [
+          [
+            null,
+            "Tap \"probe.pickupMenu\" Button[0.50, 0.50]"
+          ],
+          [
+            null,
+            "Wait for org.roominthecart.diagnostics.menu to idle"
+          ]
+        ]
+      ],
+      [
+        "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+        [
+          [
+            null,
+            "Tap \"probe.pickupMenu\" Button[0.50, 0.50]"
+          ],
+          [
+            null,
+            "Wait for org.roominthecart.diagnostics.menu to idle"
+          ]
+        ]
+      ]
+    ],
+    "allowance": "None. Diagnostic selectors are outside the app allowance."
+  },
+  {
+    "scenario": "fixture-open",
+    "hostedWarningActivityPaths": [
+      [
+        "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+        [
+          [
+            null,
+            "Tap \"probe.fixtureMenu\" Button[0.50, 0.50]"
+          ],
+          [
+            null,
+            "Wait for org.roominthecart.diagnostics.menu to idle"
+          ]
+        ]
+      ],
+      [
+        "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+        [
+          [
+            null,
+            "Tap \"probe.fixtureMenu\" Button[0.50, 0.50]"
+          ],
+          [
+            null,
+            "Wait for org.roominthecart.diagnostics.menu to idle"
+          ]
+        ]
+      ]
+    ],
+    "allowance": "None. Diagnostic selectors are outside the app allowance."
+  }
+]

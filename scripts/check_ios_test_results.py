@@ -84,6 +84,7 @@ LIST_OPTIONS_MENU_TAP = 'Tap "ledgerListOptions" Button[0.50, 0.50]'
 FIXTURE_MENU_TAP = 'Tap "fixture.s27.controls" Button'
 SYNTHESIZE_EVENT = "Synthesize event"
 INTERNAL_ACTIVITY = "com.apple.dt.xctest.activity-type.internal"
+ISSUE_ATTACHMENT_UUID = re.compile(r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}", re.IGNORECASE)
 OBSERVED_MENU_WARNINGS = {
     "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges":
         (2, PICKUP_MENU_TAP, SYNTHESIZE_EVENT),
@@ -168,13 +169,16 @@ def activity_warning_paths(activities, messages, parents=()):
                 or not isinstance(failed, bool) or not isinstance(attachments, list)
                 or any(not isinstance(item, dict) for item in attachments)):
             raise ValueError("Invalid XCTest warning activity")
-        issue_files = sum(item.get("name") == "Complete Issue Description.txt" for item in attachments)
+        issue_files = [item for item in attachments if item.get("name") == "Complete Issue Description.txt"]
         # XCTest exports runtime warnings as untyped, nonfailure issue records.
         # Assertion failures use the same attachment but are marked as failures.
         if title in messages or title == OBSERVED_WARNING or (kind is None and not failed and issue_files):
-            if kind is not None or failed or issue_files != 1 or not title.strip():
+            if kind is not None or failed or len(issue_files) != 1 or not title.strip():
                 raise ValueError("Malformed XCTest runtime warning activity")
-            yield title, parents
+            issue_id = issue_files[0].get("uuid")
+            if not isinstance(issue_id, str) or not ISSUE_ATTACHMENT_UUID.fullmatch(issue_id):
+                raise ValueError("Invalid XCTest runtime warning activity attachment UUID")
+            yield title, parents, issue_id.lower()
         yield from activity_warning_paths(
             activity.get("childActivities", []), messages, (*parents[-1:], (kind, title)),
         )
@@ -193,7 +197,12 @@ def verify_warning_activities(activities, identifier_url, configurations, detail
     if (run["device"] != configuration["device"]
             or run["testPlanConfiguration"] != configuration["testPlanConfiguration"]):
         raise ValueError("XCTest warning activity run came from another device or configuration")
-    occurrences = list(activity_warning_paths(run["activities"], set(names)))
+    records = list(activity_warning_paths(run["activities"], set(names)))
+    # The attachment UUID identifies an occurrence within the activity export.
+    # The detailed result export uses separate attachment identities.
+    if len({issue_id for _, _, issue_id in records}) != len(records):
+        raise ValueError("Duplicated XCTest runtime warning activity attachment UUID")
+    occurrences = [(title, parents) for title, parents, _ in records]
     if Counter(title for title, _ in occurrences) != Counter(names):
         raise ValueError("XCTest warning activities and detailed results disagree")
     return occurrences

@@ -121,7 +121,7 @@ class RuntimeWarningTests(unittest.TestCase):
     def inspect(self, markers, messages, *, selector=None, device=None, summary_warnings=None,
                 configuration="Test Scheme Action", extra_nodes=(), detail_changes=None,
                 activity_messages=None, activity_tap=None, activity_phase=None, activity_changes=None, run_changes=None,
-                activity_type=INTERNAL_ACTIVITY):
+                activity_type=INTERNAL_ACTIVITY, activity_issue_ids=None):
         selector = selector or next(iter(OBSERVED_MENU_WARNINGS))
         url = "test://com.apple.xcode/RoomInTheCart/" + selector
         device = device or OBSERVED_DEVICE
@@ -145,10 +145,14 @@ class RuntimeWarningTests(unittest.TestCase):
             return details
 
         _, tap, phase = OBSERVED_MENU_WARNINGS.get(selector, next(iter(OBSERVED_MENU_WARNINGS.values())))
+        activity_messages = messages if activity_messages is None else activity_messages
+        if activity_issue_ids is None:
+            activity_issue_ids = [f"12345678-1234-4abc-8def-{index:012x}" for index in range(len(activity_messages))]
+        self.assertEqual(len(activity_issue_ids), len(activity_messages))
         issues = [
             {"title": name, "isAssociatedWithFailure": False,
-             "attachments": [{"name": "Complete Issue Description.txt"}]}
-            for name in (messages if activity_messages is None else activity_messages)
+             "attachments": [{"name": "Complete Issue Description.txt", **({"uuid": issue_id} if issue_id is not None else {})}]}
+            for name, issue_id in zip(activity_messages, activity_issue_ids)
         ]
         run = {"device": device, "testPlanConfiguration": test_configuration, "activities": [{
             "title": activity_tap or tap, "isAssociatedWithFailure": False, **({"activityType": activity_type} if activity_type else {}),
@@ -189,6 +193,20 @@ class RuntimeWarningTests(unittest.TestCase):
                     self.assertEqual(evidence["warnings"][0]["menuActivity"], {"tap": tap, "phase": phase})
                     self.assertEqual(evidence["status"], "passed" if count == maximum else "unexpected-warnings")
 
+    def test_same_count_warning_substitution_rejects_duplicate_issue_uuid(self):
+        first = "098DC6EC-90D4-40A9-8363-2BF5B66767FE"
+        second = "C2356A60-61FD-4962-920B-05FC780F3A40"
+        messages = [OBSERVED_WARNING] * 2
+        self.assertEqual(self.inspect([MULTIPLE_WARNINGS], messages, activity_issue_ids=[first, second])["status"], "passed")
+        for duplicate in (first, first.lower()):
+            with self.subTest(duplicate=duplicate), self.assertRaisesRegex(ValueError, "Duplicated .* attachment UUID"):
+                self.inspect([MULTIPLE_WARNINGS], messages, activity_issue_ids=[first, duplicate])
+
+    def test_warning_issue_uuid_must_be_present_and_valid(self):
+        for issue_id in (None, "", 123, "not-a-uuid"):
+            with self.subTest(issue_id=issue_id), self.assertRaisesRegex(ValueError, "Invalid .* attachment UUID"):
+                self.inspect([OBSERVED_WARNING], [OBSERVED_WARNING], activity_issue_ids=[issue_id])
+
     def test_hosted_parent_activity_type_can_be_absent(self):
         evidence = self.inspect([OBSERVED_WARNING], [OBSERVED_WARNING], activity_type=None)
         self.assertEqual(evidence["status"], "passed")
@@ -201,7 +219,7 @@ class RuntimeWarningTests(unittest.TestCase):
             {"activity_type": "com.apple.dt.xctest.activity-type.user-created"},
             {"run_changes": {"activities": [
                 {"title": OBSERVED_WARNING, "isAssociatedWithFailure": False,
-                 "attachments": [{"name": "Complete Issue Description.txt"}]},
+                 "attachments": [{"name": "Complete Issue Description.txt", "uuid": "12345678-1234-4abc-8def-000000000001"}]},
             ]}},
         ):
             with self.subTest(changes=changes):
