@@ -123,6 +123,88 @@
       "git apply --check",
       "Swift frontend parse with DEBUG and CONTRIBUTOR_CAPTURE_UI_FIXTURE"
     ],
-    "nativeValidation": "Pending. Exercise both original selectors with all their existing assertions. Hosted environment was Xcode 26.3 and iOS 26.2 build 23C54."
+    "nativeValidation": "Passed exact 2/2 on local iPhone 17 iOS 26.2 (23C52), with zero recorded runtime warnings. Hosted confirmation remains pending."
+  },
+  "localCandidateRun": {
+    "directory": ".build/CIResearch20261104/request-duplicate-f0e2ac3/local-candidate",
+    "source": "Frozen f0e2ac3 tree plus only the reviewed test patch.",
+    "sourceSHA256": "400247e78a81de35db8afad0eacfebd056cf182b2ac9abe31e4559d58001d8d7",
+    "configuration": "ARM64 Debug, contributor fixture profile",
+    "xcode": [
+      "Xcode 27.1",
+      "Build version 27A9275"
+    ],
+    "device": {
+      "architecture": "arm64",
+      "deviceId": "A3AE9916-EAE2-4551-A292-C283496EF3F9",
+      "deviceName": "CI Request Duplicates Candidate 20261105",
+      "modelName": "iPhone 17",
+      "osBuildNumber": "23C52",
+      "osVersion": "26.2",
+      "platform": "iOS Simulator"
+    },
+    "buildPassed": true,
+    "exactResults": [
+      {
+        "selector": "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison",
+        "result": "Passed",
+        "durationSeconds": 354.7462819814682
+      },
+      {
+        "selector": "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam",
+        "result": "Passed",
+        "durationSeconds": 162.2903789281845
+      }
+    ],
+    "counts": {
+      "totalTestCount": 2,
+      "passedTests": 2,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "runtimeWarnings": {
+      "status": "passed",
+      "summaryWarningCount": 0,
+      "runtimeWarningCount": 0,
+      "examinedTestCount": 2,
+      "detailExportCount": 0,
+      "warnings": []
+    },
+    "simulatorShutdown": true,
+    "observed": {
+      "spanishFirstInboxDrag": "t =     9.86s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 670.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 430.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds",
+      "spanishOpenedSamAtSeconds": 16.98,
+      "spanishSameSheetPageTwoAtSeconds": 84.87,
+      "spanishComparedOriginalWordsAtSeconds": 349.74,
+      "englishPatRevealDrag": "t =    44.83s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 613.0) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 373.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds",
+      "englishPatOutcomeYBeforeAfterPoints": [
+        1125.5,
+        722.2
+      ],
+      "englishCancelAndApply": "Original cancel assertions confirmed zero applied decisions and one saved line. Subsequent Apply confirmed one decision and one saved line. The final visible comparison kept Lee pending and Sam saved for next shop."
+    },
+    "productSha256": {
+      "xctestrun": "d959d8e1e0d23733c2ad501eeda8508db48225106bb6df72e0d04ce0fdd760ae",
+      "appExecutable": "8ba21173fafe1bac0f21a753d55be2abd1b536979056f73b73b70e529d65c473",
+      "uiTestExecutable": "951e3feb4424cf6ec56da5e031946bc864ff24c277922f6f6b2e4258107b0dbb"
+    },
+    "evidenceSha256": {
+      "Tests.log": "8ec0c8b2349406a618a53ca15f4089e687e17e66ef5602f9e68d640b6740ea65",
+      "test-summary.json": "2035e518f40ddce8823cc608a13e7f8e44f3bbd81198719e00c2fe9f69895bb8",
+      "test-details.json": "8bc69a3cfafa7ff902c9c1724e1d1e4dc41cb1f388a5c5027e0dcf431d9e2ae9",
+      "test-runtime-warnings.json": "1677e10fda497ff129babf84318eb365d699ffcb49a8fe92016295fbb55bdefa",
+      "root-verification.txt": "2d95e36d28fe3c48563119953d63581ab243a26c714ad486622dc2995be6d534",
+      "es-details.json": "c5f9c9a98cd892bfd82dfe242487985a61bd00333f6e3390dfd9037109cd3ddd",
+      "en-details.json": "aed1a72c778068dfcd571315a0ef34c79375fb5a9513137093b39dede4c6884c",
+      "es-activities.json": "15b83bea04060af4231c28d1073b93fd952d5f5bd1188c426e28d3f33d1f8f2c",
+      "en-activities.json": "25b8252c2fc95ce1cedab2bdc728ae58a3b36a8b024f772be98372696a0d3efa",
+      "es-attachments/7B9484AB-1702-47FE-88D5-CF6F602BBAC9.txt": "4e10d3bdc9ca3ddc69f3ab7efc3019ee17aee5c16bf2a4b32e8e2b7dd6195ac0",
+      "es-attachments/0062496F-06DB-4C0F-9176-99911FF4D07A.txt": "4752656b81ff130280aa83815363d55c988487830f35bbb3fb176a70bf3e43a2",
+      "en-attachments/226379BF-5595-4C16-BCAD-51A279A906DB.txt": "4c095d5d0761fd6c82bd761a81a90811ab93bc3af9697362e603aa43232921b4",
+      "en-attachments/A0E500E3-6D0A-448A-B2ED-466B24C5A1BB.txt": "8f1e3868d4b73bc202a0ea9045df0a4d1e324db6f4c729abd8965f7c78950654",
+      "en-attachments/98EB0928-FDD0-46EE-8C50-B794F25E1FBD.txt": "4549f8392e99aece6ea733a4a1016c1ed6ba269d384cc6e29b28d40445b2021c"
+    },
+    "scope": "One serial execution of both original selectors. Local Xcode 27.1 and iOS 26.2 build 23C52 differ from hosted Xcode 26.3 and runtime 23C54."
   }
 }
