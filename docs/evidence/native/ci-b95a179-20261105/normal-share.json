@@ -1,0 +1,71 @@
+{
+  "candidate": "b95a1796b684b0f52c1188b4d2d26aafb2c9ec2d",
+  "run": 42113018695,
+  "job": 127552846046,
+  "shard": "ui-08",
+  "selector": "FreeJourneyUITests/testCancellingSystemShareKeepsTheFrozenPickupUnplaced",
+  "environment": {
+    "architecture": "arm64",
+    "deviceId": "8C9F4118-331E-4250-B1FC-194972BA6726",
+    "deviceName": "iPhone 17",
+    "modelName": "iPhone 17",
+    "osBuildNumber": "23C54",
+    "osVersion": "26.2",
+    "platform": "iOS Simulator"
+  },
+  "result": "Failed (212.781 seconds); cancellation not reached",
+  "timing": {
+    "testStartUTC": "2026-11-05T23:00:44.306Z",
+    "recordingAttachmentUTC": "2026-11-05T23:00:45.043Z",
+    "nominalTestSecondsMinusPTS": 0.737,
+    "tapSynthesized": 173.16,
+    "polls": [
+      175.89,
+      190.15
+    ],
+    "firstFailureHierarchyRequest": 190.19,
+    "teardownScreenshot": 210.13,
+    "terminate": 210.14
+  },
+  "frames": [
+    {
+      "presentationPTS": 170.838333,
+      "requestedPTS": 171,
+      "visible": "Retailer handoff, frozen Wraps — 2 units and Share dated list, normal appearance."
+    },
+    {
+      "presentationPTS": 175.128333,
+      "requestedPTS": 175.15,
+      "visible": "The first Close poll at test t175.89 maps to recording PTS175.153. The corresponding frame already shows dimming with no panel or Close."
+    },
+    {
+      "presentationPTS": 175.19,
+      "duration": 19.973333,
+      "requestedPTS": [
+        176,
+        185,
+        189,
+        191,
+        195
+      ],
+      "visible": "Dim overlay over frozen handoff page. No share choices, Close, app alert or keyboard."
+    },
+    {
+      "presentationPTS": 195.185,
+      "requestedPTS": [
+        205,
+        210
+      ],
+      "visible": "Same dimmed handoff page through teardown. The later minute displayed in the status area is the only apparent content difference."
+    }
+  ],
+  "teardownScreenshot": "786B1C73-1302-40D4-8FFA-8F3C32704FE8.png (dimmed Retailer handoff without controls)",
+  "failureAX": "ActivityListView > ShareSheet.RemoteContainerView > empty Other descendants. No Close, other share actions, or alert in supplied failure hierarchy.",
+  "comparison": "23a73a8 failed on the Reduce Motion path with the same empty dimming overlay at the deadline. Its full panel and Close appeared later. The normal-motion path on 23a73a8 passed. b95a179 normal halted at the deadline; the panel did not visibly populate before teardown.",
+  "conclusion": "Delayed presentation of remote system-share content beyond the existing 15-second boundary. The app initiated presentation. No evidence for changing the Close query, business logic or timeout. Underlying cause of the OS-hosted delay remains unresolved.",
+  "sourceSha256": {
+    "Tests.log": "4f9586f62432b97f2fb0c525a67cc593bff5dca5371e9d50ca176281f78a92d7",
+    "40CD47B5-62C3-4F02-A052-48AD83B26E8F.mp4": "f3903c6f446fb7d57719c16e4a7a121deebc8ae133e34139f268ccb01024cf7c",
+    "786B1C73-1302-40D4-8FFA-8F3C32704FE8.png": "3f65a2d8fa939844c8bebad83cbb9036caf9c6b7daac3fc685a82df8681f2fb4"
+  }
+}

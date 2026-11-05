@@ -33,6 +33,14 @@ Use a fresh isolated test installation. Do not erase a person's existing workspa
 7. Open the **Settings** gear on a tab root. Read **Help**, **Privacy and data**, and **Support** offline. Verify the missing-policy/page states if metadata is blank. The supplied support email opens a composer without sending; cancel it during this local walkthrough. Inspect **Review support summary** before opening its system share sheet. The summary must contain only version/build/iOS/language/environment/configuration booleans; verify that it includes none of the demo food, prices, names, photos, identifiers, codes or links.
 8. Open **Settings → Device shortcuts** with optional permissions denied and use typed paths. Review capture output before it becomes saved data. Exercise the actual signed share/widget/notification surfaces separately on a device; source compilation or a simulator run does not establish their distribution behavior.
 
+## Verify an update on an existing installation
+
+Use a dedicated test device and fictional groceries. Install the previous distributed build, save an offline pack comparison, and record the entered quantities, prices, result and revision. Install the signed candidate over it using the distribution update path. Keep the existing app data throughout.
+
+Launch the candidate from the Home Screen. Open the comparison in Records and check the original values. Change the confirmed quantity at home, save, quit and reopen. Verify the new costs, both saved revisions and the original record identity. Record the device OS, both build numbers, the candidate commit and the results. When a release changes the database schema, include a store created with the previous schema.
+
+The pre-release simulator check exercised this sequence on iOS 27.0 with two schema-v2 builds. The old $6 and $4 totals reopened intact, and entering six items at home produced $3 and $2 in revision two. [Update evidence](evidence/native/in-place-update-20261105/summary.json).
+
 ## Connected review, after the real environment is configured
 
 Run these steps with the submitted build and the isolated review household. The current repository's disabled email-provider or child-consent states are intentional availability states, not working substitutes for the following setup.

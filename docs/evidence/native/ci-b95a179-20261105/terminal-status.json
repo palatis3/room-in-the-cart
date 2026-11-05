@@ -1,0 +1,90 @@
+{
+  "candidate": "b95a1796b684b0f52c1188b4d2d26aafb2c9ec2d",
+  "status": "completed",
+  "accepted": false,
+  "workflowRuns": [
+    {
+      "id": 42113018695,
+      "name": "Build and test",
+      "conclusion": "failure",
+      "run_attempt": 1,
+      "created_at": "2026-11-05T21:28:54Z",
+      "updated_at": "2026-11-05T23:38:35Z",
+      "html_url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42113018695"
+    },
+    {
+      "id": 42113018643,
+      "name": "iOS deep checks",
+      "conclusion": "success",
+      "run_attempt": 1,
+      "created_at": "2026-11-05T21:28:54Z",
+      "updated_at": "2026-11-05T21:49:11Z",
+      "html_url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42113018643"
+    },
+    {
+      "id": 42113018812,
+      "name": "iOS Release performance",
+      "conclusion": "success",
+      "run_attempt": 1,
+      "created_at": "2026-11-05T21:28:54Z",
+      "updated_at": "2026-11-05T22:48:24Z",
+      "html_url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42113018812"
+    },
+    {
+      "id": 42113018757,
+      "name": "Native Swift HTTPS and PostgreSQL",
+      "conclusion": "success",
+      "run_attempt": 1,
+      "created_at": "2026-11-05T21:28:54Z",
+      "updated_at": "2026-11-05T21:44:09Z",
+      "html_url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42113018757"
+    },
+    {
+      "id": 42113019067,
+      "name": "iOS fixture checks",
+      "conclusion": "success",
+      "run_attempt": 1,
+      "created_at": "2026-11-05T21:28:54Z",
+      "updated_at": "2026-11-05T23:46:06Z",
+      "html_url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42113019067"
+    },
+    {
+      "id": 42113018868,
+      "name": "Security checks",
+      "conclusion": "success",
+      "run_attempt": 1,
+      "created_at": "2026-11-05T21:28:54Z",
+      "updated_at": "2026-11-05T21:30:24Z",
+      "html_url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42113018868"
+    }
+  ],
+  "runnerUtilization": {
+    "measuredFrom": "First to last executed step per macos-15 job in the six candidate workflows. Queue and Linux job time excluded.",
+    "jobs": 40,
+    "macWindowMinutes": 132.07,
+    "occupiedMinutes": 609.83,
+    "idealFiveRunnerMinimumMinutes": 121.97,
+    "observedPeakMacJobs": 5,
+    "elapsedSubmissionToLastWorkflowUpdateMinutes": 137.2
+  },
+  "modelPasses": 599,
+  "ui": {
+    "selected": 51,
+    "passed": 48,
+    "failed": 3,
+    "skipped": 0,
+    "runtimeWarnings": 5
+  },
+  "fixture": {
+    "ordinaryPasses": 43,
+    "recordMediaRedactedPasses": 1,
+    "runtimeWarnings": 5
+  },
+  "failures": [
+    "UI01 full free pickup timed out during checkout entry.",
+    "UI04 dinner move timed out during manual ingredient editing.",
+    "UI08 normal-motion system share container did not present actionable controls in time."
+  ],
+  "followup": "Two keyboard journey updates passed locally on 23C54. Normal system-share readiness remains unresolved.",
+  "remainingReleaseGates": "Paid Apple signing and distribution, production providers, protected backup/restore, human and physical acceptance."
+}
