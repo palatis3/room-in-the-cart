@@ -1,0 +1,113 @@
+{
+  "sourceCommit": "f0e2ac37383e76ac3812407384bf2eda968de3c4",
+  "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41944207882",
+  "completeMatrix": false,
+  "selectedUIInProducer": 50,
+  "verifiedPassedSoFar": 12,
+  "shards": {
+    "ui-02": {
+      "job": 126977497544,
+      "artifact": 13379487927,
+      "selectors": [
+        "RoomInTheCartUITests/FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop"
+      ],
+      "counts": {
+        "totalTestCount": 1,
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      },
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 1,
+        "detailExportCount": 0,
+        "warnings": []
+      },
+      "sha256": {
+        "results.zip": "d92964ace004b1d9837a9a439ceda47552f521c883ae9e621bac18acaad2c782",
+        "test-summary.json": "0fe99d93c212f80c37a1c98a2510aefbfa4c5351733db0dc1129334f1c0a8bff",
+        "test-details.json": "03f3ba17a4f65c72ff06a8cd0d99c0ce6c81f6bbc7f740c4f1ed125560beb1aa",
+        "test-runtime-warnings.json": "8d9c0044b0fa67989c83d6463e3f433df5e5d8a288bddfc20e6cc278ac231c77",
+        "root-verification.txt": "3be309b33d530d2c36f6759b0d3c5d36069cb1ff6cd017192cccb8e62376f912"
+      }
+    },
+    "ui-03": {
+      "job": 126977497661,
+      "artifact": 13379813911,
+      "selectors": [
+        "RoomInTheCartUITests/FreeJourneyUITests/testCorrectFreezerBatchAndReadReservationsAfterRestart",
+        "RoomInTheCartUITests/FreeJourneyUITests/testEnglishMealWeekListAndGridShowDatedProtectedLunch",
+        "RoomInTheCartUITests/FreeJourneyUITests/testNextShopCanCancelThenOpenOneFreshShoppingList",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testAccountDeletionSettingsExplainsScopeInEnglishAndSpanishBeforeSignIn",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testLargestDynamicTypeAndDarkAppearanceComparisonSmoke"
+      ],
+      "counts": {
+        "totalTestCount": 5,
+        "passedTests": 5,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      },
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 5,
+        "detailExportCount": 0,
+        "warnings": []
+      },
+      "sha256": {
+        "results.zip": "dc64183e00c79f03d9441fbd474a7c5b7b61666f832b8856e6708e81282a4dff",
+        "test-summary.json": "4cc0250eb78d9f2093d5b3e1e5c1461204eebb9b9377b8ae7f87c0409e3839b8",
+        "test-details.json": "7e82b5184ac5e3a094ff97799c4e5bb2f16336162dda124f48c9e483ca835629",
+        "test-runtime-warnings.json": "ac1b400487892a69c9ff53d1fe652f33be4237a35dc9bf24b2dbb5d57a788639",
+        "root-verification.txt": "d39c6a689d4fa3c94b66a275a50131e0fb915ee74fd70899a53c9a3bab08d25a"
+      }
+    },
+    "ui-04": {
+      "job": 126977497613,
+      "artifact": 13379403205,
+      "selectors": [
+        "RoomInTheCartUITests/FreeJourneyUITests/testDinnerMoveAcrossDisplayedWeeksKeepsLunchAndOccurrence",
+        "RoomInTheCartUITests/FreeJourneyUITests/testFreePickupRepairKeepsTheNeedOpenWhenAcceptedFallbackToolsAreUnavailable",
+        "RoomInTheCartUITests/FreeJourneyUITests/testManualListOrderSurvivesRestartAndOpensLargePrint",
+        "RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval",
+        "RoomInTheCartUITests/FreeJourneyUITests/testUrgentRepairWithoutAnOrderPersistsAcrossRestart",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextShopRepairShortcutRemainsInsideViewportAndOpens"
+      ],
+      "counts": {
+        "totalTestCount": 6,
+        "passedTests": 6,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      },
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 1,
+        "examinedTestCount": 6,
+        "detailExportCount": 1,
+        "warnings": [
+          {
+            "selector": "RoomInTheCartUITests/FreeJourneyUITests/testManualListOrderSurvivesRestartAndOpensLargePrint",
+            "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+            "count": 1,
+            "maximum": 1
+          }
+        ]
+      },
+      "sha256": {
+        "results.zip": "d7ad21552a48dca89dc3e6b310f0675ad57d6e32463536aacd1f7b19469566f9",
+        "test-summary.json": "b51e1b37c8205572730f5acd7b4b832f605c1e65a23a97c2266da79eda778a3d",
+        "test-details.json": "8f0e0f83641ced98bc5cca68b5b85faf372566be2420f63ceecf83d14f07b618",
+        "test-runtime-warnings.json": "ada30c1e11085ab58dd21e2130b254f790cf01328d56a002e3e1be77501cf997",
+        "root-verification.txt": "ae0dd757c91b13de92cc1c427c4219499d7f736039597e4c9edaebe00f64e51f"
+      }
+    }
+  },
+  "scope": "12 completed ordinary UI cases from the still-running matrix. Root replayed exact test inventory and runtime-warning checks; one explicitly recorded known print warning remains. Other UI and fixture results remain separate and unvalidated."
+}
