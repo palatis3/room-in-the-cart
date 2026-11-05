@@ -18,5 +18,12 @@
     "008_browser_email_auth.sql": "5ad8c46d4146e1ce980e4f8809afa00512b9ed6ae6e41fd76637e0d86a713e1e"
   },
   "localChecksumComparison": "All eight match current repository files",
-  "limits": "No backup was created, no restore was verified, no schema or configuration changed. The Supabase migration UI also lists a separate staging runtime-role entry; the eight-row application registry is the checksum authority for application migrations."
+  "limits": "No backup was created, no restore was verified, no schema or configuration changed. The Supabase migration UI also lists a separate staging runtime-role entry; the eight-row application registry is the checksum authority for application migrations.",
+  "connectorDiagnosis": {
+    "pluginInstalled": true,
+    "pluginEnabled": true,
+    "targetOrganizationInConnectorList": false,
+    "visibleOrganizationCount": 1,
+    "nextAction": "Owner asked to reconnect the correct account/organization grant; no local approval settings changed."
+  }
 }

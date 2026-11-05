@@ -1,0 +1,53 @@
+{
+  "candidate": "f20feb685f95e7da1c7a23f26eff499d2696329f",
+  "run": 41994028642,
+  "observedAt": "2026-11-05T09:19:04.832417+00:00",
+  "completedOrdinaryUIPassed": 10,
+  "expectedOrdinaryUI": 50,
+  "coverageComplete": false,
+  "shards": [
+    {
+      "shard": "ui-03",
+      "job": 127139509875,
+      "artifact": 13401951646,
+      "artifactSHA256": "e251c5c7efa0499fded99b589c41bebd67fbaa51cb2430100df42533c1b6f32b",
+      "githubDigestVerified": true,
+      "hostedConclusion": "success",
+      "independentGuardExit": 0,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "selectors": [
+        "RoomInTheCartUITests/ContextualNavigationUITests/testDinnerOnlyCapAndCancelledSlotChangeSurviveRelaunch",
+        "RoomInTheCartUITests/ContextualNavigationUITests/testEnteredStoreQuotesKeepTripCostsSeparateAndAdoptOnlyReviewedSavedProof",
+        "RoomInTheCartUITests/FreeJourneyUITests/testTypedBarcodeNeedsACodeAndFreshMatchConfirmation",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextSourceAndSavedDetailsAreFullyReadableAboveTabs",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testShopRepairShortcutRemainsInsideViewportAndOpens"
+      ],
+      "rawLogSHA256": "9d199182c93f97201db9d3d3dce03786f84214c185977eb5b2f89a92029f1eab"
+    },
+    {
+      "shard": "ui-04",
+      "job": 127139510093,
+      "artifact": 13401753481,
+      "artifactSHA256": "17874f7b7c8495a537d7bdce7de70f9c337c3e1e08bb5ccce8ee79b7d6af30c0",
+      "githubDigestVerified": true,
+      "hostedConclusion": "success",
+      "independentGuardExit": 0,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "selectors": [
+        "RoomInTheCartUITests/FreeJourneyUITests/testDinnerMoveAcrossDisplayedWeeksKeepsLunchAndOccurrence",
+        "RoomInTheCartUITests/FreeJourneyUITests/testFirstPickupCanStartFromDinnersAndReviewAnEditablePattern",
+        "RoomInTheCartUITests/FreeJourneyUITests/testRecipeCaptureOpensOnFirstAttemptAndReopensAfterCancel",
+        "RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval",
+        "RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresRecordsDetailAndIndependentShoppingList"
+      ],
+      "rawLogSHA256": "2152c2fa35b58e42da003f28deb7565c3a06e319e1067a494e9e8a56400d9466"
+    }
+  ],
+  "scope": "Both completed artifacts independently checked against the replayed compiled plan, exact raw lifecycle and detailed runtime warnings. Other UI jobs remain pending; this is partial evidence only."
+}
