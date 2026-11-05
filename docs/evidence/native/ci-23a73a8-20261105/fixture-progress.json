@@ -1,0 +1,63 @@
+{
+  "candidate": "23a73a890afbaa23d3c58ae6b0cf63a8b2e2fb71",
+  "runID": 42021894739,
+  "shards": {
+    "CorrectionPrivacyAcceptanceUITests": {
+      "artifactID": 13414642683,
+      "jobID": 127238287379,
+      "sha256": "6d42428d9579f36d76257b67fc4cd3246ed64b2b874efd28bf8b72f51f7162ab",
+      "digestVerified": true,
+      "planByteIdentical": true,
+      "strictReplayExit": 0,
+      "selected": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "warningScope": [],
+      "selectors": [
+        "RoomInTheCartUITests/CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp"
+      ],
+      "rawLogSHA256": "0c85f573919efd81b88d83ed95200603eaf687f98a784ab3d283a75912ab799c"
+    },
+    "ContributorRequestUITests": {
+      "artifactID": 13415821522,
+      "jobID": 127238287401,
+      "sha256": "ef2c7354204fcf5f392c19df8509bef68b62620803f5fb5dc589231ad0329ce4",
+      "digestVerified": true,
+      "planByteIdentical": true,
+      "strictReplayExit": 0,
+      "selected": 2,
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "warningScope": [],
+      "selectors": [
+        "RoomInTheCartUITests/ContributorRequestUITests/testSpanishLargeTextReviewStartsAtTheOriginalWording",
+        "RoomInTheCartUITests/ContributorRequestUITests/testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest"
+      ],
+      "rawLogSHA256": "b126e84d442acb0b7a7c13b399d72ea29e989fe61deface60ac1cbd74e92c994"
+    },
+    "DinnerAwayCarryoverUITests": {
+      "artifactID": 13415658262,
+      "jobID": 127238287648,
+      "sha256": "11ad2c8dc671792aa8fe9584f9b1594f26ef1cff6e06bfbb485256c372c83168",
+      "digestVerified": true,
+      "planByteIdentical": true,
+      "strictReplayExit": 0,
+      "selected": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "warningScope": [],
+      "selectors": [
+        "RoomInTheCartUITests/DinnerAwayCarryoverUITests/testPhysicalCarryoverCancelApplyAndRestartKeepOriginalPurchase"
+      ],
+      "rawLogSHA256": "220c115f2f47cbc72b9be4cf21c36f32d7589a4ef5fe87b3a07bbd9c3b1d71d2"
+    }
+  },
+  "observedAt": "2026-11-05T12:59:20.877642+00:00",
+  "independentlyVerifiedPassingCases": 4
+}

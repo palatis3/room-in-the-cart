@@ -1,5 +1,16 @@
 # Room in the Cart current handoff
 
+## Independent performance proof and billing review — November 5, 2026
+
+Candidate23a73a8 remains collecting ordinary/fixture results; do not push or cancel current handles. Root independently verified580model cases,21ordinary UI cases across ui01/02/03/04/06, and four fixture cases (CorrectionPrivacy,ContributorRequest,DinnerAwayCarryover). All strict execution guards pass with only the existing exact Menu warning allowances. The optimized performance workflow42021894768 is terminal success. Original artifact digests, exact test execution, metrics/attachments and unchanged baseline comparisons replay independently: launch median3.643s, scroll median2.583s, rendered search p952750.45ms/check p952112.79ms. No frame-hitch samples were available. Hosted SQLite readback passed but the database was not retained for a second local read. [Performance proof](evidence/native/ci-23a73a8-20261105/performance.json) · [Fixture progress](evidence/native/ci-23a73a8-20261105/fixture-progress.json).
+
+The local Swift CodeQL follow-up moves the settings-only query ahead of tracing while keeping all runtime compilation after initialization, with the same uncached legacy driver, Release/arm64/-Onone settings, required analysis and30/45-minute limits. The actual local settings query passes with no compiled products. Guard v1 correctly rejected an overly broad metadata assumption; v2 permits only recognized non-executable JSON PIF metadata and rejects24 injected compiled/invalid outputs. [Preflight proof](evidence/native/ci-23a73a8-20261105/swift-codeql-preflight.json). This has not yet passed hosted CodeQL; it is a proposed timeout fix, not a clean Swift security result.
+
+Lumpy reviewed frozen membership v2. Its independent purchase report, per-transaction delivery evidence, deliveryPending gate, same-ID recovery and stable UI IDs address prior concerns. One remaining finding: clearing all legacy notice at a new actual purchase also hides unrelated rejected/unverified callback evidence. Existing helper is preparing frozen v3 under `.build/CIResearch20261105/membership-order-review/`, preserving previous variants; rejected callback evidence must remain independently presented with neutral historical copy, while only purchase-owned operation copy resets. No billing product source is installed or natively tested yet. Root owns installation and the single local native lane after review; currently no native build/test is active. Lumpy reviews, no extra workers.
+
+Full launch goal remains active. User requests continued work without model-change pauses. No merge, ruleset activation, deployment, provider activation or distribution. Production access/backup, provider setup, signing, SMTP and physical/human acceptance remain open.
+
+
 ## Billing proposal and Swift analysis follow-up — November 5, 2026
 
 Ordinary groups ui-01/ui-02/ui-03 now provide10 independently verified passing cases. Saved-offer and normal share/cancel pass; the pickup-selection case retains exactly its two allowed Menu warnings. The fresh normal sharing pass does not explain f20's original animation/switch failure. [Partial UI proof](evidence/native/ci-23a73a8-20261105/ordinary-progress.json). Other UI groups, fixtures and performance continue on the existing23a73a8 handles; do not push or cancel them.

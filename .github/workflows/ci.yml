@@ -207,13 +207,7 @@ jobs:
             xcodebuild -version
             swift --version
           } | tee .build/SwiftCodeQLToolchain.log
-      - name: Initialize Swift security analysis
-        uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
-        with:
-          languages: swift
-          build-mode: manual
-      - name: Compile Release Swift sources for CodeQL
-        timeout-minutes: 30
+      - name: Validate Release Swift settings before tracing
         shell: bash
         run: |
           # GitHub's Swift extraction guidance requires uncached compilation and the legacy driver.
@@ -226,8 +220,79 @@ jobs:
             COMPILATION_CACHE_ENABLE_CACHING=NO SWIFT_ENABLE_COMPILE_CACHE=NO
             SWIFT_USE_INTEGRATED_DRIVER=NO SWIFT_OPTIMIZATION_LEVEL=-Onone
           )
+          cat > .build/SwiftCodeQLAssertUncompiled.py <<'PY'
+          from pathlib import Path
+          import json
+          import re
+          import stat
+
+          # Settings resolution may write PIF JSON, but must not compile runtime sources.
+          # Fail closed on other DerivedData/Build files, even if their suffix is unknown.
+          derived_build = Path(".build/SwiftCodeQLDerivedData/Build")
+          roots = [derived_build, *Path("ios/Packages").glob("*/.build")]
+          product_suffixes = {
+              ".o", ".obj", ".a", ".dylib", ".so", ".dll", ".swiftmodule", ".swiftdoc",
+              ".swiftinterface", ".swiftsourceinfo", ".pcm", ".bc", ".air", ".metallib", ".ipa",
+          }
+          product_directories = {".app", ".appex", ".framework", ".xcframework", ".xcarchive", ".dSYM", ".bundle", ".swiftmodule"}
+          binary_magic = (
+              b"\xfe\xed\xfa\xce", b"\xce\xfa\xed\xfe", b"\xfe\xed\xfa\xcf", b"\xcf\xfa\xed\xfe",
+              b"\xca\xfe\xba\xbe", b"\xbe\xba\xfe\xca", b"\xca\xfe\xba\xbf", b"\xbf\xba\xfe\xca",
+              b"\x7fELF", b"MZ", b"!<arch>\n", b"BC\xc0\xde", b"\xde\xc0\x17\x0b",
+          )
+          pif_names = {"project": "(?:PROJECT|PACKAGE)", "target": "TARGET", "workspace": "WORKSPACE"}
+
+
+          def planning_metadata(path):
+              parts = path.relative_to(derived_build).parts
+              if len(parts) != 5 or parts[:3] != ("Intermediates.noindex", "XCBuildData", "PIFCache"):
+                  return False
+              prefix = pif_names.get(parts[3])
+              if prefix is None or re.fullmatch(prefix + r"@v[0-9]+_.+-json", parts[4]) is None:
+                  return False
+              try:
+                  return isinstance(json.loads(path.read_text(encoding="utf-8")), dict)
+              except (OSError, UnicodeError, json.JSONDecodeError):
+                  return False
+
+
+          found = []
+          for root in roots:
+              if root.is_symlink():
+                  found.append(str(root) + " [symlink]")
+                  continue
+              if not root.exists():
+                  continue
+              for path in root.rglob("*"):
+                  mode = path.lstat().st_mode
+                  reason = None
+                  if stat.S_ISLNK(mode):
+                      reason = "symlink"
+                  elif stat.S_ISDIR(mode):
+                      if path.suffix in product_directories:
+                          reason = "product bundle"
+                  elif not stat.S_ISREG(mode):
+                      reason = "non-regular output"
+                  elif path.suffix in product_suffixes:
+                      reason = "compiled product suffix"
+                  elif mode & 0o111:
+                      reason = "executable output"
+                  else:
+                      with path.open("rb") as stream:
+                          header = stream.read(8)
+                      if header.startswith(binary_magic):
+                          reason = "compiled binary header"
+                      elif root == derived_build and not planning_metadata(path):
+                          reason = "unrecognized Build output"
+                  if reason:
+                      found.append(str(path) + " [" + reason + "]")
+          if found:
+              raise SystemExit("Swift CodeQL requires uncompiled app/package sources; found: " + ", ".join(sorted(found)[:20]))
+          print("No pre-existing app/package compiled products; permitted only recognized PIF JSON in DerivedData/Build.")
+          PY
+          python3 .build/SwiftCodeQLAssertUncompiled.py
           settings="$RUNNER_TEMP/swift-codeql-settings.json"
-          xcodebuild "${build_args[@]}" -showBuildSettings -json > "$settings"
+          xcodebuild "${build_args[@]}" -showBuildSettings -json > "$settings" 2> .build/SwiftCodeQLSettings.stderr.log
           python3 - "$settings" <<'PY' | tee .build/SwiftCodeQLSettings.log
           import json, sys
           from pathlib import Path
@@ -243,6 +308,20 @@ jobs:
           if actual != expected or "RELEASE" not in conditions or "DEBUG" in conditions:
               raise SystemExit("Swift CodeQL must compile Release sources for arm64 iPhoneOS with optimization disabled.")
           PY
+          python3 .build/SwiftCodeQLAssertUncompiled.py
+          declare -p build_args > .build/SwiftCodeQLBuildArgs.sh
+      - name: Initialize Swift security analysis
+        uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          languages: swift
+          build-mode: manual
+          debug: true
+      - name: Compile Release Swift sources for CodeQL
+        timeout-minutes: 30
+        shell: bash
+        run: |
+          source .build/SwiftCodeQLBuildArgs.sh
+          python3 .build/SwiftCodeQLAssertUncompiled.py
           xcodebuild "${build_args[@]}" build 2>&1 | tee .build/SwiftCodeQLBuild.log
       - name: Analyze Swift security findings
         uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
@@ -256,6 +335,7 @@ jobs:
           path: |
             .build/SwiftCodeQLToolchain.log
             .build/SwiftCodeQLSettings.log
+            .build/SwiftCodeQLSettings.stderr.log
             .build/SwiftCodeQLBuild.log
           include-hidden-files: true
           retention-days: 7
