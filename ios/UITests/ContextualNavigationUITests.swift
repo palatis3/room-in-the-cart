@@ -150,7 +150,12 @@ import UIKit
         tap(element("ledgerImport")); fill("2 wraps", into: "ledgerImportText")
         tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
         shopRoot(); tap(app.buttons["Review checkout"]); tap(app.buttons["Continue to checkout review"])
-        tap(app.buttons["Apply reviewed checkout copy"]); tap(app.buttons["Review whole checkout"])
+        let apply = app.buttons["Apply reviewed checkout copy"]
+        revealContent(apply)
+        apply.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        let checkout = app.buttons["Review whole checkout"]
+        XCTAssertTrue(checkout.waitForExistence(timeout: 8), "Applying the reviewed copy should open the pickup")
+        tap(checkout)
         fill("Family market", into: "Store", replacing: true)
         fill("Main branch", into: "Branch", replacing: true)
         fill("Tuesday 5 PM", into: "Pickup or delivery slot", replacing: true)
