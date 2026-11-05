@@ -17,6 +17,7 @@ struct LedgerImportView: View {
     @State private var captured: ReviewedCapture?
     @State private var captureBinding: LedgerCaptureBinding?
     @State private var capturePresentation: LedgerCapturePresentation?
+    @ScaledMetric(relativeTo: .body) private var importEditorHeight: CGFloat = 180
     @FocusState private var originalFocused: Bool
     private enum Focus: Hashable { case preview, status }
     @AccessibilityFocusState private var focus: Focus?
@@ -76,7 +77,8 @@ struct LedgerImportView: View {
             } else {
                 Section {
                     Text(ledgerText("One item per line. For example: 12 wraps or 2 kg rice."))
-                    TextEditor(text: $original).frame(minHeight: 180)
+                    TextEditor(text: $original)
+                        .frame(height: min(importEditorHeight, 240))
                         .focused($originalFocused)
                         .accessibilityLabel(ledgerText("List to review")).accessibilityIdentifier("ledgerImportText")
                     PasteButton(payloadType: String.self) { values in

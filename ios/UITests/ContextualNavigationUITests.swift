@@ -1,4 +1,5 @@
 import XCTest
+import UIKit
 
 /// Visible navigation on an isolated Free workspace, without seeded account authority.
 @MainActor final class ContextualNavigationUITests: XCTestCase {
@@ -18,6 +19,79 @@ import XCTest
 
     func testUnknownTaxKeepsWeighedPickupUnresolved() {
         enterWeighedPickup(knownTax: false)
+    }
+
+    func testLargeTextKeepsLongNativePasteEditableAndReviewReachable() throws {
+        let url = try XCTUnwrap(Bundle(for: Self.self).url(forResource: "ReleaseLedger500", withExtension: "txt"))
+        let fixture = try String(contentsOf: url, encoding: .utf8)
+        XCTAssertEqual(fixture.split(separator: "\n").count, 500)
+        UIPasteboard.general.string = fixture
+
+        launch(reset: true, largestText: true)
+        tap(element("openPickupList")); tap(element("ledgerStartShop"))
+        fill("Long paste pickup", into: "ledgerShopName")
+        tap(element("ledgerCreateShop")); tap(element("ledgerImport"))
+        let navigation = app.navigationBars["Bring the list"]
+        XCTAssertTrue(navigation.waitForExistence(timeout: 8))
+
+        let editor = app.textViews["ledgerImportText"]
+        revealContent(editor)
+        let initialHeight = editor.frame.height
+        XCTAssertGreaterThan(initialHeight, 0)
+        let paste = app.buttons["Paste list"]
+        revealContent(paste)
+        XCTAssertTrue(paste.isEnabled)
+        paste.coordinate(withNormalizedOffset: CGVector(dx: 0.14, dy: 0.5)).tap()
+
+        let pasted = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", fixture), object: editor)
+        XCTAssertEqual(XCTWaiter.wait(for: [pasted], timeout: 10), .completed, "Native Paste must preserve all 500 lines")
+        XCTAssertEqual(editor.frame.height, initialHeight, accuracy: 1, "Pasting must preserve the editor viewport")
+        XCTAssertLessThan(editor.frame.height, app.windows.firstMatch.frame.height / 2)
+
+        revealContent(editor)
+        let keyboard = app.keyboards.firstMatch
+        // Tap the rendered text because the accessibility activation point can fall in padding.
+        let firstLine = editor.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.17))
+        firstLine.tap()
+        if !keyboard.waitForExistence(timeout: 2) { firstLine.tap() }
+        XCTAssertTrue(keyboard.waitForExistence(timeout: 5), "Tapping inside the pasted editor must open the keyboard")
+        app.typeText("x")
+        XCTAssertEqual((editor.value as? String)?.count, fixture.count + 1, "The pasted list must remain editable")
+        app.typeText(XCUIKeyboardKey.delete.rawValue)
+        let done = app.buttons["Done"]
+        XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable)
+        done.tap()
+        XCTAssertTrue(keyboard.waitForNonExistence(timeout: 5), "Done must dismiss the editor keyboard")
+        XCTAssertTrue(editor.value as? String == fixture, "Editing and Done must preserve the original paste after undoing the edit")
+        capture("S02-500-line-native-paste-at-largest-text")
+
+        let review = element("ledgerReviewImport")
+        let form = app.collectionViews.firstMatch
+        func visibleReviewPoint() -> CGPoint? {
+            guard review.exists && review.isHittable && review.isEnabled else { return nil }
+            let viewport = form.frame.intersection(app.windows.firstMatch.frame)
+            let top = max(viewport.minY, navigation.frame.maxY)
+            let content = CGRect(x: viewport.minX, y: top, width: viewport.width, height: max(0, viewport.maxY - top))
+            let center = CGPoint(x: review.frame.midX, y: review.frame.midY)
+            return content.insetBy(dx: 0, dy: 4).contains(center) ? center : nil
+        }
+        // Start in the Form margin so the drag advances the sheet instead of scrolling editor text.
+        let lower = form.coordinate(withNormalizedOffset: CGVector(dx: 0.96, dy: 0.86))
+        let upper = form.coordinate(withNormalizedOffset: CGVector(dx: 0.96, dy: 0.38))
+        var reviewPoint = visibleReviewPoint()
+        for _ in 0..<3 {
+            if reviewPoint != nil { break }
+            lower.press(forDuration: 0.05, thenDragTo: upper, withVelocity: .slow, thenHoldForDuration: 0)
+            reviewPoint = visibleReviewPoint()
+        }
+        let point = try XCTUnwrap(reviewPoint, "Review list must have a visible tap point within a short scroll")
+        capture("S02-review-action-reachable-at-largest-text")
+        let origin = app.coordinate(withNormalizedOffset: .zero)
+        origin.withOffset(CGVector(dx: point.x - app.frame.minX, dy: point.y - app.frame.minY)).tap()
+        let previewAmount = app.textFields.matching(NSPredicate(format: "placeholderValue == %@", "Amount, unknown if blank")).firstMatch
+        XCTAssertTrue(previewAmount.waitForExistence(timeout: 8), "Tapping Review list must show an editable staged row")
+        XCTAssertFalse(editor.exists)
+        capture("S02-editable-staged-preview-at-largest-text")
     }
 
     func testDinnerOnlyCapAndCancelledSlotChangeSurviveRelaunch() {
@@ -348,9 +422,12 @@ import XCTest
         done.tap()
     }
 
-    private func launch(reset: Bool) {
+    private func launch(reset: Bool, largestText: Bool = false) {
         app.launchArguments = ["--ui-testing", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         if reset { app.launchArguments.append("--reset-test-workspace") }
+        if largestText {
+            app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+        }
         app.launch()
         XCTAssertTrue(app.tabBars.buttons["Shop"].waitForExistence(timeout: 15))
     }
