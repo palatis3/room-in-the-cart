@@ -1,5 +1,13 @@
 # Room in the Cart current handoff
 
+## Continued CI validation — November 5, 2026 (America/New_York)
+
+The user explicitly requests no further model-change pauses; the full app goal remains active. Candidate `f20feb6` is still the remote PR head. Security and native HTTPS/PostgreSQL workflows passed; both sanitizer jobs passed. The native-wire artifact digest was independently verified and its TAP confirms four integration cases and six Swift invocations, with no failures or skips ([proof](evidence/native/ci-f20feb6-20261105/native-wire.json)). StoreKit and the performance build are running; core and fixture work includes queued jobs. Continue polling the six existing run handles below. Do not push local documentation/evidence commits while the current candidate is running.
+
+Lumpy personally reviewed coverage through relay `01a1a6f5-0d06-724d-b8f8-57526604c010`. He is now preparing a scratch-only functional regression proposal for unmatched search, query clearing/replacement and relaunch within the existing 500-item rendered journey. Preserve the original 20 samples, limits and checked identities. Root must review the proposal and validate any adoption; no proposed test change has been installed yet. Physical animation and combined airplane-mode/restart/large-text/VoiceOver checks remain final signed-device acceptance. Relay snapshot cursor: `81cb0f32-5df2-443f-9bcd-9850e6ef2b64:76`.
+
+README verification counts now distinguish terminal `fa93f60` failures from pending `f20feb6` and local corrections. The actual terminal job timestamps show every core/fixture/performance job under 30 minutes, with maximum queue time 6,107 seconds; this is not proof of overall turnaround improvement. No local native lane is running, no new assistants were spawned, and no hosted deployment or distribution action occurred.
+
 ## Published follow-up candidate — November 5, 2026 (America/New_York)
 
 Candidate `f20feb685f95e7da1c7a23f26eff499d2696329f` is pushed to draft [PR#1](https://github.com/palatis3/room-in-the-cart/pull/1). All six fresh workflows are authoritatively confirmed live/queued: core41994028642, security41994028632, deep41994028656, fixtures41994028672, performance41994028865 and native-wire41994028772. Root owns monitoring. Do not restart or push another candidate without a concrete finding while results are being collected. The updated PR distinguishes prior failed hosted results, passing local follow-ups and pending fresh acceptance.
