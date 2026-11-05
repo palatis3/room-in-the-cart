@@ -86,7 +86,9 @@ def main(evidence, method, simulator_id, commit):
             details["testPlanConfigurations"] != [configuration["testPlanConfiguration"]] or
             detail_device["nodeType"] != "Device" or detail_device["nodeIdentifier"] != simulator_id or
             detail_configuration["nodeType"] != "Test Plan Configuration" or
-            detail_configuration["nodeIdentifierURL"] != url or
+            # Xcode 26.3 omits this optional URL on configuration nodes; the
+            # outer test URL and exact device/configuration IDs remain required.
+            ("nodeIdentifierURL" in detail_configuration and detail_configuration["nodeIdentifierURL"] != url) or
             detail_configuration["nodeIdentifier"] != configuration["testPlanConfiguration"]["configurationId"]):
         raise ValueError(f"Unexpected diagnostic test detail identity for {method}")
     run, = activities["testRuns"]
