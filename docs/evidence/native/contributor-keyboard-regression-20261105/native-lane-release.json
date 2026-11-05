@@ -1,0 +1,18 @@
+{
+  "at_utc": "2026-11-05T02:09:17.417912+00:00",
+  "owned_simulator": [
+    {
+      "dataPath": "/Users/palatis/Library/Developer/CoreSimulator/Devices/8B9BFA3E-DDBF-47F2-A776-13FC4BD624F4/data",
+      "dataPathSize": 1326931968,
+      "logPath": "/Users/palatis/Library/Logs/CoreSimulator/8B9BFA3E-DDBF-47F2-A776-13FC4BD624F4",
+      "udid": "8B9BFA3E-DDBF-47F2-A776-13FC4BD624F4",
+      "lastUsedAt": "2026-11-05T01:58:19Z",
+      "isAvailable": true,
+      "logPathSize": 253952,
+      "deviceTypeIdentifier": "com.apple.CoreSimulator.SimDeviceType.iPhone-17",
+      "state": "Shutdown",
+      "name": "RITC Dot Contributor Fresh 20261105"
+    }
+  ],
+  "all_test_processes_finished": true
+}

@@ -34,6 +34,7 @@ import XCTest
         }, object: element("capture.structured.original"))
         XCTAssertEqual(XCTWaiter.wait(for: [atTop], timeout: 12), .completed)
         XCTAssertEqual(element("capture.structured.original").label, original)
+        capture("Spanish-large-text-original-at-top")
     }
 
     func testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest() throws {
@@ -105,11 +106,70 @@ import XCTest
         XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
     }
     private func fill(_ text: String, into id: String, replacing: Bool = false) {
-        let field = element(id); tap(field)
-        if replacing, let old = field.value as? String, old != field.placeholderValue { app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
-        app.typeText(text)
+        // A Form can expose both its StaticText label and its input with the
+        // same name. Never let a label become the typing target.
+        let field = id == "capture.editor" ? app.textViews[id] : app.textFields[id]
+        tap(field)
+        dismissBilingualKeyboardCardIfPresent()
+        tap(field)
+        let focused = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hasKeyboardFocus == true"), object: field)
+        XCTAssertEqual(XCTWaiter.wait(for: [focused], timeout: 5), .completed)
+        if replacing, let old = field.value as? String, !old.isEmpty, old != field.placeholderValue {
+            // Tapping a multiline editor does not put the caret at its end.
+            // Select the whole value through the real edit menu before replacing it.
+            field.press(forDuration: 1.2)
+            let labels = ["Select All", "Seleccionar todo"]
+            let menuItem = app.menuItems.matching(NSPredicate(format: "label IN %@", labels)).firstMatch
+            let button = app.buttons.matching(NSPredicate(format: "label IN %@", labels)).firstMatch
+            let selectAll = menuItem.exists ? menuItem : button
+            XCTAssertTrue(selectAll.waitForExistence(timeout: 5), app.debugDescription)
+            XCTAssertTrue(selectAll.isHittable)
+            selectAll.tap()
+            field.typeText(XCUIKeyboardKey.delete.rawValue)
+            let cleared = field.value as? String
+            XCTAssertTrue(cleared == "" || cleared == field.placeholderValue, "The entire input must be cleared: \(cleared ?? "nil")")
+        }
+        field.typeText(text)
+        dismissBilingualKeyboardCardIfPresent()
+        XCTAssertEqual(field.value as? String, text, "Typed input must exactly replace the draft before review")
+        if id == "capture.editor" {
+            dismissCaptureKeyboard()
+            XCTAssertEqual(field.value as? String, text, "Dismissing the keyboard must preserve the draft")
+        }
         let done = app.buttons.matching(NSPredicate(format: "label == %@", "Done")).firstMatch
         if done.exists && done.isHittable { done.tap() }
+    }
+    private func dismissCaptureKeyboard() {
+        let keyboard = app.keyboards.firstMatch
+        guard keyboard.exists else { return }
+        // The source TextEditor has no Done action. Use the Form's existing
+        // interactive dismissal, starting in its margin outside the editor.
+        let bounds = app.frame, area = scrollableArea()
+        let origin = app.coordinate(withNormalizedOffset: .zero)
+        let start = origin.withOffset(CGVector(dx: 8, dy: area.minY + area.height * 0.25 - bounds.minY))
+        let end = origin.withOffset(CGVector(dx: 8, dy: bounds.height - 30))
+        start.press(forDuration: 0.05, thenDragTo: end)
+        let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: keyboard)
+        XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
+    }
+    private func dismissBilingualKeyboardCardIfPresent() {
+        let title = app.staticTexts["Type español e inglés"]
+        guard title.waitForExistence(timeout: 2) else {
+            XCTContext.runActivity(named: "Bilingual keyboard onboarding absent") { _ in }
+            return
+        }
+        // This is the observed iOS keyboard onboarding card, not an arbitrary
+        // Continue button or a product consent dialog.
+        XCTAssertTrue(app.staticTexts["Type both languages on the same keyboard. Customize in Settings."].exists)
+        let next = app.buttons["Continue"]
+        XCTAssertTrue(next.exists && next.isHittable)
+        XCTContext.runActivity(named: "Dismiss the identified bilingual keyboard onboarding card") { _ in
+            capture("Bilingual-keyboard-card-before-dismissal")
+            next.tap()
+            let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: title)
+            XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
+            capture("Bilingual-keyboard-card-dismissed")
+        }
     }
     private func reveal(_ target: XCUIElement, fullyVisible: Bool = false) {
         for attempt in 0..<24 {
@@ -122,9 +182,16 @@ import XCTest
             if target.exists && !target.frame.isEmpty {
                 upward = target.frame.midY > area.midY
             } else { upward = attempt < 16 }
-            scrollContent(upward: upward)
+            // A tall accessibility row may fit the viewport but not tolerate
+            // another full swipe. Center it with a measured, bounded drag.
+            let distance = fullyVisible && target.exists && !target.frame.isEmpty
+                ? abs(target.frame.midY - area.midY) : nil
+            scrollContent(upward: upward, distance: distance)
         }
-        XCTAssertTrue(target.exists && target.isHittable, "Missing actionable UI element: \(target.debugDescription)")
+        let area = scrollableArea()
+        XCTAssertTrue(target.exists && target.isHittable &&
+            (!fullyVisible || (target.frame.minY >= area.minY && target.frame.maxY <= area.maxY)),
+            "Missing actionable UI element: \(target.debugDescription)")
     }
     private func scrollableArea() -> CGRect {
         let bounds = app.frame
@@ -134,11 +201,12 @@ import XCTest
         let bottom = min(bounds.maxY - 100, keyboardTop - 16)
         return CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))
     }
-    private func scrollContent(upward: Bool) {
+    private func scrollContent(upward: Bool, distance: CGFloat? = nil) {
         // Whole-app swipes can start on the software keyboard. Drag only in
         // the observed unobscured content, and still require real hittability.
         let area = scrollableArea(), bounds = app.frame
-        let high = area.minY + area.height * 0.2, low = area.minY + area.height * 0.8
+        let travel = min(area.height * 0.6, max(20, distance ?? area.height * 0.6))
+        let high = area.midY - travel / 2, low = area.midY + travel / 2
         let origin = app.coordinate(withNormalizedOffset: .zero)
         let start = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: (upward ? low : high) - bounds.minY))
         let end = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: (upward ? high : low) - bounds.minY))
