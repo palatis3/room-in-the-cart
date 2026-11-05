@@ -1,0 +1,97 @@
+{
+  "sourceCommit": "bf114c5e583179591caae733a0a46f630a32a4e9",
+  "branch": "codex/swiftui-menu-runtime-diagnostic",
+  "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41960903906",
+  "job": 127026779374,
+  "artifact": 13385632755,
+  "artifactSHA256": "8a5e31d38a7b337de99d14d17a8a82ddf10b56175ab3fe16d73b6024692f8fd4",
+  "environment": {
+    "xcode": "26.3 (17C529)",
+    "simulator": "iPhone 17 / iOS26.2 build23C54 / arm64"
+  },
+  "workflowResult": "failure",
+  "summaryCounts": {
+    "total": 4,
+    "passed": 3,
+    "failed": 1
+  },
+  "perTestDetailedWarnings": [
+    {
+      "selector": "MenuRuntimeDiagnosticUITests/MenuRuntimeDiagnosticUITests/testFixtureControlWithoutOpeningMenu",
+      "result": "Passed",
+      "testDetailRuns": 1,
+      "activityRuns": 1,
+      "warnings": {}
+    },
+    {
+      "selector": "MenuRuntimeDiagnosticUITests/MenuRuntimeDiagnosticUITests/testOpenAndCancelFixtureControlsMenu",
+      "result": "Failed",
+      "testDetailRuns": 1,
+      "activityRuns": 1,
+      "warnings": {}
+    },
+    {
+      "selector": "MenuRuntimeDiagnosticUITests/MenuRuntimeDiagnosticUITests/testOpenAndCancelSinglePickupMenu",
+      "result": "Passed",
+      "testDetailRuns": 1,
+      "activityRuns": 1,
+      "warnings": {
+        "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.": 1
+      }
+    },
+    {
+      "selector": "MenuRuntimeDiagnosticUITests/MenuRuntimeDiagnosticUITests/testPickupControlWithoutOpeningMenu",
+      "result": "Passed",
+      "testDetailRuns": 1,
+      "activityRuns": 1,
+      "warnings": {}
+    }
+  ],
+  "warningActivity": [
+    {
+      "ancestors": [
+        "Open pickup Menu",
+        "Tap \"probe.pickupMenu\" Button[0.50, 0.50]",
+        "Synthesize event",
+        "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead."
+      ],
+      "startTime": 1793849378.357
+    }
+  ],
+  "actualExecutionLines": {
+    "testFixtureControlWithoutOpeningMenu": [
+      "Test Case '-[MenuRuntimeDiagnosticUITests.MenuRuntimeDiagnosticUITests testFixtureControlWithoutOpeningMenu]' started.",
+      "Test Case '-[MenuRuntimeDiagnosticUITests.MenuRuntimeDiagnosticUITests testFixtureControlWithoutOpeningMenu]' passed (17.123 seconds)."
+    ],
+    "testOpenAndCancelFixtureControlsMenu": [
+      "Test Case '-[MenuRuntimeDiagnosticUITests.MenuRuntimeDiagnosticUITests testOpenAndCancelFixtureControlsMenu]' started.",
+      "Test Case '-[MenuRuntimeDiagnosticUITests.MenuRuntimeDiagnosticUITests testOpenAndCancelFixtureControlsMenu]' exceeded execution time allowance of 1 minute. The test may have hung; check Xcode's test report for additional diagnostics. If the test requires additional time, use -[XCTestCase executionTimeAllowance] or one of xcodebuild's command-line overrides.",
+      "Test Case '-[MenuRuntimeDiagnosticUITests.MenuRuntimeDiagnosticUITests testOpenAndCancelFixtureControlsMenu]' passed (71.217 seconds)."
+    ],
+    "testOpenAndCancelSinglePickupMenu": [
+      "Test Case '-[MenuRuntimeDiagnosticUITests.MenuRuntimeDiagnosticUITests testOpenAndCancelSinglePickupMenu]' started.",
+      "Test Case '-[MenuRuntimeDiagnosticUITests.MenuRuntimeDiagnosticUITests testOpenAndCancelSinglePickupMenu]' exceeded execution time allowance of 1 minute. The test may have hung; check Xcode's test report for additional diagnostics. If the test requires additional time, use -[XCTestCase executionTimeAllowance] or one of xcodebuild's command-line overrides.",
+      "Test Case '-[MenuRuntimeDiagnosticUITests.MenuRuntimeDiagnosticUITests testOpenAndCancelSinglePickupMenu]' failed (61.030 seconds).",
+      "Test Case '-[MenuRuntimeDiagnosticUITests.MenuRuntimeDiagnosticUITests testOpenAndCancelSinglePickupMenu]' started.",
+      "Test Case '-[MenuRuntimeDiagnosticUITests.MenuRuntimeDiagnosticUITests testOpenAndCancelSinglePickupMenu]' passed (14.929 seconds)."
+    ],
+    "testPickupControlWithoutOpeningMenu": [
+      "Test Case '-[MenuRuntimeDiagnosticUITests.MenuRuntimeDiagnosticUITests testPickupControlWithoutOpeningMenu]' started.",
+      "Test Case '-[MenuRuntimeDiagnosticUITests.MenuRuntimeDiagnosticUITests testPickupControlWithoutOpeningMenu]' started.",
+      "Test Case '-[MenuRuntimeDiagnosticUITests.MenuRuntimeDiagnosticUITests testPickupControlWithoutOpeningMenu]' passed (53.207 seconds)."
+    ]
+  },
+  "positiveObservation": "The exact _UIReparentingView warning occurs in the isolated pickup Menu open event, with only standard SwiftUI and no production app dependencies. Its recorded successful open/cancel attempt preserves the selected pickup and zero menu actions.",
+  "limits": "The overall diagnostic is not a clean four-scenario result. Fixture Menu exceeded its 60-second allowance; pickup launch/termination failed and XCTest restarted, with repeated test starts collapsed to a single passed result in the exported tree. The combined build/test step later reached eight minutes. The fixture Menu detail had no warning. No production allowance changes follow from this incomplete run.",
+  "next": "Separate the unchanged compiled probe into four fresh one-scenario simulator jobs; require raw log starts/completions in addition to result identities and warning details. Preserve original case allowances and this failed attempt.",
+  "evidenceSHA256": {
+    "toolchain.txt": "bb7fc9a8f5e063e81975b33054b3a526c91bcccff263ad11d5bd8bcdbe8f0973",
+    "host.txt": "e0a9e270c507499fb163b6bb80e62f10c6fca344ce2c93fa2987fe42caf94b29",
+    "XCTest.log": "6139c0807b16ebec8caa29eefd0717f30ccddf381b9d291903027c2d021dac67",
+    "test-summary.json": "c645ab82cd26ffb28696ec9793a2a59b0b66c4fa20395ed927f179de0bef7eb0",
+    "test-tree.json": "daf865f7c4c567be3b26c7e7f3d142424d1a086e171ae21d3ae46fe254f09863",
+    "root-diagnostic-counts.json": "7d0a1da21f4c86a35e856836d81caea1aae0c8e771374d1a4d7b884adfdfdccd",
+    "root-warning-correlation.json": "3b3521d414e319ea174853b2391109ac56d6397d5cffab353182a91579d593f6",
+    "root-execution-lines.json": "099639f8400ce6bdc428bfaa0aef2cd90cf2e93072a46045ccb99e50d3b71ccf"
+  }
+}
