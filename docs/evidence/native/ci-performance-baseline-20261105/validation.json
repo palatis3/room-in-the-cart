@@ -81,6 +81,11 @@
           "measured": 109256.576,
           "maximum": 155000,
           "passed": true
+        },
+        "maximumPeakMemoryKilobytes": {
+          "measured": 109305.728,
+          "maximum": 160000,
+          "passed": true
         }
       }
     },
@@ -153,6 +158,11 @@
           "measured": 120021.056,
           "maximum": 155000,
           "passed": true
+        },
+        "maximumPeakMemoryKilobytes": {
+          "measured": 120184.896,
+          "maximum": 160000,
+          "passed": true
         }
       }
     }
@@ -161,38 +171,77 @@
     {
       "case": "launch",
       "metric": "responsiveLaunchMedianSeconds",
-      "result": "Rejected value 0.1% above maximum"
+      "result": "Rejected value0.1% above maximum"
     },
     {
       "case": "rendered",
       "metric": "searchP95Milliseconds",
-      "result": "Rejected value 0.1% above maximum"
+      "result": "Rejected value0.1% above maximum"
     },
     {
       "case": "rendered",
       "metric": "checkP95Milliseconds",
-      "result": "Rejected value 0.1% above maximum"
+      "result": "Rejected value0.1% above maximum"
     },
     {
       "case": "scroll",
       "metric": "scrollMedianSeconds",
-      "result": "Rejected value 0.1% above maximum"
+      "result": "Rejected value0.1% above maximum"
     },
     {
       "case": "scroll",
       "metric": "absoluteMemoryMedianKilobytes",
-      "result": "Rejected value 0.1% above maximum"
+      "result": "Rejected value0.1% above maximum"
     },
     {
       "case": "scroll",
       "metric": "peakMemoryMedianKilobytes",
-      "result": "Rejected value 0.1% above maximum"
+      "result": "Rejected value0.1% above maximum"
+    },
+    {
+      "case": "scroll",
+      "metric": "maximumPeakMemoryKilobytes",
+      "result": "Rejected value0.1% above maximum"
     },
     {
       "case": "environment",
-      "result": "Rejected unapproved runtime build"
+      "field": "osVersion",
+      "result": "Rejected mismatched environment"
+    },
+    {
+      "case": "environment",
+      "field": "osBuildNumber",
+      "result": "Rejected mismatched environment"
+    },
+    {
+      "case": "environment",
+      "field": "modelName",
+      "result": "Rejected mismatched environment"
+    },
+    {
+      "case": "environment",
+      "field": "architecture",
+      "result": "Rejected mismatched environment"
+    },
+    {
+      "case": "environment",
+      "field": "xcode",
+      "result": "Rejected mismatched environment"
+    },
+    {
+      "case": "environment",
+      "field": "buildConfiguration",
+      "result": "Rejected mismatched environment"
+    },
+    {
+      "case": "environment",
+      "field": "testConfiguration",
+      "result": "Rejected mismatched environment"
     }
   ],
-  "baselineSHA256": "ab217a44ebe69da1606e52414da17e9198507d85bad6d026a4ffdeefe764123a",
-  "scope": "Initial reviewed regression limits, not device latency targets. Local comparison replay does not relabel the original failed jobs or replace a fresh hosted strict run. Both attempts used the same compiled products and five launch/scroll/memory samples plus twenty rendered interactions each. Simulator hitch metrics were unavailable in both."
+  "scope": "Initial reviewed regression limits, not device latency targets. Local comparison replay does not relabel the original failed jobs or replace a fresh hosted strict run. Both attempts used the same compiled products and five launch/scroll/memory samples plus twenty rendered interactions each. Simulator hitch metrics were unavailable in both.",
+  "initialSixMetricBaselineSHA256": "ab217a44ebe69da1606e52414da17e9198507d85bad6d026a4ffdeefe764123a",
+  "baselineSHA256": "38742a9b5f5eea668c608f117db602ac6a2b73aa56691c3ec3f90c291d15c38e",
+  "maximumPeakDerivation": "Current checker derives maximumPeakMemoryKilobytes from the five validated raw peak samples in the unchanged reports; the historical baselineValues blocks retain their original six-metric content. No new runtime measurement is claimed.",
+  "maximumPeakTests": "Four low peaks plus161000kB reject only maximum; five156000kB peaks reject only median; an exact160000kB maximum is accepted; missing maximum budget is rejected. Eight performance-verifier test methods passed."
 }

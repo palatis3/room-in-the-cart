@@ -198,7 +198,8 @@ def baseline_values(report):
         return {"responsiveLaunchMedianSeconds": metrics[LAUNCH_METRIC]["median"]}
     return {"scrollMedianSeconds": metrics[SCROLL_METRIC]["median"],
             "absoluteMemoryMedianKilobytes": metrics[f"{MEMORY_METRIC}_absolute"]["median"],
-            "peakMemoryMedianKilobytes": metrics[f"{MEMORY_METRIC}_peak"]["median"]}
+            "peakMemoryMedianKilobytes": metrics[f"{MEMORY_METRIC}_peak"]["median"],
+            "maximumPeakMemoryKilobytes": max(metrics[f"{MEMORY_METRIC}_peak"]["samples"])}
 
 
 def compare_baseline(baseline, environment, case, values):

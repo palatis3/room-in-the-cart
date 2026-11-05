@@ -22,7 +22,8 @@
         "scroll": {
           "scrollMedianSeconds": 3.25,
           "absoluteMemoryMedianKilobytes": 150000,
-          "peakMemoryMedianKilobytes": 155000
+          "peakMemoryMedianKilobytes": 155000,
+          "maximumPeakMemoryKilobytes": 160000
         }
       }
     }

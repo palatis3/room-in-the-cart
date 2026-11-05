@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from uuid import UUID
 
-from check_ios_performance import (LAUNCH_METRIC, MEMORY_METRIC, METHODS, SCROLL_METRIC, SUITE, check_metrics,
+from check_ios_performance import (LAUNCH_METRIC, MEMORY_METRIC, METHODS, SCROLL_METRIC, SUITE, baseline_values, check_metrics,
                                    compare_baseline, ledger_readback, rendered_measurements)
 
 
@@ -149,6 +149,26 @@ class CheckIOSPerformanceTests(unittest.TestCase):
                 compare_baseline(baseline, {**environment, key: "different"}, "launch", {name: 1.2})
         with self.assertRaisesRegex(ValueError, "Incomplete approved rendered baseline"):
             compare_baseline(baseline, environment, "rendered", {"searchP95Milliseconds": 5, "checkP95Milliseconds": 5})
+
+    def test_scroll_budget_catches_a_single_peak_without_hiding_sustained_growth(self):
+        limits = {"scrollMedianSeconds": 3.25, "absoluteMemoryMedianKilobytes": 150000,
+                  "peakMemoryMedianKilobytes": 155000, "maximumPeakMemoryKilobytes": 160000}
+        environment = {"xcode": "fictional-test-environment"}
+        baseline = {"schemaVersion": 1, "profiles": [{"environment": environment, "limits": {"scroll": limits}}]}
+        for peaks, rejected in (([119000] * 4 + [161000], {"maximumPeakMemoryKilobytes"}),
+                                ([156000] * 5, {"peakMemoryMedianKilobytes"}),
+                                ([119000] * 4 + [160000], set())):
+            with self.subTest(peaks=peaks):
+                measured = check_metrics(measurements("scroll",
+                    metric(SCROLL_METRIC, "s", [2.5] * 5), metric(MEMORY_METRIC, "kB", [0] * 5),
+                    metric(f"{MEMORY_METRIC}_absolute", "kB", [119000] * 5),
+                    metric(f"{MEMORY_METRIC}_peak", "kB", peaks)), "scroll", DEVICE, CONFIG)
+                values = baseline_values({"case": "scroll", **measured})
+                comparisons = compare_baseline(baseline, environment, "scroll", values)
+                self.assertEqual({name for name, result in comparisons.items() if not result["passed"]}, rejected)
+        del limits["maximumPeakMemoryKilobytes"]
+        with self.assertRaisesRegex(ValueError, "Incomplete approved scroll baseline"):
+            compare_baseline(baseline, environment, "scroll", values)
 
     def test_cli_calibration_and_strict_baseline_outcomes(self):
         with tempfile.TemporaryDirectory() as folder:
