@@ -1,0 +1,44 @@
+{
+  "candidate": "23a73a890afbaa23d3c58ae6b0cf63a8b2e2fb71",
+  "observedAt": "2026-11-05T12:28:21.372567+00:00",
+  "run": 42021894668,
+  "coverageComplete": false,
+  "independentlyVerifiedPassingCases": 6,
+  "shards": {
+    "ui-01": {
+      "artifactID": 13413598318,
+      "sha256": "5e0dd8d94783a1f912e2d12c9206cb16e472fddb6cb11f4b31b42caa7c357fa7",
+      "githubDigestVerified": true,
+      "selected": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "selectors": [
+        "RoomInTheCartUITests/PickupCheckoutRestoreUITests/testInclusiveCheckoutFieldsAndResultSurviveRestartAndUnchangedSave"
+      ],
+      "rawLogSHA256": "249d612f2a96ca7d227da3c4e10e1d320c9b590b57af3a9092bf15fece6fba12"
+    },
+    "ui-03": {
+      "artifactID": 13413813323,
+      "sha256": "05c1dcaaafaea953b50bdb810e84c0b4d45d0c0d8658c96f842f4e3e617b5d14",
+      "githubDigestVerified": true,
+      "selected": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "selectors": [
+        "RoomInTheCartUITests/FreeJourneyUITests/testFreeCookCorrectionAndExplicitRecipientAcknowledgment",
+        "RoomInTheCartUITests/FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop",
+        "RoomInTheCartUITests/FreeJourneyUITests/testTypedBarcodeNeedsACodeAndFreshMatchConfirmation",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextShopRepairShortcutRemainsInsideViewportAndOpens",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer"
+      ],
+      "rawLogSHA256": "d056a227699f19bfa5fbc238483ceda030c81c663a0d1e8278f9bbe75b2a3f24"
+    }
+  },
+  "limits": "Only these terminal artifacts are independently verified. Other ordinary UI groups remain queued/running. Original f20 failures remain recorded; no full green candidate claim."
+}
