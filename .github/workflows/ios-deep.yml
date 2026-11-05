@@ -30,8 +30,11 @@ jobs:
           mkdir -p .build/sanitizer-results
           for manifest in ios/Packages/*/Package.swift; do
             package="$(dirname "$manifest")"
-            swift test --package-path "$package" --sanitize="$SANITIZER" 2>&1 | tee ".build/sanitizer-results/$(basename "$package").log"
+            name="$(basename "$package")"
+            swift test --package-path "$package" --sanitize="$SANITIZER" 2>&1 | tee ".build/sanitizer-results/$name.log"
+            swift test --package-path "$package" --sanitize="$SANITIZER" list --skip-build > ".build/sanitizer-results/$name.inventory.txt"
           done
+          python3 scripts/check_swift_package_results.py --results .build/sanitizer-results
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
