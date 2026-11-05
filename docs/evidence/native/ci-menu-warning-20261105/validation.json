@@ -1,0 +1,52 @@
+{
+  "sourceCommit": "f0e2ac37383e76ac3812407384bf2eda968de3c4",
+  "job": 126977497841,
+  "artifact": 13382893914,
+  "originalArtifactSHA256": "542ada499d9d5c67ec95e0551ccf9e341e3a1d05db102fc50de7212580bfbf00",
+  "reviewBundleSHA256": "5a97d5f0d8068f2253e30ff703eb8ca0bef43eeaf033e1a58d42b48625737187",
+  "verifiedPayloadFiles": 24,
+  "selector": "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekReservationDraftCannotFollowAnotherPickup",
+  "testResult": "Passed",
+  "runtimeWarningGuard": "Failed",
+  "observedOccurrences": 2,
+  "allowedOccurrences": 0,
+  "relativeSeconds": {
+    "menuTap": 66.688,
+    "warnings": [
+      67.108,
+      67.117
+    ],
+    "startAnotherPickupTap": 69.216
+  },
+  "correlation": "Both warning nodes occur within ledgerShopPicker Menu event synthesis, before selecting Start another pickup. Earlier identical warnings correlate with this menu and the List options menu. Menu source is unchanged between the observed commits.",
+  "attribution": "Unknown. No explicit manual UIHostingController view insertion was found on these paths. Exported issue details contain no source location or backtrace. This does not establish a framework defect.",
+  "nextDiagnostic": "Compare normal one-pickup and retained-reservation states using menu open/cancel only, with exact original hosted app bytes and route/draft assertions. No execution yet.",
+  "releaseStatus": "The warning remains an unresolved strict failure. No new allowance, product change or timeout change.",
+  "environmentLimit": "Local Xcode27.1/iOS26.2 build23C52 differs from hosted Xcode26.3/build23C54. A local clean result cannot certify hosted removal.",
+  "reviewEvidenceSHA256": {
+    "REPORT.txt": "8336f0c9b76cc8a6ab68ffb2cfec24516fea3edc18615fc92dc48a7f6ab16815",
+    "NEXT-DIAGNOSTIC.txt": "6d98c33042aca8b51eb779c5f7ac9b8594b7def0351c51d34c53205fce0bb341",
+    "source-provenance.json": "532b5ec24b50e606a98113c95038512ca865f98a9e8b39ff0878df37bff9483d",
+    "ledger-1fd-to-f0.diff": "f73c3c57c12d976753d5be1e8e18b444c87ca8fad955cd797695dfd0c42b73a6",
+    "root-verification.txt": "847d18d8f7f102629c5d01aca31edaf8ba26a06a0db2d4b5acba48f30ccfaa48",
+    "test-runtime-warnings.json": "ef4b1e4f303f143178b3b316a2285d7951e5df6e3778947140ca2f5769bc5cd3",
+    "test-details.json": "40174f234589189c4542582eef33728b8ca324ac470904231a0ce53610a4c308",
+    "activities.json": "296a99d8fd3801c42217dbc627757029efbbb477edce56c25e56bba43bf575c1",
+    "warning-activity-matches.json": "7918ba460c02c38f4db7af2e81a229b34973fef470d4886f37a50d65b07ff835",
+    "menu-activity-window.json": "0286aaa628fb93c60f68da1a81c24600eee1f50652662e1ed68f0f4ad570ca7d",
+    "root-legacy.json": "e50ebb773865c8a93e6db3a48df09264d6604d92d95be63a8506b5fd14ded69a",
+    "prior-ui02-activities.json": "b340c71447a60476703e5c4f4f955ea3b80157f319cb6c00c8e595bf44ed4e32",
+    "prior-ui02-warning-locations.json": "8d6b451e8a9f13bc70c305b65e68cdc01fe1ab63b131dc152fb87f3d1938e961",
+    "prior-ui04-activities.json": "7b609040a9e3f8be63372d030f4f992d6bafb3b1ee636fa9f7acd21b5eb9f144",
+    "prior-ui04-warning-locations.json": "b6d7596b59766e30d37d1d543fb4ab9457cc17ecb9d09c080626a643124c8a7b",
+    "attachments/95AB47AB-9F00-4629-A2D9-3C10A7951B6C.txt": "964fca035fc565bacb9134affae5af136bf832dc58f2f4c5ce103ed63ea7d225",
+    "attachments/20F9D2A8-002C-4857-ACEE-AC064F17F66B.txt": "964fca035fc565bacb9134affae5af136bf832dc58f2f4c5ce103ed63ea7d225",
+    "source/ios/UITests/FreeJourneyUITests.swift": "c0eb904789560888e176802b308c627000baf43736a5c2e259c54c14b6462153",
+    "source/ios/Features/Ledger/LedgerHomeView.swift": "64e07bc4f853f5885c9a61a91b829c42193fc4de51509fe99bb7b84f4f2a602a",
+    "source/ios/Features/Dinners/DinnerPlanningHome.swift": "6bdfc4c161ea2ebb93ef37255da9f146d14a01649af41379a88a8e61ff83a187",
+    "source/ios/Features/Dinners/DinnerWeekEditors.swift": "a84ded1200ace6813223a7983dd26168b6df5085f1decf03257c7d2265467ea8",
+    "source/ios/App/Theme.swift": "5c22cb54e31caa827b83d87497aff950ba8cea73cb38df430ecd3fe57511e627",
+    "source/ios/Extensions/Share/ShareViewController.swift": "41bfa3ea70f80244a5aa005ac0eda6750f4b3c7f929ec47da6e0c999b07ef405",
+    "Tests.log": "7a8e5a1c9c0c11e41bdce23751b8f2bb10665969b8cc013e53153b5e080770fd"
+  }
+}
