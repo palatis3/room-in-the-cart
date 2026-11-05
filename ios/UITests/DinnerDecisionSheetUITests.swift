@@ -13,6 +13,7 @@ final class DinnerDecisionSheetUITests: XCTestCase {
         continueAfterFailure = false
         app.launchArguments = ["--ui-testing", "--ui-testing-guest-boundary", "-AppleLanguages", "(\(language))", "-AppleLocale", language == "es" ? "es_US" : "en_US"]
         app.launch()
+        openChosenDinners(language)
         let meal = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'dinnerOccurrence-' AND label CONTAINS 'Arroz'")).firstMatch
         tap(meal)
         let guests = app.buttons["dinnerGuests"]
@@ -64,6 +65,7 @@ final class DinnerDecisionSheetUITests: XCTestCase {
         XCTAssertEqual(cancel.label, language == "es" ? "Cancelar" : "Cancel")
         tap(cancel)
         XCTAssertTrue(origin.waitForExistence(timeout: 5) && origin.isHittable)
+        openChosenDinners(language)
         let meal = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'dinnerOccurrence-' AND label CONTAINS 'Arroz'")).firstMatch
         tap(meal)
         let guests = app.buttons["dinnerGuests"]
@@ -87,6 +89,8 @@ final class DinnerDecisionSheetUITests: XCTestCase {
         tap(app.buttons["dinnerCancelPreview"])
         XCTAssertTrue(guests.waitForExistence(timeout: 5) && guests.isHittable)
         app.navigationBars.buttons.element(boundBy: 0).tap()
+        // Return through the chosen-dinners destination to its Dinners root.
+        app.navigationBars.buttons.element(boundBy: 0).tap()
         tap(origin)
         tap(app.buttons["dinnerScenarioReview"])
         tap(app.buttons["dinnerComparePairings"])
@@ -100,6 +104,7 @@ final class DinnerDecisionSheetUITests: XCTestCase {
         capture("S15-S17-" + language)
         tap(app.buttons["dinnerApply"])
         XCTAssertTrue(origin.waitForExistence(timeout: 8))
+        openChosenDinners(language)
         let tacos = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'dinnerOccurrence-' AND label CONTAINS 'Tacos'")).firstMatch
         tap(tacos)
         XCTAssertTrue(app.staticTexts["Tacos"].waitForExistence(timeout: 4))
@@ -111,6 +116,14 @@ final class DinnerDecisionSheetUITests: XCTestCase {
         reveal(protected)
         XCTAssertFalse(app.textFields["dinnerGuestServings"].exists)
         capture("S15-retained-lunch-" + language)
+    }
+
+    private func openChosenDinners(_ language: String) {
+        let title = language == "es"
+            ? "Todas las cenas elegidas, incluidas las fechas anteriores"
+            : "All chosen dinners, including earlier dates"
+        tap(app.buttons[title])
+        XCTAssertTrue(app.navigationBars[language == "es" ? "Todas las cenas elegidas" : "All chosen dinners"].waitForExistence(timeout: 5))
     }
 
     private func tap(_ item: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
