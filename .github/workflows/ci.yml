@@ -1,375 +1,87 @@
 name: Build and test
+run-name: SwiftUI Menu diagnostic only
+
 on:
-  push:
-    branches: [main]
-  pull_request:
   workflow_dispatch:
   workflow_call:
     inputs:
       require_release_metadata:
-        description: Reject missing production support, policy and Apple product metadata
+        description: Reserved for the release workflow; this diagnostic branch rejects it
         type: boolean
         default: false
+
 permissions:
   contents: read
-concurrency:
-  group: core-ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-jobs:
-  typescript:
-    runs-on: ubuntu-24.04
-    strategy:
-      matrix:
-        package: [web, service]
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-        with:
-          node-version-file: .node-version
-          cache: npm
-          cache-dependency-path: ${{ matrix.package }}/package-lock.json
-      - run: npm ci --ignore-scripts
-        working-directory: ${{ matrix.package }}
-      - run: npm test
-        working-directory: ${{ matrix.package }}
-  service-postgres:
-    runs-on: ubuntu-24.04
-    services:
-      postgres:
-        image: postgres:17.11
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: fixture-only
-          POSTGRES_DB: ritc_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres -d ritc_test"
-          --health-interval 5s --health-timeout 5s --health-retries 10
-    env:
-      TEST_ADMIN_DATABASE_URL: postgresql://postgres:fixture-only@127.0.0.1:5432/ritc_test
-      MIGRATION_DATABASE_URL: postgresql://postgres:fixture-only@127.0.0.1:5432/ritc_test
-      TEST_DATABASE_URL: postgresql://ritc_runtime:fixture-only@127.0.0.1:5432/ritc_test
-      TEST_WORKER_DATABASE_URL: postgresql://ritc_test_worker:fixture-only@127.0.0.1:5432/ritc_test
-      BILLING_TEST_ADMIN_DATABASE_URL: postgresql://postgres:fixture-only@127.0.0.1:5432/ritc_test
-      BILLING_TEST_DATABASE_URL: postgresql://ritc_runtime:fixture-only@127.0.0.1:5432/ritc_test
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-        with:
-          node-version-file: .node-version
-          cache: npm
-          cache-dependency-path: service/package-lock.json
-      - run: npm ci --ignore-scripts
-        working-directory: service
-      - name: Build the web client for the PostgreSQL browser retry tests
-        run: npm ci --ignore-scripts && npm run build
-        working-directory: web
-      - name: Prepare disposable provider-session and maintenance fixtures
-        run: |
-          psql "$TEST_ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
-          CREATE SCHEMA auth;
-          CREATE TABLE auth.users(id uuid PRIMARY KEY, email text, email_confirmed_at timestamptz);
-          CREATE TABLE auth.sessions(id uuid PRIMARY KEY, user_id uuid NOT NULL, not_after timestamptz);
-          SQL
-          psql "$TEST_ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 -c 'CREATE DATABASE ritc_operations'
-      - run: npm run migrate
-        working-directory: service
-      - name: Create restricted app, guardian verification and worker roles
-        run: |
-          psql "$TEST_ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
-          CREATE ROLE ritc_runtime LOGIN PASSWORD 'fixture-only' NOSUPERUSER NOBYPASSRLS;
-          GRANT ritc_app TO ritc_runtime;
-          CREATE ROLE ritc_guardian_test_verifier LOGIN PASSWORD 'fixture-only' NOSUPERUSER NOBYPASSRLS;
-          GRANT ritc_guardian_verifier TO ritc_guardian_test_verifier;
-          CREATE ROLE ritc_test_worker LOGIN PASSWORD 'fixture-only' NOSUPERUSER NOBYPASSRLS;
-          GRANT ritc_worker TO ritc_test_worker;
-          -- Negative readiness fixture. A verifier must reject this combined identity.
-          CREATE ROLE ritc_guardian_combined_worker LOGIN PASSWORD 'fixture-only' NOSUPERUSER NOBYPASSRLS;
-          GRANT ritc_guardian_verifier, ritc_worker TO ritc_guardian_combined_worker;
-          SQL
-      - run: npm test && npm run test:integration
-        working-directory: service
-        env:
-          RITC_TEST_WEB_WIRE: "1"
-      - name: Verify maintenance with a separate database and worker role
-        run: node scripts/test-operations.mjs
-        working-directory: service
-        env:
-          OPERATIONS_TEST_DATABASE_URL: postgresql://ritc_runtime:fixture-only@127.0.0.1:5432/ritc_operations
-          OPERATIONS_TEST_ADMIN_DATABASE_URL: postgresql://postgres:fixture-only@127.0.0.1:5432/ritc_operations
-          TEST_WORKER_DATABASE_URL: postgresql://ritc_test_worker:fixture-only@127.0.0.1:5432/ritc_operations
-  source-checks:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - name: Validate workflow syntax and expression references
-        shell: bash
-        run: |
-          lint_dir="$RUNNER_TEMP/actionlint"
-          mkdir -p "$lint_dir"
-          curl --fail --silent --show-error --location \
-            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz \
-            --output "$lint_dir/actionlint.tar.gz"
-          echo '8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  actionlint.tar.gz' \
-            | (cd "$lint_dir" && sha256sum --check)
-          tar -xzf "$lint_dir/actionlint.tar.gz" -C "$lint_dir" actionlint
-          "$lint_dir/actionlint" -shellcheck='' -pyflakes='' .github/workflows/*.yml
-      - name: Verify the pinned Node release is supported and security-current
-        timeout-minutes: 1
-        run: python3 scripts/check_node_runtime.py
-      - name: Validate generated files, localization and CI test selection
-        run: |
-          python3 scripts/generate_theme.py --check
-          python3 scripts/check_localization.py
-          python3 scripts/generate_xcode_project.py --check
-          python3 -m unittest discover -s scripts -p 'test_*.py'
-          bash -n scripts/run_ios_test_shard.sh
-  swift-packages:
-    runs-on: macos-15
-    timeout-minutes: 25
-    env:
-      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - name: Test Swift packages and collect coverage
-        run: |
-          set -o pipefail
-          mkdir -p .build/package-results
-          for manifest in ios/Packages/*/Package.swift; do
-            package="$(dirname "$manifest")"
-            name="$(basename "$package")"
-            swift test --package-path "$package" --enable-code-coverage 2>&1 | tee ".build/package-results/$name.log"
-            swift test --package-path "$package" list --skip-build > ".build/package-results/$name.inventory.txt"
-          done
-          python3 scripts/check_swift_package_results.py --results .build/package-results
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        if: always()
-        with:
-          name: swift-package-results-${{ github.run_attempt }}
-          include-hidden-files: true
-          path: |
-            .build/package-results
-            ios/Packages/**/.build/**/codecov/*.json
-          retention-days: 7
-  ios-release:
-    runs-on: macos-15
-    timeout-minutes: 45
-    env:
-      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
-      REQUIRE_RELEASE_METADATA: ${{ inputs.require_release_metadata }}
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - name: Compile unsigned Release for iPhone
-        timeout-minutes: 30
-        shell: bash
-        run: |
-          mkdir -p .build
-          xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart-Release \
-            -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' \
-            -jobs 2 -derivedDataPath .build/ReleaseDerivedData ARCHS=arm64 \
-            CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO build 2>&1 | tee .build/ReleaseBuild.log
-      - name: Verify the compiled iPhone app and embedded extensions
-        shell: bash
-        run: |
-          args=(--configuration Release)
-          if [[ "$REQUIRE_RELEASE_METADATA" == true ]]; then
-            args+=(--require-release-metadata)
-          fi
-          python3 scripts/check_built_app.py .build/ReleaseDerivedData/Build/Products/Release-iphoneos/RoomInTheCart.app "${args[@]}"
-      - name: Retain Release compilation log
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: iphone-release-build-log-${{ github.run_attempt }}
-          path: .build/ReleaseBuild.log
-          include-hidden-files: true
-          retention-days: 7
-          if-no-files-found: ignore
-  ios-swift-codeql:
-    runs-on: macos-15
-    timeout-minutes: 45
-    permissions:
-      contents: read
-      security-events: write
-      actions: read
-    env:
-      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - name: Record Swift analysis toolchain
-        shell: bash
-        run: |
-          mkdir -p .build
-          {
-            uname -m
-            xcodebuild -version
-            swift --version
-          } | tee .build/SwiftCodeQLToolchain.log
-      - name: Initialize Swift security analysis
-        uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
-        with:
-          languages: swift
-          build-mode: manual
-      - name: Compile Release Swift sources for CodeQL
-        timeout-minutes: 30
-        shell: bash
-        run: |
-          # GitHub's Swift extraction guidance requires uncached compilation and the legacy driver.
-          # https://docs.github.com/en/code-security/tutorials/customize-code-scanning/prepare-code-for-analysis
-          build_args=(
-            -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart-Release
-            -configuration Release -sdk iphoneos -destination 'generic/platform=iOS'
-            -jobs 2 -derivedDataPath .build/SwiftCodeQLDerivedData ARCHS=arm64
-            CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
-            COMPILATION_CACHE_ENABLE_CACHING=NO SWIFT_ENABLE_COMPILE_CACHE=NO
-            SWIFT_USE_INTEGRATED_DRIVER=NO SWIFT_OPTIMIZATION_LEVEL=-Onone
-          )
-          settings="$RUNNER_TEMP/swift-codeql-settings.json"
-          xcodebuild "${build_args[@]}" -showBuildSettings -json > "$settings"
-          python3 - "$settings" <<'PY' | tee .build/SwiftCodeQLSettings.log
-          import json, sys
-          from pathlib import Path
 
-          targets = json.loads(Path(sys.argv[1]).read_text())
-          app = [target["buildSettings"] for target in targets if target.get("target") == "RoomInTheCart"]
-          if len(app) != 1:
-              raise SystemExit("Expected exactly one RoomInTheCart app target in Xcode build settings.")
-          expected = {"CONFIGURATION": "Release", "PLATFORM_NAME": "iphoneos", "ARCHS": "arm64", "SWIFT_OPTIMIZATION_LEVEL": "-Onone"}
-          actual = {key: app[0].get(key) for key in expected}
-          conditions = app[0].get("SWIFT_ACTIVE_COMPILATION_CONDITIONS", "").split()
-          print(json.dumps({**actual, "SWIFT_ACTIVE_COMPILATION_CONDITIONS": conditions}, indent=2))
-          if actual != expected or "RELEASE" not in conditions or "DEBUG" in conditions:
-              raise SystemExit("Swift CodeQL must compile Release sources for arm64 iPhoneOS with optimization disabled.")
-          PY
-          xcodebuild "${build_args[@]}" build 2>&1 | tee .build/SwiftCodeQLBuild.log
-      - name: Analyze Swift security findings
-        uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
-        with:
-          category: /language:swift
-      - name: Retain Swift analysis compilation logs
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: iphone-swift-codeql-build-logs-${{ github.run_attempt }}
-          path: |
-            .build/SwiftCodeQLToolchain.log
-            .build/SwiftCodeQLSettings.log
-            .build/SwiftCodeQLBuild.log
-          include-hidden-files: true
-          retention-days: 7
-          if-no-files-found: ignore
-  ios-build:
+jobs:
+  swiftui-menu-diagnostic:
+    name: SwiftUI Menu runtime warning diagnostic
     runs-on: macos-15
-    timeout-minutes: 35
+    timeout-minutes: 18
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
-    outputs:
-      test_products_artifact: ${{ steps.upload.outputs['artifact-id'] }}
-      test_matrix: ${{ steps.plan.outputs.matrix }}
+      EVIDENCE: .build/menu-runtime-diagnostic
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - name: Record toolchain and select iPhone
+      - name: Reject release use of this diagnostic branch
+        if: ${{ inputs.require_release_metadata }}
         run: |
-          xcodebuild -version
-          swift --version
-          xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
-      - name: Build iPhone simulator test products once
-        run: >-
-          xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart
-          -configuration Debug -destination "platform=iOS Simulator,id=$SIMULATOR_ID"
-          -jobs 2 -derivedDataPath .build/DerivedData CODE_SIGN_IDENTITY=- build-for-testing
-      - name: Verify the compiled simulator app
-        run: python3 scripts/check_built_app.py .build/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app --configuration Debug
-      - name: Discover compiled tests and balance UI groups
-        id: plan
+          echo '::error::This isolated diagnostic cannot satisfy the pre-release checks.'
+          exit 1
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Require the original hosted toolchain and simulator profile
         shell: bash
         run: |
-          test_runs=(.build/DerivedData/Build/Products/RoomInTheCart_iphonesimulator*.xctestrun)
-          test "${#test_runs[@]}" -eq 1
-          xcrun simctl bootstatus "$SIMULATOR_ID" -b
-          xcodebuild -xctestrun "${test_runs[0]}" \
-            -destination "platform=iOS Simulator,id=$SIMULATOR_ID" -parallel-testing-enabled NO \
-            -enumerate-tests -test-enumeration-style flat -test-enumeration-format json \
-            -test-enumeration-output-path "$PWD/.build/test-enumeration.json" test-without-building
-          python3 scripts/plan_ios_tests.py --enumeration .build/test-enumeration.json --output-dir .build/test-plan --ui-shards 10
-          python3 -c 'import json; from pathlib import Path; p=json.loads(Path(".build/test-plan/manifest.json").read_text()); print("matrix=" + json.dumps({"include":p["include"]}))' >> "$GITHUB_OUTPUT"
-      - name: Package test products and exact selection
-        run: |
-          cp .build/test-enumeration.json .build/test-plan/
-          tar -czf "$RUNNER_TEMP/iphone-test-products.tar.gz" -C .build/DerivedData/Build Products -C "$GITHUB_WORKSPACE/.build" test-plan
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        id: upload
-        with:
-          name: iphone-test-products-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/iphone-test-products.tar.gz
-          compression-level: 0
-          retention-days: 7
-          if-no-files-found: error
-  ios-tests:
-    needs: ios-build
-    runs-on: macos-15
-    timeout-minutes: 55
-    strategy:
-      fail-fast: false
-      max-parallel: 5
-      matrix: ${{ fromJSON(needs.ios-build.outputs.test_matrix) }}
-    env:
-      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
-      TEST_SHARD: ${{ matrix.shard }}
-      EXPECTED_TEST_COUNT: ${{ matrix.expected_count }}
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
-        with:
-          artifact-ids: ${{ needs.ios-build.outputs.test_products_artifact }}
-          path: .build/download
-          merge-multiple: true
-      - name: Restore iPhone test products and selection
-        run: |
-          mkdir -p .build/DerivedData/Build
-          tar -xzf .build/download/iphone-test-products.tar.gz -C .build/DerivedData/Build
-          mv .build/DerivedData/Build/test-plan .build/test-plan
-      - name: Select and boot iPhone simulator
-        timeout-minutes: 8
-        run: |
-          xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
-      - name: Wait for simulator boot
-        timeout-minutes: 8
-        run: xcrun simctl bootstatus "$SIMULATOR_ID" -b
-      - name: Run selected tests and verify complete execution
-        timeout-minutes: 40
-        run: bash scripts/run_ios_test_shard.sh
-      - name: Retain result bundles, screenshots, logs and timing
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: iphone-results-${{ matrix.shard }}-${{ github.run_attempt }}
-          include-hidden-files: true
-          path: |
-            .build/Tests*.xcresult
-            .build/Tests*.log
-            .build/test-*.json
-            .build/test-plan/
-          retention-days: 7
-          if-no-files-found: ignore
-  ci-gate:
-    name: CI gate
-    needs: [typescript, service-postgres, source-checks, swift-packages, ios-release, ios-swift-codeql, ios-build, ios-tests]
-    if: always()
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    env:
-      JOB_RESULTS: ${{ toJSON(needs) }}
-    steps:
-      - name: Require every build and test job to succeed
-        run: |
+          mkdir -p "$EVIDENCE"
+          xcodebuild -version | tee "$EVIDENCE/toolchain.txt"
+          test "$(cat "$EVIDENCE/toolchain.txt")" = $'Xcode 26.3\nBuild version 17C529'
+          test "$(uname -m)" = arm64
+          sw_vers > "$EVIDENCE/host.txt"
+          xcrun simctl list -j > "$EVIDENCE/simulator-inventory.json"
           python3 - <<'PY'
           import json, os
-          jobs = json.loads(os.environ["JOB_RESULTS"])
-          failures = {name: job["result"] for name, job in jobs.items() if job["result"] != "success"}
-          if failures:
-              raise SystemExit(f"Required jobs did not pass: {failures}")
-          print("Every required build and test job passed.")
+          from pathlib import Path
+
+          data = json.loads((Path(os.environ['EVIDENCE']) / 'simulator-inventory.json').read_text())
+          runtime_id = 'com.apple.CoreSimulator.SimRuntime.iOS-26-2'
+          runtime, = [item for item in data['runtimes'] if item['identifier'] == runtime_id and item['isAvailable']]
+          if runtime['buildversion'] != '23C54':
+              raise SystemExit('Expected hosted iOS 26.2 runtime build 23C54')
+          device, = [item for item in data['devices'][runtime_id] if item['name'] == 'iPhone 17' and item['isAvailable']]
+          with open(os.environ['GITHUB_ENV'], 'a') as output:
+              print(f"SIMULATOR_ID={device['udid']}", file=output)
           PY
+      - name: Boot the pinned iPhone simulator
+        timeout-minutes: 5
+        run: xcrun simctl bootstatus "$SIMULATOR_ID" -b
+      - name: Run the isolated Menu and no-menu scenarios once
+        timeout-minutes: 8
+        shell: bash
+        run: |
+          xcodebuild -project diagnostics/swiftui-menu/MenuRuntimeDiagnostic.xcodeproj \
+            -scheme MenuRuntimeDiagnostic -configuration Debug \
+            -destination "platform=iOS Simulator,id=$SIMULATOR_ID" -parallel-testing-enabled NO -jobs 2 \
+            -test-timeouts-enabled YES -default-test-execution-time-allowance 60 \
+            -maximum-test-execution-time-allowance 90 -collect-test-diagnostics never \
+            -derivedDataPath "$RUNNER_TEMP/menu-runtime-derived" \
+            -resultBundlePath "$EVIDENCE/MenuDiagnostic.xcresult" CODE_SIGN_IDENTITY=- test \
+            2>&1 | tee "$EVIDENCE/XCTest.log"
+      - name: Retain and correlate exact XCTest runtime warnings
+        if: ${{ always() && !inputs.require_release_metadata }}
+        shell: bash
+        run: |
+          bundle="$EVIDENCE/MenuDiagnostic.xcresult"
+          test -d "$bundle"
+          xcrun xcresulttool get test-results summary --path "$bundle" --compact > "$EVIDENCE/test-summary.json"
+          xcrun xcresulttool get test-results tests --path "$bundle" --compact > "$EVIDENCE/test-tree.json"
+          python3 diagnostics/swiftui-menu/report.py "$EVIDENCE" | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Upload the diagnostic bundle and exact warning evidence
+        if: ${{ always() && !inputs.require_release_metadata }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: swiftui-menu-runtime-diagnostic
+          path: .build/menu-runtime-diagnostic/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
