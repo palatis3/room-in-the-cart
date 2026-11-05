@@ -72,16 +72,31 @@ def test_cases(nodes):
             yield from test_cases(node.get("children", []))
 
 
-# The retained Xcode 26.3 simulator runs recorded this message. Its origin is
-# unknown. Keep the allowance tied to the exact test, environment and count.
+# The standalone Menu control experiment reproduced this exact warning.
+# Allow only the observed test, environment, Menu tap, activity and count.
 OBSERVED_WARNING = (
     "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result "
     "in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or "
     "insert it into your SwiftUI content in a UIViewRepresentable instead."
 )
-OBSERVED_LIMITS = {
-    "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges": 2,
-    "RoomInTheCartUITests/FreeJourneyUITests/testManualListOrderSurvivesRestartAndOpensLargePrint": 1,
+PICKUP_MENU_TAP = 'Tap "ledgerShopPicker" Button'
+LIST_OPTIONS_MENU_TAP = 'Tap "ledgerListOptions" Button[0.50, 0.50]'
+FIXTURE_MENU_TAP = 'Tap "fixture.s27.controls" Button'
+SYNTHESIZE_EVENT = "Synthesize event"
+INTERNAL_ACTIVITY = "com.apple.dt.xctest.activity-type.internal"
+OBSERVED_MENU_WARNINGS = {
+    "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges":
+        (2, PICKUP_MENU_TAP, SYNTHESIZE_EVENT),
+    "RoomInTheCartUITests/FreeJourneyUITests/testManualListOrderSurvivesRestartAndOpensLargePrint":
+        (1, LIST_OPTIONS_MENU_TAP, SYNTHESIZE_EVENT),
+    "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekReservationDraftCannotFollowAnotherPickup":
+        (2, PICKUP_MENU_TAP, SYNTHESIZE_EVENT),
+    "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption":
+        (2, FIXTURE_MENU_TAP, "Wait for dev.roominthecart.app.debug to idle"),
+    "RoomInTheCartUITests/SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave":
+        (2, FIXTURE_MENU_TAP, SYNTHESIZE_EVENT),
+    "RoomInTheCartUITests/SharedStoreQuoteUITests/testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction":
+        (2, FIXTURE_MENU_TAP, SYNTHESIZE_EVENT),
 }
 OBSERVED_DEVICE = {
     "modelName": "iPhone 17", "osVersion": "26.2", "osBuildNumber": "23C54",
@@ -132,7 +147,59 @@ def export_test_details(bundle, identifier_url):
     return json.loads(result.stdout)
 
 
-def inspect_runtime_warnings(summary, nodes, cases, read_details):
+def export_test_activities(bundle, identifier_url):
+    result = subprocess.run(
+        ["xcrun", "xcresulttool", "get", "test-results", "activities",
+         "--path", str(bundle), "--test-id", identifier_url, "--compact"],
+        check=True, capture_output=True, text=True,
+    )
+    return json.loads(result.stdout)
+
+
+def activity_warning_paths(activities, messages, parents=()):
+    if not isinstance(activities, list):
+        raise ValueError("Invalid XCTest warning activity tree")
+    for activity in activities:
+        title = activity["title"]
+        kind = activity.get("activityType")
+        failed = activity["isAssociatedWithFailure"]
+        attachments = activity.get("attachments", [])
+        if (not isinstance(title, str) or (kind is not None and not isinstance(kind, str))
+                or not isinstance(failed, bool) or not isinstance(attachments, list)
+                or any(not isinstance(item, dict) for item in attachments)):
+            raise ValueError("Invalid XCTest warning activity")
+        issue_files = sum(item.get("name") == "Complete Issue Description.txt" for item in attachments)
+        # XCTest exports runtime warnings as untyped, nonfailure issue records.
+        # Assertion failures use the same attachment but are marked as failures.
+        if title in messages or title == OBSERVED_WARNING or (kind is None and not failed and issue_files):
+            if kind is not None or failed or issue_files != 1 or not title.strip():
+                raise ValueError("Malformed XCTest runtime warning activity")
+            yield title, parents
+        yield from activity_warning_paths(
+            activity.get("childActivities", []), messages, (*parents[-1:], (kind, title)),
+        )
+
+
+def verify_warning_activities(activities, identifier_url, configurations, detail_configurations, names):
+    if len(configurations) != 1 or activities["testIdentifierURL"] != identifier_url:
+        raise ValueError("XCTest warning activities came from another test or configuration")
+    configuration, = configurations
+    if detail_configurations != [configuration["testPlanConfiguration"]]:
+        raise ValueError("XCTest warning details came from another test configuration")
+    runs = activities["testRuns"]
+    if not isinstance(runs, list) or len(runs) != 1:
+        raise ValueError("Expected one XCTest runtime warning activity run")
+    run, = runs
+    if (run["device"] != configuration["device"]
+            or run["testPlanConfiguration"] != configuration["testPlanConfiguration"]):
+        raise ValueError("XCTest warning activity run came from another device or configuration")
+    occurrences = list(activity_warning_paths(run["activities"], set(names)))
+    if Counter(title for title, _ in occurrences) != Counter(names):
+        raise ValueError("XCTest warning activities and detailed results disagree")
+    return occurrences
+
+
+def inspect_runtime_warnings(summary, nodes, cases, read_details, read_activities):
     summary_names = None
     if "runtimeWarnings" in summary:
         issues = summary["runtimeWarnings"]
@@ -161,6 +228,8 @@ def inspect_runtime_warnings(summary, nodes, cases, read_details):
     )
     counts = Counter()
     markers = []
+    activity_exports = 0
+    menu_matches = {}
     for selector, node in cases:
         listed = list(warning_names(result_nodes([node])))
         markers.extend(listed)
@@ -180,6 +249,18 @@ def inspect_runtime_warnings(summary, nodes, cases, read_details):
         if not matches_tree or MULTIPLE_WARNINGS in names:
             raise ValueError(f"Runtime warning details disagree with test tree: {selector}")
         counts.update((selector, message) for message in names)
+        if names:
+            occurrences = verify_warning_activities(
+                read_activities(url), url, configurations, details["testPlanConfigurations"], names,
+            )
+            activity_exports += 1
+            if observed_environment and selector in OBSERVED_MENU_WARNINGS:
+                maximum, tap, phase = OBSERVED_MENU_WARNINGS[selector]
+                paths = [path for title, path in occurrences if title == OBSERVED_WARNING]
+                # Xcode 26.3 omits activityType on these parents; newer exports label them internal.
+                if paths and all(tuple(title for _, title in path) == (tap, phase)
+                                 and all(kind in (None, INTERNAL_ACTIVITY) for kind, _ in path) for path in paths):
+                    menu_matches[selector] = (maximum, tap, phase)
 
     if Counter(markers) != Counter(warning_names(all_nodes)):
         raise ValueError("XCTest recorded a runtime warning without a selected test")
@@ -187,8 +268,12 @@ def inspect_runtime_warnings(summary, nodes, cases, read_details):
     warnings = []
     for (selector, message), count in sorted(counts.items()):
         details_names[message] += count
-        maximum = OBSERVED_LIMITS.get(selector, 0) if observed_environment and message == OBSERVED_WARNING else 0
-        warnings.append({"selector": selector, "message": message, "count": count, "maximum": maximum})
+        allowance = menu_matches.get(selector) if message == OBSERVED_WARNING else None
+        warning = {"selector": selector, "message": message, "count": count, "maximum": 0}
+        if allowance is not None:
+            maximum, tap, phase = allowance
+            warning.update(maximum=maximum, menuActivity={"tap": tap, "phase": phase})
+        warnings.append(warning)
     if summary_names is not None and summary_names != details_names:
         raise ValueError("XCTest summary and test details disagree on runtime warnings")
     return {
@@ -197,6 +282,7 @@ def inspect_runtime_warnings(summary, nodes, cases, read_details):
         "runtimeWarningCount": sum(counts.values()),
         "examinedTestCount": len(cases),
         "detailExportCount": len(cases),
+        "activityExportCount": activity_exports,
         "warnings": warnings,
     }
 
@@ -210,7 +296,9 @@ def append_runtime_warning_report(args, summary, nodes, cases, report, failures)
         if not (args.result_bundle / "Info.plist").is_file():
             raise ValueError("Missing XCTest result bundle")
         evidence = inspect_runtime_warnings(
-            summary, nodes, cases, lambda url: export_test_details(args.result_bundle, url),
+            summary, nodes, cases,
+            lambda url: export_test_details(args.result_bundle, url),
+            lambda url: export_test_activities(args.result_bundle, url),
         )
     except (KeyError, TypeError, ValueError, OSError, subprocess.CalledProcessError) as error:
         evidence = {"status": "unavailable", "error": str(error)}

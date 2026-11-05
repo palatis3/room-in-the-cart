@@ -1,0 +1,99 @@
+{
+  "sourceBase": "9f65b545de2515e9fead50a73ae319d9df008aa7",
+  "patchSha256": "46fb7d1424302d1a1fc33cd30f781697b0e0ce435a41d09279861d3fc13b4ef2",
+  "sourceSha256": {
+    "check_ios_test_results.py": "7f058fd68d274de04bfb89b52b39eab7b5217cce593330dc7342f47a13b9c6d7",
+    "test_check_ios_test_results.py": "8c72e082d80c31ce7940e3416db40152a5f316703faa9391b72e95bbe635d2be"
+  },
+  "focusedTestsPassed": 20,
+  "gitApplyCheck": "passed",
+  "allowedEnvironment": "arm64 iPhone 17 simulator, iOS 26.2 build 23C54, Test Scheme Action, workflows pinned to Xcode 26.3",
+  "observedPolicy": {
+    "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges": {
+      "maximum": 2,
+      "menuActivity": {
+        "tap": "Tap \"ledgerShopPicker\" Button",
+        "phase": "Synthesize event"
+      }
+    },
+    "RoomInTheCartUITests/FreeJourneyUITests/testManualListOrderSurvivesRestartAndOpensLargePrint": {
+      "maximum": 1,
+      "menuActivity": {
+        "tap": "Tap \"ledgerListOptions\" Button[0.50, 0.50]",
+        "phase": "Synthesize event"
+      }
+    },
+    "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekReservationDraftCannotFollowAnotherPickup": {
+      "maximum": 2,
+      "menuActivity": {
+        "tap": "Tap \"ledgerShopPicker\" Button",
+        "phase": "Synthesize event"
+      }
+    },
+    "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption": {
+      "maximum": 2,
+      "menuActivity": {
+        "tap": "Tap \"fixture.s27.controls\" Button",
+        "phase": "Wait for dev.roominthecart.app.debug to idle"
+      }
+    },
+    "RoomInTheCartUITests/SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave": {
+      "maximum": 2,
+      "menuActivity": {
+        "tap": "Tap \"fixture.s27.controls\" Button",
+        "phase": "Synthesize event"
+      }
+    },
+    "RoomInTheCartUITests/SharedStoreQuoteUITests/testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction": {
+      "maximum": 2,
+      "menuActivity": {
+        "tap": "Tap \"fixture.s27.controls\" Button",
+        "phase": "Synthesize event"
+      }
+    }
+  },
+  "replayedBundles": [
+    "prior-ui-02",
+    "prior-ui-04",
+    "ui-04",
+    "ui-06",
+    "ui-10",
+    "shared-store-quote",
+    "clean-ui-03"
+  ],
+  "replayOutcome": "Every old and proposed allowance matched the exact original Menu activity and cap. UI10 passes this revised warning check. Old failed UI02/UI04 and SharedStoreQuote remain failed because of their original execution failures. A clean UI03 required no activity export.",
+  "warningEvidence": "Warned cases require a valid single activity run with matching case URL, device and test configuration, plus a matching detailed configuration. The nonfailure issue-message multiset must match every detailed warning. Only the exact observed parent Menu tap and immediate phase qualify for an allowance.",
+  "hostedSchema": "The retained fresh standalone Xcode 26.3 activity exports omit optional parent activityType. The verifier accepts absence or the observed internal type, validates both exact adjacent parent titles, and treats standalone selectors as outside the allowance.",
+  "negativeReplay": "One actual ui-06 activity warning moved out of its tap, a same-count changed message, a changed tap or phase, wrong device/configuration, malformed issue and missing warning all rejected. Removing optional parent activityType remains valid.",
+  "evidenceSha256": {
+    "activity-scoped-menu-warning.patch": "46fb7d1424302d1a1fc33cd30f781697b0e0ce435a41d09279861d3fc13b4ef2",
+    "unit-validation.log": "00d60841f791806c327b1cbeaf02896fce64112a52a1965d098884341643961f",
+    "bundle-replay.json": "44a36e34ab1e5763170f8d9d38796ebfcf3a9b39af61d6de70db398f80fa1c20",
+    "bundle-replay.log": "3c77b3a77772e5a34dc22dcc2141168b3bc7c0603ad4a671125f78b21ebc0444",
+    "mutation-replay.json": "55875ea0ab50692009e16c4da147ff4cbcbf7ada0d1a7ea2fdf37303856cebab",
+    "mutation-replay.log": "443330ae6a7d0f9c1f323a2b95bf71ee502758a079c74374596146bbcf0c8aa5",
+    "hosted-schema-replay.json": "f29239e9ec16b40f00365f153520f0095b64f74e22f7e917b07873a6ec78dd83"
+  },
+  "originalActivityExportSha256": {
+    "testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption-activities.json": "783589d872fb3cd8d622a8c5a06c432032591c6f371025fcfff3adde4bc2ca5b",
+    "testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption-test-details.json": "57beb35dfd2bc75058826804994a8a79f0507d1c42c5c054382ce296e0ffa673",
+    "testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave-activities.json": "68558b77f4096215fe531fa9c5a93b9e5ce3d19c856f65759c4601f25b50bacd",
+    "testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave-test-details.json": "dd9e8b55cffef2c379685bcbf2f698a69bf37d4af67312791f13be03e7c7ffd5",
+    "testManualListOrderSurvivesRestartAndOpensLargePrint-activities.json": "21543b028c6a6280cc1c0ba6461e16fa35dec04f2aa53036d3a84e243cac9143",
+    "testManualListOrderSurvivesRestartAndOpensLargePrint-test-details.json": "1d4ab416e3dae611f5fd9e511d709ebe6e262f0d8437b003f5bd58b25be68b70",
+    "testMealWeekKeepsOriginalPickupWhenShopSelectionChanges-activities.json": "72aa7faf7f4d724c9cf40de0398148e9f18fc57f09857168d6e3282778897c18",
+    "testMealWeekKeepsOriginalPickupWhenShopSelectionChanges-test-details.json": "d1e3e3fbc9e9eaf16706ebbbf943d9a4025886e578c0b6e13d266142650855bc",
+    "testMealWeekReservationDraftCannotFollowAnotherPickup-activities.json": "a5a5fbca389d619a5edded8edf3c808bcae82c153f359eb702526564ce9de6ac",
+    "testMealWeekReservationDraftCannotFollowAnotherPickup-test-details.json": "794fa81ca492746baa1f1af96d8b2cdd9fc6c2aef64770140b0f9be5149426e6",
+    "testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction-activities.json": "ba6467a05909c5d37dc597e74be9a8cd63618648f990ed23e23afa1ed691c398",
+    "testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction-test-details.json": "f80050790953eff832f54bb6148864a616efc61c9dcf27fbe83fd189da1ad936"
+  },
+  "scope": "Installed after root review, independent artifact replays and 112 Python tests. No native reruns or blanket warning exemption. Fresh hosted candidate confirmation remains pending.",
+  "rootValidation": {
+    "allPythonTests": 112,
+    "actionlint": "passed",
+    "evidenceHashes": "matched",
+    "ui10ExactLifecycleAndWarnings": "passed",
+    "originalQuoteShard": "warning policy matches; original assertion failures still reject"
+  }
+}

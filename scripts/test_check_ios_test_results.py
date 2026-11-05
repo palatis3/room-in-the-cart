@@ -8,7 +8,8 @@ import tempfile
 import unittest
 
 from check_ios_test_results import (
-    MULTIPLE_WARNINGS, OBSERVED_DEVICE, OBSERVED_LIMITS, OBSERVED_WARNING, execution_log_failures,
+    INTERNAL_ACTIVITY, MULTIPLE_WARNINGS, OBSERVED_DEVICE, OBSERVED_MENU_WARNINGS, OBSERVED_WARNING,
+    execution_log_failures,
     inspect_runtime_warnings, test_cases,
 )
 
@@ -118,8 +119,10 @@ class RuntimeWarningTests(unittest.TestCase):
                 "testPlanConfiguration": {"configurationName": configuration}}]}
 
     def inspect(self, markers, messages, *, selector=None, device=None, summary_warnings=None,
-                configuration="Test Scheme Action", extra_nodes=(), detail_changes=None):
-        selector = selector or next(iter(OBSERVED_LIMITS))
+                configuration="Test Scheme Action", extra_nodes=(), detail_changes=None,
+                activity_messages=None, activity_tap=None, activity_phase=None, activity_changes=None, run_changes=None,
+                activity_type=INTERNAL_ACTIVITY):
+        selector = selector or next(iter(OBSERVED_MENU_WARNINGS))
         url = "test://com.apple.xcode/RoomInTheCart/" + selector
         device = device or OBSERVED_DEVICE
         summary = self.warning_summary(device, configuration)
@@ -128,8 +131,9 @@ class RuntimeWarningTests(unittest.TestCase):
         case = {"nodeType": "Test Case", "nodeIdentifierURL": url,
                 "children": [{"nodeType": "Runtime Warning", "name": name} for name in markers]}
         nodes = [case, *extra_nodes]
+        test_configuration = summary["devicesAndConfigurations"][0]["testPlanConfiguration"]
         details = {
-            "testIdentifierURL": url, "devices": [device],
+            "testIdentifierURL": url, "devices": [device], "testPlanConfigurations": [test_configuration],
             "testRuns": [{"nodeType": "Device", "children": [
                 {"nodeType": "Runtime Warning", "name": name} for name in messages
             ]}],
@@ -140,7 +144,26 @@ class RuntimeWarningTests(unittest.TestCase):
             self.assertEqual(requested, url)
             return details
 
-        return inspect_runtime_warnings(summary, nodes, list(test_cases(nodes)), read_detail)
+        _, tap, phase = OBSERVED_MENU_WARNINGS.get(selector, next(iter(OBSERVED_MENU_WARNINGS.values())))
+        issues = [
+            {"title": name, "isAssociatedWithFailure": False,
+             "attachments": [{"name": "Complete Issue Description.txt"}]}
+            for name in (messages if activity_messages is None else activity_messages)
+        ]
+        run = {"device": device, "testPlanConfiguration": test_configuration, "activities": [{
+            "title": activity_tap or tap, "isAssociatedWithFailure": False, **({"activityType": activity_type} if activity_type else {}),
+            "childActivities": [{
+                "title": activity_phase or phase, "isAssociatedWithFailure": False, **({"activityType": activity_type} if activity_type else {}),
+                "childActivities": issues,
+            }],
+        }], **(run_changes or {})}
+
+        def read_activity(requested):
+            self.assertEqual(requested, url)
+            self.assertTrue(messages, "Clean cases should not need an activity export")
+            return {"testIdentifierURL": url, "testRuns": [run], **(activity_changes or {})}
+
+        return inspect_runtime_warnings(summary, nodes, list(test_cases(nodes)), read_detail, read_activity)
 
     def test_omitted_summary_still_requires_a_clean_detail_export(self):
         evidence = self.inspect([], [])
@@ -148,20 +171,62 @@ class RuntimeWarningTests(unittest.TestCase):
         self.assertEqual(evidence["runtimeWarningCount"], 0)
         self.assertEqual(evidence["examinedTestCount"], 1)
         self.assertEqual(evidence["detailExportCount"], 1)
+        self.assertEqual(evidence["activityExportCount"], 0)
 
     def test_detail_only_warning_is_rejected_when_summary_and_tree_omit_it(self):
         with self.assertRaisesRegex(ValueError, "disagree with test tree"):
             self.inspect([], [OBSERVED_WARNING])
 
     def test_duplicate_occurrences_are_counted_and_capped_for_each_case(self):
-        for selector, maximum in OBSERVED_LIMITS.items():
+        for selector, (maximum, tap, phase) in OBSERVED_MENU_WARNINGS.items():
             for count in (maximum, maximum + 1):
                 with self.subTest(selector=selector, count=count):
                     marker = [MULTIPLE_WARNINGS] if count > 1 else [OBSERVED_WARNING]
                     evidence = self.inspect(marker, [OBSERVED_WARNING] * count, selector=selector)
                     self.assertEqual(evidence["runtimeWarningCount"], count)
+                    self.assertEqual(evidence["activityExportCount"], 1)
                     self.assertEqual(evidence["warnings"][0]["maximum"], maximum)
+                    self.assertEqual(evidence["warnings"][0]["menuActivity"], {"tap": tap, "phase": phase})
                     self.assertEqual(evidence["status"], "passed" if count == maximum else "unexpected-warnings")
+
+    def test_hosted_parent_activity_type_can_be_absent(self):
+        evidence = self.inspect([OBSERVED_WARNING], [OBSERVED_WARNING], activity_type=None)
+        self.assertEqual(evidence["status"], "passed")
+        self.assertGreater(evidence["warnings"][0]["maximum"], 0)
+
+    def test_correct_message_does_not_inherit_allowance_under_another_tap_or_phase(self):
+        for changes in (
+            {"activity_tap": 'Tap "Other control" Button'},
+            {"activity_phase": "Find the button"},
+            {"activity_type": "com.apple.dt.xctest.activity-type.user-created"},
+            {"run_changes": {"activities": [
+                {"title": OBSERVED_WARNING, "isAssociatedWithFailure": False,
+                 "attachments": [{"name": "Complete Issue Description.txt"}]},
+            ]}},
+        ):
+            with self.subTest(changes=changes):
+                evidence = self.inspect([OBSERVED_WARNING], [OBSERVED_WARNING], **changes)
+                self.assertEqual(evidence["status"], "unexpected-warnings")
+                self.assertEqual(evidence["warnings"][0]["maximum"], 0)
+
+    def test_activity_warnings_must_match_messages_and_multiplicity(self):
+        for activity_messages in ([], ["different issue"], [OBSERVED_WARNING] * 2,
+                                  [OBSERVED_WARNING, "unassigned warning"]):
+            with self.subTest(activity_messages=activity_messages), self.assertRaisesRegex(ValueError, "activities and detailed results disagree"):
+                self.inspect([OBSERVED_WARNING], [OBSERVED_WARNING], activity_messages=activity_messages)
+
+    def test_missing_malformed_or_misattributed_activity_fails_closed(self):
+        for changes, error in (
+            ({"activity_changes": {"testIdentifierURL": "other"}}, "another test or configuration"),
+            ({"activity_changes": {"testRuns": []}}, "one XCTest runtime warning activity run"),
+            ({"run_changes": {"device": {}}}, "another device or configuration"),
+            ({"run_changes": {"testPlanConfiguration": {}}}, "another device or configuration"),
+            ({"run_changes": {"activities": {}}}, "Invalid XCTest warning activity tree"),
+            ({"run_changes": {"activities": [{"title": OBSERVED_WARNING, "isAssociatedWithFailure": False}]}}, "Malformed XCTest runtime warning activity"),
+            ({"detail_changes": {"testPlanConfigurations": []}}, "another test configuration"),
+        ):
+            with self.subTest(changes=changes), self.assertRaisesRegex(ValueError, error):
+                self.inspect([OBSERVED_WARNING], [OBSERVED_WARNING], **changes)
 
     def test_new_message_selector_or_environment_does_not_inherit_an_allowance(self):
         for message, kwargs in (
@@ -212,10 +277,11 @@ class RuntimeWarningTests(unittest.TestCase):
                     [case, node], [("Suite/Class/testCase", case)],
                     lambda url: {"testIdentifierURL": url, "devices": [OBSERVED_DEVICE],
                                  "testRuns": [{"nodeType": "Device"}]},
+                    lambda _: {},
                 )
         omitted = {"nodeType": "Test Case", "nodeIdentifierURL": "test://suite/omitted"}
         with self.assertRaisesRegex(ValueError, "did not examine every test case"):
-            inspect_runtime_warnings({"devicesAndConfigurations": []}, [omitted], [], lambda _: {})
+            inspect_runtime_warnings({"devicesAndConfigurations": []}, [omitted], [], lambda _: {}, lambda _: {})
 
 
 if __name__ == '__main__':
