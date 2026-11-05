@@ -8,6 +8,7 @@ on:
       - 'scripts/run_ios_native_wire.sh'
       - 'ios/Packages/HouseholdClient/**'
       - 'service/**'
+      - 'shared/**'
   workflow_dispatch:
   workflow_call:
 

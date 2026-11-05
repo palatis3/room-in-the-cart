@@ -2,6 +2,10 @@ name: iOS deep checks
 on:
   pull_request:
     paths:
+      - 'ios/**'
+      - 'scripts/**'
+      - 'shared/**'
+      - 'config/**'
       - '.github/workflows/ios-deep.yml'
       - 'scripts/check_ios_test_results.py'
       - 'scripts/test_check_ios_test_results.py'

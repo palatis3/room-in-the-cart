@@ -3,6 +3,10 @@ name: iOS fixture checks
 on:
   pull_request:
     paths:
+      - 'ios/**'
+      - 'scripts/**'
+      - 'shared/**'
+      - 'config/**'
       - '.github/workflows/ios-fixtures.yml'
       - 'scripts/check_ios_test_results.py'
       - 'scripts/test_check_ios_test_results.py'
