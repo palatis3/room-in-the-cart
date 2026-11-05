@@ -1,0 +1,43 @@
+{
+  "baseCandidate": "4a0f7f3a25ae01b6efba5e984ceb464c4ca1d157",
+  "change": "Coalesce equivalent delivery failure instructions without clearing per-transaction outcomes or independent status categories.",
+  "patchSHA256": "50fad40ada8c08ffec43dd4d1ffa56131fe15a4d1f5d88b062c73730881bb1de",
+  "sourceManifestSHA256": "3881d2a38a3f09d6076cfcd00ebdc38769af70b9723c83d11c8ab51abd268d6a",
+  "productManifestSHA256": "709b4302db54df68cfb0c19b9658837e3c013ffbe44628713a1dcf07b6a340b0",
+  "changedSourceSHA256": {
+    "ios/Features/Membership/MembershipModel.swift": "a5815360acc53d80b522f35104fe830a9c6a08eae913fde6d2c93abe2075efd1",
+    "ios/Tests/MembershipTests.swift": "9825b52ac397ba5982e24fb1f58e80858a0e6f773167cd98c7f1acc25df99714"
+  },
+  "sourceAndProductsUnchanged": true,
+  "buildExit": 0,
+  "validation": {
+    "en": {
+      "selected": 57,
+      "passed": 57,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "nativeExit": 0,
+      "strictExit": 0,
+      "testLogSHA256": "47bf631602e7f7c9669283e348bd21879a9940c6b5f0e86e9641d1d1bf27e28a",
+      "ownedSimulatorShutdown": true
+    },
+    "es": {
+      "selected": 57,
+      "passed": 57,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "nativeExit": 0,
+      "strictExit": 0,
+      "testLogSHA256": "292458bfbb13d590047aa47254f4f4e67db7783a0c3b59555f5dac64faaf194a",
+      "ownedSimulatorShutdown": true
+    }
+  },
+  "review": "Lumpy reviewed the exact two-file delta and reported no concrete issue; source review only.",
+  "limits": [
+    "This follow-up is local and not included in hosted candidate 4a0f7f3.",
+    "Local Xcode 27.1 and iOS 26.2 build 23C52 differ from hosted Xcode 26.3 and iOS build 23C54.",
+    "Model/localized-message validation is not rendered VoiceOver or physical-device acceptance."
+  ]
+}

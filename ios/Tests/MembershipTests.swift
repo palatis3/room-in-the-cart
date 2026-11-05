@@ -351,6 +351,56 @@ import Combine
         XCTAssertEqual(service.submissions, 1); XCTAssertEqual(store.finished, ["historic-ack"])
     }
 
+    func testEquivalentDeliveryFailuresRenderOnceWithoutErasingTransactionEvidence() async {
+        let pairs: [(MembershipFailure, MembershipFailure)] = [
+            (.invalidReceipt, .serverRejected), (.unverified, .invalidSnapshot),
+            (.wrongHousehold, .accountMismatch),
+        ]
+        for (first, second) in pairs {
+            for issues in [[first, second], [second, first]] {
+                let service = FakeMembershipService(snapshot: snapshot(status: .free))
+                let store = FakeMembershipStorefront(); let model = makeModel(service, store)
+                defer { model.stop() }
+                await model.loadOffer(); await model.purchase()
+                for (index, issue) in issues.enumerated() {
+                    service.submissionError = issue
+                    await model.receive(.verified(transaction(id: "delivery-\(index)", token: context.appAccountToken)))
+                }
+                let expectedText = membershipStatusMessageText(.deliveryFailure(first))
+                XCTAssertEqual(expectedText, membershipStatusMessageText(.deliveryFailure(second)))
+                XCTAssertEqual(model.statusMessages.map(membershipStatusMessageText).filter { $0 == expectedText }.count, 1)
+                XCTAssertEqual(model.deliveryOutcomes, ["delivery-0": .failed(issues[0]), "delivery-1": .failed(issues[1])])
+                XCTAssertTrue(store.finished.isEmpty)
+                XCTAssertTrue(model.statusMessages.contains(.pendingReport))
+                let stableID = MembershipModel.StatusMessage.deliveryFailure(first).id
+                XCTAssertEqual(model.statusMessages.filter { $0.id == stableID }.count, 1)
+
+                // An unrelated delivery gate and rejected callback remain
+                // distinct from the coalesced delivery instruction.
+                service.submissionError = .deliveryPending
+                await model.receive(.verified(transaction(id: "pending-delivery", token: context.appAccountToken)))
+                await model.receive(.unverified)
+                XCTAssertFalse(model.canPurchase)
+                XCTAssertTrue(model.statusMessages.contains(.deliveryFailure(.deliveryPending)))
+                XCTAssertTrue(model.statusMessages.contains(.callbackRejection(.unverified)))
+                XCTAssertTrue(model.statusMessages.contains(.pendingReport))
+
+                // Recovering one transaction must leave the other's instruction
+                // in place with the same identity and must not clear the gate.
+                service.submissionError = nil
+                await model.receive(.verified(transaction(id: "delivery-0", token: context.appAccountToken)))
+                XCTAssertEqual(model.deliveryOutcomes["delivery-0"], .delivered)
+                XCTAssertEqual(model.deliveryOutcomes["delivery-1"], .failed(issues[1]))
+                XCTAssertEqual(model.deliveryOutcomes["pending-delivery"], .failed(.deliveryPending))
+                XCTAssertEqual(model.statusMessages.filter { $0.id == stableID }.count, 1)
+                XCTAssertEqual(model.statusMessages.map(membershipStatusMessageText).filter { $0 == expectedText }.count, 1)
+                XCTAssertEqual(store.finished, ["delivery-0"])
+                XCTAssertFalse(model.canPurchase)
+                XCTAssertFalse(model.hasPaidAccess)
+            }
+        }
+    }
+
     func testStatusMessagesHaveUniqueStableSemanticIdentityWithoutTransactionIdentity() async {
         let service = FakeMembershipService(snapshot: snapshot(status: .free))
         let store = FakeMembershipStorefront(); let model = makeModel(service, store)

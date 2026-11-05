@@ -51,7 +51,7 @@ import SwiftUI
             case .purchaseFailure(let issue): return "membership.status.purchase.failure." + Self.failureID(issue)
             case .deliveryInFlight: return "membership.status.delivery.in-flight"
             case .deliverySaved: return "membership.status.delivery.saved"
-            case .deliveryFailure(let issue): return "membership.status.delivery.failure." + Self.failureID(issue)
+            case .deliveryFailure(let issue): return "membership.status.delivery.failure." + Self.deliveryFailureID(issue)
             case .callbackRejection(let issue): return "membership.status.callback.rejection." + Self.failureID(issue)
             case .otherNotice(let notice):
                 switch notice {
@@ -63,6 +63,17 @@ import SwiftUI
                 }
             }
         }
+        // Delivery rows describe the action to take, not each transaction's
+        // internal error. Keep their identity stable while equivalent failures
+        // arrive or recover; the underlying deliveryOutcomes remain separate.
+        private static func deliveryFailureID(_ issue: MembershipFailure) -> String {
+            switch issue {
+            case .unverified, .invalidReceipt, .invalidSnapshot, .serverRejected: return "verification"
+            case .wrongHousehold, .accountMismatch: return "account-household"
+            default: return failureID(issue)
+            }
+        }
+
         private static func failureID(_ issue: MembershipFailure) -> String {
             switch issue {
             case .notConfigured: return "not-configured"
@@ -100,8 +111,10 @@ import SwiftUI
         for outcome in deliveryOutcomes.values {
             if case .failed(let issue) = outcome, !deliveryIssues.contains(issue) { deliveryIssues.append(issue) }
         }
+        var deliveryMessageIDs: Set<String> = []
         for issue in deliveryIssues.sorted(by: { String(describing: $0) < String(describing: $1) }) {
-            messages.append(.deliveryFailure(issue))
+            let message = StatusMessage.deliveryFailure(issue)
+            if deliveryMessageIDs.insert(message.id).inserted { messages.append(message) }
         }
         if deliveryOutcomes.values.contains(.inFlight) { messages.append(.deliveryInFlight) }
         if deliveryOutcomes.values.contains(.delivered) { messages.append(.deliverySaved) }
