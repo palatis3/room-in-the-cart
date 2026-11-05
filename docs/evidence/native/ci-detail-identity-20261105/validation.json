@@ -1,0 +1,30 @@
+{
+  "implementation": "Dot checker byte-for-byte; Astra High supplied expanded tests and exact-source saved-bundle/mutation replay; root reviewed source and verified all artifact hashes before installation.",
+  "sourceBase": "2173191",
+  "checkerSHA256": "fa0fd489dd75560ef5a097796c79f6503c4db65043e8d8f50bb4b8e537c74314",
+  "testsSHA256": "1e54cbf351c4e401d794337b90fc817fd5b389de0847a4a3316c022ea46ebf9c",
+  "patchSHA256": "bb349bcc7f6a2f493dfbfa655873ba05563c86c5139312207c80d1ff5e874d67",
+  "behavior": "Require one matching nested Device/configuration run, optional URL match if present, and consistent selected/outer/device/config results. Coherent failed artifacts remain inspectable; main execution gate rejects them.",
+  "unchanged": [
+    "Warning profiles, budgets, Menu activities and unique issue UUID requirements",
+    "Native execution-log requirements",
+    "Missing optional configuration URL remains supported for Xcode26.3"
+  ],
+  "focusedTestsPassed": 27,
+  "actualExportChecksPassed": 119,
+  "savedBundlesReplayed": 10,
+  "nativeInvocations": 0,
+  "rootValidation": {
+    "artifactHashes": "all matched",
+    "gitApplyCheck": "passed",
+    "pythonTestsPassed": 120,
+    "actionlint": "passed",
+    "generatedProject": "passed",
+    "generatedTheme": "passed"
+  },
+  "proofSHA256": {
+    "bundle-replay.json": "86687bc733f6ed7eee01b9e842390a9bd36c92aa2e9b5b210cd6905fa0e48ad4",
+    "actual-export-mutations.json": "ed6f046192daaaa8c78c59ead8f8751c33c85b9433946efb2618ecc2050520dd"
+  },
+  "scope": "Local installation; new hosted validation pending."
+}

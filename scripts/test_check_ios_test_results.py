@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import copy
 import os
 from pathlib import Path
 import subprocess
@@ -116,29 +117,35 @@ class ExecutionLogTests(unittest.TestCase):
 class RuntimeWarningTests(unittest.TestCase):
     def warning_summary(self, device, configuration="Test Scheme Action"):
         return {"devicesAndConfigurations": [{"device": device,
-                "testPlanConfiguration": {"configurationName": configuration}}]}
+                "testPlanConfiguration": {"configurationId": "1", "configurationName": configuration}}]}
 
     def inspect(self, markers, messages, *, selector=None, device=None, summary_warnings=None,
                 configuration="Test Scheme Action", extra_nodes=(), detail_changes=None,
                 activity_messages=None, activity_tap=None, activity_phase=None, activity_changes=None, run_changes=None,
-                activity_type=INTERNAL_ACTIVITY, activity_issue_ids=None):
+                activity_type=INTERNAL_ACTIVITY, activity_issue_ids=None, mutate_details=None, case_result="Passed"):
         selector = selector or next(iter(OBSERVED_MENU_WARNINGS))
         url = "test://com.apple.xcode/RoomInTheCart/" + selector
-        device = device or OBSERVED_DEVICE
+        device = {"deviceId": "12345678-1234-4abc-8def-000000000001", **(device or OBSERVED_DEVICE)}
         summary = self.warning_summary(device, configuration)
         if summary_warnings is not None:
             summary["runtimeWarnings"] = summary_warnings
-        case = {"nodeType": "Test Case", "nodeIdentifierURL": url,
+        case = {"nodeType": "Test Case", "nodeIdentifierURL": url, "result": case_result,
                 "children": [{"nodeType": "Runtime Warning", "name": name} for name in markers]}
         nodes = [case, *extra_nodes]
         test_configuration = summary["devicesAndConfigurations"][0]["testPlanConfiguration"]
         details = {
             "testIdentifierURL": url, "devices": [device], "testPlanConfigurations": [test_configuration],
-            "testRuns": [{"nodeType": "Device", "children": [
-                {"nodeType": "Runtime Warning", "name": name} for name in messages
-            ]}],
+            "testResult": "Passed",
+            "testRuns": [{"nodeType": "Device", "nodeIdentifier": device["deviceId"],
+                          "result": "Passed", "children": [{
+                "nodeType": "Test Plan Configuration", "nodeIdentifier": test_configuration["configurationId"],
+                "nodeIdentifierURL": url, "result": "Passed",
+                "children": [{"nodeType": "Runtime Warning", "name": name} for name in messages],
+            }]}],
             **(detail_changes or {}),
         }
+        if mutate_details is not None:
+            mutate_details(details)
 
         def read_detail(requested):
             self.assertEqual(requested, url)
@@ -176,6 +183,77 @@ class RuntimeWarningTests(unittest.TestCase):
         self.assertEqual(evidence["examinedTestCount"], 1)
         self.assertEqual(evidence["detailExportCount"], 1)
         self.assertEqual(evidence["activityExportCount"], 0)
+
+    def test_nested_detail_identity_is_required_for_clean_and_warned_cases(self):
+        mutations = (
+            lambda d: d["testRuns"][0].update(nodeIdentifier="wrong-device"),
+            lambda d: d["testRuns"][0]["children"][0].update(nodeIdentifier="wrong-configuration"),
+            lambda d: d["testRuns"][0]["children"][0].update(nodeIdentifierURL="test://wrong"),
+            lambda d: d["testRuns"].append(copy.deepcopy(d["testRuns"][0])),
+            lambda d: d["testRuns"][0]["children"].append(copy.deepcopy(d["testRuns"][0]["children"][0])),
+            lambda d: d["testRuns"][0]["children"][0]["children"].append(
+                {"nodeType": "Device", "nodeIdentifier": "mixed-device"}),
+            lambda d: d.update(testPlanConfigurations=[]),
+            lambda d: d["testRuns"][0].update(nodeType="Test Case Run"),
+            lambda d: d["testRuns"][0]["children"][0].update(nodeType="Test Case Run"),
+            lambda d: d["testRuns"][0].pop("nodeIdentifier"),
+            lambda d: d["testRuns"][0]["children"][0].pop("nodeIdentifier"),
+        )
+        for messages in ([], [OBSERVED_WARNING]):
+            for mutation in mutations:
+                with self.subTest(warnings=len(messages), mutation=mutation), self.assertRaises(ValueError):
+                    self.inspect(messages, messages, mutate_details=mutation)
+
+    def test_optional_nested_url_can_be_absent_but_not_wrong(self):
+        for messages in ([], [OBSERVED_WARNING]):
+            with self.subTest(warnings=len(messages)):
+                evidence = self.inspect(messages, messages, mutate_details=lambda d:
+                                        d["testRuns"][0]["children"][0].pop("nodeIdentifierURL"))
+                self.assertEqual(evidence["runtimeWarningCount"], len(messages))
+
+    def test_failed_detail_state_still_retains_warning_evidence(self):
+        def fail(details):
+            details["testResult"] = "Failed"
+            details["testRuns"][0]["result"] = "Failed"
+            details["testRuns"][0]["children"][0]["result"] = "Failed"
+            details["testRuns"][0]["children"][0]["children"].append(
+                {"nodeType": "Test Case Run", "result": "Failed", "name": "Original assertion failure"})
+        evidence = self.inspect([OBSERVED_WARNING], [OBSERVED_WARNING], mutate_details=fail, case_result="Failed")
+        self.assertEqual(evidence["runtimeWarningCount"], 1)
+        self.assertEqual(evidence["status"], "passed")  # Warning policy only; the execution gate rejects failure.
+
+    def test_result_contradictions_fail_for_clean_and_warned_cases(self):
+        for messages in ([], [OBSERVED_WARNING]):
+            for case_result in ("Passed", "Failed"):
+                for field in ("outer", "device", "configuration", "all-details"):
+                    def contradict(details):
+                        details["testResult"] = case_result
+                        device = details["testRuns"][0]
+                        plan = device["children"][0]
+                        device["result"] = plan["result"] = case_result
+                        other = "Failed" if case_result == "Passed" else "Passed"
+                        if field in ("outer", "all-details"):
+                            details["testResult"] = other
+                        if field in ("device", "all-details"):
+                            device["result"] = other
+                        if field in ("configuration", "all-details"):
+                            plan["result"] = other
+                    with self.subTest(warnings=len(messages), case=case_result, field=field):
+                        with self.assertRaisesRegex(ValueError, "results disagree"):
+                            self.inspect(messages, messages, case_result=case_result, mutate_details=contradict)
+
+    def test_missing_or_invalid_result_cannot_certify_warning_evidence(self):
+        mutations = (
+            lambda d: d.pop("testResult"),
+            lambda d: d["testRuns"][0].pop("result"),
+            lambda d: d["testRuns"][0]["children"][0].pop("result"),
+        )
+        for mutation in mutations:
+            with self.subTest(mutation=mutation), self.assertRaisesRegex(ValueError, "results disagree"):
+                self.inspect([], [], mutate_details=mutation)
+        for result in (None, "", " ", 1):
+            with self.subTest(result=result), self.assertRaisesRegex(ValueError, "results disagree"):
+                self.inspect([], [], case_result=result)
 
     def test_detail_only_warning_is_rejected_when_summary_and_tree_omit_it(self):
         with self.assertRaisesRegex(ValueError, "disagree with test tree"):
@@ -289,12 +367,18 @@ class RuntimeWarningTests(unittest.TestCase):
             with self.subTest(error=error), self.assertRaisesRegex(ValueError, error):
                 # Construct the known selected case independently so malformed
                 # sibling structures reach the runtime warning schema check.
-                case = {"nodeType": "Test Case", "nodeIdentifierURL": "test://suite/case"}
+                case = {"nodeType": "Test Case", "nodeIdentifierURL": "test://suite/case", "result": "Passed"}
+                device = {**OBSERVED_DEVICE, "deviceId": "12345678-1234-4abc-8def-000000000001"}
+                summary = self.warning_summary(device)
+                plan = summary["devicesAndConfigurations"][0]["testPlanConfiguration"]
                 inspect_runtime_warnings(
-                    self.warning_summary(OBSERVED_DEVICE),
+                    summary,
                     [case, node], [("Suite/Class/testCase", case)],
-                    lambda url: {"testIdentifierURL": url, "devices": [OBSERVED_DEVICE],
-                                 "testRuns": [{"nodeType": "Device"}]},
+                    lambda url: {"testIdentifierURL": url, "devices": [device], "testPlanConfigurations": [plan],
+                                 "testResult": "Passed",
+                                 "testRuns": [{"nodeType": "Device", "nodeIdentifier": device["deviceId"], "result": "Passed",
+                                               "children": [{"nodeType": "Test Plan Configuration",
+                                                             "nodeIdentifier": plan["configurationId"], "result": "Passed"}]}]},
                     lambda _: {},
                 )
         omitted = {"nodeType": "Test Case", "nodeIdentifierURL": "test://suite/omitted"}

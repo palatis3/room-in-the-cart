@@ -208,6 +208,40 @@ def verify_warning_activities(activities, identifier_url, configurations, detail
     return occurrences
 
 
+def verify_detail_run_identity(runs, identifier_url, configurations, detail_configurations, case_result, detail_result):
+    # The CI shards execute one device/configuration. Failed cases still need
+    # usable warning evidence, so validate identity without requiring Passed.
+    if len(configurations) != 1 or len(runs) != 1:
+        raise ValueError("Expected one XCTest detail device/configuration run")
+    configuration, = configurations
+    plan = configuration["testPlanConfiguration"]
+    device_id = configuration["device"].get("deviceId")
+    configuration_id = plan.get("configurationId")
+    if (not isinstance(device_id, str) or not device_id
+            or not isinstance(configuration_id, str) or not configuration_id):
+        raise ValueError("Missing XCTest detail device/configuration identity")
+    if detail_configurations != [plan]:
+        raise ValueError("XCTest warning details came from another test configuration")
+    device_run, = runs
+    if device_run["nodeType"] != "Device" or device_run.get("nodeIdentifier") != device_id:
+        raise ValueError("XCTest detail run came from another device")
+    children = device_run.get("children", [])
+    if len(children) != 1:
+        raise ValueError("Expected one XCTest detail configuration run")
+    plan_run, = children
+    if (plan_run["nodeType"] != "Test Plan Configuration"
+            or plan_run.get("nodeIdentifier") != configuration_id
+            or ("nodeIdentifierURL" in plan_run and plan_run["nodeIdentifierURL"] != identifier_url)):
+        raise ValueError("XCTest detail run came from another test or configuration")
+    if (not isinstance(case_result, str) or not case_result.strip()
+            or detail_result != case_result or device_run.get("result") != case_result
+            or plan_run.get("result") != case_result):
+        raise ValueError("XCTest selected case and detail run results disagree")
+    if any(node["nodeType"] in ("Device", "Test Plan Configuration")
+           for node in result_nodes(plan_run.get("children", []))):
+        raise ValueError("Unexpected nested XCTest detail device/configuration run")
+
+
 def inspect_runtime_warnings(summary, nodes, cases, read_details, read_activities):
     summary_names = None
     if "runtimeWarnings" in summary:
@@ -250,7 +284,10 @@ def inspect_runtime_warnings(summary, nodes, cases, read_details, read_activitie
         runs = details["testRuns"]
         if not isinstance(runs, list) or not runs:
             raise ValueError(f"Missing test runs for runtime warning details: {selector}")
-        names = list(warning_names(result_nodes(runs)))
+        run_nodes = list(result_nodes(runs))
+        verify_detail_run_identity(runs, url, configurations, details["testPlanConfigurations"],
+                                   node.get("result"), details.get("testResult"))
+        names = list(warning_names(run_nodes))
         if listed == [MULTIPLE_WARNINGS]:
             matches_tree = len(names) > 1
         else:
