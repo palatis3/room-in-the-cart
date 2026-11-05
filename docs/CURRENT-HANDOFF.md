@@ -1,5 +1,14 @@
 # Room in the Cart current handoff
 
+## Published consolidated candidate — November 5, 2026
+
+Candidate `23a73a890afbaa23d3c58ae6b0cf63a8b2e2fb71` is pushed to draft [PR1](https://github.com/palatis3/room-in-the-cart/pull/1). Fresh required workflow handles are core42021894668, fixtures42021894739, security42021894555, deep42021894579, native-wire42021894581 and strict performance42021894768. Optional standalone Form toggle diagnostic42021958365 was triggered once with `diagnostic:form-toggle`. All seven runs are authoritatively confirmed on the exact candidate. Dependency review and Actions/JavaScript CodeQL have passed; Swift CodeQL is a separate core job and remains pending. Root owns monitoring. Do not push another change or cancel these runs without a concrete finding; retain each terminal artifact first.
+
+PR text now distinguishes the historical failures, local follow-ups and required fresh acceptance. Both final shared-store assertion passes remain strict-warning failures as described below. No warning exception was expanded for local23C52. The final source compiled580 models and51 ordinary UI cases; the complete required hosted result is pending. Initial core source checks, web/service tests and PostgreSQL integration passed; native builds and Swift analysis are running/queued. The local native lane is terminal and owned simulators shut down. Lumpy's source review is complete, with no active worker or native task.
+
+A fresh read-only Supabase project lookup still returns “You do not have permission to perform this action.” The pending correct-account/organization reconnect remains unresolved; no repeat question, credential request or hosted mutation was made. Production backup/restore, provider activation, Apple membership/signing, SMTP and physical/human acceptance remain open. Goal stays active; user requests no model-change pauses.
+
+
 ## Shared-store driver validated; strict local warnings retained — November 5, 2026
 
 Both complete original SharedStoreQuote journeys executed exactly once and passed their assertions on the frozen candidate: known-trip/adoption401.376s and lost-reply/restart246.824s. **Both strict guards failed**, each with one exact `_UIReparentingView` warning on local iPhone17/iOS26.2 build23C52 at `fixture.s27.controls` → `Synthesize event`. The existing exceptions cover hosted23C54; no allowance was expanded and no retry was performed. Driver exit1 is retained. This is functional evidence for the narrow helper correction, not a strict local pass or release acceptance. [Full proof](evidence/native/ci-ui-navigation-20261105/shared-store.json).
