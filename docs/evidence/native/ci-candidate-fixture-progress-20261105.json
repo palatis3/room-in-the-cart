@@ -496,6 +496,11 @@
             "maximum": 0
           }
         ]
+      },
+      "localCorrection": {
+        "result": "Five original cases passed once locally; strict warning gate still failed for three unallowed occurrences. Test-only correction installed; original hosted two assertion failures and six warnings retained.",
+        "evidence": "shared-quote-ci-20261105/validation.json",
+        "hostedConfirmation": "pending"
       }
     }
   },

@@ -84,18 +84,39 @@ import XCTest
         counter("saves",0); counter("adoptions",0)
         assertText("Changed revisions need a new review")
         capture("S27-stale-action-preserved-without-rebase")
+        XCTAssertTrue(element("sharedQuotes.retry").exists)
         tap(app.buttons["Refresh and clear local retry"])
-        tap(app.buttons.matching(identifier:"Refresh and clear local retry").allElementsBoundByIndex.last!)
+        // The first tap opens a confirmation dialog. Resolve its action in
+        // that current state, without scrolling or retaining an indexed match.
+        let dialog = app.sheets.containing(.staticText,identifier:"Clear local retry?").firstMatch
+        XCTAssertTrue(dialog.waitForExistence(timeout:8),app.debugDescription)
+        XCTAssertTrue(dialog.staticTexts["Clearing cannot undo a comparison, proposal, grant, or store adoption already received. Review the refreshed household result."].exists)
+        let clearRetry = dialog.buttons["Refresh and clear local retry"]
+        XCTAssertTrue(clearRetry.exists && clearRetry.isHittable)
+        capture("S27-confirm-exact-local-retry-clear")
+        clearRetry.tap()
+        let cleared = XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == true AND label == %@","Local retry cleared after refreshing. A change already received by the household is preserved."),object:element("sharedQuotes.notice"))
+        XCTAssertEqual(XCTWaiter.wait(for:[cleared],timeout:12),.completed)
+        XCTAssertFalse(element("sharedQuotes.retry").exists)
+        XCTAssertFalse(app.buttons["Refresh and clear local retry"].exists)
+        XCTAssertTrue(element("sharedQuotes.enter").waitForExistence(timeout:8))
+        XCTAssertTrue(element("sharedQuotes.enter").isEnabled)
+        counter("saves",0); counter("proposals",0); counter("adoptions",0)
+        capture("S27-local-retry-cleared-without-shared-write")
         fixture("Freeze shared shop"); tap(element("sharedQuotes.refresh"))
         assertText("Saved proof is read-only")
         XCTAssertFalse(element("sharedQuotes.enter").exists)
         counter("saves",0)
+        counter("proposals",0); counter("adoptions",0)
+        // Freeze republishes the fixture counters, including the rejected
+        // stale POST. Clearing the retry must not send another command.
+        counter("posts",1)
     }
     func testSpanishLargestTextKeepsRealQuoteEntryDiscoverable() {
         app.launchArguments = ["--ui-testing","--shared-store-quotes-fixture","-AppleLanguages","(es)","-AppleLocale","es_US","-UIPreferredContentSizeCategoryName","UICTContentSizeCategoryAccessibilityXXXL"]
         openAdult(); tap(element("sharedQuotes.enter"))
-        fill("Tienda del barrio",into:"sharedQuotes.first.label")
-        fill("Sucursal del barrio",into:"sharedQuotes.first.branch")
+        fill("Tienda del barrio",into:"sharedQuotes.first.label",requireDone:true)
+        fill("Sucursal del barrio",into:"sharedQuotes.first.branch",requireDone:true)
         reveal(element("sharedQuotes.first.source"))
         XCTAssertTrue(element("sharedQuotes.first.source").exists)
         capture("S27-spanish-largest-text-native-fields")
@@ -168,12 +189,50 @@ import XCTest
         XCTAssertEqual(target.value as? String,"1",id)
     }
     private func fill(_ text: String, into id: String, replacing: Bool = false, requireDone: Bool = false) {
-        let field = app.textFields.matching(identifier:id).firstMatch; tap(field)
+        tap(app.textFields.matching(identifier:id).firstMatch)
+        dismissBilingualKeyboardCardIfPresent()
+        let field = app.textFields.matching(identifier:id).firstMatch
+        tap(field)
+        let focused = XCTNSPredicateExpectation(predicate:NSPredicate(format:"hasKeyboardFocus == true"),object:field)
+        XCTAssertEqual(XCTWaiter.wait(for:[focused],timeout:5),.completed)
         if replacing, let old = field.value as? String, old != field.placeholderValue { app.typeText(String(repeating:XCUIKeyboardKey.delete.rawValue,count:old.count)) }
         if !text.isEmpty { app.typeText(text) }
-        let done = app.buttons.matching(identifier:"Done").firstMatch
+        dismissBilingualKeyboardCardIfPresent()
+        assertFieldValue(app.textFields.matching(identifier:id).firstMatch,text:text)
+        let done = app.buttons.matching(NSPredicate(format:"identifier IN %@",["Done","Listo"])).firstMatch
         if requireDone { XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable, "Done must be reachable from \(id)") }
         if done.exists && done.isHittable { done.tap() }
+        assertFieldValue(app.textFields.matching(identifier:id).firstMatch,text:text)
+    }
+    private func assertFieldValue(_ field: XCUIElement, text: String) {
+        guard let value = field.value as? String else {
+            XCTFail("The input must expose its value: \(field.identifier)")
+            return
+        }
+        if text.isEmpty {
+            XCTAssertTrue(value == "" || value == field.placeholderValue,"The input must be empty: \(field.identifier)")
+        } else {
+            XCTAssertEqual(value,text,"The input must retain the exact entered value: \(field.identifier)")
+        }
+    }
+    private func dismissBilingualKeyboardCardIfPresent() {
+        let title = app.staticTexts["Type español e inglés"]
+        guard title.waitForExistence(timeout: 2) else {
+            XCTContext.runActivity(named: "Bilingual keyboard onboarding absent") { _ in }
+            return
+        }
+        // This is the observed iOS keyboard onboarding card, not an arbitrary
+        // Continue button or a product consent dialog.
+        XCTAssertTrue(app.staticTexts["Type both languages on the same keyboard. Customize in Settings."].exists)
+        let next = app.buttons["Continue"]
+        XCTAssertTrue(next.exists && next.isHittable)
+        XCTContext.runActivity(named: "Dismiss the identified bilingual keyboard onboarding card") { _ in
+            capture("Bilingual-keyboard-card-before-dismissal")
+            next.tap()
+            let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: title)
+            XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
+            capture("Bilingual-keyboard-card-dismissed")
+        }
     }
     private func assertLabel(_ id: String, contains text: String) { let target = element(id); reveal(target); XCTAssertTrue(target.label.contains(text),target.label) }
     private func assertText(_ text: String) {
