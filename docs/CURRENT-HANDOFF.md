@@ -1,5 +1,16 @@
 # Room in the Cart current handoff
 
+## Shared-store driver validated; strict local warnings retained — November 5, 2026
+
+Both complete original SharedStoreQuote journeys executed exactly once and passed their assertions on the frozen candidate: known-trip/adoption401.376s and lost-reply/restart246.824s. **Both strict guards failed**, each with one exact `_UIReparentingView` warning on local iPhone17/iOS26.2 build23C52 at `fixture.s27.controls` → `Synthesize event`. The existing exceptions cover hosted23C54; no allowance was expanded and no retry was performed. Driver exit1 is retained. This is functional evidence for the narrow helper correction, not a strict local pass or release acceptance. [Full proof](evidence/native/ci-ui-navigation-20261105/shared-store.json).
+
+All original test methods are byte-identical to f20. The helper uses matching text queries, avoids repeated geometry queries for already-actionable elements and takes one accessibility snapshot for navigation/keyboard bounds. Lumpy identified the final fully-visible fallback gap; root corrected it before freezing and testing. All494 current/frozen source identities and product identities match. Final project generation, localization consistency and diff checks pass; the previously completed136 Python checks remain applicable because their source has not changed.
+
+The one native lane is terminal under `.build/CIResearch20261105/shared-store-navigation/`. Both owned simulators are shut down; preview5FDE1E82-1FF7-4556-9C14-0746F6295944 remains Booted/untouched. Lumpy's bounded review found no concrete reason to withhold an explicitly non-green candidate for hosted CI; he did not independently inspect these new artifacts. Root owns their validation. No new assistants are active.
+
+Next: publish the consolidated candidate and follow all six required hosted workflow handles. Keep PR1 draft. The optional standalone Form toggle control can be triggered once on this exact candidate; it does not replace any required gate. Prior f20 failures and UI05's unexplained switch behavior remain open. No merge, ruleset activation, hosted app/database/provider deployment or distribution occurred. Full52-requirement/27-route launch goal remains active.
+
+
 
 ## Checkout restoration verified locally — November 5, 2026
 

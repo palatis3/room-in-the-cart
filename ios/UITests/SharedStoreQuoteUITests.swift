@@ -236,29 +236,53 @@ import XCTest
     }
     private func assertLabel(_ id: String, contains text: String) { let target = element(id); reveal(target); XCTAssertTrue(target.label.contains(text),target.label) }
     private func assertText(_ text: String) {
-        let target = app.staticTexts.containing(NSPredicate(format:"label CONTAINS %@",text)).firstMatch
+        let target = app.staticTexts.matching(NSPredicate(format:"label CONTAINS %@",text)).firstMatch
         reveal(target); XCTAssertTrue(target.exists && target.isHittable,"Missing visible text: "+text)
     }
     private func reveal(_ target: XCUIElement, fullyVisible: Bool = false) {
         for attempt in 0..<30 {
+            let exists = target.exists
+            let hittable = exists && target.isHittable
+            if hittable && !fullyVisible { return }
             let area = scrollableArea()
-            if target.exists && target.isHittable, !fullyVisible || (target.frame.minY >= area.minY && target.frame.maxY <= area.maxY) { return }
+            let frame = exists ? target.frame : .zero
+            if hittable && frame.minY >= area.minY && frame.maxY <= area.maxY { return }
             let up: Bool
-            if target.exists && !target.frame.isEmpty { up = target.frame.midY > area.midY }
+            if exists && !frame.isEmpty { up = frame.midY > area.midY }
             else { up = (attempt / 6) % 2 == 0 }
-            scrollContent(upward:up)
+            scrollContent(upward:up,area:area)
         }
-        XCTAssertTrue(target.exists && target.isHittable,"Missing actionable UI element: "+target.debugDescription)
+        let exists = target.exists
+        let hittable = exists && target.isHittable
+        if fullyVisible {
+            let area = scrollableArea(), frame = exists ? target.frame : .zero
+            XCTAssertTrue(hittable && frame.minY >= area.minY && frame.maxY <= area.maxY,
+                          "Missing fully visible UI element: "+target.debugDescription)
+        } else {
+            XCTAssertTrue(hittable,"Missing actionable UI element: "+target.debugDescription)
+        }
     }
     private func scrollableArea() -> CGRect {
-        let bounds = app.frame
-        let keyboardTop = app.keyboards.allElementsBoundByIndex.filter(\.exists).map { $0.frame.minY }.min() ?? bounds.maxY
-        let barBottom = app.navigationBars.allElementsBoundByIndex.filter { $0.exists && $0.isHittable }.map { $0.frame.maxY }.max() ?? bounds.minY+90
+        // Measure bars and keyboard from one tree so transitions cannot replace
+        // an element between separate live existence, hittability and frame queries.
+        let snapshot = try? app.snapshot()
+        let bounds = snapshot?.frame ?? app.frame
+        var keyboardTop = bounds.maxY
+        var barBottom = bounds.minY+90
+        var elements = snapshot.map { [$0] } ?? []
+        while let element = elements.popLast() {
+            let frame = element.frame
+            if frame.height > 0 && frame.intersects(bounds) {
+                if element.elementType == .keyboard { keyboardTop = min(keyboardTop,frame.minY) }
+                if element.elementType == .navigationBar { barBottom = max(barBottom,frame.maxY) }
+            }
+            elements.append(contentsOf:element.children)
+        }
         let top = max(bounds.minY+95,min(barBottom+12,keyboardTop-140)), bottom = min(bounds.maxY-70,keyboardTop-16)
         return CGRect(x:bounds.minX+24,y:top,width:bounds.width-48,height:max(80,bottom-top))
     }
-    private func scrollContent(upward: Bool) {
-        let area = scrollableArea(), bounds = app.frame, high = area.minY+area.height*0.18, low = area.minY+area.height*0.82
+    private func scrollContent(upward: Bool, area: CGRect) {
+        let bounds = app.frame, high = area.minY+area.height*0.18, low = area.minY+area.height*0.82
         let origin = app.coordinate(withNormalizedOffset:.zero)
         let start = origin.withOffset(CGVector(dx:area.midX-bounds.minX,dy:(upward ? low:high)-bounds.minY))
         let end = origin.withOffset(CGVector(dx:area.midX-bounds.minX,dy:(upward ? high:low)-bounds.minY))
