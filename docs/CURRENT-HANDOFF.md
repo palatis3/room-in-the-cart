@@ -1,5 +1,16 @@
 # Room in the Cart current handoff
 
+## Spanish Ask to Buy failure under investigation — November 5, 2026
+
+Deep run42021894579 is terminal failed. Both sanitizers pass; English local StoreKit passes15/15 with strict guard0, Spanish passes14/15 and strict guard1, both with zero runtime warnings. The failed case is `testAskToBuyApprovalRemainsUndelivered`: its ten-second eventual wait for `purchase.finished && model.notice == .failed(.notConfigured)` expired (case13.351s). Original artifacts are retained and hashes verified; root independently replayed both exact15-selector execution/warning checks. [StoreKit proof](evidence/native/ci-23a73a8-20261105/storekit.json). Other required23a73a8 core/fixture/performance runs remain active; do not push/cancel them.
+
+Lumpy personally reviewed source and artifacts; one existing Sol6.1xhigh helper (`history_fixture_triage`) is preparing scratch-only deterministic regressions. Both identify a possible callback-order defect: an older `.pending` purchase result can overwrite the notice from a verified update's completed delivery attempt. The retained hosted failure does not record completion/notice order, so this has not been established as its cause. No product fix installed yet.
+
+The sole local native lane is a frozen23a73a8 `RoomInTheCart-LocalStoreKit` build under `.build/CIResearch20261105/storekit-approval/`, tool session43696. Its494-file snapshot adds only test instrumentation: notice transitions and final finished/busy/notice/transaction/pending counts in `AskToBuy-notice-order`. Product source and assertions are unchanged. `build-status.txt` will record its exit. Prepared `run.sh` runs all15 cases once each in Spanish then English, matching hosted120-second native limits and original ten-second eventual deadlines, with strict log/warning checks and attachment export. **The driver has not started yet.** Inspect actual build/process state before continuing; do not start another native lane.
+
+Owned Spanish simulatorE0F78F46-6FCB-46EE-AA22-43C42F4D28D3 and EnglishCEA0F544-13F6-40FA-8585-E5101164B41F are newly created and still Shutdown. Preview5FDE1E82-1FF7-4556-9C14-0746F6295944 remains untouched. Freeze product hashes after build before running; retain every outcome. Local Xcode27.1/runtime23C52 differs from hosted26.3/23C54. No hosted rerun or timeout/allowance increase.
+
+
 ## Early hosted results and diagnostic configuration fix — November 5, 2026
 
 Both package sanitizer archives now independently verify389 passes and the same three deliberate opt-in native-wire skips. The compiled core artifact has580 model and51 ordinary UI selectors across ten UI groups; every regenerated selector/manifest file matches byte-for-byte. The new checkout restoration is alone in ui-01. Group numbers changed: follow selectors, not f20's old shard numbers. [Sanitizers](evidence/native/ci-23a73a8-20261105/sanitizers.json) · [Compiled plan and product hashes](evidence/native/ci-23a73a8-20261105/compiled-plan.json). StoreKit, Swift analysis and ordinary/fixture/performance acceptance remain pending. Raw artifacts and current API snapshots are under `.build/CIResearch20261105/candidate-23a73a8/`.
