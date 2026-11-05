@@ -1,0 +1,34 @@
+{
+  "observedAt": "2026-11-05T10:12:25.269549+00:00",
+  "basePublishedCandidate": "f20feb685f95e7da1c7a23f26eff499d2696329f",
+  "sourceSHA256": "c6f425b5f1bb36515e6fde3039ac084421bbd35feeac2017f9170969cacb4192",
+  "change": "Require a segment center inside the measured unobscured history viewport, tap center once, then verify selected state and tab-specific destination. Guard against an empty viewport. Both original test method bodies are byte-identical to f20; permission/revocation assertions unchanged.",
+  "buildProfile": "DEBUG CONTRIBUTOR_CAPTURE_UI_FIXTURE STOCK_REVIEW_UI_FIXTURE AWAY_CARRYOVER_UI_FIXTURE",
+  "buildExit": 0,
+  "xcodeExit": 0,
+  "strictGuardExit": 0,
+  "passed": 2,
+  "failed": 0,
+  "skipped": 0,
+  "runtimeWarnings": 0,
+  "durationsSeconds": {
+    "freeGrant": 148.291,
+    "revocation": 73.867
+  },
+  "defaultAllowanceSeconds": 720,
+  "maximumAllowanceSeconds": 900,
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "90CD1EED-66F3-4402-A218-2782AE2B15F1",
+    "deviceName": "RITC-UI-Existence-20261105",
+    "modelName": "iPhone 17",
+    "osBuildNumber": "23C52",
+    "osVersion": "26.2",
+    "platform": "iOS Simulator"
+  },
+  "rawLogSHA256": "ad0993142a4e798d2eb8c9536ff85328fb24513c590779c27837351e6553d386",
+  "sourceManifestSHA256": "88c3d09bfc4a0efd4dc67bbef994ac69fc2cce71ef6f29147c830ea371dab147",
+  "productManifestSHA256": "8e9ffa68ad4adcef8729850d49060ab89593ef9a14fb541830ad861bd730ada4",
+  "review": "Sol6.1xhigh personally diagnosed failed hosted tap, prepared scratch patch and reviewed root-applied changes. Root reviewed source/evidence and ran both complete fixture cases.",
+  "limits": "Guarded fixture transport; no live backend/provider acceptance. Local Xcode27.1/iOS26.2 build23C52 differs from hosted. Failed f20 artifact remains failed. Owned simulator shut down after run; preview untouched."
+}

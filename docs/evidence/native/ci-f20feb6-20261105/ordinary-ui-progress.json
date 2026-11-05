@@ -1,8 +1,8 @@
 {
   "candidate": "f20feb685f95e7da1c7a23f26eff499d2696329f",
   "run": 41994028642,
-  "observedAt": "2026-11-05T09:54:58.059460+00:00",
-  "completedOrdinaryUIPassed": 15,
+  "observedAt": "2026-11-05T10:11:49.017217+00:00",
+  "completedOrdinaryUIPassed": 21,
   "expectedOrdinaryUI": 50,
   "coverageComplete": false,
   "shards": [
@@ -80,6 +80,29 @@
         "RoomInTheCartUITests/RoomInTheCartUITests/testKnownComparisonSavesAndReopensWithItemOnlyLimit"
       ],
       "rawLogSHA256": "f3ea32e978d4225db2047e4fd99d366cb29bb2a632ebe2a25079099d2ebcec88"
+    },
+    {
+      "shard": "ui-09",
+      "job": 127139509901,
+      "artifact": 13405980908,
+      "artifactSHA256": "f40becfaa69ccd803b50ba1a42951fbecc84f90355436aa02f9f3b43134d211f",
+      "githubDigestVerified": true,
+      "hostedConclusion": "success",
+      "independentGuardExit": 0,
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "selectors": [
+        "RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced",
+        "RoomInTheCartUITests/FreeJourneyUITests/testEnglishMealWeekListAndGridShowDatedProtectedLunch",
+        "RoomInTheCartUITests/FreeJourneyUITests/testNextShopCanCancelThenOpenOneFreshShoppingList",
+        "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testFullyCoveredSavesUseAtHomePlanWithoutPurchasedItemOrRetailerOrder",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testAccountDeletionSettingsExplainsScopeInEnglishAndSpanishBeforeSignIn",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer"
+      ],
+      "rawLogSHA256": "991f75bc8939b914c4ee6d9ddaf3dc9da3c4107d71503d42ea284e8ad713079a",
+      "verification": "Sol6.1xhigh verified91 archive entries, all12 plan files, exact one start/pass per selector and six detailed warning exports; root reviewed proof."
     }
   ],
   "scope": "Wholly passing shards independently checked against replayed compiled plan, exact raw lifecycle and detailed warnings. ui06 has two existing narrowly allowed Menu warnings. Separate failed-shard evidence remains failed; other UI jobs pending."
