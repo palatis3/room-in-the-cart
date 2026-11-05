@@ -23,12 +23,86 @@ SCENARIOS = {
     "testOpenAndCancelSinglePickupMenu": ["Open pickup Menu", "Dismiss pickup Menu without selection"],
     "testOpenAndCancelFixtureControlsMenu": ["Open fixture Menu", "Dismiss fixture Menu without selection"],
 }
+MENU_TAPS = {
+    "testOpenAndCancelSinglePickupMenu": 'Tap "probe.pickupMenu" Button[0.50, 0.50]',
+    "testOpenAndCancelFixtureControlsMenu": 'Tap "probe.fixtureMenu" Button[0.50, 0.50]',
+}
 
 
 def activity_titles(activities):
     for activity in activities:
         yield activity["title"]
         yield from activity_titles(activity.get("childActivities", []))
+
+
+def activity_nodes(activities, parents=(), path="$.testRuns[0].activities"):
+    if not isinstance(activities, list):
+        raise ValueError("Invalid diagnostic activity list")
+    for index, activity in enumerate(activities):
+        if not isinstance(activity, dict) or not isinstance(activity.get("title"), str):
+            raise ValueError("Invalid diagnostic activity")
+        location = f"{path}[{index}]"
+        yield activity, parents, location
+        yield from activity_nodes(
+            activity.get("childActivities", []),
+            parents + ((activity["title"], location),), location + ".childActivities",
+        )
+
+
+def correlate_warning_activities(method, activities, detail_counts):
+    # This diagnostic certifies the retained four-scenario observation, not a
+    # product warning allowance: two exact warnings per open, none per control.
+    expected = Counter({OBSERVED_WARNING: 2}) if method in MENU_TAPS else Counter()
+    if detail_counts != expected:
+        raise ValueError("Diagnostic warning multiset differs from the observed open/control scenario")
+    entries = list(activity_nodes(activities))
+    titles = [activity["title"] for activity, _, _ in entries]
+    other_markers = {title for markers in SCENARIOS.values() for title in markers} - set(SCENARIOS[method])
+    if any(title in other_markers for title in titles):
+        raise ValueError("Diagnostic activities contain another scenario")
+    taps = [(activity, parents, path) for activity, parents, path in entries
+            if activity["title"].startswith(('Tap "probe.pickupMenu"', 'Tap "probe.fixtureMenu"'))]
+    tap_path = None
+    if method in MENU_TAPS:
+        if (len(taps) != 1 or taps[0][0]["title"] != MENU_TAPS[method] or
+                not taps[0][1] or taps[0][1][-1][0] != SCENARIOS[method][0]):
+            raise ValueError("Expected one exact Menu tap inside its matching open activity")
+        tap_path = taps[0][2]
+    elif taps:
+        raise ValueError("A no-open control tapped a probe Menu")
+    counts = Counter()
+    matched = []
+    issue_ids = set()
+    for activity, parents, path in entries:
+        attachments = activity.get("attachments", [])
+        if not isinstance(attachments, list) or not all(isinstance(item, dict) for item in attachments):
+            raise ValueError("Invalid diagnostic activity attachments")
+        issue_attachments = [item for item in attachments if item.get("name") == "Complete Issue Description.txt"]
+        issue_child = any(child["title"] == "Complete Issue Description"
+                          for child in activity.get("childActivities", []))
+        title = activity["title"]
+        if title != OBSERVED_WARNING and not issue_attachments and not issue_child:
+            continue
+        if title != OBSERVED_WARNING:
+            raise ValueError("An unknown diagnostic issue activity was recorded")
+        if activity.get("isAssociatedWithFailure") is not False or activity.get("activityType") is not None:
+            raise ValueError("Diagnostic warning activity is not the observed untyped nonfailure issue")
+        if len(issue_attachments) != 1 or not issue_child:
+            raise ValueError("Diagnostic warning activity is missing its issue evidence")
+        issue_id = issue_attachments[0].get("uuid")
+        if not isinstance(issue_id, str) or not issue_id or issue_id in issue_ids:
+            raise ValueError("Missing or duplicated diagnostic warning activity identity")
+        issue_ids.add(issue_id)
+        # Match the nearest tap, not merely an earlier Menu marker elsewhere.
+        parent_taps = [(name, location) for name, location in parents if name.startswith("Tap ")]
+        if not tap_path or not parent_taps or parent_taps[-1] != (MENU_TAPS[method], tap_path):
+            raise ValueError("Diagnostic warning activity is outside the exact observed Menu tap")
+        counts[title] += 1
+        matched.append({"message": title, "activityPath": path, "issueAttachmentId": issue_id,
+                        "ancestors": [name for name, _ in parents]})
+    if counts != detail_counts:
+        raise ValueError("Diagnostic warning activities do not match the detailed warning multiset")
+    return matched
 
 
 def export_activities(bundle, url):
@@ -85,7 +159,9 @@ def main(evidence, method, simulator_id, commit):
             details["testResult"] != "Passed" or
             details["testPlanConfigurations"] != [configuration["testPlanConfiguration"]] or
             detail_device["nodeType"] != "Device" or detail_device["nodeIdentifier"] != simulator_id or
+            detail_device["result"] != "Passed" or
             detail_configuration["nodeType"] != "Test Plan Configuration" or
+            detail_configuration["result"] != "Passed" or
             # Xcode 26.3 omits this optional URL on configuration nodes; the
             # outer test URL and exact device/configuration IDs remain required.
             ("nodeIdentifierURL" in detail_configuration and detail_configuration["nodeIdentifierURL"] != url) or
@@ -111,10 +187,12 @@ def main(evidence, method, simulator_id, commit):
     verified_counts = Counter({row["message"]: row["count"] for row in warning_report["warnings"]})
     if detail_counts != verified_counts:
         raise ValueError("Diagnostic warning details disagree with the summary and test tree")
+    warning_activities = correlate_warning_activities(method, run["activities"], verified_counts)
     exact_warnings = verified_counts[OBSERVED_WARNING]
     result = {
         "selector": selector, "device": device, "activities": markers,
         "exactReparentingWarnings": exact_warnings, "warningEvidence": warning_report,
+        "warningActivities": warning_activities,
         "inputProvenance": provenance, "productIdentities": product_identities,
         "xctestLogSHA256": hashlib.sha256(log).hexdigest(),
     }
