@@ -79,6 +79,18 @@ class ExecutionLogTests(unittest.TestCase):
     done = case + "passed (71.217 seconds)."
     success = "** TEST EXECUTE SUCCEEDED **"
 
+    def test_passing_cases_cannot_hide_sqlite_api_misuse(self):
+        warning = (
+            "2026-11-05 05:17:24.258991+0000 RoomInTheCart[6045:24194] [logging] "
+            "BUG IN CLIENT OF libsqlite3.dylib: database integrity compromised by API violation: "
+            "vnode unlinked while in use: /fictional-test/ledger.sqlite"
+        )
+        failures = execution_log_failures([self.start, warning, self.done, self.success], [self.selector])
+        self.assertEqual(failures, ["SQLite reported an API misuse diagnostic at log line 2."])
+        # Routine SQLite output is not blanket-classified as an execution failure.
+        self.assertEqual(execution_log_failures(
+            [self.start, "SQLite fixture saved and closed", self.done, self.success], [self.selector]), [])
+
     def test_exact_pass_and_case_inventory(self):
         other = "RoomInTheCartTests/ModelTests/testOther"
         other_case = "Test Case '-[RoomInTheCartTests.ModelTests testOther]' "
@@ -270,6 +282,23 @@ class RuntimeWarningTests(unittest.TestCase):
                     self.assertEqual(evidence["warnings"][0]["maximum"], maximum)
                     self.assertEqual(evidence["warnings"][0]["menuActivity"], {"tap": tap, "phase": phase})
                     self.assertEqual(evidence["status"], "passed" if count == maximum else "unexpected-warnings")
+
+    def test_manual_order_menu_allowance_stays_scoped_to_two_observed_issues(self):
+        selector = "RoomInTheCartUITests/FreeJourneyUITests/testManualListOrderSurvivesRestartAndOpensLargePrint"
+        messages = [OBSERVED_WARNING] * 2
+        self.assertEqual(self.inspect([MULTIPLE_WARNINGS], messages, selector=selector)["status"], "passed")
+        self.assertEqual(self.inspect([MULTIPLE_WARNINGS], messages + [OBSERVED_WARNING], selector=selector)["status"], "unexpected-warnings")
+        for changes in (
+            {"activity_tap": 'Tap "Other control" Button'},
+            {"activity_phase": "Find the button"},
+            {"selector": "RoomInTheCartUITests/FreeJourneyUITests/testUnreviewedMenu"},
+            {"device": {**OBSERVED_DEVICE, "osBuildNumber": "23C52"}},
+        ):
+            with self.subTest(changes=changes):
+                self.assertEqual(self.inspect([MULTIPLE_WARNINGS], messages,
+                    **{"selector": selector, **changes})["status"], "unexpected-warnings")
+        self.assertEqual(self.inspect([MULTIPLE_WARNINGS], ["different warning"] * 2,
+            selector=selector)["status"], "unexpected-warnings")
 
     def test_same_count_warning_substitution_rejects_duplicate_issue_uuid(self):
         first = "098DC6EC-90D4-40A9-8363-2BF5B66767FE"

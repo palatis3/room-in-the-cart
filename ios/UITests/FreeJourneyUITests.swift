@@ -1057,7 +1057,7 @@ import XCTest
         }
     }
     private func element(_ id: String) -> XCUIElement { app.descendants(matching: .any).matching(identifier: id).firstMatch }
-    private func tap(_ target: XCUIElement) { reveal(target); XCTAssertTrue(target.isHittable, target.debugDescription); target.tap() }
+    private func tap(_ target: XCUIElement) { reveal(target); target.tap() }
     private func enableSwitch(_ label: String) {
         let control = app.switches[label]
         reveal(control)
@@ -1080,15 +1080,18 @@ import XCTest
     }
     private func reveal(_ target: XCUIElement) {
         for attempt in 0..<24 {
-            if target.exists && target.isHittable { return }
+            // isHittable already requires existence. Avoid another accessibility
+            // snapshot before every action in the complete pickup journey.
+            if target.isHittable { return }
             let area = scrollableArea()
             let upward: Bool
-            if target.exists && !target.frame.isEmpty {
-                upward = target.frame.midY > area.midY
+            if target.exists {
+                let frame = target.frame
+                upward = frame.isEmpty ? attempt < 16 : frame.midY > area.midY
             } else { upward = attempt < 16 }
-            scrollContent(upward: upward)
+            scrollContent(upward: upward, area: area)
         }
-        XCTAssertTrue(target.exists && target.isHittable, "Missing actionable UI element: \(target.debugDescription)")
+        XCTAssertTrue(target.isHittable, "Missing actionable UI element: \(target.debugDescription)")
     }
     private func scrollableArea() -> CGRect {
         // Navigation and sheet transitions can replace a bar between separate
@@ -1110,10 +1113,10 @@ import XCTest
         let bottom = min(bounds.maxY - 100, keyboardTop - 16)
         return CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))
     }
-    private func scrollContent(upward: Bool) {
+    private func scrollContent(upward: Bool, area measuredArea: CGRect? = nil) {
         // Whole-app swipes can start on the software keyboard. Drag only in
         // the observed unobscured content, and still require real hittability.
-        let area = scrollableArea(), bounds = app.frame
+        let area = measuredArea ?? scrollableArea(), bounds = app.frame
         let high = area.minY + area.height * 0.2, low = area.minY + area.height * 0.8
         let origin = app.coordinate(withNormalizedOffset: .zero)
         let start = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: (upward ? low : high) - bounds.minY))
@@ -1122,7 +1125,8 @@ import XCTest
     }
     private func assertText(_ text: String) {
         let target = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
-        reveal(target); XCTAssertTrue(target.exists && target.isHittable, "Missing visible text: \(text)")
+        // The matching query checks the text; reveal requires it to be hittable.
+        reveal(target)
     }
     private func assertElementContains(_ id: String, _ text: String) {
         let target = element(id); reveal(target); XCTAssertTrue(target.label.contains(text), target.label)

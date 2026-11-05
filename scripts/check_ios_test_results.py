@@ -25,6 +25,10 @@ def execution_log_failures(lines, expected):
     banners = []
     for number, raw_line in enumerate(lines, 1):
         line = raw_line.rstrip("\r\n")
+        # SQLite can report an unsafe live-file deletion outside XCTest's
+        # runtime-warning export, even when every assertion passes.
+        if "BUG IN CLIENT OF libsqlite3.dylib:" in line:
+            failures.append(f"SQLite reported an API misuse diagnostic at log line {number}.")
         if line.startswith(XCTEST_RESTART):
             failures.append(f"XCTest restarted its runner at log line {number}.")
         banner = XCTEST_RESULT_BANNER.fullmatch(line)
@@ -89,7 +93,7 @@ OBSERVED_MENU_WARNINGS = {
     "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges":
         (2, PICKUP_MENU_TAP, SYNTHESIZE_EVENT),
     "RoomInTheCartUITests/FreeJourneyUITests/testManualListOrderSurvivesRestartAndOpensLargePrint":
-        (1, LIST_OPTIONS_MENU_TAP, SYNTHESIZE_EVENT),
+        (2, LIST_OPTIONS_MENU_TAP, SYNTHESIZE_EVENT),
     "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekReservationDraftCannotFollowAnotherPickup":
         (2, PICKUP_MENU_TAP, SYNTHESIZE_EVENT),
     "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption":

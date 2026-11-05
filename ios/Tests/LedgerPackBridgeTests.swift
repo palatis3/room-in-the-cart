@@ -7,8 +7,7 @@ import RecordArchive
 final class LedgerPackBridgeTests: XCTestCase {
         private struct LedgerDocumentFixture: Codable { let formatVersion: Int; let workspace: LedgerWorkspace }
     @MainActor func testArchiveScopePreservesOnlySelectedShopPackEvidenceAndEarlierLedgerFilesRemainReadable() async throws {
-        let (ledger, _, directory) = try await fixture()
-        defer { try? FileManager.default.removeItem(at: directory) }
+        let (ledger, _, _, _) = try await fixture()
         let shop = try XCTUnwrap(ledger.shop), line = try XCTUnwrap(shop.lines.first?.id)
         try saved(try await packReview(ledger, line: line).save(offerID: "b", ledger: ledger))
         var other = ShoppingLedger(title: "Other shop")
@@ -38,8 +37,7 @@ final class LedgerPackBridgeTests: XCTestCase {
         XCTAssertThrowsError(try RecordsNativeCodec.validate(record))
     }
     @MainActor func testEarlierPickupArchiveDefaultsPackEvidenceWithoutAcceptingExtraAuthority() async throws {
-        let (ledger, pickup, directory) = try await fixture()
-        defer { try? FileManager.default.removeItem(at: directory) }
+        let (ledger, pickup, _, _) = try await fixture()
         let review = try LedgerCheckoutAdapter.review(shop: XCTUnwrap(ledger.shop), workspaceRevision: ledger.revision, previous: nil)
         try saved(try await LedgerCheckoutAdapter.apply(review, ledger: ledger, pickup: pickup))
         let value = try XCTUnwrap(pickup.journey)
@@ -55,8 +53,7 @@ final class LedgerPackBridgeTests: XCTestCase {
         XCTAssertThrowsError(try RecordsNativeCodec.validate(record))
     }
         @MainActor func testPackChoiceKeepsSavedCheckoutUntilExplicitReviewThenSuppliesWholePacksWithoutInventingDemand() async throws {
-        let (ledger, pickup, directory) = try await fixture()
-        defer { try? FileManager.default.removeItem(at: directory) }
+        let (ledger, pickup, _, _) = try await fixture()
         let source = try XCTUnwrap(ledger.shop), line = try XCTUnwrap(source.lines.first)
         let original = try LedgerCheckoutAdapter.review(shop: source, workspaceRevision: ledger.revision, previous: nil)
         try saved(try await LedgerCheckoutAdapter.apply(original, ledger: ledger, pickup: pickup))
@@ -84,8 +81,7 @@ final class LedgerPackBridgeTests: XCTestCase {
         XCTAssertEqual(frozenText, try Rational(10))
     }
     @MainActor func testExactSelectionRetryAndUnchangedCheckoutReviewDoNotCreateRevisionsOrClearFreshQuote() async throws {
-        let (ledger, pickup, directory) = try await fixture()
-        defer { try? FileManager.default.removeItem(at: directory) }
+        let (ledger, pickup, _, _) = try await fixture()
         let line = try XCTUnwrap(ledger.shop?.lines.first?.id)
         let review = try packReview(ledger, line: line)
         try saved(try await review.save(offerID: "b", ledger: ledger))
@@ -110,8 +106,7 @@ final class LedgerPackBridgeTests: XCTestCase {
         XCTAssertEqual(pickup.journey?.quote, quote)
     }
     @MainActor func testChangedSourceRejectsReviewAndStalePackCostCannotLeakIntoUnchangedQuantity() async throws {
-        let (ledger, pickup, directory) = try await fixture()
-        defer { try? FileManager.default.removeItem(at: directory) }
+        let (ledger, pickup, _, _) = try await fixture()
         let shop = try XCTUnwrap(ledger.shop), line = try XCTUnwrap(shop.lines.first?.id)
         let review = try packReview(ledger, line: line, packSize: 5)
         try saved(try await review.save(offerID: "b", ledger: ledger))
@@ -130,11 +125,11 @@ final class LedgerPackBridgeTests: XCTestCase {
         XCTAssertEqual(ledger.workspace.packSelections.count, 1)
     }
     @MainActor func testPackEvidenceRestartAndPlacedOrderBoundaryRemainDurable() async throws {
-        let (ledger, pickup, directory) = try await fixture()
-        defer { try? FileManager.default.removeItem(at: directory) }
+        let (ledger, pickup, directory, cleanup) = try await fixture()
         let shop = try XCTUnwrap(ledger.shop), line = try XCTUnwrap(shop.lines.first?.id)
         try saved(try await packReview(ledger, line: line).save(offerID: "b", ledger: ledger))
         let reopened = LedgerModel(databaseURL: directory.appendingPathComponent("ledger.sqlite"))
+        cleanup.track(reopened)
         await reopened.open()
         XCTAssertEqual(reopened.workspace.packSelections, ledger.workspace.packSelections)
         let review = try LedgerCheckoutAdapter.review(shop: XCTUnwrap(reopened.shop), workspaceRevision: reopened.revision, previous: nil,
@@ -149,15 +144,18 @@ final class LedgerPackBridgeTests: XCTestCase {
         catch { XCTAssertEqual(error as? LedgerCheckoutError, .placedOrder) }
         XCTAssertEqual(pickup.journey, placed)
         let reopenedPickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"))
+        cleanup.track(reopenedPickup)
         await reopenedPickup.load()
         XCTAssertEqual(reopenedPickup.journey?.ledgerPackSelections, placed.ledgerPackSelections)
         XCTAssertEqual(reopenedPickup.journey?.pickup?.orderLines.first?.ordered.amount, try Rational(12))
     }
-    @MainActor private func fixture() async throws -> (LedgerModel, PickupModel, URL) {
+    @MainActor private func fixture() async throws -> (LedgerModel, PickupModel, URL, SQLiteFixtureDirectory) {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let cleanup = SQLiteFixtureDirectory(directory, test: self)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let ledger = LedgerModel(databaseURL: directory.appendingPathComponent("ledger.sqlite"))
         let pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"))
+        cleanup.track(ledger, pickup)
         await ledger.open(); await pickup.load()
         try saved(await ledger.startShop(title: "Pack review pickup"))
         let id = try XCTUnwrap(ledger.shop?.id)
@@ -168,7 +166,7 @@ final class LedgerPackBridgeTests: XCTestCase {
             let supply = try XCTUnwrap(shop.contributions(forLineID: line).first?.id)
             try shop.addProtectedNeed(name: "Wraps", quantity: self.q(2), purpose: "Lunch", within: supply)
         })
-        return (ledger, pickup, directory)
+        return (ledger, pickup, directory, cleanup)
     }
     @MainActor private func packReview(_ ledger: LedgerModel, line: UUID, packSize: Int64 = 6) throws -> LedgerPackReview {
         try LedgerPackReview.prepare(ledger: ledger, shopID: XCTUnwrap(ledger.shop?.id), lineID: line,
