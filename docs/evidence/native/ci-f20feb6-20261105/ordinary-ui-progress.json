@@ -1,8 +1,8 @@
 {
   "candidate": "f20feb685f95e7da1c7a23f26eff499d2696329f",
   "run": 41994028642,
-  "observedAt": "2026-11-05T10:11:49.017217+00:00",
-  "completedOrdinaryUIPassed": 21,
+  "observedAt": "2026-11-05T10:22:29.876995+00:00",
+  "completedOrdinaryUIPassed": 26,
   "expectedOrdinaryUI": 50,
   "coverageComplete": false,
   "shards": [
@@ -103,6 +103,28 @@
       ],
       "rawLogSHA256": "991f75bc8939b914c4ee6d9ddaf3dc9da3c4107d71503d42ea284e8ad713079a",
       "verification": "Sol6.1xhigh verified91 archive entries, all12 plan files, exact one start/pass per selector and six detailed warning exports; root reviewed proof."
+    },
+    {
+      "shard": "ui-08",
+      "job": 127139509925,
+      "artifact": 13405083250,
+      "artifactSHA256": "31d2fbc684bc618d4a737ca66d5405319ceb49243673d1a3aed7493dd4efd2b1",
+      "githubDigestVerified": true,
+      "hostedConclusion": "success",
+      "independentGuardExit": 0,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "selectors": [
+        "RoomInTheCartUITests/ContextualReminderUITests/testNextShopDeferralRequestsReminderOnlyAfterExplicitScheduleAndCanCancel",
+        "RoomInTheCartUITests/FreeJourneyUITests/testFreeCookCorrectionAndExplicitRecipientAcknowledgment",
+        "RoomInTheCartUITests/FreeJourneyUITests/testUrgentRepairWithoutAnOrderPersistsAcrossRestart",
+        "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testOwnerExportReviewAndCancelledDeletionPreserveComparisonAfterRestart"
+      ],
+      "rawLogSHA256": "74a119c4c7ccf0598b3236578abe45efec62351060b1b68a6a8004d87f4caf40",
+      "verification": "Sol6.1xhigh verified77 archive entries, all12 plan files, exact one start/pass per selector and five detailed warning exports; root reviewed proof."
     }
   ],
   "scope": "Wholly passing shards independently checked against replayed compiled plan, exact raw lifecycle and detailed warnings. ui06 has two existing narrowly allowed Menu warnings. Separate failed-shard evidence remains failed; other UI jobs pending."
