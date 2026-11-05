@@ -116,6 +116,9 @@ jobs:
             | (cd "$lint_dir" && sha256sum --check)
           tar -xzf "$lint_dir/actionlint.tar.gz" -C "$lint_dir" actionlint
           "$lint_dir/actionlint" -shellcheck='' -pyflakes='' .github/workflows/*.yml
+      - name: Verify the pinned Node release is supported and security-current
+        timeout-minutes: 1
+        run: python3 scripts/check_node_runtime.py
       - name: Validate generated files, localization and CI test selection
         run: |
           python3 scripts/generate_theme.py --check

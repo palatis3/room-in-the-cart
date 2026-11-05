@@ -1,8 +1,14 @@
 #!/bin/bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-if ! command -v node >/dev/null 2>&1 && [ -d .tools/node-v22.14.0-darwin-arm64/bin ]; then
-  export PATH="$PWD/.tools/node-v22.14.0-darwin-arm64/bin:$PATH"
+node_version="$(cat .node-version)"
+node_bin="$PWD/.tools/node-v${node_version}-darwin-arm64/bin"
+if [ -x "$node_bin/node" ]; then
+  export PATH="$node_bin:$PATH"
+fi
+if ! command -v node >/dev/null 2>&1 || [ "$(node --version)" != "v$node_version" ]; then
+  echo "Install Node $node_version from .node-version before running these checks." >&2
+  exit 1
 fi
 python3 scripts/generate_theme.py --check
 python3 scripts/check_localization.py

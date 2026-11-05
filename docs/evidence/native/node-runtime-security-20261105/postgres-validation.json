@@ -1,0 +1,54 @@
+{
+  "sourceCommit": "1654106ac1c64fff4f1da1b439d332e43f3aa8a9",
+  "nodeRuntimeMetadataPatchSHA256": "b8697b5d663ff5571f66f8b437d68a95a83c2d06705bfd0ee88648a071e5f6a7",
+  "toolchain": {
+    "node": "22.23.4",
+    "npm": "10.9.9",
+    "postgresql": "17.11",
+    "os": "macOS 27.2 (26B123) arm64"
+  },
+  "testCounts": {
+    "integration": {
+      "tests": 174,
+      "suites": 0,
+      "pass": 174,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "operations": {
+      "tests": 15,
+      "suites": 0,
+      "pass": 15,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    }
+  },
+  "webWireCasesPassed": [
+    "real browser WebApp and API recover a dropped helper reply with exact original bytes after a newer projection",
+    "real full browser recreation recovers a lost received suggestion with read-only retries and fences identity, expiry and revocation"
+  ],
+  "nativeWireEnabled": false,
+  "migrationsVerifiedAgainstSource": {
+    "integration": 29,
+    "operations": 29,
+    "first": "001_household_requests.sql",
+    "last": "029_privacy_restore_window.sql"
+  },
+  "cleanup": {
+    "ownedClusterStopped": true,
+    "ownedClusterStateRemoved": true,
+    "generatedJournalAndPrivateKeyRemoved": true
+  },
+  "evidenceSHA256": {
+    "integration.tap": "0647cf56d1504b3493fe7d14e09bc31e6d573e19f7381d7002f2150eb2097e26",
+    "operations.tap": "a26d7451a8f35e34a1f692c752b4f1590f7cb2ab127af2f2fd25d310e21f4de0",
+    "provenance.log": "c3f321c58bea12d334f7259e2c9b79d5b7760a3966a0bc26433407c8576d668c",
+    "integration-migrations.txt": "58f8190cf98e1725f6cc26fdce01f58b1ccd6492edb7d9c5418715b08141d277",
+    "operations-migrations.txt": "58f8190cf98e1725f6cc26fdce01f58b1ccd6492edb7d9c5418715b08141d277",
+    "cleanup.log": "8881888ac5c2503c01c878c60797ed64e399104545b476ef3d7feca301cbf520"
+  }
+}

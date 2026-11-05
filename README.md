@@ -22,7 +22,7 @@ Costs and limits apply only to the item. They exclude other groceries, fees and 
 
 ## Build and verify
 
-Requirements: macOS, Xcode with an installed iPhone simulator, Python 3.9+, Node 22.14.0/npm. The handoff reference verifier separately requires Python 3.13+.
+Requirements: macOS, Xcode with an installed iPhone simulator, Python 3.9+, Node 22.23.4/npm. The handoff reference verifier separately requires Python 3.13+.
 
 ```sh
 bash scripts/check.sh
@@ -63,6 +63,8 @@ The **Security checks** workflow scans TypeScript/JavaScript and GitHub Actions 
 Use **Pre-release regression checks** on the candidate branch before an App Store submission or update. It runs the ordinary checks together with the additional suites below. Its final gate rejects failures, cancellations, skipped prerequisite jobs, missing performance baselines, incomplete CodeQL language coverage for the exact commit, serious open source findings, and high/critical vulnerabilities anywhere in the dependency lockfiles. The compiled Release app must also have production support/policy URLs and an Apple subscription product ID. The branch must still point to that candidate when the gate finishes. This workflow does not sign or upload an app.
 
 Third-party workflow actions are pinned to full commit hashes. Dependabot checks Actions and both npm projects weekly, groups minor/patch updates and limits open version-update pull requests. Updates still require review and CI; there is no automatic merge. Security alerts are separate from this weekly version-update schedule. [GitHub dependency updates](https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference)
+
+Source checks also verify that `.node-version` names a published, supported stable release at or above its major version's latest security release. Both projects' manifest and lockfile engine constraints must agree with the pin. Missing official metadata fails the check. This catches runtime security updates that dependency-lockfile audits do not cover; it does not update the runtime automatically. The Node 22.23.4 upgrade passed web, service, PostgreSQL operations and real Swift HTTPS tests locally. [Runtime validation](docs/evidence/native/node-runtime-security-20261105/validation.json)
 
 Repository secret scanning and push protection are enabled and independently verified. Push protection checks supported credential patterns before accepting future pushes; it does not detect every possible secret. The initial alert query returned no open alerts, which is not proof that a complete historical scan has finished. [Setting evidence](docs/evidence/native/ci-repository-protection-20261105.json) · [GitHub push protection](https://docs.github.com/en/code-security/how-tos/secure-your-secrets/prevent-future-leaks/enable-push-protection)
 
