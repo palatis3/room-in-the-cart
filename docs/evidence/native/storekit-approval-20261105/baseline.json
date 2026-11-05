@@ -1,0 +1,74 @@
+{
+  "sourceCandidate": "23a73a890afbaa23d3c58ae6b0cf63a8b2e2fb71",
+  "observedAt": "2026-11-05T12:22:27.595371+00:00",
+  "instrumentation": "Only the test imports Combine and captures notice transitions plus final completion/busy/transaction/pending counts. All original assertions, ten-second eventual waits and120-second native limits remain unchanged. App product source is unchanged.",
+  "buildExit": 0,
+  "driverExit": 1,
+  "sourceManifestSHA256": "f55e8b2f72523f6be2e187712d70ae4fc1129c1de80a3e89af00c89d9cd00ab9",
+  "productHashes": {
+    ".build/CIResearch20261105/storekit-approval/DerivedData/Build/Products/RoomInTheCart-LocalStoreKit_LocalStoreKit_iphonesimulator27.1-arm64.xctestrun": "89f4f5515e6d6d12cde4a50ee5b8186cb085d9acbd0812899df7d15e557348c3",
+    ".build/CIResearch20261105/storekit-approval/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart": "5125908a9a6a7ba6a1e7739725bb0b9eab138b30e058ee49727514cdb6c58425",
+    ".build/CIResearch20261105/storekit-approval/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/RoomInTheCartTests": "7c6c05064e659b5c7e1c34b9cd0a3af17462cddcfebc127ea0092faea5e7f0aa"
+  },
+  "locales": {
+    "es": {
+      "passed": 14,
+      "failed": 1,
+      "skipped": 0,
+      "nativeExit": 65,
+      "strictGuardExit": 1,
+      "runtimeWarnings": 0,
+      "approvalCaseSeconds": [
+        11.631
+      ],
+      "trace": "finished=true; busy=false; notice=Optional(RoomInTheCart.MembershipModel.Notice.pending); transactions=1; pending=0\nnil\nOptional(RoomInTheCart.MembershipModel.Notice.failed(RoomInTheCart.MembershipFailure.notConfigured))\nOptional(RoomInTheCart.MembershipModel.Notice.pending)",
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "E0F78F46-6FCB-46EE-AA22-43C42F4D28D3",
+        "deviceName": "RITC-AskToBuy-es-20261105",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C52",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "hashes": {
+        ".build/CIResearch20261105/storekit-approval/es/Tests.log": "cf5ffc776ffedf0b1c5a46fc1da5f47bf539d33c528f3edebde9a8489a303709",
+        ".build/CIResearch20261105/storekit-approval/es/test-summary.json": "0c8adaaf82dd0ac151257f077aef13a195b0dd8efc29873d398150c0606278b2",
+        ".build/CIResearch20261105/storekit-approval/es/test-details.json": "9b911a9856f0e38f78bd6d9da2e9b7dd4e91a4f9f1c34132984fa7990cedd271",
+        ".build/CIResearch20261105/storekit-approval/es/test-runtime-warnings.json": "fc1d9bc7aa17b457de8f1992a46b576761ae6955ea1ffc573066bf97e16cc9dc",
+        ".build/CIResearch20261105/storekit-approval/es/verification.txt": "2327866f239ad00c99260968f0170205280f66a55fd042f86866da5db85fba3e",
+        ".build/CIResearch20261105/storekit-approval/es/attachments/395C9D5F-2B8C-4044-9A59-65DB473ECEF1.txt": "5519637fa854b2ddb88261de76028c145c251ab676394ef18b9ec00ad36af6fc"
+      }
+    },
+    "en": {
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0,
+      "nativeExit": 0,
+      "strictGuardExit": 0,
+      "runtimeWarnings": 0,
+      "approvalCaseSeconds": [
+        2.031
+      ],
+      "trace": "finished=true; busy=false; notice=Optional(RoomInTheCart.MembershipModel.Notice.failed(RoomInTheCart.MembershipFailure.notConfigured)); transactions=1; pending=0\nnil\nOptional(RoomInTheCart.MembershipModel.Notice.pending)\nOptional(RoomInTheCart.MembershipModel.Notice.failed(RoomInTheCart.MembershipFailure.notConfigured))",
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "CEA0F544-13F6-40FA-8585-E5101164B41F",
+        "deviceName": "RITC-AskToBuy-en-20261105",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C52",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "hashes": {
+        ".build/CIResearch20261105/storekit-approval/en/Tests.log": "f564929fe5150406426ad955f3e337137af56ae56faea2a398136b9d1101ae47",
+        ".build/CIResearch20261105/storekit-approval/en/test-summary.json": "0caa6be789c9345b251f8c46a6c131bdb915fd2f27d2936d9bc78a8150f5374f",
+        ".build/CIResearch20261105/storekit-approval/en/test-details.json": "486e4f329f6d8eefba49d6819043f800986fb655cc6e462d8fbfb2bfc0c7cea3",
+        ".build/CIResearch20261105/storekit-approval/en/test-runtime-warnings.json": "fc1d9bc7aa17b457de8f1992a46b576761ae6955ea1ffc573066bf97e16cc9dc",
+        ".build/CIResearch20261105/storekit-approval/en/verification.txt": "bf826a486998457ee185dd8f411eece213a8be0d7e0699ae99c9c1a46d39405f",
+        ".build/CIResearch20261105/storekit-approval/en/attachments/B9B43030-982C-4527-BF42-77A186C16230.txt": "321460cecab9a1503a0ac99bb1e34c96a7ecb417a1fcbacd8805266a8e46e03e"
+      }
+    }
+  },
+  "limits": "Local Xcode27.1/iOS26.2 build23C52 differs from hosted. Spanish reproduces the assertion and proves the local notice overwrite; original hosted callback ordering was not recorded. The language difference in these two runs does not prove a locale-specific cause. No production fix installed and no retry-until-green."
+}

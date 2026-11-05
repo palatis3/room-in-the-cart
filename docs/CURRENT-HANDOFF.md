@@ -1,5 +1,14 @@
 # Room in the Cart current handoff
 
+## Ask to Buy notice-order reproduction retained — November 5, 2026
+
+The local diagnostic driver83110 is terminal exit1. Spanish14/15, native65/strict1, reproduces the same approval assertion. Its trace is `finished=true; busy=false; pendingAskToBuyCount=0` and notice order nil → failed(notConfigured) → pending. English15/15, native0/strict0, records nil → pending → failed(notConfigured). Both have zero runtime warnings. This establishes a local stale-pending overwrite, not retrospective proof of the unrecorded hosted callback sequence or a language-specific cause. [Pinned baseline proof](evidence/native/storekit-approval-20261105/baseline.json). Both owned simulators are shut down; preview untouched. No local native lane is active.
+
+Do **not** install the first scratch `membership-pending-order.patch`: root and helper found a counterexample. A same-account/product older transaction A may be delivered while a different purchase B is genuinely pending; suppressing all late pending results could mislabel B as delivered. The existing API provides no pending-request identity. Helper `history_fixture_triage` is refining the proposal to preserve only newly completed, still-displayed account-scoped delivery failures during the awaited purchase. Pending copy also must stop claiming absent paid access or definite outstanding Apple approval when verified access may already exist. Lumpy personally reviews this bounded option against a separate-evidence state model. No product source edit or regression execution yet; proposed nine-test broad patch remains untested/provisional.
+
+Root independently verified the exact hosted580 model selectors, all single-start/single-pass raw lifecycles and580 detailed warning exports: all pass, zero warnings/skips/SQLite misuse. [Hosted model proof](evidence/native/ci-23a73a8-20261105/models.json). Core ordinary UI/Swift analysis, fixtures and performance remain queued/running on23a73a8. Preserve them; the diagnostic-only Xcode selection fix remains local and unpushed. Full launch goal remains active.
+
+
 ## Spanish Ask to Buy failure under investigation — November 5, 2026
 
 Deep run42021894579 is terminal failed. Both sanitizers pass; English local StoreKit passes15/15 with strict guard0, Spanish passes14/15 and strict guard1, both with zero runtime warnings. The failed case is `testAskToBuyApprovalRemainsUndelivered`: its ten-second eventual wait for `purchase.finished && model.notice == .failed(.notConfigured)` expired (case13.351s). Original artifacts are retained and hashes verified; root independently replayed both exact15-selector execution/warning checks. [StoreKit proof](evidence/native/ci-23a73a8-20261105/storekit.json). Other required23a73a8 core/fixture/performance runs remain active; do not push/cancel them.
