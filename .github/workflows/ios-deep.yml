@@ -84,12 +84,23 @@ jobs:
             -maximum-test-execution-time-allowance 120 -collect-test-diagnostics never \
             -derivedDataPath .build/StoreKitDerivedData -resultBundlePath .build/StoreKit.xcresult \
             CODE_SIGN_IDENTITY=- test 2>&1 | tee .build/StoreKit.log
+      - name: Export StoreKit results even after a failed scenario
+        id: storekit-results
+        if: always()
+        shell: bash
+        run: |
+          test -d .build/StoreKit.xcresult
           xcrun xcresulttool get test-results summary --path .build/StoreKit.xcresult --compact > .build/storekit-summary.json
           xcrun xcresulttool get test-results tests --path .build/StoreKit.xcresult --compact > .build/storekit-tests.json
+      - name: Verify exact StoreKit configuration and all scenario results
+        if: always() && steps.storekit-results.outcome == 'success'
+        shell: bash
+        run: |
+          set -o pipefail
+          python3 -c 'import json, os; from pathlib import Path; s=json.loads(Path(".build/storekit-summary.json").read_text()); assert {c["testPlanConfiguration"]["configurationName"] for c in s["devicesAndConfigurations"]} == {os.environ["STOREKIT_CONFIGURATION"]}, s'
           python3 scripts/check_ios_test_results.py --selectors scripts/ios_storekit_test_selectors.txt --expected-count 15 \
             --summary .build/storekit-summary.json --tests .build/storekit-tests.json \
-            --result-bundle .build/StoreKit.xcresult --test-log .build/StoreKit.log
-          python3 -c 'import json, os; from pathlib import Path; s=json.loads(Path(".build/storekit-summary.json").read_text()); assert {c["testPlanConfiguration"]["configurationName"] for c in s["devicesAndConfigurations"]} == {os.environ["STOREKIT_CONFIGURATION"]}, s'
+            --result-bundle .build/StoreKit.xcresult --test-log .build/StoreKit.log 2>&1 | tee .build/storekit-verification.txt
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
@@ -100,5 +111,6 @@ jobs:
             .build/StoreKit.log
             .build/storekit-summary.json
             .build/storekit-tests.json
+            .build/storekit-verification.txt
             .build/test-runtime-warnings.json
           retention-days: 7
