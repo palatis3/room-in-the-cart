@@ -71,7 +71,26 @@
         "test-details.json": "85845ba5f5e934966836a4b04b4413500f9e5e018c2b2a3cd507ba7546ced589",
         "Tests.log": "afdbd1cd71f8007cf4d618dd1746c0ace8daf520f75d13a6b097c9b8863550a5"
       }
+    },
+    "ui-06": {
+      "job": 126937759241,
+      "passedTests": 4,
+      "failedTests": 1,
+      "selector": "FreeJourneyUITests/testEnglishMealWeekListAndGridShowDatedProtectedLunch",
+      "durationSeconds": 290.456,
+      "jobLogSHA256": "a7c3b6381510ff8af557cabca8030aa593d7154ecd1951a08aef3bca9664d74e",
+      "artifactLimitation": "CreateArtifact failed after five request timeouts; no screenshot/result bundle artifact is available. Counts and sequence are read from retained job log.",
+      "sequenceUTC": {
+        "started": "2026-11-04T23:57:54Z",
+        "dinnerDateAssigned": "2026-11-04T23:58:48Z",
+        "lunchDateAssigned": "2026-11-04T23:59:43Z",
+        "bothIDsVisibleInGrid": "2026-11-05T00:00:23Z",
+        "dayNoteSelected": "2026-11-05T00:00:52Z (November5)",
+        "relaunch": "2026-11-05T00:01:00Z",
+        "oldLunchMissingInFreshWeek": "2026-11-05T00:01:20Z"
+      },
+      "diagnosis": "Strong date-range inference: default rolling week starts at Date() on cold launch. Test saved November4 entries, crossed midnight, then searched after default range advanced to November5. No persisted-file readback survived artifact upload failure, so record loss is not proven or ruled out. Preparing deterministic previous-day native picker/relaunch/original-week readback without changing product date semantics."
     }
   },
-  "scope": "First five completed ordinary UI groups; groups06\u201310 remain active. Original hosted failures are preserved separately from focused local verification."
+  "scope": "First six completed ordinary UI groups:21 passed and4 failed. Groups07\u201310 remain active; local verification is recorded separately."
 }
