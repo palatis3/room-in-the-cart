@@ -48,12 +48,43 @@ import UIKit
         XCTAssertEqual(editor.frame.height, initialHeight, accuracy: 1, "Pasting must preserve the editor viewport")
         XCTAssertLessThan(editor.frame.height, app.windows.firstMatch.frame.height / 2)
 
-        revealContent(editor)
         let keyboard = app.keyboards.firstMatch
-        // Tap the rendered text because the accessibility activation point can fall in padding.
-        let firstLine = editor.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.17))
-        firstLine.tap()
-        if !keyboard.waitForExistence(timeout: 2) { firstLine.tap() }
+        func focusPastedEditor() {
+            let captureForm = app.collectionViews.containing(.textView, identifier: "ledgerImportText").firstMatch
+            for attempt in 0...3 {
+                guard navigation.exists, editor.exists, captureForm.exists else {
+                    XCTFail("Bring the list must remain open while focusing the pasted editor")
+                    return
+                }
+                let bounds = app.frame
+                let viewport = captureForm.frame.intersection(app.windows.firstMatch.frame)
+                let top = max(viewport.minY, navigation.frame.maxY)
+                let bottom = keyboard.exists ? min(viewport.maxY, keyboard.frame.minY) : viewport.maxY
+                let content = CGRect(x: viewport.minX, y: top, width: viewport.width, height: max(0, bottom - top))
+                    .insetBy(dx: 4, dy: 4)
+                let frame = editor.frame
+                // Check the actual rendered-text point. The center can be clear
+                // while this point is still behind the sheet's Cancel toolbar.
+                let point = CGPoint(x: frame.minX + frame.width * 0.2, y: frame.minY + frame.height * 0.17)
+                let origin = app.coordinate(withNormalizedOffset: .zero)
+                if content.contains(point) && editor.isHittable {
+                    origin.withOffset(CGVector(dx: point.x - bounds.minX, dy: point.y - bounds.minY)).tap()
+                    return
+                }
+                let marginX = content.maxX - 8
+                guard attempt < 3, content.height >= 100, marginX > frame.maxX,
+                      point.y < content.minY || point.y > content.maxY else { break }
+                // Move the Form from its trailing margin, outside the editor.
+                let distance = min(120, content.height * 0.3)
+                let direction: CGFloat = point.y > content.maxY ? 1 : -1
+                let start = origin.withOffset(CGVector(dx: marginX - bounds.minX, dy: content.midY + direction * distance / 2 - bounds.minY))
+                let end = origin.withOffset(CGVector(dx: marginX - bounds.minX, dy: content.midY - direction * distance / 2 - bounds.minY))
+                start.press(forDuration: 0.05, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0)
+            }
+            XCTFail("Pasted editor text must have an unobscured focus tap point in Bring the list")
+        }
+        focusPastedEditor()
+        if !keyboard.waitForExistence(timeout: 2) { focusPastedEditor() }
         XCTAssertTrue(keyboard.waitForExistence(timeout: 5), "Tapping inside the pasted editor must open the keyboard")
         app.typeText("x")
         XCTAssertEqual((editor.value as? String)?.count, fixture.count + 1, "The pasted list must remain editable")
