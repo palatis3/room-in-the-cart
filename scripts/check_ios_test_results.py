@@ -103,6 +103,13 @@ OBSERVED_MENU_WARNINGS = {
     "RoomInTheCartUITests/SharedStoreQuoteUITests/testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction":
         (2, FIXTURE_MENU_TAP, SYNTHESIZE_EVENT),
 }
+# f20feb6's manual-order case recorded both issues while waiting for the
+# same Menu tap to settle, matching the standalone Menu control experiment.
+# Keep this additional exact phase local to that case, with the same total cap.
+OBSERVED_MENU_WARNING_ALTERNATE_PHASES = {
+    "RoomInTheCartUITests/FreeJourneyUITests/testManualListOrderSurvivesRestartAndOpensLargePrint":
+        ("Wait for dev.roominthecart.app.debug to idle",),
+}
 OBSERVED_DEVICE = {
     "modelName": "iPhone 17", "osVersion": "26.2", "osBuildNumber": "23C54",
     "architecture": "arm64", "platform": "iOS Simulator",
@@ -308,9 +315,11 @@ def inspect_runtime_warnings(summary, nodes, cases, read_details, read_activitie
                 maximum, tap, phase = OBSERVED_MENU_WARNINGS[selector]
                 paths = [path for title, path in occurrences if title == OBSERVED_WARNING]
                 # Xcode 26.3 omits activityType on these parents; newer exports label them internal.
-                if paths and all(tuple(title for _, title in path) == (tap, phase)
-                                 and all(kind in (None, INTERNAL_ACTIVITY) for kind, _ in path) for path in paths):
-                    menu_matches[selector] = (maximum, tap, phase)
+                for observed_phase in (phase, *OBSERVED_MENU_WARNING_ALTERNATE_PHASES.get(selector, ())):
+                    if paths and all(tuple(title for _, title in path) == (tap, observed_phase)
+                                     and all(kind in (None, INTERNAL_ACTIVITY) for kind, _ in path) for path in paths):
+                        menu_matches[selector] = (maximum, tap, observed_phase)
+                        break
 
     if Counter(markers) != Counter(warning_names(all_nodes)):
         raise ValueError("XCTest recorded a runtime warning without a selected test")

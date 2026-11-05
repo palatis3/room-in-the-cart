@@ -157,12 +157,14 @@ import XCTest
     }
     private func reveal(_ target: XCUIElement) {
         for attempt in 0..<64 {
-            // isHittable also checks existence. Avoid resolving the same query
-            // again before every visible action in this long restart journey.
-            if target.isHittable { return }
+            // A lazy Form may not expose an offscreen row yet. Asking for
+            // isHittable first makes XCTest retry a missing element before
+            // every scroll. Resolve existence once, then test real visibility.
+            let exists = target.exists
+            if exists && target.isHittable { return }
             let area = scrollableArea()
             let upward: Bool
-            if target.exists {
+            if exists {
                 let frame = target.frame
                 upward = frame.isEmpty ? attempt < 32 : frame.midY > area.midY
             } else { upward = attempt < 32 }
@@ -171,9 +173,21 @@ import XCTest
         XCTAssertTrue(target.isHittable, "Missing actionable UI element: \(target.debugDescription)")
     }
     private func scrollableArea() -> CGRect {
-        let bounds = app.frame
-        let keyboardTop = app.keyboards.allElementsBoundByIndex.filter { $0.exists }.map { $0.frame.minY }.min() ?? bounds.maxY
-        let barBottom = app.navigationBars.allElementsBoundByIndex.filter { $0.isHittable }.map { $0.frame.maxY }.max() ?? bounds.minY + 88
+        // Navigation and sheet transitions can replace a bar between separate
+        // XCUI queries. Measure the keyboard and bars from one captured tree.
+        let snapshot = try? app.snapshot()
+        let bounds = snapshot?.frame ?? app.frame
+        var keyboardTop = bounds.maxY
+        var barBottom = bounds.minY + 88
+        var elements = snapshot.map { [$0] } ?? []
+        while let element = elements.popLast() {
+            let frame = element.frame
+            if frame.height > 0 && frame.intersects(bounds) {
+                if element.elementType == .keyboard { keyboardTop = min(keyboardTop, frame.minY) }
+                if element.elementType == .navigationBar { barBottom = max(barBottom, frame.maxY) }
+            }
+            elements.append(contentsOf: element.children)
+        }
         let top = max(bounds.minY + 88, min(barBottom + 12, keyboardTop - 140))
         let bottom = min(bounds.maxY - 100, keyboardTop - 16)
         return CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))
