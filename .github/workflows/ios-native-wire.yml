@@ -47,7 +47,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: native-wire-results
+          name: native-wire-results-${{ github.run_attempt }}
           path: .build/native-wire-results/
           include-hidden-files: true
           if-no-files-found: ignore
