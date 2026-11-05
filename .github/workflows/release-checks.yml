@@ -32,6 +32,9 @@ jobs:
   fixtures:
     name: Household and dinner regressions
     uses: ./.github/workflows/ios-fixtures.yml
+  native-wire:
+    name: Native Swift HTTPS integration
+    uses: ./.github/workflows/ios-native-wire.yml
   performance:
     name: Release performance
     uses: ./.github/workflows/ios-performance.yml
@@ -55,7 +58,7 @@ jobs:
         run: npm audit --package-lock-only --audit-level=high
   release-checks:
     name: Automated release gate
-    needs: [core, security, diagnostics, fixtures, performance, dependencies]
+    needs: [core, security, diagnostics, fixtures, native-wire, performance, dependencies]
     if: always()
     runs-on: ubuntu-24.04
     timeout-minutes: 10

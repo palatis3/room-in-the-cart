@@ -1,4 +1,3 @@
-import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
@@ -6,7 +5,7 @@ import { createServer } from 'node:https';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
-import { fileURLToPath } from 'node:url';
+import { runNativeWireTest } from './run-native-wire-test.mjs';
 
 const run = promisify(execFile);
 
@@ -44,15 +43,12 @@ export async function exerciseSharedMealClient({service, owner, householdId, sho
       res.writeHead(401); res.end('{}');
     });
     await new Promise((resolve,reject)=>tls.once('error',reject).listen(0,'127.0.0.1',resolve));
-    const packagePath = fileURLToPath(new URL('../../ios/Packages/HouseholdClient',import.meta.url));
-    try {
-      const {stdout} = await run('swift',['test','--package-path',packagePath,'--filter','SharedMealNativeWireTests'],{
-        env:{...process.env,RITC_WIRE_PORT:String(tls.address().port),RITC_WIRE_CERT:der,RITC_WIRE_CODE:code,
-          RITC_WIRE_SHOPPER:shopper?"1":"0",RITC_WIRE_HOUSEHOLD:householdId,RITC_WIRE_SHOP:shopId},
-        timeout:180000,maxBuffer:2_000_000
-      });
-      assert.match(stdout,/Executed 1 test, with 0 failures/);
-    } catch(error) { throw new Error('Native client failed: '+String(error.stdout||error.stderr).slice(-3500)+'; API responses: '+unsuccessful.join(', ')); }
+    await runNativeWireTest({
+      suite: 'SharedMealNativeWireTests', method: 'testSharedMealClientAgainstPostgres',
+      scenario: shopper ? 'meal-shopper' : 'meal-planner', unsuccessful,
+      env:{RITC_WIRE_PORT:String(tls.address().port),RITC_WIRE_CERT:der,RITC_WIRE_CODE:code,
+        RITC_WIRE_SHOPPER:shopper?"1":"0",RITC_WIRE_HOUSEHOLD:householdId,RITC_WIRE_SHOP:shopId},
+    });
   } finally {
     if(tls?.listening) await new Promise(resolve=>tls.close(resolve));
     await rm(dir,{recursive:true,force:true});
