@@ -1,0 +1,22 @@
+{
+  "observedAt": "2026-11-05T09:12:23.277580+00:00",
+  "project": "uwjxrotnocxxomqdetzk",
+  "organization": "ybzztipzreurtjtjhmbo",
+  "projectName": "Room in the Cart Staging",
+  "connector": "get_project returned You do not have permission to perform this action",
+  "dashboard": "Signed-in dashboard accessible; status Healthy; LAST MIGRATION 008_browser_email_auth; LAST BACKUP No backups",
+  "query": "SELECT version, checksum FROM public.ritc_schema_migration ORDER BY version;",
+  "source": "Read-only SELECT executed through the visible Supabase dashboard SQL editor; eight rows displayed",
+  "observedRegistry": {
+    "001_household_requests.sql": "e919302e353eae03f5cf63425ad82924c3c6315321b8b4b07e1253185e79ef5b",
+    "002_apple_billing.sql": "2f819c06c49f47e32c0093c636bacdfd95ad299ed159337b39041d173385ca6e",
+    "003_web_session.sql": "dd2b9967be0364bf313afba035e8a60fec948a94aa1cf182e9fea14e269888cb",
+    "004_household_lock.sql": "65fef08a239f4ea122133c335d56918e9d2ef2c4455418f36e18b6442a473250",
+    "005_session_and_policy_hardening.sql": "3504fec9398d40cad639aa50c931d7cbe6b585e7cf2dc5059f227b3e87727d45",
+    "006_household_lifecycle.sql": "7f293a0b681627cccb2d5bdc943eb3ea5c6e1436b063857f4a33f981cced296c",
+    "007_selected_helper_session.sql": "422f3b0cafc482adb3708689c11bbbab1d026aac69555a8dafcbd3a525f2fca5",
+    "008_browser_email_auth.sql": "5ad8c46d4146e1ce980e4f8809afa00512b9ed6ae6e41fd76637e0d86a713e1e"
+  },
+  "localChecksumComparison": "All eight match current repository files",
+  "limits": "No backup was created, no restore was verified, no schema or configuration changed. The Supabase migration UI also lists a separate staging runtime-role entry; the eight-row application registry is the checksum authority for application migrations."
+}
