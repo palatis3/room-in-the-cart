@@ -387,7 +387,13 @@
       "job": 126980954160,
       "passed": 0,
       "failed": 1,
-      "status": "Original hosted assertion location is unavailable by privacy design. Unchanged hosted-app local replay failed at Save wait. The first visibility candidate passed Save, encryption, import cancel and apply, then failed on an offscreen recovered caption. A video-supported v2 reveals that same caption before scrolling to image and wording. Full v2 validation is queued; no Records product or test patch installed."
+      "status": "Original hosted and first local candidate failures retained. Test-only visibility correction installed as 233f6d9 after the full original case passed in 287.423 seconds against unchanged hosted app bytes, with zero runtime warnings and exact-once execution. Fresh hosted validation pending.",
+      "localCorrection": {
+        "commit": "233f6d9",
+        "evidence": "records-media-ci-20261105/visibility-v2-validation.json",
+        "originalSelectorsPassed": 1,
+        "hostedConfirmation": "pending"
+      }
     },
     "DinnerDecisionSheetUITests": {
       "job": 126980957450,
