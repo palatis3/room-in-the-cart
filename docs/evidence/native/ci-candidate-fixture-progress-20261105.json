@@ -1,0 +1,177 @@
+{
+  "sourceCommit": "f0e2ac37383e76ac3812407384bf2eda968de3c4",
+  "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41944207865",
+  "completeWorkflow": false,
+  "verifiedPassedSoFar": 14,
+  "shards": {
+    "DinnerAwayCarryoverUITests": {
+      "job": 126980954173,
+      "artifact": 13379594589,
+      "selectors": [
+        "RoomInTheCartUITests/DinnerAwayCarryoverUITests/testPhysicalCarryoverCancelApplyAndRestartKeepOriginalPurchase"
+      ],
+      "counts": {
+        "totalTestCount": 1,
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      },
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 1,
+        "detailExportCount": 0,
+        "warnings": []
+      },
+      "sha256": {
+        "results.zip": "b84b232e275489ab68fdb397e5d5c2a60c520140f852f7d64e3449ce84aefa3c",
+        "test-summary.json": "df9fb6a3595e8327d4977fa3c8bdfc791ea5b58bbd4d8569693fef55041ecf41",
+        "test-details.json": "aed01c741f1451200c04a86029349cf38279a17480ec7592861c14e44400ce0a",
+        "test-runtime-warnings.json": "8d9c0044b0fa67989c83d6463e3f433df5e5d8a288bddfc20e6cc278ac231c77",
+        "root-verification.txt": "c544325b5ff2c75db593b415537e91f8ac861f584e6d9779a2329e281a662470"
+      }
+    },
+    "GuardianEnrollmentUITests": {
+      "job": 126980954594,
+      "artifact": 13379479911,
+      "selectors": [
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testCancelSetupDialogHasExplicitCancelAndForegroundRestoresStatus",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testChildForgetCancelAndForegroundKeepTheSamePairingWithoutActivation",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testNoticeDeclarationVerificationPermissionPairingAndDialogCancellation",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootColdChildMarkerAndSyntheticVaultCleanupPreserveAdultData",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootLeaveCancelAndConfirmedExitRestoreLockedAdultAccess",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testSpanishLargestTextUnavailableGateRemainsReadableAndClosed",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testUnavailableNeverOffersCreationOrAdultVerification",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testUncertainAttemptCanRefreshButCannotSendAnotherVerification"
+      ],
+      "counts": {
+        "totalTestCount": 8,
+        "passedTests": 8,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      },
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 8,
+        "detailExportCount": 0,
+        "warnings": []
+      },
+      "sha256": {
+        "results.zip": "c9b890ed8729c5d2398e9c51dce0787f6c97b8995cc2bbb58913c18c45c9f798",
+        "test-summary.json": "fdf6d506d665501ec570975ef82f82ecc424beb1741e1c507cde2c41ff2f590f",
+        "test-details.json": "d3ba4818c3075921ddf2c86740742f25c0156bf45e943aae9240ca5abd462bf4",
+        "test-runtime-warnings.json": "c646d29d64f3404b789f0125e1731af120b549a53cd003fb41a790244a9de404",
+        "root-verification.txt": "7f96fa26dde0e45e45f9137db80013151707210714fd9dd5f69a25e5b64d8614"
+      }
+    },
+    "CorrectionPrivacyAcceptanceUITests": {
+      "job": 126980954182,
+      "artifact": 13379069719,
+      "selectors": [
+        "RoomInTheCartUITests/CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp"
+      ],
+      "counts": {
+        "totalTestCount": 1,
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      },
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 1,
+        "detailExportCount": 0,
+        "warnings": []
+      },
+      "sha256": {
+        "results.zip": "7a1458bcf08c0b4869661a27751ffbd8416cf2c4a45c36f9307c3d2f4cb1b93b",
+        "test-summary.json": "8350923d71d8bc3b49a80b4723af854e01a2f0de943c09f433fbbf79d7338547",
+        "test-details.json": "41bf8080c60af93c91becfabe701ed54e03d52761094f68cbe46f739f803bfc0",
+        "test-runtime-warnings.json": "8d9c0044b0fa67989c83d6463e3f433df5e5d8a288bddfc20e6cc278ac231c77",
+        "root-verification.txt": "df8824c54132ff43d4081a269bdd8b73d157cab14ee9578d782a1e1024410ddb"
+      }
+    },
+    "HistoryGrantReadUITests": {
+      "job": 126980958206,
+      "artifact": 13380324117,
+      "selectors": [
+        "RoomInTheCartUITests/HistoryGrantReadUITests/testFreeGrantDiscoversReadOnlyShopOpensRawRecordsAndRejectsPaidAndForeignAccess",
+        "RoomInTheCartUITests/HistoryGrantReadUITests/testRevokedBudgetGrantClearsPreviouslyOpenedRawPeriodAndRememberedSource"
+      ],
+      "counts": {
+        "totalTestCount": 2,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      },
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 2,
+        "detailExportCount": 0,
+        "warnings": []
+      },
+      "sha256": {
+        "results.zip": "7904d7efde23c7cb0b449da5fdc7e04e3d66ab3cad7382b0430b7c6dab0a0ca8",
+        "test-summary.json": "1aad9db4b7a95140313b5a40be627601f8aa556b183ada3d302e168cf25f3595",
+        "test-details.json": "61cc569d0bbf6a156824864f9e002f9bf89e232b0fec0ff2e448d09dd145add2",
+        "test-runtime-warnings.json": "8a07425e151587173077e2e8ca29c2844d7078dbbd23315f07cab881f362c1ff",
+        "root-verification.txt": "cc90110b992ad13a54ff8c052ca5676cd653a74f2572ad88ba0edee23dc8bab4"
+      }
+    },
+    "HouseholdDevicesUITests": {
+      "job": 126980955296,
+      "artifact": 13381077949,
+      "selectors": [
+        "RoomInTheCartUITests/HouseholdDevicesUITests/testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess",
+        "RoomInTheCartUITests/HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke"
+      ],
+      "counts": {
+        "totalTestCount": 2,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      },
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 2,
+        "detailExportCount": 0,
+        "warnings": []
+      },
+      "sha256": {
+        "results.zip": "5122f1a500b46e946beea90fe462d330578cac052a9e1549c40df0a6dfafcb32",
+        "test-summary.json": "ca06d6b76068fa4189b8a7f2d826046a5a1d3d849f86eff8bb75a67bc9284d52",
+        "test-details.json": "187daeea5f18eab3ddf96cf8a412e45fd9414288b12e21229d4ed3c215203eea",
+        "test-runtime-warnings.json": "8a07425e151587173077e2e8ca29c2844d7078dbbd23315f07cab881f362c1ff",
+        "root-verification.txt": "050f34ff0e804cb38760addc4f8eae993d15dd025b5e1bd44d2525987065b66c"
+      }
+    }
+  },
+  "knownFailure": {
+    "shard": "ContributorRequestUITests",
+    "job": 126980954166,
+    "failed": 2,
+    "status": "Test-only correction installed locally as73a0935; original hosted two failures retained. Fresh local pair and same-binary Spanish no-card control pass exact identity/count/warning verification; hosted validation pending."
+  },
+  "scope": "Fourteen passing fixture cases across five completed shards were verified against their exact selectors and structured runtime-warning evidence. Other consumers remain outside this verification. The ContributorRequest failure remains recorded separately.",
+  "otherKnownFailure": {
+    "shard": "HouseholdRequestPackUITests",
+    "job": 126980959058,
+    "artifact": 13382356028,
+    "archiveSHA256": "bfbe926ad76e83781b109363bf7a4bfa6bcef99a7d29bd56d3693ca90db69372",
+    "failingSelector": "testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite",
+    "status": "Dot inspected screenshot, AX tree and activities: source keyboard remains visible and reviewed switch readback stays0 after tap. Inferred visibility/hit interaction issue; no product defect established. Scratch test-only correction pending native lane."
+  }
+}

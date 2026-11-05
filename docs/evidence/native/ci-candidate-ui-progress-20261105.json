@@ -3,7 +3,7 @@
   "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41944207882",
   "completeMatrix": false,
   "selectedUIInProducer": 50,
-  "verifiedPassedSoFar": 13,
+  "verifiedPassedSoFar": 38,
   "shards": {
     "ui-02": {
       "job": 126977497544,
@@ -137,7 +137,200 @@
         "test-runtime-warnings.json": "8d9c0044b0fa67989c83d6463e3f433df5e5d8a288bddfc20e6cc278ac231c77",
         "root-verification.txt": "6f9f8bbd6765f19e2da972325e0d3be875037078f636f31849065ab5bc50938c"
       }
+    },
+    "ui-05": {
+      "job": 126977497608,
+      "artifact": 13381632624,
+      "selectors": [
+        "RoomInTheCartUITests/ContextualNavigationUITests/testEnteredStoreQuotesKeepTripCostsSeparateAndAdoptOnlyReviewedSavedProof",
+        "RoomInTheCartUITests/ContextualNavigationUITests/testMissingStorePricesAndAvailabilityRemainConditionalAfterSaving",
+        "RoomInTheCartUITests/FreeJourneyUITests/testTypedBarcodeNeedsACodeAndFreshMatchConfirmation",
+        "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testShopPhoneShortcutsHaveACompleteTouchTargetAndReturnToShop",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer"
+      ],
+      "counts": {
+        "totalTestCount": 6,
+        "passedTests": 6,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      },
+      "durationsSeconds": {
+        "RoomInTheCartUITests/ContextualNavigationUITests/testEnteredStoreQuotesKeepTripCostsSeparateAndAdoptOnlyReviewedSavedProof": 441.9142299890518,
+        "RoomInTheCartUITests/ContextualNavigationUITests/testMissingStorePricesAndAvailabilityRemainConditionalAfterSaving": 143.3857500553131,
+        "RoomInTheCartUITests/FreeJourneyUITests/testTypedBarcodeNeedsACodeAndFreshMatchConfirmation": 83.57622396945953,
+        "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack": 209.13522493839264,
+        "RoomInTheCartUITests/RoomInTheCartUITests/testShopPhoneShortcutsHaveACompleteTouchTargetAndReturnToShop": 13.049003958702087,
+        "RoomInTheCartUITests/RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer": 126.87932503223419
+      },
+      "jobConclusion": "success",
+      "guardExitCode": 0,
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 6,
+        "detailExportCount": 0,
+        "warnings": []
+      },
+      "sha256": {
+        "results.zip": "73855318a983b75a22fa7f22fb6d416d2e4cccbd45af659160141e27518a247d",
+        "test-summary.json": "2ff7d858cba9b4b29bccd7f412128ad5033742fb097106fd3280ed8f222221aa",
+        "test-details.json": "765bd3e215f36a70a2dd496b76c26ce3dbdf4c09560088b222418322af6fab7c",
+        "test-runtime-warnings.json": "164101b3617b5a480ab6ed4801832728ced1e7364c911c8051ed9e509d2547b7",
+        "root-verification.txt": "b032d61a6a54095f8f4a801ac95a854dd1648576b7a4381b14e3ceed4ecc8096",
+        "reexported-summary.json": "14f180f4b32868c67588ead86d49b367262616fdaa93626b4f6941eef6f1adbb",
+        "reexported-details.json": "765bd3e215f36a70a2dd496b76c26ce3dbdf4c09560088b222418322af6fab7c"
+      }
+    },
+    "ui-06": {
+      "job": 126977497694,
+      "artifact": 13382326131,
+      "selectors": [
+        "RoomInTheCartUITests/ContextualNavigationUITests/testFreeContextualRoutesKeepPrivateAndSharedWorkSeparate",
+        "RoomInTheCartUITests/ContextualReminderUITests/testNextShopDeferralRequestsReminderOnlyAfterExplicitScheduleAndCanCancel",
+        "RoomInTheCartUITests/FreeJourneyUITests/testFreeCookCorrectionAndExplicitRecipientAcknowledgment",
+        "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges",
+        "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testFullyCoveredSavesUseAtHomePlanWithoutPurchasedItemOrRetailerOrder",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testUnknownPackAmountRemainsUnresolvedAfterSaveAndRestart"
+      ],
+      "counts": {
+        "totalTestCount": 6,
+        "passedTests": 6,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      },
+      "durationsSeconds": {
+        "RoomInTheCartUITests/ContextualNavigationUITests/testFreeContextualRoutesKeepPrivateAndSharedWorkSeparate": 239.58341002464294,
+        "RoomInTheCartUITests/ContextualReminderUITests/testNextShopDeferralRequestsReminderOnlyAfterExplicitScheduleAndCanCancel": 257.10957193374634,
+        "RoomInTheCartUITests/FreeJourneyUITests/testFreeCookCorrectionAndExplicitRecipientAcknowledgment": 153.6415148973465,
+        "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges": 78.00464701652527,
+        "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testFullyCoveredSavesUseAtHomePlanWithoutPurchasedItemOrRetailerOrder": 159.41694593429565,
+        "RoomInTheCartUITests/RoomInTheCartUITests/testUnknownPackAmountRemainsUnresolvedAfterSaveAndRestart": 99.81518304347992
+      },
+      "jobConclusion": "success",
+      "guardExitCode": 0,
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 2,
+        "examinedTestCount": 6,
+        "detailExportCount": 1,
+        "warnings": [
+          {
+            "selector": "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges",
+            "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+            "count": 2,
+            "maximum": 2
+          }
+        ]
+      },
+      "sha256": {
+        "results.zip": "dff6b946aac0aeb87c25a1d0e140cd403b74cc9b9c119881109facf106741d71",
+        "test-summary.json": "a565caa0242ba4bfd874e4802e8878b708d39d479294b6d1420a6aa1eaf12477",
+        "test-details.json": "ba5d41706dfc075cd66509c37f985ed60296541d7ba4fdbd506c8ec212c8c67a",
+        "test-runtime-warnings.json": "0ad38b44a7a313d3b50d1fb777178f8621306dc2ef284c8cfc3b3cfb9719af54",
+        "root-verification.txt": "74268dc19efd8c7e5384e5c9ed099f530cd5931c23f3a37248edb264c40fa38b",
+        "reexported-summary.json": "e3a48ee054da571285b7e59ce7f6dfc228ab6a3e198f85f2076b1360aabef718",
+        "reexported-details.json": "ba5d41706dfc075cd66509c37f985ed60296541d7ba4fdbd506c8ec212c8c67a"
+      }
+    },
+    "ui-07": {
+      "job": 126977497633,
+      "artifact": 13381457064,
+      "selectors": [
+        "RoomInTheCartUITests/ContextualNavigationUITests/testAuthorizationHoldIsOptionalAndSeparateFromCheckoutCap",
+        "RoomInTheCartUITests/ContextualReminderUITests/testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending",
+        "RoomInTheCartUITests/FreeJourneyUITests/testRecipeCaptureOpensOnFirstAttemptAndReopensAfterCancel",
+        "RoomInTheCartUITests/FreeJourneyUITests/testStagedListCanReturnToOriginalAndMergeADuplicateAfterRestart",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testKnownComparisonSavesAndReopensWithItemOnlyLimit",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testOwnerExportReviewAndCancelledDeletionPreserveComparisonAfterRestart",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testShopRepairShortcutRemainsInsideViewportAndOpens"
+      ],
+      "counts": {
+        "totalTestCount": 7,
+        "passedTests": 7,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      },
+      "durationsSeconds": {
+        "RoomInTheCartUITests/ContextualNavigationUITests/testAuthorizationHoldIsOptionalAndSeparateFromCheckoutCap": 189.59424698352814,
+        "RoomInTheCartUITests/ContextualReminderUITests/testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending": 197.4002230167389,
+        "RoomInTheCartUITests/FreeJourneyUITests/testRecipeCaptureOpensOnFirstAttemptAndReopensAfterCancel": 43.272109031677246,
+        "RoomInTheCartUITests/FreeJourneyUITests/testStagedListCanReturnToOriginalAndMergeADuplicateAfterRestart": 140.45896697044373,
+        "RoomInTheCartUITests/RoomInTheCartUITests/testKnownComparisonSavesAndReopensWithItemOnlyLimit": 112.244598031044,
+        "RoomInTheCartUITests/RoomInTheCartUITests/testOwnerExportReviewAndCancelledDeletionPreserveComparisonAfterRestart": 128.81966400146484,
+        "RoomInTheCartUITests/RoomInTheCartUITests/testShopRepairShortcutRemainsInsideViewportAndOpens": 12.66904890537262
+      },
+      "jobConclusion": "success",
+      "guardExitCode": 0,
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 7,
+        "detailExportCount": 0,
+        "warnings": []
+      },
+      "sha256": {
+        "results.zip": "9dd19b2b57f1972d4ee211334dd874a2d02e29113e200682cec67bc67bab154e",
+        "test-summary.json": "d3408aa95b12015564ff806ced50e1d0addcca47ef7a8f90ed4e66a7813c21f7",
+        "test-details.json": "b0b0c71a3e1e6d37112dd694d88ec2cf366bbd9d30fc37514d47d4194c30122a",
+        "test-runtime-warnings.json": "ed29bc8503455966dc8a1d6f909261d4543af81770f3292a3704a22766481644",
+        "root-verification.txt": "b4ad7f7992c818517e981fd7dca6f23d0fa30e5d86d1384ff274da97fea8e398",
+        "reexported-summary.json": "8b41fb03e3374ef227786ac0420443e12811fc867a63db981718bbe1349fbcba",
+        "reexported-details.json": "b0b0c71a3e1e6d37112dd694d88ec2cf366bbd9d30fc37514d47d4194c30122a"
+      }
+    },
+    "ui-08": {
+      "job": 126977497593,
+      "artifact": 13381722148,
+      "selectors": [
+        "RoomInTheCartUITests/ContextualNavigationUITests/testDinnerOnlyCapAndCancelledSlotChangeSurviveRelaunch",
+        "RoomInTheCartUITests/ContextualNavigationUITests/testUnknownTaxKeepsWeighedPickupUnresolved",
+        "RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareKeepsTheFrozenPickupUnplaced",
+        "RoomInTheCartUITests/FreeJourneyUITests/testPairingEnumerationUsesTheChosenScheduleAndDoesNotOfferItAgain",
+        "RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresSelectedDinnersTabWithoutRestoringUnsavedComparison",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextSourceAndSavedDetailsAreFullyReadableAboveTabs"
+      ],
+      "counts": {
+        "totalTestCount": 6,
+        "passedTests": 6,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      },
+      "durationsSeconds": {
+        "RoomInTheCartUITests/ContextualNavigationUITests/testDinnerOnlyCapAndCancelledSlotChangeSurviveRelaunch": 133.18506801128387,
+        "RoomInTheCartUITests/ContextualNavigationUITests/testUnknownTaxKeepsWeighedPickupUnresolved": 147.2507690191269,
+        "RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareKeepsTheFrozenPickupUnplaced": 122.45611000061035,
+        "RoomInTheCartUITests/FreeJourneyUITests/testPairingEnumerationUsesTheChosenScheduleAndDoesNotOfferItAgain": 78.64626204967499,
+        "RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresSelectedDinnersTabWithoutRestoringUnsavedComparison": 25.988988041877747,
+        "RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextSourceAndSavedDetailsAreFullyReadableAboveTabs": 171.8603858947754
+      },
+      "jobConclusion": "success",
+      "guardExitCode": 0,
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 6,
+        "detailExportCount": 0,
+        "warnings": []
+      },
+      "sha256": {
+        "results.zip": "bc2debeaa29d38874ac509be7a294383254a48b191e3612941b3360145539a4e",
+        "test-summary.json": "3888fed0c53748881952622b946f32af78f224e45ec3748778157c31bbade80d",
+        "test-details.json": "326792bd04ff10220e903fddce1e075cfac0f8e61e6036a095ade51e9ac76f83",
+        "test-runtime-warnings.json": "164101b3617b5a480ab6ed4801832728ced1e7364c911c8051ed9e509d2547b7",
+        "root-verification.txt": "744eea96f33a85c7fd94e9c0e4617789bb511734367cc26e83eff164e7d29b6c",
+        "reexported-summary.json": "4c2a9e0524c148b75b9932d2be812e1aba2b0e68c90fab17e11a8c7ac17c7768",
+        "reexported-details.json": "326792bd04ff10220e903fddce1e075cfac0f8e61e6036a095ade51e9ac76f83"
+      }
     }
   },
-  "scope": "13 completed ordinary UI cases from the still-running matrix. Root replayed exact test inventory and runtime-warning checks; one explicitly recorded known print warning remains. Other UI and fixture results remain separate and unvalidated."
+  "scope": "Verified 38 of 50 ordinary UI selections against the exact hosted producer inventory. The XCTest warning exports contain 3 occurrence(s). Pending shard verification: ui-09, ui-10. Fixture workflows are separate."
 }
