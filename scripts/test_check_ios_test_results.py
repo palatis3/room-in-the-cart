@@ -300,29 +300,32 @@ class RuntimeWarningTests(unittest.TestCase):
         self.assertEqual(self.inspect([MULTIPLE_WARNINGS], ["different warning"] * 2,
             selector=selector)["status"], "unexpected-warnings")
 
-    def test_manual_order_menu_idle_phase_keeps_exact_case_device_tap_and_total_cap(self):
-        selector = "RoomInTheCartUITests/FreeJourneyUITests/testManualListOrderSurvivesRestartAndOpensLargePrint"
-        phase = "Wait for dev.roominthecart.app.debug to idle"
-        messages = [OBSERVED_WARNING] * 2
-        options = {"selector": selector, "activity_phase": phase}
-        evidence = self.inspect([MULTIPLE_WARNINGS], messages, **options)
-        self.assertEqual(evidence["status"], "passed")
-        self.assertEqual(evidence["warnings"][0]["maximum"], 2)
-        self.assertEqual(evidence["warnings"][0]["menuActivity"]["phase"], phase)
-        self.assertEqual(self.inspect([MULTIPLE_WARNINGS], messages + [OBSERVED_WARNING], **options)["status"], "unexpected-warnings")
-        for changes in (
-            {"activity_tap": 'Tap "Other control" Button'},
-            {"activity_phase": "Find the button"},
-            {"activity_phase": "Wait for another.app to idle"},
-            {"selector": "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges"},
-            {"device": {**OBSERVED_DEVICE, "osBuildNumber": "23C52"}},
-            {"activity_type": "com.apple.dt.xctest.activity-type.user-created"},
+    def test_reviewed_menu_idle_phases_keep_exact_case_device_tap_and_total_cap(self):
+        for selector in (
+            "RoomInTheCartUITests/FreeJourneyUITests/testManualListOrderSurvivesRestartAndOpensLargePrint",
+            "RoomInTheCartUITests/SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave",
         ):
-            with self.subTest(changes=changes):
-                self.assertEqual(self.inspect([MULTIPLE_WARNINGS], messages,
-                    **{**options, **changes})["status"], "unexpected-warnings")
-        self.assertEqual(self.inspect([MULTIPLE_WARNINGS], ["different warning"] * 2,
-            **options)["status"], "unexpected-warnings")
+            phase = "Wait for dev.roominthecart.app.debug to idle"
+            messages = [OBSERVED_WARNING] * 2
+            options = {"selector": selector, "activity_phase": phase}
+            evidence = self.inspect([MULTIPLE_WARNINGS], messages, **options)
+            self.assertEqual(evidence["status"], "passed")
+            self.assertEqual(evidence["warnings"][0]["maximum"], 2)
+            self.assertEqual(evidence["warnings"][0]["menuActivity"]["phase"], phase)
+            self.assertEqual(self.inspect([MULTIPLE_WARNINGS], messages + [OBSERVED_WARNING], **options)["status"], "unexpected-warnings")
+            for changes in (
+                {"activity_tap": 'Tap "Other control" Button'},
+                {"activity_phase": "Find the button"},
+                {"activity_phase": "Wait for another.app to idle"},
+                {"selector": "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges"},
+                {"device": {**OBSERVED_DEVICE, "osBuildNumber": "23C52"}},
+                {"activity_type": "com.apple.dt.xctest.activity-type.user-created"},
+            ):
+                with self.subTest(changes=changes):
+                    self.assertEqual(self.inspect([MULTIPLE_WARNINGS], messages,
+                        **{**options, **changes})["status"], "unexpected-warnings")
+            self.assertEqual(self.inspect([MULTIPLE_WARNINGS], ["different warning"] * 2,
+                **options)["status"], "unexpected-warnings")
 
     def test_same_count_warning_substitution_rejects_duplicate_issue_uuid(self):
         first = "098DC6EC-90D4-40A9-8363-2BF5B66767FE"

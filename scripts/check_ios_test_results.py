@@ -103,11 +103,13 @@ OBSERVED_MENU_WARNINGS = {
     "RoomInTheCartUITests/SharedStoreQuoteUITests/testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction":
         (2, FIXTURE_MENU_TAP, SYNTHESIZE_EVENT),
 }
-# f20feb6's manual-order case recorded both issues while waiting for the
-# same Menu tap to settle, matching the standalone Menu control experiment.
-# Keep this additional exact phase local to that case, with the same total cap.
+# These f20feb6 cases recorded both issues while waiting for their exact
+# Menu tap to settle, matching the standalone Menu control experiment.
+# Keep each additional phase local to its observed selector and total cap.
 OBSERVED_MENU_WARNING_ALTERNATE_PHASES = {
     "RoomInTheCartUITests/FreeJourneyUITests/testManualListOrderSurvivesRestartAndOpensLargePrint":
+        ("Wait for dev.roominthecart.app.debug to idle",),
+    "RoomInTheCartUITests/SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave":
         ("Wait for dev.roominthecart.app.debug to idle",),
 }
 OBSERVED_DEVICE = {

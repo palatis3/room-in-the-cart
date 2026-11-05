@@ -2,7 +2,7 @@
   "candidate": "f20feb685f95e7da1c7a23f26eff499d2696329f",
   "run": 41994028672,
   "observedAt": "2026-11-05T10:33:32.563699+00:00",
-  "completedVerifiedPasses": 30,
+  "completedVerifiedPasses": 39,
   "expectedFixtureCases": 44,
   "coverageComplete": false,
   "shards": [
@@ -201,9 +201,82 @@
         "RoomInTheCartUITests/SharedStoreQuoteUITests/testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult"
       ],
       "verification": "Sol 6.1 xhigh independently replayed execution, exact plans and detailed warnings. Root verified retained hashes and reviewed the results."
+    },
+    {
+      "suite": "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction",
+      "job": 127143126919,
+      "artifact": 13407747507,
+      "artifactSHA256": "ba4f87542cf20e0bf43fea2039c201a6e41216c9594d88f1eee13c1902301cdb",
+      "githubDigestVerified": true,
+      "compiledPlanIndependentlyMatched": true,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 2,
+      "independentGuardExit": 0,
+      "selectors": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction"
+      ],
+      "verification": "Both f20 and current guards pass; exact compiled plans, raw execution and detailed warnings verified. Root independently rechecked archive hashes."
+    },
+    {
+      "suite": "SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable",
+      "job": 127143126939,
+      "artifact": 13408336088,
+      "artifactSHA256": "3ed59f7cae1ecd27885501eb8907dc2d203fdafd65adcdb156172cc62ff7788b",
+      "githubDigestVerified": true,
+      "compiledPlanIndependentlyMatched": true,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "independentGuardExit": 0,
+      "selectors": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testSpanishLargestTextKeepsRealQuoteEntryDiscoverable"
+      ],
+      "verification": "Both f20 and current guards pass; exact compiled plans, raw execution and detailed warnings verified. Root independently rechecked archive hashes."
+    },
+    {
+      "suite": "StockReviewUITests",
+      "job": 127143127067,
+      "artifact": 13407636994,
+      "artifactSHA256": "34e2b428bbd723fe3cfaf35e52e27fef39945791b7dca70002381afc8c743f0c",
+      "githubDigestVerified": true,
+      "compiledPlanIndependentlyMatched": true,
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "independentGuardExit": 0,
+      "selectors": [
+        "RoomInTheCartUITests/StockReviewUITests/testChangedMealRevisionDisablesPreviewWithoutApplyingBatch",
+        "RoomInTheCartUITests/StockReviewUITests/testPreviewCancelThenConfirmShowsEveryMealAndFreshCookInstructionAfterRestart"
+      ],
+      "verification": "Both f20 and current guards pass; exact compiled plans, raw execution and detailed warnings verified. Root independently rechecked archive hashes."
+    },
+    {
+      "suite": "DinnerDecisionSheetUITests",
+      "job": 127143127139,
+      "artifact": 13407464166,
+      "artifactSHA256": "d973efeeb92ec9cc4de2623d402c7e98a07852d85b1c9ae319dc814b74ed5093",
+      "githubDigestVerified": true,
+      "compiledPlanIndependentlyMatched": true,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "independentGuardExit": 0,
+      "selectors": [
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishGuestPackageBoundaryCheckoutAndCancel",
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishPaidGroupReplacementAndGuestCancellation",
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testLargestTypePairingSheetReturnsToItsInitiatingControl",
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishGuestPackageBoundaryCheckoutAndCancel",
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishPaidGroupReplacementAndGuestCancellation"
+      ],
+      "verification": "Both f20 and current guards pass; exact compiled plans, raw execution and detailed warnings verified. Root independently rechecked archive hashes."
     }
   ],
-  "limits": "Partial verification: 30 independently replayed passing cases plus one redacted Records report pass. HistoryGrantRead failed; remaining results are pending verification or execution. These fixtures do not establish live provider or physical-device acceptance.",
+  "limits": "All jobs terminal. Thirty-nine passing fixture cases independently replayed, plus one separately reported redacted Records pass. Three jobs failed: HistoryGrantRead, known-trip and lost-reply (the latter passed XCTest but failed its original warning policy). Original hosted failures remain failed; local corrections require fresh acceptance.",
   "redactedRecordsReport": {
     "job": 127143124209,
     "artifact": 13405780845,
@@ -215,5 +288,7 @@
     "runtimeWarnings": 0,
     "rawEvidenceAccessed": false,
     "verification": "Only allowlisted report and plan artifact downloaded. Report says strict hosted verification passed. This is reported separately from independently replayed raw results."
-  }
+  },
+  "runStatus": "completed",
+  "runConclusion": "failure"
 }
