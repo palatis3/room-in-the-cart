@@ -59,7 +59,7 @@
         "test-details.json": "01b794957af890275387e3ba7e25aed4250a8c132105bb7b0fdf8f120e52f52b",
         "Tests.log": "9f93fea86af0119ac4f6818a84008d9539424b9d064db85d7b986ebd04f3dff1"
       },
-      "diagnosis": "System print preview rendered successfully in Milk/Apples order. Hosted AX hierarchy exposes Close in the native Options navigation bar, but the test waited for Cancel. An isolated Close-or-Cancel query scoped to that native bar is prepared; local execution is pending. Other four cases passed."
+      "diagnosis": "Native print preview rendered in Milk/Apples order; UIKit Options exposed Close while test queried Cancel. Scoped Close-or-Cancel test correction passed1/1 locally70.226s, including native and app preview dismissals. One UIKit _UIReparentingView warning during earlier List options tap is retained. Hosted rerun pending; see print-dismissal-regression-20261105/validation.json."
     },
     "ui-05": {
       "job": 126937759217,

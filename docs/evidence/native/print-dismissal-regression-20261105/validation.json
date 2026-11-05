@@ -1,0 +1,67 @@
+{
+  "hostedSource": "1fd2b96",
+  "hostedRuntime": "iOS 26.2 (23C54)",
+  "hostedLog": "/Users/palatis/Room in the Cart/.build/CIResearch20261104/native-ui-results/ui-04/Tests.log",
+  "hostedResultBundle": "/Users/palatis/Room in the Cart/.build/CIResearch20261104/native-ui-results/ui-04/Tests.xcresult",
+  "selector": "RoomInTheCartUITests/FreeJourneyUITests/testManualListOrderSurvivesRestartAndOpensLargePrint",
+  "hostedFailureSeconds": 113.845,
+  "hostedOtherTestsPassed": 4,
+  "hostedTapActivity": "Tap \"printShoppingList\" Button",
+  "hostedTapAttachmentIDs": [
+    "8928E10F-B6EE-4517-AE97-6CD4AB239749",
+    "7D028A3D-374C-464A-A6A8-466BE97F088E"
+  ],
+  "hostedFailedQuery": "Waiting 12.0s for \"Cancel\" Button to exist",
+  "hostedAccessibilityLines": "1165\u20131180",
+  "hostedAccessibilityExcerpt": "                  NavigationBar, 0x10a80ada0, {{0.0, 88.0}, {402.0, 54.0}}, identifier: 'Options'\n                    Button, 0x10a80aec0, {{20.0, 92.0}, {36.0, 36.0}}, label: 'Close'\n                    StaticText, 0x10a80afe0, {{169.7, 99.7}, {62.7, 20.7}}, label: 'Options'\n                    Button, 0x10a80b100, {{290.0, 92.0}, {36.0, 36.0}}, label: 'Share'\n                    Button, 0x10a80b220, {{346.0, 92.0}, {36.0, 36.0}}, label: 'print', Disabled\n                  Other, 0x10a80b340, {{0.0, 72.0}, {402.0, 802.0}}\n                    Other, 0x10a80b460, {{0.0, 72.0}, {402.0, 802.0}}\n                      Table, 0x10a80b580, {{0.0, 72.0}, {402.0, 802.0}}\n                        Cell, 0x10a80b6a0, {{20.0, 157.0}, {362.0, 53.0}}\n                          Other, 0x10a80b7c0, {{20.0, 157.0}, {362.0, 53.0}}\n                            Other, 0x10a80b8e0, {{20.0, 157.0}, {362.0, 53.0}}\n                          Other, 0x10a80ba00, {{20.0, 209.0}, {362.0, 1.0}}\n                          StaticText, 0x10a80bb20, {{36.0, 173.3}, {50.7, 20.3}}, label: 'Printer'\n                          StaticText, 0x10a80bc40, {{195.3, 173.3}, {148.3, 20.3}}, label: 'No Printer Selected'\n                          Button, 0x10a80bd60, {{351.7, 176.3}, {10.3, 14.0}}, label: 'chevron', Disabled\n                        Other, 0x10a80be80, {{0.0, 210.0}, {402.0, 17.3}}",
+  "hostedFailureImage": "/tmp/room-cart-ui04.TulCp2/hosted-screenshots/2FFB7B1D-831D-4AA2-9D07-A81B7849D806.png",
+  "hostedFailureImageSHA256": "76e75e38010febb82ba6fb513a81648e1d49ec468650a525f762a88e0720ea7b",
+  "visiblePrintPreview": "System Options sheet showed Close, No Printer Selected and one print page in Milk then Apples order.",
+  "presenterPath": "ios/Features/Ledger/LedgerListLayoutViews.swift",
+  "presenterEquivalentToHostedBase": true,
+  "candidateBase": "df3cbd2600a352e189c14aa7b3b604a46810dfea",
+  "candidateSourceGitBlob": "8921c4757017d8d563d23e7f9ba6912fb2d8d96b",
+  "patch": "/tmp/room-cart-ui04.TulCp2/ui04-regression.patch",
+  "patchSHA256": "a69085617cbdd23c28e64c55f77f6f5e8079a49ac8fcf9ccda4103e86a82b6ec",
+  "priorCancelEvidence": {
+    "ios27": "/Users/palatis/Room in the Cart/.build/SystemPrint20261104/print-iphone-attachments/2B591E13-6280-486D-B06B-7ABBD62B28CC.txt",
+    "ios27AX": "Options navigation bar with Cancel button",
+    "ios17Pass": "/Users/palatis/Room in the Cart/.build/SystemPrint20261104/minimum-print-rerun.log"
+  },
+  "localXcode": [
+    "Xcode 27.1",
+    "Build version 27A9275"
+  ],
+  "localDevice": {
+    "architecture": "arm64",
+    "deviceId": "0FA7B3D4-8D01-4B59-9F8C-7095C52E3000",
+    "deviceName": "RITC UI04 System Print Regression",
+    "modelName": "iPhone 17",
+    "osBuildNumber": "23C52",
+    "osVersion": "26.2",
+    "platform": "iOS Simulator"
+  },
+  "localResult": "Passed",
+  "localTests": 1,
+  "localFailures": 0,
+  "localTestSeconds": 70.226,
+  "localExitCode": 0,
+  "localLog": "/tmp/room-cart-ui04.TulCp2/UI04-local.log",
+  "localResultBundle": "/tmp/room-cart-ui04.TulCp2/UI04-local.xcresult",
+  "localRuntimeWarnings": [
+    {
+      "issueType": "Runtime Warning",
+      "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead."
+    }
+  ],
+  "localRuntimeWarningContext": "UIKit emitted the reparenting warning during the first List options menu tap, before Print and the changed interaction.",
+  "verifiedLocalSequenceSeconds": {
+    "nativeCloseTap": 63.55,
+    "nativeSheetDismissalCheck": 65.97,
+    "largePrintDoneTap": 66.53,
+    "largePrintDismissalCheck": 68.79,
+    "ledgerListOptionsCheck": 68.86
+  },
+  "installedSourceSHA256": "81ebaf3cbeb5e7016c57f18064f0069b05e71b432a5b69e4ff90279377434128",
+  "scope": "Print-test selector correction with exact full local journey pass. Local driver27.1/runtime23C52 differs from original hosted26.3/23C54. Next integrated hosted source run remains required; one UIKit runtime warning is retained."
+}

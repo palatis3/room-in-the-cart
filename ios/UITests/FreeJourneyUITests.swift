@@ -623,11 +623,17 @@ import XCTest
         assertText("Milk"); assertText("Apples")
         capture("Large-print-shopping-list")
         tap(element("printShoppingList"))
-        let cancelPrint = app.buttons["Cancel"]
-        XCTAssertTrue(cancelPrint.waitForExistence(timeout: 12), app.debugDescription)
-        tap(cancelPrint)
-        XCTAssertTrue(cancelPrint.waitForNonExistence(timeout: 8), app.debugDescription)
-        tap(app.buttons["Done"]); XCTAssertTrue(element("ledgerListOptions").exists)
+        // The native print sheet can expose its dismiss action as Close or Cancel.
+        let printOptions = app.navigationBars.matching(NSPredicate(format: "identifier IN %@", ["Options", "Printer Options"])).firstMatch
+        let dismissPrint = printOptions.buttons.matching(NSPredicate(format: "label IN %@", ["Close", "Cancel"])).firstMatch
+        let dismissReady = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND hittable == true"), object: dismissPrint)
+        XCTAssertEqual(XCTWaiter.wait(for: [dismissReady], timeout: 12), .completed, app.debugDescription)
+        dismissPrint.tap()
+        XCTAssertTrue(printOptions.waitForNonExistence(timeout: 8), app.debugDescription)
+        let largePrint = app.navigationBars["Large-print list"]
+        tap(largePrint.buttons["Done"])
+        XCTAssertTrue(largePrint.waitForNonExistence(timeout: 8), app.debugDescription)
+        XCTAssertTrue(element("ledgerListOptions").exists)
     }
 
     func testFirstPickupCanStartFromDinnersAndReviewAnEditablePattern() {
