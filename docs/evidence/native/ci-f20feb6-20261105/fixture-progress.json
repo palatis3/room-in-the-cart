@@ -1,0 +1,89 @@
+{
+  "candidate": "f20feb685f95e7da1c7a23f26eff499d2696329f",
+  "run": 41994028672,
+  "observedAt": "2026-11-05T09:47:20.752261+00:00",
+  "completedVerifiedPasses": 16,
+  "expectedFixtureCases": 44,
+  "coverageComplete": false,
+  "shards": [
+    {
+      "suite": "ContributorRequestUITests",
+      "artifact": 13402268268,
+      "artifactSHA256": "d3bfb05e1ba9c96b33d782b1c13d31e9b44d5f21a7004f16c288385d4841dc22",
+      "githubDigestVerified": true,
+      "compiledPlanIndependentlyMatched": true,
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "independentGuardExit": 0,
+      "rawLogSHA256": "d62d9061d43b0a7f27d5d3e1a155cc936aadbc87aa871e1df22654b18f5efff3"
+    },
+    {
+      "suite": "CorrectionPrivacyAcceptanceUITests",
+      "artifact": 13401504584,
+      "artifactSHA256": "f4314be85ff26db95a8f7bb8902e1c102782c65662b45b2441065feaa6c37f5d",
+      "githubDigestVerified": true,
+      "compiledPlanIndependentlyMatched": true,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "independentGuardExit": 0,
+      "rawLogSHA256": "385d49b84f371329bb589313a06abc80103ce94153cfb04e15beba06d96fa336"
+    },
+    {
+      "suite": "GuardianEnrollmentUITests",
+      "artifact": 13404055369,
+      "artifactSHA256": "903abc2f457676fe3302d075ee47a573ffa14435ffec802c773a3a9095594129",
+      "githubDigestVerified": true,
+      "compiledPlanIndependentlyMatched": true,
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "independentGuardExit": 0,
+      "rawLogSHA256": "20d4e605c62ec837c6100ad3584f6e1be29f145f73e508be88c3b9d05b719d5b"
+    },
+    {
+      "suite": "DinnerAwayCarryoverUITests",
+      "artifact": 13403112890,
+      "artifactSHA256": "520ff0f875c8d653f6045710259a91f9c4555d5a7d7c2398207244e30aac3328",
+      "githubDigestVerified": true,
+      "compiledPlanIndependentlyMatched": true,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "independentGuardExit": 0,
+      "rawLogSHA256": "485d111dc645f4772eb773e1963e0f52aced310c10a48c39a5e73f894257c7cf"
+    },
+    {
+      "suite": "HouseholdDevicesUITests",
+      "artifact": 13403947405,
+      "artifactSHA256": "5d0c87281f28e9d47357ca060559effc007d8eed58a19f7c731180ae9765bd2f",
+      "githubDigestVerified": true,
+      "compiledPlanIndependentlyMatched": true,
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "independentGuardExit": 0,
+      "rawLogSHA256": "379d892f7bc369c35c4cbb37b0c772c8c5bc8e78a683cefda42c84ebd54e4c89"
+    },
+    {
+      "suite": "MeasurementUITests",
+      "artifact": 13404032254,
+      "artifactSHA256": "921d5d50c3a8e51e6d0b723b88258ca2375f2312f86e795c64cb8c03f149b632",
+      "githubDigestVerified": true,
+      "compiledPlanIndependentlyMatched": true,
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "independentGuardExit": 0,
+      "rawLogSHA256": "39d395ec078dce548d4886458c81eb2efe1104e2fc481b262774885d970f940c"
+    }
+  ],
+  "limits": "Partial passes only. HistoryGrantRead failed and is investigated separately; other jobs remain pending. No real provider activation or physical-device acceptance follows from these guarded fixtures."
+}
