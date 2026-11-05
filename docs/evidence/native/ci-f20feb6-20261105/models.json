@@ -1,0 +1,48 @@
+{
+  "candidate": "f20feb685f95e7da1c7a23f26eff499d2696329f",
+  "observedAt": "2026-11-05T09:06:40.436674+00:00",
+  "run": 41994028642,
+  "job": 127139509896,
+  "hostedJobConclusion": "success",
+  "artifact": {
+    "id": 13401905827,
+    "sha256": "4263f312929d73c74c2845dbf1ccb89b88a1375190c98a967db6e7346ee76130",
+    "githubDigestVerified": true
+  },
+  "independentReplay": {
+    "compiledEnumerationAndPlan": "matched retained manifest and every selector file",
+    "passed": 565,
+    "failed": 0,
+    "skipped": 0,
+    "rawExecutionAndDetailedWarningGuardExit": 0,
+    "runtimeWarnings": 0,
+    "sqliteApiMisuseDiagnostics": 0
+  },
+  "deviceAndConfiguration": [
+    {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "8C9F4118-331E-4250-B1FC-194972BA6726",
+        "deviceName": "iPhone 17",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C54",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "passedTests": 565,
+      "skippedTests": 0,
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      }
+    }
+  ],
+  "evidenceHashes": {
+    "Tests.log": "3c1bc5888aabad53625f1565238bcbbad29635c0049b90513c365d85b254ec8a",
+    "test-summary.json": "a5f356606d16f9bdd9a69a2cb71bcfc24eeacb5755b7eeade3375da60ed4700e",
+    "root-verification.txt": "f6d633dc203cf6ca8e92c42861d62e1e0b546bd467a0ae955eebc705bd6cb0d1"
+  },
+  "limits": "Closes the earlier SQLite teardown diagnostic failure for this hosted candidate; does not certify the still-running UI and fixture matrices or later source changes."
+}
