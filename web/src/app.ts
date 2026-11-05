@@ -89,11 +89,11 @@ export class WebApp {
     const start=this.proposalGeneration,fresh=await this.api.session();
     if(start!==this.proposalGeneration)return;
     if(this.reviewedScope && fresh && this.reviewedScope!==reviewScope(fresh)) {
-      this.clearPrivate();this.notice='';
+      this.clearPrivate();this.notice='';this.render();
       await this.outbox.retainScope(scopeFor(fresh)).catch(()=>{});
     }
     this.session=fresh;
-    if(!fresh){this.requests=[];this.view=null;this.pending=[];this.receivedSuggestions=[];this.suggestionsState='unchecked';this.consent=false;this.browserAuth=await this.api.authState();return;}
+    if(!fresh){this.requests=[];this.view=null;this.pending=[];this.receivedSuggestions=[];this.suggestionsState='unchecked';this.consent=false;this.render();this.browserAuth=await this.api.authState();return;}
     this.reviewedScope=reviewScope(fresh);
     if(fresh.role==='helper'||fresh.role==='editor') {
       this.requests=[];this.view=null;this.pending=[];this.draft=blank();this.retryCommand=null;this.uncertainSend=false;this.consent=false;
@@ -148,13 +148,28 @@ export class WebApp {
       if(identityCSRF)this.browserAuth=await this.api.authState().catch(()=>null);
     } catch { /* Keep the private view closed until a confirmed retry. */ }
   }
-  private async fail(error:unknown,purpose:'load'|'mutation'='mutation'):Promise<void> {
+  private async fail(error:unknown,purpose:'load'|'mutation'='mutation',rejectedPendingID?:string):Promise<void> {
     this.failurePurpose=purpose;
     const e=error instanceof ApiError ? error:new ApiError('unavailable',500);
     if(e.status===403||e.code==='access_ended'||(e.status===404&&(this.proposalIntent!==null||['editor','helper'].includes(this.session?.role??'')))) {
       this.clearPrivate();
-      await this.outbox.clear().catch(()=>{});this.notice='Access has ended. Ask your household for a new invitation.';
-    } else if(e.status===401) {this.session=null;this.requests=[];this.view=null;this.pending=[];this.receivedSuggestions=[];this.suggestionsState='unchecked';this.notice='Sign in again to continue. Your text stays on this page.';this.browserAuth=await this.api.authState().catch(()=>null);this.codeRequested=false;this.loginCode='';}
+      this.render();
+      try {
+        await this.outbox.clear();
+        this.notice='Access has ended. Ask your household for a new invitation.';
+      } catch {
+        this.notice='Access has ended. Clear site data before sharing this browser.';
+      }
+      return;
+    }
+    if(e.status===401) {
+      this.session=null;this.requests=[];this.view=null;this.pending=[];
+      this.receivedSuggestions=[];this.suggestionsState='unchecked';
+      this.notice='Sign in again to continue. Your text stays on this page.';
+      this.codeRequested=false;this.loginCode='';
+      this.render();
+      this.browserAuth=await this.api.authState().catch(()=>null);
+    }
     else if(e.code==='login_unavailable')this.notice='Email sign-in is not available yet. Your invitation stays on this page.';
     else if(e.code==='code_not_accepted')this.notice='That code was not accepted. Check the latest code or request another one.';
     else if(e.code==='login_rate_limited')this.notice='Wait before requesting or checking another code.';
@@ -166,6 +181,8 @@ export class WebApp {
     else if(this.proposalReceipt)this.notice='Suggestion status could not be checked. Its earlier receipt is still confirmed. Try again.';
     else if(this.proposalIntent)this.notice='Suggestion receipt is unconfirmed. Retry the original suggestion. It is only kept on this page; closing or reloading loses this local copy.';
     else this.notice=this.uncertainSend?'Not saved in this browser. Receipt is unconfirmed. Your text is still here. Retry to check.':'Not saved. Your text is still here. Reconnect and try again.';
+    // The server's decision remains authoritative if deleting a rejected copy fails.
+    if(rejectedPendingID)await this.outbox.remove(rejectedPendingID).catch(()=>{});
   }
   private date(value:string):string {
     const d=new Date(value);return Number.isFinite(d.getTime())?new Intl.DateTimeFormat(this.language==='es'?'es-US':'en-US',{dateStyle:'full',timeStyle:'short'}).format(d):value;
@@ -319,7 +336,11 @@ export class WebApp {
       if(persisted && error instanceof ApiError && (error.status===0||error.status>=500||error.status===429)) {
         this.showQueued(p);return;
       }
-      if(persisted)await this.outbox.remove(p.id);throw error;
+      if(persisted) {
+        await this.fail(error,'mutation',p.id);
+        return;
+      }
+      throw error;
     }
     this.draft=blank();this.retryCommand=null;this.uncertainSend=false;this.review=false;
     await this.finishReceived(p,persisted);

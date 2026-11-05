@@ -83,6 +83,7 @@ const es: Record<string, string> = {
   'You are signed out.':'Cerraste la sesión.', 'Save changes':'Guardar cambios',
   'Confirm withdrawal':'Confirmar retirada', 'Withdraw this pending request?':'¿Retirar esta solicitud pendiente?',
   'Household':'Familia', 'No automatic translation of food names.':'Los nombres de alimentos no se traducen automáticamente.',
+  'Access has ended. Clear site data before sharing this browser.':'Tu acceso ha terminado. Borra los datos del sitio antes de compartir este navegador.',
   'A pending request is no longer stored on this browser. Check Your requests for its status.':'Una solicitud pendiente ya no está guardada en este navegador. Consulta su estado en Tus solicitudes.',
   'Stored pending requests could not be opened.':'No se pudieron abrir las solicitudes pendientes guardadas.',
   'Browser storage is unavailable. Requests will remain editable but will not be saved offline.':'El almacenamiento del navegador no está disponible. Puedes seguir editando las solicitudes, pero no se guardarán sin conexión.'

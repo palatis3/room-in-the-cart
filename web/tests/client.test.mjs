@@ -135,6 +135,49 @@ test('offline queueing still requires consent and an unexpired replay window',as
  }
 });
 
+test('refresh hides the previous member as soon as the server reports a different or ended session',async()=>{
+ for(const next of [null,{...session(),memberId:'member-b'}]){
+  let current=session(),observed;
+  const outbox=new Outbox(new IDBFactory());
+  const {root,app}=await setup(fakeAPI({
+   session:async()=>current,
+   requests:async()=>current?.memberId==='member-a'?[own()]:[],
+   authState:async()=>{observed=root.textContent;return {authenticated:false,available:true};}
+  }),'en',outbox);
+  assert.match(root.textContent,/No-salt frijoles/);
+  outbox.retainScope=async()=>{observed=root.textContent;};
+  current=next;await app.start();
+  assert.equal(typeof observed,'string');
+  assert.doesNotMatch(observed,/No-salt frijoles/);
+  assert.doesNotMatch(root.textContent,/No-salt frijoles/);
+ }
+});
+
+test('a command refusal hides private content even if the saved outbox cannot be removed',async()=>{
+ for(const status of [401,403]){
+  const outbox=new Outbox(new IDBFactory());
+  const s={...session(),queueConsent:true};
+  let duringRecovery,puts=0;
+  const put=outbox.put.bind(outbox);
+  outbox.put=async(...args)=>{await put(...args);puts++;};
+  outbox.remove=async()=>{throw new DOMException('Storage denied','SecurityError');};
+  const api=fakeAPI({
+   session:async()=>s,
+   command:async()=>{throw new ApiError(status===403?'access_ended':'session_needed',status);},
+   authState:async()=>{duringRecovery=root.textContent;return {authenticated:false,available:true};}
+  });
+  const {root,dom}=await setup(api,'en',outbox);
+  outbox.clear=async()=>{duringRecovery=root.textContent;throw new DOMException('Storage denied','SecurityError');};
+  root.querySelector('input[type=checkbox]').click();
+  type(dom,'item','Private test wording');submit(root,dom);submit(root,dom);await waitForIdle(root);
+  assert.equal(puts,1);
+  assert.doesNotMatch(root.textContent,/Private test wording|Ask the shopper/);
+  assert.equal(typeof duringRecovery,'string');
+  assert.doesNotMatch(duringRecovery,/Private test wording|Ask the shopper/);
+  assert.match(root.textContent,status===403?/Access has ended.*Clear site data/:/Sign in again/);
+ }
+});
+
 test('an explicit access refusal cannot queue against the earlier session',async()=>{
  const s={...session(),queueConsent:true},outbox=new Outbox(new IDBFactory());
  let revoked=false;
