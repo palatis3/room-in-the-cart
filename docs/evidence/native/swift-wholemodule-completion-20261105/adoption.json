@@ -1,0 +1,14 @@
+{
+  "configurationInstalled": true,
+  "productionWorkflow": ".github/workflows/ci.yml",
+  "installedScannerJobSHA256": "a7092f4d37e1a0206efa85eea69038e270408175d9f6f3327949a9399faecb89",
+  "byteIdenticalToSuccessfulExperimentJob": true,
+  "otherCIJobsByteIdentical": true,
+  "compileTimeoutMinutes": 45,
+  "jobTimeoutMinutes": 60,
+  "review": "Root verified artifacts and exact job transfer. Lumpy and Astra support bounded operational adoption with retained semantic limitations.",
+  "priorFailuresPreserved": true,
+  "settingsPrelaunchInstalled": false,
+  "freshCandidateValidation": "required; not yet published",
+  "detailedIndependentReviewSHA256": "3e1100f8931eeef4d324866c12dc78b1b3827cb3c451a9880861ddd533336ccf"
+}

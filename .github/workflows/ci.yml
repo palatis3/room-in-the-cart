@@ -189,7 +189,7 @@ jobs:
           if-no-files-found: ignore
   ios-swift-codeql:
     runs-on: macos-15
-    timeout-minutes: 45
+    timeout-minutes: 60
     permissions:
       contents: read
       security-events: write
@@ -219,6 +219,7 @@ jobs:
             CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
             COMPILATION_CACHE_ENABLE_CACHING=NO SWIFT_ENABLE_COMPILE_CACHE=NO
             SWIFT_USE_INTEGRATED_DRIVER=NO SWIFT_OPTIMIZATION_LEVEL=-Onone
+            SWIFT_COMPILATION_MODE=wholemodule
           )
           cat > .build/SwiftCodeQLAssertUncompiled.py <<'PY'
           from pathlib import Path
@@ -301,12 +302,12 @@ jobs:
           app = [target["buildSettings"] for target in targets if target.get("target") == "RoomInTheCart"]
           if len(app) != 1:
               raise SystemExit("Expected exactly one RoomInTheCart app target in Xcode build settings.")
-          expected = {"CONFIGURATION": "Release", "PLATFORM_NAME": "iphoneos", "ARCHS": "arm64", "SWIFT_OPTIMIZATION_LEVEL": "-Onone"}
+          expected = {"CONFIGURATION": "Release", "PLATFORM_NAME": "iphoneos", "ARCHS": "arm64", "SWIFT_OPTIMIZATION_LEVEL": "-Onone", "SWIFT_COMPILATION_MODE": "wholemodule"}
           actual = {key: app[0].get(key) for key in expected}
           conditions = app[0].get("SWIFT_ACTIVE_COMPILATION_CONDITIONS", "").split()
           print(json.dumps({**actual, "SWIFT_ACTIVE_COMPILATION_CONDITIONS": conditions}, indent=2))
           if actual != expected or "RELEASE" not in conditions or "DEBUG" in conditions:
-              raise SystemExit("Swift CodeQL must compile Release sources for arm64 iPhoneOS with optimization disabled.")
+              raise SystemExit("Swift CodeQL must compile all Release sources in whole-module mode for arm64 iPhoneOS with optimization disabled.")
           PY
           python3 .build/SwiftCodeQLAssertUncompiled.py
           declare -p build_args > .build/SwiftCodeQLBuildArgs.sh
@@ -317,7 +318,7 @@ jobs:
           build-mode: manual
           debug: true
       - name: Compile Release Swift sources for CodeQL
-        timeout-minutes: 30
+        timeout-minutes: 45
         shell: bash
         run: |
           source .build/SwiftCodeQLBuildArgs.sh
