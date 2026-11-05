@@ -1,0 +1,320 @@
+name: UI10 Settings preflight comparison (diagnostic only)
+'on':
+  push:
+    branches: [codex/ui10-settings-preflight-comparison]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  ui10-comparison:
+    name: UI10 / ${{ matrix.arm }}
+    runs-on: macos-15
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        arm: [unprelaunched, settings-prelaunch]
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+      TEST_SHARD: ui-10
+      EXPECTED_TEST_COUNT: '6'
+      COMPARISON_ARM: ${{ matrix.arm }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ab1779c515f925b51ffdf8dabbaf65ae2bbee3d0
+          persist-credentials: false
+      - name: Record pinned source and toolchain
+        timeout-minutes: 3
+        shell: bash
+        run: |
+          mkdir -p .build/comparison
+          test "$(git rev-parse HEAD)" = ab1779c515f925b51ffdf8dabbaf65ae2bbee3d0
+          git rev-parse HEAD > .build/comparison/checked-out-head.txt
+          xcodebuild -version | tee .build/comparison/xcode-version.log
+          swift --version | tee .build/comparison/swift-version.log
+          gh --version | tee .build/comparison/gh-version.log
+          sw_vers > .build/comparison/host-version.log
+          python3 - <<'PY'
+          from pathlib import Path
+          import json, os
+          p = Path('.build/comparison')
+          assert p.joinpath('xcode-version.log').read_text().splitlines() == ['Xcode 26.3', 'Build version 17C529']
+          assert 'Apple Swift version 6.2.4 ' in p.joinpath('swift-version.log').read_text()
+          assert any(line.startswith('ProductVersion:') and line.split()[-1].startswith('15.') for line in p.joinpath('host-version.log').read_text().splitlines())
+          p.joinpath('comparison-run.json').write_text(json.dumps({
+              'comparison_run_id': os.environ['GITHUB_RUN_ID'], 'comparison_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
+              'workflow_commit': os.environ['GITHUB_SHA'], 'source_commit': 'ab1779c515f925b51ffdf8dabbaf65ae2bbee3d0',
+              'arm': os.environ['COMPARISON_ARM'], 'runner_os': os.environ['RUNNER_OS'],
+              'runner_arch': os.environ['RUNNER_ARCH'], 'diagnostic_only': True,
+              'original_failed_ui10_remains_failed': True}, indent=2) + '\n')
+          PY
+      - name: Authenticate and verify retained product archive
+        timeout-minutes: 5
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/42071958899" > .build/comparison/source-run.json
+          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/13437571219" > .build/comparison/product-artifact.json
+          cat > .build/comparison/verify_products.py <<'PY'
+          """Validate pinned source/artifact identity and restore only bounded safe members."""
+          import hashlib
+          import json
+          import os
+          from pathlib import Path, PurePosixPath
+          import shutil
+          import stat
+          import sys
+          import tarfile
+          import zipfile
+
+          SOURCE = 'ab1779c515f925b51ffdf8dabbaf65ae2bbee3d0'
+          RUN = 42071958899
+          ARTIFACT = 13437571219
+          ZIP_SHA = '297f258fa92a44e5ac5e22fb1a69ea871b67a4e9603a1019ba7f4d8483325b41'
+          SELECTION_SHA = '55a0fded66e882c99635fe8585d680bd59dc4c9a2fab2b408f2ccd395ff2cb0d'
+          MANIFEST_SHA = '2e6e1dca4868114bb9b6ad1c65132560ab945b36985d15a8648b4cefed893a1a'
+          SCRIPT_SHA = {
+              'scripts/run_ios_test_shard.sh': '45319a4e14c3e238b44cef3e3b2ab6666676592a99cf8897b1bce62039a8147e',
+              'scripts/check_ios_test_results.py': 'cbd4f9bf6c4f7d223a708d3fce9461f75a16086b6763cdf86ef7fc7f77ee99e5',
+              'scripts/select_ci_iphone.py': '8ebdee4db935d8b8039f17fb8b23909043b3095486e35ecfd713199d6a1b3c67',
+          }
+
+          def require(condition, message):
+              if not condition:
+                  raise SystemExit(message)
+
+
+          def digest(path):
+              h = hashlib.sha256()
+              with Path(path).open('rb') as source:
+                  for chunk in iter(lambda: source.read(1024 * 1024), b''):
+                      h.update(chunk)
+              return h.hexdigest()
+
+
+          def verify_metadata(root):
+              run = json.loads((root / 'source-run.json').read_text())
+              artifact = json.loads((root / 'product-artifact.json').read_text())
+              require(run['id'] == RUN and run['head_sha'] == SOURCE, 'Source run/head mismatch')
+              require(run['path'] == '.github/workflows/ci.yml' and run['status'] == 'completed', 'Source workflow/state mismatch')
+              require(run['repository']['full_name'] == os.environ['GITHUB_REPOSITORY'], 'Source repository mismatch')
+              require(artifact['id'] == ARTIFACT and artifact['name'] == 'iphone-test-products-1', 'Artifact identity mismatch')
+              require(artifact['size_in_bytes'] == 50590578 and artifact['digest'] == 'sha256:' + ZIP_SHA, 'Artifact size/digest mismatch')
+              require(not artifact['expired'], 'Source artifact expired')
+              require(artifact['workflow_run']['id'] == RUN and artifact['workflow_run']['head_sha'] == SOURCE, 'Artifact source linkage mismatch')
+              for path, expected in SCRIPT_SHA.items():
+                  require(digest(path) == expected, 'Pinned harness identity mismatch')
+
+
+          def safe_member(member):
+              path = PurePosixPath(member.name)
+              require(not path.is_absolute() and '\\' not in member.name, 'Unsafe archive path')
+              require(all(part not in ('', '.', '..') for part in member.name.rstrip('/').split('/')), 'Unsafe archive path')
+              require((path.parts and path.parts[0] in ('Products', 'test-plan'))
+                      or (member.name == '._Products' and member.isfile() and member.size == 172),
+                      'Unexpected archive root')
+              require(member.isfile() or member.isdir(), 'Unsupported archive member type')
+              require(0 <= member.size <= 64 * 1024 * 1024, 'Archive member exceeds bound')
+              return path
+
+
+          def restore(root):
+              archive = root / 'iphone-test-products-1.zip'
+              require(archive.stat().st_size == 50590578 and digest(archive) == ZIP_SHA, 'Downloaded ZIP identity mismatch')
+              packed = root / 'iphone-test-products.tar.gz'
+              with zipfile.ZipFile(archive) as z:
+                  items = z.infolist()
+                  require(len(items) == 1, 'Unexpected ZIP member count')
+                  item = items[0]
+                  require(item.filename == 'iphone-test-products.tar.gz' and item.file_size == 50590410, 'Unexpected ZIP shape')
+                  require(not stat.S_ISLNK(item.external_attr >> 16) and not item.flag_bits & 1, 'Unsupported ZIP member')
+                  with z.open(item) as source, packed.open('xb') as dest:
+                      shutil.copyfileobj(source, dest, 1024 * 1024)
+              destination = Path('.build/DerivedData/Build')
+              require(not destination.exists() and not Path('.build/test-plan').exists(), 'Restore destination must be fresh')
+              with tarfile.open(packed, 'r:gz') as tar:
+                  members = tar.getmembers()
+                  require(len(members) == 366 and sum(m.size for m in members) == 190253394, 'Tar shape mismatch')
+                  names = [str(safe_member(member)) for member in members]
+                  require(len(names) == len(set(names)), 'Duplicate archive path')
+                  # Verify every name/type/bound before creating any output. No links/devices
+                  # are restored; only verified regular files and directories are copied.
+                  destination.mkdir(parents=True)
+                  for member, name in zip(members, names):
+                      target = destination / name
+                      if member.isdir():
+                          target.mkdir(parents=True, exist_ok=True)
+                      else:
+                          target.parent.mkdir(parents=True, exist_ok=True)
+                          with tar.extractfile(member) as source, target.open('xb') as dest:
+                              shutil.copyfileobj(source, dest, 1024 * 1024)
+                          target.chmod(member.mode & 0o777)
+              (destination / 'test-plan').rename('.build/test-plan')
+              selection = Path('.build/test-plan/ui-10.txt')
+              manifest = Path('.build/test-plan/manifest.json')
+              require(digest(selection) == SELECTION_SHA and digest(manifest) == MANIFEST_SHA, 'Selection identity mismatch')
+              selectors = selection.read_text().splitlines()
+              require(len(selectors) == 6 and len(set(selectors)) == 6, 'Expected original six selectors')
+              matching = [row for row in json.loads(manifest.read_text())['include'] if row['shard'] == 'ui-10']
+              require(matching == [{'shard': 'ui-10', 'expected_count': 6}], 'Selection manifest mismatch')
+              test_runs = list((destination / 'Products').glob('RoomInTheCart_iphonesimulator*.xctestrun'))
+              require(len(test_runs) == 1 and test_runs[0].is_file(), 'Expected exactly one retained xctestrun')
+              identity = {'source_head': SOURCE, 'source_run': RUN, 'artifact_id': ARTIFACT,
+                          'artifact_sha256': ZIP_SHA, 'tar_sha256': digest(packed),
+                          'tar_members': len(members), 'tar_expanded_bytes': 190253394,
+                          'selection_sha256': digest(selection), 'manifest_sha256': digest(manifest),
+                          'selectors': selectors, 'harness_sha256': SCRIPT_SHA,
+                          'xctestrun': str(test_runs[0]), 'xctestrun_sha256': digest(test_runs[0]),
+                          'comparison_arm': os.environ['COMPARISON_ARM']}
+              (root / 'verified-product-identity.json').write_text(json.dumps(identity, indent=2) + '\n')
+
+
+          if __name__ == '__main__':
+              root = Path('.build/comparison')
+              verify_metadata(root)
+              if '--metadata-only' not in sys.argv:
+                  restore(root)
+          PY
+          python3 .build/comparison/verify_products.py --metadata-only
+          gh api --allow-escape-sequences "repos/$GITHUB_REPOSITORY/actions/artifacts/13437571219/zip" > .build/comparison/iphone-test-products-1.zip
+          python3 .build/comparison/verify_products.py
+      - name: Select exact fresh iPhone simulator
+        timeout-minutes: 8
+        shell: bash
+        run: |
+          xcrun simctl list devices available -j > .build/comparison/devices-before.json
+          xcrun simctl list runtimes -j > .build/comparison/runtimes.json
+          python3 scripts/select_ci_iphone.py < .build/comparison/devices-before.json
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          p = Path('.build/comparison')
+          assignments = [line.split('=', 1)[1] for line in Path(os.environ['GITHUB_ENV']).read_text().splitlines() if line.startswith('SIMULATOR_ID=')]
+          assert len(assignments) == 1
+          udid = assignments[0]
+          devices = json.loads(p.joinpath('devices-before.json').read_text())['devices']
+          selected = [(runtime, device) for runtime, rows in devices.items() for device in rows if device['udid'] == udid]
+          assert len(selected) == 1
+          runtime_id, device = selected[0]
+          runtimes = [r for r in json.loads(p.joinpath('runtimes.json').read_text())['runtimes'] if r['identifier'] == runtime_id]
+          assert len(runtimes) == 1
+          runtime = runtimes[0]
+          assert device['name'] == 'iPhone 17' and device['isAvailable'] and device['state'] == 'Shutdown'
+          assert runtime['version'] == '26.2' and runtime['buildversion'] == '23C54' and runtime['isAvailable']
+          p.joinpath('selected-simulator.json').write_text(json.dumps({'device': device, 'runtime': runtime}, indent=2) + '\n')
+          PY
+      - name: Wait for simulator boot
+        timeout-minutes: 8
+        shell: bash
+        run: xcrun simctl bootstatus "$SIMULATOR_ID" -b
+      - name: Apply assigned Settings process-launch setup
+        timeout-minutes: 3
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          """One optional public launch: success says nothing about accessibility readiness."""
+          import datetime
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+          import time
+
+          root = Path('.build/comparison')
+          arm = os.environ['COMPARISON_ARM']
+          assert arm in ('unprelaunched', 'settings-prelaunch')
+          record = {'arm': arm, 'started_utc': datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                    'meaning': 'process launch only; accessibility readiness is not asserted',
+                    'status': 'not_requested' if arm == 'unprelaunched' else 'started',
+                    'exit_code': None, 'duration_seconds': 0.0}
+          path = root / 'settings-preflight.json'
+          path.write_text(json.dumps(record, indent=2) + '\n')
+          if arm == 'settings-prelaunch':
+              start = time.monotonic()
+              with (root / 'settings-preflight.log').open('wb') as log:
+                  try:
+                      result = subprocess.run(['xcrun', 'simctl', 'launch', os.environ['SIMULATOR_ID'], 'com.apple.Preferences'],
+                                              stdout=log, stderr=subprocess.STDOUT, timeout=120, check=False)
+                      code = result.returncode
+                      record['status'] = 'process_launch_succeeded' if code == 0 else 'process_launch_failed'
+                  except subprocess.TimeoutExpired:
+                      code = 124
+                      record['status'] = 'launch_timed_out'
+                  except OSError:
+                      code = 125
+                      record['status'] = 'launch_unavailable'
+              record.update(exit_code=code, duration_seconds=round(time.monotonic() - start, 6),
+                            completed_utc=datetime.datetime.now(datetime.timezone.utc).isoformat())
+              path.write_text(json.dumps(record, indent=2) + '\n')
+              raise SystemExit(code)
+          PY
+      - name: Run original complete UI10 selection and strict checks
+        timeout-minutes: 40
+        shell: bash
+        run: bash scripts/run_ios_test_shard.sh
+      - name: Independently verify original actual test-start order
+        if: always()
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          """Independent diagnostic guard; never replaces the original strict verifier."""
+          import json
+          from pathlib import Path
+          import re
+
+          START = re.compile(r"^Test Case '-\[(?P<target>[^.\s]+)\.(?P<suite>[^\s\]]+) (?P<method>[^\s\]]+)\]' started\.$")
+
+
+          def review(expected, logs, retry_artifact_present=False):
+              starts = []
+              per_log = []
+              for name, lines in logs:
+                  current = []
+                  for line in lines:
+                      match = START.fullmatch(line.rstrip('\r\n'))
+                      if match:
+                          current.append('/'.join(match.group('target', 'suite', 'method')))
+                  starts.extend(current)
+                  per_log.append({'log': name, 'started': current})
+              retry_artifact_present = retry_artifact_present or any(name.endswith('Tests-retry.log') for name, _ in logs)
+              exact = starts == expected and len(expected) == 6
+              return {'expected': expected, 'actual': starts, 'per_log': per_log,
+                      'retry_artifact_present': retry_artifact_present,
+                      'comparison_valid': exact and not retry_artifact_present,
+                      'exact_original_start_order': exact,
+                      'meaning': 'start order only; original runner and strict result verifier remain required'}
+
+
+          if __name__ == '__main__':
+              path = Path('.build/test-plan/ui-10.txt')
+              expected = path.read_text().splitlines() if path.is_file() else []
+              logs = [(str(p), p.read_text(errors='replace').splitlines()) for p in
+                      (Path('.build/Tests.log'), Path('.build/Tests-retry.log')) if p.is_file()]
+              result = review(expected, logs, Path('.build/Tests-retry.xcresult').exists())
+              root = Path('.build/comparison')
+              root.mkdir(parents=True, exist_ok=True)
+              (root / 'test-start-order.json').write_text(json.dumps(result, indent=2) + '\n')
+              if not result['comparison_valid']:
+                  raise SystemExit('Comparison invalid: original six-test order incomplete/changed, or retry discarded assigned simulator setup. Preserve all native evidence.')
+          PY
+      - name: Retain comparison identity, raw results, and strict checks
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ui10-settings-comparison-${{ matrix.arm }}-${{ github.run_attempt }}
+          include-hidden-files: true
+          path: |
+            .build/Tests*.xcresult
+            .build/Tests*.log
+            .build/test-*.json
+            .build/test-plan/
+            .build/comparison/*.json
+            .build/comparison/*.log
+            .build/comparison/checked-out-head.txt
+          retention-days: 7
+          if-no-files-found: ignore
