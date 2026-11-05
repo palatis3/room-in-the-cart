@@ -1,0 +1,163 @@
+{
+  "observedAt": "2026-11-05T10:06:58.792006+00:00",
+  "basePublishedCandidate": "f20feb685f95e7da1c7a23f26eff499d2696329f",
+  "executedSourceSHA256": "f33ce161eab2215b3b77bf6659ddcae9cee0afd51a3247f7382ce6a73c08d334",
+  "sourceManifestSHA256": "99bf08dbf50da2eb8539266dcb6ba2642f408af6a0a609664b76d9c6cbf9295e",
+  "productManifestSHA256": "718114bbc006a7af4db2b754d3b4b9f1efcef8475b44afc866fe9d747500de7e",
+  "buildExit": 0,
+  "xcodeExit": 0,
+  "strictGuardExit": 0,
+  "passed": 2,
+  "failed": 0,
+  "skipped": 0,
+  "runtimeWarnings": 0,
+  "durationsSeconds": {
+    "ordinary": 104.709,
+    "reduceMotion": 113.6
+  },
+  "animationCompletionTimeoutOccurrences": 0,
+  "diagnostics": [
+    {
+      "selector": "FreeJourneyUITests/testCancellingSystemShareKeepsTheFrozenPickupUnplaced()",
+      "state": {
+        "before": [
+          "Captured at: 1793872934.536334",
+          "Exists: true",
+          "Frame: (16.0, 371.3333333333333, 370.0, 72.33333333333337)",
+          "Requested tap point: (356.40000000000003, 407.5)",
+          "Enabled: true",
+          "Hittable: true",
+          "Value: Optional(0)",
+          "Software keyboard present: false",
+          "Measured content area: (24.0, 128.0, 354.0, 646.0)"
+        ],
+        "after": [
+          "Captured at: 1793872938.28016",
+          "Exists: true",
+          "Frame: (16.0, 400.0, 370.0, 72.33333333333331)",
+          "Requested tap point: (356.40000000000003, 436.16666666666663)",
+          "Enabled: true",
+          "Hittable: true",
+          "Value: Optional(1)",
+          "Software keyboard present: false",
+          "Measured content area: (24.0, 128.0, 354.0, 646.0)"
+        ]
+      },
+      "attachments": [
+        {
+          "phase": "before",
+          "kind": "state",
+          "SHA256": "426d40185c729cc97df2d259b92fdce37991a5f4b2daad5ac5f70c983612aade",
+          "bytes": 283
+        },
+        {
+          "phase": "before",
+          "kind": "accessibility",
+          "SHA256": "8d580d841a08351767010d46aeae81c0c781ce2541877a3b29f8414b5c05a57c",
+          "bytes": 21048
+        },
+        {
+          "phase": "before",
+          "kind": "screen",
+          "SHA256": "99cdaa519357664ed5ccea6dd7df16ad8c7a9c833efa9a1a557bbed790b1a6cb",
+          "bytes": 395715
+        },
+        {
+          "phase": "after",
+          "kind": "state",
+          "SHA256": "c7771e4e3dc121419e28ad6d4d46a8e713ed1de94f8dd069240768bb23c1b14c",
+          "bytes": 283
+        },
+        {
+          "phase": "after",
+          "kind": "accessibility",
+          "SHA256": "af29880afcdf28593e113538e393e1941df7aad0466e07bbfd73cc87e0b7b4a0",
+          "bytes": 18607
+        },
+        {
+          "phase": "after",
+          "kind": "screen",
+          "SHA256": "d4f7394cd38f7523a9c47db0be43f0a6cf114a16a608e8f6dae96ec5ed22b986",
+          "bytes": 329762
+        }
+      ]
+    },
+    {
+      "selector": "FreeJourneyUITests/testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced()",
+      "state": {
+        "before": [
+          "Captured at: 1793873046.019639",
+          "Exists: true",
+          "Frame: (16.0, 371.3333333333333, 370.0, 72.33333333333337)",
+          "Requested tap point: (356.40000000000003, 407.5)",
+          "Enabled: true",
+          "Hittable: true",
+          "Value: Optional(0)",
+          "Software keyboard present: false",
+          "Measured content area: (24.0, 128.0, 354.0, 646.0)"
+        ],
+        "after": [
+          "Captured at: 1793873049.367903",
+          "Exists: true",
+          "Frame: (16.0, 400.0, 370.0, 72.33333333333331)",
+          "Requested tap point: (356.40000000000003, 436.16666666666663)",
+          "Enabled: true",
+          "Hittable: true",
+          "Value: Optional(1)",
+          "Software keyboard present: false",
+          "Measured content area: (24.0, 128.0, 354.0, 646.0)"
+        ]
+      },
+      "attachments": [
+        {
+          "phase": "before",
+          "kind": "state",
+          "SHA256": "98622b4569629b3759a989aa975e8b11697cf04bbbd6438c84f40d9a619f30ee",
+          "bytes": 283
+        },
+        {
+          "phase": "before",
+          "kind": "accessibility",
+          "SHA256": "620f755bb148097c143bea61cc45aab2cc5da2969d97db3130294fe275d6d2f9",
+          "bytes": 21048
+        },
+        {
+          "phase": "before",
+          "kind": "screen",
+          "SHA256": "bab66cb304f90259850f140061367d0da7873ab50d5ca04703c8e4c4a1c9bf76",
+          "bytes": 394794
+        },
+        {
+          "phase": "after",
+          "kind": "state",
+          "SHA256": "eb8792e7d2786ea3dbed26695c3cfc2a5e4e41757866b4938415f934cf743118",
+          "bytes": 284
+        },
+        {
+          "phase": "after",
+          "kind": "accessibility",
+          "SHA256": "1379674562f8ec01229a76d52f7a22751af2c31317dfa3eb1263017aeb723763",
+          "bytes": 18607
+        },
+        {
+          "phase": "after",
+          "kind": "screen",
+          "SHA256": "68c40c7f27d0dcc34157dd899ab290c47891b951c586a73362ff953188704ca0",
+          "bytes": 332453
+        }
+      ]
+    }
+  ],
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "90CD1EED-66F3-4402-A218-2782AE2B15F1",
+    "deviceName": "RITC-UI-Existence-20261105",
+    "modelName": "iPhone 17",
+    "osBuildNumber": "23C52",
+    "osVersion": "26.2",
+    "platform": "iOS Simulator"
+  },
+  "rawLogSHA256": "fe261ca345ec63fa84c948c110e3de8148990c52290b4e2ab0546e9e48dac1ff",
+  "review": "Dot personally reviewed diagnostic order and preservation of one tap/assertion. Root verified all twelve named diagnostic attachments and read states/AX; visually inspected ordinary before/after screenshots.",
+  "limits": "Nonreproduction only: f20 hosted switch failure remains unexplained. Local Xcode27.1/iOS26.2 build23C52 differs from hosted; added diagnostic reads may affect timing. No animation/idle bypass, retry or product change. Functional Reduce Motion preference and teardown assertions are not physical animation/hitch acceptance."
+}

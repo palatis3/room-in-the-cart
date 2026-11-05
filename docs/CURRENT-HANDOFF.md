@@ -1,5 +1,18 @@
 # Room in the Cart current handoff
 
+## Active CI failure repair — November 5, 2026
+
+User says not to pause for model changes. Keep working with Dot/Lumpy first. Published candidate remains `f20feb6`; do not push/restart while core `41994028642` and fixture `41994028672` retain unfinished jobs. Core ui-01/ui-02 timed out and ui-05 failed its inclusive-total switch assertion. HistoryGrantRead fixture failed before revocation because its tab tap missed visible content. [Timeouts](evidence/native/ci-f20feb6-20261105/ui-timeouts.json), [switch evidence](evidence/native/ci-f20feb6-20261105/ui05-share-failure.json), [history diagnosis](evidence/native/ci-f20feb6-20261105/history-fixture-failure.json). Fifteen ordinary UI cases in wholly passing shards and eighteen fixture cases independently verified so far; other jobs remain live.
+
+Local `3254e49` fixes PickupOffer navigation: one existence check before hittability and one-tree keyboard/nav geometry. Full unchanged journey passed **405.182 seconds**, strict guard0, zero warnings under unchanged720/900 limits. First local attempt failed31.733s on a transitioning nav bar and remains retained. [Proof](evidence/native/ci-ui-navigation-20261105/pickup-offer.json). Exact second manual-order Menu idle phase is narrowly allowed for the existing case/tap/device/max2;130 Python tests pass. Hosted failures remain failed.
+
+FreeJourney's existence gate and exact Next shop title query passed the entire journey in **404.833 seconds**, strict guard0 and zero warnings. [Proof](evidence/native/ci-ui-navigation-20261105/free-journey.json). The ordinary and real Reduce Motion sharing cases also passed104.709s/113.600s, with all12 pre/post screenshot/AX/state attachments independently checked and no animation-completion stalls. [Diagnostic proof](evidence/native/ci-ui-navigation-20261105/share-diagnostic.json). This is nonreproduction of the hosted switch failure, not its resolution; Dot confirmed its tap was inside a visible control. No blind retry or animation bypass.
+
+History tab-center fix is now building/running in `.build/CIResearch20261105/history-tab-center/` (exec79865), exact2 selectors. Root owns the only native lane, simulator `90CD1EED-66F3-4402-A218-2782AE2B15F1`; preview `5FDE1E82-1FF7-4556-9C14-0746F6295944` untouched. Earlier native sessions7714/65203 are terminal0. Dot personally owns new ui-07 reminder failure triage (job127139509914, artifact13404329489,4pass/1fail). No source fix yet. One Sol6.1xhigh helper reviewed History/diffs and verified RecipeLibrary2/2; no additional native lane. Eighteen fixture passes and fifteen ordinary UI cases in wholly passing shards are verified so far. Continue actual hosted handles without a push/restart.
+
+Staging connector reconnect question is still pending. Read-only dashboard metadata and isolated CLI3.0.0 preparation are saved in [backup tooling](evidence/b11/staging-readiness-20261105/backup-tooling.json). No hosted backup/restore or mutation occurred. Actual rollout/provider/Apple/SMTP/device gates remain open.
+
+
 ## UI progress and staging access clarified — November 5, 2026
 
 Ordinary UI shards ui-03/job `127139509875` and ui-04/job `127139510093` passed all five cases each. Root verified both artifact hashes, exact selector files against the independently replayed compiled plan, raw execution and detailed warnings: ten passes, zero warnings/skips. [Partial evidence](evidence/native/ci-f20feb6-20261105/ordinary-ui-progress.json). This is 10/50 ordinary UI cases, not a complete matrix. Core `41994028642` and fixtures `41994028672` remain live/queued; ui-01 and ui-02 still need their formerly timed-out journey outcomes. No push/restart/merge.

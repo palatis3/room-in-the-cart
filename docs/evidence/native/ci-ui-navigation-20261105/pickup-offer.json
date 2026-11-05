@@ -33,7 +33,17 @@
       "osVersion": "26.2",
       "platform": "iOS Simulator"
     },
-    "toolchain": "Xcode 27.1\nBuild version 27A9275"
+    "toolchain": "Xcode 27.1\nBuild version 27A9275",
+    "internalFindRetryPairs": 15,
+    "attachments": [
+      "Offer-reviewed-joint-cost-overage",
+      "Offer-reviewed-uncovered-quantity",
+      "Offer-saved-with-price-warning",
+      "Offer-expired-resume-card-after-restart",
+      "Offer-resume-opens-actual-arrival",
+      "Offer-updated-after-restart-and-copied",
+      "Offer-cancel-keeps-saved-response"
+    ]
   },
   "review": "Sol6.1xhigh reviewed driver/warning diffs read-only and found no concrete regression or assertion weakening. Dot independently reviewed analogous FreeJourney diagnosis and exact Menu idle phase.",
   "limits": "Local Xcode27.1/iOS26.2 build23C52 differs from hosted Xcode26.3/build23C54. This does not replace failed f20 hosted evidence. FreeJourney and History changes still pending their focused native runs."

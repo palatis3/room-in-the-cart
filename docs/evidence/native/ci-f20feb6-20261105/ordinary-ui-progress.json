@@ -1,8 +1,8 @@
 {
   "candidate": "f20feb685f95e7da1c7a23f26eff499d2696329f",
   "run": 41994028642,
-  "observedAt": "2026-11-05T09:19:04.832417+00:00",
-  "completedOrdinaryUIPassed": 10,
+  "observedAt": "2026-11-05T09:54:58.059460+00:00",
+  "completedOrdinaryUIPassed": 15,
   "expectedOrdinaryUI": 50,
   "coverageComplete": false,
   "shards": [
@@ -47,7 +47,40 @@
         "RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresRecordsDetailAndIndependentShoppingList"
       ],
       "rawLogSHA256": "2152c2fa35b58e42da003f28deb7565c3a06e319e1067a494e9e8a56400d9466"
+    },
+    {
+      "shard": "ui-06",
+      "job": 127139510055,
+      "artifact": 13403843885,
+      "artifactSHA256": "77545ef938cbd225f098bcae6d4f0d78b700262ec0630767d9497b93a1d27d0e",
+      "githubDigestVerified": true,
+      "hostedConclusion": "success",
+      "independentGuardExit": 0,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 2,
+      "warningEvidence": [
+        {
+          "selector": "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekReservationDraftCannotFollowAnotherPickup",
+          "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+          "count": 2,
+          "maximum": 2,
+          "menuActivity": {
+            "tap": "Tap \"ledgerShopPicker\" Button",
+            "phase": "Synthesize event"
+          }
+        }
+      ],
+      "selectors": [
+        "RoomInTheCartUITests/ContextualNavigationUITests/testAuthorizationHoldIsOptionalAndSeparateFromCheckoutCap",
+        "RoomInTheCartUITests/ContextualNavigationUITests/testUnknownTaxKeepsWeighedPickupUnresolved",
+        "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekReservationDraftCannotFollowAnotherPickup",
+        "RoomInTheCartUITests/FreeJourneyUITests/testSpanishMealWeekListAndGridShowDatedProtectedLunch",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testKnownComparisonSavesAndReopensWithItemOnlyLimit"
+      ],
+      "rawLogSHA256": "f3ea32e978d4225db2047e4fd99d366cb29bb2a632ebe2a25079099d2ebcec88"
     }
   ],
-  "scope": "Both completed artifacts independently checked against the replayed compiled plan, exact raw lifecycle and detailed runtime warnings. Other UI jobs remain pending; this is partial evidence only."
+  "scope": "Wholly passing shards independently checked against replayed compiled plan, exact raw lifecycle and detailed warnings. ui06 has two existing narrowly allowed Menu warnings. Separate failed-shard evidence remains failed; other UI jobs pending."
 }

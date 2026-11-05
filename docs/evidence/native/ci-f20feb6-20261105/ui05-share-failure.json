@@ -23,5 +23,21 @@
   ],
   "observation": "After Done at81.74s, XCTest logged five60-second app-animation completion waits surrounding the following scroll and switch tap. The reviewed switch remained0. Cause not yet established; Dot is reviewing screenshots and activity frames.",
   "rawLogSHA256": "25a8fcc45cf03d0320d11f74ef09545df6d41ee90aa391e458c104dc9df68d7d",
-  "limits": "No animation or idleness checks disabled, no retry, no timeout change. Hosted case remains failed."
+  "limits": "No animation or idleness checks disabled, no retry, no timeout change. Hosted case remains failed.",
+  "dotPersonalReview": {
+    "tapPoints": [
+      356.4,
+      179.5
+    ],
+    "approximateVisibleSwitchRectPoints": [
+      309,
+      166,
+      372,
+      194
+    ],
+    "softwareKeyboardVisibleAtTap": false,
+    "interpretation": "Recording and saved event argue against a clipped/offscreen tap. Event establishes injection intent, not delivery or binding transition. Immediate snapshot exposes only app root; enabled/hit-test hierarchy remains unknown. Video alignment/scaling uncertainty retained.",
+    "source": "UI05 isolated exports and lossless plist-to-JSON handoff bf35ade6afd2d9690e980d3c16f599738f4f962ce45176b8b417f1cc1d8b6ca5"
+  },
+  "nextDiagnostic": "Narrow pre/post screenshot, AX, geometry and state attachments around existing single tap, keeping required value1. Native diagnostic run pending; instrumentation can affect timing and does not by itself fix or explain the hosted failure."
 }

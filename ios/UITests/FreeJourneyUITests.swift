@@ -145,7 +145,7 @@ import XCTest
         fill("Main branch", into: "Branch", replacing: true)
         fill("Tuesday 5 PM", into: "Pickup or delivery slot", replacing: true)
         fill("Test checkout", into: "Source of these prices", replacing: true)
-        enableSwitch("Retailer total already includes all charges")
+        enableSwitch("Retailer total already includes all charges", diagnosticName: "Checkout-inclusive-switch")
         fill("3.00", into: "Inclusive total", requireDone: true)
         tap(app.buttons["Save and evaluate checkout"])
         back(to: "Prepare retailer handoff")
@@ -388,7 +388,9 @@ import XCTest
         restart()
         tap(app.tabBars.buttons["Dinners"])
         verifyChosenDinnerInWeek()
-        assertText("Next shop")
+        // Check the saved shop title itself. A descendant-containing query can
+        // select a larger ancestor whose frame is not the visible title row.
+        reveal(app.staticTexts.matching(NSPredicate(format: "label == %@", "Next shop")).firstMatch)
         tap(app.tabBars.buttons["Records"])
         tap(app.buttons["Family decision history"])
         tap(app.buttons["Saved pickup decisions on this iPhone"])
@@ -1058,17 +1060,38 @@ import XCTest
     }
     private func element(_ id: String) -> XCUIElement { app.descendants(matching: .any).matching(identifier: id).firstMatch }
     private func tap(_ target: XCUIElement) { reveal(target); target.tap() }
-    private func enableSwitch(_ label: String) {
+    private func enableSwitch(_ label: String, diagnosticName: String? = nil) {
         let control = app.switches[label]
         reveal(control)
         let area = scrollableArea()
         if control.frame.midY > area.maxY { scrollContent(upward: true) }
         else if control.frame.midY < area.minY { scrollContent(upward: false) }
+        if let diagnosticName { captureSwitchState(control, name: diagnosticName + "-before") }
         if control.value as? String == "0" {
             // The accessibility frame includes the Form label. Tap the trailing switch itself.
             control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
         }
+        if let diagnosticName { captureSwitchState(control, name: diagnosticName + "-after") }
         XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
+    }
+    private func captureSwitchState(_ control: XCUIElement, name: String) {
+        // Retain evidence for the hosted one-tap/animation-wait failure. These
+        // reads never retry the tap, disable animations or change app state.
+        let exists = control.exists
+        var facts = ["Captured at: \(Date().timeIntervalSince1970)", "Exists: \(exists)"]
+        if exists {
+            let frame = control.frame
+            let tapPoint = CGPoint(x: frame.minX + frame.width * 0.92, y: frame.midY)
+            facts += ["Frame: \(frame)", "Requested tap point: \(tapPoint)", "Enabled: \(control.isEnabled)",
+                      "Hittable: \(control.isHittable)", "Value: \(String(describing: control.value))"]
+        }
+        facts.append("Software keyboard present: \(app.keyboards.firstMatch.exists)")
+        facts.append("Measured content area: \(scrollableArea())")
+        let state = XCTAttachment(string: facts.joined(separator: "\n"))
+        state.name = name + "-state"; state.lifetime = .keepAlways; add(state)
+        let hierarchy = XCTAttachment(string: app.debugDescription)
+        hierarchy.name = name + "-accessibility"; hierarchy.lifetime = .keepAlways; add(hierarchy)
+        captureSystemScreen(name)
     }
     private func fill(_ text: String, into id: String, replacing: Bool = false, requireDone: Bool = false) {
         let field = element(id); tap(field)
@@ -1080,12 +1103,14 @@ import XCTest
     }
     private func reveal(_ target: XCUIElement) {
         for attempt in 0..<24 {
-            // isHittable already requires existence. Avoid another accessibility
-            // snapshot before every action in the complete pickup journey.
-            if target.isHittable { return }
+            // Offscreen lazy rows can be absent from the accessibility tree.
+            // Check once before asking for hittability, which otherwise makes
+            // XCTest retry the missing element before each bounded scroll.
+            let exists = target.exists
+            if exists && target.isHittable { return }
             let area = scrollableArea()
             let upward: Bool
-            if target.exists {
+            if exists {
                 let frame = target.frame
                 upward = frame.isEmpty ? attempt < 16 : frame.midY > area.midY
             } else { upward = attempt < 16 }

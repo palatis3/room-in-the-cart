@@ -1,8 +1,8 @@
 {
   "candidate": "f20feb685f95e7da1c7a23f26eff499d2696329f",
   "run": 41994028672,
-  "observedAt": "2026-11-05T09:47:20.752261+00:00",
-  "completedVerifiedPasses": 16,
+  "observedAt": "2026-11-05T10:06:58.794226+00:00",
+  "completedVerifiedPasses": 18,
   "expectedFixtureCases": 44,
   "coverageComplete": false,
   "shards": [
@@ -83,6 +83,20 @@
       "runtimeWarnings": 0,
       "independentGuardExit": 0,
       "rawLogSHA256": "39d395ec078dce548d4886458c81eb2efe1104e2fc481b262774885d970f940c"
+    },
+    {
+      "suite": "RecipeLibraryAcceptanceUITests",
+      "job": 127143124152,
+      "artifact": 13405860244,
+      "artifactSHA256": "0cb6b3f7e33d5ffe65044859795e479ea0bd0dcacb99c5b0527bbb36a287113b",
+      "githubDigestVerified": true,
+      "compiledPlanIndependentlyMatched": true,
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "independentGuardExit": 0,
+      "verification": "Sol6.1xhigh independently checked89 archive entries,22 exact plan files and fresh compiled enumeration replay; root reviewed scratch proof."
     }
   ],
   "limits": "Partial passes only. HistoryGrantRead failed and is investigated separately; other jobs remain pending. No real provider activation or physical-device acceptance follows from these guarded fixtures."
