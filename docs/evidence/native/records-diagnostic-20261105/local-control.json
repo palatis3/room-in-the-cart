@@ -1,0 +1,19 @@
+{
+  "candidate": "23a73a890afbaa23d3c58ae6b0cf63a8b2e2fb71",
+  "artifactID": 13413073040,
+  "sourceSHA256": "7ba8e67e407e938e54e483d7fa6f613be390104787610b3ae25815cbea416385",
+  "simulator": "0E147FE6-FCD4-4F9F-92C7-DFFFA4AFDCA4",
+  "scope": "One diagnostic run with original hosted products on local iOS26.2 build23C52, Xcode27.1 harness. Hosted original used23C54/Xcode26.3. All raw output remains local/private. No hosted result changed.",
+  "nativeExit": 0,
+  "strictExit": 0,
+  "selected": 1,
+  "passed": 1,
+  "failed": 0,
+  "skipped": 0,
+  "runtimeWarnings": 0,
+  "simulatorFinalState": "Shutdown",
+  "all264ProductAndPlanFilesUnchanged": true,
+  "originalArtifactDigestVerified": true,
+  "interpretation": "Nonreproduction with original hosted candidate products on different local runtime/Xcode harness. Original hosted Records failure remains failed and unexplained. Raw local evidence stays private; no recovery keys, screenshots, hierarchy or raw result content published.",
+  "checkerSHA256": "e72c993949368254708431f10d2460c1e1879e3a05d586f3f142c36ecb32dd5e"
+}

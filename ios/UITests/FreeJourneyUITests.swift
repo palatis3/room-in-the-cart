@@ -103,8 +103,8 @@ import XCTest
 
 #endif
 
-    func testCancellingSystemShareKeepsTheFrozenPickupUnplaced() {
-        exerciseRetailerShareCancellation()
+    func testCancellingSystemShareKeepsTheFrozenPickupUnplaced() throws {
+        try exerciseRetailerShareCancellation()
     }
 
     func testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced() async throws {
@@ -119,11 +119,11 @@ import XCTest
         captureSystemScreen("System Settings - Reduce Motion enabled")
 
         avoidIOS17SnapshotLoggingCrash()
-        exerciseRetailerShareCancellation()
+        try exerciseRetailerShareCancellation()
         XCTAssertTrue(UIAccessibility.isReduceMotionEnabled, "Reduce Motion must stay enabled through relaunch")
     }
 
-    private func exerciseRetailerShareCancellation() {
+    private func exerciseRetailerShareCancellation() throws {
         launch(reset: true)
         openShoppingList()
         tap(element("ledgerStartShop"))
@@ -158,15 +158,30 @@ import XCTest
         tap(app.buttons["Share dated list"])
         let close = app.buttons.matching(NSPredicate(format: "identifier == %@ OR label == %@", "header.closeButton", "Close")).firstMatch
         let closeReady = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND hittable == true"), object: close)
-        XCTAssertEqual(XCTWaiter.wait(for: [closeReady], timeout: 15), .completed, app.debugDescription)
-        close.tap()
-        // The system sheet can expose Close while presentation is still settling.
-        if !close.waitForNonExistence(timeout: 4) {
-            XCTAssertTrue(close.isHittable, app.debugDescription)
-            close.tap()
-            XCTAssertTrue(close.waitForNonExistence(timeout: 8), "The system share sheet stayed open after Close.")
+        _ = try XCTUnwrap(
+            XCTWaiter.wait(for: [closeReady], timeout: 15) == .completed ? close : nil,
+            "The system share sheet Close control did not become ready. \(app.debugDescription)")
+        func waitForShareDismissal(timeout: TimeInterval) -> Bool {
+            let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+                (!close.exists || !close.isHittable)
+                    && snapshot.exists && snapshot.isHittable && snapshot.label == frozenText
+            }, object: nil)
+            return XCTWaiter.wait(for: [dismissed], timeout: timeout) == .completed
         }
-        assertText("Share cancelled")
+        close.tap()
+        // Remote accessibility elements can remain after the sheet moves offscreen.
+        // Require the exact underlying snapshot to be actionable again.
+        if !waitForShareDismissal(timeout: 4) {
+            _ = try XCTUnwrap(close.exists && close.isHittable ? close : nil,
+                              "The share sheet did not return to the frozen snapshot. \(app.debugDescription)")
+            close.tap()
+            _ = try XCTUnwrap(waitForShareDismissal(timeout: 8) ? snapshot : nil,
+                              "The share sheet did not return to the frozen snapshot after Close.")
+        }
+        let cancelled = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Share cancelled")).firstMatch
+        reveal(cancelled)
+        _ = try XCTUnwrap(cancelled.exists && cancelled.isHittable && (!close.exists || !close.isHittable) ? cancelled : nil,
+                          "Show the saved Share cancelled history before relaunching.")
         restart()
         shopRoot()
         tap(app.buttons["Pickup, repairs and handoffs"])

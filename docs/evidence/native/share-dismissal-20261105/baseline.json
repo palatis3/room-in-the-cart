@@ -1,0 +1,168 @@
+{
+  "scope": "Original local pair before dismissal predicate correction; failed preserved",
+  "buildExit": 0,
+  "nativeExit": 65,
+  "strictExit": 1,
+  "selected": 2,
+  "passed": 1,
+  "failed": 1,
+  "skipped": 0,
+  "runtimeWarnings": 0,
+  "simulator": "2F23EB49-4E9E-43D4-AF5F-CDD710C4C23A",
+  "simulatorFinalState": "Shutdown",
+  "sourceManifestSHA256": "fafb80f3209477e7644974253074c1d0a07377d7c43c22a502eab8da9aa3d7a4",
+  "publicConfigManifestSHA256": "911b85fc373a77f01bf030f4d4aec26d132aae886b247fcf553e6b9157ddccfb",
+  "productManifestSHA256": "06bbfef21404d3615b8ae790d66c7ba77d459d272464a5bd87c872e25854d0cc",
+  "sourceAndProductsUnchangedAfterRun": true,
+  "normalFailure": "Close nonexistence assertion at line169; actual video shows panel dismissed but an offscreen remote Close remains in hierarchy. Saved cancellation history not checked before this failure.",
+  "reduceMotionResult": "Passed119seconds, including frozen snapshot/cancelled history after restart; whole invocation remains failed.",
+  "review": {
+    "runArtifact": "../share-readiness-stop",
+    "normalStatus": "FAILED,172.718s,FreeJourneyUITests.swift:169",
+    "reduceMotionStatus": "PASSED,119.380s",
+    "originalResultsUnchanged": true,
+    "finding": "Normal-share failure is a dismissal-observation failure: the second Close visibly dismisses the panel, but offscreen remote accessibility elements remain, so strict nonexistence times out. This does not demonstrate an application cancellation or saved-state defect.",
+    "events": [
+      {
+        "testSeconds": 87.36,
+        "event": "Share tap synthesized"
+      },
+      {
+        "testSeconds": 88.94,
+        "event": "Unchanged15-second Close exists&&hittable readiness check begins and succeeds"
+      },
+      {
+        "testSeconds": 89.95,
+        "event": "First Close tap synthesized at(364,110); gesture duration0.05s; target app pid24902",
+        "attachment": "attachments/10BFF35A-5729-48CE-A3C4-CF71173CA048"
+      },
+      {
+        "testSeconds": 95.37,
+        "event": "Second Close action starts; interruption check discovers Settings banner overlapping Close"
+      },
+      {
+        "testSeconds": [
+          96.01,
+          102.03
+        ],
+        "event": "Default XCTest interruption handler waits for banner to expire; no banner tap or app-state bypass"
+      },
+      {
+        "testSeconds": 102.15,
+        "event": "Second Close synthesized at(364,110) after successful interruption handling; same0.05s gesture",
+        "attachment": "attachments/F15F7FA9-16CA-4DB6-BF3D-E041D300703A"
+      },
+      {
+        "testSeconds": [
+          102.47,
+          162.49
+        ],
+        "event": "XCTest waits for app idle and reports animation-completion notification not received"
+      },
+      {
+        "testSeconds": [
+          162.5,
+          171.14
+        ],
+        "event": "8-second strict Close nonexistence wait fails, collects final hierarchy"
+      },
+      {
+        "testSeconds": 171.27,
+        "event": "Line169 assertion fails; no callback/history/restart checks executed"
+      }
+    ],
+    "visualEvidence": [
+      {
+        "frame": "frames/recording-00088.500.png",
+        "actualPTS": 88.47666666666667,
+        "observation": "Dimmed retailer page without panel during initial share presentation"
+      },
+      {
+        "frame": "frames/recording-00089.000.png",
+        "actualPTS": 88.995,
+        "observation": "Share panel in transition, top near screen edge and Close visibly above settled y110 center"
+      },
+      {
+        "frame": "frames/recording-00090.000.png",
+        "actualPTS": 89.85333333333334,
+        "observation": "Settled share panel, Close center at(364,110); panel still open after first action"
+      },
+      {
+        "frame": "frames/recording-00095.000.png",
+        "actualPTS": 94.60333333333334,
+        "observation": "Settings Apple Intelligence banner overlaps Close"
+      },
+      {
+        "frame": "frames/recording-00102.000.png",
+        "actualPTS": 101.98333333333333,
+        "observation": "Panel moving downward in dismissal transition following second action"
+      },
+      {
+        "frame": "frames/recording-00105.000.png",
+        "actualPTS": 102.84,
+        "observation": "Undimmed underlying frozen retailer page; panel no longer visible. This sample lasts54.6816667s."
+      },
+      {
+        "frame": "attachments/FF72ED8D-3D98-4F36-A708-1D9A9341A858.png",
+        "observation": "Failure screenshot still shows undimmed underlying frozen snapshot, not open share panel"
+      }
+    ],
+    "banner": {
+      "owner": "com.apple.springboard",
+      "identifier": "NotificationShortLookView",
+      "frame": [
+        8,
+        58.7,
+        386,
+        78.7
+      ],
+      "text": "SETTINGS, now, Ready for Apple Intelligence, Time to experience the new personal intelligence system.",
+      "evidence": "attachments/E39D6053-7A75-4A1F-B1D1-566199FB0C17.txt",
+      "conclusion": "Banner covers settled Close rect[346,92,36,36] and tap(364,110). XCTest waits it away before second event. It does not explain lack of strict nonexistence after visual dismissal."
+    },
+    "finalHierarchy": {
+      "evidence": "attachments/265DD8E2-6228-4948-A059-6EE38F5E9845.txt:153",
+      "viewport": [
+        0,
+        0,
+        402,
+        874
+      ],
+      "ActivityListViewAndRemoteContainerFrame": [
+        0,
+        874,
+        402,
+        812
+      ],
+      "CloseRemoteFrame": [
+        346,
+        20,
+        36,
+        36
+      ],
+      "remotePid": 25342,
+      "conclusion": "Host subtree begins exactly below viewport. Close remains in remote hierarchy with remote-local coordinates; existence alone incorrectly labels this visible-open. Actual isHittable value at final failure was not recorded."
+    },
+    "callbackAndHistory": {
+      "normal": "Not established. No callback instrumentation or visible Share cancelled row in normal artifact. Test stops before history reveal; final screenshot is at top of form and offscreen history is absent from AX snapshot. Neither missing nor successful callback can be inferred.",
+      "reduceMotion": "Passed callback/history checks and relaunch snapshot/placement checks. Retained post-relaunch screenshot visibly shows Share opened and Share cancelled rows at9:06AM.",
+      "reduceMotionEvidence": "reduce-motion-png/888D9970-6412-4EB7-BD36-810578856097.png",
+      "source": "PickupHomeView completion handler records shareCompleted/shareCancelled; sharing state is not explicitly cleared in that closure. This is a potential investigation point, not a demonstrated defect: no callback/state trace shows an inconsistency, and the pair contains successful full cancellation/persistence under Reduce Motion."
+    },
+    "firstTapAssessment": "Both tap records target the correct settled Close center. Initial video presentation is still changing in neighboring frames, consistent with early readiness, but MP4/activity timestamp registration differs by1.065s and lacks exact clock mapping; cannot prove first tap missed moving geometry or identify an app-side cause. No successful first dismissal is observed.",
+    "patch": {
+      "path": "dismissal-visibility-and-history.patch",
+      "status": "Scratch-only; git apply --check passes against current throwing helper; no native build/test.",
+      "change": "Keep15-second initial readiness and4/8-second dismissal windows. Treat dismissal as Close absent/non-hittable AND exact frozen snapshot existing/hittable. Retry once only when Close is still hittable, throwing if not. After dismissal reveal the Share cancelled history and require it exists/hittable with Close still non-hittable before restart. Preserve post-relaunch frozen/unplaced/history assertions.",
+      "falsePositivePrevention": "Close merely covered by a banner cannot pass while the open panel covers the exact frozen snapshot. Blank or active modal covering that snapshot cannot satisfy its hittability. No saved cancellation history means explicit throw before restart. Snapshot exact label also rules out changed frozen contents. Offscreen retained AX alone is no longer mistaken for visible presentation.",
+      "limits": "Actual non-hittability of retained Close must be validated by root; if XCTest incorrectly reports it hittable, this still fails. No timeout extension, animation suppression, unrelated query fallback, app mutation, or cancellation inference. This patch cannot retroactively pass the original failed run."
+    },
+    "constraints": "Isolated copy only; media-only AVFoundation extraction, artifact/source reads and scratch patch. No shared changes, native app build/test/simulator operations, rerun, push or deployment."
+  },
+  "videoMetadataSHA256": "68b4112047daf5404035a59b26e7d61a6c2616a528e2d777124206c766686aef",
+  "rootFollowUp": "Keep15s/4s/8s windows; require nonhittable Close, actionable exact underlying frozen snapshot, visible cancelled history before restart. No product behavior change.",
+  "documentation": [
+    "https://developer.apple.com/documentation/xcuiautomation/xcuielement/exists",
+    "https://developer.apple.com/documentation/xcuiautomation/xcuielement/ishittable"
+  ]
+}

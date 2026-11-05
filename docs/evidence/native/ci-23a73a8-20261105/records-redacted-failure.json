@@ -1,0 +1,21 @@
+{
+  "candidate": "23a73a890afbaa23d3c58ae6b0cf63a8b2e2fb71",
+  "runID": 42021894739,
+  "jobID": 127238287469,
+  "artifactID": 13417759383,
+  "sha256": "a6a5f99641644a091b3b5400770998b297c8005d7dce2ceaeebbbea870052195",
+  "digestVerified": true,
+  "planByteIdentical": true,
+  "report": "Records Media verification **failed**.\n\n| XCTest selector | Result | Executed | Passed | Failed | Skipped | Expected failures | Runtime warnings |\n| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |\n| `RoomInTheCartUITests/RecordsMediaUITests/testSelectedPhotoDisclosureEncryptedPreviewCancelSiblingRecoveryAndReadablePhoto` | Failed | 1 | 0 | 1 | 0 | 0 | 0 |\n",
+  "evidenceScope": "Redacted report only; raw test log, result bundle, screenshot and recovery material were intentionally not uploaded and have not been downloaded. Independent raw replay is unavailable.",
+  "failureLocation": "Not present in allowlisted report; cause unproven.",
+  "jobStarted": "2026-11-05T13:23:47Z",
+  "jobCompleted": "2026-11-05T13:31:35Z",
+  "nativeStep": [
+    {
+      "startedAt": "2026-11-05T13:27:25Z",
+      "completedAt": "2026-11-05T13:30:57Z"
+    }
+  ],
+  "status": "original-failure-retained"
+}

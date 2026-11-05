@@ -27,37 +27,95 @@ def read_json(path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def modern_location(case, source, line_count):
+    """Read direct failure children only; return (valid/missing/invalid, line)."""
+    try:
+        children = case.get("children", [])
+        if not isinstance(children, list):
+            return "invalid", None
+        locations = set()
+        for child in children:
+            if not isinstance(child, dict):
+                return "invalid", None
+            if child.get("nodeType") != "Failure Message":
+                continue
+            if "sourceLocation" not in child:
+                continue
+            loc = child["sourceLocation"]
+            if not isinstance(loc, dict):
+                return "invalid", None
+            path, line = loc.get("filePath"), loc.get("lineNumber")
+            if (not isinstance(path, str) or path != str(source.resolve()) or
+                    type(line) is not int or not 1 <= line <= line_count):
+                return "invalid", None
+            locations.add(line)
+        if not locations:
+            return "missing", None
+        return ("valid", next(iter(locations))) if len(locations) == 1 else ("invalid", None)
+    except (TypeError, ValueError, OSError, RuntimeError):
+        return "invalid", None
+
+
+def legacy_location(bundle_json, source, line_count):
+    try:
+        issues = bundle_json["issues"]["testFailureSummaries"]["_values"]
+        if not isinstance(issues, list):
+            return "invalid", None
+        lines = set()
+        for issue in issues:
+            if issue["testCaseName"]["_value"] != f"{SUITE}.{METHOD}()":
+                continue
+            location = issue.get("documentLocationInCreatingWorkspace")
+            if location is None:
+                continue
+            url = urlsplit(location["url"]["_value"])
+            if (url.scheme != "file" or url.netloc or url.query or
+                    re.search(r"%2f|%5c", url.path, re.IGNORECASE) or
+                    unquote(url.path) != str(source.resolve())):
+                return "invalid", None
+            fields = parse_qs(url.fragment, keep_blank_values=True, strict_parsing=True)
+            if set(fields) != {"StartingLineNumber", "EndingLineNumber"}:
+                return "invalid", None
+            start, end = fields["StartingLineNumber"], fields["EndingLineNumber"]
+            if start != end or len(start) != 1 or not re.fullmatch(r"[0-9]{1,6}", start[0]):
+                return "invalid", None
+            line = int(start[0]) + 1  # Legacy URL is zero-based.
+            if not 1 <= line <= line_count:
+                return "invalid", None
+            lines.add(line)
+        if not lines:
+            return "missing", None
+        return ("valid", next(iter(lines))) if len(lines) == 1 else ("invalid", None)
+    except (KeyError, TypeError, ValueError, AttributeError, OSError, RuntimeError):
+        return "invalid", None
+
+
 def assertion_line(bundle_json, source, line_count):
-    issues = bundle_json["issues"]["testFailureSummaries"]["_values"]
-    lines = set()
-    for issue in issues:
-        if issue["testCaseName"]["_value"] != f"{SUITE}.{METHOD}()":
-            continue
-        url = urlsplit(issue["documentLocationInCreatingWorkspace"]["url"]["_value"])
-        if url.scheme != "file" or url.netloc or url.query or unquote(url.path) != str(source.resolve()):
-            continue
-        fields = parse_qs(url.fragment)
-        start = fields.get("StartingLineNumber", [])
-        end = fields.get("EndingLineNumber", [])
-        if start == end and len(start) == 1 and re.fullmatch(r"[0-9]{1,6}", start[0]):
-            line = int(start[0]) + 1  # xcresult workspace locations are zero-indexed.
-            if line <= line_count:
-                lines.add(line)
-    return next(iter(lines)) if len(lines) == 1 else None
+    status, line = legacy_location(bundle_json, source, line_count)
+    return line if status == "valid" else None
 
 
-def read_assertion_line(evidence, source, line_count):
+def read_legacy_location(evidence, source, line_count):
     bundle = evidence / "Tests-retry.xcresult"
     if not bundle.is_dir():
         bundle = evidence / "Tests.xcresult"
+    if not bundle.is_dir():
+        return "missing", None
     try:
         data = subprocess.check_output(
             ["xcrun", "xcresulttool", "get", "object", "--legacy", "--format", "json", "--path", str(bundle)],
             stderr=subprocess.DEVNULL, timeout=5,
         )
-        return assertion_line(json.loads(data), source, line_count)
+        return legacy_location(json.loads(data), source, line_count)
     except (OSError, ValueError, TypeError, KeyError, AttributeError, subprocess.SubprocessError):
+        return "invalid", None
+
+
+def combined_location(modern, legacy):
+    if modern[0] == "invalid" or legacy[0] == "invalid":
         return None
+    lines = {line for status, line in (modern, legacy) if status == "valid"}
+    return next(iter(lines)) if len(lines) == 1 else None
 
 
 def report(evidence, source, runner_status):
@@ -96,7 +154,9 @@ def report(evidence, source, runner_status):
         f"| `{SELECTOR}` | {result} | " + " | ".join(map(str, [*counts, warning_count])) + " |",
     ]
     if result == "Failed":
-        line = read_assertion_line(evidence, source, len(source_text.splitlines()))
+        line_count = len(source_text.splitlines())
+        line = combined_location(modern_location(case, source, line_count),
+                                 read_legacy_location(evidence, source, line_count))
         if line is not None:
             rows.extend(["", f"Failure location `{SOURCE}:{line}`."])
     return "\n".join(rows), 0 if passed else 1

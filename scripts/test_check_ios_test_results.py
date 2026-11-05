@@ -134,7 +134,8 @@ class RuntimeWarningTests(unittest.TestCase):
     def inspect(self, markers, messages, *, selector=None, device=None, summary_warnings=None,
                 configuration="Test Scheme Action", extra_nodes=(), detail_changes=None,
                 activity_messages=None, activity_tap=None, activity_phase=None, activity_changes=None, run_changes=None,
-                activity_type=INTERNAL_ACTIVITY, activity_issue_ids=None, mutate_details=None, case_result="Passed"):
+                activity_type=INTERNAL_ACTIVITY, activity_issue_ids=None, mutate_details=None,
+                mutate_activity=None, case_result="Passed"):
         selector = selector or next(iter(OBSERVED_MENU_WARNINGS))
         url = "test://com.apple.xcode/RoomInTheCart/" + selector
         device = {"deviceId": "12345678-1234-4abc-8def-000000000001", **(device or OBSERVED_DEVICE)}
@@ -180,6 +181,8 @@ class RuntimeWarningTests(unittest.TestCase):
                 "childActivities": issues,
             }],
         }], **(run_changes or {})}
+        if mutate_activity is not None:
+            mutate_activity(run)
 
         def read_activity(requested):
             self.assertEqual(requested, url)
@@ -326,6 +329,64 @@ class RuntimeWarningTests(unittest.TestCase):
                         **{**options, **changes})["status"], "unexpected-warnings")
             self.assertEqual(self.inspect([MULTIPLE_WARNINGS], ["different warning"] * 2,
                 **options)["status"], "unexpected-warnings")
+
+    def test_known_trip_observed_phases_keep_one_cap_and_reject_mixed_paths(self):
+        selector = "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption"
+        phases = ("Synthesize event", "Wait for dev.roominthecart.app.debug to idle")
+        for phase in phases:
+            options = {"selector": selector, "activity_phase": phase}
+            for count in (1, 2, 3):
+                with self.subTest(phase=phase, count=count):
+                    markers = [OBSERVED_WARNING] if count == 1 else [MULTIPLE_WARNINGS]
+                    result = self.inspect(markers, [OBSERVED_WARNING] * count, **options)
+                    self.assertEqual(result["warnings"][0]["maximum"], 2)
+                    self.assertEqual(result["status"], "passed" if count <= 2 else "unexpected-warnings")
+            for changes in (
+                {"activity_tap": 'Tap "Other control" Button'},
+                {"activity_phase": "Find the button"},
+                {"device": {**OBSERVED_DEVICE, "osBuildNumber": "23C52"}},
+                {"configuration": "Other configuration"},
+                {"selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testUnreviewed"},
+                {"activity_type": "com.apple.dt.xctest.activity-type.user-created"},
+            ):
+                with self.subTest(phase=phase, changes=changes):
+                    self.assertEqual(self.inspect([MULTIPLE_WARNINGS], [OBSERVED_WARNING] * 2,
+                        **{**options, **changes})["status"], "unexpected-warnings")
+            self.assertEqual(self.inspect([MULTIPLE_WARNINGS], ["different warning"] * 2,
+                **options)["status"], "unexpected-warnings")
+
+        def mixed_paths(run):
+            phases = run["activities"][0]["childActivities"]
+            other = copy.deepcopy(phases[0])
+            other["title"] = "Synthesize event"
+            other["childActivities"] = phases[0]["childActivities"][1:]
+            phases[0]["childActivities"] = phases[0]["childActivities"][:1]
+            phases.append(other)
+
+        def deeper_path(run):
+            tap = run["activities"][0]
+            tap["childActivities"] = [{"title": "Unreviewed ancestor", "isAssociatedWithFailure": False,
+                                       "activityType": INTERNAL_ACTIVITY, "childActivities": tap["childActivities"]}]
+
+        def missing_phase(run):
+            tap = run["activities"][0]
+            tap["childActivities"] = tap["childActivities"][0]["childActivities"]
+
+        # Mixed phases remain unreviewed; they never get a separate allowance per phase.
+        for mutate in (mixed_paths, deeper_path, missing_phase):
+            for count in (2, 3):
+                with self.subTest(mutation=mutate.__name__, count=count):
+                    self.assertEqual(self.inspect([MULTIPLE_WARNINGS], [OBSERVED_WARNING] * count,
+                        selector=selector, mutate_activity=mutate)["status"], "unexpected-warnings")
+        with self.assertRaisesRegex(ValueError, "Duplicated .* attachment UUID"):
+            self.inspect([MULTIPLE_WARNINGS], [OBSERVED_WARNING] * 2, selector=selector,
+                         activity_issue_ids=["12345678-1234-4abc-8def-000000000001"] * 2)
+        with self.assertRaises(ValueError):
+            self.inspect([MULTIPLE_WARNINGS], [OBSERVED_WARNING] * 2, selector=selector,
+                         activity_messages=[OBSERVED_WARNING])
+        with self.assertRaises(ValueError):
+            self.inspect([MULTIPLE_WARNINGS], [OBSERVED_WARNING] * 2, selector=selector,
+                         detail_changes={"testIdentifierURL": "test://wrong-case"})
 
     def test_same_count_warning_substitution_rejects_duplicate_issue_uuid(self):
         first = "098DC6EC-90D4-40A9-8363-2BF5B66767FE"

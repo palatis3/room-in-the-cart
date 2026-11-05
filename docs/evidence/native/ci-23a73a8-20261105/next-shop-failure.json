@@ -24,5 +24,11 @@
   "rawLogSHA256": "04159d1fae43774a67dd507127885196848bd0ff44221ea8f4e67c531d5b699a",
   "strictReportSHA256": "d9c0056e318788d47ba75d783d65bf236a6022af21a3123c229547ce6a7d3011",
   "status": "failed-preserved-no-rerun",
-  "interpretation": "Repeated60-second XCTest animation-idle waits observed before720-second timeout; root/Lumpy read-only triage ongoing, cause not established. Original gate remains failed."
+  "interpretation": "Original result is a failed setup path, not evidence that the Next shop action itself failed. Product/runtime or prior-test sequence cause unproven. Later urgent-repair case in ui05 passed. Fresh keyboard controls cannot rule out simulator/test-sequence effects.",
+  "observedSequence": [
+    "Initial urgent-repair form, before saving need or opening Next shop.",
+    "Food field receives Rice; Done synthesis18.39s, post-event idle18.73s is followed by first60s missing-animation notification.",
+    "Eleven successive approximately60s idle waits dominate purpose/required-amount input;720s limit reached before final Done completes."
+  ],
+  "sharedImplementation": "PickupRepairView.swift line37 and DinnerReservationView both call Theme.keyboardDoneAction; this identifies common source, not causal ownership."
 }
