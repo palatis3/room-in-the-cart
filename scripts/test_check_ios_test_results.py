@@ -80,17 +80,20 @@ class RuntimeWarningTests(unittest.TestCase):
 
         def read_detail(requested):
             self.assertEqual(requested, url)
-            self.assertTrue(markers, "Clean test cases do not need another xcresulttool process")
             return details
 
         return inspect_runtime_warnings(summary, nodes, list(test_cases(nodes)), read_detail)
 
-    def test_omitted_summary_warns_about_availability_and_clean_tree_is_examined(self):
+    def test_omitted_summary_still_requires_a_clean_detail_export(self):
         evidence = self.inspect([], [])
         self.assertIsNone(evidence["summaryWarningCount"])
         self.assertEqual(evidence["runtimeWarningCount"], 0)
         self.assertEqual(evidence["examinedTestCount"], 1)
-        self.assertEqual(evidence["detailExportCount"], 0)
+        self.assertEqual(evidence["detailExportCount"], 1)
+
+    def test_detail_only_warning_is_rejected_when_summary_and_tree_omit_it(self):
+        with self.assertRaisesRegex(ValueError, "disagree with test tree"):
+            self.inspect([], [OBSERVED_WARNING])
 
     def test_duplicate_occurrences_are_counted_and_capped_for_each_case(self):
         for selector, maximum in OBSERVED_LIMITS.items():
@@ -127,9 +130,11 @@ class RuntimeWarningTests(unittest.TestCase):
         for markers, messages, changes, error in (
             ([MULTIPLE_WARNINGS], [OBSERVED_WARNING], {}, "disagree with test tree"),
             ([OBSERVED_WARNING], ["different"], {}, "disagree with test tree"),
-            ([OBSERVED_WARNING], [], {"testRuns": []}, "Missing test runs"),
-            ([OBSERVED_WARNING], [], {"testIdentifierURL": "other"}, "another test or device"),
-            ([OBSERVED_WARNING], [], {"devices": []}, "another test or device"),
+            ([], [], {"testRuns": []}, "Missing test runs"),
+            ([], [], {"testRuns": {}}, "Missing test runs"),
+            ([], [], {"testRuns": [{"nodeType": "Future runtime diagnosis"}]}, "Unknown XCTest result node type"),
+            ([], [], {"testIdentifierURL": "other"}, "another test or device"),
+            ([], [], {"devices": []}, "another test or device"),
         ):
             with self.subTest(error=error), self.assertRaisesRegex(ValueError, error):
                 self.inspect(markers, messages, detail_changes=changes)
@@ -146,7 +151,9 @@ class RuntimeWarningTests(unittest.TestCase):
                 case = {"nodeType": "Test Case", "nodeIdentifierURL": "test://suite/case"}
                 inspect_runtime_warnings(
                     self.warning_summary(OBSERVED_DEVICE),
-                    [case, node], [("Suite/Class/testCase", case)], lambda _: {},
+                    [case, node], [("Suite/Class/testCase", case)],
+                    lambda url: {"testIdentifierURL": url, "devices": [OBSERVED_DEVICE],
+                                 "testRuns": [{"nodeType": "Device"}]},
                 )
         omitted = {"nodeType": "Test Case", "nodeIdentifierURL": "test://suite/omitted"}
         with self.assertRaisesRegex(ValueError, "did not examine every test case"):

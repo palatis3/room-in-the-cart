@@ -107,13 +107,10 @@ def inspect_runtime_warnings(summary, nodes, cases, read_details):
     )
     counts = Counter()
     markers = []
-    queried = 0
     for selector, node in cases:
         listed = list(warning_names(result_nodes([node])))
         markers.extend(listed)
-        if not listed:
-            continue
-        queried += 1
+        # A missing summary field or tree marker cannot establish zero warnings.
         url = node["nodeIdentifierURL"]
         details = read_details(url)
         if details["testIdentifierURL"] != url or details["devices"] != devices:
@@ -145,7 +142,7 @@ def inspect_runtime_warnings(summary, nodes, cases, read_details):
         "summaryWarningCount": None if summary_names is None else sum(summary_names.values()),
         "runtimeWarningCount": sum(counts.values()),
         "examinedTestCount": len(cases),
-        "detailExportCount": queried,
+        "detailExportCount": len(cases),
         "warnings": warnings,
     }
 
