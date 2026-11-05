@@ -22,7 +22,6 @@ struct PickupFallbackDraft: Equatable {
     var portions = ""
     var deadline: Date?
     var permitsRepeat = false
-    var permitsTrip = false
     var tripMinutes = ""
     var topUpBudget = ""
     var topUpCharges = ""
@@ -30,12 +29,51 @@ struct PickupFallbackDraft: Equatable {
     var reviews: [UUID: FallbackRecipeReview] = [:]
 }
 
-struct PickupFallbackOption: Identifiable {
+struct PickupFallbackReview {
+    var draft = PickupFallbackDraft() {
+        didSet {
+            if draft != oldValue {
+                isReviewed = false
+                agreedTrip = nil
+            }
+        }
+    }
+    private(set) var isReviewed = false
+    var agreedTrip: PickupFallbackOption?
+
+    mutating func reviewDraft() {
+        isReviewed = true
+        agreedTrip = nil
+    }
+
+    mutating func rankedOfferChanged(to best: PickupFallbackOption?) {
+        if agreedTrip != best { agreedTrip = nil }
+    }
+
+    func canUse(_ displayed: PickupFallbackOption, fresh: PickupFallbackOption?) -> Bool {
+        isReviewed && fresh == displayed && (!displayed.requiresTrip || agreedTrip == displayed)
+    }
+}
+
+struct PickupFallbackOption: Identifiable, Equatable {
+    struct Buy: Identifiable, Equatable {
+        let id: UUID // Reviewed food identity
+        let label: String
+        let count: Int64
+        let cost: Money
+    }
+
+    struct Ingredient: Equatable {
+        let name: String
+        let required: Quantity
+        let allocated: Quantity
+    }
+
     let id: UUID
     let title: String
-    let buys: [(label: String, count: Int64, cost: Money)]
+    let buys: [Buy]
     let portions: Rational
-    let ingredients: [(name: String, required: Quantity, allocated: Quantity)]
+    let ingredients: [Ingredient]
     let exclusions: [String]
     let minutes: Int
     let packCount: Int64
@@ -118,7 +156,8 @@ enum PickupFallbackOptions {
             }
             guard valid else { continue }
             let allocation = try ConfirmedStockAllocator.allocate(lots: stock, needs: outside + demands)
-            var buys: [(String,Int64,Money)] = [], count: Int64 = 0, cost: Int64 = 0
+            var buys: [PickupFallbackOption.Buy] = []
+            var count: Int64 = 0, cost: Int64 = 0
             for (food, group) in Dictionary(grouping: demands, by: \.foodID) {
                 guard let exemplar = group.first else { continue }
                 // An unconvertible protected claim makes the shared supply uncertain for every competing need.
@@ -143,7 +182,7 @@ enum PickupFallbackOptions {
                 let totalCount = count.addingReportingOverflow(packs), totalCost = cost.addingReportingOverflow(subtotal.minorUnits)
                 guard !totalCount.overflow, !totalCost.overflow else { throw DomainError.overflow }
                 count = totalCount.partialValue; cost = totalCost.partialValue
-                buys.append((offer.packLabel,packs,subtotal))
+                buys.append(.init(id: food, label: offer.packLabel, count: packs, cost: subtotal))
             }
             guard valid else { continue }
             var extraCash = Money(minorUnits: cost)
@@ -157,13 +196,14 @@ enum PickupFallbackOptions {
             }
             let travel = count > 0 ? try? DinnerEntry.minutes(draft.tripMinutes) : 0
             guard let travel, elapsed + travel <= available else { continue }
-            let ingredients = demands.compactMap { demand -> (String,Quantity,Quantity)? in
+            let ingredients = demands.compactMap { demand -> PickupFallbackOption.Ingredient? in
                 guard let coverage = allocation.demands.first(where: { $0.id == demand.id }), let amount = coverage.allocated else { return nil }
-                return (demand.name, demand.amount, Quantity(amount: amount,unit: coverage.unit,originalLiteral: ""))
+                return .init(name: demand.name, required: demand.amount, allocated: Quantity(amount: amount,unit: coverage.unit,originalLiteral: ""))
             }
             guard ingredients.count == demands.count else { continue }
             let exclusions = Set(rules + dinner.template.exclusions + dinner.template.ingredients.flatMap(\.exclusions)).sorted()
-            results.append(.init(id: dinner.id,title: dinner.template.title,buys: buys.sorted { $0.0 < $1.0 },
+            buys.sort { ($0.label, $0.id.uuidString) < ($1.label, $1.id.uuidString) }
+            results.append(.init(id: dinner.id,title: dinner.template.title,buys: buys,
                                  portions: portions,ingredients: ingredients,exclusions: exclusions,minutes: elapsed + travel,packCount: count,merchandise: .init(minorUnits: cost),extraCash: extraCash,repeatRequired: repeatRequired))
         }
         return results.sorted {

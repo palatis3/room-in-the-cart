@@ -88,7 +88,7 @@ final class AcceptedDinnerOptionsTests: XCTestCase {
         var f = try recovery()
         let topup = try XCTUnwrap(ranked(f).first)
         XCTAssertEqual(topup.packCount,1); XCTAssertEqual(topup.merchandise.minorUnits,250); XCTAssertEqual(topup.minutes,30)
-        XCTAssertFalse(f.draft.permitsTrip); XCTAssertEqual(topup.extraCash.minorUnits,275)
+        XCTAssertEqual(topup.extraCash.minorUnits,275)
         f.draft.topUpBudget = "2.74"; XCTAssertTrue(try ranked(f).isEmpty)
         f.draft.topUpBudget = "3"
         let correction = UsableObservation(id:UUID(),receipt:f.key,usable:q(7),confirmedAt:now,supersedesID:f.firstObservation,confirmedMatchToOrderLine:true)
@@ -100,6 +100,87 @@ final class AcceptedDinnerOptionsTests: XCTestCase {
         f.draft.reviews[f.dish.id]?.completedLeadReviewed = true; f.draft.deadline = nil
         XCTAssertTrue(try ranked(f).isEmpty)
     }
+    func testTripConsentOnlyAuthorizesReviewedDraftAndExactRepairAtSelection() throws {
+        var f = try recovery()
+        let ingredient = f.dish.template.ingredients[0].id
+        f.draft.portions = "6"
+        f.draft.topUpBudget = "6"
+        f.draft.reviews[f.dish.id]?.ingredients[ingredient]?.availablePacks = "2"
+        f.journey.stockLots = [.init(id: UUID(), foodID: f.line, name: "Peppers", usable: q(1),
+                                     confirmedAt: now.addingTimeInterval(1), source: .freezer)]
+
+        let shown = try XCTUnwrap(ranked(f).first)
+        var review = PickupFallbackReview()
+        review.draft = f.draft
+        review.reviewDraft()
+        XCTAssertEqual(shown.packCount, 2)
+        XCTAssertFalse(review.canUse(shown, fresh: shown))
+        review.agreedTrip = shown
+        XCTAssertTrue(review.canUse(shown, fresh: try ranked(f).first))
+        XCTAssertFalse(review.canUse(shown, fresh: nil))
+
+        // A confirmed lot becomes available after display, while the same dinner still needs a trip.
+        let updated = try XCTUnwrap(PickupFallbackOptions.ranked(journey: f.journey, library: [f.dish], chosenTemplates: [],
+                                                                  draft: f.draft, at: now.addingTimeInterval(1), paid: true).first)
+        XCTAssertEqual(updated.id, shown.id)
+        XCTAssertEqual(updated.packCount, 1)
+        XCTAssertFalse(review.canUse(shown, fresh: updated))
+        XCTAssertFalse(review.canUse(updated, fresh: updated))
+        review.rankedOfferChanged(to: updated)
+        XCTAssertNil(review.agreedTrip)
+        review.rankedOfferChanged(to: shown)
+        XCTAssertFalse(review.canUse(shown, fresh: shown))
+        review.agreedTrip = updated
+        XCTAssertTrue(review.canUse(updated, fresh: updated))
+
+        // Editing an offer requires review even when the same packages would be purchased.
+        f.draft.reviews[f.dish.id]?.ingredients[ingredient]?.availablePacks = "3"
+        XCTAssertEqual(try ranked(f).first, shown)
+        review.draft = f.draft
+        XCTAssertFalse(review.isReviewed)
+        XCTAssertNil(review.agreedTrip)
+        review.draft.reviews[f.dish.id]?.ingredients[ingredient]?.availablePacks = "2"
+        XCTAssertFalse(review.canUse(shown, fresh: shown))
+        review.reviewDraft()
+        XCTAssertFalse(review.canUse(shown, fresh: shown))
+
+        f.draft.portions = "4"
+        let onHand = try XCTUnwrap(ranked(f).first)
+        XCTAssertFalse(onHand.requiresTrip)
+        review.draft = f.draft
+        review.reviewDraft()
+        XCTAssertTrue(review.canUse(onHand, fresh: onHand))
+    }
+
+    func testTimeLimitChangesBestTopUpAndRequiresAgreementForTheNewDinner() throws {
+        var f = try recovery()
+        let faster = dinner("Quick pepper dish", count: 1)
+        var quickReview = try XCTUnwrap(f.draft.reviews[f.dish.id])
+        var offer = try XCTUnwrap(quickReview.ingredients[f.dish.template.ingredients[0].id])
+        offer.packPrice = "2.75"
+        quickReview.ingredients = [faster.template.ingredients[0].id: offer]
+        quickReview.elapsedMinutes = "5"
+        f.draft.reviews[faster.id] = quickReview
+        let library = [f.dish, faster]
+        func best(at date: Date) throws -> PickupFallbackOption {
+            try XCTUnwrap(PickupFallbackOptions.ranked(journey: f.journey, library: library, chosenTemplates: [],
+                                                        draft: f.draft, at: date, paid: true).first)
+        }
+        var review = PickupFallbackReview()
+        review.draft = f.draft
+        review.reviewDraft()
+        let initial = try best(at: now)
+        XCTAssertEqual(initial.id, f.dish.id)
+        review.agreedTrip = initial
+        let later = try best(at: now.addingTimeInterval(16 * 60))
+        XCTAssertEqual(later.id, faster.id)
+        XCTAssertFalse(review.canUse(initial, fresh: later))
+        review.rankedOfferChanged(to: later)
+        XCTAssertFalse(review.canUse(later, fresh: later))
+        review.agreedTrip = later
+        XCTAssertTrue(review.canUse(later, fresh: later))
+    }
+
     func testUncheckedWrongLateUnconfirmedAndExcludedFoodStayUnusableAndRepeatAndSeatAreIndependent() throws {
         var f = try recovery()
         XCTAssertTrue(try ranked(f,chosen:[f.dish.template.id]).isEmpty)

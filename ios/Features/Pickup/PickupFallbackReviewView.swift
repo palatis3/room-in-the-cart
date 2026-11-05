@@ -38,77 +38,89 @@ private struct PickupFallbackReviewView: View {
     let authorized: () -> Bool
     let select: (PickupFallbackOption,UUID,Date) -> Void
     @Environment(\.dismiss) private var dismiss
-    @State private var draft = PickupFallbackDraft()
-    @State private var reviewed: PickupFallbackDraft?
+    @State private var review = PickupFallbackReview()
     private var choices: [StockNeed] { PickupFallbackOptions.needs(journey) }
     private var foodNames: [UUID:String] {
         var names = Dictionary(uniqueKeysWithValues: (journey.pickup?.orderLines ?? []).map { ($0.id,$0.name) })
         for lot in PickupFallbackOptions.lots(journey, at: now) { names[lot.foodID] = names[lot.foodID] ?? lot.name }
         return names
     }
+    private func rankedBest(at date: Date) -> PickupFallbackOption? {
+        try? PickupFallbackOptions.ranked(journey: journey, library: library, chosenTemplates: chosen,
+                                          draft: review.draft, at: date, paid: authorized()).first
+    }
+
     var body: some View {
+        let draft = review.draft
+        let best = review.isReviewed ? rankedBest(at: now) : nil
         Form {
             Section {
                 Text(dinnerText("Only checked usable food from this pickup and its confirmed stock can feed a fallback. All other named needs stay reserved."))
-                Picker(dinnerText("Need to repair"), selection: $draft.target) {
+                Picker(dinnerText("Need to repair"), selection: $review.draft.target) {
                     Text(dinnerText("Choose a meal")).tag(UUID?.none)
                     ForEach(choices.filter { $0.priority != .protected && !journey.urgent.filter(\.resolved).map(\.id).contains($0.id) }) { need in
                         Text(need.name).tag(Optional(need.id))
                     }
                 }
-                TextField(dinnerText("Required portions"), text: $draft.portions)
-                Toggle(dinnerText("Meal deadline is known"), isOn: Binding(get: { draft.deadline != nil }, set: { draft.deadline = $0 ? Date() : nil }))
-                if let date = Binding($draft.deadline) { DatePicker(dinnerText("Meal deadline"), selection: date) }
+                TextField(dinnerText("Required portions"), text: $review.draft.portions)
+                Toggle(dinnerText("Meal deadline is known"), isOn: Binding(get: { review.draft.deadline != nil }, set: { review.draft.deadline = $0 ? Date() : nil }))
+                if let date = Binding($review.draft.deadline) { DatePicker(dinnerText("Meal deadline"), selection: date) }
                 ForEach(choices.filter { $0.id != draft.target }) { need in
                     Text(dinnerFormat("Reserved: %@ · %@",need.name,dinnerQuantity(need.amount)))
                 }
                 if let rule = journey.needDetails.first(where: { $0.id == draft.target }), !rule.exclusions.isEmpty { Text(rule.exclusions.joined(separator: ", ")) }
-                TextField(dinnerText("Usual fallback minutes, optional"), text: $draft.usualMinutes)
-                TextField(dinnerText("Maximum available for a top-up, USD"), text: $draft.topUpBudget)
-                TextField(dinnerText("Top-up fees and tax, including zero, USD"), text: $draft.topUpCharges)
-                TextField(dinnerText("Round-trip minutes for a top-up"), text: $draft.tripMinutes)
-                Toggle(dinnerText("I agree to consider a repeated dinner"), isOn: $draft.permitsRepeat)
+                TextField(dinnerText("Usual fallback minutes, optional"), text: $review.draft.usualMinutes)
+                TextField(dinnerText("Maximum available for a top-up, USD"), text: $review.draft.topUpBudget)
+                TextField(dinnerText("Top-up fees and tax, including zero, USD"), text: $review.draft.topUpCharges)
+                TextField(dinnerText("Round-trip minutes for a top-up"), text: $review.draft.tripMinutes)
+                Toggle(dinnerText("I agree to consider a repeated dinner"), isOn: $review.draft.permitsRepeat)
             }
             Section(dinnerText("Accepted fallbacks")) {
                 if library.isEmpty { Text(dinnerText("No household dinner is marked as an accepted fallback.")) }
                 ForEach(library) { dinner in
                     NavigationLink(dinner.template.title) {
-                        FallbackRecipeEditor(dinner: dinner, foods: foodNames, review: Binding(get: { draft.reviews[dinner.id] ?? .init() }, set: { draft.reviews[dinner.id] = $0 }))
+                        FallbackRecipeEditor(dinner: dinner, foods: foodNames, review: Binding(get: { review.draft.reviews[dinner.id] ?? .init() }, set: { review.draft.reviews[dinner.id] = $0 }))
                     }
                 }
-                Button(dinnerText("Review feasible repairs")) { if authorized() { reviewed = draft } }
+                Button(dinnerText("Review feasible repairs")) { if authorized() { review.reviewDraft() } }
                     .disabled(draft.target == nil || draft.deadline == nil || draft.portions.isEmpty)
             }
-            if let reviewed, reviewed == draft {
-                let options = (try? PickupFallbackOptions.ranked(journey: journey, library: library, chosenTemplates: chosen,
-                                                                 draft: reviewed, at: now, paid: authorized())) ?? []
+            if review.isReviewed {
                 Section(dinnerText("Smallest feasible repair")) {
-                    if let best = options.first {
+                    if let best {
                         Text(best.instruction)
                         Text(dinnerFormat("Remaining time including any trip: %d minutes",best.minutes))
                         if let usual = try? DinnerEntry.minutes(draft.usualMinutes) {
                             Text(dinnerFormat("Your usual fallback: %d minutes",usual))
                         }
-                        ForEach(best.buys, id: \.label) { buy in Text("\(buy.label) × \(buy.count) · \(dinnerMoney(buy.cost))") }
+                        ForEach(best.buys) { buy in Text("\(buy.label) × \(buy.count) · \(dinnerMoney(buy.cost))") }
                         if best.requiresTrip {
                             Text(dinnerFormat("Extra checkout including entered fees and tax: %@",dinnerMoney(best.extraCash)))
-                            Toggle(dinnerText("I agree to an extra top-up trip for this repair"), isOn: Binding(get: { draft.permitsTrip }, set: { draft.permitsTrip = $0; self.reviewed = draft }))
+                            Toggle(dinnerText("I agree to an extra top-up trip for this repair"), isOn: Binding(
+                                get: { review.agreedTrip == best },
+                                set: { agrees in
+                                    if review.isReviewed, draft == review.draft { review.agreedTrip = agrees ? best : nil }
+                                }
+                            ))
                         }
                         Button(dinnerText("Use in manual repair instructions")) {
-                            guard authorized(), let target = draft.target, let due = draft.deadline,
-                                  let fresh = try? PickupFallbackOptions.ranked(journey: journey, library: library, chosenTemplates: chosen,
-                                                                               draft: draft, at: Date(), paid: true).first,
-                                  fresh.id == best.id, !fresh.requiresTrip || draft.permitsTrip else { return }
+                            guard draft == review.draft, let target = draft.target, let due = draft.deadline,
+                                  let fresh = rankedBest(at: Date()),
+                                  review.canUse(best, fresh: fresh) else {
+                                review.agreedTrip = nil
+                                return
+                            }
                             let savedDue = journey.urgent.first { $0.id == target }?.due
                             select(fresh,target,min(due,savedDue ?? due)); dismiss()
-                        }.disabled(best.requiresTrip && !draft.permitsTrip)
+                        }.disabled(best.requiresTrip && review.agreedTrip != best)
                     } else { Text(dinnerText("No feasible accepted repair is confirmed. Keep the need open or edit it manually.")) }
                 }
             }
         }
+        .onChange(of: best) { _, updated in review.rankedOfferChanged(to: updated) }
         .onChange(of: draft.target) { _, new in
-            draft.deadline = journey.urgent.first { $0.id == new }?.due
-            draft.reviews = [:]; draft.permitsTrip = false; reviewed = nil
+            review.draft.deadline = journey.urgent.first { $0.id == new }?.due
+            review.draft.reviews = [:]
         }
     }
 }
