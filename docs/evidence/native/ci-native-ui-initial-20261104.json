@@ -90,7 +90,62 @@
         "oldLunchMissingInFreshWeek": "2026-11-05T00:01:20Z"
       },
       "diagnosis": "Strong date-range inference: default rolling week starts at Date() on cold launch. Test saved November4 entries, crossed midnight, then searched after default range advanced to November5. No persisted-file readback survived artifact upload failure, so record loss is not proven or ruled out. Preparing deterministic previous-day native picker/relaunch/original-week readback without changing product date semantics."
+    },
+    "ui-07": {
+      "job": 126937759030,
+      "passedTests": 5,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0,
+      "evidenceSHA256": {
+        "test-summary.json": "2ef47f5548bc2a8b83f5823a719068b36f96500ce2667e227a07b70f8961b249",
+        "test-details.json": "613f81d4de6941bbdcd7e7626c76aa768377fe895d954c5b7d1f396789a76e3b",
+        "Tests.log": "b51dbd756d5aea9ddb56df0bd7ab017fa60d3c7db5235eaf7f4b1088420c6075"
+      }
+    },
+    "ui-08": {
+      "job": 126937759111,
+      "passedTests": 5,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0,
+      "evidenceSHA256": {
+        "test-summary.json": "9c14c4181af399f7ab24be164017d9a3ef2122fe13747a539cb14e69a9f356a9",
+        "test-details.json": "7192927bbb2f594c455b4ae6108aa36413cf083b6c1d0fc1cae1d9c1147fc304",
+        "Tests.log": "00364a179eddacb258284247f13095151ad7218683e5da56371a775bf00293c2"
+      }
+    },
+    "ui-09": {
+      "job": 126937759016,
+      "passedTests": 6,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0,
+      "evidenceSHA256": {
+        "test-summary.json": "d3c664d47a600d2bf443d514fe984840d8718cfb6eb7d7dc82193274e18f4d9e",
+        "test-details.json": "5d59cc79d8105180befe863e6b25cb04690d4b252f684dfd699f8764b3943932",
+        "Tests.log": "742cb876efe2552e8fa41e439077bfe5550983018c5402422289dcacffdf6923"
+      }
+    },
+    "ui-10": {
+      "job": 126937759087,
+      "passedTests": 5,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0,
+      "evidenceSHA256": {
+        "test-summary.json": "c6ac6193d43d678fef0a5503293ab3f89c413f9ad9647ba8ea7ac48f05d91902",
+        "test-details.json": "bce7b2d61d1ba0b4a8ecf65f8bc03f9827e3d7406856587296bb3633de6166e2",
+        "Tests.log": "c1b82c38a4fe6d7b27b37a7a594f2479e6f5c02a8f0dac33c9e41f5d511006bd"
+      }
     }
   },
-  "scope": "First six completed ordinary UI groups:21 passed and4 failed. Groups07\u201310 remain active; local verification is recorded separately."
+  "scope": "All ten original ordinary UI groups completed:42 passed,4 failed,46 executed. Original core run and CI gate failed; local focused verification is separate. UI06 result bundle upload failed, and its counts/sequence come from retained job log.",
+  "totals": {
+    "executedUITests": 46,
+    "passedUITests": 42,
+    "failedUITests": 4,
+    "coreConclusion": "failure",
+    "gateJob": 126965528842
+  }
 }
