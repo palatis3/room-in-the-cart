@@ -1,5 +1,14 @@
 # Room in the Cart current handoff
 
+## Resumed after model switch — November 4, 2026 (America/New_York)
+
+Goal is active. Root owns the only native lane. Lumpy/Dot was asked first to finish the partial nested detail identity/result consistency checker and actual-export negative tests; no new subagents started. Do not install his partial candidate before review.
+
+The earlier SharedMeal pair is terminal: corrected fractional case passed254.798s; unchanged lifecycle sibling failed720s with repeated animation waits and one runner restart. xcodebuild65, strict guard1. Root independently checked input/installed hashes and owned simulator Shutdown. [Terminal proof](evidence/native/shared-meal-ci-20261105/candidate-terminal.json). Original results remain failed. Source correction is still scratch-only.
+
+A single unchanged-binary, sibling-only fresh-simulator control is now running under `.build/CIResearch20261104/candidate-f0e2ac3/shared-meal-idea-diagnostic/private-sibling-isolation-control/`; driver `run-sibling-isolation-control.sh`, tool session34311. It keeps original720/900 allowances, app, runner and source. Revalidate live process/status before any additional native work. Preserve preview5FDE1E82-1FF7-4556-9C14-0746F6295944. Consolidated push and hosted revalidation remain pending; production release is not complete.
+
+
 The complete production app remains the objective. The current checkpoint below supersedes the earlier resumed and pre-restart inventories. Passing earlier snapshots do not certify later source changes. Use the [current 52-requirement / 27-route map](CURRENT-ACCEPTANCE.md) for implementation and remaining acceptance.
 
 ## Resumed CI validation — 2026-11-05T04:14:55.048995+00:00
