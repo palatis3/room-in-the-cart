@@ -2,7 +2,7 @@
   "sourceCommit": "f0e2ac37383e76ac3812407384bf2eda968de3c4",
   "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41944207865",
   "completeWorkflow": false,
-  "verifiedPassedSoFar": 14,
+  "verifiedPassedSoFar": 18,
   "shards": {
     "DinnerAwayCarryoverUITests": {
       "job": 126980954173,
@@ -157,6 +157,77 @@
         "test-runtime-warnings.json": "8a07425e151587173077e2e8ca29c2844d7078dbbd23315f07cab881f362c1ff",
         "root-verification.txt": "050f34ff0e804cb38760addc4f8eae993d15dd025b5e1bd44d2525987065b66c"
       }
+    },
+    "MeasurementUITests": {
+      "job": 126980957758,
+      "artifact": 13382452201,
+      "selectors": [
+        "RoomInTheCartUITests/MeasurementUITests/testAuthenticatedNoticeConsentExplicitClosedShopSendDeleteAndWithdrawal",
+        "RoomInTheCartUITests/MeasurementUITests/testLocalSettingsConsentIgnoresLegacyBooleanPersistsRestartAndStaysWorkspaceScoped"
+      ],
+      "counts": {
+        "totalTestCount": 2,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      },
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 2,
+        "detailExportCount": 0,
+        "warnings": []
+      },
+      "reexport": "Summary and test tree match original hosted exports. Local Xcode27.1 adds runtimeWarnings empty array, which hosted26.3 omitted; structured guard independently verified zero.",
+      "sha256": {
+        "results.zip": "4c60f475ce8348aef0f15f6f74e75e0013c4ceaaa8f4d7de6d111a32a5ac1aba",
+        "test-summary.json": "d4f25dfd07db94c88c855da31c4b41e54a17bca2b89670aec94d7b5fb4b5f608",
+        "test-details.json": "e86f7aae6a1630686c906b9db43ae5cc9455e539b2827f02039fcd04209c27ed",
+        "test-runtime-warnings.json": "8a07425e151587173077e2e8ca29c2844d7078dbbd23315f07cab881f362c1ff",
+        "root-verification.txt": "b8d9f3fb5849b0dc7d35ea580c44aae30de4d2febe8a7911079dfe4a989a1355"
+      }
+    },
+    "RecipeLibraryAcceptanceUITests": {
+      "job": 126980958012,
+      "artifact": 13381953522,
+      "selectors": [
+        "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo",
+        "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testImportedRecipeQuantityDismissesKeyboardAndRequiresExplicitPickupChoice"
+      ],
+      "counts": {
+        "totalTestCount": 2,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      },
+      "durationsSeconds": {
+        "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo": 365.05089700222015,
+        "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testImportedRecipeQuantityDismissesKeyboardAndRequiresExplicitPickupChoice": 175.81348395347595
+      },
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 2,
+        "detailExportCount": 0,
+        "warnings": []
+      },
+      "reexport": "The locally exported test tree matches the hosted tree. The summary matches after excluding the locally exposed empty runtimeWarnings array. The producer manifest, enumeration, and class selectors also match the independently downloaded MeasurementUITests artifact.",
+      "sha256": {
+        "results.zip": "f337f41fb54db6fee7e323ac0c199a43f5fdac0c45a7e59ec45e046af23d2539",
+        "test-summary.json": "700c7d2d4ee7a5fc9e8c1caa2c21af93ea03672ca1b2097a12e156ebd692d992",
+        "test-details.json": "e5c91ad1fc3ec4fd327d8cc22915e87c37fc207caf5efb85e27925304f44e24c",
+        "test-runtime-warnings.json": "8a07425e151587173077e2e8ca29c2844d7078dbbd23315f07cab881f362c1ff",
+        "root-verification.txt": "5833e34af08e070bb6ebce735c7d3207aa80b520bc11d76183f5bc845a92189c",
+        "reexported-summary.json": "e62a44cafd5099e91acdd7c08a424ee1f1e2b54e56a2d95cb087ab9197f9e38b",
+        "reexported-tests.json": "3fa83179050258d088295a07b7ddf58189f8875edc23ffb8f622d9313a2fb744",
+        "test-plan/manifest.json": "15d893bedb77ec432ed74cd662db82eebefb7bbff4159bbe4a04fa9c53c75f46",
+        "test-plan/test-enumeration.json": "1cd23b849e3de319c277624d095060ecd5ca98c7d8841a5f1d58617e0c8d4d17",
+        "test-plan/RecipeLibraryAcceptanceUITests.txt": "2291db12f1bd33ba4e44601e0a8d07d5e2587c529f6fb26475863b0ad4a47770"
+      }
     }
   },
   "knownFailure": {
@@ -165,7 +236,7 @@
     "failed": 2,
     "status": "Test-only correction installed locally as73a0935; original hosted two failures retained. Fresh local pair and same-binary Spanish no-card control pass exact identity/count/warning verification; hosted validation pending."
   },
-  "scope": "Fourteen passing fixture cases across five completed shards were verified against their exact selectors and structured runtime-warning evidence. Other consumers remain outside this verification. The ContributorRequest failure remains recorded separately.",
+  "scope": "18 passing fixture cases across 7 completed shards verified against exact selectors and structured runtime-warning evidence. Other consumers and known failures remain outside this passing verification.",
   "otherKnownFailure": {
     "shard": "HouseholdRequestPackUITests",
     "job": 126980959058,

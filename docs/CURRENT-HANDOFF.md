@@ -2,6 +2,12 @@
 
 The complete production app remains the objective. The current checkpoint below supersedes the earlier resumed and pre-restart inventories. Passing earlier snapshots do not certify later source changes. Use the [current 52-requirement / 27-route map](CURRENT-ACCEPTANCE.md) for implementation and remaining acceptance.
 
+## CI report checkpoint — November 5, 02:32 UTC
+
+The Records public report change is installed as `7148f32`. The strict test and warning verifier still runs; its raw output remains private. A separate exporter permits only the fixed selector, known status, bounded counts and an optional source line matching the exact tracked test file. Root replayed saved passing and failing results and confirmed exit statuses 0 and 1. All 103 Python tests and workflow lint pass, including private-text injection and malformed-evidence failures. Hosted validation remains pending. [Safe report proof](evidence/native/records-media-ci-20261105/safe-report-validation.json)
+
+RecipeLibraryAcceptance adds two verified fixture passes with no recorded warnings. The retained fixture total is now 18 across seven shards. Both Sol workers have completed their current read-only/evidence assignments and released the common JSON files. The duplicate-request patch remains scratch-only. Dot's relay still owns the sole native lane for HouseholdRequestPack; await its explicit release, then run the prepared unchanged Records products under the Sol quality worker, followed by the duplicate-request candidate. Current ordinary UI09/10 and remaining fixture consumers are still in progress. Preserve the active candidate before the consolidated next push.
+
 ## Native checkout checkpoint — November 5, 02:29 UTC
 
 The viewport reuse in `1654106` passed the complete exact checkout/restart/edit/cancel journey locally in 491.504 seconds. Root verified the expected single selector, zero skips/failures and zero recorded runtime warnings. The isolated build used Xcode 27.1 and iOS 26.2 build 23C52; this does not establish a speedup against hosted Xcode 26.3/build 23C54. The owned simulator is shut down and the user's preview remains untouched. [Checkout proof](evidence/native/ci-checkout-viewport-20261105/validation.json)

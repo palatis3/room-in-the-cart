@@ -1,0 +1,128 @@
+{
+  "headCommit": "f0e2ac37383e76ac3812407384bf2eda968de3c4",
+  "testedCheckoutFromJobLog": "fa769fe",
+  "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41944207865",
+  "job": "https://github.com/palatis3/room-in-the-cart/actions/runs/41944207865/job/126980954137",
+  "artifact": {
+    "id": 13382517275,
+    "name": "iphone-fixture-results-RequestDuplicateComparisonUITests-1",
+    "sizeBytes": 17060328,
+    "sha256": "b367bde6bb985ee3e85f9fadfbddaaa373641d194f1a0f7c6c228c91145e4394"
+  },
+  "artifactAndExportsLocalDirectory": ".build/CIResearch20261104/request-duplicate-f0e2ac3",
+  "environment": {
+    "xcode": "26.3",
+    "device": {
+      "architecture": "arm64",
+      "deviceId": "8C9F4118-331E-4250-B1FC-194972BA6726",
+      "deviceName": "iPhone 17",
+      "modelName": "iPhone 17",
+      "osBuildNumber": "23C54",
+      "osVersion": "26.2",
+      "platform": "iOS Simulator"
+    }
+  },
+  "counts": {
+    "totalTestCount": 2,
+    "passedTests": 0,
+    "failedTests": 2,
+    "skippedTests": 0,
+    "expectedFailures": 0
+  },
+  "cases": [
+    {
+      "sourceLine": 138,
+      "noActiveContainerAtSeconds": 19.71,
+      "collectionFramePoints": [
+        0,
+        110.7,
+        402,
+        763.3
+      ],
+      "scrollPositionPercent": 0,
+      "loadedRequests": 2,
+      "observation": "The largest-text Spanish inbox showed the refresh button and wrapped introduction. Sam had not materialized below the fold. The AX snapshot showed one full-sized CollectionView with a vertical scrollbar. The helper rejected it and made no scroll gesture.",
+      "screenshot": "es-attachments/163305A4-4A82-40D9-9CB6-1405EB1C020E.png",
+      "accessibility": "es-attachments/0A9B8D21-45E8-4883-A6FB-AB81EF84283C.txt",
+      "selector": "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison",
+      "durationSeconds": 22.280822038650513,
+      "result": "Failed",
+      "failureText": "XCTAssertTrue failed - Missing actionable UI element: Query chain:\n →Find: Target Application 'dev.roominthecart.app.debug'\n  ↪︎Find: Descendants matching type Any\n    ↪︎Find: Elements matching predicate '\"household.request.a4444444-4444-4444-8444-444444444441\" IN identifiers'\n      ↪︎Find: First Match\nNo matches found for first query match sequence: `Descendants matching type Any` -> `Elements matching predicate '\"household.request.a4444444-4444-4444-8444-444444444441\" IN identifiers'`, given input Application, pid: 6926, label: 'Room in the Cart'\n",
+      "dragCountBeforeFailure": 0,
+      "appliedDecisions": 0,
+      "savedLines": 1,
+      "sha256": {
+        "es-details.json": "1b428c096f2e01974e075c9ccaa74b316f81e2cc6ef8cc2dd4c3287af632216b",
+        "es-activities.json": "8319d5d2b0a4b71e4947ba34a5e25ffafe8535874974902b013d0cdc25732c33",
+        "es-attachments/163305A4-4A82-40D9-9CB6-1405EB1C020E.png": "6d02289491d706e5d7252f15dad05fa11457bfa1e45e1c32dff86f367f772d71",
+        "es-attachments/0A9B8D21-45E8-4883-A6FB-AB81EF84283C.txt": "e5f6670d4d2ffc2a8965847082a84187dc37eff59cf2bfadb1e5781ec87d1f1d"
+      }
+    },
+    {
+      "sourceLine": 117,
+      "noActiveContainerAtSeconds": 56.26,
+      "collectionFramePoints": [
+        0,
+        62,
+        402,
+        812
+      ],
+      "coveredInboxCollectionFramePoints": [
+        0,
+        110.7,
+        402,
+        763.3
+      ],
+      "scrollPositionPercent": 37,
+      "loadedRequests": 4,
+      "patOutcomeFramePoints": [
+        32,
+        1040.2,
+        338,
+        20.3
+      ],
+      "patOutcomeAccessibilityLabel": "This request's outcome, Handled",
+      "observation": "An earlier real sheet drag exposed Check more requests. Its tap loaded page two and the Sam and Lee identity and amount assertions passed. The screenshot shows Pat entering at the bottom of the open sheet. AX confirms his exact outcome below the viewport. The helper rejected both CollectionViews before a drag could reveal it.",
+      "screenshot": "en-attachments/EA3A5CA4-4716-42B3-BB01-732A365C2B35.png",
+      "accessibility": "en-attachments/F6902225-09B7-4098-AB22-7D624288F8CD.txt",
+      "selector": "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam",
+      "durationSeconds": 60.46937704086304,
+      "result": "Failed",
+      "failureText": "XCTAssertTrue failed - Missing visible comparison value household.duplicates.outcome.a4444444-4444-4444-8444-444444444444: Handled",
+      "dragCountBeforeFailure": 1,
+      "appliedDecisions": 0,
+      "savedLines": 1,
+      "sha256": {
+        "en-details.json": "fdc66f5ca4c0f710d158204e4f321a290ae751fa86f09aa34785334d2d360eff",
+        "en-activities.json": "699db691168b587b1eaf559543c4da898703d97a1baa1a224d1a4ce245d22311",
+        "en-attachments/EA3A5CA4-4716-42B3-BB01-732A365C2B35.png": "7d9061b8be2b3a5263055ff75090d6a0ca2c500533c3e10727ef29d1ff33ffb1",
+        "en-attachments/F6902225-09B7-4098-AB22-7D624288F8CD.txt": "e27384ab8df2f9396ba236586993a32db1b0e08db49cfacab2e9f4b91c0067f0"
+      }
+    }
+  ],
+  "otherDiagnostics": {
+    "runtimeWarningNodesInDetailedTestExports": 0,
+    "animationIdleTimeoutsInTestsLog": 0
+  },
+  "otherEvidenceSha256": {
+    "job.log": "ddfcbac736cc4328ab9c4dcde6263b0cdde3b403b058d3dd7ee10a5349a00b57",
+    "Tests.log": "cc23602bed21ed1b5d64deea2befee4fd29015721c295078a7e1dea17aba3ce2",
+    "test-summary.json": "0523a8e0c4750dfdbe07609efe6de24be16eaef388f53eda90a633fbcedeff5b",
+    "test-details.json": "ae65151ebf04625fb443d737d7b02b4f205b49d8f6080cdeb09d2b3dcf854f1d",
+    "reexported-summary.json": "ecf3bdeac08e2db10608f3351a5b67f3bef78d77ea36b75fb08ef790da226991",
+    "reexported-tests.json": "083eec5369e1c524941e858b0787cdc4e1355f2ad1b2c02dbe45a051c72d743a",
+    "test-plan/RequestDuplicateComparisonUITests.txt": "d62e3cab323ec5f8628ea6993d379b505ddb32c6fa2089a5370e3a18101d2654"
+  },
+  "diagnosis": "Both observed failures arise in XCTest navigation. The helper demanded a hittable hit point for the scroll container even when its AX hierarchy and screenshot showed a usable scroll surface. In English the required outcome already existed below the viewport. Later end-to-end assertions were not exercised by this run.",
+  "scratchCandidate": {
+    "patch": "scroll-surface.patch",
+    "sha256": "e71ec4049b17565564c4a75d904588d800ec1ed3be26836f41abb21863b0d588",
+    "candidateSourceSha256": "400247e78a81de35db8afad0eacfebd056cf182b2ac9abe31e4559d58001d8d7",
+    "scope": "Accept a unique geometry-validated active scroll surface without requiring a container hit point. Drag with application coordinates inside the existing unobscured area. Retain target hit testing, exact assertions, sheet checks, and test limits.",
+    "staticValidation": [
+      "git apply --check",
+      "Swift frontend parse with DEBUG and CONTRIBUTOR_CAPTURE_UI_FIXTURE"
+    ],
+    "nativeValidation": "Pending. Exercise both original selectors with all their existing assertions. Hosted environment was Xcode 26.3 and iOS 26.2 build 23C54."
+  }
+}
