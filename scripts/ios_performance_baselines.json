@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "profiles": [
+    {
+      "environment": {
+        "osVersion": "26.2",
+        "osBuildNumber": "23C54",
+        "modelName": "iPhone 17",
+        "architecture": "arm64",
+        "xcode": "Xcode 26.3\nBuild version 17C529",
+        "buildConfiguration": "Release",
+        "testConfiguration": "Test Scheme Action"
+      },
+      "limits": {
+        "launch": {
+          "responsiveLaunchMedianSeconds": 5.5
+        },
+        "rendered": {
+          "searchP95Milliseconds": 4750,
+          "checkP95Milliseconds": 3750
+        },
+        "scroll": {
+          "scrollMedianSeconds": 3.25,
+          "absoluteMemoryMedianKilobytes": 150000,
+          "peakMemoryMedianKilobytes": 155000
+        }
+      }
+    }
+  ]
+}
