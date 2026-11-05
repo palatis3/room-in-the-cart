@@ -33,6 +33,9 @@ PROFILES = {
     },
     "dinner": {"DINNER_DECISION_UI_FIXTURE": ("DinnerDecisionSheetUITests",)},
 }
+# These long shared-editor journeys each get a fresh hosted runner/simulator.
+# Keep whole journeys intact: no retry or assertion is removed by isolation.
+ISOLATED_SUITES = {"SharedMealIdeaUITests", "SharedStoreQuoteUITests"}
 LIBRARY_PRIVACY_HELPER = f"{UI_TARGET}/LibraryPrivacyUITestCase"
 MICROPHONE_PROBE = f"{UI_TARGET}/FreeJourneyUITests/testNativeMicrophoneRefusalLeavesTypedCaptureReviewable"
 CONDITIONAL = re.compile(r"^[ \t]*#(?:if|elseif)\s+([^\n]+)", re.MULTILINE)
@@ -74,9 +77,21 @@ def suites_for(profile):
     return sorted(suite for suites in PROFILES[profile].values() for suite in suites)
 
 
-def matrix():
-    return {"include": [{"profile": profile, "shard": suite}
-                        for profile in PROFILES for suite in suites_for(profile)]}
+def shard_members(profile, inventory):
+    groups = {}
+    for suite in suites_for(profile):
+        if suite in ISOLATED_SUITES:
+            for identifier in sorted(inventory[suite]):
+                groups[f"{suite}-{identifier.rsplit('/', 1)[1]}"] = (suite, {identifier})
+        else:
+            groups[suite] = (suite, inventory[suite])
+    return groups
+
+
+def matrix(inventory=None):
+    inventory = source_inventory(UI_SOURCES) if inventory is None else inventory
+    return {"include": [{"profile": profile, "shard": shard}
+                        for profile in PROFILES for shard in shard_members(profile, inventory)]}
 
 
 def read_enabled_identifiers(configuration, profile, seen):
@@ -127,14 +142,18 @@ def make_plan(enumeration, profile, inventory):
         if not selected or actual != expected:
             raise ValueError(f"Compiled fixture tests differ for {suite}. "
                              f"Missing {sorted(expected - actual)}; extra {sorted(actual - expected)}")
-        shards[suite] = {"selector_file": f"{suite}.txt", "test_identifiers": selected}
+        for shard, (owner, members) in shard_members(profile, inventory).items():
+            if owner == suite:
+                shards[shard] = {"suite": suite, "selector_file": f"{shard}.txt",
+                                 "test_identifiers": [identifier for identifier in selected
+                                                      if selector(identifier) in members]}
     return {"profile": profile, "test_plan": test_plan, "shards": shards}
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
-    commands.add_parser("matrix", help="validate the source inventory and print the class matrix")
+    commands.add_parser("matrix", help="validate the source inventory and print the fixture journey matrix")
     conditions = commands.add_parser("conditions", help="print the Swift compilation conditions")
     conditions.add_argument("profile", choices=PROFILES)
     plan = commands.add_parser("plan", help="validate compiled tests and write exact selectors")
@@ -148,7 +167,7 @@ def main():
         else:
             inventory = source_inventory(UI_SOURCES)
             if args.command == "matrix":
-                print(json.dumps(matrix(), separators=(",", ":")))
+                print(json.dumps(matrix(inventory), separators=(",", ":")))
             else:
                 enumeration = json.loads(args.enumeration.read_text(encoding="utf-8"))
                 write_plan(make_plan(enumeration, args.profile, inventory), args.output_dir)

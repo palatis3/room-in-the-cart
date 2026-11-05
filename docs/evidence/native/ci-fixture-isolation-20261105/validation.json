@@ -1,0 +1,125 @@
+{
+  "scope": "Source and retained hosted compiled enumeration replay; new hosted execution pending.",
+  "fixtureClasses": 17,
+  "totalSelectors": 44,
+  "jobs": 22,
+  "concurrencyCap": 5,
+  "isolatedSuites": [
+    "SharedMealIdeaUITests",
+    "SharedStoreQuoteUITests"
+  ],
+  "invariants": [
+    "All 44 compiled fixture methods assigned exactly once.",
+    "Complete individual journeys retained; no case disabled, skipped, split internally or retried.",
+    "RecordsMedia remains one original private-output job.",
+    "Both build profiles validated against original hosted enumeration."
+  ],
+  "focusedTestsPassed": 9,
+  "workflowLint": "passed",
+  "generatedProject": "passed",
+  "sourceSHA256": {
+    "scripts/plan_ios_fixture_tests.py": "24a8e7664073606836df351255409dc10066c9985e6843845f4022f83fb4059a",
+    "scripts/test_plan_ios_fixture_tests.py": "d4851b40bfebd152c26bc4b238f7a384f35427c87367707134d0b31675b0e532",
+    ".github/workflows/ios-fixtures.yml": "ccc9fb20e2f8bc86f549ed57e2ac89fed04fb11c596d6ead7adba6ec6128fc9b"
+  },
+  "matrix": {
+    "include": [
+      {
+        "profile": "contributor",
+        "shard": "ContributorRequestUITests"
+      },
+      {
+        "profile": "contributor",
+        "shard": "CorrectionPrivacyAcceptanceUITests"
+      },
+      {
+        "profile": "contributor",
+        "shard": "DinnerAwayCarryoverUITests"
+      },
+      {
+        "profile": "contributor",
+        "shard": "GuardianEnrollmentUITests"
+      },
+      {
+        "profile": "contributor",
+        "shard": "HistoryGrantReadUITests"
+      },
+      {
+        "profile": "contributor",
+        "shard": "HouseholdDevicesUITests"
+      },
+      {
+        "profile": "contributor",
+        "shard": "HouseholdRequestPackUITests"
+      },
+      {
+        "profile": "contributor",
+        "shard": "MeasurementUITests"
+      },
+      {
+        "profile": "contributor",
+        "shard": "RecipeLibraryAcceptanceUITests"
+      },
+      {
+        "profile": "contributor",
+        "shard": "RecordsMediaUITests"
+      },
+      {
+        "profile": "contributor",
+        "shard": "RequestDuplicateComparisonUITests"
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedMealChangeUITests"
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedMealCivilDateUITests"
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview"
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn"
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult"
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption"
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave"
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable"
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction"
+      },
+      {
+        "profile": "contributor",
+        "shard": "StockReviewUITests"
+      },
+      {
+        "profile": "dinner",
+        "shard": "DinnerDecisionSheetUITests"
+      }
+    ]
+  },
+  "dotReview": {
+    "result": "No concrete selection/privacy defect",
+    "plannerTestsPassed": 9,
+    "contributorSelectors": 39,
+    "dinnerSelectors": 5,
+    "newMethodInjection": "Each isolated suite gained one distinct job; duplicate and missing compiled selections rejected.",
+    "scope": "Personal review and Python/historical enumeration checks; no fresh native build."
+  }
+}

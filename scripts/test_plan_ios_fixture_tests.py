@@ -3,7 +3,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from plan_ios_fixture_tests import (LIBRARY_PRIVACY_HELPER, MICROPHONE_PROBE, UI_SOURCES, UI_TARGET, make_plan,
+from plan_ios_fixture_tests import (ISOLATED_SUITES, LIBRARY_PRIVACY_HELPER, MICROPHONE_PROBE, UI_SOURCES, UI_TARGET, make_plan,
                                     matrix, source_inventory, suites_for, write_plan)
 
 
@@ -30,9 +30,13 @@ class PlanIOSFixtureTests(unittest.TestCase):
     def enabled_for(self, profile):
         return sorted(test for suite in suites_for(profile) for test in self.inventory[suite])
 
-    def test_every_source_fixture_method_maps_to_one_serial_class_job(self):
+    def test_every_source_fixture_method_maps_to_exactly_one_job(self):
         actual = [entry["shard"] for entry in matrix()["include"]]
-        self.assertCountEqual(actual, self.inventory.keys())
+        grouped = set(self.inventory) - ISOLATED_SUITES
+        isolated = {f"{suite}-{method.rsplit('/', 1)[1]}"
+                    for suite in ISOLATED_SUITES for method in self.inventory[suite]}
+        self.assertCountEqual(actual, grouped | isolated)
+        self.assertEqual(len(actual), 22)
         self.assertIn("RecipeLibraryAcceptanceUITests", suites_for("contributor"))
         self.assertIn("CorrectionPrivacyAcceptanceUITests", suites_for("contributor"))
         self.assertNotIn("LibraryPrivacyUITestCase", actual)
@@ -47,11 +51,33 @@ class PlanIOSFixtureTests(unittest.TestCase):
                 self.assertEqual(json.loads((output / "manifest.json").read_text()), plan)
                 self.assertEqual(plan["profile"], profile)
                 selectors = []
-                for suite, shard in plan["shards"].items():
+                matrix_shards = {row["shard"] for row in matrix(self.inventory)["include"] if row["profile"] == profile}
+                self.assertEqual(set(plan["shards"]), matrix_shards)
+                for name, shard in plan["shards"].items():
+                    suite = shard["suite"]
                     lines = (output / shard["selector_file"]).read_text().splitlines()
-                    self.assertEqual(lines, sorted(self.inventory[suite]))
+                    if suite in ISOLATED_SUITES:
+                        self.assertEqual(len(lines), 1)
+                        self.assertIn(lines[0], self.inventory[suite])
+                        self.assertEqual(name, f"{suite}-{lines[0].rsplit('/', 1)[1]}")
+                    else:
+                        self.assertEqual(lines, sorted(self.inventory[suite]))
                     selectors.extend(lines)
                 self.assertCountEqual(selectors, enabled)
+
+    def test_new_isolated_method_is_included_without_dropping_existing_methods(self):
+        inventory = {suite: set(methods) for suite, methods in self.inventory.items()}
+        suite = "SharedMealIdeaUITests"
+        added = f"{UI_TARGET}/{suite}/testNewJourney"
+        inventory[suite].add(added)
+        enabled = sorted(method for owner in suites_for("contributor") for method in inventory[owner])
+        plan = make_plan(enumeration(enabled), "contributor", inventory)
+        self.assertEqual(plan["shards"][f"{suite}-testNewJourney"]["test_identifiers"], [added + "()"])
+        actual = [identifier.removesuffix("()") for shard in plan["shards"].values()
+                  for identifier in shard["test_identifiers"]]
+        self.assertCountEqual(actual, enabled)
+        self.assertEqual(len(actual), len(set(actual)))
+        self.assertIn(f"{suite}-testNewJourney", {row["shard"] for row in matrix(inventory)["include"]})
 
     def test_rejects_missing_class_and_missing_or_extra_method(self):
         enabled = self.enabled_for("contributor")
