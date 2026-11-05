@@ -1,0 +1,131 @@
+{
+  "candidate": "4a0f7f3a25ae01b6efba5e984ceb464c4ca1d157",
+  "runID": 42048735898,
+  "cases": {
+    "scroll": {
+      "artifactID": 13427778114,
+      "sha256": "3c656d711edbe62c6e486c05031e226e3886c5380c9cba5cb9d4de971be3e7a0",
+      "digestVerified": true,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "measurementsIndependentlyRecomputed": true,
+      "comparisons": {
+        "scrollMedianSeconds": {
+          "measured": 2.5813369170000002,
+          "maximum": 3.25,
+          "passed": true
+        },
+        "absoluteMemoryMedianKilobytes": {
+          "measured": 109158.208,
+          "maximum": 150000,
+          "passed": true
+        },
+        "peakMemoryMedianKilobytes": {
+          "measured": 109453.12,
+          "maximum": 155000,
+          "passed": true
+        },
+        "maximumPeakMemoryKilobytes": {
+          "measured": 109535.04,
+          "maximum": 160000,
+          "passed": true
+        }
+      },
+      "rawLogSHA256": "c2a7a7689d7c44fb1c155d2a0db85b1af459286f8ae56e827838d353ccd24502",
+      "calibrationSHA256": "e8499b8a45d187b638e13cce700cba74a6f24fa651cc177e5ff4715f9fa504ec",
+      "hostedPickupReadback": {
+        "sqliteQuickCheck": "ok",
+        "revision": 2,
+        "payloadSHA256": "efc6be42a43115848cb2a4db2a6f52d32cf356f38f7abec00113791dbe324c0a",
+        "lineCount": 500,
+        "contributionCount": 500,
+        "importCount": 1,
+        "source": "paste",
+        "checkedCount": 0,
+        "checkedRowIDs": []
+      },
+      "simulatorHitches": {
+        "status": "unavailable",
+        "detail": "XCTest emitted scroll duration and memory, but no animation hitch samples on this simulator. This run cannot evaluate frame hitches."
+      }
+    },
+    "launch": {
+      "artifactID": 13428796002,
+      "sha256": "0dde5c588041e81fa82767d56f368b2d9b838e0ff09151bc98b93816092f368a",
+      "digestVerified": true,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "measurementsIndependentlyRecomputed": true,
+      "comparisons": {
+        "responsiveLaunchMedianSeconds": {
+          "measured": 3.5677738750000003,
+          "maximum": 5.5,
+          "passed": true
+        }
+      },
+      "rawLogSHA256": "61968718d96d7728587088511db53a7cacbed11b25ac11213e83395cf96169c5",
+      "calibrationSHA256": "25e24a5e786e5f7c195f9da2655e9de3539c8631e76d07386a5c5190afd2a42e",
+      "hostedPickupReadback": null,
+      "simulatorHitches": null
+    },
+    "rendered": {
+      "artifactID": 13428882491,
+      "sha256": "49cd63c8b0fded4a5001779bb8cb356e26b8827dc2d68ebb5f8264a2544a995b",
+      "digestVerified": true,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "measurementsIndependentlyRecomputed": true,
+      "comparisons": {
+        "searchP95Milliseconds": {
+          "measured": 2777.9853333333904,
+          "maximum": 4750,
+          "passed": true
+        },
+        "checkP95Milliseconds": {
+          "measured": 2442.96108333333,
+          "maximum": 3750,
+          "passed": true
+        }
+      },
+      "rawLogSHA256": "68feb7ce931feaab3be9733cef85db6514b5017baf162123f7e87dba8eaddd41",
+      "calibrationSHA256": "9096362fcabc6c6763654b3450f42ec20b482c4f74afbc43e0446dc5a745b770",
+      "hostedPickupReadback": {
+        "sqliteQuickCheck": "ok",
+        "revision": 22,
+        "payloadSHA256": "e2d439a0945f0751a1ead4e2f64d4487105dc4e711355600b7650d2ccc0ba75f",
+        "lineCount": 500,
+        "contributionCount": 500,
+        "importCount": 1,
+        "source": "paste",
+        "checkedCount": 20,
+        "checkedRowIDs": [
+          "0a4953ff-d6a8-494f-8bdd-e164b4e6570d",
+          "0e99fcce-64da-42c4-a821-f9184be088da",
+          "0f298457-c041-4424-8aae-408239e4b715",
+          "16265739-2674-41f5-b798-60e11c103a13",
+          "20f269d8-d4ec-4f1a-9b7d-5e90e5d479b1",
+          "5814b720-4783-47b8-b152-6fe421ff7630",
+          "6e0b9507-595d-43c1-ab50-88a23c146d23",
+          "73614e47-bb40-40c9-a163-80e509e672ea",
+          "79a84c69-0d5d-436f-ae4c-4e190f3a39ae",
+          "88ea26ca-9d17-4330-bb67-9cb7e4457785",
+          "8b8345dc-4f70-4f9d-8939-2e111d6df9d3",
+          "9d4020da-2dc6-455c-8df8-cf3479a62327",
+          "9d71e6c0-d081-4fde-a329-4b302231becd",
+          "b4b929c0-4577-4453-a08d-60c7ead4a690",
+          "c0b475c5-3ba1-43fa-8d01-ead291287614",
+          "c468a7e0-99dc-47be-8c33-527b672f9734",
+          "c932333f-45f7-48f4-939a-5386dd4b8ed1",
+          "f3073891-18a2-4c4d-9252-7f545be5e596",
+          "f80d9900-793a-4a51-889e-84c963cc8853",
+          "fbe687cd-3898-44dc-8a8f-d1b4baaad8c8"
+        ]
+      },
+      "simulatorHitches": null
+    }
+  },
+  "limits": [
+    "Simulator evidence only; physical frame-smoothness acceptance remains separate.",
+    "Pickup SQLite was checked on the hosted runner. Its database is not retained, so local replay verifies metrics/attachments and reported baseline comparison, not a second database read."
+  ]
+}

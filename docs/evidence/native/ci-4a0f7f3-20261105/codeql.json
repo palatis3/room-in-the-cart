@@ -1,0 +1,14 @@
+{
+  "candidate": "4a0f7f3a25ae01b6efba5e984ceb464c4ca1d157",
+  "pullRequestMergeCommit": "a1dffaf9406a6325fd6c9e7b1293c107291c79ec",
+  "mergeTreeEqualsCandidateTree": true,
+  "ref": "refs/pull/1/merge",
+  "currentCategories": [
+    "/language:swift",
+    "/language:javascript-typescript",
+    "/language:actions"
+  ],
+  "openSeriousFindings": 0,
+  "queriedAlerts": 0,
+  "scope": "Read-only verification of this PR merge analysis with identical candidate tree. Manual release-branch gate remains separate and was not run."
+}

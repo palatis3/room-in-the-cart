@@ -1,0 +1,94 @@
+{
+  "candidate": "4a0f7f3a25ae01b6efba5e984ceb464c4ca1d157",
+  "workflowRuns": [
+    {
+      "conclusion": "success",
+      "createdAt": "2026-11-05T14:49:25Z",
+      "databaseId": 42048736328,
+      "headSha": "4a0f7f3a25ae01b6efba5e984ceb464c4ca1d157",
+      "name": "Native Swift HTTPS and PostgreSQL",
+      "status": "completed",
+      "updatedAt": "2026-11-05T14:54:59Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42048736328"
+    },
+    {
+      "conclusion": "success",
+      "createdAt": "2026-11-05T14:49:25Z",
+      "databaseId": 42048736340,
+      "headSha": "4a0f7f3a25ae01b6efba5e984ceb464c4ca1d157",
+      "name": "iOS deep checks",
+      "status": "completed",
+      "updatedAt": "2026-11-05T15:05:05Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42048736340"
+    },
+    {
+      "conclusion": "success",
+      "createdAt": "2026-11-05T14:49:25Z",
+      "databaseId": 42048736052,
+      "headSha": "4a0f7f3a25ae01b6efba5e984ceb464c4ca1d157",
+      "name": "Security checks",
+      "status": "completed",
+      "updatedAt": "2026-11-05T14:50:45Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42048736052"
+    },
+    {
+      "conclusion": "success",
+      "createdAt": "2026-11-05T14:49:25Z",
+      "databaseId": 42048736422,
+      "headSha": "4a0f7f3a25ae01b6efba5e984ceb464c4ca1d157",
+      "name": "Build and test",
+      "status": "completed",
+      "updatedAt": "2026-11-05T16:53:10Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42048736422"
+    },
+    {
+      "conclusion": "failure",
+      "createdAt": "2026-11-05T14:49:25Z",
+      "databaseId": 42048736649,
+      "headSha": "4a0f7f3a25ae01b6efba5e984ceb464c4ca1d157",
+      "name": "iOS fixture checks",
+      "status": "completed",
+      "updatedAt": "2026-11-05T17:04:53Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42048736649"
+    },
+    {
+      "conclusion": "success",
+      "createdAt": "2026-11-05T14:49:24Z",
+      "databaseId": 42048735898,
+      "headSha": "4a0f7f3a25ae01b6efba5e984ceb464c4ca1d157",
+      "name": "iOS Release performance",
+      "status": "completed",
+      "updatedAt": "2026-11-05T15:32:16Z",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42048735898"
+    }
+  ],
+  "status": "Terminal: five required workflows succeeded; fixtures failed only the original contributor Spanish editor-lookup case. Local correction passed separately.",
+  "physicalCheck": "CoreDevice returned77simulated entries, including six connected simulators, not physical iPhones. Simulator-only evidence cannot close physical acceptance.",
+  "supabaseAccess": "Fresh project lookup still returns no permission. No hosted state mutated; existing owner access question remains pending.",
+  "readinessReview": "Dot reviewed pinned acceptance and Foundation2.1. No new unowned missing product flow demonstrated. Performance telemetry reliability and hosted acceptance remain priorities; owner/provider/signing and human/device gates remain distinct.",
+  "observedAt": "2026-11-05T15:47:12.199995+00:00",
+  "localFollowup": {
+    "commit": "39de0fc",
+    "includedInHostedCandidate": false,
+    "membershipTests": {
+      "en": 57,
+      "es": 57,
+      "failures": 0,
+      "runtimeWarnings": 0
+    }
+  },
+  "fixtureFailure": {
+    "group": "contributor-balanced-02",
+    "passed": 5,
+    "failed": 1,
+    "runtimeWarnings": 0,
+    "localCorrectionPending": false,
+    "localCorrectionCommit": "979d749",
+    "requiresFreshHostedValidation": true
+  },
+  "warningTotals": {
+    "ordinaryUIAllowed": 5,
+    "fixtureAllowed": 6
+  },
+  "warningCorrection": "Earlier progress messages incorrectly described ordinary UI as warning-free. Final retained exports contain five allowed ordinary-UI warnings plus six allowed fixture warnings. All remain visible in per-group evidence; no policy changed during this run."
+}
