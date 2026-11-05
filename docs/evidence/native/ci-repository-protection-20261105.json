@@ -1,0 +1,21 @@
+{
+  "repository": "palatis3/room-in-the-cart",
+  "checkedAt": "2026-11-05T00:55:17.271021+00:00",
+  "changedSettings": {
+    "secret_scanning": {
+      "before": "disabled",
+      "after": "enabled"
+    },
+    "secret_scanning_push_protection": {
+      "before": "disabled",
+      "after": "enabled"
+    }
+  },
+  "verification": "Independent GET after successful PATCH confirmed both enabled. Initial open-alert metadata query returned zero alerts; no scan-completion claim is made. No credential values were printed or saved.",
+  "scope": "Repository credential scanning and push protection only. Main required-check rules are prepared separately and not active. No paid feature was selected.",
+  "references": [
+    "https://docs.github.com/en/rest/repos/repos#update-a-repository",
+    "https://docs.github.com/en/code-security/how-tos/secure-your-secrets/prevent-future-leaks/enable-push-protection",
+    "https://github.blog/changelog/2023-05-09-secret-scannings-push-protection-is-available-on-public-repositories-for-free/"
+  ]
+}

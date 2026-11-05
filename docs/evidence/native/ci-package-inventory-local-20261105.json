@@ -1,0 +1,37 @@
+{
+  "sourceCommit": "f0e2ac37383e76ac3812407384bf2eda968de3c4",
+  "implementationCommit": "bbdc9ca",
+  "validation": {
+    "pythonTestsPassed": 81,
+    "workflowLint": "passed",
+    "hostedLogReplay": {
+      "address": {
+        "passed": 389,
+        "approvedSkips": 3
+      },
+      "thread": {
+        "passed": 389,
+        "approvedSkips": 3
+      }
+    },
+    "negativeReplaysRejected": [
+      "Removed compiled selector",
+      "Missing terminal outcome",
+      "Duplicate execution",
+      "Unapproved skip",
+      "Failed outcome"
+    ],
+    "compiledInventory": {
+      "package": "CoreDomain",
+      "selected": 171,
+      "matchesReviewedInventory": true,
+      "command": "swift test list --skip-build using an existing exact-source build",
+      "localToolchain": "Xcode27.1 / Swift6.4"
+    }
+  },
+  "evidence": {
+    "replay-validation.log": "cefe348d7d4309f3ae80ec1feacd2846807882437e0ec63331b9b1280ac7feab",
+    "CoreDomain.compiled.inventory.txt": "9fe0f7000e5324040254d0f825f46565d5fa17ac465350c5211ab866ef767010"
+  },
+  "scope": "Retrospective sanitizer compiled inventories were reconstructed from their exact terminal-event sets; they are not independent compiled-discovery evidence. Actual local CoreDomain discovery is independent. Hosted Swift6.2.3 list --skip-build with ordinary coverage and sanitizer builds remains pending. Three explicit native-wire skips are allowed only in these package lanes; the dedicated integration lane requires all six actual scenario invocations."
+}

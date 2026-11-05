@@ -38,7 +38,7 @@
   "scope": "Existing native client calls across pinned loopback HTTPS to the real local HTTP service and disposable PostgreSQL. Free/paid history, separate meal planner/shopper and quote proposer/shopper are covered. Test-only runners and fixtures changed; no app/service product behavior or hosted database changed. Hosted Xcode26.3 execution remains pending.",
   "postValidationWorkflowChange": {
     "path": ".github/workflows/ios-native-wire.yml",
-    "change": "Artifact name includes github.run_attempt so a rerun does not conflict with the previous immutable artifact.",
+    "change": "Artifact names include github.run_attempt, giving every attempt an unambiguous evidence lookup name.",
     "currentSHA256": "fb2b6c6808cd63c985d607799e53b2c35c35d6c2521b3ef2eb874ef505ee80ed",
     "validation": "actionlint; local native execution scripts and fixtures are unchanged from the tested patch."
   }
