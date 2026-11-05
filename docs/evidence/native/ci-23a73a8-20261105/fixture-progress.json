@@ -56,8 +56,27 @@
         "RoomInTheCartUITests/DinnerAwayCarryoverUITests/testPhysicalCarryoverCancelApplyAndRestartKeepOriginalPurchase"
       ],
       "rawLogSHA256": "220c115f2f47cbc72b9be4cf21c36f32d7589a4ef5fe87b3a07bbd9c3b1d71d2"
+    },
+    "HistoryGrantReadUITests": {
+      "artifactID": 13416791390,
+      "jobID": 127238287584,
+      "sha256": "402d684d6f87c5216eaa963058e3f075ac5d3cb55f3c9858d48b41e00afa428a",
+      "digestVerified": true,
+      "planByteIdentical": true,
+      "strictReplayExit": 0,
+      "selected": 2,
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "warningScope": [],
+      "selectors": [
+        "RoomInTheCartUITests/HistoryGrantReadUITests/testFreeGrantDiscoversReadOnlyShopOpensRawRecordsAndRejectsPaidAndForeignAccess",
+        "RoomInTheCartUITests/HistoryGrantReadUITests/testRevokedBudgetGrantClearsPreviouslyOpenedRawPeriodAndRememberedSource"
+      ],
+      "rawLogSHA256": "7ce8f7131e26562f5a83e07646db1904bd5f0df15e591304e0004d0864ff56d9"
     }
   },
-  "observedAt": "2026-11-05T12:59:20.877642+00:00",
-  "independentlyVerifiedPassingCases": 4
+  "observedAt": "2026-11-05T13:01:20.389866+00:00",
+  "independentlyVerifiedPassingCases": 6
 }

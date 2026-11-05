@@ -66,6 +66,76 @@
       "simulatorHitches": {
         "status": "unavailable",
         "detail": "XCTest emitted scroll duration and memory, but no animation hitch samples on this simulator. This run cannot evaluate frame hitches."
+      },
+      "signpostDiagnostic": {
+        "sha256": "42bb700a2f46cec19ff7361c1201065beaa3fb6672f1f7effee9cfc07a51a673",
+        "status": "captured",
+        "diagnosticOnly": true,
+        "captureStatus": "ok",
+        "activityStatus": "ok",
+        "windows": [
+          {
+            "case": "warm-up",
+            "eventCount": 2,
+            "pairCount": 1,
+            "pairs": [
+              {
+                "durationSeconds": 2.583
+              }
+            ]
+          },
+          {
+            "case": "measured swipe 1",
+            "eventCount": 2,
+            "pairCount": 1,
+            "pairs": [
+              {
+                "durationSeconds": 2.581
+              }
+            ]
+          },
+          {
+            "case": "measured swipe 2",
+            "eventCount": 2,
+            "pairCount": 1,
+            "pairs": [
+              {
+                "durationSeconds": 2.583
+              }
+            ]
+          },
+          {
+            "case": "measured swipe 3",
+            "eventCount": 2,
+            "pairCount": 1,
+            "pairs": [
+              {
+                "durationSeconds": 2.583
+              }
+            ]
+          },
+          {
+            "case": "measured swipe 4",
+            "eventCount": 2,
+            "pairCount": 1,
+            "pairs": [
+              {
+                "durationSeconds": 2.6
+              }
+            ]
+          },
+          {
+            "case": "measured swipe 5",
+            "eventCount": 2,
+            "pairCount": 1,
+            "pairs": [
+              {
+                "durationSeconds": 2.601
+              }
+            ]
+          }
+        ],
+        "limits": "The normalized signpost report is diagnostic only and cannot satisfy frame-hitch or required performance gates; raw signpost logs are intentionally not retained."
       }
     },
     "rendered": {
