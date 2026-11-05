@@ -30,7 +30,7 @@ jobs:
       test_matrix: ${{ steps.plan.outputs.matrix }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - name: Validate fixture coverage and plan isolated shared journeys
+      - name: Validate fixture coverage and balanced contributor groups
         id: plan
         run: |
           python3 scripts/generate_xcode_project.py --check
@@ -156,6 +156,7 @@ jobs:
         timeout-minutes: 40
         shell: bash
         run: |
+          # Records remains a named standalone shard outside balanced groups.
           if [[ "$TEST_SHARD" == RecordsMediaUITests ]]; then
             # The synthetic recovery key can appear in screenshots and UI trees.
             status=0

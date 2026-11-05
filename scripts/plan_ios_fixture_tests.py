@@ -36,6 +36,16 @@ PROFILES = {
 # These long shared-editor journeys each get a fresh hosted runner/simulator.
 # Keep whole journeys intact: no retry or assertion is removed by isolation.
 ISOLATED_SUITES = {"SharedMealIdeaUITests", "SharedStoreQuoteUITests"}
+# Whole suites share a contributor runner; every method still runs exactly once.
+# Per-case times from23a73a8/run42021894739 sum to14.8–16.9 minutes/group.
+# Estimated repeated setup savings need fresh grouped hosted validation.
+BALANCED_SUITES = {
+    "contributor-balanced-01": ("DinnerAwayCarryoverUITests", "RequestDuplicateComparisonUITests"),
+    "contributor-balanced-02": ("ContributorRequestUITests", "MeasurementUITests", "StockReviewUITests"),
+    "contributor-balanced-03": ("HouseholdDevicesUITests", "HouseholdRequestPackUITests", "SharedMealCivilDateUITests"),
+    "contributor-balanced-04": ("HistoryGrantReadUITests", "RecipeLibraryAcceptanceUITests"),
+    "contributor-balanced-05": ("CorrectionPrivacyAcceptanceUITests", "GuardianEnrollmentUITests", "SharedMealChangeUITests"),
+}
 LIBRARY_PRIVACY_HELPER = f"{UI_TARGET}/LibraryPrivacyUITestCase"
 MICROPHONE_PROBE = f"{UI_TARGET}/FreeJourneyUITests/testNativeMicrophoneRefusalLeavesTypedCaptureReviewable"
 CONDITIONAL = re.compile(r"^[ \t]*#(?:if|elseif)\s+([^\n]+)", re.MULTILINE)
@@ -79,12 +89,30 @@ def suites_for(profile):
 
 def shard_members(profile, inventory):
     groups = {}
+    balanced = BALANCED_SUITES if profile == "contributor" else {}
+    assigned = {}
+    for name, owners in balanced.items():
+        if name in inventory or not owners:
+            raise ValueError(f"Invalid balanced fixture group: {name}")
+        for suite in owners:
+            if suite not in suites_for(profile) or suite not in inventory:
+                raise ValueError(f"Balanced fixture suite is outside {profile}: {suite}")
+            if suite == "RecordsMediaUITests" or suite in ISOLATED_SUITES:
+                raise ValueError(f"Fixture suite must remain isolated: {suite}")
+            if suite in assigned:
+                raise ValueError(f"Fixture suite belongs to multiple balanced groups: {suite}")
+            assigned[suite] = name
     for suite in suites_for(profile):
-        if suite in ISOLATED_SUITES:
+        if suite in assigned:
+            name = assigned[suite]
+            owners = balanced[name]
+            groups[name] = (owners, set().union(*(inventory[owner] for owner in owners)))
+        elif suite in ISOLATED_SUITES:
             for identifier in sorted(inventory[suite]):
-                groups[f"{suite}-{identifier.rsplit('/', 1)[1]}"] = (suite, {identifier})
+                groups[f"{suite}-{identifier.rsplit('/', 1)[1]}"] = ((suite,), {identifier})
         else:
-            groups[suite] = (suite, inventory[suite])
+            # Records retains its exact standalone shard name and private upload.
+            groups[suite] = ((suite,), inventory[suite])
     return groups
 
 
@@ -130,7 +158,7 @@ def make_plan(enumeration, profile, inventory):
         if test_selector == MICROPHONE_PROBE or (target == UI_TARGET and suite in other_suites):
             raise ValueError(f"Incompatible test compiled for {profile}: {identifier}")
 
-    shards = {}
+    selected_by_suite = {}
     for suite in suites:
         prefix = f"{UI_TARGET}/{suite}/"
         selected_disabled = [identifier for identifier in disabled if identifier.startswith(prefix)]
@@ -142,11 +170,19 @@ def make_plan(enumeration, profile, inventory):
         if not selected or actual != expected:
             raise ValueError(f"Compiled fixture tests differ for {suite}. "
                              f"Missing {sorted(expected - actual)}; extra {sorted(actual - expected)}")
-        for shard, (owner, members) in shard_members(profile, inventory).items():
-            if owner == suite:
-                shards[shard] = {"suite": suite, "selector_file": f"{shard}.txt",
-                                 "test_identifiers": [identifier for identifier in selected
-                                                      if selector(identifier) in members]}
+        selected_by_suite[suite] = selected
+
+    shards = {}
+    for shard, (owners, members) in shard_members(profile, inventory).items():
+        ownership = {"suite": owners[0]} if len(owners) == 1 else {"suites": list(owners)}
+        shards[shard] = {**ownership, "selector_file": f"{shard}.txt",
+                         "test_identifiers": sorted(identifier for owner in owners
+                                                    for identifier in selected_by_suite[owner]
+                                                    if selector(identifier) in members)}
+    planned = [selector(identifier) for shard in shards.values() for identifier in shard["test_identifiers"]]
+    expected = set().union(*(inventory[suite] for suite in suites))
+    if len(planned) != len(set(planned)) or set(planned) != expected:
+        raise ValueError("Fixture groups must cover every selected method exactly once")
     return {"profile": profile, "test_plan": test_plan, "shards": shards}
 
 

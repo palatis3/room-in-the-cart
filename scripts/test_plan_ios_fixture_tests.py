@@ -2,8 +2,9 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
-from plan_ios_fixture_tests import (ISOLATED_SUITES, LIBRARY_PRIVACY_HELPER, MICROPHONE_PROBE, UI_SOURCES, UI_TARGET, make_plan,
+from plan_ios_fixture_tests import (BALANCED_SUITES, ISOLATED_SUITES, LIBRARY_PRIVACY_HELPER, MICROPHONE_PROBE, UI_SOURCES, UI_TARGET, make_plan,
                                     matrix, source_inventory, suites_for, write_plan)
 
 
@@ -32,11 +33,12 @@ class PlanIOSFixtureTests(unittest.TestCase):
 
     def test_every_source_fixture_method_maps_to_exactly_one_job(self):
         actual = [entry["shard"] for entry in matrix()["include"]]
-        grouped = set(self.inventory) - ISOLATED_SUITES
+        grouped_suites = {suite for owners in BALANCED_SUITES.values() for suite in owners}
+        grouped = (set(self.inventory) - ISOLATED_SUITES - grouped_suites) | set(BALANCED_SUITES)
         isolated = {f"{suite}-{method.rsplit('/', 1)[1]}"
                     for suite in ISOLATED_SUITES for method in self.inventory[suite]}
         self.assertCountEqual(actual, grouped | isolated)
-        self.assertEqual(len(actual), 22)
+        self.assertEqual(len(actual), 14)
         self.assertIn("RecipeLibraryAcceptanceUITests", suites_for("contributor"))
         self.assertIn("CorrectionPrivacyAcceptanceUITests", suites_for("contributor"))
         self.assertNotIn("LibraryPrivacyUITestCase", actual)
@@ -54,16 +56,68 @@ class PlanIOSFixtureTests(unittest.TestCase):
                 matrix_shards = {row["shard"] for row in matrix(self.inventory)["include"] if row["profile"] == profile}
                 self.assertEqual(set(plan["shards"]), matrix_shards)
                 for name, shard in plan["shards"].items():
-                    suite = shard["suite"]
+                    owners = shard["suites"] if "suites" in shard else [shard["suite"]]
                     lines = (output / shard["selector_file"]).read_text().splitlines()
-                    if suite in ISOLATED_SUITES:
+                    if len(owners) == 1 and owners[0] in ISOLATED_SUITES:
+                        suite = owners[0]
                         self.assertEqual(len(lines), 1)
                         self.assertIn(lines[0], self.inventory[suite])
                         self.assertEqual(name, f"{suite}-{lines[0].rsplit('/', 1)[1]}")
                     else:
-                        self.assertEqual(lines, sorted(self.inventory[suite]))
+                        self.assertEqual(lines, sorted(method for suite in owners for method in self.inventory[suite]))
+                        if name in BALANCED_SUITES:
+                            self.assertEqual(owners, list(BALANCED_SUITES[name]))
                     selectors.extend(lines)
                 self.assertCountEqual(selectors, enabled)
+
+    def test_records_and_dinner_keep_exact_standalone_names_profiles_and_selectors(self):
+        plans = {profile: make_plan(enumeration(self.enabled_for(profile)), profile, self.inventory)
+                 for profile in ("contributor", "dinner")}
+        records = plans["contributor"]["shards"]["RecordsMediaUITests"]
+        self.assertEqual(records["suite"], "RecordsMediaUITests")
+        self.assertEqual(records["selector_file"], "RecordsMediaUITests.txt")
+        self.assertEqual([identifier.removesuffix("()") for identifier in records["test_identifiers"]],
+                         sorted(self.inventory["RecordsMediaUITests"]))
+        self.assertNotIn("suites", records)
+        self.assertEqual(set(plans["dinner"]["shards"]), {"DinnerDecisionSheetUITests"})
+        self.assertEqual(plans["dinner"]["shards"]["DinnerDecisionSheetUITests"]["suite"], "DinnerDecisionSheetUITests")
+        self.assertEqual(sum(len(shard["test_identifiers"]) for plan in plans.values()
+                             for shard in plan["shards"].values()), 44)
+        for name, shard in plans["contributor"]["shards"].items():
+            if name != "RecordsMediaUITests":
+                self.assertFalse(any("/RecordsMediaUITests/" in identifier for identifier in shard["test_identifiers"]))
+
+    def test_new_method_in_balanced_suite_keeps_its_whole_suite_and_all_other_methods(self):
+        inventory = {suite: set(methods) for suite, methods in self.inventory.items()}
+        suite = "ContributorRequestUITests"
+        added = f"{UI_TARGET}/{suite}/testNewJourney"
+        inventory[suite].add(added)
+        enabled = sorted(method for owner in suites_for("contributor") for method in inventory[owner])
+        plan = make_plan(enumeration(enabled), "contributor", inventory)
+        owner = next(name for name, owners in BALANCED_SUITES.items() if suite in owners)
+        self.assertTrue(inventory[suite].issubset({identifier.removesuffix("()")
+                                                for identifier in plan["shards"][owner]["test_identifiers"]}))
+        actual = [identifier.removesuffix("()") for shard in plan["shards"].values()
+                  for identifier in shard["test_identifiers"]]
+        self.assertCountEqual(actual, enabled)
+        self.assertEqual(len(actual), len(set(actual)))
+
+    def test_balanced_groups_reject_duplicate_foreign_privacy_or_isolated_owners(self):
+        invalid = (
+            ({"balanced": ("ContributorRequestUITests", "ContributorRequestUITests")}, "multiple balanced groups"),
+            ({"balanced": ("DinnerDecisionSheetUITests",)}, "outside contributor"),
+            ({"balanced": ("RecordsMediaUITests",)}, "must remain isolated"),
+            ({"balanced": ("SharedMealIdeaUITests",)}, "must remain isolated"),
+            ({"balanced": ("SharedStoreQuoteUITests",)}, "must remain isolated"),
+            ({"RecordsMediaUITests": ("ContributorRequestUITests",)}, "Invalid balanced fixture group"),
+            ({"balanced": ()}, "Invalid balanced fixture group"),
+        )
+        for groups, reason in invalid:
+            with self.subTest(groups=groups), patch("plan_ios_fixture_tests.BALANCED_SUITES", groups):
+                with self.assertRaisesRegex(ValueError, reason):
+                    matrix(self.inventory)
+                with self.assertRaisesRegex(ValueError, reason):
+                    make_plan(enumeration(self.enabled_for("contributor")), "contributor", self.inventory)
 
     def test_new_isolated_method_is_included_without_dropping_existing_methods(self):
         inventory = {suite: set(methods) for suite, methods in self.inventory.items()}
