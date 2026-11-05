@@ -98,16 +98,38 @@ class CheckIOSPerformanceTests(unittest.TestCase):
             report = {"fixtureLineCount": 500, "sampleCount": 20, "checkedRowIDs": ids,
                       "searchToAccessibleResultMilliseconds": list(range(1, 21)), "searchP95Milliseconds": 19,
                       "checkToResultRemovalMilliseconds": [5] * 20, "checkP95Milliseconds": 5}
+            functional = {
+                "fixtureLineCount": 500, "unmatchedQuery": "zz-no-such-fixture-item-987654321",
+                "uncheckedRowID": str(UUID(int=1000)),
+                "beforeRelaunch": {"unmatchedEmpty": True, "replacementFoundUncheckedRow": True, "clearedListRestored": True},
+                "afterRelaunch": {"unmatchedEmpty": True, "sameUncheckedRowFound": True, "checkedRowAbsent": True},
+            }
             attachments = [{"suggestedHumanReadableName": f"{name}_0_sample{Path(filename).suffix}", "exportedFileName": filename,
                             "deviceId": DEVICE, "isAssociatedWithFailure": False}
                            for name, filename in (("rendered-500-item-pickup", file.name),
+                                                  ("functional-search-500-item-pickup", "functional.json"),
                                                   ("Recently checked row after Release relaunch", "relaunch.png"))]
             write_json(directory / "manifest.json", [case_entry("rendered", attachments=attachments)])
             write_json(file, report)
+            write_json(directory / "functional.json", functional)
             (directory / "relaunch.png").write_bytes(b"example screenshot")
             measurements, checked = rendered_measurements(directory, DEVICE)
             self.assertEqual(checked, {UUID(value) for value in ids})
             self.assertEqual(measurements["searchP95Milliseconds"], 19)
+            self.assertEqual(measurements["functionalSearch"], functional)
+            for invalid in (False, 1, None):
+                with self.subTest(invalid=invalid):
+                    write_json(directory / "functional.json", {
+                        **functional, "beforeRelaunch": {**functional["beforeRelaunch"], "clearedListRestored": invalid}})
+                    with self.assertRaisesRegex(ValueError, "Incomplete functional search assertions"):
+                        rendered_measurements(directory, DEVICE)
+            write_json(directory / "functional.json", {**functional, "uncheckedRowID": ids[0]})
+            with self.assertRaisesRegex(ValueError, "Functional search result was checked"):
+                rendered_measurements(directory, DEVICE)
+            (directory / "functional.json").unlink()
+            with self.assertRaisesRegex(ValueError, "Empty XCTest attachment"):
+                rendered_measurements(directory, DEVICE)
+            write_json(directory / "functional.json", functional)
             write_json(file, {**report, "checkP95Milliseconds": 6})
             with self.assertRaisesRegex(ValueError, "Invalid rendered pickup timing or p95"):
                 rendered_measurements(directory, DEVICE)
@@ -124,6 +146,9 @@ class CheckIOSPerformanceTests(unittest.TestCase):
                 readback = ledger_readback(store, FIXTURE, ids)
                 self.assertEqual((readback["lineCount"], readback["contributionCount"], readback["importCount"]), (500, 500, 1))
                 self.assertEqual(len(readback["checkedRowIDs"]), checked_count)
+                self.assertEqual(ledger_readback(store, FIXTURE, ids, UUID(int=1000)), readback)
+                with self.assertRaisesRegex(ValueError, "original unchecked first fixture row"):
+                    ledger_readback(store, FIXTURE, ids, UUID(int=1001))
                 with self.assertRaisesRegex(ValueError, "checkoff IDs do not match"):
                     ledger_readback(store, FIXTURE, ids ^ {UUID(int=1000)})
 

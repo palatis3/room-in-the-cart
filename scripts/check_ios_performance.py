@@ -119,6 +119,20 @@ def rendered_measurements(directory, device_id):
         rank = math.ceil(len(samples) * 0.95) - 1
         require(all(samples) and report[p95] == sorted(samples)[rank], f"Invalid rendered pickup timing or p95: {name}")
     checked = unique_ids(report["checkedRowIDs"], CHECKOFF_COUNT, "attachment checkoff")
+    functional = read_json(attachment(directory, manifest, "functional-search-500-item-pickup", ".json", device_id))
+    require(functional["fixtureLineCount"] == LINE_COUNT and
+            functional["unmatchedQuery"] == "zz-no-such-fixture-item-987654321",
+            "Unexpected functional search fixture")
+    for phase, names in (
+        ("beforeRelaunch", {"unmatchedEmpty", "replacementFoundUncheckedRow", "clearedListRestored"}),
+        ("afterRelaunch", {"unmatchedEmpty", "sameUncheckedRowFound", "checkedRowAbsent"}),
+    ):
+        assertions = functional[phase]
+        require(isinstance(assertions, dict) and assertions.keys() == names and
+                all(value is True for value in assertions.values()), f"Incomplete functional search assertions: {phase}")
+    unchecked, = unique_ids([functional["uncheckedRowID"]], 1, "functional search result")
+    require(unchecked not in checked, "Functional search result was checked")
+    report["functionalSearch"] = functional
     return report, checked
 
 
@@ -129,7 +143,7 @@ def unique_ids(values, count, name):
     return identifiers
 
 
-def ledger_readback(store, fixture, expected_checked):
+def ledger_readback(store, fixture, expected_checked, expected_search_result=None):
     fixture_text = fixture.read_bytes().decode("utf-8")
     fixture_lines = fixture_text.splitlines()
     require(len(fixture_lines) == len(set(fixture_lines)) == LINE_COUNT and all(fixture_lines),
@@ -180,6 +194,9 @@ def ledger_readback(store, fixture, expected_checked):
 
     checked = {UUID(row["id"]) for row in lines if row.get("checkedAt") is not None}
     require(checked == expected_checked, "Persisted checkoff IDs do not match XCTest evidence")
+    if expected_search_result is not None:
+        require(expected_search_result == UUID(contributions[0]["lineID"]) and expected_search_result not in checked,
+                "Functional search result is not the original unchecked first fixture row")
     if checked:
         require(checked == {UUID(row["lineID"]) for row in contributions[-CHECKOFF_COUNT:]},
                 "The checked items are not the final twenty fixture rows")
@@ -248,7 +265,9 @@ def main():
             report.update(check_metrics(read_json(directory / "metrics.json"), args.case, device["deviceId"],
                                         configuration["testPlanConfiguration"]["configurationId"]))
         if args.case != "launch":
-            report["persistedPickup"] = ledger_readback(args.store, args.fixture, checked)
+            search_result = (UUID(report["renderedMeasurements"]["functionalSearch"]["uncheckedRowID"])
+                             if args.case == "rendered" else None)
+            report["persistedPickup"] = ledger_readback(args.store, args.fixture, checked, search_result)
         report["baselineValues"] = baseline_values(report)
         if report.get("simulatorHitches", {}).get("status") == "unavailable":
             print("::warning::" + report["simulatorHitches"]["detail"])

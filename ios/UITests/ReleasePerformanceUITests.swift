@@ -69,18 +69,74 @@ final class ReleasePerformanceUITests: XCTestCase {
         XCTAssertEqual(Set(checkedRowIDs).count, 20)
         screenshot("Filtered list after twenty saved checkoffs")
 
+        // Exercise search recovery after the timed samples so these extra
+        // queries do not warm up or change the measured search/checkoff loop.
+        let unmatched = "zz-no-such-fixture-item-987654321"
+        func replaceQuery(_ old: String, with new: String) {
+            tap(field)
+            if !old.isEmpty {
+                XCTAssertEqual(field.value as? String, old, "Replace the complete preceding query")
+                // A middle tap can place the caret inside a long query. Use
+                // the native edit menu instead of assuming an end position.
+                field.press(forDuration: 1.2)
+                let item = app.menuItems["Select All"]
+                let selectAll = item.exists ? item : app.buttons["Select All"]
+                XCTAssertTrue(selectAll.waitForExistence(timeout: 5))
+                selectAll.tap()
+                field.typeText(XCUIKeyboardKey.delete.rawValue)
+            }
+            let cleared = field.value as? String
+            XCTAssertTrue(cleared == "" || (cleared != nil && cleared == field.placeholderValue),
+                          "Search must be completely cleared before replacement")
+            field.typeText(new + "\n")
+            let entered = field.value as? String
+            XCTAssertTrue(entered == new || (new.isEmpty && entered != nil && entered == field.placeholderValue),
+                          "The search field must contain exactly the requested query")
+        }
+        func fixtureResult(_ token: String) -> XCUIElement {
+            app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label ENDSWITH %@", inspectPrefix, " " + token)).firstMatch
+        }
+        func requireNoResults() {
+            XCTAssertTrue(app.staticTexts[noSearchResults].waitForExistence(timeout: 8))
+            XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", inspectPrefix)).count, 0,
+                           "An unmatched query must not retain a stale item")
+        }
+        replaceQuery("m499x", with: unmatched)
+        requireNoResults()
+        replaceQuery(unmatched, with: "m000x")
+        XCTAssertTrue(fixtureResult("m000x").waitForExistence(timeout: 8))
+        let uncheckedRowID = try XCTUnwrap(UUID(uuidString: String(fixtureResult("m000x").identifier.dropFirst(inspectPrefix.count))))
+        XCTAssertFalse(checkedRowIDs.contains(uncheckedRowID.uuidString))
+        replaceQuery("m000x", with: "")
+        XCTAssertTrue(fixtureResult("m000x").waitForExistence(timeout: 8))
+        XCTAssertTrue(fixtureResult("m001x").waitForExistence(timeout: 8), "Clearing must restore more than the previous single result")
+        XCTAssertFalse(app.staticTexts[noSearchResults].exists)
+
         app.terminate()
         app.launch()
         openPickupList()
-        tap(field)
-        app.typeText("m499x\n")
-        XCTAssertTrue(app.staticTexts[noSearchResults].waitForExistence(timeout: 8))
+        replaceQuery("", with: unmatched)
+        requireNoResults()
+        replaceQuery(unmatched, with: "m000x")
+        XCTAssertTrue(fixtureResult("m000x").waitForExistence(timeout: 8))
+        XCTAssertEqual(fixtureResult("m000x").identifier, inspectPrefix + uncheckedRowID.uuidString,
+                       "Query replacement and relaunch must preserve the unchecked item identity")
+        replaceQuery("m000x", with: "m499x")
+        requireNoResults()
         tap(element("ledgerHistory"))
         XCTAssertTrue(app.navigationBars["List history"].waitForExistence(timeout: 8))
         let recent = app.buttons.matching(NSPredicate(format: "label == %@", "Reopen frozen corn market label m499x")).firstMatch
         // History follows original line order, so the final item is below the viewport.
         reveal(recent)
         screenshot("Recently checked row after Release relaunch")
+
+        try attachJSON([
+            "fixtureLineCount": fixtureCount,
+            "unmatchedQuery": unmatched,
+            "uncheckedRowID": uncheckedRowID.uuidString,
+            "beforeRelaunch": ["unmatchedEmpty": true, "replacementFoundUncheckedRow": true, "clearedListRestored": true],
+            "afterRelaunch": ["unmatchedEmpty": true, "sameUncheckedRowFound": true, "checkedRowAbsent": true],
+        ], name: "functional-search-500-item-pickup")
 
         try attachJSON([
             "fixtureLineCount": fixtureCount,
