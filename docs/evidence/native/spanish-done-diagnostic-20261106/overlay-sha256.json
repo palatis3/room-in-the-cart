@@ -1,0 +1,57 @@
+{
+  ".github/workflows/ios-fixtures.yml": {
+    "baseSHA256": "9942031a411a732f3482b73c2bb78ca8ec4dffb7046066ab9d5460ce8643ff32",
+    "proposedSHA256": "58b32ff3c19da9b2c1aa8e62b92ce10c0402dd150b6d1bf5fa906996bdce769a",
+    "bytes": 2669
+  },
+  "diagnostics/spanish-done/README.md": {
+    "baseSHA256": null,
+    "proposedSHA256": "a55bf835257f1fbeba474798931c3c347f3aac95e07e7072e92bb0bfc0a2188d",
+    "bytes": 11377
+  },
+  "diagnostics/spanish-done/build.sh": {
+    "baseSHA256": null,
+    "proposedSHA256": "bfad1466571f2fcd775415c09ffb273cbb414c7339273d17271eb3efa48c7d07",
+    "bytes": 1274
+  },
+  "diagnostics/spanish-done/local-wiring.sh": {
+    "baseSHA256": null,
+    "proposedSHA256": "509ce10372c188c8e58b73a42e472c9f6996e133479502cf62566285fe17a8b8",
+    "bytes": 887
+  },
+  "diagnostics/spanish-done/preservation.py": {
+    "baseSHA256": null,
+    "proposedSHA256": "73a122cf94191e93b03a53dfe218315493eaf76594d4d98f388c5425ce298928",
+    "bytes": 1825
+  },
+  "diagnostics/spanish-done/protocol.py": {
+    "baseSHA256": null,
+    "proposedSHA256": "930c44df458290d74152452faf349d35977699fb6c810a6d2696ec83a9afbe4c",
+    "bytes": 6829
+  },
+  "diagnostics/spanish-done/run.py": {
+    "baseSHA256": null,
+    "proposedSHA256": "cb3a8ef18c61932a40e12fa8613bdf2f8cab54953a0e2092d6ca60b07455aed0",
+    "bytes": 22961
+  },
+  "diagnostics/spanish-done/test_diagnostic.py": {
+    "baseSHA256": null,
+    "proposedSHA256": "c8162d9085a5a9241caddece753a837d7bf32819dbcd57d5341d6f2de77009f7",
+    "bytes": 22476
+  },
+  "ios/App/Theme.swift": {
+    "baseSHA256": "2d77ecf6ce6bed132275b3a9a33853cf4af311b81e2b7f9892bffe939defaa01",
+    "proposedSHA256": "15728bbe48f2fc43fe2ef1b3a793c62243847251ecf15bdebfb652901d145010",
+    "bytes": 7766
+  },
+  "ios/Features/Shop/ComparisonView.swift": {
+    "baseSHA256": "cb1e419eccc3af825d6eeaad331d628dd0230d6377244c93c8c6b8d866b1d8a4",
+    "proposedSHA256": "db4165e18c2c2ea1a3ccf105b8c39e0d400292a8ab746403d9c216420644cbb2",
+    "bytes": 18505
+  },
+  "ios/UITests/RoomInTheCartUITests.swift": {
+    "baseSHA256": "7d9e7240a8c7ec11f0067b76e7122c4c3ad4f12fa998b4b2f08e1cbdf056ee34",
+    "proposedSHA256": "19cbe46a0f3c17f4c3011d557494a5a4ac321637e7c285a71504b7b979e6b852",
+    "bytes": 32243
+  }
+}

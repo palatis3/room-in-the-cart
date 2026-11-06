@@ -1,0 +1,74 @@
+{
+  "candidate": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "runID": 42184705317,
+  "jobID": 127793433731,
+  "conclusion": "cancelled",
+  "createdAt": "2026-11-06T08:30:37Z",
+  "startedAtField": "2026-11-06T08:30:37Z",
+  "completedAt": "2026-11-06T10:15:58Z",
+  "runnerID": 0,
+  "runnerName": "",
+  "steps": [],
+  "annotations": [
+    {
+      "path": ".github",
+      "blob_href": "https://github.com/palatis3/room-in-the-cart/blob/b359d0743c2db77bb81a00a1c7e69036aa12ab77/.github",
+      "start_line": 1,
+      "start_column": null,
+      "end_line": 1,
+      "end_column": null,
+      "annotation_level": "failure",
+      "title": "",
+      "message": "The job was not acquired by Runner of type hosted even after multiple attempts",
+      "raw_details": ""
+    },
+    {
+      "path": ".github",
+      "blob_href": "https://github.com/palatis3/room-in-the-cart/blob/b359d0743c2db77bb81a00a1c7e69036aa12ab77/.github",
+      "start_line": 1,
+      "start_column": null,
+      "end_line": 1,
+      "end_column": null,
+      "annotation_level": "notice",
+      "title": "",
+      "message": "Due to capacity constraints, jobs targeting macOS arm64 runners may experience longer queue times.",
+      "raw_details": ""
+    },
+    {
+      "path": ".github",
+      "blob_href": "https://github.com/palatis3/room-in-the-cart/blob/b359d0743c2db77bb81a00a1c7e69036aa12ab77/.github",
+      "start_line": 1,
+      "start_column": null,
+      "end_line": 1,
+      "end_column": null,
+      "annotation_level": "notice",
+      "title": "",
+      "message": "Due to capacity constraints, jobs targeting macOS arm64 runners may experience longer queue times.",
+      "raw_details": ""
+    },
+    {
+      "path": ".github",
+      "blob_href": "https://github.com/palatis3/room-in-the-cart/blob/b359d0743c2db77bb81a00a1c7e69036aa12ab77/.github",
+      "start_line": 1,
+      "start_column": null,
+      "end_line": 1,
+      "end_column": null,
+      "annotation_level": "notice",
+      "title": "",
+      "message": "Due to capacity constraints, jobs targeting macOS arm64 runners may experience longer queue times.",
+      "raw_details": ""
+    }
+  ],
+  "checkOutput": {
+    "title": null,
+    "summary": null,
+    "text": null,
+    "annotations_count": 4,
+    "annotations_url": "https://api.github.com/repos/palatis3/room-in-the-cart/check-runs/127793433731/annotations"
+  },
+  "logFetchExit": 1,
+  "logResponseSHA256": "17a242d72427d77b993dc41f8700bbdb7a18e66039c59e0b5742968413634546",
+  "classification": "Cancelled before runner assignment; no steps or test execution evidenced.",
+  "testFailureCounted": false,
+  "retryAuthorized": false
+}

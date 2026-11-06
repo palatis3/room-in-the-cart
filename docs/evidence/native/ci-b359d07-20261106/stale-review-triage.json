@@ -1,0 +1,19 @@
+{
+  "candidate": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "artifactID": 13494402796,
+  "case": "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction",
+  "strictReplayExit": 1,
+  "executionAllowanceSeconds": 720,
+  "firstAnimationIdleStall": {
+    "after": "Done following sharedQuotes.second.branch entry",
+    "tapSeconds": 216.19,
+    "synthesizeSeconds": 216.61,
+    "idleStartSeconds": 216.93,
+    "missingNotificationSeconds": 276.99
+  },
+  "timeoutBoundary": "Waiting for app idle after tapping sharedQuotes.second.itemSubtotal at 712.73s; reviewSave not reached.",
+  "bilingualOnboardingAbsentMarkers": 24,
+  "runtimeWarnings": 0,
+  "sourceLogSHA256": "8be41db98cbdfb74bf16a0448e782f031a2b076a75a66b75e0341064e2d42660",
+  "causation": "Unknown. Timing identifies the first recorded 60-second animation-idle stall, not the source of ongoing animation."
+}

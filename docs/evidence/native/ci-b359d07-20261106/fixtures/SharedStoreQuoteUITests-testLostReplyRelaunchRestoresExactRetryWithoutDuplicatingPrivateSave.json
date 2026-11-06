@@ -1,0 +1,44 @@
+{
+  "artifactID": 13494181617,
+  "artifactName": "iphone-fixture-results-SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave-1",
+  "sha256": "5254aa9a5d66979c47c45b5753f0c6f3e1959b72b8fe223facc4ea117c416a23",
+  "size": 80301546,
+  "digestVerified": true,
+  "candidate": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "runID": 42184705317,
+  "jobID": 127793433855,
+  "hostedConclusion": "failure",
+  "selected": 1,
+  "passed": 0,
+  "failed": 1,
+  "skipped": 0,
+  "strictReplayExit": 1,
+  "planByteIdentical": true,
+  "runtimeWarnings": 2,
+  "warnings": {
+    "status": "passed",
+    "summaryWarningCount": null,
+    "runtimeWarningCount": 2,
+    "examinedTestCount": 1,
+    "detailExportCount": 1,
+    "activityExportCount": 1,
+    "warnings": [
+      {
+        "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave",
+        "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+        "count": 2,
+        "maximum": 2,
+        "menuActivity": {
+          "tap": "Tap \"fixture.s27.controls\" Button",
+          "phase": "Synthesize event"
+        }
+      }
+    ]
+  },
+  "selectors": [
+    "RoomInTheCartUITests/SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave"
+  ],
+  "rawLogSHA256": "772734075b1ac75c8da5fbf8d1908be05859441d62d5345dbe099561d4e3934a",
+  "replayedBundle": "Tests.xcresult",
+  "collectionRecovery": "Original generic50MB member bound rejected one72,216,589-byte xcresult member; exact artifact ID/digest/member/size exception independently reviewed, all other bounds unchanged. No test retry."
+}
