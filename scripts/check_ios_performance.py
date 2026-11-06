@@ -25,6 +25,7 @@ MEMORY_METRIC = "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical"
 LINE_COUNT = 500
 CHECKOFF_COUNT = 20
 XCTEST_ITERATIONS = 5
+EVIDENCE_ERRORS = (OSError, ValueError, KeyError, TypeError, sqlite3.Error)
 
 
 def require(condition, message):
@@ -247,6 +248,9 @@ def main():
         parser.error("pickup cases require both --fixture and --store")
     try:
         directory = args.evidence
+        # Never retain a previous success when the current validation is incomplete.
+        for filename in ("calibration.json", "evidence-validation.json"):
+            (directory / filename).unlink(missing_ok=True)
         summary = read_json(directory / "test-summary.json")
         configuration, = summary["devicesAndConfigurations"]
         device = configuration["device"]
@@ -259,15 +263,37 @@ def main():
         require(all(isinstance(value, str) and value for value in environment.values()), "Incomplete simulator environment")
         report = {"case": args.case, "status": "calibration-only", "device": device, "environment": environment}
         checked = set()
-        if args.case == "rendered":
-            report["renderedMeasurements"], checked = rendered_measurements(directory / "attachments", device["deviceId"])
-        else:
-            report.update(check_metrics(read_json(directory / "metrics.json"), args.case, device["deviceId"],
-                                        configuration["testPlanConfiguration"]["configurationId"]))
+        validation = {"case": args.case, "environment": environment, "releaseAcceptance": False}
+        errors = []
+        try:
+            if args.case == "rendered":
+                report["renderedMeasurements"], checked = rendered_measurements(directory / "attachments", device["deviceId"])
+            else:
+                report.update(check_metrics(read_json(directory / "metrics.json"), args.case, device["deviceId"],
+                                            configuration["testPlanConfiguration"]["configurationId"]))
+            validation["measurements"] = {"status": "passed"}
+        except EVIDENCE_ERRORS as error:
+            validation["measurements"] = {"status": "failed", "error": str(error)}
+            errors.append(f"measurements: {error}")
         if args.case != "launch":
-            search_result = (UUID(report["renderedMeasurements"]["functionalSearch"]["uncheckedRowID"])
-                             if args.case == "rendered" else None)
-            report["persistedPickup"] = ledger_readback(args.store, args.fixture, checked, search_result)
+            # Scroll's unchanged fixture expects zero checkoffs independently of
+            # its metrics. Rendered checkoff identities require valid attachments.
+            if args.case == "rendered" and "renderedMeasurements" not in report:
+                validation["persistedPickup"] = {"status": "not-checked",
+                    "reason": "Valid rendered attachments are required for expected checkoff and search identities."}
+            else:
+                try:
+                    search_result = (UUID(report["renderedMeasurements"]["functionalSearch"]["uncheckedRowID"])
+                                     if args.case == "rendered" else None)
+                    report["persistedPickup"] = ledger_readback(args.store, args.fixture, checked, search_result)
+                    validation["persistedPickup"] = {"status": "passed", "result": report["persistedPickup"]}
+                except EVIDENCE_ERRORS as error:
+                    validation["persistedPickup"] = {"status": "failed", "error": str(error)}
+                    errors.append(f"persisted pickup: {error}")
+        validation["status"] = "incomplete" if errors else "complete"
+        (directory / "evidence-validation.json").write_text(
+            json.dumps(validation, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+        require(not errors, "; ".join(errors))
         report["baselineValues"] = baseline_values(report)
         if report.get("simulatorHitches", {}).get("status") == "unavailable":
             print("::warning::" + report["simulatorHitches"]["detail"])
@@ -289,7 +315,7 @@ def main():
             exceeded = [name for name, result in comparisons.items() if not result["passed"]]
             parser.exit(1, f"Performance regression exceeded approved limits: {', '.join(exceeded)}\n")
         print("Complete measurements passed the approved baseline for this simulator environment.")
-    except (OSError, ValueError, KeyError, TypeError, sqlite3.Error) as error:
+    except EVIDENCE_ERRORS as error:
         parser.exit(1, f"Incomplete iOS performance evidence: {error}\n")
 
 

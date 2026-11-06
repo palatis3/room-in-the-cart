@@ -228,6 +228,66 @@ class CheckIOSPerformanceTests(unittest.TestCase):
                     self.assertEqual(subprocess.run(command, capture_output=True).returncode, exit_code)
                     self.assertEqual(json.loads(result.read_text())["status"], status)
 
+    def test_cli_retains_independent_pickup_checks_without_accepting_partial_evidence(self):
+        for missing_metric, valid_digest in ((True, True), (True, False), (False, False), (False, True)):
+            with self.subTest(missing_metric=missing_metric, valid_digest=valid_digest), tempfile.TemporaryDirectory() as folder:
+                directory = Path(folder)
+                device = {"platform": "iOS Simulator", "deviceId": DEVICE, "osVersion": "26.2",
+                          "osBuildNumber": "sample-build", "modelName": "iPhone 17", "architecture": "arm64"}
+                write_json(directory / "test-summary.json", {"devicesAndConfigurations": [{"device": device,
+                    "testPlanConfiguration": {"configurationId": CONFIG, "configurationName": "Test Scheme Action"}}]})
+                (directory / "toolchain.txt").write_text("Xcode 26.3\nBuild version sample\n")
+                series = [metric(MEMORY_METRIC, "kB", [0] * 5),
+                          metric(f"{MEMORY_METRIC}_absolute", "kB", [100] * 5),
+                          metric(f"{MEMORY_METRIC}_peak", "kB", [110] * 5)]
+                if not missing_metric:
+                    series.append(metric(SCROLL_METRIC, "s", [2] * 5))
+                write_json(directory / "metrics.json", measurements("scroll", *series))
+                store = directory / "ledger.sqlite"
+                write_store(store, workspace(0), valid_digest=valid_digest)
+                original_store = store.read_bytes()
+                # A failed new validation must not leave a stale success report.
+                write_json(directory / "calibration.json", {"status": "baseline-passed", "stale": True})
+                command = [sys.executable, str(Path(__file__).with_name("check_ios_performance.py")),
+                           "scroll", "--evidence", folder, "--fixture", str(FIXTURE), "--store", str(store)]
+                result = subprocess.run(command, capture_output=True, text=True)
+                complete = not missing_metric and valid_digest
+                self.assertEqual(result.returncode, 0 if complete else 1, result.stderr)
+                evidence = json.loads((directory / "evidence-validation.json").read_text())
+                self.assertEqual(evidence["status"], "complete" if complete else "incomplete")
+                self.assertEqual(evidence["measurements"]["status"], "failed" if missing_metric else "passed")
+                self.assertEqual(evidence["persistedPickup"]["status"], "passed" if valid_digest else "failed")
+                if valid_digest:
+                    self.assertEqual(evidence["persistedPickup"]["result"]["lineCount"], 500)
+                    self.assertEqual(evidence["persistedPickup"]["result"]["checkedCount"], 0)
+                else:
+                    self.assertIn("digest does not match", evidence["persistedPickup"]["error"])
+                    self.assertIn("digest does not match", result.stderr)
+                if missing_metric:
+                    self.assertIn(SCROLL_METRIC, evidence["measurements"]["error"])
+                    self.assertIn(SCROLL_METRIC, result.stderr)
+                self.assertEqual(store.read_bytes(), original_store, "Readback must not change the saved database")
+                self.assertEqual((directory / "calibration.json").exists(), complete)
+
+    def test_cli_failed_rendered_evidence_does_not_invent_checkoff_authority(self):
+        with tempfile.TemporaryDirectory() as folder:
+            directory = Path(folder)
+            device = {"platform": "iOS Simulator", "deviceId": DEVICE, "osVersion": "26.2",
+                      "osBuildNumber": "sample-build", "modelName": "iPhone 17", "architecture": "arm64"}
+            write_json(directory / "test-summary.json", {"devicesAndConfigurations": [{"device": device,
+                "testPlanConfiguration": {"configurationId": CONFIG, "configurationName": "Test Scheme Action"}}]})
+            (directory / "toolchain.txt").write_text("Xcode 26.3\nBuild version sample\n")
+            store = directory / "ledger.sqlite"
+            write_store(store, workspace(0))
+            result = subprocess.run([sys.executable, str(Path(__file__).with_name("check_ios_performance.py")),
+                "rendered", "--evidence", folder, "--fixture", str(FIXTURE), "--store", str(store)], capture_output=True)
+            self.assertEqual(result.returncode, 1)
+            evidence = json.loads((directory / "evidence-validation.json").read_text())
+            self.assertEqual(evidence["measurements"]["status"], "failed")
+            self.assertEqual(evidence["persistedPickup"]["status"], "not-checked")
+            self.assertIn("checkoff", evidence["persistedPickup"]["reason"])
+            self.assertFalse((directory / "calibration.json").exists())
+
 
 if __name__ == "__main__":
     unittest.main()
