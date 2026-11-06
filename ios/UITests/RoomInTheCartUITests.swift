@@ -1,4 +1,7 @@
 import XCTest
+#if DEBUG
+import Darwin
+#endif
 
 /// Real typed entry through the shipping screens. The DEBUG launch switch only
 /// isolates/clears the test database; it does not prefill or seed comparisons.
@@ -458,6 +461,11 @@ final class RoomInTheCartUITests: XCTestCase {
     }
 
     private func launch(language: String = "en", reset: Bool = true, largeDark: Bool = false) {
+        #if DEBUG
+        if ProcessInfo.processInfo.environment["RITC_SPANISH_DONE_DIAGNOSTIC"] == "1" {
+            app.launchEnvironment["RITC_SPANISH_DONE_DIAGNOSTIC"] = "1"
+        }
+        #endif
         app.launchArguments = ["--ui-testing", "-AppleLanguages", "(\(language))", "-AppleLocale", "\(language)_US",
                                "-appearance", largeDark ? "dark" : "light"]
         if reset { app.launchArguments.append("--reset-test-workspace") }
@@ -562,7 +570,19 @@ final class RoomInTheCartUITests: XCTestCase {
         app.typeText(text)
         let done = app.buttons.matching(NSPredicate(format: "label IN %@", ["Done", "Listo", "Hecho"])).firstMatch
         XCTAssertTrue(done.waitForExistence(timeout: 3), "Decimal input must have a keyboard dismissal control")
+        #if DEBUG
+        if id == "bQuantity", ProcessInfo.processInfo.environment["RITC_SPANISH_DONE_DIAGNOSTIC"] == "1" {
+            print("SDD_RUNNER|before|\(getpid())|\(ProcessInfo.processInfo.systemUptime)")
+            fflush(nil)
+        }
+        #endif
         done.tap()
+        #if DEBUG
+        if id == "bQuantity", ProcessInfo.processInfo.environment["RITC_SPANISH_DONE_DIAGNOSTIC"] == "1" {
+            print("SDD_RUNNER|after|\(getpid())|\(ProcessInfo.processInfo.systemUptime)")
+            fflush(nil)
+        }
+        #endif
         reveal(field)
         XCTAssertEqual(field.value as? String, text, "Typed input must reach its intended field")
     }

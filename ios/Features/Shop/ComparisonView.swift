@@ -40,6 +40,9 @@ struct ComparisonView: View {
             }
         }
         .keyboardDoneAction(visible: inputFocused != nil, title: tr("Done")) { inputFocused = nil }
+        #if DEBUG
+        .onChange(of: inputFocused) { _, value in SpanishDoneDiagnostic.focus(value) }
+        #endif
         .onAppear { if reviewing { model.compare() } }
     }
 
