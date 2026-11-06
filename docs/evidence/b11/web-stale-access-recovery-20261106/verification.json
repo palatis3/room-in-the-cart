@@ -1,0 +1,43 @@
+{
+  "localBase": "3703bc0856d9d48cbe390012442eed5785eb5640",
+  "files": {
+    "web/src/app.ts": "cfd69a7bfb01d69bb4539161b6b3a8109b24d32ee552f2f7f8e35fbfec303bb5",
+    "web/tests/client.test.mjs": "cb7fc2bb0330a4a50c5c8f3d86ca50646983883556ac5b33e09864f796ea3402"
+  },
+  "tests": {
+    "passed": 120,
+    "failed": 0,
+    "includesProductionBuild": true
+  },
+  "negativeControls": [
+    {
+      "source": "Original app code",
+      "outcome": "New actor-recovery test failed on stale Access has ended text above authorized form."
+    },
+    {
+      "source": "Initial unguarded patch",
+      "outcome": "New deferred Refresh expiry test failed because the current denial was cleared; final patch guards this.session === fresh."
+    }
+  ],
+  "preserved": [
+    "No old private request delivered or shown after actor switch",
+    "Anonymous refresh keeps denial",
+    "Storage-cleanup warnings preserved",
+    "Uncertain send and received notices retain existing test coverage",
+    "Current helper/editor expiry denial survives awaited Refresh completion"
+  ],
+  "actualAndroid": {
+    "browser": "156.0.8078.79",
+    "actorFenceAndAuthorizedRefresh": "passed",
+    "contributorFullRestartAnonymousPrivacy": "passed; session cookie lost, durable pending row hidden, no command delivered",
+    "providerBehavior": "synthetic loopback only"
+  },
+  "driverLimitations": [
+    "CDP pointer targeting around keyboard timed out; native tap dismissed keyboard, then observed Review control activated normally.",
+    "An earlier restart preparation on original origin55825 never reached durable pending; Back navigated its owned tab to about:blank. No restart acceptance claimed for that attempt.",
+    "Final restart preparation used real Tab focus traversal and Enter, verified focused Review button, then explicit Send.",
+    "First DevTools attach after restart returned ECONNRESET before socket ready; later attach succeeded without restarting Chrome again."
+  ],
+  "deployment": "Local only; hosted staging and PR candidate unchanged",
+  "releaseAcceptance": false
+}

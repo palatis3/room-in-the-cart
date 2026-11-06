@@ -120,6 +120,10 @@ export class WebApp {
       }
     } else {this.pending=[];await this.outbox.clear().catch(()=>{});}
     if(!this.pending.length&&this.notice==='Waiting to send from this browser')this.notice='';
+    // Fresh authorized content supersedes a prior access denial, not receipt or storage warnings.
+    if(this.session===fresh&&this.notice==='Access has ended. Ask your household for a new invitation.') {
+      this.notice='';this.failurePurpose=null;
+    }
   }
   private async reauthenticate(command?:Command, grantId?:string):Promise<Session> {
     const fresh=await this.api.session();

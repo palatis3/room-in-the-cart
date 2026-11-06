@@ -1,0 +1,105 @@
+{
+  "synthetic": true,
+  "lane": "adult",
+  "mode": "online",
+  "primedRole": null,
+  "counts": {
+    "authStarts": 0,
+    "verifies": 0,
+    "redeems": 0,
+    "activations": 0,
+    "commandPosts": 0,
+    "commandEffects": 0,
+    "exactCommandRetries": 0,
+    "proposalPosts": 0,
+    "proposalEffects": 0,
+    "exactProposalRetries": 0,
+    "logoutAttempts": 0,
+    "logoutEffects": 0,
+    "forbidden": 0
+  },
+  "events": [
+    {
+      "control": "prime contributor"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/households/fixture-house/requests/mine",
+      "bodySHA256": null
+    },
+    {
+      "control": "mode offline-api"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/session",
+      "bodySHA256": null
+    },
+    {
+      "control": "change-actor"
+    },
+    {
+      "control": "mode online"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/households/fixture-house/requests/mine",
+      "bodySHA256": null
+    },
+    {
+      "control": "mode offline-api"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/session",
+      "bodySHA256": null
+    },
+    {
+      "control": "mode online"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/auth/session",
+      "bodySHA256": null
+    }
+  ],
+  "requestCount": 0,
+  "proposalCount": 0,
+  "childCounts": {
+    "starts": 0,
+    "verifies": 0,
+    "claimPosts": 0,
+    "claims": 0,
+    "finishPosts": 0,
+    "finishes": 0,
+    "ownReads": 0,
+    "forbidden": 0,
+    "exactClaimRetries": 0,
+    "exactFinishRetries": 0
+  }
+}

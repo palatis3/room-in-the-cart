@@ -192,6 +192,39 @@ test('an explicit access refusal cannot queue against the earlier session',async
  assert.match(root.textContent,/Access has ended/);
 });
 
+test('authorized Refresh clears an old mutation access denial without discarding storage warnings',async t=>{
+ for(const storageClearFails of [false,true]){
+  const original={...session(),queueConsent:true},outbox=new Outbox(new IDBFactory());
+  let current=original,connected=true,commands=0;
+  const {root,dom}=await setup(fakeAPI({
+   session:async()=>{if(!connected)throw new ApiError('network',0);return current;},
+   command:async()=>{commands++;assert.fail('A previous actor request must never be delivered');},
+   authState:async()=>({available:false,authenticated:false})
+  }),'en',outbox);
+  t.after(()=>dom.window.close());
+  root.querySelector('input[type=checkbox]').click();
+  type(dom,'item','Previous actor private request');submit(root,dom);
+  connected=false;submit(root,dom);await waitForIdle(root);
+  assert.equal((await outbox.list(scopeFor(original))).length,1);
+  current={...original,memberId:'member-b'};connected=true;
+  if(storageClearFails)outbox.clear=async()=>{throw new DOMException('Storage denied','SecurityError');};
+  click(root,'Retry');await waitForIdle(root);
+  assert.match(root.textContent,/Access has ended/);
+  assert.doesNotMatch(root.textContent,/Previous actor private request|Ask the shopper/);
+  if(!storageClearFails)assert.deepEqual(await outbox.list(scopeFor(original)),[]);
+
+  current=null;click(root,'Refresh');await waitForIdle(root);
+  assert.match(root.textContent,/Access has ended/,'Anonymous refresh must not dismiss the denial');
+  assert.equal(root.querySelector('#item'),null);
+  current={...original,memberId:'member-b'};click(root,'Refresh');await waitForIdle(root);
+  assert.ok(root.querySelector('#item'),'The newly authorized contributor can draft their own request');
+  assert.doesNotMatch(root.textContent,/Previous actor private request/);
+  if(storageClearFails)assert.match(root.textContent,/Access has ended.*Clear site data/);
+  else assert.doesNotMatch(root.textContent,/Access has ended/,'Successful authenticated refresh must remove the stale denial');
+  assert.equal(commands,0);
+ }
+});
+
 test('pending edit carries request revision; withdrawal requires confirmation',async()=>{
  let rows=[own()];const sent=[];const {root,dom}=await setup(fakeAPI({requests:async()=>rows,command:async(s,c)=>{sent.push(c);}}));
  click(root,'Edit');type(dom,'amount','three cans');submit(root,dom);submit(root,dom);await waitForIdle(root);
@@ -725,6 +758,22 @@ test('late received-page response cannot expose old actor data after account swi
   click(root,'Check received suggestions');while(!release)await new Promise(r=>setTimeout(r,5));
   if(expire){view.expiresAt='2020-01-01T00:00:00Z';app.checkExpiry();}else active={...active,memberId:'other-member'};
   release();await waitForIdle(root);assert.doesNotMatch(root.textContent,/Previously received private suggestion/);assert.match(root.textContent,/Access has ended/);
+ }
+});
+
+test('expiry during Refresh keeps its current denial after the received-page response finishes',async t=>{
+ for(const role of ['helper','editor']){
+  let release;const view={...cookView(),canPropose:role==='editor'};
+  const api=fakeAPI({session:async()=>({...editorSession(),role}),view:async()=>view,receivedProposals:async()=>({proposals:[],nextCursor:null})});
+  const {root,dom,app}=await setup(api);t.after(()=>dom.window.close());
+  api.receivedProposals=async()=>new Promise(resolve=>{release=()=>resolve({proposals:[receivedSuggestion()],nextCursor:null});});
+  click(root,'Refresh');
+  const deadline=Date.now()+3000;
+  while(!release){assert.ok(Date.now()<deadline,'Refresh must reach suggestion loading');await new Promise(r=>setTimeout(r,5));}
+  view.expiresAt='2020-01-01T00:00:00Z';app.checkExpiry();release();await waitForIdle(root);
+  assert.match(root.textContent,/Access has ended/);
+  assert.doesNotMatch(root.textContent,/Previously received private suggestion|Family A|Current instructions/);
+  assert.equal(root.querySelector('#correction'),null);
  }
 });
 

@@ -1,0 +1,24 @@
+{
+  "passed": true,
+  "browser": "156.0.8078.79",
+  "counts": {
+    "authStarts": 0,
+    "verifies": 0,
+    "redeems": 0,
+    "activations": 0,
+    "commandPosts": 0,
+    "commandEffects": 0,
+    "exactCommandRetries": 0,
+    "proposalPosts": 0,
+    "proposalEffects": 0,
+    "exactProposalRetries": 0,
+    "logoutAttempts": 0,
+    "logoutEffects": 0,
+    "forbidden": 0
+  },
+  "denialPreservedUntilAuthorization": true,
+  "staleDenialCleared": true,
+  "oldPrivateWordingRemoved": true,
+  "pendingCleared": true,
+  "noCommandDelivered": true
+}

@@ -54,6 +54,10 @@ Actual Android synthetic-flow checks are now complete in the documented scopes: 
 
 All five owned loopback servers, exact reverse mappings and CDP52889forward are stopped/removed. The owned fixture tab is closed and public HelpEN restored; other tabs and account state are preserved. Private Play/account captures remain ignored. Physical/mixed-household/assistive/human-language gates remain open.
 
+## Browser-discovered stale access notice fixed locally
+
+Actual Android actor-switch testing found a contradictory retained “Access has ended” message after successful authorization. The local fix clears only the ordinary denial after a successful load while the same session remains current. Anonymous and storage-warning states remain; a deferred helper/editor expiry race is covered. Both negative controls fail as intended; all120web tests and production build pass. Actual Android replay verifies the original actor fence and corrected authorized display with zero command delivery. A full-browser restart also retains pending storage while hiding it without a session. [Evidence and limits](evidence/b11/web-stale-access-recovery-20261106/README.md). This web fix is not pushed/deployed and is outside the ongoing native performance run.
+
 ## Latest collected CI candidate: 8f864ea
 
 The combined candidate `8f864eafc3887ea16be996124d55fa2ca2708706` was published once at 14:29 UTC on November 6. Only the two reviewed UI helpers and documentation changed beyond `0d33c11`; production code and acceptance thresholds did not change. Both corrected journeys now pass on GitHub. Simulator and unsigned iPhone Release builds pass, as do all 601 model cases. Core attempt 1 is terminal: 33 of 51 ordinary UI cases executed, 32 passed and one large-text keyboard journey timed out. The remaining 18 cases never acquired GitHub runners. Four narrowly allowed warnings were retained across UI03/UI10. These missing executions are distinct from the executed timeout and are not passes.
