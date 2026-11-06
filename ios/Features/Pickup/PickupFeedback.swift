@@ -1,5 +1,8 @@
 import SwiftUI
 import HouseholdClient
+#if DEBUG
+import OSLog
+#endif
 
 enum PickupDecision: String, Codable, CaseIterable {
     case acted, unchanged, tooLate, unknown, alreadyKnew, wrong
@@ -87,11 +90,34 @@ extension PickupModel {
         return acceptedVersions[workspaceID.uuidString.lowercased()] == Self.noticeVersion
     }
     func setEnabled(_ value: Bool, for workspaceID: UUID?) {
-        guard let workspaceID else { return }
+        #if DEBUG
+        if MeasurementConsentDiagnostic.enabled {
+            MeasurementConsentDiagnostic.record(.consentSetEnter, requested: value,
+                workspacePresent: workspaceID != nil, enabledValue: enabled(for: workspaceID))
+        }
+        #endif
+        guard let workspaceID else {
+            #if DEBUG
+            MeasurementConsentDiagnostic.record(.consentSetRejectedMissingWorkspace, requested: value,
+                workspacePresent: false)
+            #endif
+            return
+        }
         acceptedVersions[workspaceID.uuidString.lowercased()] = value ? Self.noticeVersion : nil
         defaults.set(acceptedVersions, forKey: storageKey)
+        #if DEBUG
+        if MeasurementConsentDiagnostic.enabled {
+            MeasurementConsentDiagnostic.record(.consentSetExit, requested: value,
+                workspacePresent: true, enabledValue: enabled(for: workspaceID))
+        }
+        #endif
     }
-    func resetForUITest() { acceptedVersions = [:]; defaults.removeObject(forKey: storageKey) }
+    func resetForUITest() {
+        #if DEBUG
+        MeasurementConsentDiagnostic.record(.consentReset)
+        #endif
+        acceptedVersions = [:]; defaults.removeObject(forKey: storageKey)
+    }
 }
 
 struct PickupFeedbackSection: View {
@@ -355,3 +381,36 @@ struct SharedMeasurementFeedbackView: View {
         value == .late ? .tooLate : value == .alreadyKnew ? .alreadyKnew : PickupDecision(rawValue: value.rawValue)!
     }
 }
+
+#if DEBUG
+/// Opt-in structural events only. No identity, consent keys, payloads or disk writes.
+@MainActor enum MeasurementConsentDiagnostic {
+    enum Event: String {
+        case fixtureReady = "fixture.ready"
+        case bindingEnter = "binding.enter", bindingExit = "binding.exit"
+        case consentSetEnter = "consent.set.enter", consentSetExit = "consent.set.exit"
+        case consentSetRejectedMissingWorkspace = "consent.set.rejectedMissingWorkspace"
+        case consentReset = "consent.reset"
+    }
+    static let enabled = ProcessInfo.processInfo.arguments.contains("--ui-testing") &&
+        ProcessInfo.processInfo.environment["RITC_MEASUREMENT_CONSENT_DIAGNOSTIC"] == "1"
+    private static let logger = Logger(subsystem: "dev.roominthecart.measurementconsentdiagnostic", category: "events")
+    private static var sequence: UInt64 = 0
+
+    // Boolean fields use 1=true, 0=false, -1=not applicable; IDs never enter this API.
+    static func record(_ event: Event, requested: Bool? = nil, ready: Bool? = nil,
+                       workspacePresent: Bool? = nil, enabledValue: Bool? = nil,
+                       sameWorkspace: Bool? = nil, otherReady: Bool? = nil,
+                       otherWorkspacePresent: Bool? = nil, workspacesDistinct: Bool? = nil) {
+        guard enabled else { return }
+        sequence &+= 1
+        let currentSequence = sequence, uptime = ProcessInfo.processInfo.systemUptime
+        let name = event.rawValue
+        let request = flag(requested), isReady = flag(ready), present = flag(workspacePresent)
+        let value = flag(enabledValue), same = flag(sameWorkspace), secondReady = flag(otherReady)
+        let secondPresent = flag(otherWorkspacePresent), distinct = flag(workspacesDistinct)
+        logger.info("sequence=\(currentSequence, privacy: .public) uptime=\(uptime, privacy: .public) event=\(name, privacy: .public) requested=\(request, privacy: .public) ready=\(isReady, privacy: .public) workspacePresent=\(present, privacy: .public) enabledValue=\(value, privacy: .public) sameWorkspace=\(same, privacy: .public) otherReady=\(secondReady, privacy: .public) otherWorkspacePresent=\(secondPresent, privacy: .public) workspacesDistinct=\(distinct, privacy: .public)")
+    }
+    private static func flag(_ value: Bool?) -> Int { value.map { $0 ? 1 : 0 } ?? -1 }
+}
+#endif

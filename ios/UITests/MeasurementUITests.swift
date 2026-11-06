@@ -107,6 +107,9 @@ import XCTest
         app.launchArguments = ["--ui-testing", "--measurement-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launchEnvironment["RITC_MEASUREMENT_FIXTURE_WORKSPACE"] = workspace
         app.launchEnvironment["RITC_MEASUREMENT_FIXTURE_RESET"] = reset ? "1" : "0"
+        // The diagnostic is off unless explicitly enabled in the XCTest runner.
+        app.launchEnvironment["RITC_MEASUREMENT_CONSENT_DIAGNOSTIC"] =
+            ProcessInfo.processInfo.environment["RITC_MEASUREMENT_CONSENT_DIAGNOSTIC"] == "1" ? "1" : "0"
         app.launch()
         XCTAssertTrue(app.tabBars.buttons["Settings"].waitForExistence(timeout: 25))
         reveal(app.switches["Offer optional feedback after a pickup"])

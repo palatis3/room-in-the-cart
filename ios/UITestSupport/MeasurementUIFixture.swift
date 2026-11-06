@@ -158,6 +158,12 @@ private final class MeasurementFixtureProtocol: URLProtocol, @unchecked Sendable
             guard let workspace = model.workspaces.first else { throw ClientError.invalidResponse }
             model.keepLocalPrivate = true; await model.join(workspace); await model.sharedShop?.load()
             guard model.projection?.role == "shopper", model.sharedShop?.shop?.phase == "closed" else { throw ClientError.invalidResponse }
+            if MeasurementConsentDiagnostic.enabled {
+                MeasurementConsentDiagnostic.record(.fixtureReady, ready: first.ready,
+                    workspacePresent: first.sourceWorkspaceID != nil, otherReady: second.ready,
+                    otherWorkspacePresent: second.sourceWorkspaceID != nil,
+                    workspacesDistinct: first.sourceWorkspaceID != second.sourceWorkspaceID)
+            }
             household = model
         } catch { failed = true }
     }

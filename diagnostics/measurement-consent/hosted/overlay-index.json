@@ -1,0 +1,17 @@
+{
+  "base": "804030e68473d022e72b464940061c01c611a0bd",
+  "files": {
+    ".github/workflows/ios-fixtures.yml": "ed4d310f026f05d6d62e5e4d5a650d8af62c24fc4c3099ea3e7c16715da1c44f",
+    "diagnostics/measurement-consent/hosted/harness.py": "605e3a5bedcea8c64a66ca669631eb36a735f7f0fff279e406b7b4f2c28c6eb3",
+    "diagnostics/measurement-consent/hosted/reconcile_consent_logs.py": "7baf6e6cf975b2311ecf80129da6c7ce7dbdb860ac40e26b293d8406911b9786",
+    "diagnostics/measurement-consent/hosted/reference-plan.json": "cfad55cc6c410deed282cff65d6d19bf40f6a75050a1a9c5a40619225ba67122",
+    "diagnostics/measurement-consent/hosted/selectors.txt": "a1c7c40d5a429d6f57a85ee8b5e39cdfefa842e028be492c0157fa285ec98034",
+    "diagnostics/measurement-consent/hosted/test_harness.py": "c99c6d9cf2b444c783dbcb538acfc09caf57bba5726f2f039d3d7d116b79fd3e",
+    "diagnostics/measurement-consent/hosted/test_reconcile_consent_logs.py": "6cdc463a9e5c022a64e48a8a0d3f09fc1f9d3775613494869c3961daeeddd919",
+    "ios/App/RoomInTheCartApp.swift": "fd9ef8defcf69b0d33480195cab4e3e0e5279d31c35400cc99e4f7775c9a7bf2",
+    "ios/Features/Pickup/PickupFeedback.swift": "9044a4bc792d8e641cdfa9f9d0a0cd7451dbd9408fdfdad123d63036923c12cc",
+    "ios/UITestSupport/MeasurementUIFixture.swift": "fa66d9a9368e0ffc800cbd72446549608d28656465455a3b2a9b5bedb46a5af3",
+    "ios/UITests/MeasurementUITests.swift": "1e70206b5ec2187a35a6c6a537f3815a962ffbaeca787b6d0be3bfcf6105cf38"
+  },
+  "indexBoundByExpectedCommit": true
+}

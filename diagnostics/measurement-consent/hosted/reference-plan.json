@@ -1,0 +1,142 @@
+{
+  "profile": "contributor",
+  "test_plan": "RoomInTheCart",
+  "shards": {
+    "contributor-balanced-02": {
+      "suites": [
+        "ContributorRequestUITests",
+        "MeasurementUITests",
+        "StockReviewUITests"
+      ],
+      "selector_file": "contributor-balanced-02.txt",
+      "test_identifiers": [
+        "RoomInTheCartUITests/ContributorRequestUITests/testSpanishLargeTextReviewStartsAtTheOriginalWording()",
+        "RoomInTheCartUITests/ContributorRequestUITests/testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest()",
+        "RoomInTheCartUITests/MeasurementUITests/testAuthenticatedNoticeConsentExplicitClosedShopSendDeleteAndWithdrawal()",
+        "RoomInTheCartUITests/MeasurementUITests/testLocalSettingsConsentIgnoresLegacyBooleanPersistsRestartAndStaysWorkspaceScoped()",
+        "RoomInTheCartUITests/StockReviewUITests/testChangedMealRevisionDisablesPreviewWithoutApplyingBatch()",
+        "RoomInTheCartUITests/StockReviewUITests/testKeyboardDoneAcceptsCenterAndTargetMargins()",
+        "RoomInTheCartUITests/StockReviewUITests/testPreviewCancelThenConfirmShowsEveryMealAndFreshCookInstructionAfterRestart()"
+      ]
+    },
+    "contributor-balanced-05": {
+      "suites": [
+        "CorrectionPrivacyAcceptanceUITests",
+        "GuardianEnrollmentUITests",
+        "SharedMealChangeUITests"
+      ],
+      "selector_file": "contributor-balanced-05.txt",
+      "test_identifiers": [
+        "RoomInTheCartUITests/CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp()",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testCancelSetupDialogHasExplicitCancelAndForegroundRestoresStatus()",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testChildForgetCancelAndForegroundKeepTheSamePairingWithoutActivation()",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testNoticeDeclarationVerificationPermissionPairingAndDialogCancellation()",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootColdChildMarkerAndSyntheticVaultCleanupPreserveAdultData()",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootLeaveCancelAndConfirmedExitRestoreLockedAdultAccess()",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testSpanishLargestTextUnavailableGateRemainsReadableAndClosed()",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testUnavailableNeverOffersCreationOrAdultVerification()",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testUncertainAttemptCanRefreshButCannotSendAnotherVerification()",
+        "RoomInTheCartUITests/SharedMealChangeUITests/testAssignedShopperMapsLocalSeedWithoutPlannerPostAndCanCancel()",
+        "RoomInTheCartUITests/SharedMealChangeUITests/testPlannerCancelThenSendAndSeparateShopperCancelThenApplyExactlyOnce()"
+      ]
+    },
+    "contributor-balanced-01": {
+      "suites": [
+        "DinnerAwayCarryoverUITests",
+        "RequestDuplicateComparisonUITests"
+      ],
+      "selector_file": "contributor-balanced-01.txt",
+      "test_identifiers": [
+        "RoomInTheCartUITests/DinnerAwayCarryoverUITests/testPhysicalCarryoverCancelApplyAndRestartKeepOriginalPurchase()",
+        "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison()",
+        "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam()"
+      ]
+    },
+    "contributor-balanced-04": {
+      "suites": [
+        "HistoryGrantReadUITests",
+        "RecipeLibraryAcceptanceUITests"
+      ],
+      "selector_file": "contributor-balanced-04.txt",
+      "test_identifiers": [
+        "RoomInTheCartUITests/HistoryGrantReadUITests/testFreeGrantDiscoversReadOnlyShopOpensRawRecordsAndRejectsPaidAndForeignAccess()",
+        "RoomInTheCartUITests/HistoryGrantReadUITests/testRevokedBudgetGrantClearsPreviouslyOpenedRawPeriodAndRememberedSource()",
+        "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo()",
+        "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testImportedRecipeQuantityDismissesKeyboardAndRequiresExplicitPickupChoice()"
+      ]
+    },
+    "contributor-balanced-03": {
+      "suites": [
+        "HouseholdDevicesUITests",
+        "HouseholdRequestPackUITests",
+        "SharedMealCivilDateUITests"
+      ],
+      "selector_file": "contributor-balanced-03.txt",
+      "test_identifiers": [
+        "RoomInTheCartUITests/HouseholdDevicesUITests/testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess()",
+        "RoomInTheCartUITests/HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke()",
+        "RoomInTheCartUITests/HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite()",
+        "RoomInTheCartUITests/HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite()",
+        "RoomInTheCartUITests/HouseholdRequestPackUITests/testUnavailableMealFactsRemainUnknownInRequestDecision()",
+        "RoomInTheCartUITests/SharedMealCivilDateUITests/testEnglishCivilDaysStayExactUnderUSTimeZoneEnvironments()",
+        "RoomInTheCartUITests/SharedMealCivilDateUITests/testSpanishCivilDaysStayExactUnderUSTimeZoneEnvironments()"
+      ]
+    },
+    "RecordsMediaUITests": {
+      "suite": "RecordsMediaUITests",
+      "selector_file": "RecordsMediaUITests.txt",
+      "test_identifiers": [
+        "RoomInTheCartUITests/RecordsMediaUITests/testSelectedPhotoDisclosureEncryptedPreviewCancelSiblingRecoveryAndReadablePhoto()"
+      ]
+    },
+    "SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview": {
+      "suite": "SharedMealIdeaUITests",
+      "selector_file": "SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview.txt",
+      "test_identifiers": [
+        "RoomInTheCartUITests/SharedMealIdeaUITests/testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview()"
+      ]
+    },
+    "SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn": {
+      "suite": "SharedMealIdeaUITests",
+      "selector_file": "SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn.txt",
+      "test_identifiers": [
+        "RoomInTheCartUITests/SharedMealIdeaUITests/testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn()"
+      ]
+    },
+    "SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult": {
+      "suite": "SharedStoreQuoteUITests",
+      "selector_file": "SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult.txt",
+      "test_identifiers": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult()"
+      ]
+    },
+    "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption": {
+      "suite": "SharedStoreQuoteUITests",
+      "selector_file": "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption.txt",
+      "test_identifiers": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption()"
+      ]
+    },
+    "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave": {
+      "suite": "SharedStoreQuoteUITests",
+      "selector_file": "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave.txt",
+      "test_identifiers": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave()"
+      ]
+    },
+    "SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable": {
+      "suite": "SharedStoreQuoteUITests",
+      "selector_file": "SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable.txt",
+      "test_identifiers": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testSpanishLargestTextKeepsRealQuoteEntryDiscoverable()"
+      ]
+    },
+    "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction": {
+      "suite": "SharedStoreQuoteUITests",
+      "selector_file": "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction.txt",
+      "test_identifiers": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction()"
+      ]
+    }
+  }
+}

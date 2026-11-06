@@ -396,7 +396,25 @@ struct SettingsView: View {
                     RecordsRecoveryLink(accessibilityID: "settings.recovery")
                     CorrectionSettingsLink()
                 }
-                Toggle(pTr("Offer optional feedback after a pickup"), isOn: Binding(get: { feedbackConsent.enabled(for: pickup.sourceWorkspaceID) }, set: { feedbackConsent.setEnabled($0, for: pickup.sourceWorkspaceID) }))
+                Toggle(pTr("Offer optional feedback after a pickup"), isOn: Binding(get: { feedbackConsent.enabled(for: pickup.sourceWorkspaceID) }, set: { value in
+                    #if DEBUG
+                    let diagnosticWorkspace = MeasurementConsentDiagnostic.enabled ? pickup.sourceWorkspaceID : nil
+                    if MeasurementConsentDiagnostic.enabled {
+                        MeasurementConsentDiagnostic.record(.bindingEnter, requested: value, ready: pickup.ready,
+                            workspacePresent: diagnosticWorkspace != nil,
+                            enabledValue: feedbackConsent.enabled(for: pickup.sourceWorkspaceID))
+                    }
+                    #endif
+                    feedbackConsent.setEnabled(value, for: pickup.sourceWorkspaceID)
+                    #if DEBUG
+                    if MeasurementConsentDiagnostic.enabled {
+                        MeasurementConsentDiagnostic.record(.bindingExit, requested: value, ready: pickup.ready,
+                            workspacePresent: pickup.sourceWorkspaceID != nil,
+                            enabledValue: feedbackConsent.enabled(for: pickup.sourceWorkspaceID),
+                            sameWorkspace: diagnosticWorkspace == pickup.sourceWorkspaceID)
+                    }
+                    #endif
+                }))
                 Text(pTr("Local feedback stays on this iPhone. Your choice applies only to this local workspace and notice version. Nothing is sent."))
                 if household.identity != nil, household.projection?.grantId == nil, !household.locked {
                     NavigationLink(pTr("Optional household measurement")) { MeasurementSettingsView(household: household) }
