@@ -158,10 +158,12 @@
     "workflowID": 407500252,
     "mode": "history",
     "createdUTC": "2026-11-06T11:33:35Z",
-    "observedStatus": "in_progress",
+    "observedStatus": "completed",
     "dispatchCountForCommit": 1,
     "inertPushRunCount": 0,
-    "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42211149900"
+    "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42211149900",
+    "conclusion": "success",
+    "terminalEvidence": "hosted-0beb28e-history-result.json"
   },
   "originalBoundaryReplay": {
     "complete": false,
