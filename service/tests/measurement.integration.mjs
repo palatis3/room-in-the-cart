@@ -34,6 +34,42 @@ test('optional measurement PostgreSQL identities, RLS, consent and verified bill
    await admin.query("UPDATE ritc.shop SET measurement_closed_at='2000-01-01' WHERE household_id=$1",[h]);
    assert.deepEqual((await admin.query('SELECT measurement_closed_at FROM ritc.shop WHERE household_id=$1',[h])).rows[0].measurement_closed_at,before);
   });
+  await t.test('measurement triggers keep invoker privileges and ignore caller search path overrides',async()=>{
+   const db=await admin.connect(),shadow=`measurement_shadow_${randomUUID().replaceAll('-','')}`;
+   try{
+    await db.query(`BEGIN;
+     CREATE SCHEMA ${shadow};
+     CREATE FUNCTION ${shadow}.to_char(timestamp,text) RETURNS text LANGUAGE sql AS $$ SELECT '2000-W01'::text $$;
+     GRANT USAGE ON SCHEMA ${shadow} TO ritc_app;
+     GRANT EXECUTE ON FUNCTION ${shadow}.to_char(timestamp,text) TO ritc_app;
+     SET LOCAL ROLE ritc_app;
+     SET LOCAL search_path=${shadow},pg_catalog`);
+    await db.query("SELECT set_config('app.household_id',$1,true)",[h]);
+    const {rows:[formatter]}=await db.query(`SELECT to_char(TIMESTAMP '2026-01-01','IYYY-"W"IW') AS week`);
+    assert.equal(formatter.week,'2000-W01');
+
+    await db.query('DELETE FROM ritc.measurement_feedback WHERE household_id=$1 AND feedback_id=$2',[h,receipt.feedbackId]);
+    const insertFeedback=week=>db.query(`INSERT INTO ritc.measurement_feedback
+     (household_id,feedback_id,shop_id,eligible_week,consent_id,member_id,consent_version,outcome,baseline,comparison,recorded_at)
+     VALUES($1,$2,$3,$4,$5,$6,$7,'acted','list','different',now())`,
+    [h,receipt.feedbackId,shop,week,consent.consentId,adult,MEASUREMENT_NOTICE_VERSION]);
+    await db.query('SAVEPOINT before_wrong_week');
+    await assert.rejects(insertFeedback(formatter.week),{code:'23514',message:'current consent and eligible shared pickup required'});
+    await db.query('ROLLBACK TO SAVEPOINT before_wrong_week');
+    assert.equal((await insertFeedback(receipt.eligibleWeek)).rowCount,1);
+
+    const {rows:functions}=await db.query(`SELECT proname,prosecdef,proconfig FROM pg_catalog.pg_proc
+     WHERE oid IN ('ritc.measurement_consent_immutable()'::regprocedure,'ritc.measurement_feedback_eligible()'::regprocedure)
+     ORDER BY proname`);
+    assert.deepEqual(functions,['measurement_consent_immutable','measurement_feedback_eligible']
+     .map(proname=>({proname,prosecdef:false,proconfig:['search_path=pg_catalog']})));
+    assert.equal((await db.query('UPDATE ritc.measurement_consent SET withdrawn_at=granted_at WHERE household_id=$1 AND consent_id=$2',[h,consent.consentId])).rowCount,1);
+    await assert.rejects(db.query('UPDATE ritc.measurement_consent SET withdrawn_at=NULL WHERE household_id=$1 AND consent_id=$2',[h,consent.consentId]),
+     {code:'23514',message:'measurement consent requires a fresh explicit action'});
+   }finally{
+    try{await db.query('ROLLBACK');}finally{db.release();}
+   }
+  });
   await t.test('second device and retry have one household/shop/week response',async()=>{
    const [a,b]=await Promise.all([run(adult,ctx=>service.feedback(ctx,shop,answer())),run(adult,ctx=>service.feedback(ctx,shop,answer()))]);
    assert.equal(a.feedbackId,receipt.feedbackId);assert.equal(b.feedbackId,receipt.feedbackId);
