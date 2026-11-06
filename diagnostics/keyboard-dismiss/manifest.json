@@ -1,0 +1,13 @@
+{
+  "base": "804030e68473d022e72b464940061c01c611a0bd",
+  "rootVerifiedPreparationFiles": 29,
+  "files": {
+    "PREPARATION.md": "873f24ad112121dd96407b7f827fb2678dc6b7c0e663e955c0c9d13c53a3fa70",
+    "README.md": "9b26805afad0d9b010d644d324677c5b430d558fc21db4c4b608586c8325a98c",
+    "REVIEW.md": "3b9f923e1d75809134b2f6b9e8930465fe4a96bdef06657a7913f5b9fa8fc09d",
+    "instrumentation.patch": "8aa530381307cb9ac5903663095a1920a5945b1c4210afc9cddfcbf7222b7a05",
+    "provenance.json": "fc26ab77b5b86cf8327950c6e4baf7e8bb92c9f9f85892773da81afc31b43720",
+    "selectors.txt": "2d443930e5b225e8de035d6045a021531e7db0c27b6a4914fa87b5db388e4c51",
+    "validation.json": "a4fc1469f3cf31c6ee088b96676604a53c53f5413df43424c0843c781ffbeb9d"
+  }
+}

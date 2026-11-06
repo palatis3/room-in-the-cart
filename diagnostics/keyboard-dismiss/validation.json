@@ -1,0 +1,24 @@
+{
+  "base": "804030e68473d022e72b464940061c01c611a0bd",
+  "changedSourcePaths": [
+    "ios/Features/Pickup/PickupRepairView.swift"
+  ],
+  "allDiagnosticGuards": 7,
+  "diagnosticDisabledMatchesOriginalIgnoringWhitespace": true,
+  "selectorsByteEqualToRetainedOriginalUI07": true,
+  "selectorCount": 6,
+  "retainedSelectorsPath": "/Users/palatis/Room in the Cart/.build/CIResearch20261106/candidate-804030e/core-collection/iphone-results-ui-07-1/test-plan/ui-07.txt",
+  "patchDryRunExit": 0,
+  "parseEnabledExit": 0,
+  "copiedReferenceOfflineTests": {
+    "count": 57,
+    "passed": true,
+    "nativeCommandsAndSignalsMocked": true
+  },
+  "nativeBuildOrRunPerformed": false,
+  "trackedFileEditsPerformed": false,
+  "networkPerformed": false,
+  "isolatedLoggerSwift6TypecheckExit": 0,
+  "isolatedLoggerTarget": "arm64-apple-macos14.0",
+  "fullIOSIntegrationTypechecked": false
+}
