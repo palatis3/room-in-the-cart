@@ -8,7 +8,7 @@ Prepared from native source on 2026-11-03; staging status updated on 2026-11-06.
 | --- | --- |
 | Submitted build/version and bundle | Record from the actual signed candidate |
 | Operator business | Venture House Group LLC, explicitly supplied by the user. This does not establish policy/terms approval, jurisdiction, address or retention. |
-| Operating support owner and public destination | User-supplied contact: hello@roominthecart.com. Verify delivery/monitoring with the operating owner before release; no test email has been sent |
+| Operating support owner and public destination | User-supplied contact: hello@roominthecart.com. [Public mail-routing DNS exists](evidence/b11/support-dns-20261106/README.md), but verify this exact mailbox’s delivery/monitoring with the operating owner before release; no test email has been sent |
 | Privacy and terms pages | Supply operator-reviewed HTTPS URLs and both launch languages |
 | Demo environment | State the exact isolated service environment; use fictional records only |
 | Demo adult accounts | Provide two verified adults through App Store Connect's private review fields, outside this repository |
