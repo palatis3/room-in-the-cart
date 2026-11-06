@@ -1,0 +1,23 @@
+{
+  "baseCommit": "804030e68473d022e72b464940061c01c611a0bd",
+  "files": {
+    "ios/Features/Pickup/PickupFeedback.swift": {
+      "baseSHA256": "8f3360eaecd7ba9eab7f3104553999d3d2b4af4778b54e09f0b728e6d37c7804",
+      "proposedSHA256": "9044a4bc792d8e641cdfa9f9d0a0cd7451dbd9408fdfdad123d63036923c12cc"
+    },
+    "ios/App/RoomInTheCartApp.swift": {
+      "baseSHA256": "ab900dab2551a8929b22180405dac978fe6049bdaa03d109ee3d6f46ec8c8ed8",
+      "proposedSHA256": "fd9ef8defcf69b0d33480195cab4e3e0e5279d31c35400cc99e4f7775c9a7bf2"
+    },
+    "ios/UITestSupport/MeasurementUIFixture.swift": {
+      "baseSHA256": "6c50c72fd747156128c6a536af25e8be61fed7bc4ef99ae7f1e8653b44b3d719",
+      "proposedSHA256": "fa66d9a9368e0ffc800cbd72446549608d28656465455a3b2a9b5bedb46a5af3"
+    },
+    "ios/UITests/MeasurementUITests.swift": {
+      "baseSHA256": "7d2b1205c1d4aa56b0ab5535ea8ff3b2e7f3e65ecfa82060b5a4214965ebb8f4",
+      "proposedSHA256": "1e70206b5ec2187a35a6c6a537f3815a962ffbaeca787b6d0be3bfcf6105cf38"
+    }
+  },
+  "validation": "Exact-base and SHA-256 verification; patch dry-run against scratch originals; static action/assertion and write preservation checks. No Swift parse/typecheck/build or native/hosted execution.",
+  "patchSHA256": "4ce4dbed931a195613bc7ce2b439c42208ca8f67cf04cffae2c503087de0c681"
+}

@@ -1,0 +1,142 @@
+--- a/ios/Features/Pickup/PickupFeedback.swift
++++ b/ios/Features/Pickup/PickupFeedback.swift
+@@ -1,5 +1,8 @@
+ import SwiftUI
+ import HouseholdClient
++#if DEBUG
++import OSLog
++#endif
+ 
+ enum PickupDecision: String, Codable, CaseIterable {
+     case acted, unchanged, tooLate, unknown, alreadyKnew, wrong
+@@ -87,11 +90,34 @@
+         return acceptedVersions[workspaceID.uuidString.lowercased()] == Self.noticeVersion
+     }
+     func setEnabled(_ value: Bool, for workspaceID: UUID?) {
+-        guard let workspaceID else { return }
++        #if DEBUG
++        if MeasurementConsentDiagnostic.enabled {
++            MeasurementConsentDiagnostic.record(.consentSetEnter, requested: value,
++                workspacePresent: workspaceID != nil, enabledValue: enabled(for: workspaceID))
++        }
++        #endif
++        guard let workspaceID else {
++            #if DEBUG
++            MeasurementConsentDiagnostic.record(.consentSetRejectedMissingWorkspace, requested: value,
++                workspacePresent: false)
++            #endif
++            return
++        }
+         acceptedVersions[workspaceID.uuidString.lowercased()] = value ? Self.noticeVersion : nil
+         defaults.set(acceptedVersions, forKey: storageKey)
+-    }
+-    func resetForUITest() { acceptedVersions = [:]; defaults.removeObject(forKey: storageKey) }
++        #if DEBUG
++        if MeasurementConsentDiagnostic.enabled {
++            MeasurementConsentDiagnostic.record(.consentSetExit, requested: value,
++                workspacePresent: true, enabledValue: enabled(for: workspaceID))
++        }
++        #endif
++    }
++    func resetForUITest() {
++        #if DEBUG
++        MeasurementConsentDiagnostic.record(.consentReset)
++        #endif
++        acceptedVersions = [:]; defaults.removeObject(forKey: storageKey)
++    }
+ }
+ 
+ struct PickupFeedbackSection: View {
+@@ -355,3 +381,36 @@
+         value == .late ? .tooLate : value == .alreadyKnew ? .alreadyKnew : PickupDecision(rawValue: value.rawValue)!
+     }
+ }
++
++#if DEBUG
++/// Opt-in structural events only. No identity, consent keys, payloads or disk writes.
++@MainActor enum MeasurementConsentDiagnostic {
++    enum Event: String {
++        case fixtureReady = "fixture.ready"
++        case bindingEnter = "binding.enter", bindingExit = "binding.exit"
++        case consentSetEnter = "consent.set.enter", consentSetExit = "consent.set.exit"
++        case consentSetRejectedMissingWorkspace = "consent.set.rejectedMissingWorkspace"
++        case consentReset = "consent.reset"
++    }
++    static let enabled = ProcessInfo.processInfo.arguments.contains("--ui-testing") &&
++        ProcessInfo.processInfo.environment["RITC_MEASUREMENT_CONSENT_DIAGNOSTIC"] == "1"
++    private static let logger = Logger(subsystem: "dev.roominthecart.measurementconsentdiagnostic", category: "events")
++    private static var sequence: UInt64 = 0
++
++    // Boolean fields use 1=true, 0=false, -1=not applicable; IDs never enter this API.
++    static func record(_ event: Event, requested: Bool? = nil, ready: Bool? = nil,
++                       workspacePresent: Bool? = nil, enabledValue: Bool? = nil,
++                       sameWorkspace: Bool? = nil, otherReady: Bool? = nil,
++                       otherWorkspacePresent: Bool? = nil, workspacesDistinct: Bool? = nil) {
++        guard enabled else { return }
++        sequence &+= 1
++        let currentSequence = sequence, uptime = ProcessInfo.processInfo.systemUptime
++        let name = event.rawValue
++        let request = flag(requested), isReady = flag(ready), present = flag(workspacePresent)
++        let value = flag(enabledValue), same = flag(sameWorkspace), secondReady = flag(otherReady)
++        let secondPresent = flag(otherWorkspacePresent), distinct = flag(workspacesDistinct)
++        logger.info("sequence=\(currentSequence, privacy: .public) uptime=\(uptime, privacy: .public) event=\(name, privacy: .public) requested=\(request, privacy: .public) ready=\(isReady, privacy: .public) workspacePresent=\(present, privacy: .public) enabledValue=\(value, privacy: .public) sameWorkspace=\(same, privacy: .public) otherReady=\(secondReady, privacy: .public) otherWorkspacePresent=\(secondPresent, privacy: .public) workspacesDistinct=\(distinct, privacy: .public)")
++    }
++    private static func flag(_ value: Bool?) -> Int { value.map { $0 ? 1 : 0 } ?? -1 }
++}
++#endif
+--- a/ios/App/RoomInTheCartApp.swift
++++ b/ios/App/RoomInTheCartApp.swift
+@@ -396,7 +396,25 @@
+                     RecordsRecoveryLink(accessibilityID: "settings.recovery")
+                     CorrectionSettingsLink()
+                 }
+-                Toggle(pTr("Offer optional feedback after a pickup"), isOn: Binding(get: { feedbackConsent.enabled(for: pickup.sourceWorkspaceID) }, set: { feedbackConsent.setEnabled($0, for: pickup.sourceWorkspaceID) }))
++                Toggle(pTr("Offer optional feedback after a pickup"), isOn: Binding(get: { feedbackConsent.enabled(for: pickup.sourceWorkspaceID) }, set: { value in
++                    #if DEBUG
++                    let diagnosticWorkspace = MeasurementConsentDiagnostic.enabled ? pickup.sourceWorkspaceID : nil
++                    if MeasurementConsentDiagnostic.enabled {
++                        MeasurementConsentDiagnostic.record(.bindingEnter, requested: value, ready: pickup.ready,
++                            workspacePresent: diagnosticWorkspace != nil,
++                            enabledValue: feedbackConsent.enabled(for: pickup.sourceWorkspaceID))
++                    }
++                    #endif
++                    feedbackConsent.setEnabled(value, for: pickup.sourceWorkspaceID)
++                    #if DEBUG
++                    if MeasurementConsentDiagnostic.enabled {
++                        MeasurementConsentDiagnostic.record(.bindingExit, requested: value, ready: pickup.ready,
++                            workspacePresent: pickup.sourceWorkspaceID != nil,
++                            enabledValue: feedbackConsent.enabled(for: pickup.sourceWorkspaceID),
++                            sameWorkspace: diagnosticWorkspace == pickup.sourceWorkspaceID)
++                    }
++                    #endif
++                }))
+                 Text(pTr("Local feedback stays on this iPhone. Your choice applies only to this local workspace and notice version. Nothing is sent."))
+                 if household.identity != nil, household.projection?.grantId == nil, !household.locked {
+                     NavigationLink(pTr("Optional household measurement")) { MeasurementSettingsView(household: household) }
+--- a/ios/UITestSupport/MeasurementUIFixture.swift
++++ b/ios/UITestSupport/MeasurementUIFixture.swift
+@@ -158,6 +158,12 @@
+             guard let workspace = model.workspaces.first else { throw ClientError.invalidResponse }
+             model.keepLocalPrivate = true; await model.join(workspace); await model.sharedShop?.load()
+             guard model.projection?.role == "shopper", model.sharedShop?.shop?.phase == "closed" else { throw ClientError.invalidResponse }
++            if MeasurementConsentDiagnostic.enabled {
++                MeasurementConsentDiagnostic.record(.fixtureReady, ready: first.ready,
++                    workspacePresent: first.sourceWorkspaceID != nil, otherReady: second.ready,
++                    otherWorkspacePresent: second.sourceWorkspaceID != nil,
++                    workspacesDistinct: first.sourceWorkspaceID != second.sourceWorkspaceID)
++            }
+             household = model
+         } catch { failed = true }
+     }
+--- a/ios/UITests/MeasurementUITests.swift
++++ b/ios/UITests/MeasurementUITests.swift
+@@ -107,6 +107,9 @@
+         app.launchArguments = ["--ui-testing", "--measurement-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+         app.launchEnvironment["RITC_MEASUREMENT_FIXTURE_WORKSPACE"] = workspace
+         app.launchEnvironment["RITC_MEASUREMENT_FIXTURE_RESET"] = reset ? "1" : "0"
++        // The diagnostic is off unless explicitly enabled in the XCTest runner.
++        app.launchEnvironment["RITC_MEASUREMENT_CONSENT_DIAGNOSTIC"] =
++            ProcessInfo.processInfo.environment["RITC_MEASUREMENT_CONSENT_DIAGNOSTIC"] == "1" ? "1" : "0"
+         app.launch()
+         XCTAssertTrue(app.tabBars.buttons["Settings"].waitForExistence(timeout: 25))
+         reveal(app.switches["Offer optional feedback after a pickup"])

@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "proposalOnly": true,
+  "executesCapture": false,
+  "predicate": "subsystem == \"dev.roominthecart.measurementconsentdiagnostic\" AND category == \"events\"",
+  "format": "compact",
+  "level": "info",
+  "timezone": "UTC",
+  "process": "RoomInTheCart",
+  "artifacts": [
+    "live stdout",
+    "live stderr",
+    "bounded persisted export stdout",
+    "persisted export stderr",
+    "collector startup/finalization statuses",
+    "liveness observations",
+    "original xcresult and test log",
+    "source/product hashes"
+  ],
+  "neverCollect": [
+    "unfiltered system logs",
+    "environment dumps",
+    "credentials",
+    "domain identifiers"
+  ],
+  "livenessProvesExhaustiveDelivery": false,
+  "persistedExportSuccessProvesExhaustiveDelivery": false,
+  "equalObservedEventSetsProveExhaustiveDelivery": false,
+  "missingSetterProvesNoSetter": false
+}
