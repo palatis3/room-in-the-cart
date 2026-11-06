@@ -1,0 +1,147 @@
+{
+  "candidate": "0d33c11d43a97d670bf56d104d3260cad9b3f202",
+  "checkedAt": "2026-11-06T14:28:29.925286+00:00",
+  "allWorkflowsTerminal": true,
+  "allEvidenceCollected": true,
+  "allChecksPassing": false,
+  "runs": [
+    {
+      "attempt": 1,
+      "conclusion": "success",
+      "createdAt": "2026-11-06T12:07:07Z",
+      "databaseId": 42215222421,
+      "event": "pull_request",
+      "headSha": "0d33c11d43a97d670bf56d104d3260cad9b3f202",
+      "name": "Security checks",
+      "status": "completed",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42215222421"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "success",
+      "createdAt": "2026-11-06T12:07:07Z",
+      "databaseId": 42215222459,
+      "event": "pull_request",
+      "headSha": "0d33c11d43a97d670bf56d104d3260cad9b3f202",
+      "name": "Native Swift HTTPS and PostgreSQL",
+      "status": "completed",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42215222459"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "success",
+      "createdAt": "2026-11-06T12:07:07Z",
+      "databaseId": 42215222449,
+      "event": "pull_request",
+      "headSha": "0d33c11d43a97d670bf56d104d3260cad9b3f202",
+      "name": "iOS deep checks",
+      "status": "completed",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42215222449"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "success",
+      "createdAt": "2026-11-06T12:07:07Z",
+      "databaseId": 42215222404,
+      "event": "pull_request",
+      "headSha": "0d33c11d43a97d670bf56d104d3260cad9b3f202",
+      "name": "iOS Release performance",
+      "status": "completed",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42215222404"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "failure",
+      "createdAt": "2026-11-06T12:07:07Z",
+      "databaseId": 42215222467,
+      "event": "pull_request",
+      "headSha": "0d33c11d43a97d670bf56d104d3260cad9b3f202",
+      "name": "Build and test",
+      "status": "completed",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42215222467"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "failure",
+      "createdAt": "2026-11-06T12:07:07Z",
+      "databaseId": 42215222541,
+      "event": "pull_request",
+      "headSha": "0d33c11d43a97d670bf56d104d3260cad9b3f202",
+      "name": "iOS fixture checks",
+      "status": "completed",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42215222541"
+    }
+  ],
+  "models": {
+    "passed": 601,
+    "failed": 0,
+    "skipped": 0,
+    "warnings": 0
+  },
+  "ordinaryUI": {
+    "passed": 50,
+    "failed": 1,
+    "skipped": 0,
+    "existingAllowedMenuWarnings": 5
+  },
+  "fixtures": {
+    "passed": 44,
+    "failed": 1,
+    "skipped": 0,
+    "unexecuted": 0,
+    "existingAllowedMenuWarnings": 6,
+    "recordsPassScope": "One exact allowlisted redacted report; no raw Records download or independent native replay."
+  },
+  "billing": {
+    "passed": 30,
+    "failed": 0,
+    "warnings": 0
+  },
+  "performance": {
+    "passed": 3,
+    "failed": 0,
+    "unchangedThresholds": true,
+    "simulatorHitchSamples": "unavailable"
+  },
+  "rootReadback": {
+    "coreRetainedFileHashesVerified": 3134,
+    "coreArchiveDigestsVerified": 24,
+    "fixtureProofHashesVerified": 16,
+    "finalLocalSourceFilesMatchingFrozenBuild": 514,
+    "fixtureArchivesVerified": 15,
+    "fixtureReviewFilesVerified": 39
+  },
+  "retainedFailures": [
+    "ui01-entry-failure-triage.json",
+    "spanish-contributor-triage.json"
+  ],
+  "localFollowups": [
+    "../free-journey-value-readback-20261106/verification.json",
+    "../contributor-switch-point-20261106/verification.json"
+  ],
+  "hostedFollowupsAccepted": false,
+  "limits": [
+    "All five standalone quote cases and the earlier Spanish/unknown-weight keyboard waits pass in this normal candidate; prior failure causes are not established.",
+    "Swift source coverage includes all 254 intended runtime inputs, retaining 11 compiler diagnostics and 292 unresolved AST nodes.",
+    "The local follow-up toolchain is Xcode 27.1 while hosted acceptance remains Xcode 26.3.",
+    "No provider activation, App Store release, physical-device acceptance or owner-deferred browser walkthrough is established."
+  ],
+  "evidenceSHA256": {
+    "compiled-plan.json": "bf4d218364985d0ff2dfdbf5977a5064ca55d75fc6d5c81688bd20df4700d9da",
+    "core-final-audit.json": "727eeeb4a011978ee5094af1722044214143fe941618649e6f6ffd671366f96e",
+    "fixture-archive-exception.json": "a325965c4851de327be48241dd562d2c97e292b939c5a41676324451bd7599b5",
+    "fixture-final-audit.json": "0ff9e30bc5ba9f17e3415bd8a59c5e9a31598658d2509577312f041bf6695518",
+    "fixture-terminal-summary.json": "f2c3f68f938a9120a5afdc93c96e7c87f2ea6c9f9888a759bbd7a99c104ed2b8",
+    "native-wire.json": "0cf145d2ecb5fbd91f80f055e7f28da2a61746fa6236affb3ad092cde7dca08a",
+    "ordinary-ui.json": "e7400c1c37df6841c447e00c3bb8632096b37ece11de6e0d9a3f891d1c960849",
+    "packages-sanitizers.json": "22d21192abaff420e810f65b624e24f9d0f7c56a832a2c6f4173314a8491c53b",
+    "performance.json": "be9fddcca56cf65cc0ddc6f0435e10342265c53bbbbf679816da6875a6a2e681",
+    "records-redacted.json": "2d63c9a80def9056412c0b59b8bd41975e30e60c2056f42dad4843271a3ca32f",
+    "runtime-readback.json": "dce0191964f1b898eab13e0995a4349d08fbb06e93d3b9e88a513184d60dcb7a",
+    "security.json": "eb416e649fb374b5a34f7fba89baeaa5cbd3e7bf2a755516d57955543ad69f0a",
+    "spanish-contributor-triage.json": "77e4748189fb5accbb8a493383e2de36a74554e236f1895aa63d56da749f305d",
+    "storekit.json": "fa9a3c8d47808bab7d80b4b95c1af822815619a30eece28ec209b4ff581bc9ed",
+    "swift-security.json": "e0b5932d914fe9d95e4b0dfe9e42beafcddcd2c20172d9c2ba0612e91b3d9426",
+    "ui01-entry-failure-triage.json": "2b50b2b0108a5885f6d782db5bf3567b7c08a4ff640c036c9529d283b5f3eaa9"
+  }
+}

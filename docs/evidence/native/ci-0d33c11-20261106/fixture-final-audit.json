@@ -1,0 +1,213 @@
+{
+  "candidate": "0d33c11d43a97d670bf56d104d3260cad9b3f202",
+  "attempt": 1,
+  "all15ArtifactZIPDigestsAndSizesRechecked": true,
+  "artifactCount": 15,
+  "artifacts": [
+    {
+      "artifactID": 13508460776,
+      "name": "iphone-fixture-results-SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption-1",
+      "size": 11250427,
+      "sha256": "3f2b3bf78d962b869454dc884e9efb40425412f9d84f345afd2ce53f977dadf1"
+    },
+    {
+      "artifactID": 13509536336,
+      "name": "iphone-fixture-results-SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction-1",
+      "size": 6497508,
+      "sha256": "554c2bdab006bf1fc042d7923675aa85d5a1f985702d951ee4c944cd816b57a2"
+    },
+    {
+      "artifactID": 13510986148,
+      "name": "iphone-fixture-results-SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable-1",
+      "size": 2524818,
+      "sha256": "2e2fc16302c902b0ff6fbf9c05184b42d164614e9467972bab1274c446b7457b"
+    },
+    {
+      "artifactID": 13506861740,
+      "name": "iphone-fixture-results-SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn-1",
+      "size": 5179425,
+      "sha256": "d2d22ade278f6824d5fa6a62a429bb5f0f72b3c6882c6f5931631f7c9c700ce9"
+    },
+    {
+      "artifactID": 13505585904,
+      "name": "iphone-fixture-results-contributor-balanced-01-1",
+      "size": 24997536,
+      "sha256": "4460bd04a21b8c9cb81f8b2c3bc895659ebc910f36b43d02a03c060addad7ab0"
+    },
+    {
+      "artifactID": 13507212021,
+      "name": "iphone-fixture-results-SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult-1",
+      "size": 2790716,
+      "sha256": "ccca23e55522113bad114f632a6b4de5d9be3aed0cb5920d319f3b46d8587e6d"
+    },
+    {
+      "artifactID": 13506439869,
+      "name": "iphone-fixture-results-SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview-1",
+      "size": 7516790,
+      "sha256": "fbc2ac190f7b90cd0a9e94fba78ef3dc2f63d1aec9d8e5a46b82fc8ae7a58763"
+    },
+    {
+      "artifactID": 13507204512,
+      "name": "iphone-fixture-results-SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave-1",
+      "size": 5977175,
+      "sha256": "920ffa5e606294fcca368f55f1b70952921251fa3e6d062bbb5c1f5574c4ccf4"
+    },
+    {
+      "artifactID": 13504602433,
+      "name": "iphone-fixture-results-contributor-balanced-03-1",
+      "size": 26697956,
+      "sha256": "e126f4233303149b481518325422d449f10000edd64de3f8ae22f99a7830fa67"
+    },
+    {
+      "artifactID": 13504647847,
+      "name": "iphone-fixture-results-contributor-balanced-02-1",
+      "size": 133303280,
+      "sha256": "6c937052fbdcfbffd77be335ad50afc09ac7afd43ef8ad82807b26ae1ca28dbc"
+    },
+    {
+      "artifactID": 13504504308,
+      "name": "iphone-fixture-results-contributor-balanced-05-1",
+      "size": 15216761,
+      "sha256": "6bddb17b004be8a6b8defb3827c66ffbe4185c29253222eacdbb40057ca5c0a8"
+    },
+    {
+      "artifactID": 13505937735,
+      "name": "iphone-fixture-results-RecordsMediaUITests-1",
+      "size": 26940,
+      "sha256": "355689498616b5ea757b35d9aa56331554fc315b4dfe89892fa2c304df5eaf6f"
+    },
+    {
+      "artifactID": 13505857571,
+      "name": "iphone-fixture-results-contributor-balanced-04-1",
+      "size": 9087350,
+      "sha256": "a36ab8420cebb934125bfff5ac5c588ccdc1e475191a9420d32b95571b24f4fe"
+    },
+    {
+      "artifactID": 13509468293,
+      "name": "iphone-fixture-results-DinnerDecisionSheetUITests-1",
+      "size": 4636232,
+      "sha256": "02393e518da35efba71ff69c045d5acdec9565f148cb8afc740f879105904630"
+    },
+    {
+      "artifactID": 13499889307,
+      "name": "native-wire-results-1",
+      "size": 2389,
+      "sha256": "c601ea14cc121d957b34661dbac1592e3219d4fd268b2536fd35ae0a3d9a31bd"
+    }
+  ],
+  "runtime": [
+    [
+      "iPhone 17",
+      "26.2",
+      "23C54",
+      "arm64",
+      "iOS Simulator"
+    ]
+  ],
+  "existingSourceAllowlistedRuntimeWarnings": {
+    "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 2,
+      "examinedTestCount": 1,
+      "detailExportCount": 1,
+      "activityExportCount": 1,
+      "warnings": [
+        {
+          "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+          "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+          "count": 2,
+          "maximum": 2,
+          "menuActivity": {
+            "tap": "Tap \"fixture.s27.controls\" Button",
+            "phase": "Synthesize event"
+          }
+        }
+      ]
+    },
+    "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 2,
+      "examinedTestCount": 1,
+      "detailExportCount": 1,
+      "activityExportCount": 1,
+      "warnings": [
+        {
+          "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction",
+          "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+          "count": 2,
+          "maximum": 2,
+          "menuActivity": {
+            "tap": "Tap \"fixture.s27.controls\" Button",
+            "phase": "Synthesize event"
+          }
+        }
+      ]
+    },
+    "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 2,
+      "examinedTestCount": 1,
+      "detailExportCount": 1,
+      "activityExportCount": 1,
+      "warnings": [
+        {
+          "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave",
+          "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+          "count": 2,
+          "maximum": 2,
+          "menuActivity": {
+            "tap": "Tap \"fixture.s27.controls\" Button",
+            "phase": "Wait for dev.roominthecart.app.debug to idle"
+          }
+        }
+      ]
+    }
+  },
+  "runtimeWarningTotal": 6,
+  "hostedRetryArtifacts": 0,
+  "compiledSelectors": 45,
+  "resultCounts": {
+    "selected": 45,
+    "passed": 44,
+    "failed": 1,
+    "skipped": 0,
+    "expectedFailures": 0,
+    "executed": 45
+  },
+  "quotePassingDurations": {
+    "iphone-fixture-results-SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave-1": [
+      [
+        "-[RoomInTheCartUITests.SharedStoreQuoteUITests testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave]",
+        "317.766"
+      ]
+    ],
+    "iphone-fixture-results-SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption-1": [
+      [
+        "-[RoomInTheCartUITests.SharedStoreQuoteUITests testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption]",
+        "530.647"
+      ]
+    ],
+    "iphone-fixture-results-SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction-1": [
+      [
+        "-[RoomInTheCartUITests.SharedStoreQuoteUITests testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction]",
+        "353.452"
+      ]
+    ],
+    "iphone-fixture-results-SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable-1": [
+      [
+        "-[RoomInTheCartUITests.SharedStoreQuoteUITests testSpanishLargestTextKeepsRealQuoteEntryDiscoverable]",
+        "99.236"
+      ]
+    ],
+    "iphone-fixture-results-SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult-1": [
+      [
+        "-[RoomInTheCartUITests.SharedStoreQuoteUITests testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult]",
+        "127.242"
+      ]
+    ]
+  },
+  "notes": "Fourteen fixture artifacts including exactly allowlisted redacted Records, plus native wire. Raw Records media never downloaded/read."
+}
