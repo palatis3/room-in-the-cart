@@ -82,7 +82,7 @@ class PlanIOSFixtureTests(unittest.TestCase):
         self.assertEqual(set(plans["dinner"]["shards"]), {"DinnerDecisionSheetUITests"})
         self.assertEqual(plans["dinner"]["shards"]["DinnerDecisionSheetUITests"]["suite"], "DinnerDecisionSheetUITests")
         self.assertEqual(sum(len(shard["test_identifiers"]) for plan in plans.values()
-                             for shard in plan["shards"].values()), 44)
+                             for shard in plan["shards"].values()), 45)
         for name, shard in plans["contributor"]["shards"].items():
             if name != "RecordsMediaUITests":
                 self.assertFalse(any("/RecordsMediaUITests/" in identifier for identifier in shard["test_identifiers"]))

@@ -26,9 +26,13 @@ extension View {
             if visible {
                 HStack {
                     Spacer()
-                    Button(title, action: dismiss)
-                        .font(.body.weight(.semibold)).frame(minHeight: 44)
-                        .accessibilityIdentifier(identifier ?? title)
+                    Button(action: dismiss) {
+                        Text(title)
+                            .font(.body.weight(.semibold))
+                            .frame(minWidth: 44, minHeight: 44)
+                            .contentShape(Rectangle())
+                    }
+                    .accessibilityIdentifier(identifier ?? title)
                 }
                 .padding(.horizontal).background(.bar)
             }
