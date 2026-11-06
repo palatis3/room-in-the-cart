@@ -1,0 +1,115 @@
+{
+  "candidate": "d0b0b12ee0cb8412f17e82c92a91013217560670",
+  "observedAt": "2026-11-06T04:42:21.294851+00:00",
+  "hosted": {
+    "42149899546": {
+      "head_sha": "d0b0b12ee0cb8412f17e82c92a91013217560670",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "failure",
+      "updated_at": "2026-11-06T04:20:13Z",
+      "unfinished": [],
+      "failed": [
+        {
+          "id": 127674182426,
+          "name": "ios-tests (ui-08, 6)",
+          "conclusion": "failure"
+        },
+        {
+          "id": 127709226502,
+          "name": "CI gate",
+          "conclusion": "failure"
+        }
+      ]
+    },
+    "42149899575": {
+      "head_sha": "d0b0b12ee0cb8412f17e82c92a91013217560670",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "failure",
+      "updated_at": "2026-11-06T04:39:21Z",
+      "unfinished": [],
+      "failed": [
+        {
+          "id": 127681902052,
+          "name": "Fixture (contributor-balanced-02)",
+          "conclusion": "failure"
+        },
+        {
+          "id": 127681902133,
+          "name": "Fixture (SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction)",
+          "conclusion": "failure"
+        }
+      ]
+    },
+    "42149899549": {
+      "head_sha": "d0b0b12ee0cb8412f17e82c92a91013217560670",
+      "run_attempt": 2,
+      "status": "completed",
+      "conclusion": "failure",
+      "updated_at": "2026-11-06T03:54:13Z",
+      "unfinished": [],
+      "failed": [
+        {
+          "id": 127686677321,
+          "name": "Release performance (scroll)",
+          "conclusion": "failure"
+        }
+      ]
+    }
+  },
+  "ordinaryUI": {
+    "groupsCollected": 10,
+    "selected": 51,
+    "passed": 51,
+    "failed": 0,
+    "skipped": 0,
+    "strictPassingGroups": 9,
+    "strictPassingCases": 45,
+    "strictFailedGroups": [
+      "ui-08"
+    ]
+  },
+  "fixtureNativeReplay": {
+    "groupsCollected": 13,
+    "selected": 43,
+    "passed": 41,
+    "failed": 2,
+    "skipped": 0,
+    "strictPassingGroups": 11,
+    "strictPassingCases": 36,
+    "strictFailedGroups": [
+      "contributor-balanced-02",
+      "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction"
+    ]
+  },
+  "recordsRedactedOnly": {
+    "selected": 1,
+    "passed": 1,
+    "rawArtifactsDownloaded": false
+  },
+  "performance": {
+    "launchAttempt1": "strict test and performance pass",
+    "renderedAttempt1": "original preflight failure retained; XCTest never started",
+    "renderedAttempt2": "strict test and performance pass",
+    "scrollAttempt1": "strict XCTest pass; required XCTest scroll metric missing, performance acceptance unresolved"
+  },
+  "limits": [
+    "No source edits, reruns, push, or native runs by this collector.",
+    "All pending replay validators pinned to published d0b0b12.",
+    "Raw RecordsMedia excluded; only bounded allowlisted redacted report and plans verified."
+  ],
+  "fixturesIncludingRedactedRecords": {
+    "selected": 44,
+    "passed": 42,
+    "failed": 2,
+    "skipped": 0
+  },
+  "collectorComplete": true,
+  "failureProofs": [
+    "reservation-warning-failure.json",
+    "stock-identity-failure.json",
+    "stale-quote-timeout.json",
+    "../../performance-d0b0b12-diagnosis/diagnosis.json"
+  ]
+}

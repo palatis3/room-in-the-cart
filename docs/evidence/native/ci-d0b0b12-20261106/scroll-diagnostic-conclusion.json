@@ -1,0 +1,78 @@
+{
+  "diagnosticOnly": true,
+  "releaseAcceptance": false,
+  "runID": 42161152366,
+  "attempt": 1,
+  "commit": "d2fb0a11f5cf924bb2657157ac05601c7cd5e383",
+  "result": "One bounded diagnostic passed; original missing-series failure did not reproduce. No collection fix has been established.",
+  "originalAcceptance": "d0b0b12 run42149899549 scroll attempt1 remains failed; this result must not replace it.",
+  "test": {
+    "selected": 1,
+    "passed": 1,
+    "runtimeWarnings": 0,
+    "strictReplayExit": 0
+  },
+  "buildWarnings": {
+    "count": 12,
+    "categories": [
+      "AppIntents metadata extraction skipped without dependency",
+      "Signed binaries not stripped"
+    ],
+    "detail": "These build log warnings are separate from the zero runtime warnings in the strict test replay. No warning policy changed."
+  },
+  "measurement": {
+    "requiredXCTestScrollSeries": "present with all five actual samples",
+    "medianSeconds": 2.583454583,
+    "limitSeconds": 3.25,
+    "allApprovedComparisonsPassed": true,
+    "hostedLedgerReadback": "500 lines,500 contributions,1 native-paste import,0 checked; quick_check ok. Original database is not retained for local replay."
+  },
+  "endpointComparison": {
+    "outerWindows": 6,
+    "completePairs": 6,
+    "matchedProcessCount": 1,
+    "measuredBeginAfterOuterStartMilliseconds": [
+      64.9712085723877,
+      302.69384384155273
+    ],
+    "measuredEndBeforeOuterStopMilliseconds": [
+      1366.206169128418,
+      1426.6998767852783
+    ],
+    "maxAbsoluteXCTestVsUIKitDifferenceMilliseconds": 0.7615372236329243,
+    "limitation": "Outer timestamps only: signposts outside them are outside the measured call sequence; endpoints inside them cannot prove the XCTest collector received them or expose actual activation/deactivation boundaries."
+  },
+  "additionalFinding": {
+    "scope": "existing diagnostic-only parser",
+    "observedStatus": "incomplete_windows",
+    "cause": "Its window starts at exported Synthesize event activity; this run records each UIKit begin before that activity timestamp, excluding the begin from the existing diagnostic window. Whole swipe activity timestamps precede every begin. This does not explain the original missing XCTest series and cannot alter gate status.",
+    "beginBeforeSynthesisMilliseconds": [
+      5.000114440917969,
+      149.99985694885254,
+      98.00004959106445,
+      148.00000190734863,
+      100.99983215332031,
+      138.0000114440918
+    ],
+    "sourceChanged": false
+  },
+  "nextAction": "Retain both observations. No retry or speculative timing/threshold patch. A future independently justified collector investigation may refine diagnostic window reporting; current evidence provides no validated remedy for the original absence.",
+  "artifacts": [
+    {
+      "name": "iphone-performance-scroll-1",
+      "artifactID": 13477688510,
+      "archiveBytes": 5003591,
+      "sha256": "3453c7259bc712cebd9194efe6f1bfa309024b07ae0459c13127f25f562a8a78",
+      "digestVerified": true,
+      "safeArchiveValidated": true
+    },
+    {
+      "name": "iphone-performance-build-log-1",
+      "artifactID": 13477019641,
+      "archiveBytes": 59017,
+      "sha256": "034a3c39a00f2e2c896f1f9d2fb6856178d93380c8c33a7479f0d1cdf296b691",
+      "digestVerified": true,
+      "safeArchiveValidated": true
+    }
+  ]
+}

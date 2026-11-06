@@ -1,0 +1,97 @@
+{
+  "candidate": "d0b0b12ee0cb8412f17e82c92a91013217560670",
+  "runID": 42149899575,
+  "runAttempt": 1,
+  "jobID": 127681902133,
+  "artifactID": 13478411009,
+  "artifactSHA256": "6f63395b82d983234b7eb97e147a48253015bf89646815f9f641735ac469c556",
+  "strictReplayExit": 1,
+  "selected": 1,
+  "passed": 0,
+  "failed": 1,
+  "runtimeWarnings": 0,
+  "failure": "Test exceeded execution time allowance of 12 minutes",
+  "failurePhase": "Initial quote input; no review/save, stale-revision mutation, retry clearing or locked-shop assertion reached.",
+  "firstStall": {
+    "relativeStartSeconds": 209.87,
+    "relativeEndSeconds": 269.91,
+    "action": "Tap Done after entering West store into sharedQuotes.second.storeID; post-tap idle wait",
+    "doneFrame": [
+      344.3333333333333,
+      506.66666666666663,
+      41.666666666666686,
+      20.33333333333337
+    ],
+    "synthesizedTap": [
+      365.1666666666667,
+      516.8333333333333
+    ]
+  },
+  "timeoutActivityPath": [
+    "Tap \"sharedQuotes.second.source\" TextField",
+    "Wait for dev.roominthecart.app.debug to idle",
+    "Test exceeded execution time allowance of 12 minutes"
+  ],
+  "timeoutSourceTap": {
+    "relativeActionStartSeconds": 645.11,
+    "relativePostTapWaitStartSeconds": 706.94,
+    "synthesizedTap": [
+      201,
+      654
+    ],
+    "sourceFrame": [
+      32,
+      643,
+      338,
+      22
+    ],
+    "keyboardFrame": [
+      0,
+      583,
+      402,
+      233
+    ],
+    "preTapKeyboardFocusedField": "sharedQuotes.second.branch",
+    "retainedBranchValue": "West branch"
+  },
+  "observations": [
+    "Nine consecutive app-animation notification waits of approximately60 seconds after first stalled Done action; last completed after deadline.",
+    "XCTest runner restarted after timeout, zero additional tests executed.",
+    "Spindump records XCTest waiting for quiescence including animations.",
+    "Done/pre-following-tap snapshots share payload IDs, retaining keyboard focus.",
+    "Recording attachment contains only Unexpected Error: Finished test run with pending attachment.; no completed failure screenshot."
+  ],
+  "inference": "Keyboard/focus dismissal failed to settle during initial input. Underlying product/framework cause is not proven by retained attachments. No claim of a stale-save regression or successful stale-save coverage.",
+  "source": {
+    "ios/UITests/SharedStoreQuoteUITests.swift": {
+      "candidateSHA256": "ad1872af521245c4fac3a98931013055325f93551fec0fb67e257b7f343c00ad",
+      "workingTreeSameAsCandidate": true
+    },
+    "ios/Features/Household/SharedStoreQuotesView.swift": {
+      "candidateSHA256": "8e8a915be21df2e023c2c2f8f1970f136532b75be1d14ace7da32554e4075017",
+      "workingTreeSameAsCandidate": true
+    },
+    "scripts/check_ios_test_results.py": {
+      "candidateSHA256": "cbd4f9bf6c4f7d223a708d3fce9461f75a16086b6763cdf86ef7fc7f77ee99e5",
+      "workingTreeSameAsCandidate": false
+    }
+  },
+  "sourceLocations": {
+    "test": "ios/UITests/SharedStoreQuoteUITests.swift:81",
+    "fill": "ios/UITests/SharedStoreQuoteUITests.swift:191",
+    "doneTap": "ios/UITests/SharedStoreQuoteUITests.swift:204",
+    "productDone": "ios/Features/Household/SharedStoreQuotesView.swift:185"
+  },
+  "activitiesFile": "stale-quote-timeout-activities.json",
+  "activitiesSHA256": "8447a6a88f1aa96fbf2a86733b6bbc1fd8d0d281aee20337b339227e97d2b4a7",
+  "attachments": {
+    "118C38E6-0973-449D-979C-94D6D5A3DD37": "462afd3696f300a37feb15c35e450545ed5adee60da56831802bc5eaa572c391",
+    "0320FCD8-5D8A-4404-85D8-581111B37C74": "5bfa5cd6101bff108fd998bb80b9814217a17a5f677a435c4f776cb9c49f4dc6",
+    "FE752680-1331-49B5-9C05-CE5B0FAB62E9": "387caf47f883e396c689a0285b76b8f4e2c3c49296ddfef966a02b156dbbfd09",
+    "F85E7B4C-2950-468B-8093-010D206E1BAF": "97796dc9eefcb5e2e02bf89fcbcf88fe928e40f058939772c08586c60b5d1f0b",
+    "1C9C0AA1-9C04-45CA-9984-23167E851B5C.txt": "b392f1362489f85216a9aec1954c97b90331faf2b2f35d1ed74235c8bfc631bd",
+    "A6F8D01C-0D8F-4079-A004-B49119735230.txt": "7048160a6ab8cc4dddf0f4b8cd2d005d017864f3c114c7337fb4d965c1551f9a",
+    "EB947008-F8F5-4B4E-BB00-932687D9C603": "710db784bd0594025e4f83a838d59fda6cc1e2a4cfe85ce53f758964423d2bb9"
+  },
+  "actions": "Read-only diagnosis; no retry, source change, timeout relaxation or warning exemption."
+}
