@@ -1,0 +1,39 @@
+{
+  "candidate": "804030e68473d022e72b464940061c01c611a0bd",
+  "runID": 42272379454,
+  "artifactID": 13539283383,
+  "originalZIP": ".build/CIResearch20261106/candidate-804030e/core-collection/iphone-results-ui-06-1.zip",
+  "zipSHA256": "c5333d9b6daa0d469372b13837dd2981971b79cd284d8d704905d3724406f022",
+  "originalPresentExtractedFilesVerifiedAgainstZIP": 161,
+  "zipFilesNotPresentInOriginalExtraction": 0,
+  "freshCopiedResultMembers": 144,
+  "failedCase": "ContextualReminderUITests/testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending()",
+  "recordingAttachment": {
+    "lifetime": "deleteOnSuccess",
+    "name": "Screen Recording 2026-11-06 at 03.29.19 PM",
+    "payloadId": "0~F_Km11Vbo3aZLTfX6xrV_ya8Of24pDd1LwCTwYTQFLFXBvgn3e2lltOTJzcF5cvhggrRPWHxDvo-8QQqveN2kw==",
+    "timestamp": 1793996959.17,
+    "uuid": "6DA8D331-E441-41C6-836D-BE10F0D9D1FD"
+  },
+  "recordingBytes": 60,
+  "recordingPayloadText": "Unexpected Error: Finished test run with pending attachment.",
+  "recordingSHA256": "710db784bd0594025e4f83a838d59fda6cc1e2a4cfe85ce53f758964423d2bb9",
+  "videoDecodingAttempted": false,
+  "framesAvailable": false,
+  "adjacentSnapshots": "Before Done and first subsequent retained snapshot both encode application root only, children=[]; no keyboard, field or Done geometry. Root hasKeyboardFocus=false cannot establish input focus.",
+  "scope": "Read retained archive; fresh XCResult copy for xcresulttool; exported recording plus adjacent two snapshots and one synthesized Done event only. No native app/test run, simulator action, source change, archive download or Records media.",
+  "files": {
+    "selected-attachment-proof.json": "2a1907e5cf68691cd0690ab45ecacbad8b8d6c8f0edaf2a4bad962c73c9c9267",
+    "AD525C4B-2CF2-4742-9F01-D5E2CC144FE8.decoded.txt": "49e4c34ed6420dd41073b479b4348e5aee767ddac1cbfd47ac18c177da22071c",
+    "screen-recording.payload": "710db784bd0594025e4f83a838d59fda6cc1e2a4cfe85ce53f758964423d2bb9",
+    "copy-manifest.json": "38149aedd6ff8cded6056d41558452b6ee4f7bdf5ca84a74536c53f11401d301",
+    "AD525C4B-2CF2-4742-9F01-D5E2CC144FE8.payload": "6aa3f2184b462b2a61012d35b53fa89ad28ff8c955daef644b8982251054dcbb",
+    "B2A44D3E-BA48-42ED-A61B-D05956B70F61.payload": "fdfd4040002cc57c96b958fd3d5154a77ae9f6e7b2fa146e908cdf1e5cbc1581",
+    "0B7A16FC-4E8B-4174-B227-66BBD554627D.payload": "98bc7cc1cb77a07da8311848cafd9832e1f569c2cc0b4791ef1017845c1bde0f",
+    "0B7A16FC-4E8B-4174-B227-66BBD554627D.decoded.txt": "819ff4a4f3e236fd7a8d69a35e33158aff501d95bed99f2f5315a8a8101b444a",
+    "timeline.json": "809f50828acf8d1148d0d8f214df9782cd0a2bbdef53bc1a2d3b58e4c75db152",
+    "attachment-map.json": "3d184556eacd281fd050eebcef0c3f1376a1e15e13f37f52ca4af54aff3a0494",
+    "activities.json": "a00b557ac760538073ec85b5d085b6a6ea10b0f940d2866b210dfd15efa687ee",
+    "B2A44D3E-BA48-42ED-A61B-D05956B70F61.decoded.txt": "a143f52f0c6cdc581768eb256dd7198a31b30a74dc24da1be11799edab939507"
+  }
+}

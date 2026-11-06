@@ -11,7 +11,7 @@ Candidate `804030e68473d022e72b464940061c01c611a0bd` was published once to the e
 | Native wire | 42272379461 |
 | Security | 42272379767 |
 
-Security is independently verified: dependency review passed, JavaScript/TypeScript87rules andActions17rules report zero findings for exact merge `62b6dced75daffbe4d264a4312b71b0ad811112d`. Its parent and tree match the published candidate. Swift analysis is separate and remains pending. [Proof](security.json).
+Security is independently verified: dependency review passed, JavaScript/TypeScript87rules andActions17rules report zero findings for exact merge `62b6dced75daffbe4d264a4312b71b0ad811112d`. Its parent and tree match the published candidate. Swift analysis is separately verified:27rules/0findings across all254runtime inputs, with11compiler diagnostics and292unresolved AST nodes retained. [Swift proof](swift-security.json). [Proof](security.json).
 
 The first live concurrency snapshot shows one admitted job in each of the five shared slots and other jobs pending in those queues; this is admission evidence, not a full-run utilization or provider-availability claim. [Snapshot](initial-slot-summary.json) · [Publication](publication.json).
 

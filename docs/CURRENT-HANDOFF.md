@@ -20,7 +20,7 @@ The consent delivery probe is prepared under [diagnostics/measurement-consent](.
 
 ## Isolated consent experiment ready locally
 
-Root reviewed and committed the exact804plus diagnostic overlay as `f019f16124a1edf4d825c2a860efb0c2ca1488cd` on `codex/diagnose-consent-history-804030e`. The separate checkout is `/Users/palatis/.codex/worktrees/consent-history-diagnostic/Room in the Cart`. All46offline tests, pinned lint, manifest and overlay checks pass. No push, dispatch or native execution occurred. The original seven-case history, gates and admission slot0 are retained. [Preparation proof](evidence/native/consent-hosted-preparation-20261106/README.md).
+Root reviewed and committed the exact804plus diagnostic overlay as `f019f16124a1edf4d825c2a860efb0c2ca1488cd` on `codex/diagnose-consent-history-804030e`. The separate checkout is `/Users/palatis/.codex/worktrees/consent-history-diagnostic/Room in the Cart`. All46offline tests, pinned lint, manifest and overlay checks pass. The branch was subsequently published and manually dispatched once as run42293938170 at21:06UTC. The original seven-case history, gates and admission slot0 are retained. Remaining original UI07/stale-save jobs use slot2 and are untouched; this separate experiment does not supersede804. Root owns collection. [Preparation proof](evidence/native/consent-hosted-preparation-20261106/README.md).
 
 ## Latest ordinary UI failures
 

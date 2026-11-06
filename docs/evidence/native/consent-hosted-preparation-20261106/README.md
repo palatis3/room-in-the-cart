@@ -9,3 +9,7 @@ Both jobs share admission slot0, preserve the original seven-case history and720
 The separate timezone correction is installed in the main diagnostics at9a4ace3, with21offline tests; it does not alter native app instrumentation. Main app sources do not contain this diagnostic overlay.
 
 [Root verification](root-preparation.json), [worker review](REVIEW.md), [manifest](manifest.json), [readiness comparison](readiness-comparison.json).
+
+## Dispatch after preparation
+
+At21:06UTC root published only the isolated branch and dispatched [run42293938170](https://github.com/palatis3/room-in-the-cart/actions/runs/42293938170) once at exactf019f16. Its build acquired runner1000004074. Original UI07 and stale-save both use slot2; this experiment uses slot0 and neither cancels nor supersedes them. The main candidate branch and draft PR remain804. [Dispatch proof](dispatch.json). The earlier root-preparation receipt remains a historical pre-publication snapshot.

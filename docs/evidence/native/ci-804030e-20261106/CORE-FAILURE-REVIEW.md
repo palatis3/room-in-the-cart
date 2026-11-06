@@ -15,3 +15,7 @@ Original archives remain retained. The agent verified all209 UI10 extracted memb
 ## Follow-up screenshot correction (not covered by this run)
 
 The Reduce Motion test now captures a failed screen inside its teardown block before restoring the system setting. XCTest runs teardown blocks before `tearDownWithError`, which previously captured Settings after restoration. The new capture is failure-only; test actions, assertions, waits, system-setting restoration and pass criteria stay unchanged. Swift frontend parsing passes. No native execution of this follow-up has occurred, and it is not a fix for the Close-readiness failure.
+
+## Saved-offer recording limitation
+
+The failed UI06 recording is a60-byte pending-attachment error, not decodable video. Adjacent retained accessibility snapshots have empty application roots. Neither can establish whether the keyboard hid, which field held focus, or whether the interface kept animating. Root verified all inspection-output hashes; the original ZIP/extraction remains preserved. [Recording and snapshot provenance](saved-offer-recording-inspection.json).
