@@ -18,6 +18,10 @@ Root completed a reviewed, locally tested, unpushed performance setup follow-up:
 
 The consent delivery probe is prepared under [diagnostics/measurement-consent](../diagnostics/measurement-consent/README.md). Exact804plus the four-file overlay compiles for arm64/x86_64 simulator Debug on local Xcode27.1;16warning lines are inherited, with none added. The offline log reconciler passes19synthetic tests. No probe is installed in normal app sources, no diagnostic native test/hosted workflow ran, and absent logs cannot prove absence of setter delivery. Any next experiment must preserve the original seven-selector group and gates.
 
+## Isolated consent experiment ready locally
+
+Root reviewed and committed the exact804plus diagnostic overlay as `f019f16124a1edf4d825c2a860efb0c2ca1488cd` on `codex/diagnose-consent-history-804030e`. The separate checkout is `/Users/palatis/.codex/worktrees/consent-history-diagnostic/Room in the Cart`. All46offline tests, pinned lint, manifest and overlay checks pass. No push, dispatch or native execution occurred. The original seven-case history, gates and admission slot0 are retained. [Preparation proof](evidence/native/consent-hosted-preparation-20261106/README.md).
+
 ## Latest ordinary UI failures
 
 UI06 andUI10 are terminal failures: saved-offer reminder exceeded720seconds after10animation-completion waits; Reduce Motion sharing failed its15-second Close readiness expectation before any tap. Of45 ordinary cases collected,43pass/2fail; UI07 is still collecting. Root reviewed the share video and hierarchy without inferring hittability from pixels. No retry or causal fix is claimed. [Retained failure analysis](evidence/native/ci-804030e-20261106/CORE-FAILURE-REVIEW.md).
