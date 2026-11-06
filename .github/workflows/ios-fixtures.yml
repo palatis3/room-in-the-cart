@@ -37,6 +37,7 @@ jobs:
       - name: Validate fixture coverage and balanced contributor groups
         id: plan
         run: |
+          python3 scripts/test_ui_automation_contract.py
           python3 scripts/generate_xcode_project.py --check
           python3 scripts/test_plan_ios_fixture_tests.py
           matrix=$(python3 scripts/plan_ios_fixture_tests.py matrix)

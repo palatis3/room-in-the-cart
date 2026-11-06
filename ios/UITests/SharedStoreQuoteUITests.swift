@@ -189,14 +189,16 @@ import XCTest
         XCTAssertEqual(target.value as? String,"1",id)
     }
     private func fill(_ text: String, into id: String, replacing: Bool = false, requireDone: Bool = false) {
-        tap(app.textFields.matching(identifier:id).firstMatch)
-        dismissBilingualKeyboardCardIfPresent()
         let field = app.textFields.matching(identifier:id).firstMatch
         tap(field)
-        let focused = XCTNSPredicateExpectation(predicate:NSPredicate(format:"hasKeyboardFocus == true"),object:field)
-        XCTAssertEqual(XCTWaiter.wait(for:[focused],timeout:5),.completed)
-        if replacing, let old = field.value as? String, old != field.placeholderValue { app.typeText(String(repeating:XCUIKeyboardKey.delete.rawValue,count:old.count)) }
-        if !text.isEmpty { app.typeText(text) }
+        dismissBilingualKeyboardCardIfPresent()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout:5), "Show the keyboard for \(id)")
+        // Targeted typing requires this field to have keyboard focus.
+        if replacing, let old = field.value as? String, !old.isEmpty, old != field.placeholderValue {
+            field.typeText(String(repeating:XCUIKeyboardKey.delete.rawValue,count:old.count))
+            assertFieldValue(field,text:"")
+        }
+        if !text.isEmpty { field.typeText(text) }
         dismissBilingualKeyboardCardIfPresent()
         assertFieldValue(app.textFields.matching(identifier:id).firstMatch,text:text)
         let done = app.buttons.matching(NSPredicate(format:"identifier IN %@",["Done","Listo"])).firstMatch

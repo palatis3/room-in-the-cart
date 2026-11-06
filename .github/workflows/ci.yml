@@ -356,6 +356,8 @@ jobs:
       test_matrix: ${{ steps.plan.outputs.matrix }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Check supported keyboard automation before simulator setup
+        run: python3 scripts/test_ui_automation_contract.py
       - name: Record toolchain and select iPhone
         run: |
           xcodebuild -version

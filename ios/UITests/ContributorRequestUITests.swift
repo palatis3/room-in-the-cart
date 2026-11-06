@@ -111,9 +111,7 @@ import XCTest
         let field = id == "capture.editor" ? app.textViews[id] : app.textFields[id]
         tap(field)
         dismissBilingualKeyboardCardIfPresent()
-        tap(field)
-        let focused = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hasKeyboardFocus == true"), object: field)
-        XCTAssertEqual(XCTWaiter.wait(for: [focused], timeout: 5), .completed)
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), "The input must have a software keyboard before typing")
         if replacing, let old = field.value as? String, !old.isEmpty, old != field.placeholderValue {
             // Tapping a multiline editor does not put the caret at its end.
             // Select the whole value through the real edit menu before replacing it.
