@@ -1,0 +1,49 @@
+{
+  "candidate": "804030e68473d022e72b464940061c01c611a0bd",
+  "originalFixtureArtifact": 13534503902,
+  "originalArchiveSHA256": "6dfc2124094eecdec1eecddd49e98bdb40913e44b79af8018bd9769dc42624b6",
+  "videoSHA256": "4cdac9c17a72963156ff52d44fdbf4ac77088420bba168409b03a9df63a43b85",
+  "durationSeconds": 27.183333333333334,
+  "requestedFrameCount": 51,
+  "distinctDecodedTimestamps": [
+    15.988333333333333,
+    16.188333333333333,
+    16.355,
+    16.471666666666668,
+    16.801666666666666,
+    18.178333333333335,
+    18.37,
+    18.57,
+    18.788333333333334,
+    18.996666666666666,
+    19.198333333333334,
+    19.39,
+    19.578333333333333,
+    19.79,
+    19.986666666666668,
+    20.116666666666667,
+    22.73
+  ],
+  "cropPoints": {
+    "x": 295,
+    "y": 600,
+    "width": 100,
+    "height": 115
+  },
+  "sourcePixelSize": [
+    1206,
+    2622
+  ],
+  "pointWidth": 402,
+  "observation": "Switch appears off in every inspected decoded frame where it is visible. No visible flip observed.",
+  "limits": [
+    "Variable-frame-rate recording:51sampling requests are not51independent frames.",
+    "No claim that a short unrecorded transition is impossible.",
+    "Video-relative timestamps are not established as identical to XCTest relative action timestamps.",
+    "Images cannot establish binding setter delivery or actual UIKit hit target."
+  ],
+  "nextAction": "Reviewed opt-in setter/store diagnostic; no production workaround justified by these images.",
+  "contactSheetSHA256": "3a91268c2f7a0baac4f489df93db960c5bb7a6b95c78717afbb1260ed81a94ef",
+  "nativeExecution": false,
+  "sourceModified": false
+}
