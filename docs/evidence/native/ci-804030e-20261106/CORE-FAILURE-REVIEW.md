@@ -11,3 +11,7 @@ The share tap occurs at187.60seconds, the first predicate evaluation at190.58, a
 Original archives remain retained. The agent verified all209 UI10 extracted members against its ZIP; inspection operated on a fresh result copy. Root independently verified all listed inspection outputs, including the case video, exported frames, query details and hierarchy. No raw Records media was accessed. This evidence is failure analysis, not release acceptance.
 
 [Failure details](core-native-failures.json), [media provenance](share-failure-inspection.json), [query timeline](share-close-query-timeline.json), [sampled pre-failure frame](share-pre-failure-frame.png).
+
+## Follow-up screenshot correction (not covered by this run)
+
+The Reduce Motion test now captures a failed screen inside its teardown block before restoring the system setting. XCTest runs teardown blocks before `tearDownWithError`, which previously captured Settings after restoration. The new capture is failure-only; test actions, assertions, waits, system-setting restoration and pass criteria stay unchanged. Swift frontend parsing passes. No native execution of this follow-up has occurred, and it is not a fix for the Close-readiness failure.

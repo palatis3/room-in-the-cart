@@ -111,7 +111,14 @@ import XCTest
         let settings = XCUIApplication(bundleIdentifier: "com.apple.Preferences")
         let control = try Self.reduceMotionSwitch(in: settings)
         let original = try Self.switchValue(control)
-        addTeardownBlock {
+        addTeardownBlock { [weak self] in
+            // Restoring the system setting opens Settings before tearDownWithError.
+            // Preserve the failed app screen while it is still on display.
+            await MainActor.run {
+                if let self, (self.testRun?.failureCount ?? 0) > 0 {
+                    self.captureSystemScreen("Reduce-Motion-failure-before-settings-restoration")
+                }
+            }
             try await FreeJourneyUITests.restoreReduceMotion(original)
         }
         try Self.setReduceMotion(true, using: control)
