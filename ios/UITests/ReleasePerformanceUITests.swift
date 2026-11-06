@@ -162,6 +162,10 @@ final class ReleasePerformanceUITests: XCTestCase {
         if #available(iOS 26.0, *) {
             metrics.append(XCTHitchMetric(application: app))
         }
+        // Opt-in evidence only; this run cannot replace release acceptance.
+        let collectWindows = ProcessInfo.processInfo.environment["RITC_SCROLL_COLLECTION_DIAGNOSTIC"] == "1"
+        var measurementWindows: [[String: Any]] = []
+        if collectWindows { measurementWindows.reserveCapacity(6) }
         var restingY: CGFloat?
         measure(metrics: metrics, options: measurementOptions()) {
             // Reset before each iteration. XCTest waits for the swipe to settle.
@@ -174,11 +178,30 @@ final class ReleasePerformanceUITests: XCTestCase {
                 restingY = startY
             }
 
+            // Outer bounds: no diagnostic work occurs inside the measured interval.
+            let beforeStart = collectWindows ? Date().timeIntervalSince1970 : nil
             startMeasuring()
             list.swipeUp(velocity: .fast)
             stopMeasuring()
+            let afterStop = collectWindows ? Date().timeIntervalSince1970 : nil
+            if let beforeStart, let afterStop {
+                measurementWindows.append([
+                    "invocationIndex": measurementWindows.count,
+                    "beforeStartMeasuringUnixSeconds": beforeStart,
+                    "afterStopMeasuringUnixSeconds": afterStop,
+                ])
+            }
 
             XCTAssertTrue(!top.exists || top.frame.midY < startY, "The measured gesture must scroll the list")
+        }
+        if collectWindows {
+            try attachJSON([
+                "schemaVersion": 1,
+                "diagnosticOnly": true,
+                "requestedMeasurementCount": 5,
+                "windows": measurementWindows,
+                "bounds": "Timestamps precede startMeasuring and follow stopMeasuring; they are outer bounds, not collector activation timestamps. Indices include the warm-up invocation.",
+            ], name: "scroll-measurement-windows-diagnostic")
         }
         screenshot("Populated pickup list after measured scroll")
     }

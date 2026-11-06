@@ -22,6 +22,10 @@ on:
       - 'ios/RoomInTheCart.xcodeproj/xcshareddata/xcschemes/RoomInTheCart-Performance.xcscheme'
   workflow_dispatch:
     inputs:
+      scroll_collection_diagnostic:
+        description: Run only scroll with diagnostic bounds; not release acceptance
+        type: boolean
+        default: false
       enforce_baselines:
         description: Require approved limits for this Xcode and simulator environment
         type: boolean
@@ -42,6 +46,7 @@ concurrency:
 
 env:
   DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+  SCROLL_COLLECTION_DIAGNOSTIC: ${{ github.event_name == 'workflow_dispatch' && inputs.scroll_collection_diagnostic }}
 
 jobs:
   performance-build:
@@ -60,7 +65,12 @@ jobs:
       - name: Record Xcode and select an iPhone simulator
         run: |
           xcodebuild -version
-          xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+          if [[ "$SCROLL_COLLECTION_DIAGNOSTIC" == true ]]; then
+            test "$(xcodebuild -version)" = $'Xcode 26.3\nBuild version 17C529'
+            xcrun simctl list devices available -j | python3 -c 'import json, sys; d = json.load(sys.stdin); key = "com.apple.CoreSimulator.SimRuntime.iOS-26-2"; d["devices"] = {key: [v for v in d["devices"].get(key, []) if v["name"] == "iPhone 17"]}; json.dump(d, sys.stdout)' | python3 scripts/select_ci_iphone.py
+          else
+            xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+          fi
       - name: Build the Release app and dedicated performance tests
         shell: bash
         run: |
@@ -77,6 +87,9 @@ jobs:
           products=.build/DerivedData/Build/Products/Release-iphonesimulator
           executable="$products/RoomInTheCartUITests-Runner.app/PlugIns/RoomInTheCartUITests.xctest/RoomInTheCartUITests"
           matrix=$(python3 scripts/plan_ios_performance_tests.py "$executable")
+          if [[ "$SCROLL_COLLECTION_DIAGNOSTIC" == true ]]; then
+            matrix=$(printf '%s' "$matrix" | python3 -c 'import json, sys; m = json.load(sys.stdin); selected = [r for r in m["include"] if r["case"] == "scroll"]; assert selected == [{"case":"scroll","selector":"RoomInTheCartUITests/ReleasePerformanceUITests/testScrollingPerformanceOnFiveHundredItemPickup"}]; print(json.dumps({"include":selected}, separators=(",", ":")))')
+          fi
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
       - name: Verify and package Release test products
         run: |
@@ -128,7 +141,14 @@ jobs:
           xcodebuild -version | tee .build/performance/toolchain.txt
           printf '%s\n' "$TEST_SELECTOR" > .build/performance/selector.txt
       - name: Select an iPhone simulator
-        run: xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+        shell: bash
+        run: |
+          if [[ "$SCROLL_COLLECTION_DIAGNOSTIC" == true ]]; then
+            test "$(xcodebuild -version)" = $'Xcode 26.3\nBuild version 17C529'
+            xcrun simctl list devices available -j | python3 -c 'import json, sys; d = json.load(sys.stdin); key = "com.apple.CoreSimulator.SimRuntime.iOS-26-2"; d["devices"] = {key: [v for v in d["devices"].get(key, []) if v["name"] == "iPhone 17"]}; json.dump(d, sys.stdout)' | python3 scripts/select_ci_iphone.py
+          else
+            xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+          fi
       - name: Boot and verify a fresh Release installation
         timeout-minutes: 8
         run: |
@@ -140,6 +160,19 @@ jobs:
           if [[ "$PERFORMANCE_CASE" != launch ]]; then
             xcrun simctl pbcopy "$SIMULATOR_ID" < "$FIXTURE"
           fi
+      - name: Mark diagnostic provenance
+        if: env.SCROLL_COLLECTION_DIAGNOSTIC == 'true'
+        run: |
+          python3 - <<'PYDIAG'
+          import json, os
+          from pathlib import Path
+          Path(".build/performance/diagnostic-provenance.json").write_text(json.dumps({
+              "diagnosticOnly": True, "sourceCommit": os.environ["GITHUB_SHA"],
+              "ref": os.environ["GITHUB_REF"], "runID": os.environ["GITHUB_RUN_ID"],
+              "releaseAcceptance": False,
+          }, indent=2) + "\n")
+          PYDIAG
+          echo 'Diagnostic only; this run does not replace release acceptance.' >> "$GITHUB_STEP_SUMMARY"
       - name: Run one Release performance case
         timeout-minutes: 30
         shell: bash
@@ -147,6 +180,9 @@ jobs:
           test_runs=(.build/DerivedData/Build/Products/RoomInTheCart-Performance_iphonesimulator*.xctestrun)
           test "${#test_runs[@]}" -eq 1
           test -f "${test_runs[0]}"
+          if [[ "$SCROLL_COLLECTION_DIAGNOSTIC" == true ]]; then
+            export TEST_RUNNER_RITC_SCROLL_COLLECTION_DIAGNOSTIC=1
+          fi
           xcodebuild -xctestrun "${test_runs[0]}" -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
             -parallel-testing-enabled NO -test-timeouts-enabled YES \
             -default-test-execution-time-allowance 900 -maximum-test-execution-time-allowance 1200 \
@@ -194,6 +230,23 @@ jobs:
             else
               activity=error
             fi
+          fi
+          if [[ "$SCROLL_COLLECTION_DIAGNOSTIC" == true && "$capture" == ok ]]; then
+            python3 - "$tmp/signposts.log" "$evidence/scroll-signpost-endpoints-diagnostic.json" <<'PYDIAG'
+          import json, sys
+          from datetime import datetime, timezone
+          from pathlib import Path
+          sys.path.insert(0, "scripts")
+          from scroll_signpost_diagnostic import PATTERN
+          events = []
+          for line in Path(sys.argv[1]).read_text().splitlines():
+              match = PATTERN.match(line)
+              if match:
+                  stamp, pid, sid, phase = match.groups()
+                  events.append({"unixSeconds": datetime.fromisoformat(stamp).replace(tzinfo=timezone.utc).timestamp(),
+                                 "processID": int(pid), "signpostID": sid, "phase": phase})
+          Path(sys.argv[2]).write_text(json.dumps({"diagnosticOnly": True, "events": events}, indent=2) + "\n")
+          PYDIAG
           fi
           python3 scripts/scroll_signpost_diagnostic.py --log "$tmp/signposts.log" --activities "$tmp/activities.json" \
             --capture-status "$capture" --activity-status "$activity" --output "$evidence/scroll-signpost-diagnostic.json" || \
