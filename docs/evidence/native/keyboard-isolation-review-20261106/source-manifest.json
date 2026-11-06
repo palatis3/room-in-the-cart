@@ -1,0 +1,35 @@
+{
+  "candidate": "d0b0b12ee0cb8412f17e82c92a91013217560670",
+  "sourceSHA256": {
+    "ios/UITests/StockReviewUITests.swift": "8b5b4dfca7535c2d5820a6c8783903f95a45c89223096c582d9a650877c43377",
+    "ios/UITestSupport/StockReviewUIFixture.swift": "edb138eeee97f83bc77028ede2b121dd88b7abfc13e8d629e1d7851d1ef21b9a",
+    "ios/UITestSupport/ContributorRequestUIFixture.swift": "c87edbb7d1f491bfc6eb5a1a8a20107839bcdbf7cce66f7db602cabad30ba0ba",
+    "ios/UITests/ContributorRequestUITests.swift": "f70f064360948a8195e94511b021208fadb2f177c358b20843e590181a179ce3",
+    "ios/UITests/MeasurementUITests.swift": "7d2b1205c1d4aa56b0ab5535ea8ff3b2e7f3e65ecfa82060b5a4214965ebb8f4",
+    "ios/UITestSupport/MeasurementUIFixture.swift": "6c50c72fd747156128c6a536af25e8be61fed7bc4ef99ae7f1e8653b44b3d719",
+    "ios/UITests/SharedStoreQuoteUITests.swift": "ad1872af521245c4fac3a98931013055325f93551fec0fb67e257b7f343c00ad",
+    "ios/UITestSupport/StoreQuotesUIFixture.swift": "f97997da875c2f79c294513b107acf346277e2590e6987bf5be59663fbbdf124",
+    "ios/Features/Pickup/PickupSavedStockSection.swift": "a0a1ebdf9e2cdc32e6a60dc8d71e4d161fe4ba4abd5052167a486580b48e6542",
+    "ios/Features/Pickup/PickupHomeView.swift": "0f428130e8186e550fa68eba4c5c474f51f89adae1fb04a63d37253b1f78fee6",
+    "ios/Features/Pickup/PickupModel.swift": "cb0266ebdd87a4ea6dd51cfafd69a971f1f95761446a97e46ceb1567fa4abbd1",
+    "ios/App/RoomInTheCartApp.swift": "ab900dab2551a8929b22180405dac978fe6049bdaa03d109ee3d6f46ec8c8ed8",
+    "ios/Features/Household/HouseholdModel.swift": "300c27c7b8943bc8a355c96d0746e181f0d0737d2d125192d082910eeb293b9b",
+    ".github/workflows/ios-fixtures.yml": "9942031a411a732f3482b73c2bb78ca8ec4dffb7046066ab9d5460ce8643ff32",
+    "scripts/select_ci_iphone.py": "8ebdee4db935d8b8039f17fb8b23909043b3095486e35ecfd713199d6a1b3c67",
+    "scripts/run_ios_test_shard.sh": "45319a4e14c3e238b44cef3e3b2ab6666676592a99cf8897b1bce62039a8147e"
+  },
+  "traces": {
+    "stock": {
+      "path": ".build/CIResearch20261105/candidate-d0b0b12/iphone-fixture-results-contributor-balanced-02-1/Tests.log",
+      "sha256": "88d6997282b14418535ca0af3358ea7c0d1ab8e97947d53f6880f7a14d57a6ab"
+    },
+    "quote": {
+      "path": ".build/CIResearch20261105/candidate-d0b0b12/iphone-fixture-results-SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction-1/Tests.log",
+      "sha256": "0d723138756ee0205cdd69f6265cc059d0a7d86afb5eda73047dffc8ac641bf8"
+    },
+    "stockAX": {
+      "path": ".build/CIResearch20261105/candidate-d0b0b12/stock-identity-failure-attachments/516AA97C-D1E6-4530-8335-9261D389E2EC.txt",
+      "sha256": "2c8810dbc5240041ab762397a92a564ad7aa9a8a524322fb4df0f7b1e704ea1e"
+    }
+  }
+}
