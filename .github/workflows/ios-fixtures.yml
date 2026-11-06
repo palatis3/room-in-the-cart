@@ -4,53 +4,57 @@ on:
   workflow_dispatch:
     inputs:
       expected_sha:
-        description: Exact reviewed diagnostic commit (not release acceptance)
+        description: Exact reviewed keyboard-history harness commit (diagnostic only)
         required: true
         type: string
+
 permissions:
   contents: read
+  actions: read
+
 concurrency:
-  group: keyboard-event-diagnostic-${{ github.ref }}
+  group: keyboard-history-diagnostic-${{ github.ref }}
   cancel-in-progress: false
+
 jobs:
-  keyboard-events:
-    name: Keyboard event diagnostic — original stock journey
+  keyboard-history:
+    name: Keyboard history diagnostic — exact169 products, original six cases
     runs-on: macos-15
-    timeout-minutes: 45
+    timeout-minutes: 70
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
       EXPECTED_SHA: ${{ inputs.expected_sha }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-      - name: Require exact reviewed source and hosted profile
-        run: bash diagnostics/keyboard-events/prepare.sh
-      - name: Build and freeze matching fixture products
-        run: bash diagnostics/keyboard-events/build.sh
-      - name: Observe one unchanged stock journey
-        run: bash diagnostics/keyboard-events/run.sh
-      - name: Stop only the owned simulator
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Validate provenance and restore all exact archived products
+        timeout-minutes: 5
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 diagnostics/keyboard-history/restore.py
+      - name: Require hosted profile and create one owned simulator
+        timeout-minutes: 8
+        run: bash diagnostics/keyboard-history/prepare.sh
+      - name: Run original six selectors once with event capture
+        id: run
+        timeout-minutes: 40
+        run: bash diagnostics/keyboard-history/run.sh execute
+      - name: Preserve failed outcomes, reconcile captures and verify frozen inputs
+        if: always() && steps.run.outcome != 'skipped'
+        timeout-minutes: 5
+        run: bash diagnostics/keyboard-history/run.sh collect
+      - name: Stop and delete only the owned simulator
         if: always()
-        run: |
-          if [[ -f .build/keyboard-events/simulator-id.txt ]]; then
-            device=$(cat .build/keyboard-events/simulator-id.txt)
-            xcrun simctl shutdown "$device" || true
-            xcrun simctl delete "$device"
-          fi
-      - name: Preserve diagnostic outcomes
+        timeout-minutes: 3
+        run: python3 diagnostics/keyboard-history/cleanup.py
+      - name: Preserve diagnostic evidence (no products or prior media)
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: keyboard-events-${{ github.run_attempt }}
+          name: keyboard-history-${{ github.run_attempt }}
           include-hidden-files: true
-          path: .build/keyboard-events/
+          path: .build/keyboard-history/
           retention-days: 7
           if-no-files-found: error
-      - name: Preserve exact diagnostic binaries
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: keyboard-products-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/keyboard-diagnostic-products.tar.gz
-          compression-level: 0
-          retention-days: 7
-          if-no-files-found: ignore
