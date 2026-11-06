@@ -180,6 +180,7 @@ struct DinnerTemplateFields: View {
                     TextField(dinnerText("Ingredient notes"), text: row.notes, axis: .vertical).focused(focus, equals: prefix + "notes")
                     TextField(dinnerText("Ingredient exclusions, one per line"), text: row.exclusions, axis: .vertical)
                         .focused(focus, equals: prefix + "exclusions")
+                        .accessibilityLabel(dinnerText("Ingredient exclusions, one per line"))
                     Button(dinnerText("Remove ingredient"), role: .destructive) { draft.ingredients.removeAll { $0.id == ingredient.id } }
                         .buttonStyle(.borderless)
                 }.padding(.vertical, 6)

@@ -246,12 +246,57 @@ import XCTest
 
     func testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop() throws {
         avoidIOS17SnapshotLoggingCrash()
-        func verifyChosenDinnerInWeek() {
+        func verifyChosenDinnerInWeek(expectedShopTitle: String? = nil) {
             dinnerRoot()
             openMealWeek()
+            if let expectedShopTitle {
+                // The shop heading precedes the week and unscheduled dinners.
+                // Verify the restored title before scrolling down to the meal.
+                reveal(app.staticTexts.matching(NSPredicate(format: "label == %@", expectedShopTitle)).firstMatch,
+                       initiallyUpward: false)
+            }
             let occurrence = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
                                                                "dinnerOccurrence-", "Wrap dinner")).firstMatch
             reveal(occurrence)
+        }
+        func fillAdjacentFields(_ fields: [(String, String)]) {
+            // Keep the keyboard between adjacent fields in this journey only.
+            // reveal still measures the unobscured content before any drag.
+            for (name, value) in fields {
+                let field = app.textFields[name]
+                var tapped = false
+                for attempt in 0..<24 {
+                    var area = scrollableArea()
+                    let done = app.buttons["Done"]
+                    if app.keyboards.firstMatch.exists && done.exists {
+                        // The Done strip is above the keyboard and can cover a
+                        // field that XCTest still reports as hittable.
+                        area.size.height = max(0, min(area.maxY, done.frame.minY) - area.minY)
+                    }
+                    XCTAssertGreaterThanOrEqual(area.height, 80, "Need visible form content before entering \(name)")
+                    if field.exists && !field.frame.isEmpty {
+                        let coordinate = field.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                        let point = coordinate.screenPoint
+                        if field.isHittable && area.contains(point) {
+                            print("ADJACENT_FIELD_TAP id=\(name) point=\(point) area=\(area)")
+                            coordinate.tap()
+                            tapped = true
+                            break
+                        }
+                        scrollContent(upward: point.y > area.midY, area: area)
+                    } else {
+                        scrollContent(upward: attempt < 16, area: area)
+                    }
+                }
+                XCTAssertTrue(tapped, "No visible field tap point for \(name)")
+                field.typeText(value)
+                XCTAssertEqual(field.value as? String, value, name)
+            }
+            let done = app.buttons["Done"]
+            XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable,
+                          "Done must remain reachable after adjacent form fields")
+            done.tap()
+            XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
         }
         launch(reset: true)
         tap(element("settings"))
@@ -268,14 +313,13 @@ import XCTest
         tap(app.tabBars.buttons["Dinners"])
         tap(element("dinnerLibrary"))
         tap(element("ledgerNewTemplate"))
-        fill("Wrap dinner", into: "ledgerDinnerTitle")
-        fill("6", into: "ledgerDinnerServings")
-        fill("Wraps", into: "Ingredient name")
-        fill("6", into: "Amount, optional")
-        fill("No sesame", into: "Ingredient exclusions, one per line")
+        fillAdjacentFields([
+            ("ledgerDinnerTitle", "Wrap dinner"), ("ledgerDinnerServings", "6"),
+            ("Ingredient name", "Wraps"), ("Amount, optional", "6"),
+            ("Ingredient exclusions, one per line", "No sesame"),
+        ])
         tap(app.buttons["Add serving group"])
-        fill("Lunch", into: "Group name")
-        fill("2", into: "Group servings")
+        fillAdjacentFields([("Group name", "Lunch"), ("Group servings", "2")])
         enableSwitch("Protected group")
         tap(element("ledgerReviewDinner"))
         assertText("Lunch")
@@ -291,17 +335,15 @@ import XCTest
         verifyChosenDinnerInWeek()
         assertText("Unscheduled")
 
-        shopRoot()
         openShoppingList()
         tap(app.buttons["Inspect Wraps"])
         tap(element("ledgerPackChoice"))
-        fill("Four wraps", into: "First pack label")
-        fill("4", into: "First pack usable amount")
-        fill("2", into: "First pack price, USD")
-        fill("Three wraps", into: "Second pack label")
-        fill("3", into: "Second pack usable amount")
-        fill("1.50", into: "Second pack price, USD")
-        fill("Retailer shelf checked today", into: "Where you checked these packs and prices")
+        fillAdjacentFields([
+            ("First pack label", "Four wraps"), ("First pack usable amount", "4"),
+            ("First pack price, USD", "2"), ("Second pack label", "Three wraps"),
+            ("Second pack usable amount", "3"), ("Second pack price, USD", "1.50"),
+            ("Where you checked these packs and prices", "Retailer shelf checked today"),
+        ])
         tap(element("ledgerReviewPacks"))
         assertText("Item-only comparison")
         assertText("3.00")
@@ -414,10 +456,7 @@ import XCTest
         capture("Free-one-dinner-reused-for-next-shop")
         restart()
         tap(app.tabBars.buttons["Dinners"])
-        verifyChosenDinnerInWeek()
-        // Check the saved shop title itself. A descendant-containing query can
-        // select a larger ancestor whose frame is not the visible title row.
-        reveal(app.staticTexts.matching(NSPredicate(format: "label == %@", "Next shop")).firstMatch)
+        verifyChosenDinnerInWeek(expectedShopTitle: "Next shop")
         tap(app.tabBars.buttons["Records"])
         tap(app.buttons["Family decision history"])
         tap(app.buttons["Saved pickup decisions on this iPhone"])
@@ -924,13 +963,15 @@ import XCTest
         // Use the visible row center, clear of navigation and tab bars.
         for attempt in 0..<24 {
             let area = scrollableArea().insetBy(dx: 0, dy: 12)
-            if row.exists && row.isHittable && area.contains(CGPoint(x: row.frame.midX, y: row.frame.midY)) {
-                print("S25_ROW_TAP id=\(row.identifier) frame=\(row.frame) area=\(area)")
+            let exists = row.exists
+            let frame = exists ? row.frame : .zero
+            if exists && row.isHittable && area.contains(CGPoint(x: frame.midX, y: frame.midY)) {
+                print("S25_ROW_TAP id=\(row.identifier) frame=\(frame) area=\(area)")
                 row.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
                 return
             }
             // A lazy row outside the viewport can be above or below the current position.
-            scrollContent(upward: row.exists ? row.frame.midY > area.midY : attempt < 12)
+            scrollContent(upward: exists ? frame.midY > area.midY : attempt < 12)
         }
         XCTFail("No visible center for week row: \(row.debugDescription)")
     }
@@ -1147,7 +1188,7 @@ import XCTest
         if requireDone { XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable, "Done must be reachable from \(id)") }
         if done.exists && done.isHittable { done.tap() }
     }
-    private func reveal(_ target: XCUIElement) {
+    private func reveal(_ target: XCUIElement, initiallyUpward: Bool = true) {
         for attempt in 0..<24 {
             // Offscreen lazy rows can be absent from the accessibility tree.
             // Check once before asking for hittability, which otherwise makes
@@ -1158,8 +1199,8 @@ import XCTest
             let upward: Bool
             if exists {
                 let frame = target.frame
-                upward = frame.isEmpty ? attempt < 16 : frame.midY > area.midY
-            } else { upward = attempt < 16 }
+                upward = frame.isEmpty ? (attempt < 16 ? initiallyUpward : !initiallyUpward) : frame.midY > area.midY
+            } else { upward = attempt < 16 ? initiallyUpward : !initiallyUpward }
             scrollContent(upward: upward, area: area)
         }
         XCTAssertTrue(target.isHittable, "Missing actionable UI element: \(target.debugDescription)")

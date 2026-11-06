@@ -1,0 +1,77 @@
+{
+  "candidate": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "run": 42184704871,
+  "attempt": 1,
+  "job": 127786281811,
+  "artifact": 13489089994,
+  "archiveSHA256": "282232bb0e74058b94af76bd56ef9c8c9402161337ebeb03c112e8427dd8478a",
+  "strict": {
+    "selected": 4,
+    "passed": 2,
+    "failed": 2,
+    "exit": 1,
+    "warnings": 0
+  },
+  "extractionProof": "evidence/ui02-extraction.json",
+  "originalDefaultRefusalPreservedIn": [
+    "collector-actions.log",
+    "collector-failures.json"
+  ],
+  "pickup": {
+    "test": "PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart",
+    "source": "source-PickupOfferUITests.swift",
+    "sourceSHA256": "bb25ea698694626a8f6680c1955e37e5c760f3156d1411dd560d2a66d11f5ed0",
+    "callLine": 75,
+    "helperLines": [
+      126,
+      130
+    ],
+    "lastBusinessAssertion": "forecast shortfall contains : 1 at298.75\u2013299.06s; screenshot299.663s",
+    "firstUnexpectedAction": "approve switch normalized(0.92,0.5) tap at299.987s; no reveal drag occurred",
+    "actualEventPoint": [
+      356.40000000000003,
+      904.5000000000002
+    ],
+    "appFrame": [
+      0,
+      0,
+      402,
+      874
+    ],
+    "pointBelowViewport": 30.500000000000227,
+    "failure": "switch remained0; expected1 at line130, t301.031",
+    "idleAnimationTimeoutCount": 0,
+    "preTapScreenshot": "ui02-pickup-attachments/090B5901-FE8B-45E8-A526-70B01DE20478.png",
+    "postFailureScreenshot": "ui02-pickup-attachments/11DA2B5A-E669-4DDC-A159-0F0D698A34C5.png",
+    "event": "ui02-pickup-attachments/3D1F682C-2491-4CFD-AB2E-7418BA1039FC",
+    "snapshot": "ui02-pickup-attachments/EF865FD6-57BE-4ACA-A9F3-CBD86A70F902",
+    "visible": "New store offer sheet, forecast uncovered quantities and disclaimer; approval switch not visible, no keyboard or tab bar",
+    "limits": "Snapshot contains app root only, no switch frame. Actual event point is direct evidence; full control frame cannot be reconstructed. No attribution to keyboard animation."
+  },
+  "spanish": {
+    "test": "RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer",
+    "source": "source-RoomInTheCartUITests.swift",
+    "sourceSHA256": "7d9e7240a8c7ec11f0067b76e7122c4c3ad4f12fa998b4b2f08e1cbdf056ee34",
+    "entryLine": 167,
+    "quantityLine": 486,
+    "doneLine": 565,
+    "lastCompletedInputAssertion": "aPrice3 readback at46.22\u201346.70s; bQuantity6 typed49.47\u201350.29s",
+    "firstUnexpectedWait": "Listo tap51.626s, synthesize52.217s, idle52.549\u2192112.599s: App animations complete notification not received",
+    "actualEventPoint": [
+      364,
+      544
+    ],
+    "event": "ui02-spanish-attachments/047233CC-2768-43AE-BC6F-3E25B58C8CD5",
+    "snapshot": "ui02-spanish-attachments/82DD10C7-07A8-4B3F-AEB1-037C7F91CCDC",
+    "subsequent": "bQuantity value check114.99s; bPrice type and Listo continue with60s idle waits; compare tap610.88s; unchanged720s case deadline exceeded during post-compare idle",
+    "idleAnimationTimeoutCount": 11,
+    "visibleLimits": "No retained PNG. Snapshot app root only, no Listo frame/focus/keyboard detail. Screen Recording attachment is60byte text: Unexpected Error: Finished test run with pending attachment. Thus visible control and keyboard disappearance cannot be established.",
+    "pendingRecording": "ui02-spanish-attachments/A3565D4B-85B7-4230-9A05-DB84B70CF9DE",
+    "resultAssertionsReachedBeforeDeadline": false,
+    "postDeadlineLogContinuation": "After timeout message, editComparison exists733.31s; scope/original name checks734.66/735.93s; aTotal6.00 checks737.48\u2013738.04s and aPacks740.20s; bTotal reveal swipe741.45s then runner restart. No passing completion, save or reopen reached. Logged screenshots736.50/739.13s are not present in exported attachment manifest."
+  },
+  "limits": [
+    "Original hosted failures preserved. No retry, test execution, source change, timeout/warning relaxation.",
+    "No claim that successful input readback proves keyboard hide or animation completion."
+  ]
+}

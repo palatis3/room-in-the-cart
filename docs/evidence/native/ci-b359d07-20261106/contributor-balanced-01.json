@@ -1,0 +1,34 @@
+{
+  "artifactID": 13489324130,
+  "artifactName": "iphone-fixture-results-contributor-balanced-01-1",
+  "sha256": "314135b019c73b7560ee7893d92d3d3f9857d6de36b48996c5b52d9f6688d60e",
+  "size": 25721029,
+  "digestVerified": true,
+  "candidate": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "runID": 42184705317,
+  "jobID": 127793433718,
+  "hostedConclusion": "success",
+  "selected": 3,
+  "passed": 3,
+  "failed": 0,
+  "skipped": 0,
+  "strictReplayExit": 0,
+  "planByteIdentical": true,
+  "runtimeWarnings": 0,
+  "warnings": {
+    "status": "passed",
+    "summaryWarningCount": null,
+    "runtimeWarningCount": 0,
+    "examinedTestCount": 3,
+    "detailExportCount": 3,
+    "activityExportCount": 0,
+    "warnings": []
+  },
+  "selectors": [
+    "RoomInTheCartUITests/DinnerAwayCarryoverUITests/testPhysicalCarryoverCancelApplyAndRestartKeepOriginalPurchase",
+    "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison",
+    "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam"
+  ],
+  "rawLogSHA256": "3335b1ae80e7f356b92c7355d0fe77e910efd887b1f10110e2aed65723a2bf2b",
+  "replayedBundle": "Tests.xcresult"
+}

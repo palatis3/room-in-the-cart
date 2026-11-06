@@ -1,0 +1,323 @@
+{
+  "scope": "Complete original Free journey and saved-offer journey with explicit visible tap-point checks, unchanged business/persistence assertions and deadlines.",
+  "baselineCandidate": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "tests": [
+    {
+      "identifier": "PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart()",
+      "result": "Passed",
+      "durationSeconds": 396.38345897197723
+    },
+    {
+      "identifier": "FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop()",
+      "result": "Passed",
+      "durationSeconds": 384.57305097579956
+    }
+  ],
+  "passed": 2,
+  "failed": 0,
+  "skipped": 0,
+  "strictExit": 0,
+  "runtimeWarnings": 0,
+  "toolchain": "Xcode 27.1\nBuild version 27A9275",
+  "knownHarnessDiagnostics": {
+    "invalidDigitCountOccurrences": 27,
+    "note": "Xcode SDK/device metadata diagnostics retained separately from XCTest runtime warnings."
+  },
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "4E1C3CA3-0D3D-4AB1-A0DF-D28CF9BFF42F",
+    "deviceName": "RITC Free journey navigation 20261106",
+    "modelName": "iPhone 17",
+    "osBuildNumber": "23C54",
+    "osVersion": "26.2",
+    "platform": "iOS Simulator"
+  },
+  "bootGuardAcceptedFinished": true,
+  "ownedSimulatorDeleted": true,
+  "sourceFilesVerified": 514,
+  "productFilesVerified": 179,
+  "frozenInputsUnchanged": {
+    "source": true,
+    "products": true
+  },
+  "sourceFilesMatchCurrentCheckout": true,
+  "sourceFix": "The filled multiline ingredient-exclusion field keeps its existing localized accessible label. The retained old-app negative control fails the identical post-typing name/value assertion.",
+  "testNavigation": [
+    "Check the exact restored Next shop heading before scrolling down to the same saved Wrap dinner.",
+    "Keep keyboard open between 14 adjacent fields in this journey only, require exact values and final Done/keyboard disappearance for all three batches.",
+    "Require actual field center inside observed content excluding the keyboard Done strip; a single tap per field.",
+    "Remove duplicate Shop navigation and cache a week-row frame only within an attempt.",
+    "Require actual trailing approval-switch coordinate inside unobscured content before at most one tap; exact switch-value assertion retained."
+  ],
+  "adjacentFieldTapPoints": [
+    {
+      "field": "ledgerDinnerTitle",
+      "point": [
+        201.0,
+        234.33333333333334
+      ],
+      "contentArea": [
+        24.0,
+        180.0,
+        354.0,
+        594.0
+      ]
+    },
+    {
+      "field": "ledgerDinnerServings",
+      "point": [
+        201.0,
+        286.3333333333333
+      ],
+      "contentArea": [
+        24.0,
+        180.0,
+        354.0,
+        315.0
+      ]
+    },
+    {
+      "field": "Ingredient name",
+      "point": [
+        201.0,
+        403.0
+      ],
+      "contentArea": [
+        24.0,
+        128.0,
+        354.0,
+        367.0
+      ]
+    },
+    {
+      "field": "Amount, optional",
+      "point": [
+        201.0,
+        433.0
+      ],
+      "contentArea": [
+        24.0,
+        128.0,
+        354.0,
+        367.0
+      ]
+    },
+    {
+      "field": "Ingredient exclusions, one per line",
+      "point": [
+        201.0,
+        149.66666666666663
+      ],
+      "contentArea": [
+        24.0,
+        128.0,
+        354.0,
+        367.0
+      ]
+    },
+    {
+      "field": "Group name",
+      "point": [
+        201.0,
+        446.0
+      ],
+      "contentArea": [
+        24.0,
+        128.0,
+        354.0,
+        646.0
+      ]
+    },
+    {
+      "field": "Group servings",
+      "point": [
+        201.0,
+        476.0
+      ],
+      "contentArea": [
+        24.0,
+        128.0,
+        354.0,
+        367.0
+      ]
+    },
+    {
+      "field": "First pack label",
+      "point": [
+        201.0,
+        558.3333333333333
+      ],
+      "contentArea": [
+        24.0,
+        196.0,
+        354.0,
+        578.0
+      ]
+    },
+    {
+      "field": "First pack usable amount",
+      "point": [
+        201.0,
+        178.66666666666663
+      ],
+      "contentArea": [
+        24.0,
+        144.0,
+        354.0,
+        351.0
+      ]
+    },
+    {
+      "field": "First pack price, USD",
+      "point": [
+        201.0,
+        282.6666666666666
+      ],
+      "contentArea": [
+        24.0,
+        144.0,
+        354.0,
+        378.0
+      ]
+    },
+    {
+      "field": "Second pack label",
+      "point": [
+        201.0,
+        392.6666666666667
+      ],
+      "contentArea": [
+        24.0,
+        144.0,
+        354.0,
+        378.0
+      ]
+    },
+    {
+      "field": "Second pack usable amount",
+      "point": [
+        201.0,
+        444.6666666666667
+      ],
+      "contentArea": [
+        24.0,
+        144.0,
+        354.0,
+        351.0
+      ]
+    },
+    {
+      "field": "Second pack price, USD",
+      "point": [
+        201.0,
+        332.0
+      ],
+      "contentArea": [
+        24.0,
+        144.0,
+        354.0,
+        378.0
+      ]
+    },
+    {
+      "field": "Where you checked these packs and prices",
+      "point": [
+        201.0,
+        442.0
+      ],
+      "contentArea": [
+        24.0,
+        144.0,
+        354.0,
+        378.0
+      ]
+    }
+  ],
+  "milestones": [
+    {
+      "seconds": 86.37,
+      "attachment": "Free-dinner-and-protected-lunch"
+    },
+    {
+      "seconds": 147.86,
+      "attachment": "Free-whole-packs-saved-for-checkout-review"
+    },
+    {
+      "seconds": 188.29,
+      "attachment": "Free-frozen-placement-unconfirmed"
+    },
+    {
+      "seconds": 229.67,
+      "attachment": "Free-observed-short-fill"
+    },
+    {
+      "seconds": 281.91,
+      "attachment": "Free-complete-cook-note"
+    },
+    {
+      "seconds": 336.83,
+      "attachment": "Free-settlement-keeps-food-separate"
+    },
+    {
+      "seconds": 362.01,
+      "attachment": "Free-one-dinner-reused-for-next-shop"
+    },
+    {
+      "seconds": 382.57,
+      "attachment": "Free-saved-repair-decision-without-inferred-outcome"
+    },
+    {
+      "seconds": 185.6,
+      "attachment": "Offer-reviewed-joint-cost-overage"
+    },
+    {
+      "seconds": 188.3,
+      "attachment": "Offer-reviewed-uncovered-quantity"
+    },
+    {
+      "seconds": 203.74,
+      "attachment": "Offer-saved-with-price-warning"
+    },
+    {
+      "seconds": 210.21,
+      "attachment": "Offer-expired-resume-card-after-restart"
+    },
+    {
+      "seconds": 212.29,
+      "attachment": "Offer-resume-opens-actual-arrival"
+    },
+    {
+      "seconds": 317.22,
+      "attachment": "Offer-updated-after-restart-and-copied"
+    },
+    {
+      "seconds": 394.15,
+      "attachment": "Offer-cancel-keeps-saved-response"
+    }
+  ],
+  "perTestTimeAllowanceSeconds": {
+    "default": 720,
+    "maximum": 900
+  },
+  "retainedPriorRuns": [
+    "label-negative-control.json",
+    "label-fix-and-occluded-field.json"
+  ],
+  "scratchDirectory": ".build/FreeJourneyNavigation20261106/validation-viewport-fix",
+  "sha256": {
+    "Tests.log": "ced7bb98617f267edf6297d9d122bce2138d606d6de4c22b65afe082b796f378",
+    "test-summary.json": "b7649cd8c716a5c987321c89107b677b3cab7cda76ceec4ac6f0d1ff0cb1b050",
+    "test-details.json": "98e72e91ceabea95dce756d9a301c6622182bd56cd3821e91e95c29c5ddaa8e1",
+    "strict.log": "3c5d197dd8d826dfe768b8f587620ff36baf9de830df921b6335bf2a20923f4b",
+    "source-sha256.json": "e4477c9bcf6f7abddd6724878b2775d567ab808faeb74d035e26b1afd59388d1",
+    "product-sha256.json": "607d3c4755dd3187151f3bda82ec84fdb6c0e9188cdcbbaa05d1a2c73e73d1d7",
+    "source-diff.patch": "a6e497877a575bdd2c74ebb0852a826571501748d209c771f051e926764614cb",
+    "boot.log": "f4d5e2d1d180c002595594f981f7eb6eebd28e6bb5c2cfd30dbfcf18f6373678"
+  },
+  "limits": [
+    "Local Xcode27.1 differs from hosted26.3. Original hosted UI01/UI02 failures remain; no hosted passing-duration or complete CI acceptance claim.",
+    "The separate Spanish Done/animation-idle timeout is unresolved and not exercised by these two selectors.",
+    "The label fix is covered in English; no physical VoiceOver or human Spanish acceptance is claimed.",
+    "Original default fill behavior, warning policy, animation idling, time limits and retries are unchanged."
+  ]
+}

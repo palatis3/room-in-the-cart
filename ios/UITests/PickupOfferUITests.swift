@@ -125,9 +125,24 @@ import XCTest
 
     private func approveOffer() {
         let control = app.switches["pickup.offer.approve"]
-        reveal(control)
-        if control.value as? String == "0" { control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap() }
-        XCTAssertEqual(control.value as? String, "1")
+        for attempt in 0..<64 {
+            let area = scrollableArea()
+            if control.exists && !control.frame.isEmpty {
+                let coordinate = control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5))
+                let point = coordinate.screenPoint
+                // A hittable Form row can still put its trailing switch below
+                // the viewport. Check the actual touch point before tapping.
+                if control.isHittable && area.contains(point) {
+                    if control.value as? String == "0" { coordinate.tap() }
+                    XCTAssertEqual(control.value as? String, "1")
+                    return
+                }
+                scrollContent(upward: point.y > area.midY, area: area)
+            } else {
+                scrollContent(upward: attempt < 32, area: area)
+            }
+        }
+        XCTFail("No visible approval switch tap point: \(control.debugDescription)")
     }
     private func launch(reset: Bool) {
         app.launchArguments = ["--ui-testing", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
