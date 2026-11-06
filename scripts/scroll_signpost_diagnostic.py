@@ -32,15 +32,20 @@ def summarize(log, activity, capture_status, activity_status):
         out['candidateLineCount'] = sum('Scroll_DraggingAndDeceleration' in line for line in log.splitlines())
         out['unparsedCandidateCount'] = out['candidateLineCount'] - len(events)
         out['timeZoneOfLog'] = 'UTC'
+        out['windowBasis'] = 'enclosing swipe activity start to following activity start; not XCTest measurement boundaries'
         previous_end = None
         process_ids = set()
         for swipe, following in zip(activities[reset:], activities[reset+1:]):
             if not swipe['title'].startswith('Swipe up CollectionView'): continue
             starts = [a['startTime'] for a in swipe.get('childActivities', []) if a['title'] == 'Synthesize event']
             if len(starts) != 1: raise ValueError('missing or ambiguous synthesis')
-            start, end = starts[0], following['startTime']
-            if (type(start) not in (int, float) or type(end) not in (int, float)
-                    or not math.isfinite(start) or not math.isfinite(end) or end <= start
+            # Exported synthesis timestamps can follow UIKit's begin event.
+            # Use the enclosing gesture activity, without treating this
+            # diagnostic window as the actual XCTest collection interval.
+            start, synthesis, end = swipe['startTime'], starts[0], following['startTime']
+            if (any(type(value) not in (int, float) or not math.isfinite(value)
+                    for value in (start, synthesis, end))
+                    or not start <= synthesis < end
                     or (previous_end is not None and start <= previous_end)):
                 raise ValueError('invalid or overlapping window')
             previous_end = end

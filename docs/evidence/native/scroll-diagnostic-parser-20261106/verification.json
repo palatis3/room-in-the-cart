@@ -1,0 +1,33 @@
+{
+  "diagnosticOnly": true,
+  "sourceRun": 42161152366,
+  "originalAcceptanceRun": 42149899549,
+  "reconstruction": "Rebuilt only parser-consumed log fields from retained normalized endpoint JSON; original full activity JSON used unchanged. Raw log text was not retained.",
+  "observedRegression": {
+    "original": "fails expected captured, got incomplete_windows",
+    "corrected": "passes"
+  },
+  "fullObservedReplay": {
+    "events": 104,
+    "originalStatus": "incomplete_windows",
+    "correctedStatus": "captured",
+    "completePairs": 6,
+    "unparsedCandidateCount": 0
+  },
+  "tests": {
+    "scripts/test_scroll_signpost_diagnostic.py": 9,
+    "scripts/test_check_ios_performance.py": 8,
+    "allPass": true,
+    "gitDiffCheck": "passed"
+  },
+  "originalMissingMetricReplay": "Missing required performance metric: com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.duration",
+  "unchangedFilesSHA256": {
+    "scripts/check_ios_performance.py": "199a08ef43a9cc85fdb22a98b9c0143ab401fe9d98554c6e5919d283cdaddc38",
+    "scripts/ios_performance_baselines.json": "38742a9b5f5eea668c608f117db602ac6a2b73aa56691c3ec3f90c291d15c38e",
+    ".github/workflows/ios-performance.yml": "15d9861f35391a6ce1f1037c342a11e324f44050c96f78c86aa9a275541b8027",
+    "ios/UITests/ReleasePerformanceUITests.swift": "bde26f21c934c1f7d0c8ff885592c2715c494cfb7ab832e286b8f1a93641484b"
+  },
+  "patchSHA256": "830634ecb78a55ebc572e47e1d4e07b39bd4ae4440877d4776c3ba72e802fdd9",
+  "scope": "Root accepted diagnostic parser correction only; no hosted retry, no app or performance-gate changes.",
+  "rootReview": "Observed enclosing activity bounds reviewed; focused parser and performance validator suites independently pass. Diagnostic values remain separate from mandatory XCTest metrics."
+}
