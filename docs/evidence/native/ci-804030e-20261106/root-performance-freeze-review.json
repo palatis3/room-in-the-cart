@@ -1,0 +1,12 @@
+{
+  "candidate": "804030e68473d022e72b464940061c01c611a0bd",
+  "runID": 42272379490,
+  "attempt": 1,
+  "verifiedAt": "2026-11-06T20:18:07.318291+00:00",
+  "freezeSHA256": "86799c49fa4dd1fcb54432fb7e36568ff945f74e2be9773d8171471750efd02a",
+  "filesVerified": 141,
+  "allHashesMatch": true,
+  "performancePassed": 2,
+  "scrollTestExecuted": false,
+  "sourceOrNativeChanges": false
+}
