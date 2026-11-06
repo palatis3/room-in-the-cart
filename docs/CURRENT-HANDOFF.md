@@ -10,6 +10,10 @@ Six attempt-1 runs are active/collecting: core42272379454, deep42272379472, fixt
 
 Read-only collectors are `ci_core_resume` (core/deep/performance, session43785) and `ci_fixtures_resume` (fixtures/native wire, session34355). Root owns security, integration and any next dispatch decision. Live evidence is `.build/CIResearch20261106/candidate-804030e/`; both research-date current-candidate pointers identify804030e. Do not rerun on observation timeout. No further source push should replace this candidate while it is collecting.
 
+## Android companion-web handoff resumed
+
+The retained Android emulator PID26580 is running. Its crash-report startup blocker is resolved using the documented disabled-reporting option, and its task-owned ADB bridge now uses the existing trusted key. Boot and automatic UTC clock verify; Play Store visibly shows Sign in. Chrome149 remains outdated. The owner has been asked to sign in directly or report the exact error text. Do not capture screens/logs during credential entry. No key contents, account data or tokens were read; no new debugging trust or account terms were accepted. Current-stable acquisition and Android product acceptance remain open. [Environment recovery](evidence/b11/android-resume-20261106/REVIEW.md).
+
 ## Latest collected CI candidate: 8f864ea
 
 The combined candidate `8f864eafc3887ea16be996124d55fa2ca2708706` was published once at 14:29 UTC on November 6. Only the two reviewed UI helpers and documentation changed beyond `0d33c11`; production code and acceptance thresholds did not change. Both corrected journeys now pass on GitHub. Simulator and unsigned iPhone Release builds pass, as do all 601 model cases. Core attempt 1 is terminal: 33 of 51 ordinary UI cases executed, 32 passed and one large-text keyboard journey timed out. The remaining 18 cases never acquired GitHub runners. Four narrowly allowed warnings were retained across UI03/UI10. These missing executions are distinct from the executed timeout and are not passes.

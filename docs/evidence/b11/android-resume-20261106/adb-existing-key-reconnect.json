@@ -1,0 +1,35 @@
+{
+  "utc": "2026-11-06T18:54:10.652850+00:00",
+  "existing_key_path": "/tmp/ritc-android/user/adbkey",
+  "private_key_read_by_agent": false,
+  "operations": [
+    {
+      "command": [
+        "/tmp/ritc-android/sdk/platform-tools/adb",
+        "kill-server"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/tmp/ritc-android/sdk/platform-tools/adb",
+        "start-server"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": "* daemon not running; starting now at tcp:5037\n* daemon started successfully\n"
+    },
+    {
+      "command": [
+        "/tmp/ritc-android/sdk/platform-tools/adb",
+        "devices",
+        "-l"
+      ],
+      "exit": 0,
+      "stdout": "List of devices attached\nemulator-5554          device product:sdk_gphone64_arm64 model:sdk_gphone64_arm64 device:emu64a transport_id:1\n\n",
+      "stderr": ""
+    }
+  ]
+}
