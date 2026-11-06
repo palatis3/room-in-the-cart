@@ -1,0 +1,80 @@
+{
+  "head": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "checkedAt": "2026-11-06T08:25:26.741013+00:00",
+  "acceptance": "in_progress",
+  "runs": [
+    {
+      "attempt": 1,
+      "conclusion": "success",
+      "databaseId": 42184705128,
+      "headSha": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+      "name": "Security checks",
+      "status": "completed",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42184705128"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "",
+      "databaseId": 42184704871,
+      "headSha": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+      "name": "Build and test",
+      "status": "queued",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42184704871"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "",
+      "databaseId": 42184705113,
+      "headSha": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+      "name": "iOS Release performance",
+      "status": "queued",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42184705113"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "",
+      "databaseId": 42184705317,
+      "headSha": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+      "name": "iOS fixture checks",
+      "status": "in_progress",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42184705317"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "success",
+      "databaseId": 42184705027,
+      "headSha": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+      "name": "Native Swift HTTPS and PostgreSQL",
+      "status": "completed",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42184705027"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "success",
+      "databaseId": 42184704881,
+      "headSha": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+      "name": "iOS deep checks",
+      "status": "completed",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42184704881"
+    }
+  ],
+  "verifiedFilesSHA256": {
+    "security.json": "c3664393542b2b0e42834b2d9893286c2d95754d4435950a362574c3c35c74dd",
+    "compiled-plan.json": "684b616c3d0b3101c0b5eddd2661acbde3eecafcc945499b5d14c48adb40a574",
+    "packages-sanitizers.json": "beb00ae63a4a4ca9bc1dc031850fceac1c2ac783dc3ec1d6561cba04a354c5b4",
+    "storekit.json": "a93e4602a223fe221f9fd99c0f0dd2852862ee2f166c76abb48c733144475233",
+    "performance-inventory.json": "eb626aeed799517d1aa389beddc8a91858fe776d2badc02fc93d683f7dbe233e",
+    "native-wire.json": "e721ee82ba57602bbbb6dc9c046a3dd827aec91452b8c9d8ac6608360021afbe"
+  },
+  "limits": [
+    "Native inventory is not a claim that every native case executed; core model/UI,fixtures,performance and SwiftCodeQL results still collecting.",
+    "Prior candidate failures and diagnostic capture failures are preserved. No workflow retry or duplicate dispatch.",
+    "StoreKit configurations are local; no App Store provider acceptance.",
+    "No raw RecordsMedia artifacts downloaded or inspected."
+  ],
+  "collectors": {
+    "coreDeepPerformance": ".build/CIResearch20261105/candidate-b359d07/core-collection",
+    "fixturesNative": ".build/CIResearch20261105/candidate-b359d07/fixture-evidence"
+  },
+  "staging": "Migration030 and first scheduled housekeeping are independently verified; browser explicitly deferred."
+}

@@ -6,18 +6,18 @@ Updated November 6, 2026 UTC. The owner resumed and explicitly approved the revi
 
 A single normal push published `b359d0743c2db77bb81a00a1c7e69036aa12ab77` and started six PR workflows at attempt 1. This is the first combined acceptance run containing the verified Done touch-target fix, persistent stock labels/editable-control helper, bounded Menu warning-phase correction, diagnostic parser correction and additive local migration 030. The fixture inventory is 45; all 44 earlier cases remain. No manual duplicate dispatch or retry was made.
 
-| Workflow | Run ID | Verified at 08:10 UTC |
+| Workflow | Run ID | Verified at 08:25 UTC |
 |---|---:|---|
-| Core build/tests |42184704871| In progress; unsigned iPhone Release, source, package, TypeScript and PostgreSQL jobs pass; native selection/tests pending |
-| Deep checks |42184704881| Queued |
+| Core build/tests |42184704871| In progress; compiled plan verifies 601 models/51 UI; Release/source/backend/package jobs pass; UI shards and Swift scan continue |
+| Deep checks |42184704881| Passed; both sanitizer lanes and both 15-case StoreKit languages independently verified |
 | Release performance |42184705113| In progress |
-| Native HTTPS/PostgreSQL |42184705027| Queued |
-| Fixtures |42184705317| Queued |
+| Native HTTPS/PostgreSQL |42184705027| Passed; four integration cases and six exact Swift scenarios independently verified |
+| Fixtures |42184705317| In progress; builds and 45-case fixture plan |
 | Security |42184705128| Passed; dependency review and 104 JavaScript/Actions rules, zero findings |
 
 Security analyses use merge `c0f2ea1c7db1a528c6262af900e2a912480a7001`, whose parent is the exact candidate and whose tree matches it. Swift scanning remains a separate pending core job. New collection lives in `.build/CIResearch20261105/candidate-b359d07/`; `current-candidate.json` now points to this candidate. Two helpers collect core/deep/performance and fixtures/native wire respectively; root owns Security and integration. Never retrieve raw Records media artifacts; retain the exact restricted report procedure. All previous d0 failures and diagnostic limitations remain preserved. Do not infer acceptance from local passes or diagnostic nonreproduction.
 
-The owner explicitly deferred the browser walkthrough. Scheduled maintenance is registered and enabled; bounded runtime and request log queries through 08:08:52 UTC contain no invocation yet. This is an observation, not a failure diagnosis. No manual request was made during that window. The additive migration 030 follow-up below is now applied and independently verified. Local native processes remain stopped and the protected preview is untouched.
+The owner explicitly deferred the browser walkthrough. Scheduled maintenance is now observed: matching request and runtime logs show Vercel cron at 08:21:00 UTC, HTTP 200, Node 22, successful housekeeping, empty queues and no attention needed. No manual maintenance request was made during the observation window. [Scheduled-delivery proof](evidence/b11/staging-scheduled-maintenance-20261106/verification.json). The additive migration 030 follow-up below is now applied and independently verified. Local native processes remain stopped and the protected preview is untouched.
 
 The paragraphs below preserve earlier checkpoints. Their references to “no new acceptance run” or d0 as the published candidate describe their original timestamps; this section supersedes those current-state claims.
 
@@ -27,7 +27,7 @@ Under the owner's standing authorization to fix app issues, root applied the loc
 
 The exact apply/rollback rehearsal refused drift, timed out on a held migration lock, and proved atomic rollback after an injected registry failure following both ALTER statements. It preserved all 81 local app-table rowsets and restored the exact 029 baseline. The guarded rollback file is saved but was not executed on staging. The original encrypted backup and actual 029 restore remain detached. This follow-up did not redeploy the server, rotate credentials or activate providers. All 27 public API/page/asset checks pass after the change. [Hosted 030 verification and recovery SQL](evidence/b11/staging-measurement-hardening-20261106/verification.json).
 
-The current deployment's API metadata confirms Node 22.x, overriding the project's newer default. Its Hobby plan allows the `0 8 * * *` maintenance job to fire anywhere within 08:00–08:59 UTC; scheduled observation remains pending. The browser walkthrough remains owner-deferred.
+The current deployment's API metadata confirms Node 22.x, overriding the project's newer default. Its Hobby plan allows the `0 8 * * *` maintenance job to fire anywhere within 08:00–08:59 UTC; the first observed invocation succeeded at 08:21 UTC. The browser walkthrough remains owner-deferred.
 
 ## Approved staging rollout completed
 
@@ -35,7 +35,7 @@ On November 6 the owner explicitly approved migrations 009–029, the tested ser
 
 Current public address: https://room-in-the-cart-staging.vercel.app . Current READY deployment: `dpl_5WrPFnhZhcp51X9UWU919sULJaTh`, project `prj_MsdHyy06CKCuFeAvoOCpnJRQ1vGa`, team `team_zkjaW5rtwPK9URZDeSoybwXB`. The 137 uploaded files are frozen from reviewed runtime `d0b0b12ee0cb8412f17e82c92a91013217560670`; web outputs match exactly. Vercel inherited parent-checkout Git metadata `efc6a3a`, but explicit sourceCommit metadata and the upload manifest identify the actual pinned source. Do not confuse these two identities. Prior compatible rollback deployment remains `dpl_9mAfUc4cPpz6FQLiVLn5tRvFkDvD`; its six API checks passed after migration.
 
-All 27 checks pass both behind deployment protection and through the promoted public address: six API boundaries, 17 page URL forms and four assets. All five protected and four public maintenance checks pass. Authenticated housekeeping ran successfully with zero queued work, disabled privacy processing and no configured logout provider. Cron is registered to this deployment at `0 8 * * *`; an actual scheduled invocation has not yet been observed. Local browser use was disabled during rollout. The owner subsequently chose to leave the live browser walkthrough for later; it is explicitly deferred. Do not infer rendered acceptance from HTTP/asset checks or ask again now.
+All 27 checks pass both behind deployment protection and through the promoted public address: six API boundaries, 17 page URL forms and four assets. All five protected and four public maintenance checks pass. Authenticated housekeeping ran successfully with zero queued work, disabled privacy processing and no configured logout provider. Cron is registered to this deployment at `0 8 * * *`; a later invocation was observed successfully at 08:21 UTC, as recorded above. Local browser use was disabled during rollout. The owner subsequently chose to leave the live browser walkthrough for later; it is explicitly deferred. Do not infer rendered acceptance from HTTP/asset checks or ask again now.
 
 At that rollout checkpoint, security advisors reported 16 intentional internal default-deny tables and two invoker-trigger search-path warnings. The subsequent local regression and guarded hosted migration 030 resolved the two warnings, as recorded above. [Local regression proof](evidence/b11/measurement-trigger-hardening-20261106/verification.json). No child-provider, email, deletion or App Store activation occurred. Both encrypted archives remain detached.
 
@@ -147,4 +147,4 @@ Capture, selected restore and second-copy migration rehearsal checks are complet
 
 ## Remaining release work
 
-[Acceptance gates](CURRENT-ACCEPTANCE.md#remaining-production-work-and-release-gates) retain full scope: current combined CI; live browser and scheduled-maintenance verification after the completed protected backup/restore and hosted rollout; independent journal/runtime/alert recovery; real KWS and email delivery; Apple paid signing/StoreKit/TestFlight/AppStore; approved policies/support operations; full route/device walkthrough; human US-Spanish and physical camera/share/widget/print/notification/assistive-access checks; current Android companion-web acceptance. Do not represent simulator, fixture, synthetic-provider or earlier-source results as those gates.
+[Acceptance gates](CURRENT-ACCEPTANCE.md#remaining-production-work-and-release-gates) retain full scope: current combined CI; owner-deferred live browser verification after the completed protected backup/restore and hosted rollout; independent journal/runtime/alert recovery; real KWS and email delivery; Apple paid signing/StoreKit/TestFlight/AppStore; approved policies/support operations; full route/device walkthrough; human US-Spanish and physical camera/share/widget/print/notification/assistive-access checks; current Android companion-web acceptance. Do not represent simulator, fixture, synthetic-provider or earlier-source results as those gates.
