@@ -1,0 +1,232 @@
+{
+  "candidate": "8f864eafc3887ea16be996124d55fa2ca2708706",
+  "attempt": 2,
+  "rawExecutedCasesIndependentlyExamined": 32,
+  "rawRuntimeWarningOccurrences": 0,
+  "recordsRedactedExecuted": 1,
+  "recordsRedactedRuntimeWarningOccurrences": 0,
+  "rawRecordsRead": false,
+  "executedRuntimeVerified": {
+    "modelName": "iPhone 17",
+    "osVersion": "26.2",
+    "osBuildNumber": "23C54",
+    "architecture": "arm64",
+    "platform": "iOS Simulator"
+  },
+  "xcodeVersion": "26.3",
+  "xcodeBuild": "17C529",
+  "xcodeVersionScope": "Contributor attempt2 and carried dinner attempt1 build logs",
+  "defaultTestAllowanceSeconds": 720,
+  "maximumTestAllowanceSeconds": 900,
+  "noObservedMenuWarningOccurrencesInExecutedCases": true,
+  "warningScopeCaveat": "KnownTrip timed out before later Menu flow; LostReply and StaleReviewedSave did not acquire runners. Zero observed warnings is not full Menu-path coverage.",
+  "runtime": {
+    "contributor-balanced-02": {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+        "deviceName": "iPhone 17",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C54",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      },
+      "testCount": 7,
+      "runtimeWarningCount": 0,
+      "detailExportCount": 7,
+      "activityExportCount": 0,
+      "warnings": [],
+      "summaryWarningFieldPresent": false,
+      "replayedBundle": "Tests.xcresult",
+      "hostedRetryArtifactPresent": false
+    },
+    "contributor-balanced-04": {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+        "deviceName": "iPhone 17",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C54",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      },
+      "testCount": 4,
+      "runtimeWarningCount": 0,
+      "detailExportCount": 4,
+      "activityExportCount": 0,
+      "warnings": [],
+      "summaryWarningFieldPresent": false,
+      "replayedBundle": "Tests.xcresult",
+      "hostedRetryArtifactPresent": false
+    },
+    "contributor-balanced-05": {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+        "deviceName": "iPhone 17",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C54",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      },
+      "testCount": 11,
+      "runtimeWarningCount": 0,
+      "detailExportCount": 11,
+      "activityExportCount": 0,
+      "warnings": [],
+      "summaryWarningFieldPresent": false,
+      "replayedBundle": "Tests.xcresult",
+      "hostedRetryArtifactPresent": false
+    },
+    "SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult": {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+        "deviceName": "iPhone 17",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C54",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      },
+      "testCount": 1,
+      "runtimeWarningCount": 0,
+      "detailExportCount": 1,
+      "activityExportCount": 0,
+      "warnings": [],
+      "summaryWarningFieldPresent": false,
+      "replayedBundle": "Tests.xcresult",
+      "hostedRetryArtifactPresent": false
+    },
+    "SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview": {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+        "deviceName": "iPhone 17",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C54",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      },
+      "testCount": 1,
+      "runtimeWarningCount": 0,
+      "detailExportCount": 1,
+      "activityExportCount": 0,
+      "warnings": [],
+      "summaryWarningFieldPresent": false,
+      "replayedBundle": "Tests.xcresult",
+      "hostedRetryArtifactPresent": false
+    },
+    "SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn": {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+        "deviceName": "iPhone 17",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C54",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      },
+      "testCount": 1,
+      "runtimeWarningCount": 0,
+      "detailExportCount": 1,
+      "activityExportCount": 0,
+      "warnings": [],
+      "summaryWarningFieldPresent": false,
+      "replayedBundle": "Tests.xcresult",
+      "hostedRetryArtifactPresent": false
+    },
+    "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption": {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+        "deviceName": "iPhone 17",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C54",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      },
+      "testCount": 1,
+      "runtimeWarningCount": 0,
+      "detailExportCount": 1,
+      "activityExportCount": 0,
+      "warnings": [],
+      "summaryWarningFieldPresent": false,
+      "replayedBundle": "Tests.xcresult",
+      "hostedRetryArtifactPresent": false
+    },
+    "DinnerDecisionSheetUITests": {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+        "deviceName": "iPhone 17",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C54",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      },
+      "testCount": 5,
+      "runtimeWarningCount": 0,
+      "detailExportCount": 5,
+      "activityExportCount": 0,
+      "warnings": [],
+      "summaryWarningFieldPresent": false,
+      "replayedBundle": "Tests.xcresult",
+      "hostedRetryArtifactPresent": false
+    },
+    "SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable": {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+        "deviceName": "iPhone 17",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C54",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      },
+      "testCount": 1,
+      "runtimeWarningCount": 0,
+      "detailExportCount": 1,
+      "activityExportCount": 0,
+      "warnings": [],
+      "summaryWarningFieldPresent": false,
+      "replayedBundle": "Tests.xcresult",
+      "hostedRetryArtifactPresent": false
+    }
+  }
+}

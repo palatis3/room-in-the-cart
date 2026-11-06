@@ -1,0 +1,137 @@
+{
+  "candidate": "8f864eafc3887ea16be996124d55fa2ca2708706",
+  "runID": 42234317004,
+  "groups": {
+    "ui-02": {
+      "artifactID": 13514082232,
+      "sha256": "a7cb351f72687df8b19b1e35b583b38e9afea351e1007af2ff9915995c7ccd5b",
+      "digestVerified": true,
+      "selectors": [
+        "RoomInTheCartUITests/FreeJourneyUITests/testRecipeCaptureOpensOnFirstAttemptAndReopensAfterCancel",
+        "RoomInTheCartUITests/PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testConfirmedComparisonDeletionSurvivesRestart",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer"
+      ],
+      "selected": 4,
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "rawLogSHA256": "9ec65112358be09e6fe786b32dfe08ca9c8e8012ebf496ee08091a17cfeac1c6"
+    },
+    "ui-03": {
+      "artifactID": 13514167585,
+      "sha256": "6d3afbf3c49891a5264b59b4492cd0d479f07610241cb9a4848b81384b466622",
+      "digestVerified": true,
+      "selectors": [
+        "RoomInTheCartUITests/ContextualNavigationUITests/testEnteredStoreQuotesKeepTripCostsSeparateAndAdoptOnlyReviewedSavedProof",
+        "RoomInTheCartUITests/FreeJourneyUITests/testManualListOrderSurvivesRestartAndOpensLargePrint",
+        "RoomInTheCartUITests/FreeJourneyUITests/testStagedListCanReturnToOriginalAndMergeADuplicateAfterRestart",
+        "RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresRecordsDetailAndIndependentShoppingList",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testShopPhoneShortcutsHaveACompleteTouchTargetAndReturnToShop"
+      ],
+      "selected": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 2,
+      "rawLogSHA256": "ba0a081e535ad4e04179a63dd8b40338ab7bea10beb9810fe355f447b04c155a"
+    },
+    "ui-05": {
+      "artifactID": 13517183891,
+      "sha256": "21097d85c45ba45a127a2f8687b1d863967d74293a8505d3c29f7b713bbdfedd",
+      "digestVerified": true,
+      "selectors": [
+        "RoomInTheCartUITests/ContextualNavigationUITests/testAuthorizationHoldIsOptionalAndSeparateFromCheckoutCap",
+        "RoomInTheCartUITests/FreeJourneyUITests/testFreePickupRepairKeepsTheNeedOpenWhenAcceptedFallbackToolsAreUnavailable",
+        "RoomInTheCartUITests/FreeJourneyUITests/testPairingEnumerationUsesTheChosenScheduleAndDoesNotOfferItAgain",
+        "RoomInTheCartUITests/PickupCheckoutRestoreUITests/testInclusiveCheckoutFieldsAndResultSurviveRestartAndUnchangedSave",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testComparisonSaveStaysInsideViewportAboveTabBar"
+      ],
+      "selected": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "rawLogSHA256": "de4d24ec101bad5bf1a489a7bcd6c8b7d5fe496bbcf90f19954741b58209e95c"
+    },
+    "ui-04": {
+      "artifactID": 13519040265,
+      "sha256": "0c1272c349c07854fbb2b145297dd072dc4542b2901956c7ae42d2d0c5341959",
+      "digestVerified": true,
+      "selectors": [
+        "RoomInTheCartUITests/FreeJourneyUITests/testCorrectFreezerBatchAndReadReservationsAfterRestart",
+        "RoomInTheCartUITests/FreeJourneyUITests/testDinnerMoveAcrossDisplayedWeeksKeepsLunchAndOccurrence",
+        "RoomInTheCartUITests/FreeJourneyUITests/testListCaptureOpensWithTypedDraftAndReopensAfterCancel",
+        "RoomInTheCartUITests/FreeJourneyUITests/testTypedBarcodeNeedsACodeAndFreshMatchConfirmation",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextEditActionGrowsInContentAndReturnsToEntry"
+      ],
+      "selected": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "rawLogSHA256": "91c385ee11aaa0adc6ff4e58cc11081562b78c543b498246ea1422b4bc8c6b14"
+    },
+    "ui-01": {
+      "artifactID": 13518245882,
+      "sha256": "3aa2c8ac43f9ceee575f56357de53e6a1fd8ac6acd7c238794f8be8e21056299",
+      "digestVerified": true,
+      "selectors": [
+        "RoomInTheCartUITests/FreeJourneyUITests/testFirstPickupCanStartFromDinnersAndReviewAnEditablePattern",
+        "RoomInTheCartUITests/FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testUnknownPackAmountRemainsUnresolvedAfterSaveAndRestart"
+      ],
+      "selected": 3,
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "rawLogSHA256": "35f3229c4c4f594ea3b551c054829f0be9d4fb6ad048cb2b887c34b4ca0c18b8"
+    },
+    "ui-06": {
+      "artifactID": 13518283527,
+      "sha256": "fb149cebc230420f71b649faf0de6b63b27160bc33b272c1e68c98e3925e23b3",
+      "digestVerified": true,
+      "selectors": [
+        "RoomInTheCartUITests/ContextualReminderUITests/testNextShopDeferralRequestsReminderOnlyAfterExplicitScheduleAndCanCancel",
+        "RoomInTheCartUITests/ContextualReminderUITests/testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending",
+        "RoomInTheCartUITests/FreeJourneyUITests/testUrgentRepairWithoutAnOrderPersistsAcrossRestart",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testKnownComparisonSavesAndReopensWithItemOnlyLimit",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testLargestDynamicTypeAndDarkAppearanceComparisonSmoke"
+      ],
+      "selected": 5,
+      "passed": 4,
+      "failed": 1,
+      "skipped": 0,
+      "strictReplayExit": 1,
+      "runtimeWarnings": 0,
+      "rawLogSHA256": "4487c72a2ed0ad1c1a5c2f398356cb481393d22c26a02732f01c1f5750f04f4c"
+    },
+    "ui-10": {
+      "artifactID": 13521382045,
+      "sha256": "2f5b4caa1ce443a7ef1b9b8332784e3656306f3c2014e77b624f55d51a45dd39",
+      "digestVerified": true,
+      "selectors": [
+        "RoomInTheCartUITests/ContextualNavigationUITests/testFreeContextualRoutesKeepPrivateAndSharedWorkSeparate",
+        "RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced",
+        "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges",
+        "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testFullyCoveredSavesUseAtHomePlanWithoutPurchasedItemOrRetailerOrder",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextShopRepairShortcutRemainsInsideViewportAndOpens",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testOwnerExportReviewAndCancelledDeletionPreserveComparisonAfterRestart"
+      ],
+      "selected": 6,
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 2,
+      "rawLogSHA256": "cd3ae093ac9aed2ae29c3a98375fac9d8af9d88b3b076d3720e0ff9518c04cc6"
+    }
+  }
+}

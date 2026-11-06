@@ -1,0 +1,427 @@
+{
+  "candidate": "8f864eafc3887ea16be996124d55fa2ca2708706",
+  "runID": 42234317004,
+  "attempt": 2,
+  "observedAt": "2026-11-06T16:54:26.230526+00:00",
+  "terminal": true,
+  "conclusion": "failure",
+  "frozenVerifierInputs": 148,
+  "verifierInputsMatchCandidateGitObjects": true,
+  "acceptancePolicyPinsUnchanged": true,
+  "attempt1FreezeAndArchivesUnchanged": true,
+  "sourceScope": {
+    "candidate": "8f864eafc3887ea16be996124d55fa2ca2708706",
+    "attempt": 2,
+    "checkedAt": "2026-11-06T16:53:18.640827+00:00",
+    "newExecutions": [
+      {
+        "id": 128014553226,
+        "name": "ios-tests (ui-07, 6)",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "runner_id": 0,
+        "runner_name": "",
+        "started_at": "2026-11-06T16:33:45Z",
+        "completed_at": "2026-11-06T16:53:02Z",
+        "steps": []
+      },
+      {
+        "id": 128024915969,
+        "name": "CI gate",
+        "status": "completed",
+        "conclusion": "failure",
+        "runner_id": 1000004009,
+        "runner_name": "GitHub Actions 1000004009",
+        "started_at": "2026-11-06T16:53:05Z",
+        "completed_at": "2026-11-06T16:53:09Z",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-06T16:53:06Z",
+            "completed_at": "2026-11-06T16:53:06Z"
+          },
+          {
+            "name": "Require every build and test job to succeed",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 2,
+            "started_at": "2026-11-06T16:53:06Z",
+            "completed_at": "2026-11-06T16:53:07Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-06T16:53:07Z",
+            "completed_at": "2026-11-06T16:53:07Z"
+          }
+        ]
+      }
+    ],
+    "inheritedExecutions": [
+      {
+        "originalJobID": 127947893245,
+        "currentAPIJobID": 128014551116,
+        "name": "ios-release",
+        "conclusion": "success",
+        "executionFieldsIdentical": [
+          "started_at",
+          "completed_at",
+          "steps",
+          "runner_id",
+          "runner_name",
+          "conclusion"
+        ]
+      },
+      {
+        "originalJobID": 127947893301,
+        "currentAPIJobID": 128014551966,
+        "name": "source-checks",
+        "conclusion": "success",
+        "executionFieldsIdentical": [
+          "started_at",
+          "completed_at",
+          "steps",
+          "runner_id",
+          "runner_name",
+          "conclusion"
+        ]
+      },
+      {
+        "originalJobID": 127947893123,
+        "currentAPIJobID": 128014552777,
+        "name": "swift-packages",
+        "conclusion": "success",
+        "executionFieldsIdentical": [
+          "started_at",
+          "completed_at",
+          "steps",
+          "runner_id",
+          "runner_name",
+          "conclusion"
+        ]
+      },
+      {
+        "originalJobID": 127955589560,
+        "currentAPIJobID": 128014553422,
+        "name": "ios-tests (models, 601)",
+        "conclusion": "success",
+        "executionFieldsIdentical": [
+          "started_at",
+          "completed_at",
+          "steps",
+          "runner_id",
+          "runner_name",
+          "conclusion"
+        ]
+      },
+      {
+        "originalJobID": 127955589463,
+        "currentAPIJobID": 128014553756,
+        "name": "ios-tests (ui-02, 4)",
+        "conclusion": "success",
+        "executionFieldsIdentical": [
+          "started_at",
+          "completed_at",
+          "steps",
+          "runner_id",
+          "runner_name",
+          "conclusion"
+        ]
+      },
+      {
+        "originalJobID": 127955589706,
+        "currentAPIJobID": 128014553810,
+        "name": "ios-tests (ui-04, 5)",
+        "conclusion": "success",
+        "executionFieldsIdentical": [
+          "started_at",
+          "completed_at",
+          "steps",
+          "runner_id",
+          "runner_name",
+          "conclusion"
+        ]
+      },
+      {
+        "originalJobID": 127955589554,
+        "currentAPIJobID": 128014554011,
+        "name": "ios-tests (ui-01, 3)",
+        "conclusion": "success",
+        "executionFieldsIdentical": [
+          "started_at",
+          "completed_at",
+          "steps",
+          "runner_id",
+          "runner_name",
+          "conclusion"
+        ]
+      },
+      {
+        "originalJobID": 127955589393,
+        "currentAPIJobID": 128014554418,
+        "name": "ios-tests (ui-03, 5)",
+        "conclusion": "success",
+        "executionFieldsIdentical": [
+          "started_at",
+          "completed_at",
+          "steps",
+          "runner_id",
+          "runner_name",
+          "conclusion"
+        ]
+      },
+      {
+        "originalJobID": 127955589602,
+        "currentAPIJobID": 128014554488,
+        "name": "ios-tests (ui-05, 5)",
+        "conclusion": "success",
+        "executionFieldsIdentical": [
+          "started_at",
+          "completed_at",
+          "steps",
+          "runner_id",
+          "runner_name",
+          "conclusion"
+        ]
+      },
+      {
+        "originalJobID": 127955589646,
+        "currentAPIJobID": 128014555251,
+        "name": "ios-tests (ui-06, 5)",
+        "conclusion": "failure",
+        "executionFieldsIdentical": [
+          "started_at",
+          "completed_at",
+          "steps",
+          "runner_id",
+          "runner_name",
+          "conclusion"
+        ]
+      },
+      {
+        "originalJobID": 127955589548,
+        "currentAPIJobID": 128014555445,
+        "name": "ios-tests (ui-10, 6)",
+        "conclusion": "success",
+        "executionFieldsIdentical": [
+          "started_at",
+          "completed_at",
+          "steps",
+          "runner_id",
+          "runner_name",
+          "conclusion"
+        ]
+      },
+      {
+        "originalJobID": 127947893166,
+        "currentAPIJobID": 128014604233,
+        "name": "service-postgres",
+        "conclusion": "success",
+        "executionFieldsIdentical": [
+          "started_at",
+          "completed_at",
+          "steps",
+          "runner_id",
+          "runner_name",
+          "conclusion"
+        ]
+      },
+      {
+        "originalJobID": 127947892678,
+        "currentAPIJobID": 128014608174,
+        "name": "typescript (web)",
+        "conclusion": "success",
+        "executionFieldsIdentical": [
+          "started_at",
+          "completed_at",
+          "steps",
+          "runner_id",
+          "runner_name",
+          "conclusion"
+        ]
+      },
+      {
+        "originalJobID": 127947893397,
+        "currentAPIJobID": 128014616664,
+        "name": "ios-swift-codeql",
+        "conclusion": "success",
+        "executionFieldsIdentical": [
+          "started_at",
+          "completed_at",
+          "steps",
+          "runner_id",
+          "runner_name",
+          "conclusion"
+        ]
+      },
+      {
+        "originalJobID": 127947893402,
+        "currentAPIJobID": 128014627970,
+        "name": "ios-build",
+        "conclusion": "success",
+        "executionFieldsIdentical": [
+          "started_at",
+          "completed_at",
+          "steps",
+          "runner_id",
+          "runner_name",
+          "conclusion"
+        ]
+      },
+      {
+        "originalJobID": 127947893119,
+        "currentAPIJobID": 128014641449,
+        "name": "typescript (service)",
+        "conclusion": "success",
+        "executionFieldsIdentical": [
+          "started_at",
+          "completed_at",
+          "steps",
+          "runner_id",
+          "runner_name",
+          "conclusion"
+        ]
+      }
+    ],
+    "inheritedUnexecutedCancellations": [
+      {
+        "originalJobID": 127955589616,
+        "currentAPIJobID": 128014555253,
+        "name": "ios-tests (ui-09, 6)",
+        "conclusion": "cancelled",
+        "steps": [],
+        "currentStartedAt": "2026-11-06T16:33:46Z",
+        "originalCompletedAt": "2026-11-06T16:24:44Z",
+        "runnerID": null,
+        "newExecution": false
+      },
+      {
+        "originalJobID": 127955589647,
+        "currentAPIJobID": 128014555516,
+        "name": "ios-tests (ui-08, 6)",
+        "conclusion": "cancelled",
+        "steps": [],
+        "currentStartedAt": "2026-11-06T16:33:46Z",
+        "originalCompletedAt": "2026-11-06T16:10:47Z",
+        "runnerID": null,
+        "newExecution": false
+      }
+    ],
+    "UI06FailureInheritedUnchanged": true,
+    "onlyOwnedShardAndGateAreNew": true
+  },
+  "archives": {},
+  "missingOwnedArtifact": true,
+  "ui07": null,
+  "runtime": null,
+  "executedXcodeCommandLines": null,
+  "inheritedCompiledProducts": {
+    "artifactID": 13512830848,
+    "sha256": "0caf9cf2feec3b060a41bf4a2196640342fc99c1667e5bd13812fa6279183a9f",
+    "originalToolchainProof": {
+      "member": "Products/Debug-iphonesimulator/RoomInTheCart.app/Info.plist",
+      "sha256": "73272d3a28c7699f280c833a231764ce82dacc807ff2dd709b75c3dbff49cf65",
+      "fields": {
+        "DTXcode": "2630",
+        "DTXcodeBuild": "17C529",
+        "DTSDKName": "iphonesimulator26.2",
+        "DTSDKBuild": "23C57",
+        "DTPlatformName": "iphonesimulator",
+        "DTPlatformVersion": "26.2",
+        "DTPlatformBuild": "23C57",
+        "CFBundleIdentifier": "dev.roominthecart.app.debug"
+      }
+    }
+  },
+  "cumulativeOrdinaryCounts": {
+    "selected": 33,
+    "passed": 32,
+    "failed": 1,
+    "skipped": 0,
+    "runtimeWarnings": 4,
+    "expected": 51,
+    "missingGroups": [
+      "ui-07",
+      "ui-08",
+      "ui-09"
+    ],
+    "strictFailedGroups": {
+      "ui-06": 1
+    }
+  },
+  "originalUI06FailureRetained": {
+    "artifactID": 13518283527,
+    "sha256": "fb149cebc230420f71b649faf0de6b63b27160bc33b272c1e68c98e3925e23b3",
+    "digestVerified": true,
+    "selectors": [
+      "RoomInTheCartUITests/ContextualReminderUITests/testNextShopDeferralRequestsReminderOnlyAfterExplicitScheduleAndCanCancel",
+      "RoomInTheCartUITests/ContextualReminderUITests/testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending",
+      "RoomInTheCartUITests/FreeJourneyUITests/testUrgentRepairWithoutAnOrderPersistsAcrossRestart",
+      "RoomInTheCartUITests/RoomInTheCartUITests/testKnownComparisonSavesAndReopensWithItemOnlyLimit",
+      "RoomInTheCartUITests/RoomInTheCartUITests/testLargestDynamicTypeAndDarkAppearanceComparisonSmoke"
+    ],
+    "selected": 5,
+    "passed": 4,
+    "failed": 1,
+    "skipped": 0,
+    "strictReplayExit": 1,
+    "runtimeWarnings": 0,
+    "rawLogSHA256": "4487c72a2ed0ad1c1a5c2f398356cb481393d22c26a02732f01c1f5750f04f4c"
+  },
+  "performanceFailureRetained": "Required scroll metric missing in run 42234316869 attempt 1; not rerun.",
+  "ownedShardStrictPassed": false,
+  "overallAcceptanceComplete": false,
+  "collector": {
+    "candidate": "8f864eafc3887ea16be996124d55fa2ca2708706",
+    "runID": 42234317004,
+    "attempt": 2,
+    "terminal": true,
+    "conclusion": "failure",
+    "collected": [],
+    "collectorFailures": [],
+    "hostedMutations": false,
+    "nativeTestsExecuted": false,
+    "rawRecordsMediaDownloaded": false
+  },
+  "limits": [
+    "Only the newly produced UI07 result was eligible for download. No result was produced in this attempt; no build/results were downloaded.",
+    "No hosted mutation, native execution, publication, or raw RecordsMedia retrieval by collector.",
+    "Scope verifies only UI07 plus dependent CI gate as new; UI06 is inherited failure, UI08/UI09 inherited never-executed cancellations."
+  ],
+  "runnerAcquisitionFailure": {
+    "candidate": "8f864eafc3887ea16be996124d55fa2ca2708706",
+    "runID": 42234317004,
+    "attempt": 2,
+    "jobID": 128014553226,
+    "jobName": "ios-tests (ui-07, 6)",
+    "status": "completed",
+    "conclusion": "cancelled",
+    "runnerID": 0,
+    "runnerName": "",
+    "steps": [],
+    "startedAt": "2026-11-06T16:33:45Z",
+    "completedAt": "2026-11-06T16:53:02Z",
+    "testsExecuted": false,
+    "selectedTestsUnexecuted": 6,
+    "failureKind": "hosted runner acquisition",
+    "failureMessages": [
+      "The job was not acquired by Runner of type hosted even after multiple attempts",
+      "Due to capacity constraints, jobs targeting macOS arm64 runners may experience longer queue times.",
+      "Due to capacity constraints, jobs targeting macOS arm64 runners may experience longer queue times.",
+      "Due to capacity constraints, jobs targeting macOS arm64 runners may experience longer queue times."
+    ],
+    "resultArtifactProduced": false,
+    "sourceHashes": {
+      "42234317004-jobs.json": "1aec682106fc41989c1354d26882a85ab831f9444ad23e270271bf9ae0d74eeb",
+      "128014553226-check.json": "463e9f57bbf91c873faf6dbaa32d2eb36a96d7f669bb0afcd20806f2295699f1",
+      "128014553226-annotations.json": "dcc2d40237a0d7c8d89ff50b3704330c3ec8be6e0a838970ed7f80fe220d0bed",
+      "128014553226-log-fetch.json": "cc070d036dc42f20b641f4011ceab83aac607054136b119a9330b6c9ffc85ed4"
+    },
+    "collectorRetriedJob": false
+  }
+}

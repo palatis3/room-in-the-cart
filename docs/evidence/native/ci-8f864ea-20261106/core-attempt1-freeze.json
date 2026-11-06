@@ -1,0 +1,141 @@
+{
+  "candidate": "8f864eafc3887ea16be996124d55fa2ca2708706",
+  "runID": 42234317004,
+  "attempt": 1,
+  "frozenAt": "2026-11-06T16:30:07.605809+00:00",
+  "terminalConclusion": "failure",
+  "files": {
+    "acceptance-policy-pin.json": "f574a633b49833b9c1d9d5ffda0fbe64c6b8143b68fc8136709ebd6785de6b03",
+    "ui08-annotations.json": "3d13952ae150f338a3353afb82bebf8ef7db63dc982f95a118f92f0c1ad576b5",
+    "compiled-plan-proof.json": "2fda4f0829581ce68cf031fc480808a57e4f39142273f59fc579a8698de93290",
+    "ui08-check.json": "85a9632acaa4b86211afc032802c156337d327a09b91cf4e3fd04af1a22ff00e",
+    "ui07-annotations.json": "3d13952ae150f338a3353afb82bebf8ef7db63dc982f95a118f92f0c1ad576b5",
+    "42234317004-job-127955589647.log": "68809d5b315f2ece592b92079f4ffe7cfcedd8171961bc024a725d59cd198390",
+    "42234317004-job-127955589646.log": "0eeef82f0904ad169c7608492943a2e4092faa9493401d3e6cca251f14751469",
+    "42234317004-job-128011781027.log": "1e4f3663fdc27e2adc62b67029c406fe06c9c256e9222c901d2036fac68f2035",
+    "ui07-job.json": "bbbe5f772aefc51709dc477891bddbadf4e547db1e925688ca30db740d21ad1d",
+    "ui09-annotations.json": "3d13952ae150f338a3353afb82bebf8ef7db63dc982f95a118f92f0c1ad576b5",
+    "42234317004-job-127955589454.log": "5fe095b30498e42c131230fca82a97b164cbd63ed91eb11fd201a5e8daae466c",
+    "ui07-check.json": "0b1a42c566d59a81a4570bb903f3345cfebb4fe4d9dd99779842bb19c0f7e971",
+    "core-job-127955589647-check.json": "85a9632acaa4b86211afc032802c156337d327a09b91cf4e3fd04af1a22ff00e",
+    "ui09-check.json": "e6284e44d229b00080e0beb694a075460881f19116ce69a9fc476e0d5e722585",
+    "ui09-job.json": "b6ec9f041f976c81470d11e9d544a408a129fa53515b036063af3a67aee375c2",
+    "ui08-job.json": "ae75838f2b80491e30ee6cc808d7d1c86dced9475c2eb7877c31c9207323e5df",
+    "42234317004-artifacts.json": "edfbbb17e8d3a16985a5f3afe258bed312e473ec7cedab389fbaf38e09b6df53",
+    "verifier-input-sha256.json": "75d4414c370c7e9693446b487d4792acb5768e1ea277a5cfe436952ba8848fdb",
+    "core-job-127955589616-annotations.json": "3d13952ae150f338a3353afb82bebf8ef7db63dc982f95a118f92f0c1ad576b5",
+    "core-job-128011781027-check.json": "a5bd4814e3e36f3b6af50cbe3c29a1385c3bc959e04ac6879f0ff2ae695bb0c3",
+    "collector-complete.json": "e3dc72f93a7c8cbbd3d0332d6451a7a839bc86e9d1df9322cd2646a5982d97f7",
+    "core-job-127955589646-annotations.json": "c0426c457d20fc71ed7a63ca0bd03814c7dc4aca9f50fbf770b4cc6c28c1c7a1",
+    "core-job-128011781027-annotations.json": "4357a1a02932a3bf6dba52e6a9730f30c54ad3f63f0bb7394a829d5fd68ec745",
+    "42234317004-job-127947893402.log": "dbd3369df27a61c0405bb5d7e0b98703f75b4ca8151efb99f0612796793c4f75",
+    "core-job-127955589454-check.json": "0b1a42c566d59a81a4570bb903f3345cfebb4fe4d9dd99779842bb19c0f7e971",
+    "core-job-127955589454-annotations.json": "3d13952ae150f338a3353afb82bebf8ef7db63dc982f95a118f92f0c1ad576b5",
+    "core-job-127955589646-check.json": "e1bd9a4fb86a93a92f7b83e50d092d9518516d4515f2709dc40e870199cd978b",
+    "42234317004-jobs.json": "706ad02b17df944c1b4ae40c20d6dd4091e575454596ce3b520a19715c4f1e38",
+    "42234317004-job-127955589616.log": "099474814eccec3a3f6be84ef1b91f786dd1144c886c349ce37aa798bf2e87db",
+    "core-job-127955589616-check.json": "e6284e44d229b00080e0beb694a075460881f19116ce69a9fc476e0d5e722585",
+    "lane-status.json": "497f21803140751f6d60aca333696434aa364ca10833b983bb40f51e4597c178",
+    "core-job-127955589647-annotations.json": "3d13952ae150f338a3353afb82bebf8ef7db63dc982f95a118f92f0c1ad576b5",
+    "42234317004-run.json": "4ec091d05cff2f120b9b087d96320d05f7c97b50e61c8d4341573035087bc01f",
+    "evidence/thread-runner-acquisition-failure.json": "f24bb165d4532900f6d1ec64faaa4a843ad9808b3df0e38c0ab79d78de5462f1",
+    "evidence/archive-storekit-es-1.json": "1343910c30564c5d57ff1ead88e63d6dfed981d062d2649f1da57acfeb72b7e0",
+    "evidence/core-job-127955589454-runner-acquisition-failure.json": "f4ec72550f27efb7a44b3a6d616d0f2313968c2eaca04085474ccb2ba456e3c3",
+    "evidence/ui08-runner-acquisition-failure.json": "c71c891768324a04932b2b6357a6a6dc1c5485fca9daa5b97f0d33b0964fed14",
+    "evidence/archive-swift-package-results-1.json": "fef9d21fec06c68f80d409ed7f6aefc33471290c43e9f3b7a1ee349e200117cb",
+    "evidence/ordinary-ui.json": "4d8c6a46683018d6d4dd3847d185b936ed914f9b9bd9ae46111fc762f44a92c6",
+    "evidence/models.json": "dd46b7b9a672d14b2ce12d7d6d8fc52fd259cdb85b1c10200e5cb0047faaee2f",
+    "evidence/archive-iphone-performance-scroll-1.json": "d0a98a7b181fce63c887df6c8ed35ba0834db8668497808b0295ad1d65a91dd1",
+    "evidence/archive-iphone-results-ui-05-1.json": "4c19345d4c47ea3daa23d413f5dd1e7348691059a6961e278ae5eb99fabecdf8",
+    "evidence/archive-iphone-performance-rendered-1.json": "a618d6edbd5bddf1f14669d574af63cdfcf0eb0e783ae5f9db629cd2e28aa141",
+    "evidence/performance-inventory.json": "ad0ad03f1a5ac918ecdac0dc1ff021ef14bd036e56f2b64ae6a8ce4000eb9e94",
+    "evidence/archive-iphone-results-ui-01-1.json": "2a8375a4910aeb4bb800128693e246c7a0b7091bff111a4b2547bbd9a8f7362a",
+    "evidence/storekit.json": "8a789a1b63489689dc718bea34cff23bc38e3023955bd60197ff458012171dab",
+    "evidence/packages-sanitizers.json": "d9badbcff6d1406ab045dada21084f2cbbd241ac7c591f04dd35aa35dfe6c058",
+    "evidence/archive-iphone-results-ui-03-1.json": "3a4124a907ad5b3db838bc4909a268567b37c00c0969d65a4de04d318751b600",
+    "evidence/core-job-127955589616-runner-acquisition-failure.json": "fa6ed246b01c5072af075efc341e7a5f0c8e1d26520dd99b91247721699e6051",
+    "evidence/storekit-en-runner-acquisition-failure.json": "d671232f2f96178ee95b63dfdff12b72c434a6a6f8904ed5f40ff9e9f804b5f6",
+    "evidence/collection-recovery.json": "cfb35f20cc9e02342c4633c05c3d9aedd647ba806d4797a787c3da6a4e53134c",
+    "evidence/archive-swift-address-1.json": "43ce32794c44059510cdabb8985c898ec4538af7b3c86f015463913cb6adcd4f",
+    "evidence/performance.json": "c84ba10fe17c6b774d554f9726e31788dbae7a15ff812ed24e0870955e44b9cc",
+    "evidence/archive-iphone-performance-build-log-1.json": "d15930e1e5fec9e572d596d08582f527f84c38ba9a75ef468545cc952f88a70a",
+    "evidence/archive-iphone-results-ui-06-1.json": "754c94540e4324cfb3afd302530f6f87d567a6be5d3064a1c031686eed932fc1",
+    "evidence/ui07-runner-acquisition-failure.json": "469dcc3dbc7d45cb3f35a8f63c5d4a22d29327072476c91401483cba6d284b29",
+    "evidence/archive-iphone-results-ui-04-1.json": "4eb7cd345ec7ccc38b8a29c1233d23a3fe176b70625536a1b676b090bbc87286",
+    "evidence/archive-iphone-results-models-1.json": "49d90fc936984174eec57c67ac67a5474a240dbc1a7757d52b177b429d940690",
+    "evidence/runtime-readback.json": "0c9e75d89a5bcf946014c9d28404ea0ea80c00765054e2cf5670e162bf73f14d",
+    "evidence/archive-iphone-release-build-log-1.json": "87a30a0a3f28357a62d7d7e3e9bf03b44d9e55552c2c0ef03498f1826d7c0e26",
+    "evidence/archive-iphone-performance-launch-1.json": "8a9ad3ea1b6f0e30b5337612e108d66ec8f38e04b7dfaf625b694654fd4ea901",
+    "evidence/scroll-missing-required-metric.json": "06921faf5ead652803b3f5458412493d78207ac0e65a2508a72807b2d81159ba",
+    "evidence/archive-iphone-test-discovery-1.json": "70966bec4c2d750130db3acf68c8cf4aeb67aacf5d70876e65c2570f5f7dbddc",
+    "evidence/toolchain.json": "e604ec96608c3026e89d8e070bbe186ff03dc112decf5f3d422fa81b7c9ac267",
+    "evidence/ui06-timeout-failure-triage.json": "d983785110d02b48a36bf4cb68aad07c60e90bdcf40f4d18f6d27dd0c40476e5",
+    "evidence/archive-iphone-results-ui-10-1.json": "ad8a046930239f471e15f46f931c42e2c2bbb64850f385a10ff454d3b8db1a31",
+    "evidence/archive-iphone-results-ui-02-1.json": "8eb45cd94552bd8d600a8be1b99f4935e90dc8db75a9b27c10bc35ba84811386",
+    "evidence/storekit-es-download-original-503.json": "4d8d58e3f18762954f1a3198213af9b456f7bef0d370a7b31a4e44d77a9b9766",
+    "evidence/core-job-127955589647-runner-acquisition-failure.json": "7011c010e395a72e95512433b25d38c1909c61ceeef4ad4d886b3b6ece4afba6",
+    "evidence/ui09-runner-acquisition-failure.json": "72895ee9e4ffb4d7d7ade48bc7061738e6d4c657ea5f9c97d46d6a41320ad058"
+  },
+  "retainedArchiveReferences": {
+    "core-collection/iphone-results-ui-06-1.zip": {
+      "bytes": 26505320,
+      "sha256": "fb149cebc230420f71b649faf0de6b63b27160bc33b272c1e68c98e3925e23b3"
+    },
+    "core-collection/iphone-results-ui-04-1.zip": {
+      "bytes": 18870046,
+      "sha256": "0c1272c349c07854fbb2b145297dd072dc4542b2901956c7ae42d2d0c5341959"
+    },
+    "core-collection/swift-package-results-1.zip": {
+      "bytes": 704599,
+      "sha256": "189e2d715ba53bc8dc9fde9c90b3246325249089d7be938841512dbec3a0d73b"
+    },
+    "core-collection/iphone-test-discovery-1.zip": {
+      "bytes": 18152,
+      "sha256": "f81ef67fea8574b3789344b817b7d54560a799513ba1650c8d8cc96a2be67f6d"
+    },
+    "core-collection/iphone-results-ui-02-1.zip": {
+      "bytes": 18207771,
+      "sha256": "a7cb351f72687df8b19b1e35b583b38e9afea351e1007af2ff9915995c7ccd5b"
+    },
+    "core-collection/iphone-results-ui-05-1.zip": {
+      "bytes": 14620074,
+      "sha256": "21097d85c45ba45a127a2f8687b1d863967d74293a8505d3c29f7b713bbdfedd"
+    },
+    "core-collection/iphone-results-ui-03-1.zip": {
+      "bytes": 15537456,
+      "sha256": "6d3afbf3c49891a5264b59b4492cd0d479f07610241cb9a4848b81384b466622"
+    },
+    "core-collection/iphone-results-ui-01-1.zip": {
+      "bytes": 18132844,
+      "sha256": "3aa2c8ac43f9ceee575f56357de53e6a1fd8ac6acd7c238794f8be8e21056299"
+    },
+    "core-collection/iphone-results-models-1.zip": {
+      "bytes": 1242300,
+      "sha256": "dbf70ccafbd03042c74d6547971d7dd8bfcc06dabcfdaa84a4fea42e9364e3dc"
+    },
+    "core-collection/compiled-products.zip": {
+      "bytes": 50625351,
+      "sha256": "0caf9cf2feec3b060a41bf4a2196640342fc99c1667e5bd13812fa6279183a9f"
+    },
+    "core-collection/iphone-release-build-log-1.zip": {
+      "bytes": 34472,
+      "sha256": "b088952f8fb19785d4d4ec7e6a4466acf606dcefdaf77c9e67130825a222524d"
+    },
+    "core-collection/iphone-results-ui-10-1.zip": {
+      "bytes": 21086593,
+      "sha256": "2f5b4caa1ce443a7ef1b9b8332784e3656306f3c2014e77b624f55d51a45dd39"
+    }
+  },
+  "neverStartedJobIDs": [
+    127955589454,
+    127955589616,
+    127955589647
+  ],
+  "executedTestFailureJobIDs": [
+    127955589646
+  ],
+  "otherFailedJobIDs": [
+    128011781027
+  ],
+  "collectorPerformedHostedMutations": false
+}

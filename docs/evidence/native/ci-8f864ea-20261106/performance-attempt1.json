@@ -1,0 +1,108 @@
+{
+  "candidate": "8f864eafc3887ea16be996124d55fa2ca2708706",
+  "runID": 42234316869,
+  "cases": {
+    "launch": {
+      "attempt": 1,
+      "artifactID": 13517610586,
+      "sha256": "a4032e225c44a0219db6155cf6e839eb8ca44773b238b483f671d65a6654ccf8",
+      "digestVerified": true,
+      "strictReplayExit": 0,
+      "measurementReplay": "passed",
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": 0,
+      "metricIdentifiers": [
+        "com.apple.dt.XCTMetric_ApplicationLaunch-ApplicationFirstFramePresentationResponsive.duration"
+      ],
+      "comparisons": {
+        "responsiveLaunchMedianSeconds": {
+          "measured": 4.6002536670000005,
+          "maximum": 5.5,
+          "passed": true
+        }
+      },
+      "calibrationSHA256": "234b35f225bd63dab44d75879d0a795a4dbdbae8ceab57c2931168935c0ab2b2",
+      "hostedPickupReadback": null,
+      "simulatorHitches": null,
+      "rawLogSHA256": "ab3028f55929b537f55cb47579b18727f009ab5168ddcccfbbfd49608a76ed9c"
+    },
+    "scroll": {
+      "attempt": 1,
+      "artifactID": 13515972039,
+      "sha256": "993b790f763440eb3b61e37baf31e11a915dfafee8646d69dd84f47061e493e2",
+      "digestVerified": true,
+      "strictReplayExit": 0,
+      "measurementReplay": "not verified",
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": 0,
+      "failure": "ValueError: Missing required performance metric: com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.duration",
+      "rawLogSHA256": "fb23cd4f8fb5fe94be637019d4773be0142db70dad31f0bd4388dab8a9700d6c"
+    },
+    "rendered": {
+      "attempt": 1,
+      "artifactID": 13516647385,
+      "sha256": "36a2b59db74e175ae912b2cf8df6e9aa8338b9f3b7b96323a94a451838a260c8",
+      "digestVerified": true,
+      "strictReplayExit": 0,
+      "measurementReplay": "passed",
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": 0,
+      "comparisons": {
+        "searchP95Milliseconds": {
+          "measured": 3012.2991666667076,
+          "maximum": 4750,
+          "passed": true
+        },
+        "checkP95Milliseconds": {
+          "measured": 2390.7160416666784,
+          "maximum": 3750,
+          "passed": true
+        }
+      },
+      "calibrationSHA256": "094f4c4f0f9919a5f650906399f2ca401a39cf0187c9483d5207d4ad29502204",
+      "hostedPickupReadback": {
+        "sqliteQuickCheck": "ok",
+        "revision": 22,
+        "payloadSHA256": "b854b851922199b91525eb4839d2b91e67eb063c059f8b6c8b0ff7887cc1b25b",
+        "lineCount": 500,
+        "contributionCount": 500,
+        "importCount": 1,
+        "source": "paste",
+        "checkedCount": 20,
+        "checkedRowIDs": [
+          "07464588-3159-44b4-a4a7-980360ee5b92",
+          "088b4570-0c4a-4c68-a42f-ec29433cf1d9",
+          "2a98906d-f27a-4669-918d-8cf55224b123",
+          "2b158f20-d256-46d0-a545-d931da9d0091",
+          "366dcfc7-fd76-479a-83fe-e4e452bb567a",
+          "3ed83ad8-357c-4583-b4e9-9b321cc05582",
+          "51d57f2b-b9bc-47df-8e13-0eaf35345b68",
+          "5535a6a3-e69f-4db7-a11e-655862ab28ca",
+          "5f505a71-233b-46c3-9aa7-3355f1e7e332",
+          "796565ae-01e7-4b21-8aa0-2fc95b4c038f",
+          "7e1dd0bb-1407-4baa-91f2-d0aac7f40971",
+          "95a74b51-53e6-432a-b0d5-d3e168fdbcde",
+          "a3843b1a-b797-4aa6-b1c2-0bf54848c081",
+          "a4dbae49-e1be-4413-b5f8-e230960f56b8",
+          "a7a89eda-6123-417a-9ed9-af1662e0a7a2",
+          "a7b69b0c-ead7-4843-a168-eaffee7a7cd1",
+          "c41093fa-c277-4555-b617-0471e1713e7a",
+          "cfd38914-187e-44f2-8a13-64714d28099a",
+          "d8cdc44e-1ffd-46eb-a983-1df1e42bdd19",
+          "f95e311a-99e2-4ef2-8912-3750f9563690"
+        ]
+      },
+      "simulatorHitches": null,
+      "rawLogSHA256": "3ca9f1d529a00bff0a211d95e50b8a5dd77a99d11e5900371f1259bf5a1082b0"
+    }
+  },
+  "limits": [
+    "Simulator evidence only. Hosted SQLite reported readback is verified from retained report, not a second local database read."
+  ]
+}

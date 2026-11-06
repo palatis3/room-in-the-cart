@@ -1,0 +1,78 @@
+{
+  "candidate": "8f864eafc3887ea16be996124d55fa2ca2708706",
+  "scope": "Completed core attempts1\u20132, deep recovery, fixture attempts1\u20132 and original performance. All original failures/nonexecutions remain retained.",
+  "files": {
+    "core-deep-performance-audit.json": {
+      "source": "combined-collection-audit.json",
+      "sha256": "bf9328ce3e356f9a69a23bb5096667e26cb0b8796956d8c03e64dca8ab20ac83"
+    },
+    "ordinary-attempt1.json": {
+      "source": "core-attempt1-frozen/evidence/ordinary-ui.json",
+      "sha256": "4d8c6a46683018d6d4dd3847d185b936ed914f9b9bd9ae46111fc762f44a92c6"
+    },
+    "models-attempt1.json": {
+      "source": "core-attempt1-frozen/evidence/models.json",
+      "sha256": "dd46b7b9a672d14b2ce12d7d6d8fc52fd259cdb85b1c10200e5cb0047faaee2f"
+    },
+    "performance-attempt1.json": {
+      "source": "core-attempt1-frozen/evidence/performance.json",
+      "sha256": "c84ba10fe17c6b774d554f9726e31788dbae7a15ff812ed24e0870955e44b9cc"
+    },
+    "deep-recovery-attempt2.json": {
+      "source": "deep-attempt2/final-audit.json",
+      "sha256": "5c95afb64c3be4800a434526aa1d63c07175aa0e6c3a59f2d82fdca45e9dc034"
+    },
+    "core-recovery-scope.json": {
+      "source": "recovery/core-job-recovery-scope.json",
+      "sha256": "7fb65407bcfa2ce5e5b0fdeac46b9025cdb4ba534058f26aef7d55c2ee317d8e"
+    },
+    "core-attempt1-freeze.json": {
+      "source": "core-attempt1-frozen/freeze.json",
+      "sha256": "ee66115496aa7cdba99278150218ce3032470ac23a4ec8841be9b918d0d6305c"
+    },
+    "fixture-terminal-proof.json": {
+      "source": "fixture-attempt2/fixture-terminal-proof.json",
+      "sha256": "98adafc2782dcf10d837c2a6b85867b86cc451bdda130e237c7ee48e07c34460"
+    },
+    "fixture-runtime-audit.json": {
+      "source": "fixture-attempt2/fixture-runtime-audit.json",
+      "sha256": "ea5e06445f052aa7787f35605bc00f30ef5470692ef67c8ddbac6e40597e68d9"
+    },
+    "fixture-archive-audit.json": {
+      "source": "fixture-attempt2/fixture-archive-audit.json",
+      "sha256": "337679ee3cdee67185bbdf6f00a51c1823eed812773d93e199804bc4957a07e0"
+    },
+    "fixture-knowntrip-timeout.json": {
+      "source": "fixture-attempt2/fixture-knowntrip-timeout.json",
+      "sha256": "c2a8210866456310627e1e7e972e58cd30178badc6af5d8328e1226adf0941ce"
+    },
+    "fixture-result-compiled-union.json": {
+      "source": "fixture-attempt2/fixture-result-compiled-union.json",
+      "sha256": "661207454bb9919643db3b9b53d517e426b50e4f9595841ec89750083625e319"
+    },
+    "fixture-review-manifest.json": {
+      "source": "fixture-attempt2/fixture-review-manifest.json",
+      "sha256": "1bf90b1b6283dbd15402cd2acde798368e57f8c8fda2640a379c8fd12f791bca"
+    },
+    "core-recovery-attempt2.json": {
+      "source": "core-attempt2/final-audit.json",
+      "sha256": "ac8e615d0279f17fc01bff1a331205aa477b3436b7b666e16c0b427f08528d9d"
+    },
+    "core-attempt2-freeze.json": {
+      "source": "core-attempt2/freeze.json",
+      "sha256": "5584744eb75bce27b8c89994be19e138ff8c8a31d781d55ad64b0e652b5fc380"
+    },
+    "security.json": {
+      "source": "evidence/security.json",
+      "sha256": "9c981f8d19942afcc565f31b992d1396532db2764d15b18a182e2d4946043a91"
+    },
+    "swift-security.json": {
+      "source": "security-collection/evidence/swift-security.json",
+      "sha256": "9b646af0e9f4e7edbe5089c078a49fefbf2f4e9b1881bc986c54c3c6db25f5fa"
+    },
+    "native-wire.json": {
+      "source": "fixture-evidence/native-wire.json",
+      "sha256": "8b7e18ffec7c04a7a68ed0516f10b3791ca8c2195b449f0c609f6da884accc0b"
+    }
+  }
+}

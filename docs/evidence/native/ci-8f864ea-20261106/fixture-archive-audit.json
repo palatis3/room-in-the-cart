@@ -1,0 +1,119 @@
+{
+  "candidate": "8f864eafc3887ea16be996124d55fa2ca2708706",
+  "attempt": 2,
+  "artifacts": {
+    "contributor-balanced-02": {
+      "artifactID": 13520780878,
+      "sha256": "0d60309d5b729e3905ca610cbaea7833fe4bc28fa9118bc4b8079e9e0b5f8d7e",
+      "archiveBytes": 21722456,
+      "memberCount": 123,
+      "expandedBytes": 23618599,
+      "largestMemberBytes": 11366138,
+      "digestSizeAndPathModeBoundsVerified": true,
+      "recordsExactRedactedAllowlistVerified": false,
+      "rawRecordsRead": false
+    },
+    "contributor-balanced-04": {
+      "artifactID": 13520212035,
+      "sha256": "da1161c0f54682cdb7d1d06f70539d8fc0c2922d2ec8fabbfc29f2b1bd78b8be",
+      "archiveBytes": 9327187,
+      "memberCount": 99,
+      "expandedBytes": 11362615,
+      "largestMemberBytes": 3117941,
+      "digestSizeAndPathModeBoundsVerified": true,
+      "recordsExactRedactedAllowlistVerified": false,
+      "rawRecordsRead": false
+    },
+    "RecordsMediaUITests": {
+      "artifactID": 13520239190,
+      "sha256": "b0749ceae6a4385aa26f082f8234a619cbf68d9a59a16a776e0f55cc26077bfc",
+      "archiveBytes": 26940,
+      "memberCount": 16,
+      "expandedBytes": 123376,
+      "largestMemberBytes": 109769,
+      "digestSizeAndPathModeBoundsVerified": true,
+      "recordsExactRedactedAllowlistVerified": true,
+      "rawRecordsRead": false
+    },
+    "contributor-balanced-05": {
+      "artifactID": 13521497897,
+      "sha256": "ee2bf10a2738a3e2bdf51db00a983923cfe3e9e1c08c86e8c0f762de7712ea53",
+      "archiveBytes": 15521710,
+      "memberCount": 163,
+      "expandedBytes": 18322086,
+      "largestMemberBytes": 4432335,
+      "digestSizeAndPathModeBoundsVerified": true,
+      "recordsExactRedactedAllowlistVerified": false,
+      "rawRecordsRead": false
+    },
+    "SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult": {
+      "artifactID": 13521813171,
+      "sha256": "fe8cd835479f444d3a4e63f3e3af20814ea12db8e0471793f03e57e9c59da08d",
+      "archiveBytes": 2777728,
+      "memberCount": 57,
+      "expandedBytes": 3276055,
+      "largestMemberBytes": 1556663,
+      "digestSizeAndPathModeBoundsVerified": true,
+      "recordsExactRedactedAllowlistVerified": false,
+      "rawRecordsRead": false
+    },
+    "SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview": {
+      "artifactID": 13521593585,
+      "sha256": "180893d80950a9127754a099a08c69cb9796614a14418e0db32e021b7ea1001a",
+      "archiveBytes": 7705191,
+      "memberCount": 63,
+      "expandedBytes": 8602999,
+      "largestMemberBytes": 5026934,
+      "digestSizeAndPathModeBoundsVerified": true,
+      "recordsExactRedactedAllowlistVerified": false,
+      "rawRecordsRead": false
+    },
+    "SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn": {
+      "artifactID": 13521966763,
+      "sha256": "65a400fca23e7baeba8d607b489db9694f36e5a6af7743c01d88b99ad74bbbd0",
+      "archiveBytes": 5194896,
+      "memberCount": 55,
+      "expandedBytes": 5895570,
+      "largestMemberBytes": 3886992,
+      "digestSizeAndPathModeBoundsVerified": true,
+      "recordsExactRedactedAllowlistVerified": false,
+      "rawRecordsRead": false
+    },
+    "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption": {
+      "artifactID": 13523211334,
+      "sha256": "b98b18af3c774319731743b42f447943c58691f6a7cab16f9399d4336024a8ab",
+      "archiveBytes": 8654345,
+      "memberCount": 271,
+      "expandedBytes": 9210878,
+      "largestMemberBytes": 4327419,
+      "digestSizeAndPathModeBoundsVerified": true,
+      "recordsExactRedactedAllowlistVerified": false,
+      "rawRecordsRead": false
+    },
+    "DinnerDecisionSheetUITests": {
+      "artifactID": 13522502689,
+      "sha256": "8b829ed82af7fa26d1e26974a4f83aca8d9f87ddfb6ec34d076c9379ee303967",
+      "archiveBytes": 4600521,
+      "memberCount": 65,
+      "expandedBytes": 5364256,
+      "largestMemberBytes": 1773990,
+      "digestSizeAndPathModeBoundsVerified": true,
+      "recordsExactRedactedAllowlistVerified": false,
+      "rawRecordsRead": false
+    },
+    "SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable": {
+      "artifactID": 13522289218,
+      "sha256": "d784c94bce1e0a6423ea82d9b611b0dbcc6c5bee2bb96b3c3cd0999eb50e404a",
+      "archiveBytes": 2529289,
+      "memberCount": 57,
+      "expandedBytes": 2984162,
+      "largestMemberBytes": 764820,
+      "digestSizeAndPathModeBoundsVerified": true,
+      "recordsExactRedactedAllowlistVerified": false,
+      "rawRecordsRead": false
+    }
+  },
+  "defaultBoundsUnchanged": true,
+  "sourceManifestSHA256": "a840aa491b98e9dc15d77fe591d30795fe4146818dee3c9c51234cf863a1ee5d",
+  "compiledUnionSHA256": "661207454bb9919643db3b9b53d517e426b50e4f9595841ec89750083625e319"
+}
