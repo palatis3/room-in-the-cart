@@ -5,3 +5,5 @@ docs/evidence/b11/s21-device-management-20261103/se17-logging-crash/app-stdout-f
 docs/evidence/b11/s21-device-management-20261103/ui-diagnosis/FinalFixture-Form-hitpoint-diagnostic.txt whitespace=-blank-at-eof
 docs/evidence/b11/privacy-journal-durable-library-20261103/evidence/authority-fence-fixed.tap whitespace=-blank-at-eof
 docs/evidence/b11/privacy-journal-durable-library-20261103/review/INDEPENDENT-REVIEW.md whitespace=-blank-at-eof
+# Preserve the required space marker on blank unified-diff context lines.
+diagnostics/measurement-consent/instrumentation.patch whitespace=-blank-at-eol
