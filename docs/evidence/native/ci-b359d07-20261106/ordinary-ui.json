@@ -172,6 +172,26 @@
       "strictReplayExit": 1,
       "runtimeWarnings": 2,
       "rawLogSHA256": "4523d93a634b4857fe12119445f85325583db3fa311cbbf8bd969a4186582308"
+    },
+    "ui-09": {
+      "artifactID": 13493552336,
+      "sha256": "e1c638c3fea0a7b82f7112d39a708742cbe239ccc6d2f10208a478ac0fdc9767",
+      "digestVerified": true,
+      "selectors": [
+        "RoomInTheCartUITests/ContextualNavigationUITests/testDinnerOnlyCapAndCancelledSlotChangeSurviveRelaunch",
+        "RoomInTheCartUITests/ContextualNavigationUITests/testLargeTextKeepsLongNativePasteEditableAndReviewReachable",
+        "RoomInTheCartUITests/ContextualNavigationUITests/testUnknownProduceWeightUsesSavedWholePickupCapAndBillingIncrement",
+        "RoomInTheCartUITests/ContextualNavigationUITests/testUnknownTaxKeepsWeighedPickupUnresolved",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testAccountDeletionSettingsExplainsScopeInEnglishAndSpanishBeforeSignIn",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextSourceAndSavedDetailsAreFullyReadableAboveTabs"
+      ],
+      "selected": 6,
+      "passed": 5,
+      "failed": 1,
+      "skipped": 0,
+      "strictReplayExit": 1,
+      "runtimeWarnings": 0,
+      "rawLogSHA256": "4d2b8901f54783b904ba7234898213805e4d6dfb2003e8ebf952f7f786711655"
     }
   }
 }
