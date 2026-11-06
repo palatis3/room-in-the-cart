@@ -1,0 +1,41 @@
+{
+  "candidate": "d0b0b12ee0cb8412f17e82c92a91013217560670",
+  "job": 127681902052,
+  "artifactID": 13475213172,
+  "archiveSHA256": "8b9563ca378b6a9e2253a99a6108ed1e841897798ac020faadb8dc66d5b70db2",
+  "selected": 6,
+  "passed": 5,
+  "failed": 1,
+  "runtimeWarnings": 0,
+  "strictExit": 1,
+  "test": "StockReviewUITests/testChangedMealRevisionDisablesPreviewWithoutApplyingBatch",
+  "failure": "stockReview.identityChecked remained0 after targeted0.92,0.5 tap; expected1 at StockReviewUITests.swift97",
+  "timing": "Done tap followed by60s animation-complete wait; switch tap had60s before and60s after synthesis; total201.755s",
+  "screenshotFinding": "Identity switch visible and off, amount3, preview disabled, saved batch5/revision3; no keyboard displayed. Stale-meal mutation assertions never reached.",
+  "axSwitchFrame": [
+    16,
+    731.3,
+    370,
+    72.3
+  ],
+  "scope": "One hosted failed test. The same shard later passed the sibling preview/cancel/confirm/restart stock case. No source correction or retry performed.",
+  "evidence": {
+    "516AA97C-D1E6-4530-8335-9261D389E2EC.txt": "2c8810dbc5240041ab762397a92a564ad7aa9a8a524322fb4df0f7b1e704ea1e",
+    "71178D4F-FB23-4330-94DF-2E5DAEEA18EC.png": "c12194672a507147ad9ca6da8838f9697a942da82d7e9d2538ff85143dff4a27"
+  },
+  "synthesizedPointerEvents": [
+    {
+      "eventType": 1,
+      "offset": 0.0,
+      "coordinate.y": 767.5,
+      "coordinate.x": 356.40000000000003
+    },
+    {
+      "eventType": 3,
+      "offset": 0.05,
+      "coordinate.y": 767.5,
+      "coordinate.x": 356.40000000000003
+    }
+  ],
+  "synthesizedEventAttachment": "stock-identity-failure-attachments/54EF6003-25E9-49B8-904F-31F20E282F38"
+}

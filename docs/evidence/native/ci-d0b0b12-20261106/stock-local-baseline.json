@@ -1,0 +1,51 @@
+{
+  "candidate": "d0b0b12ee0cb8412f17e82c92a91013217560670",
+  "sourceOrigin": "git archive of exact candidate; no shared working-tree changes included",
+  "selector": "RoomInTheCartUITests/StockReviewUITests/testChangedMealRevisionDisablesPreviewWithoutApplyingBatch",
+  "fixtureConditions": "DEBUG CONTRIBUTOR_CAPTURE_UI_FIXTURE STOCK_REVIEW_UI_FIXTURE AWAY_CARRYOVER_UI_FIXTURE",
+  "result": "passed",
+  "selected": 1,
+  "executed": 1,
+  "seconds": 30.06,
+  "xcodebuildExit": 0,
+  "strictVerifierExit": 0,
+  "runtimeWarnings": 0,
+  "animationIdleTimeoutOccurrences": 0,
+  "xcode": "Xcode 27.1\nBuild version 27A9275",
+  "osBuild": "23C54",
+  "ownedSimulator": "6B3ACD4A-4EC8-40E2-A66F-9776A3819893",
+  "cleanup": {
+    "owned_simulator": "6B3ACD4A-4EC8-40E2-A66F-9776A3819893",
+    "owned_simulator_deleted": true,
+    "protected_preview_observation_only": [
+      {
+        "udid": "5FDE1E82-1FF7-4556-9C14-0746F6295944",
+        "state": "Booted"
+      }
+    ]
+  },
+  "sourceFileHashesUnchanged": 2107,
+  "builtProductFileHashesUnchanged": 179,
+  "observedTiming": {
+    "DoneTapSeconds": 14.09,
+    "identityTapSeconds": 15.53,
+    "identityAssertReadSeconds": 17.45,
+    "previewTapSeconds": 18.05
+  },
+  "comparison": "Hosted candidate failed after three60second idle waits and identity remained0; this single unchanged local baseline proceeded normally and reached stale-meal assertions. Local Xcode27.1 differs from hosted26.3; no hostedfix or flakeelimination claimed.",
+  "sourceChanges": false,
+  "reruns": 0,
+  "commandsArtifact": "run.sh",
+  "artifactHashes": {
+    "run.sh": "518ec9e78cde27ef9ed84809a3b7e388b06d915d519bb5d7968116923b555339",
+    "candidate-relevant-hashes.json": "0e63cf2687bbb8586e9c8499354961a69b72916cfd4892cb0782904e26db3a91",
+    "Tests.log": "9f1bb5897116346f46981167c07261ab6ad070928bfb8916311ccd3abebee735",
+    "strict.log": "518a73b99442dd2084455eaf009922829cd26bc668e22d3c3b1203d49330217b",
+    "test-summary.json": "4eb623eefdf515ab2ec625a1ae2a40fb7e74be7139c56369ae85a941d43bf284",
+    "test-details.json": "f9c0fe5a0dadf62fba464696fe41c04451b9f393daae0b0531487a332343a8c6",
+    "source-before.json": "ca264cabb4d8128658682991f89b9a14f96208d2c5527dff361cf8102ba28c4b",
+    "source-after.json": "ca264cabb4d8128658682991f89b9a14f96208d2c5527dff361cf8102ba28c4b",
+    "products-before.json": "05c7bb3a6f2d193799c37c6dd7641eb0753a62e3df9080dd59281b4b5671f565",
+    "products-after.json": "05c7bb3a6f2d193799c37c6dd7641eb0753a62e3df9080dd59281b4b5671f565"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "candidate": "d0b0b12ee0cb8412f17e82c92a91013217560670",
+  "run": 42149899549,
+  "job": 127672626907,
+  "scope": "Read-only original scroll artifact investigation; no simulator, hosted mutation, test retry, or source edit.",
+  "conclusion": "The required series was never reported by XCTest. Not a JSON export or parser failure; root cause of missing collection remains unproved.",
+  "independentRepresentations": {
+    "modernMetricsJSON": [
+      "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak",
+      "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical",
+      "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute"
+    ],
+    "legacyActionTestSummary": [
+      "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak",
+      "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical",
+      "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute"
+    ],
+    "CSV": "Only the same three memory series; no duration column.",
+    "console": "Only three measured results, all memory."
+  },
+  "strictReplay": {
+    "status": "rejected-as-required",
+    "reason": "Missing required performance metric: com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.duration"
+  },
+  "originalXCTestDiagnostics": {
+    "source": "xcresulttool export diagnostics from the original scroll Performance.xcresult",
+    "disablePerformanceMetrics": "NO",
+    "traceCollectionEnabled": null,
+    "enablePerformanceTestsDiagnostics": null,
+    "reportedMetricCallbackCount": 3,
+    "collectionError": "No signpost/hitch-specific explanation found in testmanagerd or runner session log.",
+    "limitations": "Existing UIKit diagnostic windows use gesture activity timestamps, not actual startMeasuring/stopMeasuring boundaries; complete external signposts do not prove XCTest collector received them."
+  },
+  "primarySources": [
+    {
+      "url": "https://developer.apple.com/documentation/xctest/xctossignpostmetric",
+      "finding": "The metric reports matching begin/end signpost regions; no matching pair yields no result."
+    },
+    {
+      "url": "https://developer.apple.com/documentation/xctest/xctossignpostmetric/scrollinganddecelerationmetric",
+      "finding": "Current built-in metric measures scroll dragging and deceleration; visionOS compatibility restriction does not describe this iOS Simulator run."
+    },
+    {
+      "url": "https://developer.apple.com/videos/play/wwdc2020/10077/",
+      "finding": "Apple demonstrates swipeUp(.fast) then stopMeasuring() before resetting scroll position. Immediate stop is not itself evidence of misuse."
+    }
+  ],
+  "verification": {
+    "test_check_ios_performance.py": 8,
+    "test_scroll_signpost_diagnostic.py": 7,
+    "test_plan_ios_performance_tests.py": 5,
+    "allPassed": true
+  },
+  "recommendation": {
+    "productionChange": "None justified by current evidence. Keep required metric, five samples, thresholds and warning/skip rules unchanged.",
+    "nextBoundedDiagnostic": "On one fresh task-owned simulator matching hosted Xcode 26.3/iOS 26.2, execute the same selected scroll test once as a separate diagnostic, with exact Date timestamps immediately around startMeasuring/stopMeasuring retained outside the measured block, plus scoped XCTest collector logs. Compare UIKit begin/end pairs against the inner confirmed measurement window. Preserve result whether pass or fail; do not replace original acceptance evidence.",
+    "decisionRule": "If actual signpost endpoints fall outside measurement boundaries, address the observed boundary with a supported synchronization condition. If complete pairs are inside but absent from XCTest, isolate collector behavior in a minimal reproduction and retain this release gate failed pending a measured, verified remedy.",
+    "rejectedShortcuts": [
+      "No raw UIKit duration substitution",
+      "No arbitrary sleeps",
+      "No repeated acceptance retries",
+      "No treating prior candidate metrics as current proof"
+    ]
+  },
+  "hashes": {
+    "metrics.json": "eef7dd8837d4a29ff9dbb29debf9569f9f7dc58712044f8730be0df39018e572",
+    "Performance.log": "1544de85d80a4e62815013a01f5165555940d028f400b36c9d58686df55ab1e0",
+    "scroll-signpost-diagnostic.json": "eac99126423fa3c09fdc2b47b22560fbeda752a5f3ad65859ce36aa684b078d7"
+  }
+}

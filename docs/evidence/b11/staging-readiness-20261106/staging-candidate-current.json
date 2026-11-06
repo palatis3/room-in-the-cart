@@ -1,0 +1,282 @@
+{
+  "candidate": "d0b0b12ee0cb8412f17e82c92a91013217560670",
+  "previousReviewedCandidate": "3d26f1f2316586de89060b7ed2310c193206371f",
+  "verifiedAtUTC": "2026-11-06T04:17:26.966329+00:00",
+  "runtimeSourceRootsCompared": [
+    "api",
+    "service/src",
+    "service/migrations",
+    "service/journal-authority",
+    "service/package.json",
+    "service/package-lock.json",
+    "web/src",
+    "web/public",
+    "web/package.json",
+    "web/package-lock.json",
+    "config",
+    "vercel.json"
+  ],
+  "runtimeSourceChanges": [],
+  "backupAndRestoreUpgrade": "live-upgrade.json",
+  "hostedRegistry": "Read-only connector query still returns001\u2013008with all matching checksums; no hosted writes.",
+  "rollbackDeployment": {
+    "id": "dpl_9mAfUc4cPpz6FQLiVLn5tRvFkDvD",
+    "url": "room-in-the-cart-staging-998uadgdg-doorframe-staging.vercel.app",
+    "name": "room-in-the-cart-staging",
+    "readyState": "READY",
+    "status": null,
+    "createdAt": 1793688796230,
+    "target": "production",
+    "projectId": null,
+    "teamId": null,
+    "alias": null,
+    "meta": {}
+  },
+  "configurationNamesOnly": {
+    "projectId": "prj_MsdHyy06CKCuFeAvoOCpnJRQ1vGa",
+    "teamId": "team_zkjaW5rtwPK9URZDeSoybwXB",
+    "environment": "production",
+    "namesOnly": [
+      "CHILD_NETWORK_ENABLED",
+      "DATABASE_CA_PEM",
+      "DATABASE_URL",
+      "EMAIL_OTP_ENABLED",
+      "JWT_AUDIENCE",
+      "JWT_ISSUER",
+      "JWT_JWKS_URL",
+      "SUPABASE_PUBLISHABLE_KEY",
+      "SUPABASE_URL",
+      "WEB_ORIGIN"
+    ],
+    "valuesNotRetained": true
+  },
+  "publicChecks": {
+    "checkedAt": "2026-11-06T04:08:57.211937+00:00",
+    "url": "https://room-in-the-cart-staging.vercel.app",
+    "checks": [
+      {
+        "check": "health",
+        "path": "/health",
+        "status": 200,
+        "expected": 200,
+        "pass": true
+      },
+      {
+        "check": "session",
+        "path": "/v1/session",
+        "status": 200,
+        "expected": 200,
+        "pass": true
+      },
+      {
+        "check": "email-availability",
+        "path": "/v1/auth/session",
+        "status": 200,
+        "expected": 200,
+        "pass": true
+      },
+      {
+        "check": "unauthenticated",
+        "path": "/v1/me/workspaces",
+        "status": 401,
+        "expected": 401,
+        "pass": true
+      },
+      {
+        "check": "invalid-token",
+        "path": "/v1/me/workspaces",
+        "status": 401,
+        "expected": 401,
+        "pass": true
+      },
+      {
+        "check": "wrong-origin",
+        "path": "/v1/session",
+        "status": 403,
+        "expected": 403,
+        "pass": true
+      },
+      {
+        "check": "candidate-web",
+        "path": "/",
+        "status": 200,
+        "expected": 200,
+        "pass": false,
+        "expectedSHA256": "dd9d150c6ea73c816a05820591b005a0d10c64b1e0eb1013185c99e04c90114f"
+      },
+      {
+        "check": "candidate-web",
+        "path": "/help",
+        "status": 404,
+        "expected": 200,
+        "pass": false,
+        "expectedSHA256": "dd9d150c6ea73c816a05820591b005a0d10c64b1e0eb1013185c99e04c90114f"
+      },
+      {
+        "check": "candidate-web",
+        "path": "/help/",
+        "status": 404,
+        "expected": 200,
+        "pass": false,
+        "expectedSHA256": "dd9d150c6ea73c816a05820591b005a0d10c64b1e0eb1013185c99e04c90114f"
+      },
+      {
+        "check": "candidate-web",
+        "path": "/privacy",
+        "status": 404,
+        "expected": 200,
+        "pass": false,
+        "expectedSHA256": "dd9d150c6ea73c816a05820591b005a0d10c64b1e0eb1013185c99e04c90114f"
+      },
+      {
+        "check": "candidate-web",
+        "path": "/privacy/",
+        "status": 404,
+        "expected": 200,
+        "pass": false,
+        "expectedSHA256": "dd9d150c6ea73c816a05820591b005a0d10c64b1e0eb1013185c99e04c90114f"
+      },
+      {
+        "check": "candidate-web",
+        "path": "/terms",
+        "status": 404,
+        "expected": 200,
+        "pass": false,
+        "expectedSHA256": "dd9d150c6ea73c816a05820591b005a0d10c64b1e0eb1013185c99e04c90114f"
+      },
+      {
+        "check": "candidate-web",
+        "path": "/terms/",
+        "status": 404,
+        "expected": 200,
+        "pass": false,
+        "expectedSHA256": "dd9d150c6ea73c816a05820591b005a0d10c64b1e0eb1013185c99e04c90114f"
+      },
+      {
+        "check": "candidate-web",
+        "path": "/support",
+        "status": 404,
+        "expected": 200,
+        "pass": false,
+        "expectedSHA256": "dd9d150c6ea73c816a05820591b005a0d10c64b1e0eb1013185c99e04c90114f"
+      },
+      {
+        "check": "candidate-web",
+        "path": "/support/",
+        "status": 404,
+        "expected": 200,
+        "pass": false,
+        "expectedSHA256": "dd9d150c6ea73c816a05820591b005a0d10c64b1e0eb1013185c99e04c90114f"
+      },
+      {
+        "check": "candidate-web",
+        "path": "/requests",
+        "status": 404,
+        "expected": 200,
+        "pass": false,
+        "expectedSHA256": "dd9d150c6ea73c816a05820591b005a0d10c64b1e0eb1013185c99e04c90114f"
+      },
+      {
+        "check": "candidate-web",
+        "path": "/requests/",
+        "status": 404,
+        "expected": 200,
+        "pass": false,
+        "expectedSHA256": "dd9d150c6ea73c816a05820591b005a0d10c64b1e0eb1013185c99e04c90114f"
+      },
+      {
+        "check": "candidate-web",
+        "path": "/invite",
+        "status": 404,
+        "expected": 200,
+        "pass": false,
+        "expectedSHA256": "dd9d150c6ea73c816a05820591b005a0d10c64b1e0eb1013185c99e04c90114f"
+      },
+      {
+        "check": "candidate-web",
+        "path": "/invite/",
+        "status": 404,
+        "expected": 200,
+        "pass": false,
+        "expectedSHA256": "dd9d150c6ea73c816a05820591b005a0d10c64b1e0eb1013185c99e04c90114f"
+      },
+      {
+        "check": "candidate-web",
+        "path": "/view",
+        "status": 404,
+        "expected": 200,
+        "pass": false,
+        "expectedSHA256": "dd9d150c6ea73c816a05820591b005a0d10c64b1e0eb1013185c99e04c90114f"
+      },
+      {
+        "check": "candidate-web",
+        "path": "/view/",
+        "status": 404,
+        "expected": 200,
+        "pass": false,
+        "expectedSHA256": "dd9d150c6ea73c816a05820591b005a0d10c64b1e0eb1013185c99e04c90114f"
+      },
+      {
+        "check": "candidate-web",
+        "path": "/child-invite",
+        "status": 404,
+        "expected": 200,
+        "pass": false,
+        "expectedSHA256": "dd9d150c6ea73c816a05820591b005a0d10c64b1e0eb1013185c99e04c90114f"
+      },
+      {
+        "check": "candidate-web",
+        "path": "/child-invite/",
+        "status": 404,
+        "expected": 200,
+        "pass": false,
+        "expectedSHA256": "dd9d150c6ea73c816a05820591b005a0d10c64b1e0eb1013185c99e04c90114f"
+      },
+      {
+        "check": "candidate-web",
+        "path": "/apple-touch-icon.png",
+        "status": 200,
+        "expected": 200,
+        "pass": true,
+        "expectedSHA256": "e69ddd65f0718ffef895c0b82a63873d580722b920af40e86b1478a5cd9427e3"
+      },
+      {
+        "check": "candidate-web",
+        "path": "/assets/index-B9I61_lh.css",
+        "status": 404,
+        "expected": 200,
+        "pass": false,
+        "expectedSHA256": "7cf18dacddae715ef01363daf5f2770fb9562762a10d2d2e4d41daf406224cee"
+      },
+      {
+        "check": "candidate-web",
+        "path": "/assets/index-j3N1cbKn.js",
+        "status": 404,
+        "expected": 200,
+        "pass": false,
+        "expectedSHA256": "a8730142344357900ec1abc54a75a68f17a3b8d4ef57b727604e7330ee1152c6"
+      },
+      {
+        "check": "candidate-web",
+        "path": "/icon.png",
+        "status": 200,
+        "expected": 200,
+        "pass": true,
+        "expectedSHA256": "dd8314efcedbe096fbce5c43f09af13a335d713a1dcfae43f82b4904d9e58914"
+      }
+    ]
+  },
+  "webBuildHashes": {
+    "icon.png": "dd8314efcedbe096fbce5c43f09af13a335d713a1dcfae43f82b4904d9e58914",
+    "index.html": "dd9d150c6ea73c816a05820591b005a0d10c64b1e0eb1013185c99e04c90114f",
+    "apple-touch-icon.png": "e69ddd65f0718ffef895c0b82a63873d580722b920af40e86b1478a5cd9427e3",
+    "assets/index-j3N1cbKn.js": "a8730142344357900ec1abc54a75a68f17a3b8d4ef57b727604e7330ee1152c6",
+    "assets/index-B9I61_lh.css": "7cf18dacddae715ef01363daf5f2770fb9562762a10d2d2e4d41daf406224cee"
+  },
+  "remainingBeforeActivation": [
+    "Reviewed hosted migration/deployment decision.",
+    "Separate worker/cron protected credential provisioning; currently absent.",
+    "Independent journal authority, observer recovery and provider activation remain separate release work."
+  ],
+  "notAReleaseApproval": true
+}

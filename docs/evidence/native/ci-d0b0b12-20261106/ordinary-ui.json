@@ -56,6 +56,142 @@
       "strictReplayExit": 0,
       "runtimeWarnings": 0,
       "rawLogSHA256": "c3cea945db030df5b1650ad71805c17754e369207ddd841b3a48ac344730a51b"
+    },
+    "ui-02": {
+      "artifactID": 13474700719,
+      "sha256": "e417e2de41a9340059f8a55a941a5ebc6b501f64b275badb76e4baea0807a2be",
+      "digestVerified": true,
+      "selectors": [
+        "RoomInTheCartUITests/FreeJourneyUITests/testRecipeCaptureOpensOnFirstAttemptAndReopensAfterCancel",
+        "RoomInTheCartUITests/PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testConfirmedComparisonDeletionSurvivesRestart",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer"
+      ],
+      "selected": 4,
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "rawLogSHA256": "8588099184b311d820da04bf16394689e5e8e02d3ff1cb7d5d6ff3a86552abe5"
+    },
+    "ui-05": {
+      "artifactID": 13474867744,
+      "sha256": "963050fb49743ac25c5428d7a9fcf14fd28d2eb915ce6646624303b9f928a5fe",
+      "digestVerified": true,
+      "selectors": [
+        "RoomInTheCartUITests/ContextualNavigationUITests/testAuthorizationHoldIsOptionalAndSeparateFromCheckoutCap",
+        "RoomInTheCartUITests/FreeJourneyUITests/testFreePickupRepairKeepsTheNeedOpenWhenAcceptedFallbackToolsAreUnavailable",
+        "RoomInTheCartUITests/FreeJourneyUITests/testPairingEnumerationUsesTheChosenScheduleAndDoesNotOfferItAgain",
+        "RoomInTheCartUITests/PickupCheckoutRestoreUITests/testInclusiveCheckoutFieldsAndResultSurviveRestartAndUnchangedSave",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testComparisonSaveStaysInsideViewportAboveTabBar"
+      ],
+      "selected": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "rawLogSHA256": "f0236654f447cc6e789a6341e2fd274be92726b2f62a4bc6788da258beac28bc"
+    },
+    "ui-07": {
+      "artifactID": 13476541302,
+      "sha256": "81f7ca3ef83e30d42d108306b80126eb20192f8b5b98f4ac28a215792e37ba39",
+      "digestVerified": true,
+      "selectors": [
+        "RoomInTheCartUITests/ContextualNavigationUITests/testMissingStorePricesAndAvailabilityRemainConditionalAfterSaving",
+        "RoomInTheCartUITests/FreeJourneyUITests/testFreeCookCorrectionAndExplicitRecipientAcknowledgment",
+        "RoomInTheCartUITests/FreeJourneyUITests/testNextShopCanCancelThenOpenOneFreshShoppingList",
+        "RoomInTheCartUITests/FreeJourneyUITests/testSpanishMealWeekListAndGridShowDatedProtectedLunch",
+        "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack",
+        "RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresSelectedDinnersTabWithoutRestoringUnsavedComparison"
+      ],
+      "selected": 6,
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "rawLogSHA256": "7d71eddfce3471d6facefbe0196d9681bfbf77ead8f44ff8899fe91a06bbcd20"
+    },
+    "ui-06": {
+      "artifactID": 13476606257,
+      "sha256": "02d8fee988216ca02229d31352a75b6e56a246938b09bf99f3ce255243669b41",
+      "digestVerified": true,
+      "selectors": [
+        "RoomInTheCartUITests/ContextualReminderUITests/testNextShopDeferralRequestsReminderOnlyAfterExplicitScheduleAndCanCancel",
+        "RoomInTheCartUITests/ContextualReminderUITests/testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending",
+        "RoomInTheCartUITests/FreeJourneyUITests/testUrgentRepairWithoutAnOrderPersistsAcrossRestart",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testKnownComparisonSavesAndReopensWithItemOnlyLimit",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testLargestDynamicTypeAndDarkAppearanceComparisonSmoke"
+      ],
+      "selected": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "rawLogSHA256": "1715f9e074df46a077bf4fa6dfcd816dcf2eddd6b731746fb1ef490c1fdd5a86"
+    },
+    "ui-08": {
+      "artifactID": 13476134229,
+      "sha256": "63d1ded0b6d395015188df9030e099cd60c851f1b850e4a8984c6673b194f8cb",
+      "digestVerified": true,
+      "selectors": [
+        "RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareKeepsTheFrozenPickupUnplaced",
+        "RoomInTheCartUITests/FreeJourneyUITests/testEnglishMealWeekListAndGridShowDatedProtectedLunch",
+        "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekReservationDraftCannotFollowAnotherPickup",
+        "RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testAutomatedAccessibilityAuditOnShopAndKnownResults",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testShopRepairShortcutRemainsInsideViewportAndOpens"
+      ],
+      "selected": 6,
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 1,
+      "runtimeWarnings": 2,
+      "rawLogSHA256": "e802d985d97636aabf8ccf14c926ec9410081cec833485e30f7166d0cadf8bb5"
+    },
+    "ui-10": {
+      "artifactID": 13476394606,
+      "sha256": "800ef2b4cd1062040df1d8b4e347c2947a358973477561348f3a2182aeba1703",
+      "digestVerified": true,
+      "selectors": [
+        "RoomInTheCartUITests/ContextualNavigationUITests/testFreeContextualRoutesKeepPrivateAndSharedWorkSeparate",
+        "RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced",
+        "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges",
+        "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testFullyCoveredSavesUseAtHomePlanWithoutPurchasedItemOrRetailerOrder",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextShopRepairShortcutRemainsInsideViewportAndOpens",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testOwnerExportReviewAndCancelledDeletionPreserveComparisonAfterRestart"
+      ],
+      "selected": 6,
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 2,
+      "rawLogSHA256": "c69c10b43ece38c27f9f9707374c775a4b1e19725820f9802aa144dabc848f45"
+    },
+    "ui-09": {
+      "artifactID": 13477326491,
+      "sha256": "8750de7f4abd9a7c2c05eef5326699301319202afe72ac8994c6bb7a0932a157",
+      "digestVerified": true,
+      "selectors": [
+        "RoomInTheCartUITests/ContextualNavigationUITests/testDinnerOnlyCapAndCancelledSlotChangeSurviveRelaunch",
+        "RoomInTheCartUITests/ContextualNavigationUITests/testLargeTextKeepsLongNativePasteEditableAndReviewReachable",
+        "RoomInTheCartUITests/ContextualNavigationUITests/testUnknownProduceWeightUsesSavedWholePickupCapAndBillingIncrement",
+        "RoomInTheCartUITests/ContextualNavigationUITests/testUnknownTaxKeepsWeighedPickupUnresolved",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testAccountDeletionSettingsExplainsScopeInEnglishAndSpanishBeforeSignIn",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextSourceAndSavedDetailsAreFullyReadableAboveTabs"
+      ],
+      "selected": 6,
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "rawLogSHA256": "d0f65ad4f65ce566f6d6c611a9d1b2a938a52b801e06a95bcbf1929f6961c9e9"
     }
   }
 }

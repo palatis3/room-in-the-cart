@@ -21,6 +21,62 @@
       "calibrationSHA256": "9414e35caca9cebdd60daf9da678e4af2ff6685e78a048a56ab4b277626da42f",
       "hostedPickupReadback": null,
       "simulatorHitches": null
+    },
+    "rendered": {
+      "attempt": 2,
+      "artifactID": 13476435729,
+      "sha256": "3e0087eaff4501549134fcebca8b5bb66e6b77f2091f77f04c6638a7abc25c17",
+      "digestVerified": true,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "measurementsIndependentlyRecomputed": true,
+      "comparisons": {
+        "searchP95Milliseconds": {
+          "measured": 2834.6521666667286,
+          "maximum": 4750,
+          "passed": true
+        },
+        "checkP95Milliseconds": {
+          "measured": 2071.6706666665914,
+          "maximum": 3750,
+          "passed": true
+        }
+      },
+      "rawLogSHA256": "0d221c697724169a9f612f7b969535133ca707ddd3f911dcfd2f3da3e534d220",
+      "calibrationSHA256": "20823e938ff647a9b58b5f335dcc2d74246cf5446288cc3ed80c565c3b109268",
+      "hostedPickupReadback": {
+        "sqliteQuickCheck": "ok",
+        "revision": 22,
+        "payloadSHA256": "cd5add0eaa0ffcffb69a8f17af6b07c2efa64a3f0c4d15107986737156b7673e",
+        "lineCount": 500,
+        "contributionCount": 500,
+        "importCount": 1,
+        "source": "paste",
+        "checkedCount": 20,
+        "checkedRowIDs": [
+          "004128f1-e0a9-4b22-9eb1-01b2bc55cc84",
+          "01553c28-c452-43d2-9d8c-33cfcb245edf",
+          "12c8fad0-1455-44f4-b3e1-a0876aa32f6c",
+          "13433204-4442-4892-bb30-580176c4df27",
+          "2fc286cc-78cb-4e8a-a01b-c2d136b601c8",
+          "3f057418-9e9e-4355-9f5c-84b31639c5ae",
+          "741cb2f4-48f9-4745-bb83-bd7b1bd47df9",
+          "7eb027ec-cf5a-403e-9e92-f644f209b994",
+          "7ebaee60-c799-45dd-9bea-a890ba3600ff",
+          "9b97c4af-7785-4209-abd0-aefaa92a2900",
+          "a4524cd0-7a4e-4dce-84c4-0e2f0f9dd884",
+          "a9050de7-3dc6-4b60-91f6-0b221aacec57",
+          "ab6fa7a7-4587-4db8-aa0f-9b8ccbbc419b",
+          "b466ed4c-d7c7-4337-9abc-9ab0b388cade",
+          "bcd7bb42-811b-44a2-8a78-252e8e44a83e",
+          "cd071707-1daa-4b1f-a6b7-74c10e42bc4d",
+          "e13dd155-aedc-4d38-b270-871c45df5a3a",
+          "e18cd071-ad4e-4f8f-9adb-e84459639fc4",
+          "e34b41e2-3e2b-46cc-96dd-3f51d0f3e986",
+          "f41fcf37-49c9-434e-a1e7-83c559c9116c"
+        ]
+      },
+      "simulatorHitches": null
     }
   },
   "limits": [

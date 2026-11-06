@@ -1,0 +1,18 @@
+{
+  "scripts/check_ios_test_results.py": {
+    "matchesCandidate": true,
+    "sha256": "cbd4f9bf6c4f7d223a708d3fce9461f75a16086b6763cdf86ef7fc7f77ee99e5"
+  },
+  "scripts/check_ios_performance.py": {
+    "matchesCandidate": true,
+    "sha256": "199a08ef43a9cc85fdb22a98b9c0143ab401fe9d98554c6e5919d283cdaddc38"
+  },
+  "scripts/plan_ios_fixture_tests.py": {
+    "matchesCandidate": true,
+    "sha256": "bba3fdc6827e28137b95c53aa2a98f627d83b7c3ab898dcb3693027bcd3b9e2b"
+  },
+  "scripts/ios_performance_baselines.json": {
+    "matchesCandidate": true,
+    "sha256": "38742a9b5f5eea668c608f117db602ac6a2b73aa56691c3ec3f90c291d15c38e"
+  }
+}
