@@ -1,0 +1,169 @@
+{
+  "source": {
+    "commit": "3d26f1f2316586de89060b7ed2310c193206371f",
+    "filesCompared": 457,
+    "harnessOnlyChanges": [
+      "ios/RoomInTheCart.xcodeproj/xcshareddata/xcschemes/RoomInTheCart-Release.xcscheme",
+      "ios/UITests/RoomInTheCartUITests.swift"
+    ]
+  },
+  "compiledAndInstalledReleaseExecutableSHA256": "21a3bcd0cc00f1b910df0c12af39ea9cdbeb44c70e7e668f573648b77df4ca12",
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "FDAC26FB-36D1-4123-9A85-D913C6BA07C0",
+    "deviceName": "RITC ES AX SE 20261105",
+    "modelName": "iPhone SE (3rd generation)",
+    "osBuildNumber": "21A328",
+    "osVersion": "17.0",
+    "platform": "iOS Simulator"
+  },
+  "commonSystemSettings": {
+    "increase_contrast": "enabled",
+    "content_size": "accessibility-extra-extra-extra-large",
+    "AppleLocale": "es_US",
+    "AppleLanguages": [
+      "es-US",
+      "en-US"
+    ]
+  },
+  "configuration": "Ordinary Release simulator app, production bundle ID, blank household service URL, app launch arguments only for Spanish and US locale; standard local database.",
+  "darkFirstInstall": {
+    "run": "Spanish.xcresult",
+    "result": "First install, real typed entry, choice, scope, amounts, save and durable confirmation verified. Initial test then failed on a wait for an offscreen lazy Records row before scrolling. Failure and screenshots retained.",
+    "rowWaitFailure": "XCTAssertTrue failed",
+    "visibleTitle": "Tortillas de la abuela",
+    "scope": "Comparación de un solo artículo",
+    "need": 12,
+    "capUSD": 30,
+    "packA": {
+      "size": 8,
+      "unitUSD": 3,
+      "packs": 2,
+      "totalUSD": 6
+    },
+    "packB": {
+      "size": 6,
+      "unitUSD": 2,
+      "packs": 2,
+      "totalUSD": 4,
+      "roomUSD": 26
+    },
+    "choice": "Menor costo para comprar la cantidad necesaria de este artículo",
+    "viewportPoints": [
+      0,
+      64,
+      375,
+      546
+    ],
+    "saveFramePoints": [
+      16,
+      364,
+      343,
+      226
+    ],
+    "tabBarStartsAtY": 618,
+    "saveBottomClearanceToTabsPoints": 28,
+    "sourceReadback": "after-first.json"
+  },
+  "lightInitialHarnessResult": "LightReopenAudit.xcresult preserved. The application restored the saved comparison detail; the probe initially expected the Records root. The retained failure screenshot shows that detail in light mode. The follow-up uses Atrás, scrolls to the saved row, and explicitly opens it before auditing.",
+  "reopenAudit": {
+    "dark": {
+      "run": "ReopenAudit.xcresult",
+      "result": "Passed",
+      "runtimeWarnings": [],
+      "viewport": "Wrapped lower-cost Pack B decision, directly under $4.00",
+      "audit": "Default performAccessibilityAudit, all categories, issue handler returns false; no issues reported."
+    },
+    "light": {
+      "run": "LightRestoredAudit.xcresult",
+      "result": "Passed",
+      "runtimeWarnings": [],
+      "viewport": "Wrapped lower-cost Pack B decision, directly under $4.00",
+      "audit": "Default performAccessibilityAudit, all categories, issue handler returns false; no issues reported."
+    }
+  },
+  "evidence": {
+    "Spanish/Failure": {
+      "path": "Spanish-attachments/BD751FB3-05C4-4B4B-86E9-C5C8D7269446.png",
+      "sha256": "bf3427d672d72bf1e0838a642820c00bf7565320a59472fb93ed6d817f5d2f12"
+    },
+    "Spanish/Saved": {
+      "path": "Spanish-attachments/AF769420-3B6F-495C-9D20-F0253648E5F9.png",
+      "sha256": "7813e5559c5c28b3d4e38093a21a1f871920744228cc7f37d1d152c9912f2632"
+    },
+    "Spanish/Save": {
+      "path": "Spanish-attachments/1ACF1B34-2876-4B61-8FDA-E780F2847A49.png",
+      "sha256": "8f5b6cf5b06deba55bfec1d2acdad9615f5cb487f416d801ef2f1e6aabff5d76"
+    },
+    "Spanish/Room": {
+      "path": "Spanish-attachments/76F56EC9-5BD1-4095-806E-5A571D0047F2.png",
+      "sha256": "eb8689a25b83bf2d4421ee03f5b0da1528b1f48df3462170152043bfc98e493c"
+    },
+    "Spanish/Decision": {
+      "path": "Spanish-attachments/5E7D29D3-FF8F-4559-8A5A-2B3D372F56C3.png",
+      "sha256": "ae4688c206b41756e3d5183f815b9fca648dfc00a8964208df7c28c9453a3131"
+    },
+    "Spanish/B-total": {
+      "path": "Spanish-attachments/41F72E47-5A4C-4BC3-801B-07C29591B67A.png",
+      "sha256": "bba8d2d7339eb5522c68dce01c3801df599b6b3ba9eecc3e3e6bef35e3590af0"
+    },
+    "Spanish/A-total": {
+      "path": "Spanish-attachments/2E283898-1CCB-4011-9511-F974599EBFA6.png",
+      "sha256": "3a27e6c42e095b7961eb1a89c0fc07072f13414d9522be17885392814e2a6d9a"
+    },
+    "Spanish/Scope": {
+      "path": "Spanish-attachments/0FF58805-A640-4E65-911C-5B2620D014B0.png",
+      "sha256": "c1a359874a7213e9002f31f14c32d273c882b4ffe1666cff4a156f7d8cf891b4"
+    },
+    "ReopenAudit/Reopened-decision": {
+      "path": "ReopenAudit-attachments/E5C239E0-3A7D-49F9-8DF8-6727C4DAF410.png",
+      "sha256": "e56d4d1ca22eaf06d1ba173baa5d36e3e9e2b44bd037ab50ffda75601a082dcb"
+    },
+    "ReopenAudit/Reopened-B": {
+      "path": "ReopenAudit-attachments/4CBE3CF1-5A90-4501-B9FF-55E52FB12BEB.png",
+      "sha256": "5b434d4c1875425d169cf7a892e17a317b4c51e2b4b43679528b202ab96347d7"
+    },
+    "ReopenAudit/Reopened-A": {
+      "path": "ReopenAudit-attachments/BA563848-6CFD-497F-9BE7-A999349395AA.png",
+      "sha256": "0e1a410133956a89cb4d9f788859de38ab9dcbf49e8759dcb1de287a49ccf40e"
+    },
+    "ReopenAudit/Reopened-scope": {
+      "path": "ReopenAudit-attachments/F665E237-537F-4E0F-972F-133F0A92FB13.png",
+      "sha256": "66f096ceede6c54b3f8eb4fac577ea3099663812ab0e978a77a16605216d6f0d"
+    },
+    "ReopenAudit/Records-scrolled": {
+      "path": "ReopenAudit-attachments/888A06CC-4429-4441-9191-2FBCC1C20F03.png",
+      "sha256": "a388bb2dddb2c308e126f56ef016849a08bf6fd6f723afbcc4c0284ad0529d37"
+    },
+    "LightRestoredAudit/Reopened-decision": {
+      "path": "LightRestoredAudit-attachments/66356926-6A8C-49C3-B5B3-187C5D7F351F.png",
+      "sha256": "c20a9424c330c3a57b2df4c0931e8e5328f45cfaad9851e34b9c65bb6c59476e"
+    },
+    "LightRestoredAudit/Reopened-B": {
+      "path": "LightRestoredAudit-attachments/EEF51166-E65E-46CD-852F-9D0CBB5DF071.png",
+      "sha256": "159269cab83a7020537ad334cdd0d9741a3fca14c3ab6653032d1b5c98924ca2"
+    },
+    "LightRestoredAudit/Reopened-A": {
+      "path": "LightRestoredAudit-attachments/C2FB63E7-8013-45B6-8EF1-9A5B214F24C9.png",
+      "sha256": "3ec8b03ce4840886355e84a69cd05f40c1ff2b96d1fcd0ca0b2dee38f056e688"
+    },
+    "LightRestoredAudit/Reopened-scope": {
+      "path": "LightRestoredAudit-attachments/8752BC30-8000-4011-A62B-B1DAD82CEC1E.png",
+      "sha256": "01cda285d823b240084269156de50091d2720c7f26f2a2727cf1873e7bde5966"
+    },
+    "LightRestoredAudit/Records-scrolled": {
+      "path": "LightRestoredAudit-attachments/16264D1D-4987-425A-8A70-E825E8840074.png",
+      "sha256": "7c125c63a80e90564c1c73b45b05ff8613981ea1153674828b31a91cb6252c45"
+    }
+  },
+  "storage": {
+    "comparisonID": "1417A2B6-C960-459B-919F-CE54FBEAE614",
+    "workspaceID": "7894CAE3-B1C7-48A6-BA56-2C2E02CFA1B7",
+    "revision": 1,
+    "decodedPayloadSHA256": "7d300b90ee554be836d979c109479552671e3fd325e6df0179746f2a1742da4d",
+    "integrity": "ok",
+    "foreignKeyViolations": 0,
+    "sameRecordAndHistoryAcrossAllReadbacks": true
+  },
+  "scope": "One real simulator flow on iOS 17.0 SE. The full-category audits were run on the currently visible reopened Pack B decision. Dark mode also covered entry, save and confirmation. Physical assistive technology, WCAG measurement across all screens, alternate locales and distribution remain separate."
+}
