@@ -1,0 +1,96 @@
+{
+  "candidate": "804030e68473d022e72b464940061c01c611a0bd",
+  "runID": 42272379490,
+  "attempt": 1,
+  "runConclusion": "failure",
+  "jobID": 128083892445,
+  "runnerID": 1000004059,
+  "classification": "pre-test setup timeout after bootstatus reported Finished",
+  "failingStep": {
+    "name": "Boot and verify a fresh Release installation",
+    "status": "completed",
+    "conclusion": "failure",
+    "number": 6,
+    "started_at": "2026-11-06T19:49:36Z",
+    "completed_at": "2026-11-06T19:53:01Z"
+  },
+  "keyLogLines": [
+    {
+      "line": 540,
+      "text": "2026-11-06T19:51:14.6822500Z [2026-11-06 19:51:12 +0000] Status=4294967295, isTerminal=YES, Elapsed=01:34."
+    },
+    {
+      "line": 541,
+      "text": "2026-11-06T19:51:15.4969730Z \tFinished"
+    },
+    {
+      "line": 543,
+      "text": "2026-11-06T19:52:59.5544450Z An error was encountered processing the command (domain=NSPOSIXErrorDomain, code=60):"
+    },
+    {
+      "line": 544,
+      "text": "2026-11-06T19:53:00.8470530Z The operation couldn\u2019t be completed. Operation timed out"
+    },
+    {
+      "line": 545,
+      "text": "2026-11-06T19:53:01.2326220Z Operation timed out"
+    },
+    {
+      "line": 546,
+      "text": "2026-11-06T19:53:01.3296720Z ##[error]Process completed with exit code 60."
+    }
+  ],
+  "subcommandAttribution": "No shell tracing distinguishes the individual commands. Bootstatus reported Finished before the timeout; the same step subsequently checks installation and pastes the fixture. Do not claim a proven native test or missing-metric failure.",
+  "selectedCount": 1,
+  "executedNativeTests": 0,
+  "nativeCaseStep": {
+    "name": "Run one Release performance case",
+    "status": "completed",
+    "conclusion": "skipped",
+    "number": 7,
+    "started_at": "2026-11-06T19:53:01Z",
+    "completed_at": "2026-11-06T19:53:01Z"
+  },
+  "validationStep": {
+    "name": "Require exact test execution and complete performance evidence",
+    "status": "completed",
+    "conclusion": "skipped",
+    "number": 10,
+    "started_at": "2026-11-06T19:53:16Z",
+    "completed_at": "2026-11-06T19:53:16Z"
+  },
+  "metricsStatus": "not produced; native test skipped",
+  "sidecarStatus": "not produced; validation skipped",
+  "savedPickupReadback": "not reached",
+  "runtimeReadback": "No XCTest runtime proof because no native test ran. Exact Xcode report and pinned selection source retained.",
+  "artifactID": 13537130251,
+  "artifactBytes": 688,
+  "archiveSHA256": "a9c289fa64247b5fa31fd83d9cf0329633b703deb948b2a3801d928c5fa97c29",
+  "artifactFiles": {
+    "toolchain.txt": "bb7fc9a8f5e063e81975b33054b3a526c91bcccff263ad11d5bd8bcdbe8f0973",
+    "scroll-signpost-diagnostic.json": "54a39ff5d8b25752666efc90808c09fe234c046011c831f4b33e6d25fbf088a8",
+    "selector.txt": "a7fa18c33b4e70ecdf816b513590d0f4339ad72ab2bf56e547c5b16a2562db84"
+  },
+  "diagnostic": {
+    "schemaVersion": 1,
+    "diagnosticOnly": true,
+    "captureStatus": "ok",
+    "activityStatus": "unavailable",
+    "metric": "com.apple.UIKit:ScrollView Scroll_DraggingAndDeceleration",
+    "windows": [],
+    "status": "activities_unavailable"
+  },
+  "jobLogSHA256": "30ed630e485dce45d36305709e604db49cdb7e35320aa2509452ff3436017401",
+  "sourceReferences": {
+    "scripts/boot_ios_simulator.py": {
+      "path": "hosted-source-references/scripts/boot_ios_simulator.py",
+      "sha256": "30bf3c8343bb43385579932c4dbe63978dfeb0348e5c20c6965400818f061b8f"
+    },
+    "scripts/select_ci_iphone.py": {
+      "path": "hosted-source-references/scripts/select_ci_iphone.py",
+      "sha256": "8ebdee4db935d8b8039f17fb8b23909043b3095486e35ecfd713199d6a1b3c67"
+    }
+  },
+  "noRetryOrNativeExecutionByCollector": true,
+  "at": "2026-11-06T19:55:50.021793+00:00"
+}

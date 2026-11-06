@@ -1,0 +1,43 @@
+{
+  "candidate": "804030e68473d022e72b464940061c01c611a0bd",
+  "observedAt": "2026-11-06T19:48:27.740456+00:00",
+  "reason": "Inherited UI/model verifier used extracted result directly because a quote-sensitive helper rewrite did not match. xcresulttool changed extracted SQLite metadata. Original ZIPs were preserved and remain digest-exact.",
+  "nativeOrHostedRetry": false,
+  "acceptancePolicyChanged": false,
+  "items": [
+    {
+      "artifact": "iphone-results-models-1",
+      "originalArchiveSHA256": "eb007de4dbcf09d5b9b8490460a3c31d38ca31181e3ff305a1066873a7c37f8c",
+      "originalArchiveUnmodified": true,
+      "retainedInspectedCopy": "independent-replay/iphone-results-models-1",
+      "restoredPristineExtraction": "iphone-results-models-1",
+      "allRestoredMembersMatchZIP": true,
+      "differences": [
+        {
+          "member": "Tests.xcresult/database.sqlite3",
+          "originalZIPSHA256": "be14197b9da605141af035946244a005ecf038e6bc809336abf339475857401f",
+          "inspectedExtractedSHA256": "588e2a879e4217756aa0f45f086bf107e1cd03b381a402ae3c2f3f9d7e5769a1"
+        }
+      ]
+    },
+    {
+      "artifact": "iphone-results-ui-03-1",
+      "originalArchiveSHA256": "6c78f632f8de8fdab3826d946acf69415ac92ed46b4b274281ab4c0bfd2ed509",
+      "originalArchiveUnmodified": true,
+      "retainedInspectedCopy": "independent-replay/iphone-results-ui-03-1",
+      "restoredPristineExtraction": "iphone-results-ui-03-1",
+      "allRestoredMembersMatchZIP": true,
+      "differences": [
+        {
+          "member": "Tests.xcresult/database.sqlite3",
+          "originalZIPSHA256": "b7fbae70db81e0541d21f4612f1e4c69e4141908482d231762e694604adb3667",
+          "inspectedExtractedSHA256": "49311a4e847f3a51589148318f4c1c37abd1b31abe9322ef032fcb09457e05ff"
+        }
+      ]
+    }
+  ],
+  "correctedHelperSHA256": {
+    "verify-models.py": "cfa3145fe1e6b5b842b202c2eb97569e047cf018d870b2f4f6c597eeab6dadd4",
+    "verify-ui.py": "0abafd2d4cf18956365aaa3ae1b37a929882caa43ad3bb3e4a52830ca40b44e0"
+  }
+}
