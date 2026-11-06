@@ -1,0 +1,9 @@
+{
+  "package": "com.android.chrome",
+  "versionLines": [
+    "versionCode=807807904 minSdk=32 targetSdk=36",
+    "versionName=156.0.8078.79",
+    "versionCode=567263634 minSdk=24 targetSdk=34",
+    "versionName=113.0.5672.136"
+  ]
+}

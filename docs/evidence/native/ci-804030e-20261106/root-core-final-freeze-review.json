@@ -1,0 +1,14 @@
+{
+  "candidate": "804030e68473d022e72b464940061c01c611a0bd",
+  "originalAttempt": 1,
+  "freezeSHA256": "ae63230b336dfcfb9f5233230e709364c697f65bab2b7bd8a80269a2686ac4ec",
+  "filesVerified": 3138,
+  "allBytesMatch": true,
+  "resultToolsRun": false,
+  "terminalRuns": {
+    "42272379454": "failure",
+    "42272379472": "failure",
+    "42272379490": "failure"
+  },
+  "scope": "Independent byte verification of frozen collector evidence; no acceptance claim."
+}

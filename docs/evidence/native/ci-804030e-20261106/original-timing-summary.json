@@ -1,0 +1,1296 @@
+{
+  "candidate": "804030e68473d022e72b464940061c01c611a0bd",
+  "attempt": 1,
+  "allRunsTerminal": true,
+  "stateHistorySHA256": "ce09b0726d7b50cfcb608a1b274c08eae3fb9b9de095f98e68e0619575ddc608",
+  "runs": [
+    {
+      "runID": 42272379454,
+      "status": "completed",
+      "conclusion": "failure",
+      "runCreatedAt": "2026-11-06T18:37:24Z",
+      "runStartedAt": "2026-11-06T18:37:24Z",
+      "apiUpdatedAt": "2026-11-06T21:23:07Z",
+      "latestJobCompletedAt": "2026-11-06T21:23:06Z",
+      "runWallToTerminalAPIUpdateSeconds": 9943.0,
+      "runWallToLastJobCompletionSeconds": 9942.0,
+      "jobs": [
+        {
+          "id": 128079948040,
+          "name": "typescript (service)",
+          "status": "completed",
+          "conclusion": "success",
+          "runnerID": 1000004023,
+          "reportedJobStartedAt": "2026-11-06T18:37:28Z",
+          "reportedJobCompletedAt": "2026-11-06T18:37:50Z",
+          "reportedJobSpanSeconds": 22.0,
+          "firstStepStartedAt": "2026-11-06T18:37:28Z",
+          "lastStepCompletedAt": "2026-11-06T18:37:48Z",
+          "runnerExecutionStepSpanSeconds": 20.0,
+          "runCreatedToFirstStepSeconds": 4.0,
+          "reportedJobStartToFirstStepSeconds": 0.0,
+          "stepCount": 9,
+          "noRecordedExecution": false,
+          "observedAdmissionAcquisitionStates": [
+            {
+              "state": {
+                "status": "completed",
+                "conclusion": "success",
+                "runner_id": 1000004023
+              },
+              "firstObservedAt": "2026-11-06T18:39:49.134584+00:00",
+              "lastObservedAt": "2026-11-06T21:23:21.120642+00:00"
+            }
+          ],
+          "waitAttribution": "Run-created/job-reported-start to first step includes waiting and setup before the first recorded step; dependency, admission and provider contributions are not independently established. Snapshot transitions are observation bounds, not exact scheduler timestamps."
+        },
+        {
+          "id": 128079948615,
+          "name": "source-checks",
+          "status": "completed",
+          "conclusion": "success",
+          "runnerID": 1000004024,
+          "reportedJobStartedAt": "2026-11-06T18:37:28Z",
+          "reportedJobCompletedAt": "2026-11-06T18:37:45Z",
+          "reportedJobSpanSeconds": 17.0,
+          "firstStepStartedAt": "2026-11-06T18:37:29Z",
+          "lastStepCompletedAt": "2026-11-06T18:37:43Z",
+          "runnerExecutionStepSpanSeconds": 14.0,
+          "runCreatedToFirstStepSeconds": 5.0,
+          "reportedJobStartToFirstStepSeconds": 1.0,
+          "stepCount": 7,
+          "noRecordedExecution": false,
+          "observedAdmissionAcquisitionStates": [
+            {
+              "state": {
+                "status": "completed",
+                "conclusion": "success",
+                "runner_id": 1000004024
+              },
+              "firstObservedAt": "2026-11-06T18:39:49.134584+00:00",
+              "lastObservedAt": "2026-11-06T21:23:21.120642+00:00"
+            }
+          ],
+          "waitAttribution": "Run-created/job-reported-start to first step includes waiting and setup before the first recorded step; dependency, admission and provider contributions are not independently established. Snapshot transitions are observation bounds, not exact scheduler timestamps."
+        },
+        {
+          "id": 128079948716,
+          "name": "service-postgres",
+          "status": "completed",
+          "conclusion": "success",
+          "runnerID": 1000004025,
+          "reportedJobStartedAt": "2026-11-06T18:37:28Z",
+          "reportedJobCompletedAt": "2026-11-06T18:38:39Z",
+          "reportedJobSpanSeconds": 71.0,
+          "firstStepStartedAt": "2026-11-06T18:37:28Z",
+          "lastStepCompletedAt": "2026-11-06T18:38:37Z",
+          "runnerExecutionStepSpanSeconds": 69.0,
+          "runCreatedToFirstStepSeconds": 4.0,
+          "reportedJobStartToFirstStepSeconds": 0.0,
+          "stepCount": 15,
+          "noRecordedExecution": false,
+          "observedAdmissionAcquisitionStates": [
+            {
+              "state": {
+                "status": "completed",
+                "conclusion": "success",
+                "runner_id": 1000004025
+              },
+              "firstObservedAt": "2026-11-06T18:39:49.134584+00:00",
+              "lastObservedAt": "2026-11-06T21:23:21.120642+00:00"
+            }
+          ],
+          "waitAttribution": "Run-created/job-reported-start to first step includes waiting and setup before the first recorded step; dependency, admission and provider contributions are not independently established. Snapshot transitions are observation bounds, not exact scheduler timestamps."
+        },
+        {
+          "id": 128079948827,
+          "name": "typescript (web)",
+          "status": "completed",
+          "conclusion": "success",
+          "runnerID": 1000004026,
+          "reportedJobStartedAt": "2026-11-06T18:37:28Z",
+          "reportedJobCompletedAt": "2026-11-06T18:37:50Z",
+          "reportedJobSpanSeconds": 22.0,
+          "firstStepStartedAt": "2026-11-06T18:37:29Z",
+          "lastStepCompletedAt": "2026-11-06T18:37:47Z",
+          "runnerExecutionStepSpanSeconds": 18.0,
+          "runCreatedToFirstStepSeconds": 5.0,
+          "reportedJobStartToFirstStepSeconds": 1.0,
+          "stepCount": 9,
+          "noRecordedExecution": false,
+          "observedAdmissionAcquisitionStates": [
+            {
+              "state": {
+                "status": "completed",
+                "conclusion": "success",
+                "runner_id": 1000004026
+              },
+              "firstObservedAt": "2026-11-06T18:39:49.134584+00:00",
+              "lastObservedAt": "2026-11-06T21:23:21.120642+00:00"
+            }
+          ],
+          "waitAttribution": "Run-created/job-reported-start to first step includes waiting and setup before the first recorded step; dependency, admission and provider contributions are not independently established. Snapshot transitions are observation bounds, not exact scheduler timestamps."
+        },
+        {
+          "id": 128079949075,
+          "name": "ios-build",
+          "status": "completed",
+          "conclusion": "success",
+          "runnerID": 1000004041,
+          "reportedJobStartedAt": "2026-11-06T18:58:17Z",
+          "reportedJobCompletedAt": "2026-11-06T19:07:35Z",
+          "reportedJobSpanSeconds": 558.0,
+          "firstStepStartedAt": "2026-11-06T18:58:18Z",
+          "lastStepCompletedAt": "2026-11-06T19:07:33Z",
+          "runnerExecutionStepSpanSeconds": 555.0,
+          "runCreatedToFirstStepSeconds": 1254.0,
+          "reportedJobStartToFirstStepSeconds": 1.0,
+          "stepCount": 12,
+          "noRecordedExecution": false,
+          "observedAdmissionAcquisitionStates": [
+            {
+              "state": {
+                "status": "pending",
+                "conclusion": null,
+                "runner_id": null
+              },
+              "firstObservedAt": "2026-11-06T18:39:49.134584+00:00",
+              "lastObservedAt": "2026-11-06T18:50:30.215769+00:00"
+            },
+            {
+              "state": {
+                "status": "queued",
+                "conclusion": null,
+                "runner_id": 0
+              },
+              "firstObservedAt": "2026-11-06T18:53:45.943519+00:00",
+              "lastObservedAt": "2026-11-06T18:53:45.943519+00:00"
+            },
+            {
+              "state": {
+                "status": "in_progress",
+                "conclusion": null,
+                "runner_id": 1000004041
+              },
+              "firstObservedAt": "2026-11-06T18:58:37.892093+00:00",
+              "lastObservedAt": "2026-11-06T19:01:08.669576+00:00"
+            },
+            {
+              "state": {
+                "status": "completed",
+                "conclusion": "success",
+                "runner_id": 1000004041
+              },
+              "firstObservedAt": "2026-11-06T19:08:21.341136+00:00",
+              "lastObservedAt": "2026-11-06T21:23:21.120642+00:00"
+            }
+          ],
+          "waitAttribution": "Run-created/job-reported-start to first step includes waiting and setup before the first recorded step; dependency, admission and provider contributions are not independently established. Snapshot transitions are observation bounds, not exact scheduler timestamps."
+        },
+        {
+          "id": 128079949224,
+          "name": "swift-packages",
+          "status": "completed",
+          "conclusion": "success",
+          "runnerID": 1000004035,
+          "reportedJobStartedAt": "2026-11-06T18:46:35Z",
+          "reportedJobCompletedAt": "2026-11-06T18:49:43Z",
+          "reportedJobSpanSeconds": 188.0,
+          "firstStepStartedAt": "2026-11-06T18:46:36Z",
+          "lastStepCompletedAt": "2026-11-06T18:49:42Z",
+          "runnerExecutionStepSpanSeconds": 186.0,
+          "runCreatedToFirstStepSeconds": 552.0,
+          "reportedJobStartToFirstStepSeconds": 1.0,
+          "stepCount": 6,
+          "noRecordedExecution": false,
+          "observedAdmissionAcquisitionStates": [
+            {
+              "state": {
+                "status": "pending",
+                "conclusion": null,
+                "runner_id": null
+              },
+              "firstObservedAt": "2026-11-06T18:39:49.134584+00:00",
+              "lastObservedAt": "2026-11-06T18:41:26.713985+00:00"
+            },
+            {
+              "state": {
+                "status": "queued",
+                "conclusion": null,
+                "runner_id": 0
+              },
+              "firstObservedAt": "2026-11-06T18:42:16.106420+00:00",
+              "lastObservedAt": "2026-11-06T18:42:16.106420+00:00"
+            },
+            {
+              "state": {
+                "status": "in_progress",
+                "conclusion": null,
+                "runner_id": 1000004035
+              },
+              "firstObservedAt": "2026-11-06T18:47:13.544021+00:00",
+              "lastObservedAt": "2026-11-06T18:47:13.544021+00:00"
+            },
+            {
+              "state": {
+                "status": "completed",
+                "conclusion": "success",
+                "runner_id": 1000004035
+              },
+              "firstObservedAt": "2026-11-06T18:50:30.215769+00:00",
+              "lastObservedAt": "2026-11-06T21:23:21.120642+00:00"
+            }
+          ],
+          "waitAttribution": "Run-created/job-reported-start to first step includes waiting and setup before the first recorded step; dependency, admission and provider contributions are not independently established. Snapshot transitions are observation bounds, not exact scheduler timestamps."
+        },
+        {
+          "id": 128079949243,
+          "name": "ios-swift-codeql",
+          "status": "completed",
+          "conclusion": "success",
+          "runnerID": 1000004045,
+          "reportedJobStartedAt": "2026-11-06T19:00:16Z",
+          "reportedJobCompletedAt": "2026-11-06T19:48:20Z",
+          "reportedJobSpanSeconds": 2884.0,
+          "firstStepStartedAt": "2026-11-06T19:00:17Z",
+          "lastStepCompletedAt": "2026-11-06T19:48:17Z",
+          "runnerExecutionStepSpanSeconds": 2880.0,
+          "runCreatedToFirstStepSeconds": 1373.0,
+          "reportedJobStartToFirstStepSeconds": 1.0,
+          "stepCount": 12,
+          "noRecordedExecution": false,
+          "observedAdmissionAcquisitionStates": [
+            {
+              "state": {
+                "status": "pending",
+                "conclusion": null,
+                "runner_id": null
+              },
+              "firstObservedAt": "2026-11-06T18:39:49.134584+00:00",
+              "lastObservedAt": "2026-11-06T18:58:37.892093+00:00"
+            },
+            {
+              "state": {
+                "status": "in_progress",
+                "conclusion": null,
+                "runner_id": 1000004045
+              },
+              "firstObservedAt": "2026-11-06T19:00:18.302616+00:00",
+              "lastObservedAt": "2026-11-06T19:47:48.691421+00:00"
+            },
+            {
+              "state": {
+                "status": "completed",
+                "conclusion": "success",
+                "runner_id": 1000004045
+              },
+              "firstObservedAt": "2026-11-06T19:48:36.809329+00:00",
+              "lastObservedAt": "2026-11-06T21:23:21.120642+00:00"
+            }
+          ],
+          "waitAttribution": "Run-created/job-reported-start to first step includes waiting and setup before the first recorded step; dependency, admission and provider contributions are not independently established. Snapshot transitions are observation bounds, not exact scheduler timestamps."
+        },
+        {
+          "id": 128079949373,
+          "name": "ios-release",
+          "status": "completed",
+          "conclusion": "success",
+          "runnerID": 1000004032,
+          "reportedJobStartedAt": "2026-11-06T18:40:51Z",
+          "reportedJobCompletedAt": "2026-11-06T18:47:03Z",
+          "reportedJobSpanSeconds": 372.0,
+          "firstStepStartedAt": "2026-11-06T18:40:52Z",
+          "lastStepCompletedAt": "2026-11-06T18:47:01Z",
+          "runnerExecutionStepSpanSeconds": 369.0,
+          "runCreatedToFirstStepSeconds": 208.0,
+          "reportedJobStartToFirstStepSeconds": 1.0,
+          "stepCount": 7,
+          "noRecordedExecution": false,
+          "observedAdmissionAcquisitionStates": [
+            {
+              "state": {
+                "status": "pending",
+                "conclusion": null,
+                "runner_id": null
+              },
+              "firstObservedAt": "2026-11-06T18:39:49.134584+00:00",
+              "lastObservedAt": "2026-11-06T18:39:49.134584+00:00"
+            },
+            {
+              "state": {
+                "status": "in_progress",
+                "conclusion": null,
+                "runner_id": 1000004032
+              },
+              "firstObservedAt": "2026-11-06T18:41:26.713985+00:00",
+              "lastObservedAt": "2026-11-06T18:42:16.106420+00:00"
+            },
+            {
+              "state": {
+                "status": "completed",
+                "conclusion": "success",
+                "runner_id": 1000004032
+              },
+              "firstObservedAt": "2026-11-06T18:47:13.544021+00:00",
+              "lastObservedAt": "2026-11-06T21:23:21.120642+00:00"
+            }
+          ],
+          "waitAttribution": "Run-created/job-reported-start to first step includes waiting and setup before the first recorded step; dependency, admission and provider contributions are not independently established. Snapshot transitions are observation bounds, not exact scheduler timestamps."
+        },
+        {
+          "id": 128095293415,
+          "name": "ios-tests (ui-03, 5)",
+          "status": "completed",
+          "conclusion": "success",
+          "runnerID": 1000004053,
+          "reportedJobStartedAt": "2026-11-06T19:27:07Z",
+          "reportedJobCompletedAt": "2026-11-06T19:47:00Z",
+          "reportedJobSpanSeconds": 1193.0,
+          "firstStepStartedAt": "2026-11-06T19:27:07Z",
+          "lastStepCompletedAt": "2026-11-06T19:46:58Z",
+          "runnerExecutionStepSpanSeconds": 1191.0,
+          "runCreatedToFirstStepSeconds": 2983.0,
+          "reportedJobStartToFirstStepSeconds": 0.0,
+          "stepCount": 10,
+          "noRecordedExecution": false,
+          "observedAdmissionAcquisitionStates": [
+            {
+              "state": {
+                "status": "pending",
+                "conclusion": null,
+                "runner_id": null
+              },
+              "firstObservedAt": "2026-11-06T19:08:21.341136+00:00",
+              "lastObservedAt": "2026-11-06T19:22:41.477733+00:00"
+            },
+            {
+              "state": {
+                "status": "in_progress",
+                "conclusion": null,
+                "runner_id": 1000004053
+              },
+              "firstObservedAt": "2026-11-06T19:27:26.358004+00:00",
+              "lastObservedAt": "2026-11-06T19:42:28.788778+00:00"
+            },
+            {
+              "state": {
+                "status": "completed",
+                "conclusion": "success",
+                "runner_id": 1000004053
+              },
+              "firstObservedAt": "2026-11-06T19:47:48.691421+00:00",
+              "lastObservedAt": "2026-11-06T21:23:21.120642+00:00"
+            }
+          ],
+          "waitAttribution": "Run-created/job-reported-start to first step includes waiting and setup before the first recorded step; dependency, admission and provider contributions are not independently established. Snapshot transitions are observation bounds, not exact scheduler timestamps."
+        },
+        {
+          "id": 128095293644,
+          "name": "ios-tests (models, 601)",
+          "status": "completed",
+          "conclusion": "success",
+          "runnerID": 1000004055,
+          "reportedJobStartedAt": "2026-11-06T19:35:45Z",
+          "reportedJobCompletedAt": "2026-11-06T19:42:25Z",
+          "reportedJobSpanSeconds": 400.0,
+          "firstStepStartedAt": "2026-11-06T19:35:46Z",
+          "lastStepCompletedAt": "2026-11-06T19:42:23Z",
+          "runnerExecutionStepSpanSeconds": 397.0,
+          "runCreatedToFirstStepSeconds": 3502.0,
+          "reportedJobStartToFirstStepSeconds": 1.0,
+          "stepCount": 10,
+          "noRecordedExecution": false,
+          "observedAdmissionAcquisitionStates": [
+            {
+              "state": {
+                "status": "pending",
+                "conclusion": null,
+                "runner_id": null
+              },
+              "firstObservedAt": "2026-11-06T19:08:21.341136+00:00",
+              "lastObservedAt": "2026-11-06T19:28:13.749316+00:00"
+            },
+            {
+              "state": {
+                "status": "in_progress",
+                "conclusion": null,
+                "runner_id": 1000004055
+              },
+              "firstObservedAt": "2026-11-06T19:36:08.388873+00:00",
+              "lastObservedAt": "2026-11-06T19:36:08.388873+00:00"
+            },
+            {
+              "state": {
+                "status": "completed",
+                "conclusion": "success",
+                "runner_id": 1000004055
+              },
+              "firstObservedAt": "2026-11-06T19:42:28.788778+00:00",
+              "lastObservedAt": "2026-11-06T21:23:21.120642+00:00"
+            }
+          ],
+          "waitAttribution": "Run-created/job-reported-start to first step includes waiting and setup before the first recorded step; dependency, admission and provider contributions are not independently established. Snapshot transitions are observation bounds, not exact scheduler timestamps."
+        },
+        {
+          "id": 128095293820,
+          "name": "ios-tests (ui-01, 3)",
+          "status": "completed",
+          "conclusion": "success",
+          "runnerID": 1000004056,
+          "reportedJobStartedAt": "2026-11-06T19:41:58Z",
+          "reportedJobCompletedAt": "2026-11-06T20:04:02Z",
+          "reportedJobSpanSeconds": 1324.0,
+          "firstStepStartedAt": "2026-11-06T19:42:00Z",
+          "lastStepCompletedAt": "2026-11-06T20:04:01Z",
+          "runnerExecutionStepSpanSeconds": 1321.0,
+          "runCreatedToFirstStepSeconds": 3876.0,
+          "reportedJobStartToFirstStepSeconds": 2.0,
+          "stepCount": 10,
+          "noRecordedExecution": false,
+          "observedAdmissionAcquisitionStates": [
+            {
+              "state": {
+                "status": "pending",
+                "conclusion": null,
+                "runner_id": null
+              },
+              "firstObservedAt": "2026-11-06T19:08:21.341136+00:00",
+              "lastObservedAt": "2026-11-06T19:36:08.388873+00:00"
+            },
+            {
+              "state": {
+                "status": "in_progress",
+                "conclusion": null,
+                "runner_id": 1000004056
+              },
+              "firstObservedAt": "2026-11-06T19:42:28.788778+00:00",
+              "lastObservedAt": "2026-11-06T19:55:51.655891+00:00"
+            },
+            {
+              "state": {
+                "status": "completed",
+                "conclusion": "success",
+                "runner_id": 1000004056
+              },
+              "firstObservedAt": "2026-11-06T20:04:23.505159+00:00",
+              "lastObservedAt": "2026-11-06T21:23:21.120642+00:00"
+            }
+          ],
+          "waitAttribution": "Run-created/job-reported-start to first step includes waiting and setup before the first recorded step; dependency, admission and provider contributions are not independently established. Snapshot transitions are observation bounds, not exact scheduler timestamps."
+        },
+        {
+          "id": 128095294119,
+          "name": "ios-tests (ui-02, 4)",
+          "status": "completed",
+          "conclusion": "success",
+          "runnerID": 1000004067,
+          "reportedJobStartedAt": "2026-11-06T20:18:28Z",
+          "reportedJobCompletedAt": "2026-11-06T20:32:31Z",
+          "reportedJobSpanSeconds": 843.0,
+          "firstStepStartedAt": "2026-11-06T20:18:28Z",
+          "lastStepCompletedAt": "2026-11-06T20:32:30Z",
+          "runnerExecutionStepSpanSeconds": 842.0,
+          "runCreatedToFirstStepSeconds": 6064.0,
+          "reportedJobStartToFirstStepSeconds": 0.0,
+          "stepCount": 10,
+          "noRecordedExecution": false,
+          "observedAdmissionAcquisitionStates": [
+            {
+              "state": {
+                "status": "pending",
+                "conclusion": null,
+                "runner_id": null
+              },
+              "firstObservedAt": "2026-11-06T19:08:21.341136+00:00",
+              "lastObservedAt": "2026-11-06T20:17:42.140400+00:00"
+            },
+            {
+              "state": {
+                "status": "queued",
+                "conclusion": null,
+                "runner_id": 0
+              },
+              "firstObservedAt": "2026-11-06T20:18:28.697510+00:00",
+              "lastObservedAt": "2026-11-06T20:18:28.697510+00:00"
+            },
+            {
+              "state": {
+                "status": "in_progress",
+                "conclusion": null,
+                "runner_id": 1000004067
+              },
+              "firstObservedAt": "2026-11-06T20:19:15.286468+00:00",
+              "lastObservedAt": "2026-11-06T20:28:37.540096+00:00"
+            },
+            {
+              "state": {
+                "status": "completed",
+                "conclusion": "success",
+                "runner_id": 1000004067
+              },
+              "firstObservedAt": "2026-11-06T20:33:20.384880+00:00",
+              "lastObservedAt": "2026-11-06T21:23:21.120642+00:00"
+            }
+          ],
+          "waitAttribution": "Run-created/job-reported-start to first step includes waiting and setup before the first recorded step; dependency, admission and provider contributions are not independently established. Snapshot transitions are observation bounds, not exact scheduler timestamps."
+        },
+        {
+          "id": 128095294284,
+          "name": "ios-tests (ui-04, 5)",
+          "status": "completed",
+          "conclusion": "success",
+          "runnerID": 1000004054,
+          "reportedJobStartedAt": "2026-11-06T19:27:41Z",
+          "reportedJobCompletedAt": "2026-11-06T19:49:08Z",
+          "reportedJobSpanSeconds": 1287.0,
+          "firstStepStartedAt": "2026-11-06T19:27:42Z",
+          "lastStepCompletedAt": "2026-11-06T19:49:06Z",
+          "runnerExecutionStepSpanSeconds": 1284.0,
+          "runCreatedToFirstStepSeconds": 3018.0,
+          "reportedJobStartToFirstStepSeconds": 1.0,
+          "stepCount": 10,
+          "noRecordedExecution": false,
+          "observedAdmissionAcquisitionStates": [
+            {
+              "state": {
+                "status": "pending",
+                "conclusion": null,
+                "runner_id": null
+              },
+              "firstObservedAt": "2026-11-06T19:08:21.341136+00:00",
+              "lastObservedAt": "2026-11-06T19:08:21.341136+00:00"
+            },
+            {
+              "state": {
+                "status": "queued",
+                "conclusion": null,
+                "runner_id": 0
+              },
+              "firstObservedAt": "2026-11-06T19:22:41.477733+00:00",
+              "lastObservedAt": "2026-11-06T19:27:26.358004+00:00"
+            },
+            {
+              "state": {
+                "status": "in_progress",
+                "conclusion": null,
+                "runner_id": 1000004054
+              },
+              "firstObservedAt": "2026-11-06T19:28:13.749316+00:00",
+              "lastObservedAt": "2026-11-06T19:48:36.809329+00:00"
+            },
+            {
+              "state": {
+                "status": "completed",
+                "conclusion": "success",
+                "runner_id": 1000004054
+              },
+              "firstObservedAt": "2026-11-06T19:49:24.849392+00:00",
+              "lastObservedAt": "2026-11-06T21:23:21.120642+00:00"
+            }
+          ],
+          "waitAttribution": "Run-created/job-reported-start to first step includes waiting and setup before the first recorded step; dependency, admission and provider contributions are not independently established. Snapshot transitions are observation bounds, not exact scheduler timestamps."
+        },
+        {
+          "id": 128113006612,
+          "name": "ios-tests (ui-05, 5)",
+          "status": "completed",
+          "conclusion": "success",
+          "runnerID": 1000004061,
+          "reportedJobStartedAt": "2026-11-06T19:55:27Z",
+          "reportedJobCompletedAt": "2026-11-06T20:16:03Z",
+          "reportedJobSpanSeconds": 1236.0,
+          "firstStepStartedAt": "2026-11-06T19:55:28Z",
+          "lastStepCompletedAt": "2026-11-06T20:16:01Z",
+          "runnerExecutionStepSpanSeconds": 1233.0,
+          "runCreatedToFirstStepSeconds": 4684.0,
+          "reportedJobStartToFirstStepSeconds": 1.0,
+          "stepCount": 10,
+          "noRecordedExecution": false,
+          "observedAdmissionAcquisitionStates": [
+            {
+              "state": {
+                "status": "pending",
+                "conclusion": null,
+                "runner_id": null
+              },
+              "firstObservedAt": "2026-11-06T19:42:28.788778+00:00",
+              "lastObservedAt": "2026-11-06T19:49:24.849392+00:00"
+            },
+            {
+              "state": {
+                "status": "in_progress",
+                "conclusion": null,
+                "runner_id": 1000004061
+              },
+              "firstObservedAt": "2026-11-06T19:55:51.655891+00:00",
+              "lastObservedAt": "2026-11-06T20:04:23.505159+00:00"
+            },
+            {
+              "state": {
+                "status": "completed",
+                "conclusion": "success",
+                "runner_id": 1000004061
+              },
+              "firstObservedAt": "2026-11-06T20:16:06.106647+00:00",
+              "lastObservedAt": "2026-11-06T21:23:21.120642+00:00"
+            }
+          ],
+          "waitAttribution": "Run-created/job-reported-start to first step includes waiting and setup before the first recorded step; dependency, admission and provider contributions are not independently established. Snapshot transitions are observation bounds, not exact scheduler timestamps."
+        },
+        {
+          "id": 128115338748,
+          "name": "ios-tests (ui-06, 5)",
+          "status": "completed",
+          "conclusion": "failure",
+          "runnerID": 1000004068,
+          "reportedJobStartedAt": "2026-11-06T20:19:09Z",
+          "reportedJobCompletedAt": "2026-11-06T20:48:58Z",
+          "reportedJobSpanSeconds": 1789.0,
+          "firstStepStartedAt": "2026-11-06T20:19:10Z",
+          "lastStepCompletedAt": "2026-11-06T20:48:57Z",
+          "runnerExecutionStepSpanSeconds": 1787.0,
+          "runCreatedToFirstStepSeconds": 6106.0,
+          "reportedJobStartToFirstStepSeconds": 1.0,
+          "stepCount": 10,
+          "noRecordedExecution": false,
+          "observedAdmissionAcquisitionStates": [
+            {
+              "state": {
+                "status": "pending",
+                "conclusion": null,
+                "runner_id": null
+              },
+              "firstObservedAt": "2026-11-06T19:47:48.691421+00:00",
+              "lastObservedAt": "2026-11-06T20:18:28.697510+00:00"
+            },
+            {
+              "state": {
+                "status": "in_progress",
+                "conclusion": null,
+                "runner_id": 1000004068
+              },
+              "firstObservedAt": "2026-11-06T20:19:15.286468+00:00",
+              "lastObservedAt": "2026-11-06T20:45:51.695889+00:00"
+            },
+            {
+              "state": {
+                "status": "completed",
+                "conclusion": "failure",
+                "runner_id": 1000004068
+              },
+              "firstObservedAt": "2026-11-06T20:49:49.169574+00:00",
+              "lastObservedAt": "2026-11-06T21:23:21.120642+00:00"
+            }
+          ],
+          "waitAttribution": "Run-created/job-reported-start to first step includes waiting and setup before the first recorded step; dependency, admission and provider contributions are not independently established. Snapshot transitions are observation bounds, not exact scheduler timestamps."
+        },
+        {
+          "id": 128116417997,
+          "name": "ios-tests (ui-07, 6)",
+          "status": "completed",
+          "conclusion": "failure",
+          "runnerID": 1000004072,
+          "reportedJobStartedAt": "2026-11-06T20:45:05Z",
+          "reportedJobCompletedAt": "2026-11-06T21:22:58Z",
+          "reportedJobSpanSeconds": 2273.0,
+          "firstStepStartedAt": "2026-11-06T20:45:06Z",
+          "lastStepCompletedAt": "2026-11-06T21:22:57Z",
+          "runnerExecutionStepSpanSeconds": 2271.0,
+          "runCreatedToFirstStepSeconds": 7662.0,
+          "reportedJobStartToFirstStepSeconds": 1.0,
+          "stepCount": 10,
+          "noRecordedExecution": false,
+          "observedAdmissionAcquisitionStates": [
+            {
+              "state": {
+                "status": "pending",
+                "conclusion": null,
+                "runner_id": null
+              },
+              "firstObservedAt": "2026-11-06T19:49:24.849392+00:00",
+              "lastObservedAt": "2026-11-06T20:35:40.222187+00:00"
+            },
+            {
+              "state": {
+                "status": "queued",
+                "conclusion": null,
+                "runner_id": 0
+              },
+              "firstObservedAt": "2026-11-06T20:45:05.020795+00:00",
+              "lastObservedAt": "2026-11-06T20:45:05.020795+00:00"
+            },
+            {
+              "state": {
+                "status": "in_progress",
+                "conclusion": null,
+                "runner_id": 1000004072
+              },
+              "firstObservedAt": "2026-11-06T20:45:51.695889+00:00",
+              "lastObservedAt": "2026-11-06T20:50:40.513104+00:00"
+            },
+            {
+              "state": {
+                "status": "completed",
+                "conclusion": "failure",
+                "runner_id": 1000004072
+              },
+              "firstObservedAt": "2026-11-06T21:23:21.120642+00:00",
+              "lastObservedAt": "2026-11-06T21:23:21.120642+00:00"
+            }
+          ],
+          "waitAttribution": "Run-created/job-reported-start to first step includes waiting and setup before the first recorded step; dependency, admission and provider contributions are not independently established. Snapshot transitions are observation bounds, not exact scheduler timestamps."
+        },
+        {
+          "id": 128123809027,
+          "name": "ios-tests (ui-08, 6)",
+          "status": "completed",
+          "conclusion": "success",
+          "runnerID": 1000004064,
+          "reportedJobStartedAt": "2026-11-06T20:04:06Z",
+          "reportedJobCompletedAt": "2026-11-06T20:27:23Z",
+          "reportedJobSpanSeconds": 1397.0,
+          "firstStepStartedAt": "2026-11-06T20:04:07Z",
+          "lastStepCompletedAt": "2026-11-06T20:27:21Z",
+          "runnerExecutionStepSpanSeconds": 1394.0,
+          "runCreatedToFirstStepSeconds": 5203.0,
+          "reportedJobStartToFirstStepSeconds": 1.0,
+          "stepCount": 10,
+          "noRecordedExecution": false,
+          "observedAdmissionAcquisitionStates": [
+            {
+              "state": {
+                "status": "in_progress",
+                "conclusion": null,
+                "runner_id": 1000004064
+              },
+              "firstObservedAt": "2026-11-06T20:04:23.505159+00:00",
+              "lastObservedAt": "2026-11-06T20:19:15.286468+00:00"
+            },
+            {
+              "state": {
+                "status": "completed",
+                "conclusion": "success",
+                "runner_id": 1000004064
+              },
+              "firstObservedAt": "2026-11-06T20:27:47.554719+00:00",
+              "lastObservedAt": "2026-11-06T21:23:21.120642+00:00"
+            }
+          ],
+          "waitAttribution": "Run-created/job-reported-start to first step includes waiting and setup before the first recorded step; dependency, admission and provider contributions are not independently established. Snapshot transitions are observation bounds, not exact scheduler timestamps."
+        },
+        {
+          "id": 128129865022,
+          "name": "ios-tests (ui-09, 6)",
+          "status": "completed",
+          "conclusion": "success",
+          "runnerID": 1000004066,
+          "reportedJobStartedAt": "2026-11-06T20:16:54Z",
+          "reportedJobCompletedAt": "2026-11-06T20:35:36Z",
+          "reportedJobSpanSeconds": 1122.0,
+          "firstStepStartedAt": "2026-11-06T20:16:54Z",
+          "lastStepCompletedAt": "2026-11-06T20:35:34Z",
+          "runnerExecutionStepSpanSeconds": 1120.0,
+          "runCreatedToFirstStepSeconds": 5970.0,
+          "reportedJobStartToFirstStepSeconds": 0.0,
+          "stepCount": 10,
+          "noRecordedExecution": false,
+          "observedAdmissionAcquisitionStates": [
+            {
+              "state": {
+                "status": "queued",
+                "conclusion": null,
+                "runner_id": null
+              },
+              "firstObservedAt": "2026-11-06T20:16:06.106647+00:00",
+              "lastObservedAt": "2026-11-06T20:16:06.106647+00:00"
+            },
+            {
+              "state": {
+                "status": "in_progress",
+                "conclusion": null,
+                "runner_id": 1000004066
+              },
+              "firstObservedAt": "2026-11-06T20:17:42.140400+00:00",
+              "lastObservedAt": "2026-11-06T20:33:20.384880+00:00"
+            },
+            {
+              "state": {
+                "status": "completed",
+                "conclusion": "success",
+                "runner_id": 1000004066
+              },
+              "firstObservedAt": "2026-11-06T20:35:40.222187+00:00",
+              "lastObservedAt": "2026-11-06T21:23:21.120642+00:00"
+            }
+          ],
+          "waitAttribution": "Run-created/job-reported-start to first step includes waiting and setup before the first recorded step; dependency, admission and provider contributions are not independently established. Snapshot transitions are observation bounds, not exact scheduler timestamps."
+        },
+        {
+          "id": 128135453217,
+          "name": "ios-tests (ui-10, 6)",
+          "status": "completed",
+          "conclusion": "failure",
+          "runnerID": 1000004070,
+          "reportedJobStartedAt": "2026-11-06T20:28:12Z",
+          "reportedJobCompletedAt": "2026-11-06T20:49:54Z",
+          "reportedJobSpanSeconds": 1302.0,
+          "firstStepStartedAt": "2026-11-06T20:28:12Z",
+          "lastStepCompletedAt": "2026-11-06T20:49:53Z",
+          "runnerExecutionStepSpanSeconds": 1301.0,
+          "runCreatedToFirstStepSeconds": 6648.0,
+          "reportedJobStartToFirstStepSeconds": 0.0,
+          "stepCount": 10,
+          "noRecordedExecution": false,
+          "observedAdmissionAcquisitionStates": [
+            {
+              "state": {
+                "status": "pending",
+                "conclusion": null,
+                "runner_id": null
+              },
+              "firstObservedAt": "2026-11-06T20:27:47.554719+00:00",
+              "lastObservedAt": "2026-11-06T20:27:47.554719+00:00"
+            },
+            {
+              "state": {
+                "status": "in_progress",
+                "conclusion": null,
+                "runner_id": 1000004070
+              },
+              "firstObservedAt": "2026-11-06T20:28:37.540096+00:00",
+              "lastObservedAt": "2026-11-06T20:49:49.169574+00:00"
+            },
+            {
+              "state": {
+                "status": "completed",
+                "conclusion": "failure",
+                "runner_id": 1000004070
+              },
+              "firstObservedAt": "2026-11-06T20:50:40.513104+00:00",
+              "lastObservedAt": "2026-11-06T21:23:21.120642+00:00"
+            }
+          ],
+          "waitAttribution": "Run-created/job-reported-start to first step includes waiting and setup before the first recorded step; dependency, admission and provider contributions are not independently established. Snapshot transitions are observation bounds, not exact scheduler timestamps."
+        },
+        {
+          "id": 128162168641,
+          "name": "CI gate",
+          "status": "completed",
+          "conclusion": "failure",
+          "runnerID": 1000004077,
+          "reportedJobStartedAt": "2026-11-06T21:23:02Z",
+          "reportedJobCompletedAt": "2026-11-06T21:23:06Z",
+          "reportedJobSpanSeconds": 4.0,
+          "firstStepStartedAt": "2026-11-06T21:23:03Z",
+          "lastStepCompletedAt": "2026-11-06T21:23:03Z",
+          "runnerExecutionStepSpanSeconds": 0.0,
+          "runCreatedToFirstStepSeconds": 9939.0,
+          "reportedJobStartToFirstStepSeconds": 1.0,
+          "stepCount": 3,
+          "noRecordedExecution": false,
+          "observedAdmissionAcquisitionStates": [
+            {
+              "state": {
+                "status": "completed",
+                "conclusion": "failure",
+                "runner_id": 1000004077
+              },
+              "firstObservedAt": "2026-11-06T21:23:21.120642+00:00",
+              "lastObservedAt": "2026-11-06T21:23:21.120642+00:00"
+            }
+          ],
+          "waitAttribution": "Run-created/job-reported-start to first step includes waiting and setup before the first recorded step; dependency, admission and provider contributions are not independently established. Snapshot transitions are observation bounds, not exact scheduler timestamps."
+        }
+      ]
+    },
+    {
+      "runID": 42272379472,
+      "status": "completed",
+      "conclusion": "failure",
+      "runCreatedAt": "2026-11-06T18:37:24Z",
+      "runStartedAt": "2026-11-06T18:37:24Z",
+      "apiUpdatedAt": "2026-11-06T19:00:14Z",
+      "latestJobCompletedAt": "2026-11-06T19:00:13Z",
+      "runWallToTerminalAPIUpdateSeconds": 1370.0,
+      "runWallToLastJobCompletionSeconds": 1369.0,
+      "jobs": [
+        {
+          "id": 128079947828,
+          "name": "sanitizers (address)",
+          "status": "completed",
+          "conclusion": "success",
+          "runnerID": 1000004027,
+          "reportedJobStartedAt": "2026-11-06T18:37:36Z",
+          "reportedJobCompletedAt": "2026-11-06T18:40:40Z",
+          "reportedJobSpanSeconds": 184.0,
+          "firstStepStartedAt": "2026-11-06T18:37:36Z",
+          "lastStepCompletedAt": "2026-11-06T18:40:38Z",
+          "runnerExecutionStepSpanSeconds": 182.0,
+          "runCreatedToFirstStepSeconds": 12.0,
+          "reportedJobStartToFirstStepSeconds": 0.0,
+          "stepCount": 6,
+          "noRecordedExecution": false,
+          "observedAdmissionAcquisitionStates": [
+            {
+              "state": {
+                "status": "in_progress",
+                "conclusion": null,
+                "runner_id": 1000004027
+              },
+              "firstObservedAt": "2026-11-06T18:39:50.224614+00:00",
+              "lastObservedAt": "2026-11-06T18:39:50.224614+00:00"
+            },
+            {
+              "state": {
+                "status": "completed",
+                "conclusion": "success",
+                "runner_id": 1000004027
+              },
+              "firstObservedAt": "2026-11-06T18:41:27.905325+00:00",
+              "lastObservedAt": "2026-11-06T19:00:19.902391+00:00"
+            }
+          ],
+          "waitAttribution": "Run-created/job-reported-start to first step includes waiting and setup before the first recorded step; dependency, admission and provider contributions are not independently established. Snapshot transitions are observation bounds, not exact scheduler timestamps."
+        },
+        {
+          "id": 128079948353,
+          "name": "sanitizers (thread)",
+          "status": "completed",
+          "conclusion": "success",
+          "runnerID": 1000004028,
+          "reportedJobStartedAt": "2026-11-06T18:37:38Z",
+          "reportedJobCompletedAt": "2026-11-06T18:41:32Z",
+          "reportedJobSpanSeconds": 234.0,
+          "firstStepStartedAt": "2026-11-06T18:37:38Z",
+          "lastStepCompletedAt": "2026-11-06T18:41:29Z",
+          "runnerExecutionStepSpanSeconds": 231.0,
+          "runCreatedToFirstStepSeconds": 14.0,
+          "reportedJobStartToFirstStepSeconds": 0.0,
+          "stepCount": 6,
+          "noRecordedExecution": false,
+          "observedAdmissionAcquisitionStates": [
+            {
+              "state": {
+                "status": "in_progress",
+                "conclusion": null,
+                "runner_id": 1000004028
+              },
+              "firstObservedAt": "2026-11-06T18:39:50.224614+00:00",
+              "lastObservedAt": "2026-11-06T18:41:27.905325+00:00"
+            },
+            {
+              "state": {
+                "status": "completed",
+                "conclusion": "success",
+                "runner_id": 1000004028
+              },
+              "firstObservedAt": "2026-11-06T18:42:17.301935+00:00",
+              "lastObservedAt": "2026-11-06T19:00:19.902391+00:00"
+            }
+          ],
+          "waitAttribution": "Run-created/job-reported-start to first step includes waiting and setup before the first recorded step; dependency, admission and provider contributions are not independently established. Snapshot transitions are observation bounds, not exact scheduler timestamps."
+        },
+        {
+          "id": 128079948617,
+          "name": "storekit (es, US Spanish app \u00b7 Spanish (Mexico) offer \u00b7 USA storefront)",
+          "status": "completed",
+          "conclusion": "success",
+          "runnerID": 1000004029,
+          "reportedJobStartedAt": "2026-11-06T18:37:34Z",
+          "reportedJobCompletedAt": "2026-11-06T18:53:13Z",
+          "reportedJobSpanSeconds": 939.0,
+          "firstStepStartedAt": "2026-11-06T18:37:35Z",
+          "lastStepCompletedAt": "2026-11-06T18:53:11Z",
+          "runnerExecutionStepSpanSeconds": 936.0,
+          "runCreatedToFirstStepSeconds": 11.0,
+          "reportedJobStartToFirstStepSeconds": 1.0,
+          "stepCount": 9,
+          "noRecordedExecution": false,
+          "observedAdmissionAcquisitionStates": [
+            {
+              "state": {
+                "status": "in_progress",
+                "conclusion": null,
+                "runner_id": 1000004029
+              },
+              "firstObservedAt": "2026-11-06T18:39:50.224614+00:00",
+              "lastObservedAt": "2026-11-06T18:45:30.544311+00:00"
+            },
+            {
+              "state": {
+                "status": "completed",
+                "conclusion": "success",
+                "runner_id": 1000004029
+              },
+              "firstObservedAt": "2026-11-06T18:53:47.073590+00:00",
+              "lastObservedAt": "2026-11-06T19:00:19.902391+00:00"
+            }
+          ],
+          "waitAttribution": "Run-created/job-reported-start to first step includes waiting and setup before the first recorded step; dependency, admission and provider contributions are not independently established. Snapshot transitions are observation bounds, not exact scheduler timestamps."
+        },
+        {
+          "id": 128079949194,
+          "name": "storekit (en, US English \u2014 local StoreKit)",
+          "status": "completed",
+          "conclusion": "cancelled",
+          "runnerID": 0,
+          "reportedJobStartedAt": "2026-11-06T18:37:25Z",
+          "reportedJobCompletedAt": "2026-11-06T19:00:13Z",
+          "reportedJobSpanSeconds": 1368.0,
+          "firstStepStartedAt": null,
+          "lastStepCompletedAt": null,
+          "runnerExecutionStepSpanSeconds": null,
+          "runCreatedToFirstStepSeconds": null,
+          "reportedJobStartToFirstStepSeconds": null,
+          "stepCount": 0,
+          "noRecordedExecution": true,
+          "observedAdmissionAcquisitionStates": [
+            {
+              "state": {
+                "status": "pending",
+                "conclusion": null,
+                "runner_id": null
+              },
+              "firstObservedAt": "2026-11-06T18:39:50.224614+00:00",
+              "lastObservedAt": "2026-11-06T18:42:17.301935+00:00"
+            },
+            {
+              "state": {
+                "status": "queued",
+                "conclusion": null,
+                "runner_id": 0
+              },
+              "firstObservedAt": "2026-11-06T18:45:30.544311+00:00",
+              "lastObservedAt": "2026-11-06T18:53:47.073590+00:00"
+            },
+            {
+              "state": {
+                "status": "completed",
+                "conclusion": "cancelled",
+                "runner_id": 0
+              },
+              "firstObservedAt": "2026-11-06T19:00:19.902391+00:00",
+              "lastObservedAt": "2026-11-06T19:00:19.902391+00:00"
+            }
+          ],
+          "waitAttribution": "Run-created/job-reported-start to first step includes waiting and setup before the first recorded step; dependency, admission and provider contributions are not independently established. Snapshot transitions are observation bounds, not exact scheduler timestamps."
+        }
+      ]
+    },
+    {
+      "runID": 42272379490,
+      "status": "completed",
+      "conclusion": "failure",
+      "runCreatedAt": "2026-11-06T18:37:24Z",
+      "runStartedAt": "2026-11-06T18:37:24Z",
+      "apiUpdatedAt": "2026-11-06T19:53:43Z",
+      "latestJobCompletedAt": "2026-11-06T19:53:42Z",
+      "runWallToTerminalAPIUpdateSeconds": 4579.0,
+      "runWallToLastJobCompletionSeconds": 4578.0,
+      "jobs": [
+        {
+          "id": 128079947517,
+          "name": "Build optimized iPhone test products",
+          "status": "completed",
+          "conclusion": "success",
+          "runnerID": 1000004030,
+          "reportedJobStartedAt": "2026-11-06T18:37:29Z",
+          "reportedJobCompletedAt": "2026-11-06T18:45:11Z",
+          "reportedJobSpanSeconds": 462.0,
+          "firstStepStartedAt": "2026-11-06T18:37:29Z",
+          "lastStepCompletedAt": "2026-11-06T18:45:09Z",
+          "runnerExecutionStepSpanSeconds": 460.0,
+          "runCreatedToFirstStepSeconds": 5.0,
+          "reportedJobStartToFirstStepSeconds": 0.0,
+          "stepCount": 11,
+          "noRecordedExecution": false,
+          "observedAdmissionAcquisitionStates": [
+            {
+              "state": {
+                "status": "in_progress",
+                "conclusion": null,
+                "runner_id": 1000004030
+              },
+              "firstObservedAt": "2026-11-06T18:39:51.170245+00:00",
+              "lastObservedAt": "2026-11-06T18:39:51.170245+00:00"
+            },
+            {
+              "state": {
+                "status": "completed",
+                "conclusion": "success",
+                "runner_id": 1000004030
+              },
+              "firstObservedAt": "2026-11-06T18:45:31.503356+00:00",
+              "lastObservedAt": "2026-11-06T19:54:17.949288+00:00"
+            }
+          ],
+          "waitAttribution": "Run-created/job-reported-start to first step includes waiting and setup before the first recorded step; dependency, admission and provider contributions are not independently established. Snapshot transitions are observation bounds, not exact scheduler timestamps."
+        },
+        {
+          "id": 128083891944,
+          "name": "Release performance (launch)",
+          "status": "completed",
+          "conclusion": "success",
+          "runnerID": 1000004046,
+          "reportedJobStartedAt": "2026-11-06T19:04:27Z",
+          "reportedJobCompletedAt": "2026-11-06T19:13:48Z",
+          "reportedJobSpanSeconds": 561.0,
+          "firstStepStartedAt": "2026-11-06T19:04:28Z",
+          "lastStepCompletedAt": "2026-11-06T19:13:45Z",
+          "runnerExecutionStepSpanSeconds": 557.0,
+          "runCreatedToFirstStepSeconds": 1624.0,
+          "reportedJobStartToFirstStepSeconds": 1.0,
+          "stepCount": 13,
+          "noRecordedExecution": false,
+          "observedAdmissionAcquisitionStates": [
+            {
+              "state": {
+                "status": "pending",
+                "conclusion": null,
+                "runner_id": null
+              },
+              "firstObservedAt": "2026-11-06T18:45:31.503356+00:00",
+              "lastObservedAt": "2026-11-06T18:45:31.503356+00:00"
+            },
+            {
+              "state": {
+                "status": "queued",
+                "conclusion": null,
+                "runner_id": 0
+              },
+              "firstObservedAt": "2026-11-06T18:59:30.591285+00:00",
+              "lastObservedAt": "2026-11-06T18:59:30.591285+00:00"
+            },
+            {
+              "state": {
+                "status": "in_progress",
+                "conclusion": null,
+                "runner_id": 1000004046
+              },
+              "firstObservedAt": "2026-11-06T19:05:07.371834+00:00",
+              "lastObservedAt": "2026-11-06T19:05:07.371834+00:00"
+            },
+            {
+              "state": {
+                "status": "completed",
+                "conclusion": "success",
+                "runner_id": 1000004046
+              },
+              "firstObservedAt": "2026-11-06T19:13:55.926191+00:00",
+              "lastObservedAt": "2026-11-06T19:54:17.949288+00:00"
+            }
+          ],
+          "waitAttribution": "Run-created/job-reported-start to first step includes waiting and setup before the first recorded step; dependency, admission and provider contributions are not independently established. Snapshot transitions are observation bounds, not exact scheduler timestamps."
+        },
+        {
+          "id": 128083892445,
+          "name": "Release performance (scroll)",
+          "status": "completed",
+          "conclusion": "failure",
+          "runnerID": 1000004059,
+          "reportedJobStartedAt": "2026-11-06T19:48:24Z",
+          "reportedJobCompletedAt": "2026-11-06T19:53:42Z",
+          "reportedJobSpanSeconds": 318.0,
+          "firstStepStartedAt": "2026-11-06T19:48:25Z",
+          "lastStepCompletedAt": "2026-11-06T19:53:40Z",
+          "runnerExecutionStepSpanSeconds": 315.0,
+          "runCreatedToFirstStepSeconds": 4261.0,
+          "reportedJobStartToFirstStepSeconds": 1.0,
+          "stepCount": 13,
+          "noRecordedExecution": false,
+          "observedAdmissionAcquisitionStates": [
+            {
+              "state": {
+                "status": "pending",
+                "conclusion": null,
+                "runner_id": null
+              },
+              "firstObservedAt": "2026-11-06T18:45:31.503356+00:00",
+              "lastObservedAt": "2026-11-06T19:20:17.707138+00:00"
+            },
+            {
+              "state": {
+                "status": "in_progress",
+                "conclusion": null,
+                "runner_id": 1000004059
+              },
+              "firstObservedAt": "2026-11-06T19:48:38.384451+00:00",
+              "lastObservedAt": "2026-11-06T19:48:38.384451+00:00"
+            },
+            {
+              "state": {
+                "status": "completed",
+                "conclusion": "failure",
+                "runner_id": 1000004059
+              },
+              "firstObservedAt": "2026-11-06T19:54:17.949288+00:00",
+              "lastObservedAt": "2026-11-06T19:54:17.949288+00:00"
+            }
+          ],
+          "waitAttribution": "Run-created/job-reported-start to first step includes waiting and setup before the first recorded step; dependency, admission and provider contributions are not independently established. Snapshot transitions are observation bounds, not exact scheduler timestamps."
+        },
+        {
+          "id": 128083892450,
+          "name": "Release performance (rendered)",
+          "status": "completed",
+          "conclusion": "success",
+          "runnerID": 1000004047,
+          "reportedJobStartedAt": "2026-11-06T19:04:33Z",
+          "reportedJobCompletedAt": "2026-11-06T19:19:50Z",
+          "reportedJobSpanSeconds": 917.0,
+          "firstStepStartedAt": "2026-11-06T19:04:34Z",
+          "lastStepCompletedAt": "2026-11-06T19:19:48Z",
+          "runnerExecutionStepSpanSeconds": 914.0,
+          "runCreatedToFirstStepSeconds": 1630.0,
+          "reportedJobStartToFirstStepSeconds": 1.0,
+          "stepCount": 13,
+          "noRecordedExecution": false,
+          "observedAdmissionAcquisitionStates": [
+            {
+              "state": {
+                "status": "pending",
+                "conclusion": null,
+                "runner_id": null
+              },
+              "firstObservedAt": "2026-11-06T18:45:31.503356+00:00",
+              "lastObservedAt": "2026-11-06T18:45:31.503356+00:00"
+            },
+            {
+              "state": {
+                "status": "queued",
+                "conclusion": null,
+                "runner_id": 0
+              },
+              "firstObservedAt": "2026-11-06T18:59:30.591285+00:00",
+              "lastObservedAt": "2026-11-06T18:59:30.591285+00:00"
+            },
+            {
+              "state": {
+                "status": "in_progress",
+                "conclusion": null,
+                "runner_id": 1000004047
+              },
+              "firstObservedAt": "2026-11-06T19:05:07.371834+00:00",
+              "lastObservedAt": "2026-11-06T19:13:55.926191+00:00"
+            },
+            {
+              "state": {
+                "status": "completed",
+                "conclusion": "success",
+                "runner_id": 1000004047
+              },
+              "firstObservedAt": "2026-11-06T19:20:17.707138+00:00",
+              "lastObservedAt": "2026-11-06T19:54:17.949288+00:00"
+            }
+          ],
+          "waitAttribution": "Run-created/job-reported-start to first step includes waiting and setup before the first recorded step; dependency, admission and provider contributions are not independently established. Snapshot transitions are observation bounds, not exact scheduler timestamps."
+        }
+      ]
+    }
+  ],
+  "scope": [
+    "Runner execution uses recorded first/last step timestamps, never job started_at alone.",
+    "Terminal API updated_at and last job completion are reported separately; neither is silently substituted for an unavailable dedicated workflow completed_at field.",
+    "The five-slot policy does not itself demonstrate faster execution or shorter wall time. Waiting categories remain combined or unknown except observed pending/queued/acquired bounds."
+  ]
+}
