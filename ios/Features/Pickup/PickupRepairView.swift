@@ -1,11 +1,17 @@
 import SwiftUI
 import UIKit
 import CoreDomain
+#if DEBUG && KEYBOARD_DISMISS_DIAGNOSTIC
+import OSLog
+#endif
 
 struct UrgentRepairView: View {
     @ObservedObject var model: PickupModel
     private enum Field { case food, meal, required, available }
     @FocusState private var field: Field?
+    #if DEBUG && KEYBOARD_DISMISS_DIAGNOSTIC
+    @Environment(\.scenePhase) private var diagnosticScenePhase
+    #endif
     @State private var food = ""
     @State private var meal = ""
     @State private var required = ""
@@ -34,11 +40,47 @@ struct UrgentRepairView: View {
         }.navigationTitle(pTr("Something is missing"))
             .onChange(of: [food, meal, required, available, unit.rawValue]) { _, _ in confirmedAt = nil }
             .scrollDismissesKeyboard(.interactively)
-            .keyboardDoneAction(visible: field != nil, title: tr("Done")) { field = nil }
+            .keyboardDoneAction(visible: field != nil, title: tr("Done")) {
+                #if DEBUG && KEYBOARD_DISMISS_DIAGNOSTIC
+                UrgentKeyboardDismissDiagnostic.record(.doneEnter, focus: diagnosticFocus(field))
+                #endif
+                field = nil
+                #if DEBUG && KEYBOARD_DISMISS_DIAGNOSTIC
+                UrgentKeyboardDismissDiagnostic.record(.doneExit, focus: diagnosticFocus(field))
+                #endif
+            }
+            #if DEBUG && KEYBOARD_DISMISS_DIAGNOSTIC
+            .onChange(of: field) { old, new in
+                UrgentKeyboardDismissDiagnostic.record(.focusChange,
+                    previousFocus: diagnosticFocus(old), focus: diagnosticFocus(new))
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+                // UIKit keyboard notifications are delivered on the main thread; no async hop.
+                MainActor.assumeIsolated { UrgentKeyboardDismissDiagnostic.record(.keyboardWillHide) }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidHideNotification)) { _ in
+                MainActor.assumeIsolated { UrgentKeyboardDismissDiagnostic.record(.keyboardDidHide) }
+            }
+            .onChange(of: diagnosticScenePhase, initial: true) { old, new in
+                UrgentKeyboardDismissDiagnostic.record(.sceneObserve,
+                    previousScene: .init(old), scene: .init(new))
+            }
+            #endif
             .task { await model.load() }
             .navigationDestination(isPresented: $showRepair) { PickupRepairView(model: model) }
             .disabled(model.saving)
     }
+    #if DEBUG && KEYBOARD_DISMISS_DIAGNOSTIC
+    private func diagnosticFocus(_ value: Field?) -> UrgentKeyboardDismissDiagnostic.Focus {
+        switch value {
+        case nil: .none
+        case .food: .food
+        case .meal: .meal
+        case .required: .required
+        case .available: .available
+        }
+    }
+    #endif
     private func save() {
         do {
             guard let confirmedAt, !food.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
@@ -326,3 +368,41 @@ struct PickupCookView: View {
         return false
     }
 }
+
+#if DEBUG && KEYBOARD_DISMISS_DIAGNOSTIC
+/// Diagnostic build only. All payload values are fixed structural enums or monotonic counters.
+@MainActor private enum UrgentKeyboardDismissDiagnostic {
+    enum Event: String {
+        case doneEnter = "done.enter", doneExit = "done.exit"
+        case focusChange = "focus.change"
+        case keyboardWillHide = "keyboard.willHide", keyboardDidHide = "keyboard.didHide"
+        case sceneObserve = "scene.observe"
+    }
+    enum Focus: Int { case notApplicable = -1, none = 0, food, meal, required, available }
+    enum Scene: Int {
+        case notApplicable = -1, active = 0, inactive, background, unknown
+        init(_ value: ScenePhase) {
+            switch value {
+            case .active: self = .active
+            case .inactive: self = .inactive
+            case .background: self = .background
+            @unknown default: self = .unknown
+            }
+        }
+    }
+    private static let enabled = ProcessInfo.processInfo.arguments.contains("--ui-testing")
+    private static let logger = Logger(subsystem: "dev.roominthecart.urgentkeyboarddiagnostic", category: "events")
+    private static var sequence: UInt64 = 0
+
+    static func record(_ event: Event, previousFocus: Focus = .notApplicable, focus: Focus = .notApplicable,
+                       previousScene: Scene = .notApplicable, scene: Scene = .notApplicable) {
+        guard enabled else { return }
+        sequence &+= 1
+        let currentSequence = sequence, uptime = ProcessInfo.processInfo.systemUptime
+        let name = event.rawValue
+        let oldFocus = previousFocus.rawValue, newFocus = focus.rawValue
+        let oldScene = previousScene.rawValue, newScene = scene.rawValue
+        logger.info("sequence=\(currentSequence, privacy: .public) uptime=\(uptime, privacy: .public) event=\(name, privacy: .public) previousFocus=\(oldFocus, privacy: .public) focus=\(newFocus, privacy: .public) previousScene=\(oldScene, privacy: .public) scene=\(newScene, privacy: .public)")
+    }
+}
+#endif
