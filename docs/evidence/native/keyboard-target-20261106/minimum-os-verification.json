@@ -1,0 +1,32 @@
+{
+  "scope": "Same merged noninstrumented products tested on minimum supported iOS and small phone; one regression covering five distinct points.",
+  "selector": "RoomInTheCartUITests/StockReviewUITests/testKeyboardDoneAcceptsCenterAndTargetMargins",
+  "toolchain": "Xcode 27.1\nBuild version 27A9275",
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "AFACBB11-C735-467B-AEE0-7264C372CAB3",
+    "deviceName": "RITC minimum OS Done target",
+    "modelName": "iPhone SE (3rd generation)",
+    "osBuildNumber": "21A328",
+    "osVersion": "17.0",
+    "platform": "iOS Simulator"
+  },
+  "selected": 1,
+  "passed": 1,
+  "failed": 0,
+  "skipped": 0,
+  "durationSeconds": 58.769,
+  "strictExit": 0,
+  "runtimeWarnings": 0,
+  "sameSourceAndProductsAs": "integrated-verification.json",
+  "sourceManifestSHA256": "ca32c6301ddedbe3270f2a088584ed1b3adda344109bad168a5b34328ad9545b",
+  "productManifestSHA256": "00d380bb9ca27af31776e7d6364111e75bccff6ba550322a0ce0a5640bd32426",
+  "frozenInputsUnchanged": {
+    "source": true,
+    "products": true,
+    "reusedIntegratedProducts": true
+  },
+  "ownedSimulatorDeleted": true,
+  "scratchDirectory": ".build/KeyboardDiagnostic20261106/minimum-os-target",
+  "limits": "English/default text size on an iPhone SE simulator. Does not resolve prior hosted centered-tap/animation stalls or replace physical-device accessibility checks."
+}
