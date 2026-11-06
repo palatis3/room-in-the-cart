@@ -1,0 +1,38 @@
+{
+  "status": "prepared-not-submitted",
+  "packagedFilesVerified": 28,
+  "sourceGitObjectsVerified": true,
+  "originalArchivesAndReadbacks": [
+    {
+      "artifact": 13515972039,
+      "archiveVerified": true,
+      "sourceMembersVerified": true,
+      "originalMetricRowsVerified": true,
+      "scrollSeriesPresent": false
+    },
+    {
+      "artifact": 13502513337,
+      "archiveVerified": true,
+      "sourceMembersVerified": true,
+      "originalMetricRowsVerified": true,
+      "scrollSeriesPresent": true
+    },
+    {
+      "artifact": 13526949819,
+      "archiveVerified": true,
+      "sourceMembersVerified": true,
+      "originalMetricRowsVerified": true,
+      "scrollSeriesPresent": false
+    }
+  ],
+  "nativeExecution": false,
+  "hostedChanges": false,
+  "externalSubmission": false,
+  "scope": "Supports a report of intermittent missing native metrics, not a confirmed framework defect or release acceptance.",
+  "packagingNormalization": {
+    "file": "UnwrappedScrollExcerpt.swift",
+    "change": "Remove one blank line after the final method for repository whitespace checks; method contents unchanged.",
+    "scratchSHA256": "07c8ced56baf4559cfb5f04305b0f515e43ce690e54616a37ec20347034e6e72",
+    "packagedSHA256": "34632b2691ac78db2aba10906f7c68c222006bc1244e05830b7928c14d99a1ec"
+  }
+}

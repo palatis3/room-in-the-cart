@@ -22,6 +22,12 @@ The consent delivery probe is prepared under [diagnostics/measurement-consent](.
 
 Root reviewed and committed the exact804plus diagnostic overlay as `f019f16124a1edf4d825c2a860efb0c2ca1488cd` on `codex/diagnose-consent-history-804030e`. The separate checkout is `/Users/palatis/.codex/worktrees/consent-history-diagnostic/Room in the Cart`. All46offline tests, pinned lint, manifest and overlay checks pass. The branch was subsequently published and manually dispatched once as run42293938170 at21:06UTC. The original seven-case history, gates and admission slot0 are retained. Remaining original UI07/stale-save jobs use slot2 and are untouched; this separate experiment does not supersede804. Root owns collection. [Preparation proof](evidence/native/consent-hosted-preparation-20261106/README.md).
 
+The diagnostic's root-owned read-only collector is exec session91398, polling run42293938170 every45seconds and retaining state under `.build/MeasurementConsentReview20261106/hosted-run-f019f16/`. Source/toolchain/runtime checks passed and contributor compilation started21:11UTC. Do not restart it on an observation timeout.
+
+## Scroll metric feedback draft
+
+A reviewable, unsubmitted [Apple Feedback draft](evidence/native/apple-scroll-feedback-20261106/REPORT.md) packages the original unwrapped omission, same-test passing comparator, and newer-toolchain omission. Root verified28prepared files, all three original archive digests/metric-table readbacks and pinned source objects. It does not claim a confirmed framework defect or deterministic reproduction. Current804setup failure and the rejected wrapper remain excluded. No external submission or new native run occurred.
+
 ## Latest ordinary UI failures
 
 UI06 andUI10 are terminal failures: saved-offer reminder exceeded720seconds after10animation-completion waits; Reduce Motion sharing failed its15-second Close readiness expectation before any tap. Of45 ordinary cases collected,43pass/2fail; UI07 is still collecting. Root reviewed the share video and hierarchy without inferring hittability from pixels. No retry or causal fix is claimed. [Retained failure analysis](evidence/native/ci-804030e-20261106/CORE-FAILURE-REVIEW.md).
