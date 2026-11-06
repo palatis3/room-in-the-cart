@@ -96,6 +96,8 @@ The isolated performance setup follow-up f117439 is terminal: setup3/3 passed, l
 
 The tested stale-access web correction is now live on staging (dpl_2tfRmEfTGLW63sSTksJ6xJ9MZ97P, source9d2bf47). Exact Android-tested bundle delivery and29/29protected +29/29public route/asset/anonymous-boundary checks pass. All94server runtime files remain byte-identical to the approved prior build; no database/provider/environment changes. This supersedes earlier local-only status for that web fix, without replacing actual live household or native acceptance. [Deployment proof](evidence/b11/web-stale-access-staging-20261106/summary.json).
 
+Six additional actual Android scopes now pass against the exact staged bundle using synthetic fixture authority: queue-permission loss, fresh helper invite/read-only EN/ES/reload, editor unsent reload, wrong-household child denial, unconfirmed child Finish without scoped cookie, and unconfigured child setup. All19observed DOM states fit411CSS pixels; effect counts and cleanup are verified. [Evidence](evidence/b11/android-remaining-scopes-20261106/summary.json). This closes those bounded emulator scenarios, not live guardian/email, real mixed-device household, physical accessibility or radio-offline acceptance.
+
 ## Evidence scopes
 
 Results belong to their own immutable source and binary identities. Do not add these counts together or treat an actual UI pass with a synthetic service as a deployed household pass.
@@ -239,7 +241,7 @@ Results belong to their own immutable source and binary identities. Do not add t
 | E07 | Store sorting/aisles, print, selected-text inbox, widget/App Intent and dictation ports; N526, SYSTEM-SELECTED-TEXT, SYSTEM-PRINT, SYSTEM-WIDGET, WIDGET-ROUTE and scoped surface UI. | Physical AirPrint, signed extensions/widget/lock-screen, delayed WidgetKit refresh and speech. |
 | E08 | Explicit per-offer/deferral reminder time/zone/quiet hours/expiry; N526, REMINDER-VIEWPORT, REMINDER-LOGGING, REMINDER-LIFECYCLE, DEFERRAL-READBACK, REMINDER-TAP, REMINDER-SAVE, SYSTEM-REMINDER, NOTIFICATION-REFUSAL. | Verify protected signed-in unlock and interruption on a physical iPhone. |
 | E09 | Authorized history, saved Free references and partial-scope period budgets; N526, B175, LIBRARY. | Final configured household period-budget task. |
-| E10 | Narrow contributor/cook web clients and market configuration; B175, WEB. | Current stable Android, deployed browser/screen-reader and market claims. |
+| E10 | Narrow contributor/cook web clients and market configuration; B175, WEB. | Actual Chrome156/Android14 synthetic scopes now verified; authenticated deployed household, physical browser/screen-reader and market claims remain. |
 | N01 | Own-only contributor requests, guardian flow, inbox duplicates, pack/meal preview and once-only decisions; N526, B175, G29, GUARDIAN-UI, REQUEST-UI, CAPTION, DEVICE. | Actual KWS/SMTP, configured hosted service and mixed-phone household. |
 | N02 | Structured typed/speech review of item/count/unit/pack/purpose/destination; native contributor and ledger routes; N526, SPEECH-READBACK. The [separate native microphone refusal](evidence/native/microphone-refusal-20261104.json) preserved the editable draft and one confirmed import after restart, with Speech Recognition allowed. | Physical on-device speech/negation/locale and retry task. |
 | N03 | Exact current cook projection, pause/stop/repeat and VoiceOver arbitration model; N526, STOCK, SPEECH-READBACK. | Physical playback and assistive speech interruption. |
