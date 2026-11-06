@@ -2,6 +2,14 @@
 
 Updated November 6, 2026 UTC. The owner resumed and explicitly approved the reviewed hosted staging update; the full first-version goal is active and release acceptance remains incomplete. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
+## Active CI candidate: 804030e
+
+A single ordinary push published `804030e68473d022e72b464940061c01c611a0bd` to draft PR1. The reviewed five-job scheduling and independent performance/pickup evidence changes are now under hosted validation. All 199 local script tests, workflow lint and generated-file checks passed before publication. App/test bodies, inventory, time limits, warning rules and original Xcode26.3/iOS26.2 release pins remain unchanged. No new performance baseline is approved.
+
+Six attempt-1 runs are active/collecting: core42272379454, deep42272379472, fixtures42272379477, performance42272379490, native-wire42272379461 and security42272379767. Security has completed: dependency review passed and exact-merge JS/TS87rules plus Actions17rules produced zero findings. Swift is still pending. The first live concurrency snapshot verifies five admitted slot holders and waiting jobs; no queue failure or capacity improvement is inferred from this snapshot. [Candidate evidence](evidence/native/ci-804030e-20261106/README.md).
+
+Read-only collectors are `ci_core_resume` (core/deep/performance, session43785) and `ci_fixtures_resume` (fixtures/native wire, session34355). Root owns security, integration and any next dispatch decision. Live evidence is `.build/CIResearch20261106/candidate-804030e/`; both research-date current-candidate pointers identify804030e. Do not rerun on observation timeout. No further source push should replace this candidate while it is collecting.
+
 ## Latest collected CI candidate: 8f864ea
 
 The combined candidate `8f864eafc3887ea16be996124d55fa2ca2708706` was published once at 14:29 UTC on November 6. Only the two reviewed UI helpers and documentation changed beyond `0d33c11`; production code and acceptance thresholds did not change. Both corrected journeys now pass on GitHub. Simulator and unsigned iPhone Release builds pass, as do all 601 model cases. Core attempt 1 is terminal: 33 of 51 ordinary UI cases executed, 32 passed and one large-text keyboard journey timed out. The remaining 18 cases never acquired GitHub runners. Four narrowly allowed warnings were retained across UI03/UI10. These missing executions are distinct from the executed timeout and are not passes.
@@ -20,11 +28,11 @@ Root independently verified all 507 frozen evidence hashes. All4 original archiv
 
 The earlier c34 run remains a separate frozen pre-build Bash failure with zero native executions. Its reviewed command-array fix and old/fixed smoke tests are retained. The four-file diagnostic overlay is isolated on `codex/qualify-xcode-26-4-1-8f864ea`, with no PR; do not merge it into the release branch. [Full qualification history](evidence/native/toolchain-qualification-20261106/README.md).
 
-## Local CI improvements awaiting publication
+## Reviewed CI improvements published in 804030e
 
 Commit `17ab18c` retains independent measurement and saved-pickup outcomes even when the scroll series is absent. Either failure remains fatal, stale success reports are removed, and rendered checkoff authority still requires valid attachments. All10 focused tests pass; 17 acceptance functions/constants are unchanged. This is evidence collection, not a native fix or retroactive validation. [Regression evidence](evidence/native/performance-evidence-independence-20261106/README.md).
 
-Commit `aff410e` installs five shared slots across all 14 macOS leaf-job definitions. Root validation passes 199 script tests, exact workflow lint, theme/project generation and localization structure; all 43 proposal evidence hashes and 16 installed files match. Original selectors/counts/order, deadlines, artifacts and gates are preserved. Independent review includes 1620 case-insensitive/computed namespace-collision probes. This is repository-wide admission control, not proof of hosted capacity. No new hosted run has started. [Scheduling evidence](evidence/native/five-job-scheduling-20261106/README.md).
+Commit `aff410e` installs five shared slots across all 14 macOS leaf-job definitions. Root validation passes 199 script tests, exact workflow lint, theme/project generation and localization structure; all 43 proposal evidence hashes and 16 installed files match. Original selectors/counts/order, deadlines, artifacts and gates are preserved. Independent review includes 1620 case-insensitive/computed namespace-collision probes. This is repository-wide admission control, not proof of hosted capacity. The single candidate publication above is now collecting. [Scheduling evidence](evidence/native/five-job-scheduling-20261106/README.md).
 
 ## Resumed public browser walkthrough completed
 

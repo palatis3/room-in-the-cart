@@ -1,0 +1,33 @@
+{
+  "candidate": "804030e68473d022e72b464940061c01c611a0bd",
+  "mergeCommit": "62b6dced75daffbe4d264a4312b71b0ad811112d",
+  "tree": "9c743800660d2ff3ae365ab2080948c7ed725d50",
+  "exactCandidateParentAndTreeVerified": true,
+  "runID": 42272379767,
+  "attempt": 1,
+  "status": "success",
+  "dependencyReview": "success",
+  "analyses": [
+    {
+      "id": 2114390697,
+      "commit_sha": "62b6dced75daffbe4d264a4312b71b0ad811112d",
+      "created_at": "2026-11-06T18:38:29Z",
+      "category": "/language:javascript-typescript",
+      "results_count": 0,
+      "rules_count": 87,
+      "error": ""
+    },
+    {
+      "id": 2114388190,
+      "commit_sha": "62b6dced75daffbe4d264a4312b71b0ad811112d",
+      "created_at": "2026-11-06T18:38:06Z",
+      "category": "/language:actions",
+      "results_count": 0,
+      "rules_count": 17,
+      "error": ""
+    }
+  ],
+  "swift": "Not established for this candidate; separate core analysis still pending.",
+  "limits": "Zero findings within configured languages/rules does not establish complete semantic coverage.",
+  "collectedAt": "2026-11-06T18:40:38.078674+00:00"
+}
