@@ -92,6 +92,8 @@ Migration 028 extends that drill with a single source database. It verifies drai
 
 Migration 029 verifies and stages a complete archive window in a distinct quarantine database. The operator applies two signed segments to a real pre-switch dump and checks both exact erasures, the unrelated member and the final quarantine gate. [Restore window evidence](evidence/b11/privacy-window-20261104/validation.json)
 
+The isolated performance setup follow-up f117439 is terminal: setup3/3 passed, launch and scroll pass strict native/baseline checks, and rendered fails before fixture entry due to missing launch-time accessibility queries. Required scroll duration is present in original result SQLite and JSON; this does not explain prior omissions. Root verified357frozen files. [Final audit](evidence/native/performance-setup-followup-20261106/final-audit.json). The reviewed four-line readiness follow-up807aa3c is now in one separate performance run42304515547 with baselines enforced; acceptance remains pending. Original804 failures remain open. [Scope](evidence/native/performance-launch-readiness-20261106/README.md).
+
 ## Evidence scopes
 
 Results belong to their own immutable source and binary identities. Do not add these counts together or treat an actual UI pass with a synthetic service as a deployed household pass.

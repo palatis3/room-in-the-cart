@@ -1,0 +1,163 @@
+{
+  "candidate": "f117439994835e0090376f4a29d81c478a6b86b4",
+  "runID": 42301547684,
+  "cases": {
+    "rendered": {
+      "attempt": 1,
+      "artifactID": 13544528826,
+      "sha256": "c40e62db416b010959720eb3a7ee556d49dfeeaf7eced194283937986400c7df",
+      "digestVerified": true,
+      "strictReplayExit": 1,
+      "measurementReplay": "failed required measurement structure",
+      "independentSidecarNotAcceptance": true,
+      "failures": [
+        "Strict XCTest verification failed",
+        "ValueError: Missing or duplicated XCTest attachment: Recently checked row after Release relaunch",
+        "Sidecar validation: FileNotFoundError: [Errno 2] No such file or directory: '/Users/palatis/Room in the Cart/.build/CIResearch20261106/performance-setup-f117439/independent-replay/iphone-performance-rendered-1/evidence-validation.json'"
+      ],
+      "passedTests": 0,
+      "failedTests": 1,
+      "skippedTests": 0,
+      "runtimeWarnings": 0,
+      "environment": {
+        "osVersion": "26.2",
+        "osBuildNumber": "23C54",
+        "modelName": "iPhone 17",
+        "architecture": "arm64",
+        "xcode": "Xcode 26.3\nBuild version 17C529",
+        "buildConfiguration": "Release",
+        "testConfiguration": "Test Scheme Action"
+      },
+      "runtimeExpected": true,
+      "independentMeasurementStructure": "failed",
+      "measurementError": "ValueError: Missing or duplicated XCTest attachment: Recently checked row after Release relaunch",
+      "sidecarConsistentWithIndependentChecks": false,
+      "rawLogSHA256": "9c80076c36efcb6b73dab56294ab86be68aa424a348d379028db3be672111921",
+      "acceptancePassed": false,
+      "failureClassification": "native-functional-failure-before-complete-evidence",
+      "sidecarStatus": "not-produced-native-gate-failed",
+      "hostedPickupStructuralStatus": "not-checked-native-gate-failed",
+      "classificationProof": "evidence/rendered-native-failure.json"
+    },
+    "launch": {
+      "attempt": 1,
+      "artifactID": 13545565837,
+      "sha256": "edbca91eaacf00b4305433a04209640e558bd3a2c74066daf9d73ad8d8fdabd4",
+      "digestVerified": true,
+      "strictReplayExit": 0,
+      "measurementReplay": "passed",
+      "independentSidecarNotAcceptance": true,
+      "failures": [],
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": 0,
+      "environment": {
+        "osVersion": "26.2",
+        "osBuildNumber": "23C54",
+        "modelName": "iPhone 17",
+        "architecture": "arm64",
+        "xcode": "Xcode 26.3\nBuild version 17C529",
+        "buildConfiguration": "Release",
+        "testConfiguration": "Test Scheme Action"
+      },
+      "runtimeExpected": true,
+      "independentMeasurementStructure": "passed",
+      "sidecarSHA256": "fa91d0246bb1d5678a26ce41b628086236f805e911a232dbe91326b909afd720",
+      "sidecarConsistentWithIndependentChecks": true,
+      "sidecarStatus": "complete",
+      "metricIdentifiers": [
+        "com.apple.dt.XCTMetric_ApplicationLaunch-ApplicationFirstFramePresentationResponsive.duration"
+      ],
+      "comparisons": {
+        "responsiveLaunchMedianSeconds": {
+          "measured": 4.800704458,
+          "maximum": 5.5,
+          "passed": true
+        }
+      },
+      "calibrationSHA256": "48fd497d5be35f86a8a2d53eefd7e663fbe67f4cc67a56f4868239820a7707d4",
+      "simulatorHitches": null,
+      "rawLogSHA256": "670200ab21bfb8ca3e77baba36703cbb6ac88d0f01b64b55a0121827bc37a82a",
+      "acceptancePassed": true
+    },
+    "scroll": {
+      "attempt": 1,
+      "artifactID": 13545486502,
+      "sha256": "60037936e5373007c0d99e051efa2c8bcc13c985ba05adc1465b12d10249480b",
+      "digestVerified": true,
+      "strictReplayExit": 0,
+      "measurementReplay": "passed",
+      "independentSidecarNotAcceptance": true,
+      "failures": [],
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": 0,
+      "environment": {
+        "osVersion": "26.2",
+        "osBuildNumber": "23C54",
+        "modelName": "iPhone 17",
+        "architecture": "arm64",
+        "xcode": "Xcode 26.3\nBuild version 17C529",
+        "buildConfiguration": "Release",
+        "testConfiguration": "Test Scheme Action"
+      },
+      "runtimeExpected": true,
+      "independentMeasurementStructure": "passed",
+      "sidecarSHA256": "2631673a4965d303f7342df03bf69ee8fd68ef4ef9e294754d7dfd0cb0a5c60c",
+      "hostedPickupStructuralStatus": "passed",
+      "hostedPickupReadback": {
+        "sqliteQuickCheck": "ok",
+        "revision": 2,
+        "payloadSHA256": "568250fb75d0e8a114b78016b0c5c626d40969217f2e8c7876d7438ea479474e",
+        "lineCount": 500,
+        "contributionCount": 500,
+        "importCount": 1,
+        "source": "paste",
+        "checkedCount": 0,
+        "checkedRowIDs": []
+      },
+      "sidecarConsistentWithIndependentChecks": true,
+      "sidecarStatus": "complete",
+      "metricIdentifiers": [
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical",
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute",
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak",
+        "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.duration"
+      ],
+      "comparisons": {
+        "scrollMedianSeconds": {
+          "measured": 2.583448333,
+          "maximum": 3.25,
+          "passed": true
+        },
+        "absoluteMemoryMedianKilobytes": {
+          "measured": 109535.168,
+          "maximum": 150000,
+          "passed": true
+        },
+        "peakMemoryMedianKilobytes": {
+          "measured": 109993.92,
+          "maximum": 155000,
+          "passed": true
+        },
+        "maximumPeakMemoryKilobytes": {
+          "measured": 110075.84,
+          "maximum": 160000,
+          "passed": true
+        }
+      },
+      "calibrationSHA256": "e5d8ab3e24120f9e45b03ed499bd36edf39c5d8c84378c52a545749980354ab3",
+      "simulatorHitches": {
+        "status": "unavailable",
+        "detail": "XCTest emitted scroll duration and memory, but no animation hitch samples on this simulator. This run cannot evaluate frame hitches."
+      },
+      "rawLogSHA256": "f1c5bf872cfb644e9e769beb6063d12a3de063ec6fae4510a07457b772aba4fb",
+      "acceptancePassed": true
+    }
+  },
+  "limits": [
+    "Simulator evidence only. Hosted SQLite readback is verified from retained independent sidecar/report fields, not a second local raw database read. Structural sidecar success never substitutes for missing metrics or baseline acceptance."
+  ]
+}

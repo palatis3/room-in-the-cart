@@ -1,0 +1,174 @@
+{
+  "candidate": "f117439994835e0090376f4a29d81c478a6b86b4",
+  "runID": 42301547684,
+  "jobID": 128184766889,
+  "artifactID": 13544528826,
+  "archiveSHA256": "c40e62db416b010959720eb3a7ee556d49dfeeaf7eced194283937986400c7df",
+  "failure": [
+    {
+      "failureText": "Failed to swipe up ScrollView (First Match): No matches found for first query match sequence: `Descendants matching type ScrollView`, given input App element pid: 7496",
+      "targetName": "RoomInTheCartUITests",
+      "testIdentifier": 1,
+      "testIdentifierString": "ReleasePerformanceUITests/testRenderedFiveHundredItemPickup()",
+      "testIdentifierURL": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/ReleasePerformanceUITests/testRenderedFiveHundredItemPickup",
+      "testName": "testRenderedFiveHundredItemPickup()"
+    }
+  ],
+  "setup": {
+    "schemaVersion": 1,
+    "case": "rendered",
+    "status": "passed",
+    "stages": [
+      {
+        "stage": "boot",
+        "status": "passed",
+        "exitCode": 0,
+        "elapsedSeconds": 108.822
+      },
+      {
+        "stage": "list-installed-apps",
+        "status": "passed",
+        "exitCode": 0,
+        "elapsedSeconds": 14.489
+      },
+      {
+        "stage": "verify-app-absent",
+        "status": "passed",
+        "exitCode": 0,
+        "elapsedSeconds": 0.138
+      },
+      {
+        "stage": "seed-pasteboard",
+        "status": "passed",
+        "exitCode": 0,
+        "elapsedSeconds": 33.273
+      }
+    ]
+  },
+  "job": {
+    "id": 128184766889,
+    "name": "Release performance (rendered)",
+    "status": "completed",
+    "conclusion": "failure",
+    "runner_id": 1000004081,
+    "started_at": "2026-11-06T22:12:22Z",
+    "completed_at": "2026-11-06T22:18:40Z",
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1,
+        "started_at": "2026-11-06T22:12:23Z",
+        "completed_at": "2026-11-06T22:12:24Z"
+      },
+      {
+        "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2,
+        "started_at": "2026-11-06T22:12:24Z",
+        "completed_at": "2026-11-06T22:12:29Z"
+      },
+      {
+        "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3,
+        "started_at": "2026-11-06T22:12:29Z",
+        "completed_at": "2026-11-06T22:12:34Z"
+      },
+      {
+        "name": "Restore Release products and record the toolchain",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4,
+        "started_at": "2026-11-06T22:12:34Z",
+        "completed_at": "2026-11-06T22:12:40Z"
+      },
+      {
+        "name": "Select an iPhone simulator",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 5,
+        "started_at": "2026-11-06T22:12:40Z",
+        "completed_at": "2026-11-06T22:12:49Z"
+      },
+      {
+        "name": "Boot and verify a fresh Release installation",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6,
+        "started_at": "2026-11-06T22:12:49Z",
+        "completed_at": "2026-11-06T22:15:27Z"
+      },
+      {
+        "name": "Run one Release performance case",
+        "status": "completed",
+        "conclusion": "failure",
+        "number": 7,
+        "started_at": "2026-11-06T22:15:27Z",
+        "completed_at": "2026-11-06T22:17:58Z"
+      },
+      {
+        "name": "Export available XCTest metrics, attachments and test results",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 8,
+        "started_at": "2026-11-06T22:17:58Z",
+        "completed_at": "2026-11-06T22:18:06Z"
+      },
+      {
+        "name": "Capture scroll signpost diagnostic",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 9,
+        "started_at": "2026-11-06T22:18:06Z",
+        "completed_at": "2026-11-06T22:18:06Z"
+      },
+      {
+        "name": "Require exact test execution and complete performance evidence",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 10,
+        "started_at": "2026-11-06T22:18:06Z",
+        "completed_at": "2026-11-06T22:18:06Z"
+      },
+      {
+        "name": "Retain Release performance evidence",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 11,
+        "started_at": "2026-11-06T22:18:06Z",
+        "completed_at": "2026-11-06T22:18:09Z"
+      },
+      {
+        "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 22,
+        "started_at": "2026-11-06T22:18:09Z",
+        "completed_at": "2026-11-06T22:18:10Z"
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 23,
+        "started_at": "2026-11-06T22:18:10Z",
+        "completed_at": "2026-11-06T22:18:38Z"
+      }
+    ],
+    "logSHA256": "d6bf7ec0fe408f996542c4016d75ed209728b2efa986ae02c7e866a5611f120f",
+    "checkoutCommits": [
+      "f117439994835e0090376f4a29d81c478a6b86b4"
+    ],
+    "checkoutExpected": true,
+    "pinnedDeveloperPathObserved": true,
+    "observedBaselineEnforcementValues": [
+      "true"
+    ],
+    "explicitBaselineEnforcementObserved": true
+  },
+  "classification": "Native functional failure, not setup failure or baseline regression. Strict test gate stops later performance checker in same workflow step. Missing evidence-validation.json means hosted persisted-pickup readback was not reached, not that readback itself failed. Incomplete rendered attachments also prevent independent complete measurement validation."
+}
