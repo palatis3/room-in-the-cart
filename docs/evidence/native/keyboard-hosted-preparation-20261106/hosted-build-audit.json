@@ -1,0 +1,41 @@
+{
+  "sourceBeforeExact": true,
+  "sourceAfterExact": true,
+  "compiledPlanExact": true,
+  "selectorBytesExact": true,
+  "identity": {
+    "base": "804030e68473d022e72b464940061c01c611a0bd",
+    "head": "efc1bfc5393cb21caeb3089f237619ef53cb1adc",
+    "role": "build",
+    "runID": "42309239002",
+    "attempt": "1",
+    "imageOS": "macos15",
+    "imageVersion": "20261104.0514.1",
+    "diagnosticOnly": true,
+    "releaseAcceptance": false
+  },
+  "cleanup": {
+    "ownedDeviceRecorded": true,
+    "outcomes": [
+      {
+        "udid": "5AC6A5CB-7B70-4311-BEA2-03A45AE57249",
+        "shutdownExit": 0,
+        "deleteExit": 0
+      }
+    ],
+    "missingAlready": false
+  },
+  "archive": {
+    "sha256": "b037a23359b58fc84ceb770f2e13fb110c19746bb7b0cdfcfefd60227c3db086",
+    "name": "keyboard-products.tar.gz",
+    "bytes": 50754416
+  },
+  "xctestrun": {
+    "original": "RoomInTheCart_iphonesimulator26.2-arm64.xctestrun",
+    "originalSHA256": "77926a4df6196a6798e34ccd4a5f2041b28d3e5609caceeede07783b7a8d7742",
+    "modified": false,
+    "runtimeEnvironmentChanged": false
+  },
+  "toolchain": "Xcode 26.3\nBuild version 17C529",
+  "runtimeBuild": "23C54"
+}
