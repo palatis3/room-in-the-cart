@@ -1,0 +1,31 @@
+{
+  "sha": "3d26f1f2316586de89060b7ed2310c193206371f",
+  "merge": "a27a933fcbca26dd72bd08f30e549971a81ee1a7",
+  "tree": "3b8d1355ccc0103a5f4c191398ce32f2da665aa3",
+  "runID": 42132403111,
+  "analyses": [
+    {
+      "category": "/language:javascript-typescript",
+      "id": 2108297911,
+      "error": "",
+      "warning": "",
+      "rules_count": 87,
+      "results_count": 0
+    },
+    {
+      "category": "/language:actions",
+      "id": 2108295175,
+      "error": "",
+      "warning": "",
+      "rules_count": 17,
+      "results_count": 0
+    }
+  ],
+  "openPRAlerts": [],
+  "previousFixtureFindingState": "fixed",
+  "jobs": {
+    "Dependency review": "success",
+    "CodeQL (javascript-typescript)": "success",
+    "CodeQL (actions)": "success"
+  }
+}

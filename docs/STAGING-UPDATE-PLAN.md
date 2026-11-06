@@ -2,6 +2,8 @@
 
 ## Current candidate and encrypted restore rehearsal
 
+The owner selected an encrypted archive on this Mac, with its recovery key held in the login Keychain, for the actual pre-upgrade staging backup. Keep the archive outside the repository and exclude database contents and recovery material from logs and evidence. This selects the backup location and key custody. Authenticated live capture, recovery from that capture and the hosted rollout decision remain pending. The current session reports the Supabase plugin as uninstalled and browser access as disabled. A reconnect with the Room in the Cart organization has been requested.
+
 Candidate `3d26f1f` retains the reviewed service runtime, deployment configuration and all 29 migration checksums. The contributor web client includes queue, receipt and session-privacy fixes. Six public staging API checks passed. The existing deployment still serves an older root page and returned 404 for the candidate’s named routes and new assets. [Candidate comparison](evidence/b11/encrypted-staging-rehearsal-20261105/staging-candidate.json) · [Public HTTP results](evidence/b11/encrypted-staging-rehearsal-20261105/public-staging.json).
 
 The local PostgreSQL 17.11 rehearsal captured an 008 baseline with fictional rows into an AES-256 encrypted Mac disk image. After detaching and reopening the image read-only, the restore preserved the migration registry, records, access policies, ownership and privileges. One isolated copy then upgraded through 029. The second remained at 008. The destination bootstrap role had to match the source grantor to replay its administrator membership correctly. [Rehearsal and limitations](evidence/b11/encrypted-staging-rehearsal-20261105/summary.json).
