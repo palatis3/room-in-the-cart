@@ -1,0 +1,54 @@
+{
+  "baseCommit": "3c502bba7b00e23b31d8b181e2fc8b9b6c69ba4a",
+  "appSourceEquivalentToHostedCandidate": "3d26f1f2316586de89060b7ed2310c193206371f",
+  "onlySourceOverride": [
+    "ios/UITests/ContextualReminderUITests.swift"
+  ],
+  "overrideSHA256": "bf08a8f9001a855709ebe748eabe86ff23fd78d59f4c6b5ed19b7963daeedda7",
+  "result": "passed",
+  "singleAttempt": true,
+  "originalSelector": "RoomInTheCartUITests/ContextualReminderUITests/testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending",
+  "testSeconds": 180.94,
+  "passed": 1,
+  "failed": 0,
+  "skipped": 0,
+  "runtimeWarnings": [],
+  "testExit": 0,
+  "strictGuardExit": 0,
+  "defaultTimeoutSeconds": 720,
+  "maximumTimeoutSeconds": 900,
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "27ABB792-6F23-49BF-98DA-FBA307B87D71",
+    "deviceName": "RITC reminder cutoff 23C54 20261105",
+    "modelName": "iPhone 17",
+    "osBuildNumber": "23C54",
+    "osVersion": "26.2",
+    "platform": "iOS Simulator"
+  },
+  "deviceFinalState": "Shutdown",
+  "sourceFrozen": true,
+  "productsFrozen": true,
+  "cutoffEvidence": "Target day: Tuesday, December 15; target month: December 2026\nCompact date label: Date and Time Picker\nCompact date value: Optional(9:08\u202fPM, Dec 15, 2026)\nPicker value: Optional()",
+  "checks": [
+    "unique actionable December 15 button",
+    "exact full saved date in reminder context",
+    "future date",
+    "unscheduled reminder before confirmation",
+    "cancel returns to pending retailer decision"
+  ],
+  "artifactHashes": {
+    "source-before.json": "cd7a95cfa1d12eb8cd64d945b0718145d555c4ed81aae2229bcbf3519c312533",
+    "source-after.json": "cd7a95cfa1d12eb8cd64d945b0718145d555c4ed81aae2229bcbf3519c312533",
+    "products-before.json": "51c1fd856d1ae281753679897fff26548eaa4da4c8c195d8ddd900c4632b3bce",
+    "products-after.json": "51c1fd856d1ae281753679897fff26548eaa4da4c8c195d8ddd900c4632b3bce",
+    "test-summary.json": "7cf65901c0a94c887a44cc340f76ba4ab9960ade117b6ea30d9cdec03eb1eccf",
+    "test-details.json": "ac848a4b21a2e1f845d28f939ea7d6b1ebf663e18eee88ea6e02df3e099c5e01",
+    "test-runtime-warnings.json": "ce5f63a49527481ca5704f8996eb8eea682d8688c3381353dd8f23ad6759bffb",
+    "Tests.log": "424db0ec31f63e74b90dbb85313d54e5fd98d219f7058d169b176d3045ab826b",
+    "strict.log": "2aefabc74898340c6194a4ff185eb1b697f69d8224952613c69da6e6b8b1fbcc",
+    "change.patch": "ef955155e0774eadbd2db9fb787b7c8ca0691ed4f1926d67dd2b722fb3ec693d",
+    "attachments/3520762B-49CF-4B38-97D2-1785B81AD72D.txt": "8e64c05254a03cf2ff8ec5857e1e40e3bcaeb6c972cadb806bdaeada4820a957"
+  },
+  "limit": "Local Xcode27.1 on iOS26.2 build23C54. Hosted attempt2 remains failed; current local success verifies the reviewed three-line helper change."
+}

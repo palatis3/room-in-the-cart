@@ -151,6 +151,9 @@ import XCTest
         XCTAssertEqual(days.count, 1)
         day.tap()
         app.navigationBars["New store offer"].tap()
+        // Dismissing the calendar can restore the prior text field's keyboard
+        // and scroll the compact picker out of the lazy Form hierarchy.
+        reveal(picker)
         let evidence = XCTAttachment(string: "Target day: \(spoken.string(from: target)); target month: \(month.string(from: nextMonth))\nCompact date label: \(dateButton.label)\nCompact date value: \(String(describing: dateButton.value))\nPicker value: \(String(describing: picker.value))")
         evidence.name = "Offer-future-cutoff-selection"; evidence.lifetime = .keepAlways; add(evidence)
         return target
