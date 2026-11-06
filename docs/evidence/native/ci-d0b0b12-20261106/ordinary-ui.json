@@ -1,0 +1,61 @@
+{
+  "candidate": "d0b0b12ee0cb8412f17e82c92a91013217560670",
+  "runID": 42149899546,
+  "groups": {
+    "ui-03": {
+      "artifactID": 13474236700,
+      "sha256": "c38e63317fe51bb521e82fcb8ff850ca61a286e790fb3dd9eb256abce6f01fff",
+      "digestVerified": true,
+      "selectors": [
+        "RoomInTheCartUITests/ContextualNavigationUITests/testEnteredStoreQuotesKeepTripCostsSeparateAndAdoptOnlyReviewedSavedProof",
+        "RoomInTheCartUITests/FreeJourneyUITests/testManualListOrderSurvivesRestartAndOpensLargePrint",
+        "RoomInTheCartUITests/FreeJourneyUITests/testStagedListCanReturnToOriginalAndMergeADuplicateAfterRestart",
+        "RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresRecordsDetailAndIndependentShoppingList",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testShopPhoneShortcutsHaveACompleteTouchTargetAndReturnToShop"
+      ],
+      "selected": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 2,
+      "rawLogSHA256": "4dca140aed9d05f420f625dbdb03ce33940f1dbeff6d5fc9a3534981fceaadb8"
+    },
+    "ui-04": {
+      "artifactID": 13474033512,
+      "sha256": "074c83ed1f5818dc23de3d2134cb491813a9b3e6c16867adf200ebe3c2ab9024",
+      "digestVerified": true,
+      "selectors": [
+        "RoomInTheCartUITests/FreeJourneyUITests/testCorrectFreezerBatchAndReadReservationsAfterRestart",
+        "RoomInTheCartUITests/FreeJourneyUITests/testDinnerMoveAcrossDisplayedWeeksKeepsLunchAndOccurrence",
+        "RoomInTheCartUITests/FreeJourneyUITests/testListCaptureOpensWithTypedDraftAndReopensAfterCancel",
+        "RoomInTheCartUITests/FreeJourneyUITests/testTypedBarcodeNeedsACodeAndFreshMatchConfirmation",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextEditActionGrowsInContentAndReturnsToEntry"
+      ],
+      "selected": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "rawLogSHA256": "cc004dafa1cb450816847272bbf5bb2d8777788143b60b1cdd7789ac5b433530"
+    },
+    "ui-01": {
+      "artifactID": 13473054508,
+      "sha256": "da71db148082ff6613e3359437b0a7d4bc250c0cd29d6c3207ef67752f53534b",
+      "digestVerified": true,
+      "selectors": [
+        "RoomInTheCartUITests/FreeJourneyUITests/testFirstPickupCanStartFromDinnersAndReviewAnEditablePattern",
+        "RoomInTheCartUITests/FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testUnknownPackAmountRemainsUnresolvedAfterSaveAndRestart"
+      ],
+      "selected": 3,
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "rawLogSHA256": "c3cea945db030df5b1650ad71805c17754e369207ddd841b3a48ac344730a51b"
+    }
+  }
+}

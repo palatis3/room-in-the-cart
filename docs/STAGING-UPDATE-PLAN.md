@@ -1,5 +1,17 @@
 # Next staging update
 
+## Actual staging backup and restore verified — November 6, 2026
+
+The protected live export now succeeds. Full database and selected `auth/public/ritc` archives use the same exported snapshot as their inventory, and all eight existing migration checksums match. Global role facts stayed unchanged across capture. After capture the temporary password file was removed; the image was detached, reopened read-only, and all archive hashes matched. [Capture proof](evidence/b11/staging-readiness-20261106/live-capture.json).
+
+An isolated encrypted restore replays the actual Auth schema/data, app schema and migration registry. It verifies 58 tables / 90 rows (all app tables empty, eight app migration rows and 82 Auth migration rows), 32 app relations, 33 policies, function/column grants, role memberships and all eight checksums. Full selected-schema comparison and independent schema/default ACL comparison pass. The database owner matches the source. The owned Unix-socket-only server is stopped. [Restore proof](evidence/b11/staging-readiness-20261106/live-restore.json).
+
+The fresh restore must preserve initdb’s pristine `public` schema: the archive assumes its default PUBLIC USAGE privilege. Skip only the exact reviewed public CREATE SCHEMA table-of-contents entry, retaining its COMMENT/ACL entries and all others. A failed earlier attempt that dropped public is preserved. Both schema comparisons use the same renderer; only independent default-GRANT ordering and nonsemantic dump comments/tokens are normalized after catalog equality is verified. This is an exact local restore, not a permissions workaround.
+
+Provider services/settings, Storage/Vault, extension installation and login passwords are outside the verified selected restore. The capture found no Storage objects/buckets or Vault secrets and no Auth user/session rows. The full raw archive is retained, but whole-provider restoration is not claimed. Role passwords require protected reprovisioning. The local same-source upgrade through 029 is being prepared on a second restored copy; the verified 008 baseline remains untouched. No hosted migration, deployment or provider activation has occurred. The owner’s rollout decision still follows the exact candidate/rollback review.
+
+Earlier sections below are historical preparation snapshots and do not supersede this actual capture/restore result.
+
 ## Current candidate and encrypted restore rehearsal
 
 The actual archive storage is now prepared outside the repository under this Mac’s application-support directory. Its unchanged compiled helper stored a new recovery passphrase in the login Keychain and retrieved it in fresh processes for read/write and read-only mounting. macOS reported encrypted=true with one passphrase. The marker survived reopening, a write returned EROFS and the image was detached. This 512 MiB archive contains a preparation marker and protected diagnostics from a credential-reader timeout. No live database bytes were captured. The image and the separate encrypted restore workspace are now detached; capture and restore remain pending. Local ignored files `live-backup-location.json` and `live-backup-storage-proof.json` under `.build/CIResearch20261105/` identify the exact archive and stable helper. [Storage verification](evidence/b11/staging-readiness-20261106/storage-preparation.json).
