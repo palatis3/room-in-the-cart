@@ -162,6 +162,16 @@ final class ReleasePerformanceUITests: XCTestCase {
         if #available(iOS 26.0, *) {
             metrics.append(XCTHitchMetric(application: app))
         }
+        // Diagnostic only: buffer clock reads; serialize only after measure returns.
+        // These reads add overhead and cannot establish release acceptance.
+        typealias Boundary = (beforeStart: TimeInterval, afterStart: TimeInterval,
+                              beforeGesture: TimeInterval, afterGesture: TimeInterval,
+                              beforeStop: TimeInterval, afterStop: TimeInterval)
+        var boundaries: [Boundary] = []
+        boundaries.reserveCapacity(6) // Expected warm-up plus five; retain any extra invocations.
+        let anchorBefore = ProcessInfo.processInfo.systemUptime
+        let anchorUTC = Date().timeIntervalSince1970
+        let anchorAfter = ProcessInfo.processInfo.systemUptime
         var restingY: CGFloat?
         measure(metrics: metrics, options: measurementOptions()) {
             // Reset before each iteration. XCTest waits for the swipe to settle.
@@ -174,11 +184,49 @@ final class ReleasePerformanceUITests: XCTestCase {
                 restingY = startY
             }
 
+            let beforeStart = ProcessInfo.processInfo.systemUptime
             startMeasuring()
+            let afterStart = ProcessInfo.processInfo.systemUptime
+            let beforeGesture = ProcessInfo.processInfo.systemUptime
             list.swipeUp(velocity: .fast)
+            let afterGesture = ProcessInfo.processInfo.systemUptime
+            let beforeStop = ProcessInfo.processInfo.systemUptime
             stopMeasuring()
+            let afterStop = ProcessInfo.processInfo.systemUptime
+            boundaries.append((beforeStart, afterStart, beforeGesture, afterGesture,
+                               beforeStop, afterStop))
 
             XCTAssertTrue(!top.exists || top.frame.midY < startY, "The measured gesture must scroll the list")
+        }
+        let finalAnchorBefore = ProcessInfo.processInfo.systemUptime
+        let finalAnchorUTC = Date().timeIntervalSince1970
+        let finalAnchorAfter = ProcessInfo.processInfo.systemUptime
+        do {
+            try attachJSON([
+                "schemaVersion": 1,
+                "diagnosticOnly": true,
+                "clock": "ProcessInfo.systemUptime seconds; UTC anchors are approximate",
+                "initialClockAnchor": ["uptimeBefore": anchorBefore, "unixUTC": anchorUTC,
+                                       "uptimeAfter": anchorAfter],
+                "finalClockAnchor": ["uptimeBefore": finalAnchorBefore, "unixUTC": finalAnchorUTC,
+                                     "uptimeAfter": finalAnchorAfter],
+                "observedInvocationCount": boundaries.count,
+                "expectedInvocationCount": 6,
+                "invocationMapping": "Zero-based observed order. First is expected warm-up only when six invocations complete; no sample is discarded here.",
+                "boundaries": boundaries.enumerated().map { index, value in
+                    ["invocationIndex": Double(index),
+                     "beforeStartMeasuring": value.beforeStart,
+                     "afterStartMeasuring": value.afterStart,
+                     "beforeGesture": value.beforeGesture,
+                     "afterGesture": value.afterGesture,
+                     "beforeStopMeasuring": value.beforeStop,
+                     "afterStopMeasuring": value.afterStop]
+                },
+                "limits": "Clock reads and buffering perturb timing. Calls are bracketed, not XCTest internal collection boundaries. No duration-series substitution or acceptance claim.",
+            ], name: "scroll-measurement-boundaries")
+        } catch {
+            // Missing receipts remain unavailable evidence, never a replacement pass.
+            print("Scroll measurement boundary diagnostic attachment unavailable: \(error)")
         }
         screenshot("Populated pickup list after measured scroll")
     }
