@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "baseCommit": "8f864eafc3887ea16be996124d55fa2ca2708706",
+  "diagnosticOnly": true,
+  "published": false,
+  "hostedDispatched": false,
+  "workflowExecuted": false,
+  "mainSourceModified": false,
+  "status": "Failed local diagnostic validation; reject wrapper, preserve original missing-metric failure.",
+  "localToolchain": "Xcode 27.1\nBuild version 27A9275",
+  "runtime": "iOS 26.2 build 23C54 / iPhone 17 arm64",
+  "testCount": 1,
+  "passed": 0,
+  "failed": 1,
+  "failure": "-stopMeasuring wasn't called this iteration in manualStop mode (NSInternalInconsistencyException)",
+  "earlierErrors": [
+    "Bad date range to search archive. Start date is (null). Stop date is (null).",
+    "Assertion failure in -[MXMOSSignpostMetric _constructProbe]"
+  ],
+  "originalStopCallPresent": true,
+  "metricsExport": [],
+  "reportAttachmentProduced": false,
+  "cause": "Unproven; wrapping changes built-in runtime class identity and may prevent required setup. This is not a reproduction of the original omitted series.",
+  "compileCompleted": true,
+  "sourceAndProductsReverified": true,
+  "ownedSimulatorDeleted": true,
+  "protectedPreviewUntouched": true,
+  "patchSHA256": "ed39b4d4f493e79aeacd63fac61cede07a2fc6b5d16c63b4b30b2574e9369727",
+  "files": {
+    "Tests.log": "a276ce8a3487cbe5065bf60094289f6eac2206828fd96a1bb791dd73943c9309",
+    "test-summary.json": "3f8c4375bf8a1ac5cbaa943b1babc2c4ad4cf0ed6f303f3d1ada32d8d09e3250",
+    "metrics.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "strict.log": "1ae454ba974d194b5f445a68423e812546447afe433a9a36ebddda0cd863c814",
+    "frozen-inputs-unchanged.json": "f1c405d0ae92d064ecb5666a609e13071b5086dbc6165494b575745e3dfc3a18",
+    "source-sha256.json": "6580f391f981893963df2a1fec9eac845915a1518077eab2feb7fa8d8545546d",
+    "product-sha256.json": "fa1ee2f32e74085cb798e67ad513edf8c5cef357af8bf25559cbc77494c69056"
+  },
+  "nextAction": "Prepare a local upstream feedback draft from already retained unwrapped failure and comparator; do not send or run again for its preparation."
+}

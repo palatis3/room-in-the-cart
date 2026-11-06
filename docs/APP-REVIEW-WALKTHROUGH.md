@@ -1,6 +1,6 @@
 # App Review walkthrough and fictional demo handoff
 
-Prepared from native source on 2026-11-03. This is a reviewer script and release-owner handoff, not a completed review run. The repository has local native/service test evidence, but this document does not establish an Apple-distributed build, live email sign-in, production guardian verification or a successful sandbox purchase. Fill the build, device, locale, tester and result fields for the actual candidate; a source route is not evidence that it passed on that candidate.
+Prepared from native source on 2026-11-03; staging status updated on 2026-11-06. This is a reviewer script and release-owner handoff, not a completed review run. The repository has local native/service test evidence, but this document does not establish an Apple-distributed build, live email sign-in, production guardian verification or a successful sandbox purchase. Fill the build, device, locale, tester and result fields for the actual candidate; a source route is not evidence that it passed on that candidate.
 
 ## Review package supplied by the release owner
 
@@ -18,7 +18,7 @@ Prepared from native source on 2026-11-03. This is a reviewer script and release
 | Apple product | Supply the actual product ID, storefront and reviewer purchase/restore instructions |
 | Open gates | List unconfigured or failed behavior explicitly; exclude its claim from the listing |
 
-Release metadata is wired through [the native configuration guide](../config/README.md). Blank URLs produce visible unavailable states. The current staging `/help`, `/privacy`, `/terms` and `/support` paths returned HTTP 404 on 2026-11-03 and must not be represented as published policies or support. The owner must finish the public pages, identity/email setup, signing and actual App Store configuration before a distribution submission that advertises those paths.
+Release metadata is wired through [the native configuration guide](../config/README.md). Blank URLs produce visible unavailable states. The staging `/help`, `/privacy`, `/terms` and `/support` paths now resolve after the approved 2026-11-06 deployment; all 27 public API/page/asset checks passed. [Staging rollout evidence](evidence/b11/staging-rollout-20261106/summary.json). After the owner re-enabled browser access, the public pages were also checked in English and Spanish at narrow and wide widths, including keyboard skip navigation, section links and the support contact. The invited sign-in screens correctly remain unavailable while email setup is deferred; authenticated journeys were not exercised. [Rendered browser scope and evidence](evidence/b11/staging-browser-walkthrough-20261106/REVIEW.md). These checks do not establish operator policy approval, production URL readiness or a functioning support mailbox. The owner must finish those operating checks, identity/email setup, signing and actual App Store configuration before a distribution submission that advertises those paths.
 
 ## Fictional local demo, no account required
 
