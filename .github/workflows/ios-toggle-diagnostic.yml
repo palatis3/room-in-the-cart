@@ -1,12 +1,10 @@
-name: Standalone Form toggle diagnostic
+name: Swift PhotosPicker overlay diagnostic
 
 on:
-  pull_request:
-    types: [labeled]
   workflow_dispatch:
     inputs:
       candidate_sha:
-        description: Exact 40-character SHA of the selected workflow ref
+        description: Exact 40-character SHA of this isolated diagnostic workflow ref
         type: string
         required: true
 
@@ -14,91 +12,104 @@ permissions:
   contents: read
 
 jobs:
-  control:
-    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'diagnostic:form-toggle'
+  photos-overlay:
     runs-on: macos-15
-    timeout-minutes: 45
+    timeout-minutes: 15
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
-      EXPECTED_SHA: ${{ github.event.pull_request.head.sha || inputs.candidate_sha }}
+      EXPECTED_SHA: ${{ inputs.candidate_sha }}
       EVENT_SHA: ${{ github.sha }}
-      EVENT_NAME: ${{ github.event_name }}
-      EVIDENCE: ${{ github.workspace }}/.build/form-toggle-diagnostic
-      PRODUCTS: ${{ github.workspace }}/.build/form-toggle-products/Build/Products
+      EVIDENCE: ${{ github.workspace }}/.build/photos-overlay-diagnostic
+      CODEQL_DIR: ${{ github.workspace }}/.build/photos-overlay-codeql/codeql
     steps:
-      - name: Require an immutable candidate identity
+      - name: Require immutable diagnostic identity
+        shell: bash
         run: |
           python3 - <<'PY'
-          import os, re
-          candidate = os.environ['EXPECTED_SHA']
-          if not re.fullmatch('[0-9a-f]{40}', candidate):
-              raise SystemExit('An exact candidate SHA is required')
-          if os.environ['EVENT_NAME'] == 'workflow_dispatch' and candidate != os.environ['EVENT_SHA']:
-              raise SystemExit('Dispatch candidate must match the selected workflow ref SHA')
+          import os,re
+          assert re.fullmatch('[0-9a-f]{40}',os.environ['EXPECTED_SHA'])
+          assert os.environ['EXPECTED_SHA']==os.environ['EVENT_SHA']
           PY
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ env.EXPECTED_SHA }}
           persist-credentials: false
-      - name: Verify source and hosted environment; create a fresh simulator
-        run: bash diagnostics/swiftui-toggle/require-environment.sh
-      - name: Build and freeze standalone products
-        timeout-minutes: 12
+      - name: Freeze exact fixture, query and toolchain
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,os,shutil,subprocess
+
+          root=Path(os.environ['EVIDENCE'])
+          root.mkdir(parents=True)
+          (root/'source').mkdir()
+          (root/'queries').mkdir()
+          assets=Path('scripts/diagnostics/photos-overlay')
+          inputs={
+              assets/'PhotoProbe.swift': root/'source/PhotoProbe.swift',
+              assets/'Probe.ql': root/'queries/Probe.ql',
+              assets/'qlpack.yml': root/'queries/qlpack.yml',
+              assets/'compile.sh': root/'compile.sh',
+              Path('scripts/diagnostics/photos_overlay_probe.py'): root/'run.py',
+              Path('.github/workflows/ios-toggle-diagnostic.yml'): root/'workflow.yml',
+          }
+          for source,destination in inputs.items():
+              shutil.copy2(source,destination)
+          expected='5c3292c77777137361bbccafd993bdac13a39cd94f4ed3037b05a295d381c726'
+          assert hashlib.sha256((root/'source/PhotoProbe.swift').read_bytes()).hexdigest()==expected
+          actual=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          assert actual==os.environ['EXPECTED_SHA']
+          xcode=subprocess.check_output(['xcodebuild','-version'],text=True).strip()
+          swift=subprocess.check_output(['xcrun','swiftc','--version'],stderr=subprocess.STDOUT,text=True).strip()
+          sdk=subprocess.check_output(['xcrun','--sdk','iphoneos','--show-sdk-version'],text=True).strip()
+          (root/'toolchain.json').write_text(json.dumps({
+              'candidate':actual,'xcode':xcode,'swift':swift,'sdk':sdk,
+              'host':subprocess.check_output(['uname','-m'],text=True).strip(),
+          },indent=2))
+          assert xcode=='Xcode 26.3\nBuild version 17C529',xcode
+          assert 'Swift version 6.2.4' in swift,swift
+          assert sdk=='26.2',sdk
+          (root/'input-sha256.json').write_text(json.dumps({
+              str(source):hashlib.sha256(source.read_bytes()).hexdigest()
+              for source in inputs
+          },indent=2))
+          PY
+      - name: Fetch and verify pinned official Swift tooling
+        timeout-minutes: 2
+        shell: bash
         run: |
           set -euo pipefail
-          xcodebuild -project diagnostics/swiftui-toggle/FormToggleDiagnostic.xcodeproj \
-            -scheme FormToggleDiagnostic -configuration Debug \
-            -destination 'generic/platform=iOS Simulator' -parallel-testing-enabled NO -jobs 2 \
-            -derivedDataPath .build/form-toggle-products CODE_SIGN_IDENTITY=- build-for-testing \
-            2>&1 | tee "$EVIDENCE/Build.log"
+          tool_root="$(dirname "$CODEQL_DIR")"
+          mkdir -p "$tool_root"
+          archive="$tool_root/codeql-bundle-swift-osx64.tar.zst"
+          curl --fail --location --proto '=https' --tlsv1.2 --max-time 75 \
+            'https://github.com/github/codeql-action/releases/download/codeql-bundle-v2.27.4/codeql-bundle-swift-osx64.tar.zst' -o "$archive"
+          printf '%s  %s\n' '52e3f0ea756787f0ceb2e5b2553d2560ba1d83573e3f77002f31833b307fbebc' "$archive" | shasum -a 256 -c - | tee "$EVIDENCE/bundle-verification.log"
+          test "$(stat -f %z "$archive")" = 392800211
+          tar -xf "$archive" -C "$tool_root"
+          "$CODEQL_DIR/codeql" version --format=json > "$EVIDENCE/codeql-version.json"
           python3 - <<'PY'
-          import hashlib, json, os
+          import json,os
           from pathlib import Path
-          files = {}
-          for root in [Path('diagnostics/swiftui-toggle'), Path(os.environ['PRODUCTS'])]:
-              for path in sorted(root.rglob('*')):
-                  if path.is_file():
-                      files[str(path)] = hashlib.sha256(path.read_bytes()).hexdigest()
-          (Path(os.environ['EVIDENCE']) / 'source-products-sha256.json').write_text(json.dumps(files, indent=2) + '\n')
+          assert json.loads((Path(os.environ['EVIDENCE'])/'codeql-version.json').read_text())['version']=='2.27.4'
           PY
-          tar -czf "$EVIDENCE/source.tar.gz" diagnostics/swiftui-toggle scripts/check_ios_test_results.py
-          tar -czf "$EVIDENCE/products.tar.gz" -C .build/form-toggle-products/Build Products
-      - name: Boot the dedicated simulator
-        timeout-minutes: 8
-        run: xcrun simctl bootstatus "$SIMULATOR_ID" -b
-      - name: Run the single control with normal XCTest idle behavior
-        timeout-minutes: 17
-        run: bash diagnostics/swiftui-toggle/run-test.sh
-      - name: Shut down the owned simulator
+          shasum -a 256 "$CODEQL_DIR/swift/tools/osx64/extractor.real" > "$EVIDENCE/extractor-sha256.txt"
+          file "$CODEQL_DIR/swift/tools/osx64/extractor.real" > "$EVIDENCE/extractor-architecture.txt"
+      - name: Compare independent baseline and overlay-enabled extraction
+        timeout-minutes: 11
+        shell: bash
+        run: python3 "$EVIDENCE/run.py"
+      - name: Retain both outcomes including incomplete trials
         if: always()
-        run: |
-          python3 - <<'PY'
-          import json, os, subprocess, uuid
-          from pathlib import Path
-          root = Path(os.environ['EVIDENCE'])
-          path = root / 'simulator-id.txt'
-          if not path.exists():
-              raise SystemExit(0)  # Environment checks failed before device creation.
-          device = path.read_text().strip()
-          try:
-              uuid.UUID(device)
-          except ValueError:
-              (root / 'cleanup-status.json').write_text(json.dumps({
-                  'status': 'unavailable', 'reason': 'Simulator creation returned no valid owned UUID'}) + '\n')
-              raise SystemExit('Cannot clean up without an exact owned simulator UUID')
-          inventory = json.loads(subprocess.check_output(['xcrun', 'simctl', 'list', 'devices', '-j']))
-          matches = [x for group in inventory['devices'].values() for x in group if x['udid'] == device]
-          if len(matches) != 1:
-              raise SystemExit('Owned diagnostic simulator is missing or ambiguous')
-          code = 0 if matches[0]['state'] == 'Shutdown' else subprocess.run(['xcrun', 'simctl', 'shutdown', device]).returncode
-          (root / 'cleanup-status.json').write_text(json.dumps({'simulatorID': device, 'exitCode': code}) + '\n')
-          raise SystemExit(code)
-          PY
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: standalone-form-toggle-${{ github.run_attempt }}
-          path: .build/form-toggle-diagnostic/
+          name: swift-photos-overlay-${{ github.run_attempt }}
+          path: |
+            .build/photos-overlay-diagnostic/
+            !.build/photos-overlay-diagnostic/*/database/**
+            !.build/photos-overlay-diagnostic/*/module-cache/**
+            !.build/photos-overlay-diagnostic/*/*.o
           include-hidden-files: true
           retention-days: 7
-          if-no-files-found: error
+          if-no-files-found: warn

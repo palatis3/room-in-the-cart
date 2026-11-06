@@ -1,0 +1,4 @@
+name: local/photos-overlay-probe
+version: 0.0.0
+dependencies:
+  codeql/swift-all: 6.8.7
