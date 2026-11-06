@@ -20,8 +20,8 @@ class PlanIOSPerformanceTests(unittest.TestCase):
                      "@objc RoomInTheCartUITests.OtherTests.testExample() -> ()",
                      f"{CLASS_PREFIX}setUpWithError() throws -> ()"]
         plan = performance_matrix("\n".join([*reversed(COMPILED), *unrelated]))
-        self.assertEqual(plan["include"], [{"case": case, "selector": f"{UI_TARGET}/{SUITE}/{method}"}
-                                           for case, method in METHODS.items()])
+        self.assertEqual(plan["include"], [{"case": case, "selector": f"{UI_TARGET}/{SUITE}/{method}", "macos_slot": index}
+                                           for index, (case, method) in enumerate(METHODS.items())])
 
     def test_rejects_empty_missing_or_extra_compiled_tests(self):
         for symbols, error in (([], "Missing .*testColdLaunchPerformance"),

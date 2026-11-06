@@ -39,7 +39,7 @@ class PlanIOSTests(unittest.TestCase):
             output = Path(folder) / "plan"
             write_plan(plan, output)
             manifest = json.loads((output / "manifest.json").read_text())
-            self.assertEqual(manifest["include"][0], {"shard": "models", "expected_count": 2})
+            self.assertEqual(manifest["include"][0], {"shard": "models", "expected_count": 2, "macos_slot": 0})
             self.assertEqual(manifest["disabled_tests"], [DISABLED])
             original_identifiers = []
             selectors = []

@@ -45,6 +45,10 @@ env:
 
 jobs:
   performance-build:
+    concurrency:
+      group: ritc-macos-slot-2
+      queue: max
+      cancel-in-progress: false
     name: Build optimized iPhone test products
     runs-on: macos-15
     timeout-minutes: 35
@@ -101,6 +105,10 @@ jobs:
           if-no-files-found: ignore
 
   performance-tests:
+    concurrency:
+      group: ritc-macos-slot-${{ matrix.macos_slot }}
+      queue: max
+      cancel-in-progress: false
     name: Release performance (${{ matrix.case }})
     needs: performance-build
     runs-on: macos-15

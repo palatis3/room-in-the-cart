@@ -1,0 +1,5 @@
+# PyYAML 6.0.3 official wheels: CPython 3.12 Linux x86_64 (ubuntu-24.04)
+# and CPython 3.9 macOS arm64 (isolated local validation). No source builds.
+PyYAML==6.0.3 \
+    --hash=sha256:ba1cc08a7ccde2d2ec775841541641e4548226580ab850948cbfda66a1befcdc \
+    --hash=sha256:c3355370a2c156cffb25e876646f149d5d68f5e0a3ce86a5084dd0b64a994917

@@ -44,6 +44,10 @@ jobs:
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
 
   build-contributor:
+    concurrency:
+      group: ritc-macos-slot-0
+      queue: max
+      cancel-in-progress: false
     name: Build contributor, stock and carryover fixtures
     needs: fixture-plan
     runs-on: macos-15
@@ -106,6 +110,10 @@ jobs:
           if-no-files-found: ignore
 
   build-dinner:
+    concurrency:
+      group: ritc-macos-slot-1
+      queue: max
+      cancel-in-progress: false
     name: Build dinner decision fixture
     needs: fixture-plan
     runs-on: macos-15
@@ -117,6 +125,10 @@ jobs:
     steps: *fixture-build-steps
 
   fixture-tests:
+    concurrency:
+      group: ritc-macos-slot-${{ matrix.macos_slot }}
+      queue: max
+      cancel-in-progress: false
     name: Fixture (${{ matrix.shard }})
     needs: [fixture-plan, build-contributor, build-dinner]
     runs-on: macos-15

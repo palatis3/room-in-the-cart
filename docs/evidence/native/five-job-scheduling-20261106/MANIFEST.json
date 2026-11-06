@@ -1,0 +1,182 @@
+{
+  "patchSHA256": "1e915426e4a158896f5fde2a88c95e1d2a1cde95fbb382f2655f39bfacb4796b",
+  "baseCommit": "afce8b8e88bfca7b562ea121e2d3dcfe88865706",
+  "files": {
+    "README.md": {
+      "bytes": 6993,
+      "sha256": "ef41660ffb9914b1bd2942043c5c8dd4d8cd65561250f118c3c84d5fc46c2ea2"
+    },
+    "bash-syntax.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "compare-planners.py": {
+      "bytes": 1150,
+      "sha256": "5ef68d10ef1fa8a9b14a38821ccc8a6e332bc2f6175233779d90e489152cf1f5"
+    },
+    "compare-workflows.py": {
+      "bytes": 3447,
+      "sha256": "41761d0b3541a869f0e8991e4b98bd1660c2e41b3a56f38ed644900acba3b288"
+    },
+    "dependency-provenance.json": {
+      "bytes": 1191,
+      "sha256": "d46e25f9ff805ea0675a7183e7c78df788394241bb457478eac655f32c08f1b4"
+    },
+    "files/.github/workflows/ci.yml": {
+      "bytes": 23068,
+      "sha256": "12b1df6bf660aa404dca51e477683eed71f416cbc3a4e37fee8f3fa8b747e13c"
+    },
+    "files/.github/workflows/ios-deep.yml": {
+      "bytes": 6033,
+      "sha256": "d5fe2f5afee8eaa363a7dbc0ed3cb064ddb26d2668a3ef9913fffa8f104605f2"
+    },
+    "files/.github/workflows/ios-fixtures.yml": {
+      "bytes": 9203,
+      "sha256": "226f618f4ff84e83d5ca54c5c2103bdae5977c6f6d2c055a626266958031975d"
+    },
+    "files/.github/workflows/ios-native-wire.yml": {
+      "bytes": 1826,
+      "sha256": "e1cc36dc552458deeee2f78ce7ae33c76d512d797835d9ecd7d7da5ee18f86d8"
+    },
+    "files/.github/workflows/ios-performance.yml": {
+      "bytes": 11608,
+      "sha256": "1ed55580574c9e511724858a52f854b8649be76a591729d7f73c3dcce66fe404"
+    },
+    "files/.github/workflows/ios-toggle-diagnostic.yml": {
+      "bytes": 5033,
+      "sha256": "a5b7024f0f171f20c1c45252ade36b05007e9c6643414893a95384f413d301f2"
+    },
+    "files/scripts/check_ci_workflows.py": {
+      "bytes": 14874,
+      "sha256": "f2f7eba7c69cf5304a97aedfcb789b916c25a00096514f80494528bd2b6fd449"
+    },
+    "files/scripts/ci_mac_slots.py": {
+      "bytes": 1324,
+      "sha256": "23e5dae583f1fc10b523348d034f66fad39196a16b7df179e5720221c22ec41a"
+    },
+    "files/scripts/ci_yaml_requirements.txt": {
+      "bytes": 334,
+      "sha256": "59c8dfb0d6897c88befa0b57ffd59a8ca2ef32f02500c32909228fe58752170e"
+    },
+    "files/scripts/plan_ios_fixture_tests.py": {
+      "bytes": 11340,
+      "sha256": "a242b92a643d6b8d59ef3b394442b1a81c75be51e24d490b149989d560b6e63b"
+    },
+    "files/scripts/plan_ios_performance_tests.py": {
+      "bytes": 2294,
+      "sha256": "708685decfd580f1b33dd949f893f54ec08ec3d424a51b538edd9da5eedd5f6a"
+    },
+    "files/scripts/plan_ios_tests.py": {
+      "bytes": 6248,
+      "sha256": "eff8122356457031fc25f3fcbcc0636e050613b356db830061ebbd249ea182cf"
+    },
+    "files/scripts/test_check_ci_workflows.py": {
+      "bytes": 11812,
+      "sha256": "36a267e5bdbe3e0284a2834ae176680c5702800653ce9ceeb26561a1b4886530"
+    },
+    "files/scripts/test_ci_mac_slots.py": {
+      "bytes": 2910,
+      "sha256": "2cb742378b1515485d14262b73de6084e5cff2e2e2dac858776ffa9b3f6de020"
+    },
+    "files/scripts/test_plan_ios_performance_tests.py": {
+      "bytes": 3445,
+      "sha256": "08a125f12243851f713b75c8de85d89de18bfd47eff3e6f8d5a430c1a242cedd"
+    },
+    "files/scripts/test_plan_ios_tests.py": {
+      "bytes": 5528,
+      "sha256": "5b5e2d1322770dc9b70b0dc42fea4ec7b43c0ea09a3fe78de5f0fc4c10e1ee80"
+    },
+    "first-lint.json": {
+      "bytes": 6336,
+      "sha256": "22c674b33ae03359b52cac99204bed1c51b06c85c4f3178fdb4efb80eed01d50"
+    },
+    "freeze.py": {
+      "bytes": 1781,
+      "sha256": "6998a533d731c225d3dbb29d60a9e20edba6992cb7c93aaf94ded2bbbc39b714"
+    },
+    "integration-check.py": {
+      "bytes": 1382,
+      "sha256": "66fbc7e54674f402f0761840a0f1082db4005b39228bfeb9846288d007a66720"
+    },
+    "integration-proof.json": {
+      "bytes": 15158,
+      "sha256": "6b1e7c87d3b1c06a6b03bc3ee02047965f57aaf7b447ab75cbe604a95f6a595c"
+    },
+    "localization.log": {
+      "bytes": 327,
+      "sha256": "795283b4b42df34f100dafd6aaeb30af5e2a8c418c646992d832fb93e65a6a0e"
+    },
+    "new-plans.json": {
+      "bytes": 95182,
+      "sha256": "e7752dbc3143240a9674b885a0ba2aa4a0dfd41dae6cb35ccbccbf43c6169407"
+    },
+    "old-plans.json": {
+      "bytes": 94482,
+      "sha256": "faf1ee412b3eb13a8c93e999b8f9671b8bfc73aeecf8706a572750a457927d69"
+    },
+    "patch-apply-check.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "planner-parity.json": {
+      "bytes": 697,
+      "sha256": "37c33bd0322cb9308a3e2dc603e68a6c4de908f183669c4086144dc91afbeb08"
+    },
+    "project.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "python-tests.log": {
+      "bytes": 837,
+      "sha256": "3568f8801ab20fa369f8595aeeaaa6228e254d9f9772f299eafb989eb9af6d7c"
+    },
+    "root-workflow-lint.json": {
+      "bytes": 15308,
+      "sha256": "450628d69ca154909ea2e448d1aa06a52d9235b84e5fb815cda2d92dae32218e"
+    },
+    "scheduling.patch": {
+      "bytes": 43940,
+      "sha256": "1e915426e4a158896f5fde2a88c95e1d2a1cde95fbb382f2655f39bfacb4796b"
+    },
+    "source-parity.json": {
+      "bytes": 2736,
+      "sha256": "0581ea0decb1dc9e0e64f755a140812d96040bc29e2a961ff0c0cf7ad956ef2c"
+    },
+    "superseded-034f0d10.patch": {
+      "bytes": 41440,
+      "sha256": "034f0d1048f6b834f4650f7f21773310bd2269cd072e5b45b085148be347fbcc"
+    },
+    "theme.log": {
+      "bytes": 22,
+      "sha256": "60928341c92ffb78f9f9f86688b63bb1ad46fe62481af2803d5125fcdf973206"
+    },
+    "validate-final.py": {
+      "bytes": 1365,
+      "sha256": "3daa85449f42b12af05cd233386dc78d6019ab66eb4c4f9959a2db230fadf079"
+    },
+    "validation.json": {
+      "bytes": 3242,
+      "sha256": "a0deb97a086485794dc4a2c24c29c9d1b786eba627049d0c7036bf1ef66ed017"
+    },
+    "workflow-lint.json": {
+      "bytes": 15308,
+      "sha256": "450628d69ca154909ea2e448d1aa06a52d9235b84e5fb815cda2d92dae32218e"
+    },
+    "workflow-lint.log": {
+      "bytes": 68,
+      "sha256": "22e889a1f7c0b55f81780e082aa20e41410fd3d22a26181f13af406902d52abc"
+    },
+    "workflow-parity.json": {
+      "bytes": 3631,
+      "sha256": "716cc8540956ef819af28daf675a261af97f4387785728fa6fa994469db7c04f"
+    },
+    "workflow-parity.log": {
+      "bytes": 63,
+      "sha256": "d03a953929bfce03871d3ebfe6e3b68bec545f1137f942052164e76294205ca6"
+    }
+  },
+  "independentOwnershipReview": {
+    "path": "/Users/palatis/Room in the Cart/.build/CIResearch20261106/scheduling-independent-review/ownership-revalidation.json",
+    "sha256": "99338b775c87864a9d5bdcf9839255df5dbf6a9fbb9538861839b9c7560ad662"
+  }
+}

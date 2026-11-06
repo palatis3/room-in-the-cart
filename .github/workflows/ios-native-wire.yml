@@ -21,6 +21,10 @@ concurrency:
 
 jobs:
   native-wire:
+    concurrency:
+      group: ritc-macos-slot-4
+      queue: max
+      cancel-in-progress: false
     runs-on: macos-15
     timeout-minutes: 25
     env:

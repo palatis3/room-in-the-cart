@@ -26,12 +26,21 @@ concurrency:
   cancel-in-progress: true
 jobs:
   sanitizers:
+    name: sanitizers (${{ matrix.sanitizer }})
+    concurrency:
+      group: ritc-macos-slot-${{ matrix.macos_slot }}
+      queue: max
+      cancel-in-progress: false
     runs-on: macos-15
     timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
-        sanitizer: [thread, address]
+        include:
+          - sanitizer: thread
+            macos_slot: 0
+          - sanitizer: address
+            macos_slot: 1
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
       SANITIZER: ${{ matrix.sanitizer }}
@@ -57,6 +66,11 @@ jobs:
           path: .build/sanitizer-results/
           retention-days: 7
   storekit:
+    name: storekit (${{ matrix.locale }}, ${{ matrix.configuration }})
+    concurrency:
+      group: ritc-macos-slot-${{ matrix.macos_slot }}
+      queue: max
+      cancel-in-progress: false
     runs-on: macos-15
     timeout-minutes: 45
     strategy:
@@ -64,8 +78,10 @@ jobs:
       matrix:
         include:
           - locale: en
+            macos_slot: 2
             configuration: US English — local StoreKit
           - locale: es
+            macos_slot: 3
             configuration: US Spanish app · Spanish (Mexico) offer · USA storefront
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer

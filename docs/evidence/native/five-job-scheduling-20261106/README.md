@@ -1,0 +1,11 @@
+# Five-job native CI scheduling
+
+All 14 macOS leaf-job definitions now share five repository-wide concurrency groups. Existing workflows retain their independent triggers and PR supersession. Each slot queues up to GitHub's documented 100 pending jobs without replacing another waiting job. This bounds admission for these workflows; it does not reserve account-wide capacity or prove that hosted-provider acquisition failures are fixed. Fixed slots can leave a free slot idle while work waits behind another slot.
+
+All original test commands, selectors/counts/order, dependencies, matrix caps, deadlines, artifact names and final failure gates are preserved. Planners add only a deterministic slot field; implicit display names are made explicit to avoid new check names. The complete selection remains 601 model cases, 51 ordinary UI cases, 45 fixture cases and three performance cases, with existing sanitizer/billing/native-wire jobs unchanged.
+
+Pinned actionlint 1.7.12 does not yet recognize GitHub's queue property. A hash-pinned safe YAML parser validates exact ownership, literal queue settings, duplicates/aliases, slot coverage and source positions before the full original linter executes. Only its exact obsolete queue-key diagnostics at those validated positions are exempted; every other error remains fatal. Review caught and fixed case-insensitive/computed namespace collisions. Independent review rejects 1,620 adverse group expressions across workflow, caller and Linux scopes.
+
+Root verified all 43 retained proposal evidence hashes and all 16 installed file bytes, then passed all 199 script tests, full workflow lint (14 exact queue exceptions), theme/project generation and localization structure checks. [Root verification](root-validation.json) · [Planner parity](planner-parity.json) · [Workflow parity](workflow-parity.json) · [Superseding review](review.md) · [Namespace probes](ownership-revalidation.json). The failed earlier native runs remain failed. This scheduling change has not yet been published or exercised on hosted runners.
+
+[GitHub concurrency semantics](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency) · [Dependency provenance](dependency-provenance.json). The immutable proposal and its logs remain in `.build/CIResearch20261106/scheduling-proposal/`.

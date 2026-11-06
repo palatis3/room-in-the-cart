@@ -1,0 +1,16 @@
+# Independent scheduling review
+
+Approved revised patch `1e915426e4a158896f5fde2a88c95e1d2a1cde95fbb382f2655f39bfacb4796b`; no remaining actionable findings. This approval supersedes the original review after the root-discovered case-insensitive ownership gap was fixed and independently revalidated.
+
+- Reviewed six workflow changes, three planner wrappers, shared slot validator, workflow/actionlint bridge, hash-pinned dependency, and related tests. Root's separate performance-checker/docs changes were excluded.
+- Re-review confirms non-leaf groups now use casefolded namespace checks and must have a fixed literal prefix provably disjoint from all five reserved slot names. Entirely computed and ambiguous-prefix groups fail for explicit review. All 17 updated validator tests pass independently; an additional 1,620 independent collision probes cover every split position, all five slot names, three case variants, and root/Linux/caller mapping/string concurrency forms. Safe family prefixes remain accepted. See `ownership-revalidation.json`.
+- All 14 macOS leaf job definitions use five shared repository group names, with literal queue=max and cancel-in-progress=false. Workflow supersession remains unchanged; workflow/caller jobs cannot acquire these slots. Native jobs do not hold slots while awaiting downstream jobs.
+- Semantic comparison, after removing only the intended admission metadata, name preservation, sanitizer matrix representation, and linter bootstrap replacement, exactly matches all six original workflows. Needs, test commands, selectors, counts, timeout values, artifacts, conditions, and acceptance gates remain unchanged. Explicit names preserve the prior matrix-value names without appending the new slot value.
+- Planner diffs only wrap existing ordered rows with deterministic integer slot metadata. Independently ran 4 slot tests and 16 workflow/linter tests; all passed. Inspected the worker's 196-test passing log.
+- The bridge runs pinned actionlint 1.7.12 on original workflow files, retains unrelated errors, and exempts only the exact known queue syntax diagnostic at independently validated physical source positions. Missing, duplicate, altered, relocated, or extra diagnostics remain fatal. Duplicate YAML, unsafe tags, merge keys, cycles, queue aliases, invalid literals/slots, changed matrix producers, and missing native inventory are rejected.
+- Worker real-actionlint evidence passes with exactly 14 exemptions, no other diagnostics, and every workflow source hash still matches the reviewed files.
+- PyYAML 6.0.3 is installed with --require-hashes, --no-deps, and --only-binary=:all: in an isolated venv. Independently matched both supplied SHA-256 values against official PyPI wheel metadata (CPython 3.12 Linux x86_64 and CPython 3.9 macOS arm64).
+
+Boundary: this is repository-level scheduling, not an account-wide capacity guarantee. GitHub documents queue=max as up to 100 pending entries per group; existing workflow supersession can still cancel obsolete runs. No native tests, hosted runs, or shared source mutations were performed during review.
+
+Sources: https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency ; https://pypi.org/pypi/PyYAML/6.0.3/json

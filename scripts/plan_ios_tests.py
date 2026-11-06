@@ -6,6 +6,8 @@ import json
 from pathlib import Path
 import re
 
+from ci_mac_slots import with_macos_slots
+
 
 MODEL_TARGET = "RoomInTheCartTests"
 UI_TARGET = "RoomInTheCartUITests"
@@ -102,10 +104,10 @@ def make_plan(enumeration, durations, ui_shards):
         }
 
     return {
-        "include": [
+        "include": with_macos_slots([
             {"shard": name, "expected_count": len(shard["test_identifiers"])}
             for name, shard in shards.items()
-        ],
+        ], ("shard",)),
         "test_plan": configuration["testPlan"],
         "disabled_tests": disabled,
         "shards": shards,

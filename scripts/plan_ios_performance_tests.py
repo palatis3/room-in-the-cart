@@ -7,6 +7,8 @@ from pathlib import Path
 import re
 import subprocess
 
+from ci_mac_slots import with_macos_slots
+
 from check_ios_performance import METHODS, SUITE
 from plan_ios_tests import UI_TARGET
 
@@ -34,8 +36,8 @@ def performance_matrix(demangled):
     if compiled != expected:
         raise ValueError(f"Compiled performance XCTest inventory differs. "
                          f"Missing {sorted(expected - compiled)}; extra {sorted(compiled - expected)}")
-    return {"include": [{"case": case, "selector": f"{UI_TARGET}/{SUITE}/{method}"}
-                        for case, method in METHODS.items()]}
+    return {"include": with_macos_slots([{"case": case, "selector": f"{UI_TARGET}/{SUITE}/{method}"}
+                        for case, method in METHODS.items()], ("case",))}
 
 
 def plan_from_binary(binary):

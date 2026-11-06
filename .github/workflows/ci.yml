@@ -112,6 +112,11 @@ jobs:
       - name: Validate workflow syntax and expression references
         shell: bash
         run: |
+          yaml_env="$RUNNER_TEMP/ci-yaml"
+          python3 -m venv "$yaml_env"
+          "$yaml_env/bin/python" -m pip install --disable-pip-version-check --no-cache-dir \
+            --no-deps --require-hashes --only-binary=:all: -r scripts/ci_yaml_requirements.txt
+          echo "$yaml_env/bin" >> "$GITHUB_PATH"
           lint_dir="$RUNNER_TEMP/actionlint"
           mkdir -p "$lint_dir"
           curl --fail --silent --show-error --location \
@@ -120,7 +125,8 @@ jobs:
           echo '8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  actionlint.tar.gz' \
             | (cd "$lint_dir" && sha256sum --check)
           tar -xzf "$lint_dir/actionlint.tar.gz" -C "$lint_dir" actionlint
-          "$lint_dir/actionlint" -shellcheck='' -pyflakes='' .github/workflows/*.yml
+          "$yaml_env/bin/python" scripts/check_ci_workflows.py --actionlint "$lint_dir/actionlint" \
+            --report .build/workflow-lint.json
       - name: Verify the pinned Node release is supported and security-current
         timeout-minutes: 1
         run: python3 scripts/check_node_runtime.py
@@ -132,6 +138,10 @@ jobs:
           python3 -m unittest discover -s scripts -p 'test_*.py'
           bash -n scripts/run_ios_test_shard.sh
   swift-packages:
+    concurrency:
+      group: ritc-macos-slot-0
+      queue: max
+      cancel-in-progress: false
     runs-on: macos-15
     timeout-minutes: 25
     env:
@@ -159,6 +169,10 @@ jobs:
             ios/Packages/**/.build/**/codecov/*.json
           retention-days: 7
   ios-release:
+    concurrency:
+      group: ritc-macos-slot-1
+      queue: max
+      cancel-in-progress: false
     runs-on: macos-15
     timeout-minutes: 45
     env:
@@ -193,6 +207,10 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
   ios-swift-codeql:
+    concurrency:
+      group: ritc-macos-slot-2
+      queue: max
+      cancel-in-progress: false
     runs-on: macos-15
     timeout-minutes: 60
     permissions:
@@ -347,6 +365,10 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
   ios-build:
+    concurrency:
+      group: ritc-macos-slot-3
+      queue: max
+      cancel-in-progress: false
     runs-on: macos-15
     timeout-minutes: 35
     env:
@@ -400,6 +422,11 @@ jobs:
           retention-days: 7
           if-no-files-found: error
   ios-tests:
+    name: ios-tests (${{ matrix.shard }}, ${{ matrix.expected_count }})
+    concurrency:
+      group: ritc-macos-slot-${{ matrix.macos_slot }}
+      queue: max
+      cancel-in-progress: false
     needs: ios-build
     runs-on: macos-15
     timeout-minutes: 55
