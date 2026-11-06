@@ -1,0 +1,151 @@
+{
+  "scope": "Bounded comparison of two already-retained diagnostic receipts; no new execution or raw log capture. Activity intervals are not XCTest measurement boundaries. Pair counts cannot replace the required five-sample XCTest metric or establish cause.",
+  "runs": [
+    {
+      "candidate": "f117439994835e0090376f4a29d81c478a6b86b4",
+      "diagnosticPath": ".build/CIResearch20261106/performance-setup-f117439/iphone-performance-scroll-1/scroll-signpost-diagnostic.json",
+      "sha256": "18f731a106a6a4d09e0dbb5518f750759a023fc57e226e849e4eee787010a853",
+      "diagnosticStatus": "captured",
+      "captureStatus": "ok",
+      "activityStatus": "ok",
+      "windowBasis": "enclosing swipe activity start to following activity start; not XCTest measurement boundaries",
+      "windows": [
+        {
+          "case": "warm-up",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.598
+            }
+          ]
+        },
+        {
+          "case": "measured swipe 1",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.584
+            }
+          ]
+        },
+        {
+          "case": "measured swipe 2",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.583
+            }
+          ]
+        },
+        {
+          "case": "measured swipe 3",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.583
+            }
+          ]
+        },
+        {
+          "case": "measured swipe 4",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.584
+            }
+          ]
+        },
+        {
+          "case": "measured swipe 5",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.584
+            }
+          ]
+        }
+      ],
+      "requiredXCTestMeasurementOutcome": "passed",
+      "parsedEventCount": 102,
+      "candidateLineCount": 102,
+      "unparsedCandidateCount": 0,
+      "matchedProcessCount": 1
+    },
+    {
+      "candidate": "807aa3c73ed872d4a83f6cbd71f7633797bb6fc8",
+      "diagnosticPath": ".build/CIResearch20261106/performance-readiness-807aa3c/iphone-performance-scroll-1/scroll-signpost-diagnostic.json",
+      "sha256": "1d7be830f3858bca6b671ddfd74213063c850063950fe6cf8ee4c69eabe3e267",
+      "diagnosticStatus": "incomplete_windows",
+      "captureStatus": "ok",
+      "activityStatus": "ok",
+      "windowBasis": "enclosing swipe activity start to following activity start; not XCTest measurement boundaries",
+      "windows": [
+        {
+          "case": "warm-up",
+          "eventCount": 1,
+          "pairCount": 0,
+          "pairs": []
+        },
+        {
+          "case": "measured swipe 1",
+          "eventCount": 1,
+          "pairCount": 0,
+          "pairs": []
+        },
+        {
+          "case": "measured swipe 2",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.577
+            }
+          ]
+        },
+        {
+          "case": "measured swipe 3",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.6
+            }
+          ]
+        },
+        {
+          "case": "measured swipe 4",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.567
+            }
+          ]
+        },
+        {
+          "case": "measured swipe 5",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.58
+            }
+          ]
+        }
+      ],
+      "requiredXCTestMeasurementOutcome": "failed required measurement structure",
+      "parsedEventCount": 100,
+      "candidateLineCount": 100,
+      "unparsedCandidateCount": 0,
+      "matchedProcessCount": 1
+    }
+  ],
+  "firstTwoWindowCountsEqual": false,
+  "interpretation": "The missing pair in warm-up and measured swipe 1 is unique to 807 among these two retained receipts: f117 has 2 events/1 pair in every one of six windows; 807 has 1 event/0 pairs in the first two and 2 events/1 pair in the remaining four. Both captures/activity exports report ok with zero unparsed candidate lines. This is an observed discriminator, not a causal conclusion."
+}
