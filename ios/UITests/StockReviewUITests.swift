@@ -72,6 +72,9 @@ import XCTest
     private func launch(reset: Bool) {
         app.launchArguments = ["--ui-testing", "--stock-review-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         if reset { app.launchArguments.append("--reset-stock-review-fixture") }
+        if ProcessInfo.processInfo.environment["RITC_KEYBOARD_DIAGNOSTIC"] == "1" {
+            app.launchEnvironment["RITC_KEYBOARD_DIAGNOSTIC"] = "1"
+        }
         app.launch()
     }
     private func openBatchAndPreview() {

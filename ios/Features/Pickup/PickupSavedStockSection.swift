@@ -107,7 +107,7 @@ private struct PickupBatchReview: View {
                     Text(pTr(lot.usable.unit.rawValue))
                     DatePicker(pTr("Batch observed at"), selection: $observedAt, in: ...Date())
                     Toggle(pTr("Use this batch first"), isOn: $useFirst)
-                    Toggle(pTr("I reviewed identity, exclusions and usable quantity"), isOn: $checked)
+                    Toggle(pTr("I reviewed identity, exclusions and usable quantity"), isOn: diagnosticIdentityBinding)
                         .accessibilityIdentifier("stockReview.identityChecked")
                     Button(pTr("Preview batch effects")) { preview() }
                         .disabled(!checked || amount.isEmpty || model.saving || model.hasPendingSave || currentScope == nil)
@@ -151,10 +151,35 @@ private struct PickupBatchReview: View {
                 }
             }
         }.navigationTitle(pTr("Batch details"))
-            .onChange(of: amount) { _, _ in checked = false; cancelPreview() }
-            .onChange(of: foodID) { _, _ in checked = false; cancelPreview() }
-            .onChange(of: observedAt) { _, _ in checked = false; cancelPreview() }
-            .onChange(of: useFirst) { _, _ in checked = false; cancelPreview() }
+            .onChange(of: amount) { _, _ in
+                #if DEBUG
+                KeyboardDiagnostic.record(.stockResetAmount)
+                #endif
+                checked = false; cancelPreview()
+            }
+            .onChange(of: foodID) { _, _ in
+                #if DEBUG
+                KeyboardDiagnostic.record(.stockResetFood)
+                #endif
+                checked = false; cancelPreview()
+            }
+            .onChange(of: observedAt) { _, _ in
+                #if DEBUG
+                KeyboardDiagnostic.record(.stockResetObservedAt)
+                #endif
+                checked = false; cancelPreview()
+            }
+            .onChange(of: useFirst) { _, _ in
+                #if DEBUG
+                KeyboardDiagnostic.record(.stockResetUseFirst)
+                #endif
+                checked = false; cancelPreview()
+            }
+            #if DEBUG
+            .onChange(of: amountFocused) { _, focused in
+                KeyboardDiagnostic.record(focused ? .stockFocusOn : .stockFocusOff)
+            }
+            #endif
             .onAppear { if reviewSession.refresh(presentation) { cancelPreview() } }
             .onChange(of: presentation) { _, value in
                 if reviewSession.refresh(value) { cancelPreview() }
@@ -163,6 +188,23 @@ private struct PickupBatchReview: View {
             .onChange(of: scenePhase) { _, phase in if phase != .active { cancelPreview() } }
             .scrollDismissesKeyboard(.interactively)
             .keyboardDoneAction(visible: amountFocused, title: tr("Done")) { amountFocused = false }
+    }
+
+    private var diagnosticIdentityBinding: Binding<Bool> {
+        #if DEBUG
+        if KeyboardDiagnostic.enabled {
+            let original = $checked
+            return Binding(get: { original.wrappedValue }, set: { value, transaction in
+                // This binding is used only by the existing UI Toggle. Preserve
+                // its incoming transaction and synchronous write exactly.
+                MainActor.assumeIsolated {
+                    KeyboardDiagnostic.record(value ? .stockToggleTrue : .stockToggleFalse)
+                    original.transaction(transaction).wrappedValue = value
+                }
+            })
+        }
+        #endif
+        return $checked
     }
 
     private var presentation: PickupStockReviewPresentation {
