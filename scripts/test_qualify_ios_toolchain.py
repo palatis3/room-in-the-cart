@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Adversarial pure-data guard tests; never starts a native process."""
+"""Guard and stubbed system-Bash tests; never invokes native Apple tools."""
 import copy
 import json
 import os
@@ -241,6 +241,100 @@ class CleanupGuards(unittest.TestCase):
         self.assertTrue(failed)
         self.assertEqual(calls, [])
         self.assertFalse(report['allOwnedDevicesProvenAbsent'])
+
+
+class BashBuildSmokeTests(unittest.TestCase):
+    SIMULATOR = '22222222-2222-4222-8222-222222222222'
+    SCRIPT = Path(__file__).with_name('run_ios_toolchain_qualification.sh')
+
+    @staticmethod
+    def invoke_build(script, mode, build_exit=0):
+        """Use actual system Bash, but make every Python/Xcode call a shell stub."""
+        with tempfile.TemporaryDirectory(prefix='qualification bash smoke ') as temp:
+            root = Path(temp)
+            stubs = root / 'stubs'
+            stubs.mkdir()
+            out = root / '.build/toolchain-qualification'
+            out.mkdir(parents=True)
+            python_stub = stubs / 'python3'
+            python_stub.write_text('''#!/bin/bash
+set -euo pipefail
+printf '%s\\0' "$@" >> "$STUB_PYTHON_LOG"
+printf '\\0' >> "$STUB_PYTHON_LOG"
+if [[ "$#" -eq 3 && "$1" == scripts/qualify_ios_toolchain.py && "$2" == verify-runtime && "$3" == build ]]; then
+    printf '%s\\n' "$STUB_SIMULATOR"
+elif [[ "$#" -eq 4 && "$1" == scripts/check_built_app.py && "$3" == --configuration ]]; then
+    exit 0
+else
+    echo 'Unexpected Python stub command; refusing execution' >&2
+    exit 97
+fi
+''')
+            xcode_stub = stubs / 'xcodebuild'
+            xcode_stub.write_text('''#!/bin/bash
+set -euo pipefail
+printf '%s\\0' "$@" > "$STUB_XCODE_LOG"
+printf 'stub build output\\n'
+exit "$STUB_BUILD_EXIT"
+''')
+            python_stub.chmod(0o755)
+            xcode_stub.chmod(0o755)
+            # Only tee is real; no Python, xcrun, simctl or Xcode is reachable via PATH.
+            (stubs / 'tee').symlink_to('/usr/bin/tee')
+            environment = dict(os.environ, PATH=str(stubs), STUB_SIMULATOR=BashBuildSmokeTests.SIMULATOR,
+                               STUB_BUILD_EXIT=str(build_exit), STUB_PYTHON_LOG=str(root / 'python.args'),
+                               STUB_XCODE_LOG=str(root / 'xcode.args'))
+            result = subprocess.run(['/bin/bash', str(Path(script).resolve()), mode], cwd=root,
+                                    env=environment, capture_output=True, text=True, timeout=15, check=False)
+            python_calls = []
+            if (root / 'python.args').exists():
+                python_calls = [record.decode().split('\0') for record in
+                                (root / 'python.args').read_bytes().split(b'\0\0') if record]
+            xcode_args = None
+            if (root / 'xcode.args').exists():
+                xcode_args = (root / 'xcode.args').read_bytes().decode().rstrip('\0').split('\0')
+            configuration = 'Debug' if mode == 'build-debug' else 'Release'
+            log = out / (configuration + '-build.log')
+            return {'exit': result.returncode, 'stdout': result.stdout, 'stderr': result.stderr,
+                    'pythonCalls': python_calls, 'xcodeArguments': xcode_args,
+                    'buildLog': log.read_text() if log.exists() else None,
+                    'pathEntries': ['stub python3', 'stub xcodebuild', '/usr/bin/tee'],
+                    'mode': mode, 'stubBuildExit': build_exit}
+
+    def expected_arguments(self, configuration):
+        scheme = 'RoomInTheCart' if configuration == 'Debug' else 'RoomInTheCart-Performance'
+        arguments = ['-project', 'ios/RoomInTheCart.xcodeproj', '-scheme', scheme,
+                     '-configuration', configuration, '-destination', 'platform=iOS Simulator,id=' + self.SIMULATOR,
+                     '-parallel-testing-enabled', 'NO', '-jobs', '2', '-derivedDataPath', '.build/DerivedData']
+        if configuration == 'Release':
+            arguments += ['-enableCodeCoverage', 'NO', '-enableAddressSanitizer', 'NO',
+                          '-enableThreadSanitizer', 'NO', '-enableUndefinedBehaviorSanitizer', 'NO']
+        return arguments + ['CODE_SIGN_IDENTITY=-', 'build-for-testing']
+
+    def check_success(self, mode, configuration):
+        result = self.invoke_build(self.SCRIPT, mode)
+        self.assertEqual(result['exit'], 0, result)
+        self.assertEqual(result['xcodeArguments'], self.expected_arguments(configuration))
+        self.assertEqual(result['pythonCalls'], [
+            ['scripts/qualify_ios_toolchain.py', 'verify-runtime', 'build'],
+            ['scripts/check_built_app.py', '.build/DerivedData/Build/Products/' + configuration +
+             '-iphonesimulator/RoomInTheCart.app', '--configuration', configuration]])
+        self.assertEqual(result['buildLog'], 'stub build output\n')
+
+    def test_debug_exact_argv_on_system_bash(self):
+        self.check_success('build-debug', 'Debug')
+
+    def test_release_exact_argv_and_flags_on_system_bash(self):
+        self.check_success('build-release', 'Release')
+
+    def test_build_failure_propagates_through_tee_and_skips_app_validation(self):
+        for mode, configuration in [('build-debug', 'Debug'), ('build-release', 'Release')]:
+            with self.subTest(mode=mode):
+                result = self.invoke_build(self.SCRIPT, mode, build_exit=42)
+                self.assertEqual(result['exit'], 42, result)
+                self.assertEqual(result['xcodeArguments'], self.expected_arguments(configuration))
+                self.assertEqual(result['pythonCalls'], [['scripts/qualify_ios_toolchain.py', 'verify-runtime', 'build']])
+                self.assertEqual(result['buildLog'], 'stub build output\n')
 
 
 if __name__ == '__main__':

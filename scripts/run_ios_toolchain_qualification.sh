@@ -8,16 +8,18 @@ build-debug|build-release)
     simulator=$(python3 "$helper" verify-runtime build)
     configuration=Debug
     scheme=RoomInTheCart
-    extra=()
     if [[ "$1" == build-release ]]; then
         configuration=Release
         scheme=RoomInTheCart-Performance
-        extra=(-enableCodeCoverage NO -enableAddressSanitizer NO -enableThreadSanitizer NO -enableUndefinedBehaviorSanitizer NO)
     fi
-    xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme "$scheme" \
-        -configuration "$configuration" -destination "platform=iOS Simulator,id=$simulator" \
-        -parallel-testing-enabled NO -jobs 2 -derivedDataPath .build/DerivedData \
-        "${extra[@]}" CODE_SIGN_IDENTITY=- build-for-testing 2>&1 | tee "$out/$configuration-build.log"
+    build=(xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme "$scheme"
+        -configuration "$configuration" -destination "platform=iOS Simulator,id=$simulator"
+        -parallel-testing-enabled NO -jobs 2 -derivedDataPath .build/DerivedData)
+    if [[ "$1" == build-release ]]; then
+        build+=(-enableCodeCoverage NO -enableAddressSanitizer NO -enableThreadSanitizer NO -enableUndefinedBehaviorSanitizer NO)
+    fi
+    build+=(CODE_SIGN_IDENTITY=- build-for-testing)
+    "${build[@]}" 2>&1 | tee "$out/$configuration-build.log"
     python3 scripts/check_built_app.py "$products/$configuration-iphonesimulator/RoomInTheCart.app" --configuration "$configuration"
     ;;
 inventory)
