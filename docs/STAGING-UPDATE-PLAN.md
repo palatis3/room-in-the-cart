@@ -1,5 +1,13 @@
 # Next staging update
 
+## Current candidate and encrypted restore rehearsal
+
+Candidate `3d26f1f` retains the reviewed service runtime, deployment configuration and all 29 migration checksums. The contributor web client includes queue, receipt and session-privacy fixes. Six public staging API checks passed. The existing deployment still serves an older root page and returned 404 for the candidate’s named routes and new assets. [Candidate comparison](evidence/b11/encrypted-staging-rehearsal-20261105/staging-candidate.json) · [Public HTTP results](evidence/b11/encrypted-staging-rehearsal-20261105/public-staging.json).
+
+The local PostgreSQL 17.11 rehearsal captured an 008 baseline with fictional rows into an AES-256 encrypted Mac disk image. After detaching and reopening the image read-only, the restore preserved the migration registry, records, access policies, ownership and privileges. One isolated copy then upgraded through 029. The second remained at 008. The destination bootstrap role had to match the source grantor to replay its administrator membership correctly. [Rehearsal and limitations](evidence/b11/encrypted-staging-rehearsal-20261105/summary.json).
+
+Before an actual hosted rollout, confirm the current staging registry, private backup destination, recovery-key custody and authenticated backup access. Inventory hosted Auth customizations, Storage objects, Vault key requirements and provider settings for that project. Test recovery using the captured staging backup before applying migrations. The rehearsal used synthetic data and a temporary key. [Supabase recovery guidance](https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore).
+
 ## November 5 backup tooling preparation
 
 The read-only dashboard catalog reports PostgreSQL 17.11, matching the bundled `pg_dump` major version. Root installed the official Supabase CLI 3.0.0 into an isolated ignored tools directory, verified its archive against the release digest/checksums, and read its dump help. No remote CLI command, login, backup or restore was performed. [Tooling and catalog evidence](evidence/b11/staging-readiness-20261105/backup-tooling.json).
