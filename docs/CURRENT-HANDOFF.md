@@ -12,7 +12,7 @@ Read-only collectors are `ci_core_resume` (core/deep/performance, session43785) 
 
 ## Android companion-web handoff resumed
 
-The retained Android emulator PID26580 is running. Its crash-report startup blocker is resolved using the documented disabled-reporting option, and its task-owned ADB bridge now uses the existing trusted key. Boot and automatic UTC clock verify; Play Store visibly shows Sign in. Chrome149 remains outdated. The owner has been asked to sign in directly or report the exact error text. Do not capture screens/logs during credential entry. No key contents, account data or tokens were read; no new debugging trust or account terms were accepted. Current-stable acquisition and Android product acceptance remain open. [Environment recovery](evidence/b11/android-resume-20261106/REVIEW.md).
+The retained Android emulator PID26580 is running. Its crash-report startup blocker is resolved using the documented disabled-reporting option, and its task-owned ADB bridge now uses the existing trusted key. Boot and automatic UTC clock verify; Play Store visibly shows Sign in. Chrome149 remains outdated. The owner reported the error again; root found emulator Wi-Fi off with no default network. Enabling emulator Wi-Fi restored validated internet and the Google email-or-phone form now loads. The owner is completing credentials directly; do not capture screens/logs during entry. [Observed network repair](evidence/b11/android-network-repair-20261106/README.md). No key contents, account data or tokens were read; no new debugging trust or account terms were accepted. Current-stable acquisition and Android product acceptance remain open. [Environment recovery](evidence/b11/android-resume-20261106/REVIEW.md).
 
 ## Latest collected CI candidate: 8f864ea
 

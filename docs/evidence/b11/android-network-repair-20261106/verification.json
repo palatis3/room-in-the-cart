@@ -1,0 +1,35 @@
+{
+  "verified_at": "2026-11-06T19:21:14.559824+00:00",
+  "avd": "RITC_Chrome_API34",
+  "serial": "emulator-5554",
+  "before": {
+    "wifi_enabled": false,
+    "default_network": null,
+    "visible_error": "Couldn't sign in"
+  },
+  "action": {
+    "command": "adb -s emulator-5554 shell svc wifi enable",
+    "scope": "Existing emulator Wi-Fi only; user requested sign-in repair",
+    "exit": 0
+  },
+  "after": {
+    "wifi_enabled": true,
+    "android_validated_internet": true,
+    "visible_google_signin_form": "Email or phone; Next; no identifier entered"
+  },
+  "credentials_entered_by_agent": false,
+  "account_or_terms_changes_by_agent": false,
+  "userdata_wiped": false,
+  "host_network_changes": false,
+  "user_handoff": "Awaiting user Google sign-in; stop screen/log capture during entry",
+  "limits": [
+    "This repairs the observed offline sign-in prerequisite; completed Google authentication and current Chrome acquisition remain pending.",
+    "The prior historical sign-in failure was not captured and its cause is not independently established."
+  ],
+  "private_source_hashes": {
+    "connectivity.json": "4655accf95ce5bf846ed9ba736e268b707a34da5611e66796691f61d5c790aff",
+    "network-settled.json": "547ea06a90af33848f046c7a087bd1cf26770515094a2f8f6354318ba9536a8f",
+    "private-signin-error.png": "9ff91eacd5432d025a971c2e59afc4597eba4ba888abfd683a7931cbf12b0337",
+    "private-signin-result.png": "d051893a1bdc35b2fba6c1322831ed5a1a0a4fb09ee82f32c61cdc9cf1842031"
+  }
+}
