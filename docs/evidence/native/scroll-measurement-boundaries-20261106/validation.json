@@ -1,0 +1,52 @@
+{
+  "baseSHA": "807aa3c73ed872d4a83f6cbd71f7633797bb6fc8",
+  "changedFiles": [
+    "ios/UITests/ReleasePerformanceUITests.swift",
+    "scripts/scroll_signpost_diagnostic.py",
+    "scripts/test_scroll_signpost_diagnostic.py"
+  ],
+  "patchSHA256": "57d3d4d21619f5c24ff1db3eb748f9b3c44760313dc163c039d7c63f45e497db",
+  "sourceHashes": {
+    "ios/UITests/ReleasePerformanceUITests.swift": {
+      "base": "c7954233968072b97fd5845d5c28877c9251495cfee33675169a960839d2625f",
+      "proposed": "b75b9ede2ff8da817b13fc503792de1f81fb0d22adbe8987f16c8ec01d3ad877"
+    },
+    "scripts/scroll_signpost_diagnostic.py": {
+      "base": "e8fa85d6ceee7eb9c9a098338a002ea577df7605165d7b7b76b7cc9deb5aefa1",
+      "proposed": "be4a3f473c7e5dc6bc952df4c82e350a8ad58c4c2fb8721e71efabfa441f7de9"
+    },
+    "scripts/test_scroll_signpost_diagnostic.py": {
+      "base": "c2e59c37b3527ff86f326f0e3798f5f7c72ee985db0f8a2d13342083108e0a1d",
+      "proposed": "a3b94cec9424acfed37a1e102c5f79ef240d984154ecc80ee31e6dbd78942c4c"
+    }
+  },
+  "unchangedPolicyAndTransportInputs": {
+    ".github/workflows/ios-performance.yml": "7f320c5b1dc5e0f8b1b3250fa4ae00b937222f22b8e9088a2dbeea209166a978",
+    "scripts/check_ios_performance.py": "f203f21510455a8a83300ee6968e8c5ac2bb14dd8c6afd5a6adb5caa7ce8a4c7",
+    "scripts/ios_performance_baselines.json": "38742a9b5f5eea668c608f117db602ac6a2b73aa56691c3ec3f90c291d15c38e",
+    "scripts/check_ios_test_results.py": "17b8af9e6fcee857e14a3b3ea92baf8b5e410468c7e8482c89aa62c8edfdd990",
+    "ios/UITests/Fixtures/ReleaseLedger500.txt": "7411eb3a8a10911d6599237e1f2f618c0c3508667909a4766a4b5b14bef6e3b8"
+  },
+  "validation": {
+    "offlineParserTests": 16,
+    "pythonAST": "pass",
+    "patchAppliedToScratchEqualsProposedFiles": true,
+    "swiftOriginalLinesAllPreserved": true,
+    "metricObjectsAndMeasurementOptionsUnchanged": true,
+    "existingMeasurementAndGestureCallCountsUnchanged": true,
+    "nativeTypecheckBuildExecution": "not performed; no native execution authorized"
+  },
+  "releaseAcceptance": false,
+  "freezeRevalidation": {
+    "performance-readiness-807aa3c": {
+      "files": 359,
+      "sha256": "077a351934a6af515db860f6ad79a49ac066688c5f265098b0a4f07d7341a3e2",
+      "mismatches": 0
+    },
+    "performance-setup-f117439": {
+      "files": 357,
+      "sha256": "56d431ee346583a4f22dd0e94ffeb7e45ab68c5ff668ad8772caca89aa8709c5",
+      "mismatches": 0
+    }
+  }
+}
