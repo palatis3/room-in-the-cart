@@ -290,6 +290,13 @@ import XCTest
                 }
                 XCTAssertTrue(tapped, "No visible field tap point for \(name)")
                 field.typeText(value)
+                // Hosted typing can finish before the last character reaches
+                // the accessibility value. Wait for the exact input once;
+                // never repair the value by typing again.
+                let entered = XCTNSPredicateExpectation(
+                    predicate: NSPredicate(format: "value == %@", value), object: field)
+                XCTAssertEqual(XCTWaiter.wait(for: [entered], timeout: 5), .completed,
+                               "Typed value must finish updating for \(name)")
                 XCTAssertEqual(field.value as? String, value, name)
             }
             let done = app.buttons["Done"]

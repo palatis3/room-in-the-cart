@@ -1,0 +1,159 @@
+{
+  "candidate": "0d33c11d43a97d670bf56d104d3260cad9b3f202",
+  "runID": 42215222467,
+  "attempt": 1,
+  "group": "ui-01",
+  "artifact": {
+    "runID": 42215222467,
+    "attempt": 1,
+    "candidate": "0d33c11d43a97d670bf56d104d3260cad9b3f202",
+    "artifactID": 13503288062,
+    "name": "iphone-results-ui-01-1",
+    "apiSize": 54078476,
+    "apiDigest": "sha256:087f9bb450f499bff97fdad929f2e4e599a0780ebe1466fffca8f3ea6b24e2a6",
+    "extracted": true,
+    "limits": {
+      "archive": 256000000,
+      "member": 50000000,
+      "total": 1000000000,
+      "members": 50000,
+      "ratio": 1000
+    },
+    "sha256": "087f9bb450f499bff97fdad929f2e4e599a0780ebe1466fffca8f3ea6b24e2a6",
+    "digestVerified": true,
+    "members": 179,
+    "expandedBytes": 55355301,
+    "oversizedMembers": []
+  },
+  "selector": "RoomInTheCartUITests/FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop",
+  "outcome": "failed",
+  "seconds": 188.883,
+  "assertion": {
+    "source": "ios/UITests/FreeJourneyUITests.swift:293",
+    "sourceSHA256": "a5f72d6c4bab058b8e1aa0eb5fb22b8579d9bd9e45e25d61b75806206a3e79bc",
+    "expected": "Four wraps",
+    "actualAtRead": "Four wrap",
+    "position": "immediately after field.typeText; before Done/dismissal and before any next-field focus"
+  },
+  "boundary": {
+    "target": "First pack label TextField",
+    "point": [
+      201,
+      558.3333333333333
+    ],
+    "contentArea": [
+      24,
+      196,
+      354,
+      578
+    ],
+    "pointInsideArea": true,
+    "tapSeconds": 182.48,
+    "typeSeconds": 184.4,
+    "postTypeIdleSeconds": 185.8,
+    "valueReadSeconds": 185.84,
+    "screenshotSeconds": 187.47
+  },
+  "activities": [
+    {
+      "path": "/testRuns/0/activities/285",
+      "activityType": "com.apple.dt.xctest.activity-type.internal",
+      "attachments": [
+        {
+          "lifetime": "deleteOnSuccess",
+          "name": "UI Snapshot 2026-11-06 at 07.59.04 AM",
+          "payloadId": "0~xM7eViFUFONq93PqEB7bthC74K47BqEENWhw2SsbvGreBRl-FXPBWHNDwv2ow_DdKKe18ztF5vBm6yoa5bBVHg==",
+          "timestamp": 1793969944.672,
+          "uuid": "2E81F75D-865B-4D6D-B59A-425296B4B3CC"
+        },
+        {
+          "lifetime": "deleteOnSuccess",
+          "name": "Synthesized Event 2026-11-06 at 07.59.05 AM",
+          "payloadId": "0~28D9dzGFSrz9Je2GB6klWNsQVfCfGLg2Jf3tINxEcxaVFwGAeX2PxG7WV1DTfJruVUuruEvFHYA58mhPe5X4tQ==",
+          "timestamp": 1793969945.318,
+          "uuid": "37B1621F-94D8-4AA9-977E-FDBF924C9551"
+        }
+      ],
+      "isAssociatedWithFailure": false,
+      "startTime": 1793969944.341,
+      "title": "Tap \"First pack label\" TextField[0.50, 0.50]"
+    },
+    {
+      "path": "/testRuns/0/activities/286",
+      "activityType": "com.apple.dt.xctest.activity-type.internal",
+      "attachments": [
+        {
+          "lifetime": "deleteOnSuccess",
+          "name": "UI Snapshot 2026-11-06 at 07.59.07 AM",
+          "payloadId": "0~xM7eViFUFONq93PqEB7bthC74K47BqEENWhw2SsbvGreBRl-FXPBWHNDwv2ow_DdKKe18ztF5vBm6yoa5bBVHg==",
+          "timestamp": 1793969947.275,
+          "uuid": "E38538AA-8042-466C-8CE0-CD1C521E0956"
+        },
+        {
+          "lifetime": "deleteOnSuccess",
+          "name": "Synthesized Event 2026-11-06 at 07.59.07 AM",
+          "payloadId": "0~hpmj4GORpN6DsAKvbqY-JrlrX2clWGgCu1rEJ_80vNbHKJf7RyYcFKBQpfzGSTyTiNLM8cBttDBUaSDd24M7dA==",
+          "timestamp": 1793969947.659,
+          "uuid": "F589124C-0C7D-4102-B291-82F5C2FB59A0"
+        }
+      ],
+      "isAssociatedWithFailure": false,
+      "startTime": 1793969946.261,
+      "title": "Type 'Four wraps' into \"First pack label\" TextField"
+    },
+    {
+      "path": "/testRuns/0/activities/287",
+      "activityType": "com.apple.dt.xctest.activity-type.internal",
+      "isAssociatedWithFailure": false,
+      "startTime": 1793969947.697,
+      "title": "Find the \"First pack label\" TextField"
+    },
+    {
+      "path": "/testRuns/0/activities/288",
+      "isAssociatedWithFailure": true,
+      "startTime": 1793969948.065,
+      "title": "XCTAssertEqual failed: (\"Optional(\"Four wrap\")\") is not equal to (\"Optional(\"Four wraps\")\") - First pack label"
+    }
+  ],
+  "typingSynthesizedEvent": {
+    "attachment": "F589124C-0C7D-4102-B291-82F5C2FB59A0",
+    "requestTitle": "Type 'Four wraps'",
+    "requestedText": "Four wraps",
+    "actualDeliveryNotEstablishedByRequest": true
+  },
+  "screenshotObservation": "Retained Free-flow-failure screenshot visibly shows complete Four wraps with insertion caret and keyboard still open. It was captured after the failing value read; no permanence claim for the earlier partial value.",
+  "runtimeWarnings": 0,
+  "animationWaitWarningsInFailedCase": 0,
+  "attachmentRefs": {
+    "D8076C28-AE07-4378-A9F5-A90599A10BAB.png": {
+      "path": "/Users/palatis/Room in the Cart/.build/CIResearch20261105/candidate-0d33c11/core-collection/ui01-journey-attachments/D8076C28-AE07-4378-A9F5-A90599A10BAB.png",
+      "bytes": 430660,
+      "sha256": "3ab943b997b7d14ae7feb33ef3bbc7cb759a90ce315c62f8f96ca3c3ef580839"
+    },
+    "2E81F75D-865B-4D6D-B59A-425296B4B3CC": {
+      "path": "/Users/palatis/Room in the Cart/.build/CIResearch20261105/candidate-0d33c11/core-collection/ui01-journey-attachments/2E81F75D-865B-4D6D-B59A-425296B4B3CC",
+      "bytes": 1066,
+      "sha256": "85a25f675a8fcae2c947fa8b18bf7736a41e738ebc091c906cdf9bd56d065082"
+    },
+    "37B1621F-94D8-4AA9-977E-FDBF924C9551": {
+      "path": "/Users/palatis/Room in the Cart/.build/CIResearch20261105/candidate-0d33c11/core-collection/ui01-journey-attachments/37B1621F-94D8-4AA9-977E-FDBF924C9551",
+      "bytes": 1891,
+      "sha256": "b028b36ab187f2286b5da281ed62fa3244093888390ba6cfa2138004c55b3e8f"
+    },
+    "E38538AA-8042-466C-8CE0-CD1C521E0956": {
+      "path": "/Users/palatis/Room in the Cart/.build/CIResearch20261105/candidate-0d33c11/core-collection/ui01-journey-attachments/E38538AA-8042-466C-8CE0-CD1C521E0956",
+      "bytes": 1066,
+      "sha256": "85a25f675a8fcae2c947fa8b18bf7736a41e738ebc091c906cdf9bd56d065082"
+    },
+    "F589124C-0C7D-4102-B291-82F5C2FB59A0": {
+      "path": "/Users/palatis/Room in the Cart/.build/CIResearch20261105/candidate-0d33c11/core-collection/ui01-journey-attachments/F589124C-0C7D-4102-B291-82F5C2FB59A0",
+      "bytes": 1734,
+      "sha256": "d3c95e06242ec3e9169a9c799b8660835db606ea3ba80911217f1186fe932e3d"
+    }
+  },
+  "limits": [
+    "No app event telemetry was enabled in acceptance products.",
+    "Request payload/full later screenshot do not prove exact final-character delivery or accessibility-update timing at the earlier value read.",
+    "No retry, corrected outcome, source edit, or causal claim."
+  ]
+}
