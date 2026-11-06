@@ -140,14 +140,9 @@ jobs:
       - name: Boot and verify a fresh Release installation
         timeout-minutes: 8
         run: |
-          python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
-          if xcrun simctl get_app_container "$SIMULATOR_ID" dev.roominthecart.app app >/dev/null 2>&1; then
-            echo 'Expected a fresh simulator without the Release app.' >&2
-            exit 1
-          fi
-          if [[ "$PERFORMANCE_CASE" != launch ]]; then
-            xcrun simctl pbcopy "$SIMULATOR_ID" < "$FIXTURE"
-          fi
+          python3 scripts/prepare_ios_performance_simulator.py \
+            --simulator "$SIMULATOR_ID" --case "$PERFORMANCE_CASE" --fixture "$FIXTURE" \
+            --output .build/performance/setup.json
       - name: Run one Release performance case
         timeout-minutes: 30
         shell: bash
