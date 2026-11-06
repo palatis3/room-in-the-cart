@@ -287,6 +287,8 @@ All 27 have current source entries. “Pending” below concerns current screen 
 | S26 Idea | Dinners or shared planning → local/shared idea review and approval. | PLANNING; final real household. |
 | S27 Quotes | Checkout contextual entry or Dinners/shared shop → quotes. | QUOTES/B175; final configured hardware. |
 
+The isolated [keyboard diagnostic](evidence/native/keyboard-hosted-preparation-20261106/README.md) now compiles locally and has one hosted run42309239002 on exactefc1bfc. Its original six selectors, test bodies and limits remain unchanged. No native result exists at this checkpoint; original UI07/UI06 stalls remain unresolved.
+
 ## Remaining production work and release gates
 
 - **Current local milestone:** all six follow-up flow scopes now have passing dedicated UI evidence across their separately pinned runs; current polished Release/ordinary Debug and privacy resources compile/verify, and the preview is replaced without resetting its inventoried data. This is local implementation/acceptance progress, not a combined all-green regression or full27-route/device release gate. Recheck evidence affected by later changes. Preserve failed runs, the S21 logging accommodation and unlocated invalid-frame diagnostics.
