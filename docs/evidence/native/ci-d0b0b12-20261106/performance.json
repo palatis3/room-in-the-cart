@@ -1,0 +1,30 @@
+{
+  "candidate": "d0b0b12ee0cb8412f17e82c92a91013217560670",
+  "runID": 42149899549,
+  "cases": {
+    "launch": {
+      "attempt": 1,
+      "artifactID": 13472642232,
+      "sha256": "e13fab324c0528dcdf945a24880d4d5ea302b91c3b50addd66806fba53b190b9",
+      "digestVerified": true,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "measurementsIndependentlyRecomputed": true,
+      "comparisons": {
+        "responsiveLaunchMedianSeconds": {
+          "measured": 4.625577667,
+          "maximum": 5.5,
+          "passed": true
+        }
+      },
+      "rawLogSHA256": "1780d26b12a5f4cbd305d0993292b2f7b40212c32833d41abe4a2a9954d0d075",
+      "calibrationSHA256": "9414e35caca9cebdd60daf9da678e4af2ff6685e78a048a56ab4b277626da42f",
+      "hostedPickupReadback": null,
+      "simulatorHitches": null
+    }
+  },
+  "limits": [
+    "Simulator evidence only; physical frame-smoothness acceptance remains separate.",
+    "Pickup SQLite was checked on the hosted runner. Its database is not retained, so local replay verifies metrics/attachments and reported baseline comparison, not a second database read."
+  ]
+}

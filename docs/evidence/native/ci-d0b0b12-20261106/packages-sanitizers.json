@@ -1,0 +1,32 @@
+{
+  "candidate": "d0b0b12ee0cb8412f17e82c92a91013217560670",
+  "checks": {
+    "swift-address-1": {
+      "runID": 42149899513,
+      "artifactID": 13471838490,
+      "sha256": "9e08f8db1a6aa749411403450a0b32be079fec50efe4004e553ba03264fdbfa4",
+      "strictReplayExit": 0,
+      "passed": 389,
+      "expectedNativeWireSkips": 3,
+      "result": "CoreDomain: 171 passed, 0 deliberately skipped\nDeviceSurfaces: 29 passed, 0 deliberately skipped\nHouseholdClient: 82 passed, 3 deliberately skipped\nLocalStore: 74 passed, 0 deliberately skipped\nRecordArchive: 33 passed, 0 deliberately skipped"
+    },
+    "swift-thread-1": {
+      "runID": 42149899513,
+      "artifactID": 13472855029,
+      "sha256": "ebaf2de425bbf78c76f962dc80415b6141c55572f0ffec86a50a6dfd4f541b58",
+      "strictReplayExit": 0,
+      "passed": 389,
+      "expectedNativeWireSkips": 3,
+      "result": "CoreDomain: 171 passed, 0 deliberately skipped\nDeviceSurfaces: 29 passed, 0 deliberately skipped\nHouseholdClient: 82 passed, 3 deliberately skipped\nLocalStore: 74 passed, 0 deliberately skipped\nRecordArchive: 33 passed, 0 deliberately skipped"
+    },
+    "swift-package-results-1": {
+      "runID": 42149899546,
+      "artifactID": 13471608852,
+      "sha256": "0c6dc1766b40263ff8f8d1e190c54284daba130223e21ec487a49b825fb5f8af",
+      "strictReplayExit": 0,
+      "passed": 389,
+      "expectedNativeWireSkips": 3,
+      "result": "CoreDomain: 171 passed, 0 deliberately skipped\nDeviceSurfaces: 29 passed, 0 deliberately skipped\nHouseholdClient: 82 passed, 3 deliberately skipped\nLocalStore: 74 passed, 0 deliberately skipped\nRecordArchive: 33 passed, 0 deliberately skipped"
+    }
+  }
+}
