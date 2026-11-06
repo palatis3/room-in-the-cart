@@ -1,0 +1,29 @@
+{
+  "localOnly": true,
+  "migrations": {
+    "before": 29,
+    "applied": 30,
+    "rolledBack": 29,
+    "name": "030_measurement_trigger_search_path.sql",
+    "checksum": "8706c4ae16b6670c43b7360bb7dcd563ac1413aee9c2c0ebce1204bdc1abb97f"
+  },
+  "baselineDigest": "e045b01e0446988527005eae6be125c4276b44f77c272a4696fa498884882532",
+  "appliedDigest": "6810492177c30ec803168a7b4bfc0517684a365ffc638bc88995b2f6aa3f32fa",
+  "rollbackDigest": "e045b01e0446988527005eae6be125c4276b44f77c272a4696fa498884882532",
+  "appTables": 81,
+  "appRowsDigest": "e6fb2097da67a2f575ff5bd013cc0d9f35e436af5dcfd233b8f67be32536cf1f",
+  "afterRollbackAppRowsDigest": "e6fb2097da67a2f575ff5bd013cc0d9f35e436af5dcfd233b8f67be32536cf1f",
+  "lockRefusalMs": 2003,
+  "driftRefusal": [
+    "settings",
+    "advisory lock",
+    "registry timestamp",
+    "function body",
+    "table security",
+    "rollback checksum"
+  ],
+  "atomicInsertFaultReverted": true,
+  "normalRunnerAccepted030": true,
+  "applyRerunRefused": true,
+  "rollbackRerunRefused": true
+}

@@ -1,5 +1,8 @@
 # Next staging update
 
+
+November 6 follow-up: additive migration 030 is applied and independently verified. All 30 application checksums match; both search-path warnings are resolved; function privileges and all 81 app-table security definitions are preserved. All 27 public HTTP checks pass. [Verification and tested rollback](evidence/b11/staging-measurement-hardening-20261106/verification.json). The owner deferred the browser walkthrough; scheduled-maintenance observation remains pending.
+
 ## Current execution status — November 6
 
 The owner approved the concrete rollout and root completed migrations009–029, protected maintenance provisioning and deployment dpl_5WrPFnhZhcp51X9UWU919sULJaTh. All27publicAPI/page/asset checks and four public maintenance checks pass. Original data and all29checksums verify; encrypted recovery files are detached. Actual scheduled delivery and a live browser walkthrough remain pending. [Rollout evidence](evidence/b11/staging-rollout-20261106/summary.json). Earlier preparation snapshots below retain their original scope and are superseded by this result.
