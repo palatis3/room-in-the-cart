@@ -68,7 +68,7 @@ import XCTest
         tap(element("openPickupList")); tap(element("ledgerStartShop"))
         fill("Confirmed stock packs", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
         tap(element("ledgerImport"))
-        let original = element("ledgerImportText")
+        let original = editableElement("ledgerImportText")
         tap(original); app.typeText("12 wraps")
         dismissKeyboard()
         XCTAssertEqual(original.value as? String, "12 wraps")
@@ -78,7 +78,7 @@ import XCTest
         shopRoot(); tap(element("openPickupList")); tap(app.buttons["Inspect wraps"])
         tap(app.buttons["Confirm pantry or freezer food"])
         fill("Checked freezer wraps", into: "Actual food or freezer batch")
-        let usableAmount = element("Confirmed usable amount")
+        let usableAmount = editableElement("Confirmed usable amount")
         tap(usableAmount); app.typeText(amount)
         dismissKeyboard()
         XCTAssertEqual(usableAmount.value as? String, amount)
@@ -96,9 +96,16 @@ import XCTest
         XCTAssertTrue(app.tabBars.buttons["Shop"].waitForExistence(timeout: 15))
     }
     private func element(_ id: String) -> XCUIElement { app.descendants(matching: .any).matching(identifier: id).firstMatch }
+    private func editableElement(_ id: String) -> XCUIElement {
+        // Persistent labels can share an input's accessible name. Select only
+        // an editable control, including lazily materialized multiline fields.
+        let types: [XCUIElement.ElementType] = [.textField, .textView, .secureTextField, .searchField]
+        return app.descendants(matching: .any).matching(identifier: id)
+            .matching(NSPredicate(format: "elementType IN %@", types.map { $0.rawValue })).firstMatch
+    }
     private func tap(_ target: XCUIElement) { reveal(target); XCTAssertTrue(target.isHittable, target.debugDescription); target.tap() }
     private func fill(_ text: String, into id: String) {
-        tap(element(id)); app.typeText(text)
+        tap(editableElement(id)); app.typeText(text)
         let done = app.buttons["Done"]
         if done.exists && done.isHittable { done.tap() }
     }
