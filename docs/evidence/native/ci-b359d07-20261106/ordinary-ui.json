@@ -152,6 +152,26 @@
       "strictReplayExit": 0,
       "runtimeWarnings": 2,
       "rawLogSHA256": "af6d782741c0046bd6767f919e82eec4b224dbbe5ea3c4de593cc8e4f6007d06"
+    },
+    "ui-10": {
+      "artifactID": 13492539382,
+      "sha256": "34c27d465f96bdb962f0d94b289bb05225f019dde73c1bf400cb892117b58c57",
+      "digestVerified": true,
+      "selectors": [
+        "RoomInTheCartUITests/ContextualNavigationUITests/testFreeContextualRoutesKeepPrivateAndSharedWorkSeparate",
+        "RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced",
+        "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges",
+        "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testFullyCoveredSavesUseAtHomePlanWithoutPurchasedItemOrRetailerOrder",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextShopRepairShortcutRemainsInsideViewportAndOpens",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testOwnerExportReviewAndCancelledDeletionPreserveComparisonAfterRestart"
+      ],
+      "selected": 6,
+      "passed": 5,
+      "failed": 1,
+      "skipped": 0,
+      "strictReplayExit": 1,
+      "runtimeWarnings": 2,
+      "rawLogSHA256": "4523d93a634b4857fe12119445f85325583db3fa311cbbf8bd969a4186582308"
     }
   }
 }

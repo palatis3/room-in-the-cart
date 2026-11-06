@@ -1,6 +1,6 @@
 {
   "head": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
-  "checkedAt": "2026-11-06T09:58:44.751316+00:00",
+  "checkedAt": "2026-11-06T10:04:20.106819+00:00",
   "acceptance": "in_progress_with_retained_failure",
   "runs": [
     {
@@ -69,9 +69,10 @@
     }
   ],
   "verifiedFilesSHA256": {
-    "ordinary-ui.json": "7e28101ffd8726f8500edb37957eb756933fe083374906928df7705177cc0d50",
+    "ordinary-ui.json": "3d38c61dafe9ce877021ff6204453a424c3070efa46a19f6bd0caf553bf75495",
     "models.json": "c4bb58c51509aede81291f5c33f69b573bbb6c527b2eb99479281ab4a061ca70",
     "swift-security.json": "4b1646687bd45b4c1b43ec2c77eed555df83c9f94927bc71babcef7e15d49918",
+    "ui10-failure-triage.json": "f8dabd13728a92f0105a0e8d8abcafdf1a7fb364f95eb2525ef273337741fd88",
     "performance-inventory.json": "eb626aeed799517d1aa389beddc8a91858fe776d2badc02fc93d683f7dbe233e",
     "contributor-balanced-01.json": "9f32a9c65896be926c40fe476aa7c9ce90c4cb1e0f4cbd5e7ddb5e61e77ab90d",
     "ui07-failure-triage.json": "cd2deace5a5f06e394ebdaac520f33b832111d2bad17584307e1c54f640e9a6b",
@@ -95,7 +96,7 @@
   },
   "limits": [
     "Remaining UI and fixture cases have not all completed. All3performance cases passed within their retained scope. This is not combined release acceptance.",
-    "UI01 retains its720-second failure; UI02 retains offscreen approval and Spanish animation waits; UI07 retains the static-label input selection failure. Later local corrections do not relabel hosted failures.",
+    "UI01 retains its720-second failure; UI02 retains offscreen approval and Spanish animation waits; UI07 and UI10 retain the static-label stock-input failures. Later local corrections do not relabel hosted failures.",
     "All recorded candidate results use b359d07 pinned validators; new local boot-guard and navigation changes are outside this candidate.",
     "Swift scanning retains11compiler diagnostics and292unresolved AST nodes. Scroll hitch data was unavailable; physical-device performance is not established.",
     "No manual retry or duplicate workflow dispatch. Raw Records media artifacts are excluded."
