@@ -1,6 +1,8 @@
 # Current candidate native failures
 
-Candidate `804030e`, core run42272379454 attempt1, has two executed failures. All ten native UI groups acquired a runner; UI07 remains collecting. Of the45 cases with evidence so far,43 passed and2 failed. No manual retry or timeout change was made.
+Candidate `804030e`, core run42272379454 attempt1, is terminal: all ten ordinary UI groups executed, with48/51 cases passing and3 failing. The failures are UI06 saved-offer reminder, UI07 next-shop cancellation and UI10 Reduce Motion sharing. No manual retry or timeout change was made. [Terminal audit](original-core-deep-performance-audit.json) and [UI07 failure evidence](ui07-native-failure.json).
+
+The original review below was written when45 cases had evidence (43pass/2fail) and UI07 was still collecting. Its observations remain scoped to their original artifacts; later diagnostic passes do not relabel these failures.
 
 The saved-offer deadline-reminder journey in UI06 exceeded its original720-second allowance after ten approximately60-second XCTest animation-completion waits. The first starts after the Done tap at126.40seconds. Other UI06 cases, including the previous candidate’s largest-text failure, pass. That pass does not establish a fix for the recurring synchronization problem. Runtime warnings are zero; the implicit XCTest runner restart remains a strict lifecycle failure.
 
