@@ -306,6 +306,7 @@ class RuntimeWarningTests(unittest.TestCase):
     def test_reviewed_menu_idle_phases_keep_exact_case_device_tap_and_total_cap(self):
         for selector in (
             "RoomInTheCartUITests/FreeJourneyUITests/testManualListOrderSurvivesRestartAndOpensLargePrint",
+            "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekReservationDraftCannotFollowAnotherPickup",
             "RoomInTheCartUITests/SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave",
         ):
             phase = "Wait for dev.roominthecart.app.debug to idle"

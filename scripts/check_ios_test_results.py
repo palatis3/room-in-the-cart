@@ -107,6 +107,10 @@ OBSERVED_MENU_WARNINGS = {
 # Menu tap to settle, matching the standalone Menu control experiment.
 # Keep each additional phase local to its observed selector and total cap.
 OBSERVED_MENU_WARNING_ALTERNATE_PHASES = {
+    # d0b0b12 UI08: the already-reviewed pickup Menu emitted its same two
+    # issues while settling after the tap rather than during event synthesis.
+    "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekReservationDraftCannotFollowAnotherPickup":
+        ("Wait for dev.roominthecart.app.debug to idle",),
     # 23a73a8: the same two fixture Menu issues moved from idle to synthesis.
     # Keep the combined cap and exact selector/tap/device/issue identity checks.
     "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption":
