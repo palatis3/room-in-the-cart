@@ -61,7 +61,7 @@ def parse(text):
                    for key, value in flags.items()): raise ValueError()
             if event == 'consent.set.rejectedMissingWorkspace' and flags['workspacePresent'] != 0:
                 raise ValueError()
-            events.append({'line': number, 'timestampUTC': timestamp, 'pid': pid,
+            events.append({'line': number, 'timestampRaw': timestamp, 'pid': pid,
                            'sequence': sequence, 'uptime': exact_decimal(stamp),
                            'event': event, **flags})
         except (ValueError, InvalidOperation):
@@ -81,7 +81,7 @@ def gaps(sequences):
     return [[a + 1, b - 1] for a, b in zip(values, values[1:]) if b > a + 1]
 
 
-def source_report(parsed, read_status, capture_status):
+def source_report(parsed, read_status, capture_status, timezone):
     events = parsed['events']
     counts = Counter(identity(event) for event in events)
     per_process = {}
@@ -96,19 +96,21 @@ def source_report(parsed, read_status, capture_status):
             'activationObserved': any(event['event'] == 'fixture.ready' for event in selected),
         }
     return {**parsed, 'readStatus': read_status, 'captureStatus': capture_status,
+            'wallTimeZone': timezone, 'timezoneProvenance': 'caller_declared' if timezone == 'UTC' else 'unknown',
             'eventCount': len(events), 'uniqueEventCount': len(counts),
             'exactDuplicateOccurrences': sum(count - 1 for count in counts.values()),
             'processes': per_process}
 
 
 def reconcile(live, exported, *, live_status='unknown', export_status='unknown',
-              live_read='ok', export_read='ok', expected_pids=()):
+              live_read='ok', export_read='ok', expected_pids=(), live_timezone='unknown', export_timezone='unknown'):
+    if live_timezone not in ('unknown', 'UTC') or export_timezone not in ('unknown', 'UTC'): raise ValueError('Invalid timezone metadata')
     if live_status not in STATUSES or export_status not in STATUSES: raise ValueError('Invalid capture status')
     if any(type(pid) is not int or not 0 < pid <= 2**31-1 for pid in expected_pids):
         raise ValueError('Invalid expected process metadata')
     sources = {
-        'live': source_report(parse(live), live_read, live_status),
-        'export': source_report(parse(exported), export_read, export_status),
+        'live': source_report(parse(live), live_read, live_status, live_timezone),
+        'export': source_report(parse(exported), export_read, export_status, export_timezone),
     }
     live_ids = {identity(event) for event in sources['live']['events']}
     export_ids = {identity(event) for event in sources['export']['events']}
@@ -149,7 +151,7 @@ def reconcile(live, exported, *, live_status='unknown', export_status='unknown',
     if live_ids != export_ids: reasons.append('Live and persisted observations differ.')
     if any(process['conflictingSequences'] for process in processes): reasons.append('Conflicting same-process sequence values; do not select a preferred variant.')
     return {
-        'schemaVersion': 1, 'diagnosticOnly': True, 'status': 'inconclusive',
+        'schemaVersion': 2, 'diagnosticOnly': True, 'status': 'inconclusive',
         'exhaustiveDeliveryEstablished': False, 'noSetterInferencePermitted': False,
         'absenceMeaning': 'not_observed', 'reasons': reasons,
         'comparison': {'liveOnlyUniqueEvents': len(live_ids-export_ids),
@@ -174,6 +176,8 @@ def main():
     parser.add_argument('--export', dest='exported', required=True)
     parser.add_argument('--live-status', choices=STATUSES, default='unknown')
     parser.add_argument('--export-status', choices=STATUSES, default='unknown')
+    parser.add_argument('--live-timezone', choices=('unknown', 'UTC'), default='unknown')
+    parser.add_argument('--export-timezone', choices=('unknown', 'UTC'), default='unknown')
     parser.add_argument('--expected-pid', type=int, action='append', default=[])
     parser.add_argument('--output', required=True)
     args = parser.parse_args()
@@ -181,7 +185,8 @@ def main():
     exported, export_read, export_hash = read_file(args.exported)
     try:
         result = reconcile(live, exported, live_status=args.live_status, export_status=args.export_status,
-                           live_read=live_read, export_read=export_read, expected_pids=args.expected_pid)
+                           live_read=live_read, export_read=export_read, expected_pids=args.expected_pid,
+                           live_timezone=args.live_timezone, export_timezone=args.export_timezone)
     except ValueError as error:
         parser.error(str(error))
     result['inputSHA256'] = {'live': live_hash, 'export': export_hash}

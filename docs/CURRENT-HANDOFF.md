@@ -18,6 +18,12 @@ Root completed a reviewed, locally tested, unpushed performance setup follow-up:
 
 The consent delivery probe is prepared under [diagnostics/measurement-consent](../diagnostics/measurement-consent/README.md). Exact804plus the four-file overlay compiles for arm64/x86_64 simulator Debug on local Xcode27.1;16warning lines are inherited, with none added. The offline log reconciler passes19synthetic tests. No probe is installed in normal app sources, no diagnostic native test/hosted workflow ran, and absent logs cannot prove absence of setter delivery. Any next experiment must preserve the original seven-selector group and gates.
 
+## Latest ordinary UI failures
+
+UI06 andUI10 are terminal failures: saved-offer reminder exceeded720seconds after10animation-completion waits; Reduce Motion sharing failed its15-second Close readiness expectation before any tap. Of45 ordinary cases collected,43pass/2fail; UI07 is still collecting. Root reviewed the share video and hierarchy without inferring hittability from pixels. No retry or causal fix is claimed. [Retained failure analysis](evidence/native/ci-804030e-20261106/CORE-FAILURE-REVIEW.md).
+
+The offline consent reconciler now preserves raw timestamps and explicit per-source timezone provenance; `log stream` has no timezone option. All21synthetic checks pass. The native instrumentation patch remains unchanged and unexecuted.
+
 ## Main branch baseline protection enabled
 
 At20:20UTC root enabled and independently verified `main` protection: PR required, current base, resolved conversations, four app-bound core/security checks, admin enforcement, no force push/deletion, zero mandatory human approvals. Main and draftPR1refs are unchanged. This supersedes historical notes that main protection was pending. It does not enforce every path-filtered extra check or certify release; the complete exact-candidate pre-release workflow and owner/provider/device gates remain necessary. [Settings proof and scope](evidence/native/main-protection-20261106/README.md).

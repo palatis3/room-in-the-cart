@@ -181,6 +181,22 @@ class ReconcileTests(unittest.TestCase):
             self.assertEqual(result['comparison']['liveOnlyUniqueEvents'], 4)
             self.assert_no_negative_inference(result)
 
+    def test_raw_wall_time_never_silently_claims_utc(self):
+        result = reconcile(event(), event(), export_timezone='UTC')
+        self.assertEqual(result['schemaVersion'], 2)
+        self.assertEqual(result['sources']['live']['wallTimeZone'], 'unknown')
+        self.assertEqual(result['sources']['export']['wallTimeZone'], 'UTC')
+        self.assertIn('timestampRaw', result['sources']['live']['events'][0])
+        self.assertNotIn('timestampUTC', json.dumps(result))
+        self.assertEqual(result['comparison']['sharedUniqueEvents'], 1)
+        self.assert_no_negative_inference(result)
+
+    def test_timezone_metadata_does_not_change_identity(self):
+        text = event().replace('19:00:00.123', '14:00:00.123')
+        result = reconcile(text, event(), export_timezone='UTC')
+        self.assertEqual(result['comparison']['sharedUniqueEvents'], 1)
+        with self.assertRaises(ValueError): reconcile('', '', live_timezone='invented')
+
     def test_invalid_capture_status_and_expected_pid_rejected(self):
         with self.assertRaises(ValueError): reconcile('', '', live_status='complete')
         for pid in (0, -1, True, 'credential'):

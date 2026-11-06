@@ -1,11 +1,10 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "proposalOnly": true,
   "executesCapture": false,
   "predicate": "subsystem == \"dev.roominthecart.measurementconsentdiagnostic\" AND category == \"events\"",
   "format": "compact",
   "level": "info",
-  "timezone": "UTC",
   "process": "RoomInTheCart",
   "artifacts": [
     "live stdout",
@@ -26,5 +25,11 @@
   "livenessProvesExhaustiveDelivery": false,
   "persistedExportSuccessProvesExhaustiveDelivery": false,
   "equalObservedEventSetsProveExhaustiveDelivery": false,
-  "missingSetterProvesNoSetter": false
+  "missingSetterProvesNoSetter": false,
+  "timestampRepresentation": "raw OSLog timestamp, without an inferred timezone",
+  "sourceTimezones": {
+    "live": "unknown unless independently established",
+    "export": "UTC only when log show --timezone UTC was actually used"
+  },
+  "streamTimezoneOptionSupported": false
 }
