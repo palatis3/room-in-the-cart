@@ -10,6 +10,12 @@ All six original attempt-1 runs are terminal: core42272379454, fixtures422723794
 
 All original collectors are stopped. Root verified3138 core frozen files and113 compact fixture files. The single English-only StoreKit recovery is terminal success:15/15 passed, zero warnings/skips/restarts, exact source/order/runtime. The original English job had no runner and no execution; its acquisition failure remains retained. All three other deep jobs kept their original execution unchanged. Root verified the separate268-file recovery freeze. [Recovery audit](evidence/native/ci-804030e-20261106/english-recovery-final-audit.json). No new acceptance candidate or source push has followed804.
 
+## Targeted performance setup follow-up dispatched
+
+Root published exact804 plus the reviewed0500ca3 setup helper as `f117439994835e0090376f4a29d81c478a6b86b4` on isolated branch`codex/verify-performance-setup-804030e`. A single [performance run42301547684](https://github.com/palatis3/room-in-the-cart/actions/runs/42301547684) was dispatched at22:02:20UTC with`enforce_baselines=true`. One build and the original three cases retain native source, runtime gates, inventory, warnings, metrics/readback requirements and limits. Root replayed32focused tests and matched previous207/lint proof hashes; independent review found no blocker. No PR opened or main-PR branch pushed. [Dispatch proof](evidence/native/performance-setup-followup-20261106/dispatch.json).
+
+Agent`ci_core_resume` owns read-only collection under`.build/CIResearch20261106/performance-setup-f117439/`. Do not redispatch on an observation timeout. This run tests setup and performance evidence; it does not erase earlier missing-scroll-series or UI failures.
+
 ## Mid-run review and local follow-up
 
 Root independently verified current Swift CodeQL: all254 runtime inputs,27rules/0findings;11compiler diagnostics and292unresolved AST nodes remain. The unchanged consent journey passed locally1/1 with0warnings on Xcode27.1/iOS26.2-23C54; hosted26.3failure is unresolved. Scroll performance stopped in pre-test simulator setup with exit60, producing no native/metric/readback result. This historical mid-run checkpoint is superseded by the terminal counts and separately scoped English recovery above. [Independent review](evidence/native/ci-804030e-20261106/MID-RUN-REVIEW.md).
