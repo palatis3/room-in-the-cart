@@ -1,0 +1,56 @@
+{
+  "diagnosticOnly": true,
+  "releaseAcceptance": false,
+  "head": "169613bfabeb00355649f96d6bc88ad91064f708",
+  "runID": 42176801822,
+  "attempt": 1,
+  "identity": {
+    "EXPECTED_SHA": "169613bfabeb00355649f96d6bc88ad91064f708",
+    "GITHUB_RUN_ID": "42176801822",
+    "GITHUB_RUN_ATTEMPT": "1",
+    "ImageOS": "macos15",
+    "ImageVersion": "20261028.0489.1",
+    "runtime": "com.apple.CoreSimulator.SimRuntime.iOS-26-2",
+    "runtimeBuild": "23C54",
+    "simulatorID": "6CECFF88-EAA3-4084-9864-231D02752C7F",
+    "diagnosticOnly": true,
+    "releaseAcceptance": false
+  },
+  "toolchain": "Xcode26.3/17C529",
+  "sourceManifestMatchesExactGitCommit": true,
+  "sourceFileCount": 525,
+  "hostedFrozenInputsUnchanged": {
+    "source": true,
+    "products": true,
+    "diagnosticOnly": true
+  },
+  "archivedProductsMatchManifest": true,
+  "productFileCount": 238,
+  "boundedAppleDoubleMetadata": {
+    "._Products": "4798dcd53450d1b8bd450cf6e57b913e12a90a3baf6a63c051c5153c68cc3c1e",
+    "Products/._Debug-iphonesimulator": "4798dcd53450d1b8bd450cf6e57b913e12a90a3baf6a63c051c5153c68cc3c1e",
+    "Products/Debug-iphonesimulator/._PackageFrameworks": "4798dcd53450d1b8bd450cf6e57b913e12a90a3baf6a63c051c5153c68cc3c1e"
+  },
+  "expandedProductBytes": 194257759,
+  "productArchiveSHA256": "a5c87f66347417d3ebafdec2b87d45c7c6b5eda3d9f5819298ad94147241e87f",
+  "selector": "RoomInTheCartUITests/StockReviewUITests/testChangedMealRevisionDisablesPreviewWithoutApplyingBatch",
+  "selected": 1,
+  "passed": 1,
+  "failed": 0,
+  "skipped": 0,
+  "strictExit": 0,
+  "summaryExportDifference": "Local newer xcresulttool adds runtimeWarnings:[]; all other fields equal hosted summary.",
+  "runtimeWarnings": 0,
+  "captureAliveBeforeStop": "1",
+  "persistedExportExit": "0",
+  "eventCounts": {
+    "events.log": 23,
+    "events-export.log": 23
+  },
+  "eventSequenceIdentical": true,
+  "eventLogSHA256": {
+    "events.log": "aff295c3875f214e097b723ce22a2a241f4bad989e02025ce8bd6b2c454e5e57",
+    "events-export.log": "5e070921e202a55db8ad4d12c3de7808b5be6f734e6eca87b46bf4eccc73935e"
+  },
+  "observedAt": "2026-11-06T07:08:32.875990+00:00"
+}
