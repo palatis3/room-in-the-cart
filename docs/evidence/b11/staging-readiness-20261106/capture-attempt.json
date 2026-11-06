@@ -1,0 +1,27 @@
+{
+  "status": "capture_not_completed",
+  "failure": "TLS_client_unavailable",
+  "temporaryPasswordFilePresent": false,
+  "liveCliRolesObservedAfterAttempt": 1,
+  "liveDatabaseCaptured": false,
+  "restoreVerified": false,
+  "signInVerified": true,
+  "targetProject": "uwjxrotnocxxomqdetzk",
+  "credentialOrDatabaseOutputPublished": false,
+  "limitation": "Credential access now works. The installed PostgreSQL17.11 local-test client lacks SSL support. An isolated SSL-enabled client is being prepared; certificate verification will remain mandatory.",
+  "ownerKeychainAccessApproved": true,
+  "attempts": [
+    {
+      "capture": "capture-20261106",
+      "outcome": "credential_reader_timeout",
+      "cliRolesObservedAfter": 0
+    },
+    {
+      "capture": "capture-20261106-02",
+      "outcome": "psql_has_no_SSL_support",
+      "temporaryLoginTTLSeconds": 300,
+      "temporaryRole": "cli_login_postgres",
+      "observedRoleExpiryUTC": "2026-11-06T02:25:01.304116Z"
+    }
+  ]
+}
