@@ -240,6 +240,10 @@ final class ReleasePerformanceUITests: XCTestCase {
     }
 
     private func openPickupList() {
+        // Launch can return before the root accessibility tree is available.
+        // Establish readiness before reveal tries to scroll for a missing tab.
+        XCTAssertTrue(app.tabBars.buttons["Shop"].waitForExistence(timeout: 10),
+                      "The Shop tab must be available before opening the pickup list")
         tap(app.tabBars.buttons["Shop"])
         if !element("ledgerSearch").exists { tap(element("openPickupList")) }
     }
