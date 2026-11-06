@@ -1,0 +1,143 @@
+{
+  "scope": "Three complete original shared-quote journeys: private proposal and shopper adoption, lost-reply relaunch retry without duplication, and stale-review rejection with explicit retry clearing.",
+  "baselineCandidate": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "problem": "The review opened, but the acknowledgement followed long facts below the viewport. Independent live target queries failed before the helper could scroll.",
+  "change": "Switch reveal reads one parent snapshot per attempt, requires the whole switch vertically visible and verifies the actual trailing touch point before one optional tap. Original 30-attempt bound, all test bodies and final on-value assertion remain.",
+  "tests": [
+    {
+      "identifier": "SharedStoreQuoteUITests/testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction()",
+      "durationSeconds": 211.01840794086456
+    },
+    {
+      "identifier": "SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave()",
+      "durationSeconds": 206.48783898353577
+    },
+    {
+      "identifier": "SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption()",
+      "durationSeconds": 373.4749879837036
+    }
+  ],
+  "passed": 3,
+  "failed": 0,
+  "skipped": 0,
+  "strictExit": 0,
+  "runtimeWarnings": 3,
+  "summaryRuntimeWarnings": [
+    {
+      "issueType": "Runtime Warning",
+      "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead."
+    },
+    {
+      "issueType": "Runtime Warning",
+      "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead."
+    },
+    {
+      "issueType": "Runtime Warning",
+      "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead."
+    }
+  ],
+  "warningGuard": {
+    "status": "passed",
+    "summaryWarningCount": 3,
+    "runtimeWarningCount": 3,
+    "examinedTestCount": 3,
+    "detailExportCount": 3,
+    "activityExportCount": 3,
+    "warnings": [
+      {
+        "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+        "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+        "count": 1,
+        "maximum": 2,
+        "menuActivity": {
+          "tap": "Tap \"fixture.s27.controls\" Button",
+          "phase": "Synthesize event"
+        }
+      },
+      {
+        "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave",
+        "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+        "count": 1,
+        "maximum": 2,
+        "menuActivity": {
+          "tap": "Tap \"fixture.s27.controls\" Button",
+          "phase": "Synthesize event"
+        }
+      },
+      {
+        "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction",
+        "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+        "count": 1,
+        "maximum": 2,
+        "menuActivity": {
+          "tap": "Tap \"fixture.s27.controls\" Button",
+          "phase": "Synthesize event"
+        }
+      }
+    ]
+  },
+  "toolchain": "Xcode 27.1\nBuild version 27A9275",
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "CDFB1546-E427-4388-8878-0A5715CE24D1",
+    "deviceName": "RITC shared quote switch reveal 20261106",
+    "modelName": "iPhone 17",
+    "osBuildNumber": "23C54",
+    "osVersion": "26.2",
+    "platform": "iOS Simulator"
+  },
+  "switchHelperPreservation": {
+    "baseCommit": "4133bb0",
+    "source": "ios/UITests/SharedStoreQuoteUITests.swift",
+    "baseSHA256": "ad1872af521245c4fac3a98931013055325f93551fec0fb67e257b7f343c00ad",
+    "proposedSHA256": "ba6685c3b2b710e7f112524467e5bafe559a5c9742d076431c15feb680b0a7ad",
+    "patchSHA256": "edc00b0a9c73352a6cda4b78df07ef64d6d6e0133c3f7fde2292d92b05ac07b7",
+    "patchBytes": 4054,
+    "normalizationToExactBase": true,
+    "productionSourceUnchanged": true,
+    "allFiveTestBodiesSetupTeardownAndOtherHelpersPreserved": true,
+    "genericRevealUnchanged": true,
+    "scrollableAreaDefaultBehaviorUnchanged": true,
+    "switchAttemptBound": 30,
+    "tapRetryAdded": false,
+    "originalFinalOnValueAssertionPreserved": true,
+    "swiftCompilationPerformed": false,
+    "nativeTestsPerformed": false,
+    "syntheticImplementationMirroringTestsAdded": false,
+    "hostedActionsPerformed": false,
+    "gitMutationsPerformed": false,
+    "validationRequired": "Root builds and runs complete original lost-reply, known-trip/adoption, and stale-review journeys with unchanged selector/default/max deadlines; retain warnings and failures.",
+    "originalFullVerticalVisibilityPreserved": true,
+    "actualTrailingPointGuardPreserved": true
+  },
+  "sourceFilesVerified": 514,
+  "productFilesVerified": 179,
+  "frozenInputsUnchanged": {
+    "source": true,
+    "products": true
+  },
+  "ownedSimulatorDeleted": true,
+  "bootGuardAcceptedFinished": true,
+  "timeAllowanceSeconds": {
+    "default": 720,
+    "maximum": 900
+  },
+  "scratchDirectory": ".build/SharedQuoteSwitchReveal20261106/validation",
+  "knownHarnessDiagnostics": {
+    "invalidDigitCountOccurrences": 15
+  },
+  "sha256": {
+    "Tests.log": "fe90443ce621abd9708be2d236c9503edb99c983f7c263aa9599857c3972b2e1",
+    "strict.log": "458ddcae7aa5e578038b084970550a32defdd3f055080c064f1eeccd1e73afdd",
+    "test-summary.json": "90590c691c5876d104eb64609ce938d38b4c6074b786908a91c954f8e4177da5",
+    "test-details.json": "981277f6e414ad530350b30dac14a9a960e54c4b74ad8f1473fbfd3aa281a2d7",
+    "source-sha256.json": "4c1f3e4cb273f1cae3e08ad85274d564e93a5f6519d62ec29e1facf0d9089958",
+    "product-sha256.json": "e2c7ba7e4c2dd1a82b907b574db6e3b976cb4fdf25cad5db8ec87b4434e30db3",
+    "source-diff.patch": "d153c0a1cb095e97c582db52e1ffc17fe2126b57e0df6ae544134faf339d86df",
+    "boot.log": "763b0fff8c1197afe097bd5278aca63e97bce619347cb1133d37019249b2a8c2"
+  },
+  "limits": [
+    "Local Xcode27.1 differs from hosted26.3; retained hosted results are not relabeled.",
+    "No new hosted retry or full acceptance run; no time allowance, warning policy, business assertion or fixture profile changed."
+  ]
+}

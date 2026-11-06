@@ -184,9 +184,50 @@ import XCTest
     private func element(_ id: String) -> XCUIElement { app.descendants(matching:.any).matching(identifier:id).firstMatch }
     private func tap(_ target: XCUIElement) { reveal(target); XCTAssertTrue(target.isHittable,target.debugDescription); target.tap() }
     private func enableSwitch(_ id: String) {
-        let target = app.switches.matching(identifier:id).firstMatch; reveal(target,fullyVisible:true)
-        if target.value as? String == "0" { target.coordinate(withNormalizedOffset:CGVector(dx:0.92,dy:0.5)).tap() }
-        XCTAssertEqual(target.value as? String,"1",id)
+        for attempt in 0..<30 {
+            // A review transition can remove a lazy Form row between live
+            // exists/frame queries. Locate the switch and its viewport in one tree.
+            guard let snapshot = try? app.snapshot() else {
+                XCTFail("Could not snapshot the app while revealing switch: "+id)
+                return
+            }
+            let area = scrollableArea(snapshot:snapshot)
+            var elements = [snapshot]
+            var matches: [XCUIElementSnapshot] = []
+            while let element = elements.popLast() {
+                if element.elementType == .switch && element.identifier == id { matches.append(element) }
+                elements.append(contentsOf:element.children)
+            }
+            guard matches.count <= 1 else {
+                XCTFail("Ambiguous switch identifier: "+id)
+                return
+            }
+            if let match = matches.first, !match.frame.isEmpty {
+                let point = CGPoint(x:match.frame.minX+match.frame.width*0.92,y:match.frame.midY)
+                if match.frame.minY >= area.minY && match.frame.maxY <= area.maxY && area.contains(point) {
+                    // Resolve the current editable control only after its snapshot
+                    // tap point is visible, then verify the actual touch coordinate.
+                    let target = app.switches.matching(identifier:id).firstMatch
+                    let coordinate = target.coordinate(withNormalizedOffset:CGVector(dx:0.92,dy:0.5))
+                    let currentPoint = coordinate.screenPoint
+                    if !area.contains(currentPoint) {
+                        scrollContent(upward:currentPoint.y > area.midY,area:area)
+                        continue
+                    }
+                    guard target.isEnabled && target.isHittable else {
+                        XCTFail("Visible switch must be editable and hittable: "+id)
+                        return
+                    }
+                    if target.value as? String == "0" { coordinate.tap() }
+                    XCTAssertEqual(target.value as? String,"1",id)
+                    return
+                }
+                scrollContent(upward:point.y > area.midY,area:area)
+            } else {
+                scrollContent(upward:(attempt / 6) % 2 == 0,area:area)
+            }
+        }
+        XCTFail("No visible switch tap point after 30 reveal attempts: "+id)
     }
     private func fill(_ text: String, into id: String, replacing: Bool = false, requireDone: Bool = false) {
         let field = app.textFields.matching(identifier:id).firstMatch
@@ -264,10 +305,10 @@ import XCTest
             XCTAssertTrue(hittable,"Missing actionable UI element: "+target.debugDescription)
         }
     }
-    private func scrollableArea() -> CGRect {
+    private func scrollableArea(snapshot suppliedSnapshot: XCUIElementSnapshot? = nil) -> CGRect {
         // Measure bars and keyboard from one tree so transitions cannot replace
         // an element between separate live existence, hittability and frame queries.
-        let snapshot = try? app.snapshot()
+        let snapshot = suppliedSnapshot ?? (try? app.snapshot())
         let bounds = snapshot?.frame ?? app.frame
         var keyboardTop = bounds.maxY
         var barBottom = bounds.minY+90

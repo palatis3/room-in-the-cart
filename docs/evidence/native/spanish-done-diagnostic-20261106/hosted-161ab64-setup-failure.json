@@ -1,0 +1,195 @@
+{
+  "runID": 42203081911,
+  "attempt": 1,
+  "workflowID": 407500252,
+  "head": "161ab6497daa560e8b9c3b2dc133cd2777e3c53f",
+  "branch": "codex/diagnostic-spanish-done-b359d07",
+  "conclusion": "failure",
+  "collectedAt": "2026-11-06T10:36:02.180120+00:00",
+  "artifact": {
+    "run": 42203081911,
+    "attempt": 1,
+    "head": "161ab6497daa560e8b9c3b2dc133cd2777e3c53f",
+    "artifactID": 13494099879,
+    "name": "spanish-done-diagnostic-1",
+    "archiveBytes": 16222,
+    "sha256": "91acf20f0fd36be0b5fc5d44d93982a686401b34826302ac748c3a3d54a41cca",
+    "digestVerified": true,
+    "members": 9,
+    "expandedBytes": 291801,
+    "oversizedMembers": [],
+    "limits": {
+      "archiveBytes": 256000000,
+      "memberBytes": 50000000,
+      "totalBytes": 1000000000,
+      "members": 50000
+    },
+    "extracted": true
+  },
+  "source": {
+    "diagnosticCommitMatchesReviewedOverlay": true,
+    "reviewedPatchSHA256": "9d761dff5a769a95c7bcc7237e92633aa312beeae5da889b6e435e72be294aef",
+    "reviewedFiles": {
+      ".github/workflows/ios-fixtures.yml": "58b32ff3c19da9b2c1aa8e62b92ce10c0402dd150b6d1bf5fa906996bdce769a",
+      "diagnostics/spanish-done/README.md": "a55bf835257f1fbeba474798931c3c347f3aac95e07e7072e92bb0bfc0a2188d",
+      "diagnostics/spanish-done/build.sh": "bfad1466571f2fcd775415c09ffb273cbb414c7339273d17271eb3efa48c7d07",
+      "diagnostics/spanish-done/local-wiring.sh": "509ce10372c188c8e58b73a42e472c9f6996e133479502cf62566285fe17a8b8",
+      "diagnostics/spanish-done/preservation.py": "73a122cf94191e93b03a53dfe218315493eaf76594d4d98f388c5425ce298928",
+      "diagnostics/spanish-done/protocol.py": "930c44df458290d74152452faf349d35977699fb6c810a6d2696ec83a9afbe4c",
+      "diagnostics/spanish-done/run.py": "cb3a8ef18c61932a40e12fa8613bdf2f8cab54953a0e2092d6ca60b07455aed0",
+      "diagnostics/spanish-done/test_diagnostic.py": "c8162d9085a5a9241caddece753a837d7bf32819dbcd57d5341d6f2de77009f7",
+      "ios/App/Theme.swift": "15728bbe48f2fc43fe2ef1b3a793c62243847251ecf15bdebfb652901d145010",
+      "ios/Features/Shop/ComparisonView.swift": "db4165e18c2c2ea1a3ccf105b8c39e0d400292a8ab746403d9c216420644cbb2",
+      "ios/UITests/RoomInTheCartUITests.swift": "19cbe46a0f3c17f4c3011d557494a5a4ac321637e7c285a71504b7b979e6b852"
+    },
+    "hostedFrozenSourceManifest": "not produced: preparation stopped before source freeze",
+    "hostedCompiledProducts": "not produced: build step skipped"
+  },
+  "toolchain": "Xcode 26.3\nBuild version 17C529",
+  "environment": {
+    "hostImage": "20261028.0489.1",
+    "runtimeIdentifier": "com.apple.CoreSimulator.SimRuntime.iOS-26-2",
+    "inventoryVersion": "26.2",
+    "inventoryBuild": "23C54",
+    "exactInventoryMatchCount": 1,
+    "actualBootedBuild": null,
+    "actualBuildVerified": false,
+    "ownedSimulatorID": "2779278A-CF5F-43E9-8B5E-0DADCD530B77",
+    "ownedSimulatorName": "RITC Spanish Done 1bcf4ead-55c6-475b-98ed-906a1de8dc5d"
+  },
+  "failureClassification": "Runtime-build readback timed out during preflight. No app test or compilation occurred.",
+  "runtimeReadback": {
+    "phase": "post-boot",
+    "simulatorID": "2779278A-CF5F-43E9-8B5E-0DADCD530B77",
+    "runtime": "com.apple.CoreSimulator.SimRuntime.iOS-26-2",
+    "expectedBuild": "23C54",
+    "actualBuild": null,
+    "matched": false,
+    "observedUTC": 1793961130.09315,
+    "queryError": "Command '['xcrun', 'simctl', 'getenv', '2779278A-CF5F-43E9-8B5E-0DADCD530B77', 'SIMULATOR_RUNTIME_BUILD_VERSION']' timed out after 30 seconds"
+  },
+  "boot": {
+    "finished": true,
+    "finishedUTC": "2026-11-06T10:31:49Z",
+    "reportedMigrationFailure": false,
+    "logSHA256": "dde44f25783c2b7ec2db50189510f1f04bca7e0ef977cea442d7a8fad8d535b1"
+  },
+  "testResult": {
+    "raw": null,
+    "notInvoked": true
+  },
+  "strictReplay": {
+    "status": "not run",
+    "reason": "Test was not invoked; no Tests.xcresult, Tests.log, test summary or product exists. Do not synthesize an XCTest result.",
+    "pinnedCheckerBase": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+    "checkerSHA256": "17b8af9e6fcee857e14a3b3ea92baf8b5e410468c7e8482c89aa62c8edfdd990"
+  },
+  "capture": {
+    "complete": false,
+    "errors": [
+      "[Errno 2] No such file or directory: '.build/spanish-done/source-sha256.json'"
+    ],
+    "absenceInferenceAllowed": false
+  },
+  "cleanup": {
+    "simulatorID": "2779278A-CF5F-43E9-8B5E-0DADCD530B77",
+    "shutdownExit": 0,
+    "deleted": false
+  },
+  "jobSteps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Require one exact manually selected diagnostic commit",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Validate diagnostic parsing and source preservation without native UI actions",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Check exact source and environment; create and boot one owned simulator",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "name": "Compile original core test profile and freeze diagnostic products",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Run the complete original Spanish selector once with normal idling",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Collect evidence and retain independent test and capture verdicts",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "name": "Shut down only the owned simulator",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "retainedFilesSHA256": {
+    "boot.log": "dde44f25783c2b7ec2db50189510f1f04bca7e0ef977cea442d7a8fad8d535b1",
+    "capture-status.json": "1b9119217aa543a5142b8131c8bb1f8bae3c0789e25c93e37fc932e42cd5f036",
+    "cleanup-status.json": "2ef76570de5190a9febcda24ea8d11f3dafe5cbf7d5cb28f8b7b928ecbde5981",
+    "identity.json": "52da671d0d822fd5241b23c96bb5f75ff36b174132bd6f9bc36b7050128f4525",
+    "runtime-check-001.json": "89cc9f5ddd81dce9d1db08431fff4f3c3d40ed12ff799ccd6371da1877fa7bae",
+    "runtime-selection.json": "121702a52f103a2350345908b0be45b3d727b9d79a1654d38d0e5d767bbf2948",
+    "simulator-inventory.json": "c8c0143a6fce52f8ffd3a2ca530a4541462ee511d01251c2599db89edcd03656",
+    "test-result.json": "d0fb1e32458b81b1da3c02485bd8ffad50908b8d4edd2449e8ffbf05659796a0",
+    "toolchain.txt": "bb7fc9a8f5e063e81975b33054b3a526c91bcccff263ad11d5bd8bcdbe8f0973"
+  },
+  "limitations": [
+    "The timeout did not observe a different runtime build; actual build remains unknown.",
+    "Inventory match and successful boot-status completion do not substitute for the missing actual-build readback.",
+    "No hosted reproduction/nonreproduction result, product fix, or comparison against local timing can be inferred.",
+    "Collector performed no native app/test/simulator operation, dispatch, retry, cancellation, Git mutation or source edit. Read-only metadata/log download and bounded extraction only.",
+    "Root owns interpretation and any next experiment."
+  ],
+  "failureTiming": {
+    "query": [
+      "xcrun",
+      "simctl",
+      "getenv",
+      "2779278A-CF5F-43E9-8B5E-0DADCD530B77",
+      "SIMULATOR_RUNTIME_BUILD_VERSION"
+    ],
+    "configuredQueryTimeoutSeconds": 30,
+    "queryObservationUTC": "2026-11-06T10:32:10.093150+00:00",
+    "queryObservationMeaning": "Proof timestamp immediately before runtime query, not an independently measured subprocess start.",
+    "bootFinishedUTC": "2026-11-06T10:31:49Z",
+    "prepareFailureLogUTC": "2026-11-06T10:32:41.0321230Z",
+    "jobTerminalFailure": true
+  },
+  "collectorStopped": true
+}
