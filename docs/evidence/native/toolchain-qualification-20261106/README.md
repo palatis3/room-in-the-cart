@@ -9,3 +9,5 @@ The target is macOS 26 arm64, Xcode 26.4.1 build 17E202, iPhone 17 and iOS 26.4.
 The new performance environment has no approved baseline. Structural calibration is explicitly nonacceptance and does not change release thresholds. A pass would establish one compatibility observation, not an intermittent-cause fix. KnownTrip is outside this bounded sample and remains open. No automatic retry is configured; no additional acceptance or calibration run is claimed here.
 
 [Dispatch receipt](dispatch.json) · [Live qualification run](https://github.com/palatis3/room-in-the-cart/actions/runs/42259468210)
+
+The first attempt is terminal: the environment booted and all 57 validator tests passed, but `extra[@]: unbound variable` stopped the Debug command before compilation. No native test, measurement or SQLite readback occurred. Cleanup reported success; the retained raw inventory was truncated. [Frozen first-attempt evidence](first-attempt-audit.json). A script compatibility fix is being prepared; no repeat has been requested.
