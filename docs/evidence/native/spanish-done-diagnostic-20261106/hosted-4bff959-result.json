@@ -1,0 +1,333 @@
+{
+  "runID": 42206008187,
+  "attempt": 1,
+  "head": "4bff9599a3619bfc5efa79a7a533fd12e08250fc",
+  "workflowID": 407500252,
+  "conclusion": "success",
+  "diagnosticOnly": true,
+  "releaseAcceptance": false,
+  "testSeconds": 176.523,
+  "strict": {
+    "selected": 1,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "warnings": 0,
+    "independentExit": 0,
+    "checkerBase": "b359d0743c2db77bb81a00a1c7e69036aa12ab77"
+  },
+  "sourceFilesVerified": 528,
+  "productsVerified": 238,
+  "compiledModels": 601,
+  "compiledUI": 51,
+  "toolchain": "Xcode26.3/17C529",
+  "runtime": "iOS26.2/23C54",
+  "runtimeReadbacksMatched": 3,
+  "capture": {
+    "complete": true,
+    "independentlyReplayed": true,
+    "events": 122,
+    "processIDs": [
+      30569,
+      34581
+    ],
+    "targetPID": 30569,
+    "runnerMarkerSeconds": 0.9347535416666233,
+    "stillsDecoded": 2,
+    "videoRetainedNotDecoded": false,
+    "videoInspection": {
+      "decodedFrames": 1574,
+      "dimensions": [
+        "1206x2622"
+      ],
+      "durationSeconds": 212.54166666666666,
+      "firstPTS": 0,
+      "frames": [
+        {
+          "actualSeconds": 118.965,
+          "file": "frame-00119.000.png",
+          "requestedSeconds": 119
+        },
+        {
+          "actualSeconds": 119.115,
+          "file": "frame-00119.500.png",
+          "requestedSeconds": 119.5
+        },
+        {
+          "actualSeconds": 119.865,
+          "file": "frame-00120.000.png",
+          "requestedSeconds": 120
+        },
+        {
+          "actualSeconds": 120.39,
+          "file": "frame-00120.500.png",
+          "requestedSeconds": 120.5
+        },
+        {
+          "actualSeconds": 120.72666666666667,
+          "file": "frame-00121.000.png",
+          "requestedSeconds": 121
+        },
+        {
+          "actualSeconds": 120.72666666666667,
+          "file": "frame-00122.000.png",
+          "requestedSeconds": 122
+        },
+        {
+          "actualSeconds": 129.825,
+          "file": "frame-00130.000.png",
+          "requestedSeconds": 130
+        },
+        {
+          "actualSeconds": 139.855,
+          "file": "frame-00140.000.png",
+          "requestedSeconds": 140
+        }
+      ],
+      "fullyDecoded": true,
+      "lastPTS": 209.17333333333335,
+      "source": "/Users/palatis/Room in the Cart/.build/SpanishDoneDiagnostic20261106/hosted-4bff959/spanish-done-diagnostic-1/screen.mp4",
+      "timingLimit": "Video time is not automatically synchronized to app or runner event uptime."
+    },
+    "rootVisualReview": {
+      "stills": [
+        "after-bQuantity-Done-5s.png",
+        "after-bQuantity-Done-15s.png"
+      ],
+      "frames": [
+        "frame-00119.500.png",
+        "frame-00120.000.png",
+        "frame-00120.500.png",
+        "frame-00122.000.png",
+        "frame-00140.000.png"
+      ],
+      "observation": "Video shows bQuantity value 6 with keyboard and Listo, followed by keyboard removal with value retained; later comparison action is visible above the tab bar after scrolling. Timed stills show later bPrice value 2 with no keyboard.",
+      "limits": [
+        "Video timestamps are not synchronized exactly to app/runner uptime.",
+        "Still delays are watcher-relative request-start times, not exact frame-exposure or command-completion times.",
+        "Diagnostic observers and video may alter scheduling."
+      ]
+    },
+    "mediaSHA256": {
+      "screen.mp4": "f50935cc5844ec2ebfa18b5b848482bbd596f9ff7710b2172440429d403047ab",
+      "after-bQuantity-Done-5s.png": "df49a452e7bc29411430a51287b39b95f09ef00ceafc0ca67700cf4f367871a3",
+      "after-bQuantity-Done-15s.png": "df49a452e7bc29411430a51287b39b95f09ef00ceafc0ca67700cf4f367871a3"
+    }
+  },
+  "archive": {
+    "run": 42206008187,
+    "attempt": 1,
+    "head": "4bff9599a3619bfc5efa79a7a533fd12e08250fc",
+    "artifactID": 13497202263,
+    "name": "spanish-done-diagnostic-1",
+    "archiveBytes": 85078230,
+    "sha256": "390a0662b9907ed319c390675964c091f2130cb5d5d174865f0f77abc95f6117",
+    "digestVerified": true,
+    "members": 86,
+    "expandedBytes": 87409940,
+    "oversizedMembers": [
+      {
+        "member": "products.tar.gz",
+        "bytes": 50602351,
+        "compressedBytes": 50182495
+      }
+    ],
+    "limits": {
+      "archiveBytes": 256000000,
+      "memberBytes": 50000000,
+      "totalBytes": 1000000000,
+      "members": 50000,
+      "maxCompressionRatio": 1000
+    },
+    "extracted": true,
+    "approvedScopedException": {
+      "member": "products.tar.gz",
+      "bytes": 50602351,
+      "compressedBytes": 50182495,
+      "authority": "Parent explicitly reviewed exact archive/member on 2026-11-06; original refusal retained in archive-default-refusal.json"
+    }
+  },
+  "controlLedger": {
+    "rows": 26,
+    "allRecordedSucceeded": true,
+    "initialInventorySeconds": 6.941205916999998,
+    "slowestControlSeconds": 47.655259083000004,
+    "incompleteOnExternalHardKill": true
+  },
+  "shutdownExit": 0,
+  "deleted": false,
+  "collectorStopped": true,
+  "priorFailuresPreserved": true,
+  "causalConclusion": null,
+  "media": {
+    "screen.mp4": "/Users/palatis/Room in the Cart/.build/SpanishDoneDiagnostic20261106/hosted-4bff959/spanish-done-diagnostic-1/screen.mp4",
+    "after-bQuantity-Done-5s.png": "/Users/palatis/Room in the Cart/.build/SpanishDoneDiagnostic20261106/hosted-4bff959/spanish-done-diagnostic-1/after-bQuantity-Done-5s.png",
+    "after-bQuantity-Done-15s.png": "/Users/palatis/Room in the Cart/.build/SpanishDoneDiagnostic20261106/hosted-4bff959/spanish-done-diagnostic-1/after-bQuantity-Done-15s.png"
+  },
+  "markerChronology": {
+    "targetPID": 30569,
+    "runnerPID": 30277,
+    "beforeUptime": 948.4748662083334,
+    "afterUptime": 949.40961975,
+    "elapsedSeconds": 0.9347535416666233,
+    "targetEventsNearCall": [
+      {
+        "pid": 30569,
+        "sequence": 89,
+        "uptime": 946.9631377916667,
+        "relativeToBeforeSeconds": -1.511728416666756,
+        "event": "keyboard.willChangeFrame",
+        "site": "process"
+      },
+      {
+        "pid": 30569,
+        "sequence": 90,
+        "uptime": 946.9640393333334,
+        "relativeToBeforeSeconds": -1.5108268750000207,
+        "event": "keyboard.willShow",
+        "site": "process"
+      },
+      {
+        "pid": 30569,
+        "sequence": 91,
+        "uptime": 946.9654473333334,
+        "relativeToBeforeSeconds": -1.5094188750000512,
+        "event": "keyboard.didChangeFrame",
+        "site": "process"
+      },
+      {
+        "pid": 30569,
+        "sequence": 92,
+        "uptime": 946.9667685000001,
+        "relativeToBeforeSeconds": -1.5080977083333664,
+        "event": "keyboard.didShow",
+        "site": "process"
+      },
+      {
+        "pid": 30569,
+        "sequence": 93,
+        "uptime": 948.8850097500001,
+        "relativeToBeforeSeconds": 0.41014354166668454,
+        "event": "done.enter",
+        "site": "comparison"
+      },
+      {
+        "pid": 30569,
+        "sequence": 94,
+        "uptime": 948.885359125,
+        "relativeToBeforeSeconds": 0.4104929166666125,
+        "event": "done.exit",
+        "site": "comparison"
+      },
+      {
+        "pid": 30569,
+        "sequence": 95,
+        "uptime": 948.9267755833334,
+        "relativeToBeforeSeconds": 0.4519093750000138,
+        "event": "keyboard.willChangeFrame",
+        "site": "process"
+      },
+      {
+        "pid": 30569,
+        "sequence": 96,
+        "uptime": 948.9276394583334,
+        "relativeToBeforeSeconds": 0.45277324999995017,
+        "event": "keyboard.willHide",
+        "site": "process"
+      },
+      {
+        "pid": 30569,
+        "sequence": 97,
+        "uptime": 948.9315615,
+        "relativeToBeforeSeconds": 0.4566952916666196,
+        "event": "textField.endEditing",
+        "site": "process"
+      },
+      {
+        "pid": 30569,
+        "sequence": 98,
+        "uptime": 948.9560007916667,
+        "relativeToBeforeSeconds": 0.4811345833333007,
+        "event": "focus.hidden",
+        "site": "comparison"
+      },
+      {
+        "pid": 30569,
+        "sequence": 99,
+        "uptime": 948.9563128750001,
+        "relativeToBeforeSeconds": 0.48144666666667035,
+        "event": "comparison.focus.none",
+        "site": "comparison"
+      },
+      {
+        "pid": 30569,
+        "sequence": 100,
+        "uptime": 949.3625909166667,
+        "relativeToBeforeSeconds": 0.8877247083332804,
+        "event": "keyboard.didChangeFrame",
+        "site": "process"
+      },
+      {
+        "pid": 30569,
+        "sequence": 101,
+        "uptime": 949.3653517916667,
+        "relativeToBeforeSeconds": 0.8904855833333158,
+        "event": "keyboard.didHide",
+        "site": "process"
+      }
+    ],
+    "captureCoveragePassed": true,
+    "absenceInferenceAllowed": false,
+    "causalConclusion": null
+  },
+  "policyVerification": {
+    "sourcePreservation": {
+      "ios/App/Theme.swift": "2d77ecf6ce6bed132275b3a9a33853cf4af311b81e2b7f9892bffe939defaa01",
+      "ios/Features/Shop/ComparisonView.swift": "cb1e419eccc3af825d6eeaad331d628dd0230d6377244c93c8c6b8d866b1d8a4",
+      "ios/UITests/RoomInTheCartUITests.swift": "7d9e7240a8c7ec11f0067b76e7122c4c3ad4f12fa998b4b2f08e1cbdf056ee34"
+    },
+    "compiledInventory": {
+      "models": 601,
+      "ui-01": 3,
+      "ui-02": 4,
+      "ui-03": 5,
+      "ui-04": 5,
+      "ui-05": 5,
+      "ui-06": 5,
+      "ui-07": 6,
+      "ui-08": 6,
+      "ui-09": 6,
+      "ui-10": 6
+    },
+    "totalModels": 601,
+    "totalUI": 51,
+    "selectedCompiledExactlyOnce": true,
+    "singleOriginalSelector": "RoomInTheCartUITests/RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer",
+    "unchangedXCTest720_900": true,
+    "parallelEnabled": false,
+    "retryFlags": false,
+    "controlLedgerRows": 26,
+    "allRecordedCommandsSucceededWithinDeadlines": true,
+    "initialInventorySeconds": 6.941205916999998,
+    "maxControlSeconds": 47.655259083000004,
+    "slowestControl": {
+      "command": [
+        "xcrun",
+        "simctl",
+        "list",
+        "devices",
+        "-j"
+      ],
+      "startedUTC": 1793962523.2679832,
+      "timeoutSeconds": 90,
+      "status": "succeeded",
+      "exit": 0,
+      "endedUTC": 1793962570.923239,
+      "elapsedSeconds": 47.655259083000004
+    },
+    "captureComplete": true,
+    "frozenInputVerification": "Pinned run.py checks manifests at freeze, execute and collect; all three phases succeeded. Archived 528 sources and 238 products independently match manifests.",
+    "ledgerScope": "command() wrapper only; direct boot/video/still/log-export/cleanup subprocesses have separate evidence. Finally-only writes cannot prove coverage under external hard kill; none is reported in this successful invocation."
+  },
+  "nextStep": "Separately review original four-case UI02 history using these exact frozen products; no second singleton or full acceptance retry has been launched."
+}
