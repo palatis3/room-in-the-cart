@@ -1,0 +1,91 @@
+{
+  "checkedAt": "2026-11-06T06:27:53.373019+00:00",
+  "approval": "Owner explicitly approved reviewed staging update in this chat on November 6, 2026",
+  "status": "applied, promoted and HTTP/maintenance verified",
+  "supabaseProject": "uwjxrotnocxxomqdetzk",
+  "vercelProject": "prj_MsdHyy06CKCuFeAvoOCpnJRQ1vGa",
+  "vercelTeam": "team_zkjaW5rtwPK9URZDeSoybwXB",
+  "deployment": "dpl_5WrPFnhZhcp51X9UWU919sULJaTh",
+  "url": "https://room-in-the-cart-staging.vercel.app",
+  "sourceCommit": "d0b0b12ee0cb8412f17e82c92a91013217560670",
+  "cliInheritedGitMetadataCommit": "efc6a3acfee3dd5e4a4bd4a79fab881e354f7103",
+  "sourceIdentityExplanation": "CLI inherited parent checkout Git metadata; uploaded files were independently frozen from sourceCommit, all137 uploaded files matched its manifest, and explicit sourceCommit deployment metadata is pinned. Web assets match exact reviewed build.",
+  "rollbackDeployment": "dpl_9mAfUc4cPpz6FQLiVLn5tRvFkDvD",
+  "oldDeploymentAPIAfterMigration": {
+    "selected": 6,
+    "passed": 6
+  },
+  "migrations": {
+    "appliedThisRun": 21,
+    "total": 29,
+    "checksumsMatch": true,
+    "originalTablesPreservedExcludingRegistry": 57,
+    "objectOwners": "postgres",
+    "allRitcTablesForcedRLS": true
+  },
+  "worker": {
+    "login": "ritc_maintenance",
+    "membership": "ritc_worker",
+    "inherit": true,
+    "setRole": false,
+    "runtimeGuardPassed": true,
+    "privateRecovery": "Encrypted RestoreChecks archive; login Keychain key; secret bytes never in Git/chat",
+    "temporaryPassfileRemoved": true
+  },
+  "verification": {
+    "stagedHTTP": {
+      "selected": 27,
+      "passed": 27
+    },
+    "publicHTTP": {
+      "selected": 27,
+      "passed": 27
+    },
+    "stagedMaintenance": {
+      "selected": 5,
+      "passed": 5
+    },
+    "publicMaintenance": {
+      "selected": 4,
+      "passed": 4
+    },
+    "providerDeletionEnabled": false,
+    "emailEnabled": false,
+    "childVerificationActivated": false
+  },
+  "cron": {
+    "enabledAt": 1793686529784,
+    "disabledAt": null,
+    "updatedAt": 1793946200862,
+    "deploymentId": "dpl_5WrPFnhZhcp51X9UWU919sULJaTh",
+    "definitions": [
+      {
+        "host": "room-in-the-cart-staging-kuoy0dz9r-doorframe-staging.vercel.app",
+        "path": "/internal/maintenance",
+        "schedule": "0 8 * * *"
+      }
+    ]
+  },
+  "cronScheduledInvocationObserved": false,
+  "manualHousekeepingObserved": true,
+  "browserWalkthrough": {
+    "status": "pending",
+    "reason": "CUA returned Local browser use is disabled in Work settings; no bypass attempted."
+  },
+  "advisors": {
+    "infoDefaultDenyTables": 16,
+    "rawAppWorkerTableGrants": false,
+    "columnGrantsOnThoseTables": false,
+    "warningMutableSearchPathFunctions": 2,
+    "newAdditiveHardeningMigrationPending": true
+  },
+  "deploymentProtection": "Preserved; Vercel CLI generated project-scoped automation bypass for protected checks; secret not exported",
+  "limitations": [
+    "This is staging deployment verification, not iOS release acceptance.",
+    "Scheduled cron delivery has not yet occurred under the new deployment; manual execution passed.",
+    "Real KWS/email/Apple distribution and independent privacy journal/observer activation remain separate.",
+    "Final operator policy review and human Spanish/physical-device checks remain pending."
+  ],
+  "sourcePackagingPreparation": "First isolated build omitted shared contracts and failed; added exact pinned shared directory, then both builds passed with unchanged source and matching web output.",
+  "encryptedArchivesSafelyDetached": true
+}

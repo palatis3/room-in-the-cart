@@ -1,0 +1,10 @@
+{
+  "status": "verified",
+  "project": "uwjxrotnocxxomqdetzk",
+  "sourceCommit": "d0b0b12ee0cb8412f17e82c92a91013217560670",
+  "originalTablesPreserved": 57,
+  "migrationCount": 29,
+  "workerLogin": "ritc_maintenance",
+  "backupHashesVerified": true,
+  "livePreflightEqualsCapturedInventory": true
+}

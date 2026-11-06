@@ -1,5 +1,10 @@
 # Next staging update
 
+## Current execution status — November 6
+
+The owner approved the concrete rollout and root completed migrations009–029, protected maintenance provisioning and deployment dpl_5WrPFnhZhcp51X9UWU919sULJaTh. All27publicAPI/page/asset checks and four public maintenance checks pass. Original data and all29checksums verify; encrypted recovery files are detached. Actual scheduled delivery and a live browser walkthrough remain pending. [Rollout evidence](evidence/b11/staging-rollout-20261106/summary.json). Earlier preparation snapshots below retain their original scope and are superseded by this result.
+
+
 ## Actual staging backup and restore verified — November 6, 2026
 
 The protected live export now succeeds. Full database and selected `auth/public/ritc` archives use the same exported snapshot as their inventory, and all eight existing migration checksums match. Global role facts stayed unchanged across capture. After capture the temporary password file was removed; the image was detached, reopened read-only, and all archive hashes matched. [Capture proof](evidence/b11/staging-readiness-20261106/live-capture.json).

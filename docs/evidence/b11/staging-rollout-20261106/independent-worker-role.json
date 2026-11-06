@@ -1,0 +1,20 @@
+{
+  "source": "Independent authenticated Supabase connector read after rollout",
+  "project": "uwjxrotnocxxomqdetzk",
+  "rows": [
+    {
+      "rolname": "ritc_maintenance",
+      "rolcanlogin": true,
+      "rolinherit": true,
+      "rolsuper": false,
+      "rolcreatedb": false,
+      "rolcreaterole": false,
+      "rolreplication": false,
+      "rolbypassrls": false,
+      "membership": "ritc_worker",
+      "admin_option": false,
+      "inherit_option": true,
+      "set_option": false
+    }
+  ]
+}

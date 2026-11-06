@@ -28,4 +28,4 @@ On failure, retain the database evidence and each completed migration's checksum
 
 The latest read-only check confirms the old deployment still passes six public API checks but fails 19 checks for the candidate web build, including the missing named routes. Separate worker and scheduler configuration is currently absent. [Current comparison and rollback evidence](evidence/b11/staging-readiness-20261106/staging-candidate-current.json).
 
-Owner approval is pending. Earlier explicit backend approval covered local installation; no hosted migration or deployment has been performed as part of this proposal.
+The owner explicitly approved this exact update on November 6, 2026. Migrations009–029, the separate maintenance login and the pinned server/web deployment are applied and verified. [Execution evidence](evidence/b11/staging-rollout-20261106/summary.json). Live browser walkthrough and scheduled invocation observation remain pending; provider activation and App Store release remain separate.
