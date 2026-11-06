@@ -294,6 +294,47 @@ class CollectorTests(unittest.TestCase):
         self.assertTrue(run.invocation_succeeded({"invoked": True, "exit": 0}))
 
 
+class ControlCommandTests(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.log = Path(temporary.name) / "commands.jsonl"
+        log_patch = patch("run.COMMAND_LOG", self.log)
+        log_patch.start()
+        self.addCleanup(log_patch.stop)
+
+    def test_single_control_call_and_explicit_inventory_keep_bounded_deadlines(self):
+        with patch("run.subprocess.check_output", return_value="metadata") as call:
+            run.command(["xcrun", "simctl", "list", "devices", "-j"])
+            run.command(["xcrun", "simctl", "list", "-j"], timeout=180)
+            run.command(["git", "rev-parse", "HEAD"])
+        self.assertEqual([c.kwargs["timeout"] for c in call.call_args_list], [90, 180, 30])
+        proof = [json.loads(line) for line in self.log.read_text().splitlines()]
+        self.assertEqual([p["timeoutSeconds"] for p in proof], [90, 180, 30])
+        self.assertTrue(all(p["status"] == "succeeded" and p["exit"] == 0 for p in proof))
+        self.assertTrue(all(p["elapsedSeconds"] >= 0 and p["endedUTC"] >= p["startedUTC"] for p in proof))
+        self.assertNotIn("metadata", self.log.read_text())
+
+    def test_timeout_records_failure_without_retry_or_output_disclosure(self):
+        error = subprocess.TimeoutExpired("simctl", 90, output="PRIVATE OUTPUT")
+        with patch("run.subprocess.check_output", side_effect=error) as call:
+            with self.assertRaises(subprocess.TimeoutExpired):
+                run.command(["xcrun", "simctl", "getenv", "owned", "SIMULATOR_RUNTIME_BUILD_VERSION"])
+        self.assertEqual(call.call_count, 1)
+        proof = json.loads(self.log.read_text())
+        self.assertEqual(proof["status"], "timeout")
+        self.assertIsNone(proof["exit"])
+        self.assertNotIn("PRIVATE OUTPUT", self.log.read_text())
+
+    def test_nonzero_control_result_is_retained_and_propagated(self):
+        with patch("run.subprocess.check_output", side_effect=subprocess.CalledProcessError(7, "simctl")) as call:
+            with self.assertRaises(subprocess.CalledProcessError):
+                run.command(["xcrun", "simctl", "create", "owned"])
+        self.assertEqual(call.call_count, 1)
+        proof = json.loads(self.log.read_text())
+        self.assertEqual((proof["status"], proof["exit"]), ("failed", 7))
+
+
 class RuntimePreflightTests(unittest.TestCase):
     def setUp(self):
         temporary = tempfile.TemporaryDirectory()

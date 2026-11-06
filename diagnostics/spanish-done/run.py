@@ -22,6 +22,7 @@ SELECTOR = "RoomInTheCartUITests/RoomInTheCartUITests/testSpanishEntryPreservesO
 BUNDLE = "dev.roominthecart.app.debug"
 RUNTIME = "com.apple.CoreSimulator.SimRuntime.iOS-26-2"
 PREDICATE = 'subsystem == "dev.roominthecart.spanishdone" AND category == "events"'
+COMMAND_LOG = None
 
 
 def write(path, value):
@@ -30,8 +31,32 @@ def write(path, value):
     temporary.replace(path)
 
 
-def command(args, *, timeout=30):
-    return subprocess.check_output(args, text=True, timeout=timeout)
+def command(args, *, timeout=None):
+    # Simulator control-plane startup is separate from XCTest execution. The
+    # original successful CI inventory took143s; do not impose a30s cold-start cap.
+    deadline = timeout if timeout is not None else (90 if args[:2] == ["xcrun", "simctl"] else 30)
+    started = time.monotonic()
+    proof = {"command": [str(a) for a in args], "startedUTC": time.time(),
+             "timeoutSeconds": deadline, "status": "interrupted", "exit": None}
+    try:
+        result = subprocess.check_output(args, text=True, timeout=deadline)
+        proof.update(status="succeeded", exit=0)
+        return result
+    except subprocess.TimeoutExpired:
+        proof["status"] = "timeout"
+        raise
+    except subprocess.CalledProcessError as error:
+        proof.update(status="failed", exit=error.returncode)
+        raise
+    except OSError as error:
+        proof.update(status="launch-failed", errorType=type(error).__name__)
+        raise
+    finally:
+        proof.update(endedUTC=time.time(), elapsedSeconds=time.monotonic() - started)
+        if COMMAND_LOG is not None and COMMAND_LOG.parent.is_dir():
+            # Fixed command metadata only: never stdout, environment or credentials.
+            with COMMAND_LOG.open("a", encoding="utf-8") as log:
+                log.write(json.dumps(proof) + "\n")
 
 
 def hashes(paths):
@@ -124,7 +149,7 @@ def prepare(out, wiring, runtime, runtime_build=None):
     (out / "toolchain.txt").write_text(toolchain)
     if not wiring and (toolchain.strip() != "Xcode 26.3\nBuild version 17C529" or os.uname().machine != "arm64"):
         raise ValueError("Representative diagnostic requires arm64 Xcode26.3/17C529")
-    inventory = json.loads(command(["xcrun", "simctl", "list", "-j"]))
+    inventory = json.loads(command(["xcrun", "simctl", "list", "-j"], timeout=180))
     write(out / "simulator-inventory.json", inventory)
     candidates = [r for r in inventory["runtimes"] if r["identifier"] == runtime and r["isAvailable"]]
     matches = [r for r in candidates if r["buildversion"] == runtime_build]
@@ -418,6 +443,7 @@ if __name__ == "__main__":
     parser.add_argument("--runtime", default=RUNTIME)
     parser.add_argument("--runtime-build", help="Required expected build for local wiring; representative default is23C54")
     args = parser.parse_args()
+    COMMAND_LOG = args.out / "control-commands.jsonl"
     try:
         if args.mode == "prepare":
             prepare(args.out, args.wiring, args.runtime, args.runtime_build)
