@@ -1,0 +1,125 @@
+{
+  "associationBasis": "Explicit app PID in termination activity inside the exact XCTest case log; not live-wall-time/UTC inference.",
+  "liveWallTimezone": "unknown",
+  "processes": [
+    {
+      "pid": 22951,
+      "caseAttribution": {
+        "selector": "RoomInTheCartUITests/FreeJourneyUITests/testFreeCookCorrectionAndExplicitRecipientAcknowledgment",
+        "logLine": 1215,
+        "terminationActivity": "t =   130.96s     Terminate dev.roominthecart.app.debug:22951"
+      },
+      "eventCount": 25,
+      "sequenceContinuousObservedPrefix": true,
+      "doneGroups": [
+        {
+          "fieldCode": 1,
+          "sequenceRange": [
+            3,
+            7
+          ],
+          "exitObservedFocus": 1,
+          "entryToExitSeconds": "0.000175",
+          "entryToObservedFocusNoneSeconds": "0.041313",
+          "entryToDidHideSeconds": "0.446105"
+        },
+        {
+          "fieldCode": 2,
+          "sequenceRange": [
+            9,
+            13
+          ],
+          "exitObservedFocus": 2,
+          "entryToExitSeconds": "0.000133",
+          "entryToObservedFocusNoneSeconds": "0.057626",
+          "entryToDidHideSeconds": "0.493919"
+        },
+        {
+          "fieldCode": 3,
+          "sequenceRange": [
+            15,
+            19
+          ],
+          "exitObservedFocus": 3,
+          "entryToExitSeconds": "0.000181",
+          "entryToObservedFocusNoneSeconds": "0.032245",
+          "entryToDidHideSeconds": "0.439493"
+        },
+        {
+          "fieldCode": 4,
+          "sequenceRange": [
+            21,
+            25
+          ],
+          "exitObservedFocus": 4,
+          "entryToExitSeconds": "0.000301",
+          "entryToObservedFocusNoneSeconds": "0.047450",
+          "entryToDidHideSeconds": "0.460465"
+        }
+      ]
+    },
+    {
+      "pid": 28633,
+      "caseAttribution": {
+        "selector": "RoomInTheCartUITests/FreeJourneyUITests/testNextShopCanCancelThenOpenOneFreshShoppingList",
+        "logLine": 1349,
+        "terminationActivity": "t =    48.50s Terminate dev.roominthecart.app.debug:28633"
+      },
+      "eventCount": 25,
+      "sequenceContinuousObservedPrefix": true,
+      "doneGroups": [
+        {
+          "fieldCode": 1,
+          "sequenceRange": [
+            3,
+            7
+          ],
+          "exitObservedFocus": 1,
+          "entryToExitSeconds": "0.002340",
+          "entryToObservedFocusNoneSeconds": "0.173222",
+          "entryToDidHideSeconds": "0.640963"
+        },
+        {
+          "fieldCode": 2,
+          "sequenceRange": [
+            9,
+            13
+          ],
+          "exitObservedFocus": 2,
+          "entryToExitSeconds": "0.000187",
+          "entryToObservedFocusNoneSeconds": "0.052535",
+          "entryToDidHideSeconds": "0.466703"
+        },
+        {
+          "fieldCode": 3,
+          "sequenceRange": [
+            15,
+            19
+          ],
+          "exitObservedFocus": 3,
+          "entryToExitSeconds": "0.000475",
+          "entryToObservedFocusNoneSeconds": "0.071325",
+          "entryToDidHideSeconds": "0.503584"
+        },
+        {
+          "fieldCode": 4,
+          "sequenceRange": [
+            21,
+            25
+          ],
+          "exitObservedFocus": 4,
+          "entryToExitSeconds": "0.000194",
+          "entryToObservedFocusNoneSeconds": "0.044465",
+          "entryToDidHideSeconds": "0.452179"
+        }
+      ]
+    }
+  ],
+  "liveLogSHA256": "d667b84437e637dc7e262107cfa5703a7a54d6d99f9d52d00a03d6d1346e6907",
+  "nativeLogSHA256": "5f976e715066a5583b596dffa318ebe09b7b1192b1976aca308638edc06c0fa5",
+  "persistedExportEventCount": 0,
+  "captureFinalizationVerified": false,
+  "exhaustiveDeliveryEstablished": false,
+  "malformedScopedLine1Classification": "Exact log-stream filter banner, not an event payload; original parser result and raw line preserved.",
+  "interpretation": "Positive observed Done entry/exit, subsequent focus transition to none and didHide in passing diagnostic cases. Done exit observes the old focus code; no assumption that the FocusState assignment is synchronously reflected. No reproduction or causal resolution of original804 timeout."
+}

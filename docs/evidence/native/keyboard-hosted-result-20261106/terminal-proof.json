@@ -1,0 +1,1067 @@
+{
+  "runID": 42309239002,
+  "head": "efc1bfc5393cb21caeb3089f237619ef53cb1adc",
+  "attempt": 1,
+  "terminalConclusion": "success",
+  "sourceFiles": 2348,
+  "selected": [
+    "RoomInTheCartUITests/ContextualNavigationUITests/testMissingStorePricesAndAvailabilityRemainConditionalAfterSaving",
+    "RoomInTheCartUITests/FreeJourneyUITests/testFreeCookCorrectionAndExplicitRecipientAcknowledgment",
+    "RoomInTheCartUITests/FreeJourneyUITests/testNextShopCanCancelThenOpenOneFreshShoppingList",
+    "RoomInTheCartUITests/FreeJourneyUITests/testSpanishMealWeekListAndGridShowDatedProtectedLunch",
+    "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack",
+    "RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresSelectedDinnersTabWithoutRestoringUnsavedComparison"
+  ],
+  "artifacts": {
+    "keyboard-build-evidence-1": {
+      "available": true,
+      "artifactID": 13547843164,
+      "apiDigest": "sha256:6a8f4697912817f7f3ae2ad623d4f3ae26daef3d263c7be60c9aa5ef9a0b64e9",
+      "archiveSHA256": "6a8f4697912817f7f3ae2ad623d4f3ae26daef3d263c7be60c9aa5ef9a0b64e9",
+      "refusal": null
+    },
+    "keyboard-run-evidence-1": {
+      "available": true,
+      "artifactID": 13550386399,
+      "apiDigest": "sha256:6ac98151a915dc6544022574e559ec59cfd09544a7c1cc2a697e55d1c8ebbae5",
+      "archiveSHA256": "6ac98151a915dc6544022574e559ec59cfd09544a7c1cc2a697e55d1c8ebbae5",
+      "refusal": null
+    }
+  },
+  "errors": [],
+  "hostedMutation": false,
+  "nativeTestExecutionByCollector": false,
+  "rawRecordsMediaDownloaded": false,
+  "releaseAcceptance": false,
+  "jobs": [
+    {
+      "id": 128206290465,
+      "name": "Build exact keyboard diagnostic products",
+      "status": "completed",
+      "conclusion": "success",
+      "runnerID": 1000004087,
+      "runnerName": "GitHub Actions 1000004087",
+      "runnerAcquired": true,
+      "startedAt": "2026-11-06T23:03:43Z",
+      "completedAt": "2026-11-06T23:18:34Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-06T23:03:44Z",
+          "completed_at": "2026-11-06T23:03:46Z"
+        },
+        {
+          "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-06T23:03:46Z",
+          "completed_at": "2026-11-06T23:03:53Z"
+        },
+        {
+          "name": "Verify exact source and create owned build simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-06T23:03:53Z",
+          "completed_at": "2026-11-06T23:04:40Z"
+        },
+        {
+          "name": "Boot and verify exact build runtime",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-06T23:04:40Z",
+          "completed_at": "2026-11-06T23:06:26Z"
+        },
+        {
+          "name": "Build ordinary Debug plus diagnostic flag",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-06T23:06:26Z",
+          "completed_at": "2026-11-06T23:15:12Z"
+        },
+        {
+          "name": "Verify compiled inventory and freeze transport",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-06T23:15:12Z",
+          "completed_at": "2026-11-06T23:18:07Z"
+        },
+        {
+          "name": "Clean only owned build resources and record outcomes",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-06T23:18:07Z",
+          "completed_at": "2026-11-06T23:18:23Z"
+        },
+        {
+          "name": "Retain frozen diagnostic binaries separately",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-06T23:18:23Z",
+          "completed_at": "2026-11-06T23:18:26Z"
+        },
+        {
+          "name": "Retain build proof and cleanup outcomes",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-06T23:18:26Z",
+          "completed_at": "2026-11-06T23:18:27Z"
+        },
+        {
+          "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18,
+          "started_at": "2026-11-06T23:18:27Z",
+          "completed_at": "2026-11-06T23:18:28Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-06T23:18:28Z",
+          "completed_at": "2026-11-06T23:18:33Z"
+        }
+      ]
+    },
+    {
+      "id": 128212142250,
+      "name": "Original six-case ordinary UI07 history with keyboard events",
+      "status": "completed",
+      "conclusion": "success",
+      "runnerID": 1000004089,
+      "runnerName": "GitHub Actions 1000004089",
+      "runnerAcquired": true,
+      "startedAt": "2026-11-06T23:29:22Z",
+      "completedAt": "2026-11-06T23:51:52Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-06T23:29:22Z",
+          "completed_at": "2026-11-06T23:29:23Z"
+        },
+        {
+          "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-06T23:29:23Z",
+          "completed_at": "2026-11-06T23:29:28Z"
+        },
+        {
+          "name": "Verify exact source and create separate owned execution simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-06T23:29:28Z",
+          "completed_at": "2026-11-06T23:30:28Z"
+        },
+        {
+          "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-06T23:30:28Z",
+          "completed_at": "2026-11-06T23:30:30Z"
+        },
+        {
+          "name": "Verify frozen products and unchanged original xctestrun",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-06T23:30:30Z",
+          "completed_at": "2026-11-06T23:30:32Z"
+        },
+        {
+          "name": "Boot and verify exact execution runtime",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-06T23:30:32Z",
+          "completed_at": "2026-11-06T23:34:08Z"
+        },
+        {
+          "name": "Execute the original six selectors once",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-06T23:34:08Z",
+          "completed_at": "2026-11-06T23:50:34Z"
+        },
+        {
+          "name": "Retain bounded filtered logs and apply unchanged strict checker",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-06T23:50:34Z",
+          "completed_at": "2026-11-06T23:51:34Z"
+        },
+        {
+          "name": "Clean only owned execution resources and record outcomes",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-06T23:51:34Z",
+          "completed_at": "2026-11-06T23:51:41Z"
+        },
+        {
+          "name": "Retain diagnostic evidence including cleanup",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-06T23:51:41Z",
+          "completed_at": "2026-11-06T23:51:44Z"
+        },
+        {
+          "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 20,
+          "started_at": "2026-11-06T23:51:44Z",
+          "completed_at": "2026-11-06T23:51:45Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 21,
+          "started_at": "2026-11-06T23:51:45Z",
+          "completed_at": "2026-11-06T23:51:50Z"
+        }
+      ]
+    }
+  ],
+  "build": {
+    "executedEvidenceAvailable": true,
+    "identity.json": {
+      "base": "804030e68473d022e72b464940061c01c611a0bd",
+      "head": "efc1bfc5393cb21caeb3089f237619ef53cb1adc",
+      "role": "build",
+      "runID": "42309239002",
+      "attempt": "1",
+      "imageOS": "macos15",
+      "imageVersion": "20261104.0514.1",
+      "diagnosticOnly": true,
+      "releaseAcceptance": false
+    },
+    "source-before.jsonMatchesExactHead": true,
+    "source-after.jsonMatchesExactHead": true,
+    "frozen-inputs.json": {
+      "unchanged": true
+    },
+    "owned-device.json": {
+      "name": "RITC keyboard build 412f042b-b25e-436d-8836-4fcd6f755e58",
+      "runtime": "com.apple.CoreSimulator.SimRuntime.iOS-26-2",
+      "udid": "5AC6A5CB-7B70-4311-BEA2-03A45AE57249"
+    },
+    "cleanup.json": {
+      "ownedDeviceRecorded": true,
+      "outcomes": [
+        {
+          "udid": "5AC6A5CB-7B70-4311-BEA2-03A45AE57249",
+          "shutdownExit": 0,
+          "deleteExit": 0
+        }
+      ],
+      "missingAlready": false
+    },
+    "toolchain.log": "Xcode 26.3\nBuild version 17C529",
+    "architecture.log": "arm64",
+    "booted-build.log": "23C54",
+    "appBuildSettings": [
+      {
+        "CONFIGURATION": "Debug",
+        "PLATFORM_NAME": "iphonesimulator",
+        "SWIFT_ACTIVE_COMPILATION_CONDITIONS": "DEBUG KEYBOARD_DISMISS_DIAGNOSTIC",
+        "ARCHS": "arm64",
+        "SDKROOT": "/Applications/Xcode_26.3.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.2.sdk",
+        "PRODUCT_BUNDLE_IDENTIFIER": "dev.roominthecart.app.debug"
+      }
+    ],
+    "exactIdentity": true,
+    "ownedDeviceCleanupVerified": true,
+    "compiledPlanMatches": true,
+    "selectorBytesMatch": true
+  },
+  "run": {
+    "executedEvidenceAvailable": true,
+    "identity.json": {
+      "base": "804030e68473d022e72b464940061c01c611a0bd",
+      "head": "efc1bfc5393cb21caeb3089f237619ef53cb1adc",
+      "role": "run",
+      "runID": "42309239002",
+      "attempt": "1",
+      "imageOS": "macos15",
+      "imageVersion": "20261104.0514.1",
+      "diagnosticOnly": true,
+      "releaseAcceptance": false
+    },
+    "source-before.jsonMatchesExactHead": true,
+    "source-after.jsonMatchesExactHead": true,
+    "frozen-inputs.json": {
+      "unchanged": true
+    },
+    "owned-device.json": {
+      "name": "RITC keyboard run 98f6d3da-4603-4472-b619-642bca885b10",
+      "runtime": "com.apple.CoreSimulator.SimRuntime.iOS-26-2",
+      "udid": "86732FBF-847C-42BF-A2FF-E52D02F075CF"
+    },
+    "cleanup.json": {
+      "ownedDeviceRecorded": true,
+      "outcomes": [
+        {
+          "udid": "86732FBF-847C-42BF-A2FF-E52D02F075CF",
+          "shutdownExit": 0,
+          "deleteExit": 0
+        }
+      ],
+      "missingAlready": false
+    },
+    "toolchain.log": "Xcode 26.3\nBuild version 17C529",
+    "architecture.log": "arm64",
+    "booted-build.log": "23C54",
+    "exactIdentity": true,
+    "ownedDeviceCleanupVerified": true
+  },
+  "productArchiveBuilderReceipt": {
+    "sha256": "b037a23359b58fc84ceb770f2e13fb110c19746bb7b0cdfcfefd60227c3db086",
+    "name": "keyboard-products.tar.gz",
+    "bytes": 50754416
+  },
+  "productArtifact": {
+    "metadata": {
+      "id": 13547893179,
+      "node_id": "MDg6QXJ0aWZhY3QxMzU0Nzg5MzE3OQ==",
+      "name": "keyboard-products-1",
+      "size_in_bytes": 50754578,
+      "url": "https://api.github.com/repos/palatis3/room-in-the-cart/actions/artifacts/13547893179",
+      "archive_download_url": "https://api.github.com/repos/palatis3/room-in-the-cart/actions/artifacts/13547893179/zip",
+      "expired": false,
+      "digest": "sha256:a21e2346282d8a28837808c90828714e001a613273c76efdcdea9e7b52c7078b",
+      "created_at": "2026-11-06T23:18:26Z",
+      "updated_at": "2026-11-06T23:18:26Z",
+      "expires_at": "2026-11-13T23:18:24Z",
+      "workflow_run": {
+        "id": 42309239002,
+        "repository_id": 1445928007,
+        "head_repository_id": 1445928007,
+        "head_branch": "codex/diagnose-keyboard-idle-804030e",
+        "head_sha": "efc1bfc5393cb21caeb3089f237619ef53cb1adc"
+      }
+    },
+    "downloaded": false,
+    "note": "Provider digest pinned; inner product tar not downloaded or independently hashed by collector."
+  },
+  "restore.json": {
+    "archiveSHA256": "b037a23359b58fc84ceb770f2e13fb110c19746bb7b0cdfcfefd60227c3db086",
+    "productsMatch": true,
+    "sourceMatchesBuild": true
+  },
+  "productManifestsMatch": true,
+  "xctestrun-original.json": {
+    "original": "RoomInTheCart_iphonesimulator26.2-arm64.xctestrun",
+    "originalSHA256": "77926a4df6196a6798e34ccd4a5f2041b28d3e5609caceeede07783b7a8d7742",
+    "modified": false,
+    "runtimeEnvironmentChanged": false
+  },
+  "Tests.status.json": {
+    "stage": "Tests",
+    "status": "passed",
+    "timeoutSeconds": null,
+    "argv": [
+      "xcodebuild",
+      "-xctestrun",
+      ".build/DerivedData/Build/Products/RoomInTheCart_iphonesimulator26.2-arm64.xctestrun",
+      "-destination",
+      "platform=iOS Simulator,id=86732FBF-847C-42BF-A2FF-E52D02F075CF",
+      "-resultBundlePath",
+      ".build/keyboard-run/Tests.xcresult",
+      "-parallel-testing-enabled",
+      "NO",
+      "-test-timeouts-enabled",
+      "YES",
+      "-default-test-execution-time-allowance",
+      "720",
+      "-maximum-test-execution-time-allowance",
+      "900",
+      "-collect-test-diagnostics",
+      "never",
+      "-only-testing:RoomInTheCartUITests/ContextualNavigationUITests/testMissingStorePricesAndAvailabilityRemainConditionalAfterSaving",
+      "-only-testing:RoomInTheCartUITests/FreeJourneyUITests/testFreeCookCorrectionAndExplicitRecipientAcknowledgment",
+      "-only-testing:RoomInTheCartUITests/FreeJourneyUITests/testNextShopCanCancelThenOpenOneFreshShoppingList",
+      "-only-testing:RoomInTheCartUITests/FreeJourneyUITests/testSpanishMealWeekListAndGridShowDatedProtectedLunch",
+      "-only-testing:RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack",
+      "-only-testing:RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresSelectedDinnersTabWithoutRestoringUnsavedComparison",
+      "test-without-building"
+    ],
+    "stderrSeparate": false,
+    "startedUTC": "2026-11-06T23:35:56.918148+00:00",
+    "startedMonotonic": 523.48123775,
+    "exitCode": 0,
+    "elapsedSeconds": 867.455
+  },
+  "outcome.json": {
+    "nativeAndStrictPassed": true,
+    "diagnosticOnly": true,
+    "releaseAcceptance": false,
+    "nativeExit": 0,
+    "strictExit": 0,
+    "resultCopyVerified": true,
+    "logAbsenceNeverProvesNoDone": true
+  },
+  "capture-final.json": {
+    "operationExit": 0,
+    "helperExit": 1,
+    "streamExit": null,
+    "shutdownComplete": false,
+    "completeDeliveryProven": false,
+    "wallTimeZone": "unknown"
+  },
+  "capture-owner-final.json": {
+    "exitCode": 1,
+    "ownerReaped": true,
+    "helperFinalReceiptPresent": true,
+    "gracefulFinalizationConfirmed": false,
+    "shutdownBudgetSeconds": 17,
+    "completeDeliveryProven": false
+  },
+  "capture-liveness.json": {
+    "ownerAliveBeforeStop": true,
+    "completeDeliveryProven": false
+  },
+  "capture-window.json": {
+    "startUTC": "2026-11-06 23:35:56+0000"
+  },
+  "events-export.status.json": {
+    "stage": "events-export",
+    "status": "passed",
+    "timeoutSeconds": 45,
+    "argv": [
+      "xcrun",
+      "simctl",
+      "spawn",
+      "86732FBF-847C-42BF-A2FF-E52D02F075CF",
+      "log",
+      "show",
+      "--start",
+      "2026-11-06 23:35:56+0000",
+      "--end",
+      "2026-11-06 23:50:35+0000",
+      "--info",
+      "--style",
+      "compact",
+      "--timezone",
+      "UTC",
+      "--predicate",
+      "subsystem == \"dev.roominthecart.urgentkeyboarddiagnostic\" AND category == \"events\""
+    ],
+    "stderrSeparate": true,
+    "startedUTC": "2026-11-06T23:50:35.561534+00:00",
+    "startedMonotonic": 1402.124588708,
+    "exitCode": 0,
+    "elapsedSeconds": 7.336
+  },
+  "captureStopReceipts": [
+    {
+      "stage": "execute",
+      "event": "stop_started",
+      "atUTC": "2026-11-06T23:50:24.435884+00:00",
+      "atMonotonic": 1390.999914625,
+      "maximumSeconds": 17
+    },
+    {
+      "stage": "execute-owner-term",
+      "event": "identity_check_started",
+      "atUTC": "2026-11-06T23:50:24.453013+00:00",
+      "atMonotonic": 1391.016077,
+      "pid": 15012,
+      "maximumSeconds": 10
+    },
+    {
+      "stage": "execute-owner-term",
+      "event": "identity_checked",
+      "atUTC": "2026-11-06T23:50:24.536279+00:00",
+      "atMonotonic": 1391.099354916,
+      "pid": 15012,
+      "matched": true
+    },
+    {
+      "stage": "execute-owner-term",
+      "event": "signal_requested",
+      "atUTC": "2026-11-06T23:50:24.537726+00:00",
+      "atMonotonic": 1391.100788208,
+      "pid": 15012,
+      "signal": "SIGTERM"
+    },
+    {
+      "stage": "execute-owner-term",
+      "event": "signal_sent",
+      "atUTC": "2026-11-06T23:50:24.537873+00:00",
+      "atMonotonic": 1391.100924583,
+      "pid": 15012,
+      "signal": "SIGTERM"
+    },
+    {
+      "stage": "execute-owner-grace",
+      "event": "wait_started",
+      "atUTC": "2026-11-06T23:50:24.537989+00:00",
+      "atMonotonic": 1391.101041458,
+      "pid": 15012,
+      "maximumSeconds": 12
+    },
+    {
+      "stage": "helper",
+      "event": "stop_started",
+      "atUTC": "2026-11-06T23:50:24.555649+00:00",
+      "atMonotonic": 1391.119263666,
+      "maximumSeconds": 10
+    },
+    {
+      "stage": "helper-term",
+      "event": "identity_check_started",
+      "atUTC": "2026-11-06T23:50:24.563135+00:00",
+      "atMonotonic": 1391.126199291,
+      "pid": 15018,
+      "maximumSeconds": 9.991812666999976
+    },
+    {
+      "stage": "helper-term",
+      "event": "identity_checked",
+      "atUTC": "2026-11-06T23:50:24.667960+00:00",
+      "atMonotonic": 1391.231035833,
+      "pid": 15018,
+      "matched": false
+    },
+    {
+      "stage": "helper-term",
+      "event": "signal_refused",
+      "atUTC": "2026-11-06T23:50:24.668206+00:00",
+      "atMonotonic": 1391.231258708,
+      "pid": 15018,
+      "identityMatched": false
+    },
+    {
+      "stage": "helper-grace",
+      "event": "wait_started",
+      "atUTC": "2026-11-06T23:50:24.668352+00:00",
+      "atMonotonic": 1391.23140475,
+      "pid": 15018,
+      "maximumSeconds": 5
+    },
+    {
+      "stage": "helper-grace",
+      "event": "wait_timed_out",
+      "atUTC": "2026-11-06T23:50:29.671250+00:00",
+      "atMonotonic": 1396.23443225,
+      "pid": 15018
+    },
+    {
+      "stage": "helper-kill",
+      "event": "identity_check_started",
+      "atUTC": "2026-11-06T23:50:29.672886+00:00",
+      "atMonotonic": 1396.235950083,
+      "pid": 15018,
+      "maximumSeconds": 4.881772375000082
+    },
+    {
+      "stage": "helper-kill",
+      "event": "identity_checked",
+      "atUTC": "2026-11-06T23:50:29.684117+00:00",
+      "atMonotonic": 1396.24719225,
+      "pid": 15018,
+      "matched": false
+    },
+    {
+      "stage": "helper-kill",
+      "event": "signal_refused",
+      "atUTC": "2026-11-06T23:50:29.685029+00:00",
+      "atMonotonic": 1396.2480865,
+      "pid": 15018,
+      "identityMatched": false
+    },
+    {
+      "stage": "helper-reap",
+      "event": "wait_started",
+      "atUTC": "2026-11-06T23:50:29.685253+00:00",
+      "atMonotonic": 1396.248368916,
+      "pid": 15018,
+      "maximumSeconds": 4.869389083999977
+    },
+    {
+      "stage": "helper-reap",
+      "event": "wait_timed_out",
+      "atUTC": "2026-11-06T23:50:34.556162+00:00",
+      "atMonotonic": 1401.119355541,
+      "pid": 15018
+    },
+    {
+      "stage": "execute-owner-grace",
+      "event": "reaped",
+      "atUTC": "2026-11-06T23:50:34.610089+00:00",
+      "atMonotonic": 1401.173331875,
+      "pid": 15012,
+      "exitCode": 1
+    },
+    {
+      "stage": "collect-capture-owner.json",
+      "event": "identity_check_started",
+      "atUTC": "2026-11-06T23:50:35.542398+00:00",
+      "atMonotonic": 1402.1057945,
+      "pid": 15012,
+      "maximumSeconds": 10
+    },
+    {
+      "stage": "collect-capture-owner.json",
+      "event": "identity_checked",
+      "atUTC": "2026-11-06T23:50:35.547657+00:00",
+      "atMonotonic": 1402.110740875,
+      "pid": 15012,
+      "matched": false
+    },
+    {
+      "stage": "collect-capture-owner.json",
+      "event": "signal_refused",
+      "atUTC": "2026-11-06T23:50:35.547850+00:00",
+      "atMonotonic": 1402.110901708,
+      "pid": 15012,
+      "identityMatched": false
+    },
+    {
+      "stage": "collect-capture-child.json",
+      "event": "identity_check_started",
+      "atUTC": "2026-11-06T23:50:35.548775+00:00",
+      "atMonotonic": 1402.111826791,
+      "pid": 15018,
+      "maximumSeconds": 10
+    },
+    {
+      "stage": "collect-capture-child.json",
+      "event": "identity_checked",
+      "atUTC": "2026-11-06T23:50:35.559517+00:00",
+      "atMonotonic": 1402.122609958,
+      "pid": 15018,
+      "matched": false
+    },
+    {
+      "stage": "collect-capture-child.json",
+      "event": "signal_refused",
+      "atUTC": "2026-11-06T23:50:35.559742+00:00",
+      "atMonotonic": 1402.122793958,
+      "pid": 15018,
+      "identityMatched": false
+    },
+    {
+      "stage": "collect",
+      "event": "signal_phase_finished",
+      "atUTC": "2026-11-06T23:50:35.559957+00:00",
+      "atMonotonic": 1402.123029,
+      "completionEstablished": false
+    },
+    {
+      "stage": "cleanup-capture-owner.json",
+      "event": "identity_check_started",
+      "atUTC": "2026-11-06T23:51:34.524294+00:00",
+      "atMonotonic": 1461.08780425,
+      "pid": 15012,
+      "maximumSeconds": 10
+    },
+    {
+      "stage": "cleanup-capture-owner.json",
+      "event": "identity_checked",
+      "atUTC": "2026-11-06T23:51:34.574863+00:00",
+      "atMonotonic": 1461.137939083,
+      "pid": 15012,
+      "matched": false
+    },
+    {
+      "stage": "cleanup-capture-owner.json",
+      "event": "signal_refused",
+      "atUTC": "2026-11-06T23:51:34.575085+00:00",
+      "atMonotonic": 1461.138137166,
+      "pid": 15012,
+      "identityMatched": false
+    },
+    {
+      "stage": "cleanup-capture-child.json",
+      "event": "identity_check_started",
+      "atUTC": "2026-11-06T23:51:34.576699+00:00",
+      "atMonotonic": 1461.139754958,
+      "pid": 15018,
+      "maximumSeconds": 10
+    },
+    {
+      "stage": "cleanup-capture-child.json",
+      "event": "identity_checked",
+      "atUTC": "2026-11-06T23:51:34.585412+00:00",
+      "atMonotonic": 1461.1484825,
+      "pid": 15018,
+      "matched": false
+    },
+    {
+      "stage": "cleanup-capture-child.json",
+      "event": "signal_refused",
+      "atUTC": "2026-11-06T23:51:34.585626+00:00",
+      "atMonotonic": 1461.148680833,
+      "pid": 15018,
+      "identityMatched": false
+    },
+    {
+      "stage": "cleanup",
+      "event": "signal_phase_finished",
+      "atUTC": "2026-11-06T23:51:34.585819+00:00",
+      "atMonotonic": 1461.148870875,
+      "completionEstablished": false
+    }
+  ],
+  "innerArchiveDigestReceiptsMatch": true,
+  "differentBuildRunDevices": true,
+  "captureReconcileExit": 0,
+  "capture": {
+    "status": "inconclusive",
+    "exhaustiveDeliveryEstablished": false,
+    "comparison": {
+      "liveOnlyUniqueEvents": 50,
+      "exportOnlyUniqueEvents": 0,
+      "sharedUniqueEvents": 0,
+      "observedEventSetsEqual": false
+    },
+    "provenance": {
+      "receiptSHA256": {
+        "capture-liveness.json": "7adc33bd602dbaad96445740edb1e9ac5dae3d22dffc635d01ce6d0675383fc5",
+        "capture-owner-final.json": "6783d371ca6da8cb7ecf857c12e59fb89df3840de9e9a6a1ae55615f9ed69338",
+        "capture-final.json": "5ee8327832b1888987dd009db423fd238f64df62403bb3ed384f384eb9cdff25",
+        "events-export.status.json": "99fd6d3e40ae5beeb5b370619c41c07f5ebadd133d0fcb71196774ac43ac12bb",
+        "owned-device.json": "8752cb294d8c1b2cab82d71cc57203f1e816ee5a6a6b7ee8348a91bc5ede0bc6",
+        "capture-window.json": "83537531612b4d2d232a2ca679f136c08d364bef20afae92ded978637a1338e0"
+      },
+      "missingOrInvalidReceipts": [],
+      "ownedDeviceReceiptValid": true,
+      "captureWindowReceiptValid": true,
+      "exportDeviceMatchesOwned": true,
+      "exportWindowMatchesCapture": true,
+      "exportWindowSeconds": 879,
+      "maximumExportWindowSeconds": 2700,
+      "liveFinalizationVerified": false,
+      "exportCommandScopeVerified": true,
+      "exportCommandPassed": true,
+      "liveWallTimeZone": "unknown",
+      "exportWallTimeZone": "UTC",
+      "timezoneProvenance": "captured_command_receipt",
+      "exhaustiveDeliveryEstablished": false
+    },
+    "sources": {
+      "live": {
+        "eventCount": 50,
+        "uniqueEventCount": 50,
+        "malformedLineNumbers": [
+          1
+        ],
+        "captureStatus": "unknown",
+        "wallTimeZone": "unknown"
+      },
+      "export": {
+        "eventCount": 0,
+        "uniqueEventCount": 0,
+        "malformedLineNumbers": [],
+        "captureStatus": "ok",
+        "wallTimeZone": "UTC"
+      }
+    },
+    "processes": [
+      {
+        "pid": 22951,
+        "expected": false,
+        "observed": true,
+        "sceneObservationPresent": true,
+        "missingPrefixRange": null,
+        "internalGapRanges": [],
+        "conflictingSequences": [],
+        "pidReuseOrCorruptionPossible": false,
+        "observedEventNames": {
+          "done.enter": 4,
+          "done.exit": 4,
+          "focus.change": 8,
+          "keyboard.didHide": 4,
+          "keyboard.willHide": 4,
+          "scene.observe": 1
+        },
+        "doneEnterObserved": true
+      },
+      {
+        "pid": 28633,
+        "expected": false,
+        "observed": true,
+        "sceneObservationPresent": true,
+        "missingPrefixRange": null,
+        "internalGapRanges": [],
+        "conflictingSequences": [],
+        "pidReuseOrCorruptionPossible": false,
+        "observedEventNames": {
+          "done.enter": 4,
+          "done.exit": 4,
+          "focus.change": 8,
+          "keyboard.didHide": 4,
+          "keyboard.willHide": 4,
+          "scene.observe": 1
+        },
+        "doneEnterObserved": true
+      }
+    ]
+  },
+  "startOrder": {
+    "expected": [
+      "RoomInTheCartUITests/ContextualNavigationUITests/testMissingStorePricesAndAvailabilityRemainConditionalAfterSaving",
+      "RoomInTheCartUITests/FreeJourneyUITests/testFreeCookCorrectionAndExplicitRecipientAcknowledgment",
+      "RoomInTheCartUITests/FreeJourneyUITests/testNextShopCanCancelThenOpenOneFreshShoppingList",
+      "RoomInTheCartUITests/FreeJourneyUITests/testSpanishMealWeekListAndGridShowDatedProtectedLunch",
+      "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack",
+      "RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresSelectedDinnersTabWithoutRestoringUnsavedComparison"
+    ],
+    "actual": [
+      "RoomInTheCartUITests/ContextualNavigationUITests/testMissingStorePricesAndAvailabilityRemainConditionalAfterSaving",
+      "RoomInTheCartUITests/FreeJourneyUITests/testFreeCookCorrectionAndExplicitRecipientAcknowledgment",
+      "RoomInTheCartUITests/FreeJourneyUITests/testNextShopCanCancelThenOpenOneFreshShoppingList",
+      "RoomInTheCartUITests/FreeJourneyUITests/testSpanishMealWeekListAndGridShowDatedProtectedLunch",
+      "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack",
+      "RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresSelectedDinnersTabWithoutRestoringUnsavedComparison"
+    ],
+    "matches": true,
+    "restarts": 0
+  },
+  "nativeInvocation": {
+    "exitCode": 0,
+    "selectorsMatch": true,
+    "defaultAllowance": "720",
+    "maximumAllowance": "900",
+    "parallel": "NO",
+    "diagnostics": "never"
+  },
+  "independentCopyVerifiedBeforeInspection": true,
+  "nativeCounts": {
+    "result": "Passed",
+    "totalTestCount": 6,
+    "passedTests": 6,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "expectedFailures": 0
+  },
+  "actualRuntime": [
+    {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "86732FBF-847C-42BF-A2FF-E52D02F075CF",
+        "deviceName": "RITC keyboard run 98f6d3da-4603-4472-b619-642bca885b10",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C54",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "passedTests": 6,
+      "skippedTests": 0,
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      }
+    }
+  ],
+  "runtimeMatches": true,
+  "strictExit": 0,
+  "runtimeWarnings": {
+    "status": "passed",
+    "summaryWarningCount": 0,
+    "runtimeWarningCount": 0,
+    "examinedTestCount": 6,
+    "detailExportCount": 6,
+    "activityExportCount": 0,
+    "warnings": []
+  },
+  "cases": [
+    {
+      "selector": "RoomInTheCartUITests/ContextualNavigationUITests/testMissingStorePricesAndAvailabilityRemainConditionalAfterSaving",
+      "result": "Passed",
+      "duration": 136.47345101833344
+    },
+    {
+      "selector": "RoomInTheCartUITests/FreeJourneyUITests/testFreeCookCorrectionAndExplicitRecipientAcknowledgment",
+      "result": "Passed",
+      "duration": 132.3500519990921
+    },
+    {
+      "selector": "RoomInTheCartUITests/FreeJourneyUITests/testNextShopCanCancelThenOpenOneFreshShoppingList",
+      "result": "Passed",
+      "duration": 79.97323298454285
+    },
+    {
+      "selector": "RoomInTheCartUITests/FreeJourneyUITests/testSpanishMealWeekListAndGridShowDatedProtectedLunch",
+      "result": "Passed",
+      "duration": 228.8896700143814
+    },
+    {
+      "selector": "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack",
+      "result": "Passed",
+      "duration": 190.2977010011673
+    },
+    {
+      "selector": "RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresSelectedDinnersTabWithoutRestoringUnsavedComparison",
+      "result": "Passed",
+      "duration": 31.622873067855835
+    }
+  ],
+  "allPristineExtractionsUnchanged": true,
+  "pristineExtractions": {
+    "keyboard-build-evidence-1": true,
+    "keyboard-run-evidence-1": true
+  },
+  "allRequestedTestsPassing": true,
+  "sourceAndProductEvidenceVerified": true,
+  "cleanupVerified": true,
+  "allNativeAndIntegrityChecksPassing": true,
+  "terminalAuditComplete": true,
+  "caseEventAttribution": {
+    "associationBasis": "Explicit app PID in termination activity inside the exact XCTest case log; not live-wall-time/UTC inference.",
+    "liveWallTimezone": "unknown",
+    "processes": [
+      {
+        "pid": 22951,
+        "caseAttribution": {
+          "selector": "RoomInTheCartUITests/FreeJourneyUITests/testFreeCookCorrectionAndExplicitRecipientAcknowledgment",
+          "logLine": 1215,
+          "terminationActivity": "t =   130.96s     Terminate dev.roominthecart.app.debug:22951"
+        },
+        "eventCount": 25,
+        "sequenceContinuousObservedPrefix": true,
+        "doneGroups": [
+          {
+            "fieldCode": 1,
+            "sequenceRange": [
+              3,
+              7
+            ],
+            "exitObservedFocus": 1,
+            "entryToExitSeconds": "0.000175",
+            "entryToObservedFocusNoneSeconds": "0.041313",
+            "entryToDidHideSeconds": "0.446105"
+          },
+          {
+            "fieldCode": 2,
+            "sequenceRange": [
+              9,
+              13
+            ],
+            "exitObservedFocus": 2,
+            "entryToExitSeconds": "0.000133",
+            "entryToObservedFocusNoneSeconds": "0.057626",
+            "entryToDidHideSeconds": "0.493919"
+          },
+          {
+            "fieldCode": 3,
+            "sequenceRange": [
+              15,
+              19
+            ],
+            "exitObservedFocus": 3,
+            "entryToExitSeconds": "0.000181",
+            "entryToObservedFocusNoneSeconds": "0.032245",
+            "entryToDidHideSeconds": "0.439493"
+          },
+          {
+            "fieldCode": 4,
+            "sequenceRange": [
+              21,
+              25
+            ],
+            "exitObservedFocus": 4,
+            "entryToExitSeconds": "0.000301",
+            "entryToObservedFocusNoneSeconds": "0.047450",
+            "entryToDidHideSeconds": "0.460465"
+          }
+        ]
+      },
+      {
+        "pid": 28633,
+        "caseAttribution": {
+          "selector": "RoomInTheCartUITests/FreeJourneyUITests/testNextShopCanCancelThenOpenOneFreshShoppingList",
+          "logLine": 1349,
+          "terminationActivity": "t =    48.50s Terminate dev.roominthecart.app.debug:28633"
+        },
+        "eventCount": 25,
+        "sequenceContinuousObservedPrefix": true,
+        "doneGroups": [
+          {
+            "fieldCode": 1,
+            "sequenceRange": [
+              3,
+              7
+            ],
+            "exitObservedFocus": 1,
+            "entryToExitSeconds": "0.002340",
+            "entryToObservedFocusNoneSeconds": "0.173222",
+            "entryToDidHideSeconds": "0.640963"
+          },
+          {
+            "fieldCode": 2,
+            "sequenceRange": [
+              9,
+              13
+            ],
+            "exitObservedFocus": 2,
+            "entryToExitSeconds": "0.000187",
+            "entryToObservedFocusNoneSeconds": "0.052535",
+            "entryToDidHideSeconds": "0.466703"
+          },
+          {
+            "fieldCode": 3,
+            "sequenceRange": [
+              15,
+              19
+            ],
+            "exitObservedFocus": 3,
+            "entryToExitSeconds": "0.000475",
+            "entryToObservedFocusNoneSeconds": "0.071325",
+            "entryToDidHideSeconds": "0.503584"
+          },
+          {
+            "fieldCode": 4,
+            "sequenceRange": [
+              21,
+              25
+            ],
+            "exitObservedFocus": 4,
+            "entryToExitSeconds": "0.000194",
+            "entryToObservedFocusNoneSeconds": "0.044465",
+            "entryToDidHideSeconds": "0.452179"
+          }
+        ]
+      }
+    ],
+    "liveLogSHA256": "d667b84437e637dc7e262107cfa5703a7a54d6d99f9d52d00a03d6d1346e6907",
+    "nativeLogSHA256": "5f976e715066a5583b596dffa318ebe09b7b1192b1976aca308638edc06c0fa5",
+    "persistedExportEventCount": 0,
+    "captureFinalizationVerified": false,
+    "exhaustiveDeliveryEstablished": false,
+    "malformedScopedLine1Classification": "Exact log-stream filter banner, not an event payload; original parser result and raw line preserved.",
+    "interpretation": "Positive observed Done entry/exit, subsequent focus transition to none and didHide in passing diagnostic cases. Done exit observes the old focus code; no assumption that the FocusState assignment is synchronously reflected. No reproduction or causal resolution of original804 timeout."
+  },
+  "captureLimitations": [
+    "Live helper finalization failed: helperExit1, shutdownComplete false, streamExit null; owner reaped exit1. Child fingerprint mismatch caused TERM/KILL refusal; actual later fingerprint not retained, so mismatch cause unproven.",
+    "Persisted export exit0 and strict scope provenance verified, but export contains header only and zero events.",
+    "Live contains50 valid events across2PIDs, no observed sequence gaps/conflicts. Filter banner remains recorded as malformed scoped line1.",
+    "No exhaustive delivery, all-launch coverage or app-liveness inference."
+  ]
+}

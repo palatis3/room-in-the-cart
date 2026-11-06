@@ -1,0 +1,37 @@
+{
+  "devicesAndConfigurations": [
+    {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "86732FBF-847C-42BF-A2FF-E52D02F075CF",
+        "deviceName": "RITC keyboard run 98f6d3da-4603-4472-b619-642bca885b10",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C54",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "passedTests": 6,
+      "skippedTests": 0,
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription": "RoomInTheCart \u00b7 Built with macOS 15.8.2",
+  "expectedFailures": 0,
+  "failedTests": 0,
+  "finishTime": 1794009018.35,
+  "passedTests": 6,
+  "result": "Passed",
+  "runtimeWarnings": [],
+  "skippedTests": 0,
+  "startTime": 1794008167.953,
+  "statistics": [],
+  "testFailures": [],
+  "title": "Test - RoomInTheCart",
+  "topInsights": [],
+  "totalTestCount": 6
+}
