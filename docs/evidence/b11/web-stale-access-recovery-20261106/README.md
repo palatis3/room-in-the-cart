@@ -9,3 +9,5 @@ The actor-recovery regression fails on original code. A separate deferred-Refres
 A separate real Chrome restart preserves the fictional pending IndexedDB row, but loses the fixture session. The private wording and Retry remain hidden after offline restart and anonymous reconnect; no operation sends. This covers the safe anonymous branch, not an authenticated session-survival branch. See [verification and driver limits](verification.json).
 
 The old and fixed bundle hashes, synthetic counters, DOM observations and tests are retained. The corrected bundle is local only, with no staging deployment or PR push. Owned fixture servers/tabs/reverse mappings and CDP forwarding are cleaned up; the public Help page is restored. Real provider, household and physical-device acceptance remain separate.
+
+Subsequent deployment: the exact tested bundle was promoted to staging with29protected and29public checks passing. The local-only statement above describes the original browser-test checkpoint. [Deployment evidence](../web-stale-access-staging-20261106/summary.json).

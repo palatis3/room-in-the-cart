@@ -1,0 +1,12 @@
+{
+  "serverCompiledFilesCompared": 94,
+  "serverByteIdenticalToApprovedDeployment": true,
+  "newWebAsset": "index-DyqgPDmw.js",
+  "webOutputSHA256": {
+    "icon.png": "dd8314efcedbe096fbce5c43f09af13a335d713a1dcfae43f82b4904d9e58914",
+    "index.html": "1f5c07a36c0d437f6cab44eda239a311afc4b737f13b69fa86dfc4f40bb8c91b",
+    "apple-touch-icon.png": "e69ddd65f0718ffef895c0b82a63873d580722b920af40e86b1478a5cd9427e3",
+    "assets/index-B9I61_lh.css": "7cf18dacddae715ef01363daf5f2770fb9562762a10d2d2e4d41daf406224cee",
+    "assets/index-DyqgPDmw.js": "df99574e742b11478f4cd422d59481a8cbdf112b8b7e33622976efb2fa3b121a"
+  }
+}

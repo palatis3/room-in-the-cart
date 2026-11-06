@@ -94,6 +94,8 @@ Migration 029 verifies and stages a complete archive window in a distinct quaran
 
 The isolated performance setup follow-up f117439 is terminal: setup3/3 passed, launch and scroll pass strict native/baseline checks, and rendered fails before fixture entry due to missing launch-time accessibility queries. Required scroll duration is present in original result SQLite and JSON; this does not explain prior omissions. Root verified357frozen files. [Final audit](evidence/native/performance-setup-followup-20261106/final-audit.json). The reviewed four-line readiness follow-up807aa3c is now in one separate performance run42304515547 with baselines enforced; acceptance remains pending. Original804 failures remain open. [Scope](evidence/native/performance-launch-readiness-20261106/README.md).
 
+The tested stale-access web correction is now live on staging (dpl_2tfRmEfTGLW63sSTksJ6xJ9MZ97P, source9d2bf47). Exact Android-tested bundle delivery and29/29protected +29/29public route/asset/anonymous-boundary checks pass. All94server runtime files remain byte-identical to the approved prior build; no database/provider/environment changes. This supersedes earlier local-only status for that web fix, without replacing actual live household or native acceptance. [Deployment proof](evidence/b11/web-stale-access-staging-20261106/summary.json).
+
 ## Evidence scopes
 
 Results belong to their own immutable source and binary identities. Do not add these counts together or treat an actual UI pass with a synthetic service as a deployed household pass.
