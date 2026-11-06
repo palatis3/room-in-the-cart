@@ -3,6 +3,12 @@ name: Spanish Done event diagnostic
 on:
   workflow_dispatch:
     inputs:
+      mode:
+        description: One singleton or one original UI02 history on pinned singleton products
+        type: choice
+        options: [singleton, history]
+        default: singleton
+        required: true
       expected_sha:
         description: Exact diagnostic branch commit SHA; must match the selected workflow ref
         type: string
@@ -10,11 +16,12 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   spanish-done:
     runs-on: macos-15
-    timeout-minutes: 70
+    timeout-minutes: ${{ inputs.mode == 'history' && 100 || 70 }}
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
       EXPECTED_SHA: ${{ inputs.expected_sha }}
@@ -41,24 +48,62 @@ jobs:
           bash -n diagnostics/spanish-done/build.sh
           bash -n diagnostics/spanish-done/local-wiring.sh
       - name: Check exact source and environment; create and boot one owned simulator
+        if: inputs.mode == 'singleton'
         timeout-minutes: 8
         run: python3 diagnostics/spanish-done/run.py prepare
       - name: Compile original core test profile and freeze diagnostic products
+        if: inputs.mode == 'singleton'
         timeout-minutes: 30
         run: bash diagnostics/spanish-done/build.sh
       - name: Run the complete original Spanish selector once with normal idling
+        if: inputs.mode == 'singleton'
         timeout-minutes: 21
         run: python3 diagnostics/spanish-done/run.py execute
+      - name: Fetch only the pinned successful singleton artifact for history
+        if: inputs.mode == 'history'
+        timeout-minutes: 5
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          mkdir -p .build
+          gh api "repos/$GH_REPO/actions/artifacts/13497202263/zip" > .build/spanish-singleton-pinned.zip
+      - name: Verify pinned products and source provenance; prepare one fresh history device
+        if: inputs.mode == 'history'
+        timeout-minutes: 13
+        run: python3 diagnostics/spanish-done/history.py prepare
+      - name: Run original four-case history once with unchanged per-case allowances
+        if: inputs.mode == 'history'
+        timeout-minutes: 70
+        run: python3 diagnostics/spanish-done/history.py execute
+      - name: Collect complete history and separate Spanish capture assessment
+        if: always() && inputs.mode == 'history'
+        timeout-minutes: 8
+        run: python3 diagnostics/spanish-done/history.py collect
+      - name: Shut down only the owned history simulator
+        if: always() && inputs.mode == 'history'
+        timeout-minutes: 3
+        run: python3 diagnostics/spanish-done/history.py cleanup
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always() && inputs.mode == 'history'
+        with:
+          name: spanish-done-original-ui02-history-${{ github.run_attempt }}
+          path: |
+            .build/spanish-done-history/
+            .build/spanish-done-history-inputs/provenance.json
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: error
       - name: Collect evidence and retain independent test and capture verdicts
-        if: always()
+        if: always() && inputs.mode == 'singleton'
         timeout-minutes: 8
         run: python3 diagnostics/spanish-done/run.py collect
       - name: Shut down only the owned simulator
-        if: always()
+        if: always() && inputs.mode == 'singleton'
         timeout-minutes: 3
         run: python3 diagnostics/spanish-done/run.py cleanup
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        if: always()
+        if: always() && inputs.mode == 'singleton'
         with:
           name: spanish-done-diagnostic-${{ github.run_attempt }}
           path: .build/spanish-done/

@@ -343,11 +343,11 @@ def collect_journals(source, target):
     return {p.name: p.read_text() for p in target.iterdir()}
 
 
-def collect(out):
+def collect(out, *, expected_count=1, event_validator=compare_sinks, export_window="25m"):
     if not out.is_dir():
         return 1  # Preparation never created evidence; do not invoke native tools.
     # Always preserve the original result, even if input ownership/capture later fails.
-    test = collect_test_result(out, validate=False)
+    test = collect_test_result(out, validate=False, expected_count=expected_count)
     errors, records, journals = [], {}, {}
     try:
         frozen(out)
@@ -355,7 +355,7 @@ def collect(out):
     except (OSError, ValueError, subprocess.SubprocessError) as error:
         write(out / "capture-status.json", {"complete": False, "errors": [str(error)], "absenceInferenceAllowed": False})
         return 1
-    test = collect_test_result(out)
+    test = collect_test_result(out, expected_count=expected_count)
     try:
         container = Path(command(["xcrun", "simctl", "get_app_container", device, BUNDLE, "data"]).strip())
         journals = collect_journals(container / "Library/Caches/SpanishDoneDiagnostic", out / "journals")
@@ -363,7 +363,7 @@ def collect(out):
         errors.append("Journal collection: " + str(error))
     with (out / "events-export.log").open("w") as log, (out / "events-export.stderr").open("w") as error_log:
         try:
-            export = subprocess.run(["xcrun", "simctl", "spawn", device, "log", "show", "--last", "25m",
+            export = subprocess.run(["xcrun", "simctl", "spawn", device, "log", "show", "--last", export_window,
                 "--info", "--debug", "--style", "compact", "--timezone", "UTC", "--predicate", PREDICATE],
                 stdout=log, stderr=error_log, timeout=120)
             records["exportExit"] = export.returncode
@@ -384,7 +384,7 @@ def collect(out):
         if len(stills) != 2 or any(s.get("exit") != 0 for s in stills):
             raise ValueError("Both bounded external still captures are required")
         records["stills"] = [validate_png(out / f"after-bQuantity-Done-{delay}s.png") for delay in (5, 15)]
-        records["events"] = compare_sinks(journals, (out / "events-live.log").read_text(),
+        records["events"] = event_validator(journals, (out / "events-live.log").read_text(),
                                          (out / "events-export.log").read_text(), (out / "Tests.log").read_text())
     except (OSError, ValueError, KeyError) as error:
         errors.append("Capture validation: " + str(error))
@@ -393,7 +393,7 @@ def collect(out):
     return 0 if not errors and test.get("strictExit") == 0 and invocation_succeeded(test.get("raw") or {}) else 1
 
 
-def collect_test_result(out, *, validate=True):
+def collect_test_result(out, *, validate=True, expected_count=1):
     test = {"raw": None}
     status_path = out / "test-status.json"
     if not (out / "invocation.json").exists() and not status_path.exists():
@@ -414,7 +414,7 @@ def collect_test_result(out, *, validate=True):
             (out / name).write_text(command(["xcrun", "xcresulttool", "get", "test-results", kind,
                 "--path", str(out / "Tests.xcresult"), "--compact"], timeout=90))
         args = [sys.executable, "scripts/check_ios_test_results.py", "--selectors", str(out / "selectors.txt"),
-                "--expected-count", "1", "--summary", str(out / "test-summary.json"), "--tests", str(out / "test-details.json"),
+                "--expected-count", str(expected_count), "--summary", str(out / "test-summary.json"), "--tests", str(out / "test-details.json"),
                 "--result-bundle", str(out / "Tests.xcresult"), "--test-log", str(out / "Tests.log")]
         with (out / "strict.log").open("w") as log:
             test["strictExit"] = subprocess.run(args, stdout=log, stderr=subprocess.STDOUT, timeout=120).returncode
