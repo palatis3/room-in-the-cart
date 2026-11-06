@@ -1,0 +1,176 @@
+{
+  "diagnosticOnly": true,
+  "releaseAcceptance": false,
+  "runID": 42181706949,
+  "jobID": 127772598249,
+  "attempt": 1,
+  "harnessCommit": "e0fc658e49aa105712ee43b2e94f96b1cbd5f5e3",
+  "binaryCommit": "169613bfabeb00355649f96d6bc88ad91064f708",
+  "binarySourceRun": 42176801822,
+  "workflowConclusion": "failure",
+  "diagnosticResult": "Incomplete persisted-event reconciliation; original test assertions all pass.",
+  "selected": 6,
+  "passed": 6,
+  "failed": 0,
+  "skipped": 0,
+  "independentStrictExit": 0,
+  "runtimeWarnings": 0,
+  "sourceReuse": "Verified2117 harness files against exact e0fc658e Git blobs; original525-source manifest matches169613bf; runtime source unchanged; all238 product manifest entries match prior independently hashed archive; pre/post freeze true.",
+  "sourceRunAndArtifactMetadataIndependentlyMatched": true,
+  "actualOrderMatchesOriginalFailedShard": true,
+  "spanishBilingualOnboarding": "Dismissed in first Contributor Spanish test; Tests.log lines387\u2013399, before stock target.",
+  "casePIDs": {
+    "RoomInTheCartUITests/ContributorRequestUITests/testSpanishLargeTextReviewStartsAtTheOriginalWording": [
+      13931
+    ],
+    "RoomInTheCartUITests/ContributorRequestUITests/testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest": [
+      19922
+    ],
+    "RoomInTheCartUITests/MeasurementUITests/testAuthenticatedNoticeConsentExplicitClosedShopSendDeleteAndWithdrawal": [
+      36212,
+      36919,
+      39972
+    ],
+    "RoomInTheCartUITests/MeasurementUITests/testLocalSettingsConsentIgnoresLegacyBooleanPersistsRestartAndStaysWorkspaceScoped": [
+      40293,
+      40819,
+      42676
+    ],
+    "RoomInTheCartUITests/StockReviewUITests/testChangedMealRevisionDisablesPreviewWithoutApplyingBatch": [
+      43417
+    ],
+    "RoomInTheCartUITests/StockReviewUITests/testPreviewCancelThenConfirmShowsEveryMealAndFreshCookInstructionAfterRestart": [
+      44473,
+      46846
+    ]
+  },
+  "targetDurationSeconds": 37.297,
+  "siblingDurationSeconds": 81.714,
+  "stockLiveChronologies": [
+    {
+      "pid": 43417,
+      "case": "RoomInTheCartUITests/StockReviewUITests/testChangedMealRevisionDisablesPreviewWithoutApplyingBatch",
+      "eventCount": 23,
+      "eventNamesEqualHealthySingleton": true,
+      "relativeToDone": [
+        {
+          "event": "stock.reset.amount",
+          "seconds": -0.823653
+        },
+        {
+          "event": "done.enter",
+          "seconds": 0.0
+        },
+        {
+          "event": "done.exit",
+          "seconds": 0.00018
+        },
+        {
+          "event": "keyboard.willHide",
+          "seconds": 0.050142
+        },
+        {
+          "event": "textField.endEditing",
+          "seconds": 0.055529
+        },
+        {
+          "event": "stock.focus.off",
+          "seconds": 0.064865
+        },
+        {
+          "event": "keyboard.didHide",
+          "seconds": 0.542271
+        },
+        {
+          "event": "stock.toggle.setter.true",
+          "seconds": 1.954465
+        }
+      ],
+      "recordedPostSetterResets": []
+    },
+    {
+      "pid": 44473,
+      "case": "RoomInTheCartUITests/StockReviewUITests/testPreviewCancelThenConfirmShowsEveryMealAndFreshCookInstructionAfterRestart",
+      "eventCount": 23,
+      "eventNamesEqualHealthySingleton": true,
+      "relativeToDone": [
+        {
+          "event": "stock.reset.amount",
+          "seconds": -1.248513
+        },
+        {
+          "event": "done.enter",
+          "seconds": 0.0
+        },
+        {
+          "event": "done.exit",
+          "seconds": 0.000192
+        },
+        {
+          "event": "keyboard.willHide",
+          "seconds": 0.055157
+        },
+        {
+          "event": "textField.endEditing",
+          "seconds": 0.064043
+        },
+        {
+          "event": "stock.focus.off",
+          "seconds": 0.077052
+        },
+        {
+          "event": "keyboard.didHide",
+          "seconds": 0.527862
+        },
+        {
+          "event": "stock.toggle.setter.true",
+          "seconds": 1.786223
+        }
+      ],
+      "recordedPostSetterResets": []
+    }
+  ],
+  "capture": {
+    "streamAliveAtStop": true,
+    "liveEventCount": 46,
+    "persistedEventCount": 0,
+    "persistedExportExit": 0,
+    "persistedFileContents": "Timestamp header only",
+    "captureReconciliationExit": 1,
+    "captureFailurePreserved": true,
+    "eventsSHA256": "eddb4d34885811c150f52bd53b94de756964233471abbe95797e3a4a9d0fb156",
+    "exportSHA256": "9f56fca152030dba9e8ee76dee4fc8967ab667507b5878f0f9ab819d55b6b9a6"
+  },
+  "animationTimeoutMessages": 0,
+  "runnerRestarts": 0,
+  "artifacts": {
+    "keyboard-history-1": {
+      "artifactID": 13486647511,
+      "sha256": "ea120660dca6ec3f76beba9f2b660fcd75adadc4b02d2e87a519e5f8c9b54bc4",
+      "digestVerified": true,
+      "compressedBytes": 18011703,
+      "members": 116,
+      "expandedBytes": 20157766
+    }
+  },
+  "jobLogSHA256": "c9394c16534d0da26e5529d45ce8c948ca0303738b6d873c104ffe303fddfea3",
+  "cleanup": {
+    "simulatorID": "29BC236D-A924-43BE-BAC0-90B41997E2F0",
+    "shutdownExit": 0,
+    "deleteExit": 0,
+    "ownedSimulatorOnly": true
+  },
+  "limits": [
+    "This is a diagnostic failure due to capture disagreement, not an XCTest assertion failure; no guard was changed.",
+    "The live stream records healthy Done/focus/keyboard/toggle chronology in target and sibling, but empty persisted export prevents independent reconciliation. Underlying export gap cause is not established.",
+    "Missing persisted entries are not evidence of absent app events. Unified Logging completeness is not guaranteed.",
+    "Only StockReviewUITests forwards the diagnostic environment flag in the frozen products; lack of prefix-case app events is expected instrumentation scope, not proof of no prefix keyboard events. Prefix history is observed through XCTest.",
+    "No reset after toggle is recorded in the live stream; this does not prove all reset events were captured.",
+    "All original assertions and actual prior-case order pass; this run did not reproduce the original stock failure and establishes no fix or cause.",
+    "The six-case prefix combines language, elapsed time, keyboard use, and process launches, and cannot isolate a causal predecessor.",
+    "Original d0 failure, healthy singleton42176801822, standalone control, quote-entry failure and acceptance candidate remain distinct."
+  ],
+  "actions": "Collected one dispatched run and stopped. No retries, dispatches, pushes, source edits or local native execution.",
+  "rootIndependentReview": "Root replayed exact source/product-manifest/selection and strict six-case verification. The zero-event persisted capture remains an explicit failed diagnostic check.",
+  "scratchDirectory": ".build/KeyboardHistoryDiagnostic20261106/hosted-run42181706949"
+}
