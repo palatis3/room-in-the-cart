@@ -1,0 +1,267 @@
+{
+  "fixtureScope": {
+    "candidate": {
+      "candidate": "d0b0b12ee0cb8412f17e82c92a91013217560670",
+      "onlyChangedSource": "ios/Features/Pickup/PickupSavedStockSection.swift",
+      "candidateFileSHA256": "a0a1ebdf9e2cdc32e6a60dc8d71e4d161fe4ba4abd5052167a486580b48e6542",
+      "sharedFileCapturedSHA256": "9c7b0f8298275962664f60b5672432410f55350b2eebecff6ddb4e6b4f0958ed",
+      "deltaSHA256": "88befb5ef26ee6120189294049000c78d8f84a207f6cb6708a78dde824436ac7",
+      "selectors": [
+        "RoomInTheCartUITests/StockReviewUITests/testChangedMealRevisionDisablesPreviewWithoutApplyingBatch",
+        "RoomInTheCartUITests/StockReviewUITests/testPreviewCancelThenConfirmShowsEveryMealAndFreshCookInstructionAfterRestart",
+        "RoomInTheCartUITests/FreeJourneyUITests/testCorrectFreezerBatchAndReadReservationsAfterRestart"
+      ],
+      "simulator": "D78DA029-3F3C-4AF9-A2E2-1E723B229DD7",
+      "scope": "Visible-label layout regression, no switch fix claimed; tests/timeout unchanged"
+    },
+    "xcode": "Xcode 27.1\nBuild version 27A9275",
+    "runtimeBuild": "23C54",
+    "testExit": 65,
+    "strictExit": 1,
+    "passed": 2,
+    "failed": 1,
+    "runtimeWarnings": [],
+    "hashes": {
+      "source": {
+        "count": 2107,
+        "unchanged": true
+      },
+      "products": {
+        "count": 179,
+        "unchanged": true
+      }
+    },
+    "cleanup": {
+      "ownedSimulator": "D78DA029-3F3C-4AF9-A2E2-1E723B229DD7",
+      "ownedSimulatorAbsent": true,
+      "protectedPreview": [
+        {
+          "udid": "5FDE1E82-1FF7-4556-9C14-0746F6295944",
+          "state": "Booted"
+        }
+      ],
+      "protectedPreviewActions": "none",
+      "shutdownLog": "",
+      "deleteLog": ""
+    },
+    "failure": {
+      "selector": "FreeJourneyUITests/testCorrectFreezerBatchAndReadReservationsAfterRestart",
+      "location": "ios/UITests/FreeJourneyUITests.swift:1092",
+      "action": "initial launch, waitForExistence15s for Shop tab",
+      "reason": "Contributor compile condition replaces normal app entry point. FreeJourney launch has no fixture route flag; fixture entry point falls through to Household contributor fixture, which has no Shop tab. Stock fields never reached.",
+      "classification": "test configuration mismatch; no label regression inferred",
+      "screenshot": "attachments/A6D45552-BA08-454E-B50E-53CCC6FD01DA.png"
+    },
+    "visualObservation": "Filled correction form screenshot inspected: Confirmed usable amount remains visible above value3. Existing two StockReview journeys passed. New-stock field labels not reached by FreeJourney in this fixture build.",
+    "limits": "Xcode27.1 local differs hosted26.3; no hosted switch fix claimed. No rerun, original assertions and720/900timeouts preserved.",
+    "command": "bash run.sh; exact build/test/check commands retained in run.sh"
+  },
+  "originalHelperFailure": {
+    "provenance": {
+      "candidate": "d0b0b12ee0cb8412f17e82c92a91013217560670",
+      "onlyChangedSource": "ios/Features/Pickup/PickupSavedStockSection.swift",
+      "candidateFileSHA256": "a0a1ebdf9e2cdc32e6a60dc8d71e4d161fe4ba4abd5052167a486580b48e6542",
+      "sharedFileCapturedSHA256": "9c7b0f8298275962664f60b5672432410f55350b2eebecff6ddb4e6b4f0958ed",
+      "deltaSHA256": "88befb5ef26ee6120189294049000c78d8f84a207f6cb6708a78dde824436ac7",
+      "selectors": [
+        "RoomInTheCartUITests/FreeJourneyUITests/testCorrectFreezerBatchAndReadReservationsAfterRestart"
+      ],
+      "simulator": "D6693DEA-9D82-4328-AB59-32DD8E8CFAEB",
+      "scope": "Ordinary DEBUG app, corrected FreeJourney harness selection; previous contributor-mode failed bundle preserved",
+      "conditions": [
+        "DEBUG"
+      ],
+      "entryPointReview": {
+        "normalApp": "RoomInTheCartApp.swift excludes normal @main only if DEBUG && (CONTRIBUTOR_CAPTURE_UI_FIXTURE || DINNER_DECISION_UI_FIXTURE); neither defined",
+        "fixtureApp": "ContributorRequestUIFixture.swift @main is #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE; not defined"
+      },
+      "copiedFrom": ".build/CIResearch20261105/stock-d0b0b12/visible-label-validation/source"
+    },
+    "xcode": "Xcode 27.1\nBuild version 27A9275",
+    "runtimeBuild": "23C54",
+    "testExit": 65,
+    "strictExit": 1,
+    "passed": 0,
+    "failed": 1,
+    "runtimeWarnings": [],
+    "seconds": 40.302,
+    "hashes": {
+      "source": {
+        "count": 2107,
+        "unchanged": true
+      },
+      "products": {
+        "count": 179,
+        "unchanged": true
+      }
+    },
+    "cleanup": {
+      "ownedSimulator": "D6693DEA-9D82-4328-AB59-32DD8E8CFAEB",
+      "ownedSimulatorAbsent": true,
+      "protectedPreview": [
+        {
+          "udid": "5FDE1E82-1FF7-4556-9C14-0746F6295944",
+          "state": "Booted"
+        }
+      ],
+      "protectedPreviewActions": "none",
+      "shutdownLog": "",
+      "deleteLog": ""
+    },
+    "failure": {
+      "action": "At32.08s tap Actual food or freezer batch StaticText, then typeText Opened freezer wraps",
+      "error": "Neither element nor any descendant has keyboard focus",
+      "cause": "Existing fill uses descendants(.any).matching(identifier: id).firstMatch; newly added persistent StaticText label matches before its TextField. AX confirms both StaticText label and TextField placeholder have same text.",
+      "testSource": "ios/UITests/FreeJourneyUITests.swift:520,1105,1137",
+      "screenshot": "attachments/D2FE729F-1618-447D-B85F-9696F86EF2AD.png",
+      "AX": "attachments/CFEA5B37-210D-4DF1-BB5F-45C23525D5ED.txt"
+    },
+    "scope": "Corrected ordinary DEBUG harness, separate from contributor-mode mismatch. No test/source edits, no acceptance retry. Could not verify filled new-stock labels or downstream restart because keyboard focus failure occurs at first modified field. No fix or rerun attempted.",
+    "command": "bash run.sh; exact build/test/verifier commands in run.sh"
+  },
+  "correctedFreezerJourney": {
+    "provenance": {
+      "candidate": "d0b0b12ee0cb8412f17e82c92a91013217560670",
+      "onlyChangedFiles": {
+        "ios/Features/Pickup/PickupSavedStockSection.swift": {
+          "candidateSHA256": "a0a1ebdf9e2cdc32e6a60dc8d71e4d161fe4ba4abd5052167a486580b48e6542",
+          "capturedSharedSHA256": "9c7b0f8298275962664f60b5672432410f55350b2eebecff6ddb4e6b4f0958ed"
+        },
+        "ios/UITests/FreeJourneyUITests.swift": {
+          "candidateSHA256": "b19c2a0d4f4e721bfb7bb6c069d4e3bfc0c7221eee886dd0c3b0e9d7f9a78b19",
+          "capturedSharedSHA256": "4dd4a776cd60aeec66f8d6ca0a78efd1793f857944fd25e7985f7a2f68157cc9"
+        }
+      },
+      "simulator": "8C37DC01-5088-4B42-9ED8-668D88C67BD8",
+      "runtimeBuild": "23C54",
+      "conditions": [
+        "DEBUG"
+      ],
+      "selectors": [
+        "RoomInTheCartUITests/FreeJourneyUITests/testCorrectFreezerBatchAndReadReservationsAfterRestart"
+      ],
+      "entryPointReview": "Normal RoomInTheCartApp @main enabled; CONTRIBUTOR_CAPTURE_UI_FIXTURE and DINNER_DECISION_UI_FIXTURE absent",
+      "scope": "Original FreeJourney freezer selector, captured persistent-label correction plus editable-element helper. Prior failed runs preserved; no assertions/timeouts altered.",
+      "separateDerivedData": true
+    },
+    "xcode": "Xcode 27.1\nBuild version 27A9275",
+    "runtimeBuild": "23C54",
+    "testExit": 0,
+    "strictExit": 0,
+    "passed": 1,
+    "failed": 0,
+    "runtimeWarnings": [],
+    "seconds": 80.619,
+    "hashes": {
+      "source": {
+        "count": 2107,
+        "unchanged": true
+      },
+      "products": {
+        "count": 179,
+        "unchanged": true
+      }
+    },
+    "cleanup": {
+      "ownedSimulator": "8C37DC01-5088-4B42-9ED8-668D88C67BD8",
+      "ownedSimulatorAbsent": true,
+      "protectedPreview": [
+        {
+          "udid": "5FDE1E82-1FF7-4556-9C14-0746F6295944",
+          "state": "Booted"
+        }
+      ],
+      "protectedPreviewActions": "none",
+      "shutdownLog": "",
+      "deleteLog": ""
+    },
+    "visualObservation": "new-stock-filled.png inspected: persistent Actual food or freezer batch above Opened freezer wraps, persistent Confirmed usable amount above3. Existing test completed stock creation/correction/restart, verified Dinner1 and Unreserved0.",
+    "finalScreenshots": [
+      {
+        "file": "C510C5F7-66DC-4814-9833-632C753F21FF.png",
+        "name": "E06-corrected-freezer-reservations-after-restart_0_AF6A0777-214E-4F76-908B-11AB78E93B5C.png"
+      }
+    ],
+    "capturedImages": [
+      {
+        "trigger": "Tap \"Use this batch first\" Switch",
+        "screenshot": "new-stock-filled.png",
+        "exit": 0
+      },
+      {
+        "trigger": "Tap \"Confirm this separate stock lot\" Button",
+        "screenshot": "new-stock-confirm.png",
+        "exit": 0
+      },
+      {
+        "trigger": "Tap \"stockReview.preview\" Button",
+        "screenshot": "corrected-stock-filled.png",
+        "exit": 0
+      }
+    ],
+    "scope": "Original one FreeJourney selector on ordinary DEBUG; exact two captured shared-file deltas over d0b0b12. Earlier contributor-mode mismatch and initial generic-query failure preserved. LocalXcode27.1 differs hosted26.3; no hosted identity-switch fix claimed. No extra rerun.",
+    "command": "bash run.sh; exact build/test/strict commands retained in run.sh"
+  },
+  "editableTextViewJourney": {
+    "provenance": {
+      "reuseFrom": "/Users/palatis/Room in the Cart/.build/CIResearch20261105/stock-d0b0b12/ordinary-label-editable-validation",
+      "sourceAndProductHashesMatchPriorPassingRun": true,
+      "buildPerformed": false,
+      "simulator": "E3D701AD-E096-4820-9543-711F866ECEF5",
+      "runtimeBuild": "23C54",
+      "selector": "RoomInTheCartUITests/FreeJourneyUITests/testListCaptureOpensWithTypedDraftAndReopensAfterCancel",
+      "purpose": "Different editable TextView control path: typed draft retained through capture cancel/reopen. Original selector/assertions720/900timeouts unchanged."
+    },
+    "xcode": "Xcode 27.1\nBuild version 27A9275",
+    "runtimeBuild": "23C54",
+    "testExit": 0,
+    "strictExit": 0,
+    "passed": 1,
+    "failed": 0,
+    "runtimeWarnings": [],
+    "seconds": 42.953,
+    "hashes": {
+      "source": {
+        "count": 2107,
+        "unchanged": true
+      },
+      "products": {
+        "count": 179,
+        "unchanged": true
+      }
+    },
+    "cleanup": {
+      "ownedSimulator": "E3D701AD-E096-4820-9543-711F866ECEF5",
+      "ownedSimulatorAbsent": true,
+      "protectedPreview": [
+        {
+          "udid": "5FDE1E82-1FF7-4556-9C14-0746F6295944",
+          "state": "Booted"
+        }
+      ],
+      "protectedPreviewActions": "none",
+      "shutdownLog": "",
+      "deleteLog": ""
+    },
+    "scope": "Original typed-draft capture/cancel/reopen selector, verifying editable TextView path with same previously successful products; no rebuild or source changes, original assertions/timeouts. Native work stopped after this test.",
+    "command": "bash run.sh; exact test/strict commands in run.sh"
+  },
+  "currentFilesSHA256": {
+    "ios/Features/Pickup/PickupSavedStockSection.swift": "9c7b0f8298275962664f60b5672432410f55350b2eebecff6ddb4e6b4f0958ed",
+    "ios/UITests/FreeJourneyUITests.swift": "4dd4a776cd60aeec66f8d6ca0a78efd1793f857944fd25e7985f7a2f68157cc9"
+  },
+  "rootIndependentVerification": "Current source hashes, 2107source hashes and179product hashes before/after and on disk match; same unchanged products support the TextView variant; existing failed attempts remain preserved.",
+  "limits": [
+    "Simulator Xcode27.1/iOS26.2 only; no hosted switch failure fix claimed.",
+    "The original three-case fixture bundle remains failed because its normal-app selector launched the contributor fixture. Two StockReview cases passed within it.",
+    "Initial normal-app label build exposed a StaticText/TextField query collision; exact corrective helper and original normal-app journeys are separately verified."
+  ],
+  "apiReferences": [
+    "https://developer.apple.com/documentation/xcuiautomation/xcuielementquery/matching(_:)",
+    "https://developer.apple.com/documentation/xcuiautomation/xcuielementattributes/elementtype"
+  ],
+  "images": {
+    "new-stock-filled.png": "7c2072a4912c6323536a5046984440f419db2cb549d21f3fa2d41f790715be09",
+    "corrected-stock-filled.png": "b21e3594ff984b4df949a515837e3d6b7f31ace4c87540ecf53475c3f64ca286"
+  }
+}

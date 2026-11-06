@@ -1135,9 +1135,14 @@ import XCTest
         captureSystemScreen(name)
     }
     private func fill(_ text: String, into id: String, replacing: Bool = false, requireDone: Bool = false) {
-        let field = element(id); tap(field)
-        if replacing, let old = field.value as? String, old != field.placeholderValue { app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
-        app.typeText(text)
+        // Persistent labels can share the field's accessible name. Match only
+        // editable controls, including lazily materialized Form rows.
+        let editableTypes: [XCUIElement.ElementType] = [.textField, .textView, .secureTextField, .searchField]
+        let field = app.descendants(matching: .any).matching(identifier: id)
+            .matching(NSPredicate(format: "elementType IN %@", editableTypes.map { $0.rawValue })).firstMatch
+        tap(field)
+        if replacing, let old = field.value as? String, old != field.placeholderValue { field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
+        field.typeText(text)
         let done = app.buttons.matching(NSPredicate(format: "label IN %@", ["Done", "Listo"])).firstMatch
         if requireDone { XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable, "Done must be reachable from \(id)") }
         if done.exists && done.isHittable { done.tap() }
