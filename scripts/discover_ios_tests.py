@@ -7,6 +7,7 @@ from pathlib import Path
 import plistlib
 import shutil
 import subprocess
+import sys
 from uuid import UUID
 
 from plan_ios_tests import DURATIONS_PATH, make_plan, write_plan
@@ -53,7 +54,7 @@ def discover(simulator, products, diagnostics, plan_dir):
         ])
         return path, json.loads(path.read_bytes())
 
-    run("bootstatus", ["xcrun", "simctl", "bootstatus", simulator, "-b"])
+    run("bootstatus", [sys.executable, str(Path(__file__).with_name("boot_ios_simulator.py")), simulator])
     path, inventory = enumerate_tests(1)
     if isinstance(inventory, dict) and inventory.get("errors") == [HOST_MISSING]:
         app = products / "Debug-iphonesimulator/RoomInTheCart.app"

@@ -31,7 +31,7 @@ if ! run_tests "$result" "$log"; then
         test_status=1
     else
         xcrun simctl shutdown "$SIMULATOR_ID" || true
-        xcrun simctl bootstatus "$SIMULATOR_ID" -b
+        python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
         result=.build/Tests-retry.xcresult
         log=.build/Tests-retry.log
         run_tests "$result" "$log" || test_status=$?

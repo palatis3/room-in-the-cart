@@ -72,7 +72,7 @@ jobs:
           test_runs=(.build/DerivedData/Build/Products/RoomInTheCart_iphonesimulator*.xctestrun)
           test "${#test_runs[@]}" -eq 1
           test -f "${test_runs[0]}"
-          xcrun simctl bootstatus "$SIMULATOR_ID" -b
+          python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
           xcodebuild -xctestrun "${test_runs[0]}" \
             -destination "platform=iOS Simulator,id=$SIMULATOR_ID" -parallel-testing-enabled NO \
             -enumerate-tests -test-enumeration-style flat -test-enumeration-format json \
@@ -156,7 +156,7 @@ jobs:
         run: xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
       - name: Boot the iPhone simulator
         timeout-minutes: 8
-        run: xcrun simctl bootstatus "$SIMULATOR_ID" -b
+        run: python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
       - name: Run selected fixture tests and require complete execution
         timeout-minutes: 40
         shell: bash

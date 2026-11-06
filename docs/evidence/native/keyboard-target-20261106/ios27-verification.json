@@ -1,0 +1,127 @@
+{
+  "candidate": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "scope": "Additional runtime coverage of the five-point Done touch-target regression with the same noninstrumented compiled products.",
+  "selector": "RoomInTheCartUITests/StockReviewUITests/testKeyboardDoneAcceptsCenterAndTargetMargins",
+  "runs": [
+    {
+      "runtime": "27.0",
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "7348A14D-679A-45F8-9F56-16AA6C2EE728",
+        "deviceName": "RITC iOS 27-0 Done target",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "24A434",
+        "osVersion": "27.0",
+        "platform": "iOS Simulator"
+      },
+      "requestedDeviceType": "iPhone 17",
+      "toolchain": "Xcode 27.1\nBuild version 27A9275",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "strictExit": 0,
+      "durationSeconds": 96.768,
+      "runtimeWarnings": 0,
+      "bootstrap": {
+        "simctlExit": 0,
+        "terminalStatus": 4294967295,
+        "message": "Finished",
+        "cleanStartupAcceptance": true
+      },
+      "knownHarnessDiagnostics": {
+        "invalidDigitCountOccurrences": 24,
+        "classification": "Xcode SDK/device metadata diagnostics retained separately from XCTest runtime warnings"
+      },
+      "sourceFilesVerified": 512,
+      "productFilesVerified": 179,
+      "sameSourceAndProductsAs": "integrated-verification.json",
+      "frozenInputsUnchanged": {
+        "source": true,
+        "products": true,
+        "reusedIntegratedProducts": true
+      },
+      "ownedSimulatorDeleted": true,
+      "scratchDirectory": ".build/KeyboardDiagnostic20261106/ios-27-0-target",
+      "sha256": {
+        "boot.log": "06ce8afd243faa626b3cbdb36d8ddba732cbe6c904f70cf53d9da3e94ac9718e",
+        "Tests.log": "34311ddc986bc3cb5cbf7a42ede3cdd1b244fa2336175e71b30a99001f8d4f11",
+        "test-summary.json": "6db4e9e887dbb60b53ea81c64afb2c0e412d7a6cc4ab1d17cb2e5ab856e19602",
+        "test-details.json": "fe9cd1a3c2fa471c21f03a38ba578710f428f29794878891837aa8e0027fa1b3",
+        "strict.log": "4f21d74e5429f367df93d5984f85b9b10ca38118b460bf5eccc09f07e952e2ff",
+        "test-runtime-warnings.json": "ce5f63a49527481ca5704f8996eb8eea682d8688c3381353dd8f23ad6759bffb",
+        "source-sha256.json": "ca32c6301ddedbe3270f2a088584ed1b3adda344109bad168a5b34328ad9545b",
+        "product-sha256.json": "00d380bb9ca27af31776e7d6364111e75bccff6ba550322a0ce0a5640bd32426",
+        "candidate-source-match.json": "f5a212cdedec25a7b4ba4d3e3483a536c54f4e032016333af54819345668ff10",
+        "frozen-inputs-unchanged.json": "21d3502b86bf1ae3a44235f0f206a303d3b3e51e2bf25ba241fa8e37f1dc6778",
+        "toolchain.txt": "ee3fe26035862d2b9653c1a570be3eca4ee5be2815f0ce99ff2d8ffa3399e4c8",
+        "runtime-build.txt": "c633f97219285cbb4f5f5970231c6f4737021ca5579d224323a633be2a519a9b",
+        "delete.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "shutdown.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "runtime": "27.1",
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "4B3162DA-8205-4485-A0E1-13B440F15DAD",
+        "deviceName": "RITC iOS 27-1 Done target",
+        "modelName": "iPhone",
+        "osBuildNumber": "24A94425",
+        "osVersion": "27.1",
+        "platform": "iOS Simulator"
+      },
+      "requestedDeviceType": "iPhone Duo",
+      "toolchain": "Xcode 27.1\nBuild version 27A9275",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "strictExit": 0,
+      "durationSeconds": 174.698,
+      "runtimeWarnings": 0,
+      "bootstrap": {
+        "simctlExit": 0,
+        "terminalStatus": 3,
+        "message": "Data Migration Failed",
+        "cleanStartupAcceptance": false
+      },
+      "knownHarnessDiagnostics": {
+        "invalidDigitCountOccurrences": 48,
+        "classification": "Xcode SDK/device metadata diagnostics retained separately from XCTest runtime warnings"
+      },
+      "sourceFilesVerified": 512,
+      "productFilesVerified": 179,
+      "sameSourceAndProductsAs": "integrated-verification.json",
+      "frozenInputsUnchanged": {
+        "source": true,
+        "products": true,
+        "reusedIntegratedProducts": true
+      },
+      "ownedSimulatorDeleted": true,
+      "scratchDirectory": ".build/KeyboardDiagnostic20261106/ios-27-1-target",
+      "sha256": {
+        "boot.log": "abec9c458b80d3dd8ebb62af9097e0918c3b5d5e2aab5f3e507f749d76b3a46d",
+        "Tests.log": "ffcf2dc1d23fb24850053cc12403cae6e70604fb0a59b333f4433767b45fa170",
+        "test-summary.json": "8b8e08f6a02a8c916c55e27f9390de563a10ac6f21260acd90cf867b3eed154d",
+        "test-details.json": "2d28cf62b588c91df144f5ef2a33b939ba3a83fd9cd7b2a59f577c37855c52a4",
+        "strict.log": "b671c38459ff2a5e150bdf213ba402ec7d300ffee7e9bc8c7031b2a520b6930c",
+        "test-runtime-warnings.json": "ce5f63a49527481ca5704f8996eb8eea682d8688c3381353dd8f23ad6759bffb",
+        "source-sha256.json": "ca32c6301ddedbe3270f2a088584ed1b3adda344109bad168a5b34328ad9545b",
+        "product-sha256.json": "00d380bb9ca27af31776e7d6364111e75bccff6ba550322a0ce0a5640bd32426",
+        "candidate-source-match.json": "f5a212cdedec25a7b4ba4d3e3483a536c54f4e032016333af54819345668ff10",
+        "frozen-inputs-unchanged.json": "21d3502b86bf1ae3a44235f0f206a303d3b3e51e2bf25ba241fa8e37f1dc6778",
+        "toolchain.txt": "ee3fe26035862d2b9653c1a570be3eca4ee5be2815f0ce99ff2d8ffa3399e4c8",
+        "runtime-build.txt": "cabf6d823bdcd1f618e09d79340092651db31f625796a17b6aba8600445f0fe7",
+        "delete.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "shutdown.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "boot-migration-errors.log": "c1eca0b64715a7804aefea544a91ec51af569c0f7fd4c56300b97925dae0f36f"
+      }
+    }
+  ],
+  "limits": [
+    "The iOS 27.1 assertions passed, but startup reported a migration failure. This is not clean fresh-install or compatibility acceptance.",
+    "Bounded migration-error logs do not establish the failed migration plugin or an app cause.",
+    "Both runs use default English text on simulators and local Xcode 27.1; they do not resolve the earlier hosted centered-tap or keyboard stalls, and are not full-route or physical-device acceptance.",
+    "The protected preview simulator was not operated on.",
+    "The original boot harness trusted simctl exit status; the failed startup motivated a separate CI guard, not retrospective reclassification as a clean run."
+  ]
+}

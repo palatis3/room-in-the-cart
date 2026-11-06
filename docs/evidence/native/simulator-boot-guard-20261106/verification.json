@@ -1,0 +1,47 @@
+{
+  "problem": "Observed simctl bootstatus returned zero while reporting terminal Status=3 and Data Migration Failed.",
+  "implementation": "Shared output-preserving wrapper rejects either exact failure marker at all eight boot sites. Existing nonzero exits and external deadlines remain failures; already-booted output remains supported.",
+  "reviewedPatchSHA256": "fc20e13ba115af2cc6f3f91a1ca2881aa76bbd083bd71e73ae3ace3dd6ebade2",
+  "rootVerification": {
+    "guardAndDiscoveryTests": 19,
+    "allScriptTests": 176,
+    "actionlint": "passed for all five changed workflows",
+    "bashSyntax": "passed",
+    "diffWhitespace": "passed",
+    "logSHA256": "37a538b0ac62326c9cdc65ee4ac33f9a752f918ffeccffb87aa0078286e2a95f"
+  },
+  "observedLogReplay": [
+    {
+      "log": ".build/KeyboardDiagnostic20261106/ios-27-0-target/boot.log",
+      "sha256": "06ce8afd243faa626b3cbdb36d8ddba732cbe6c904f70cf53d9da3e94ac9718e",
+      "observedProcessExit": 0,
+      "replayExit": 0,
+      "outputPreserved": true
+    },
+    {
+      "log": ".build/KeyboardDiagnostic20261106/ios-27-1-target/boot.log",
+      "sha256": "abec9c458b80d3dd8ebb62af9097e0918c3b5d5e2aab5f3e507f749d76b3a46d",
+      "observedProcessExit": 0,
+      "replayExit": 1,
+      "outputPreserved": true
+    }
+  ],
+  "sourceSHA256": {
+    "scripts/boot_ios_simulator.py": "30bf3c8343bb43385579932c4dbe63978dfeb0348e5c20c6965400818f061b8f",
+    "scripts/test_boot_ios_simulator.py": "bacb796ef5e0575d6ec26e9735e068362bfb210bf0858f5a74fae1134ad355d1",
+    "scripts/discover_ios_tests.py": "6a9ca46bbef2e39e0414c238414c2b9f9ffdac8ce88068200980ad8e3716e948",
+    "scripts/test_discover_ios_tests.py": "76816bf8e0f28c65da500ae9967f0db4a070e7e92e336bc81048e49d85469a83",
+    "scripts/run_ios_test_shard.sh": "d76fe05dcfb42d3a64313af0c5e7ff5f4daf59f3e2fd4f6a23c61438b86ae347",
+    ".github/workflows/ci.yml": "f584ee2152ae84ade510b9ed44789857b7e0b8530621bbd4c47129a8c4369729",
+    ".github/workflows/ios-deep.yml": "5c5ae5f2639f242fe57b7f831a55b4c9b6bf7ddb18fe0041e2c1c378deffd625",
+    ".github/workflows/ios-fixtures.yml": "ca95b419a1fe79e5ca40f1cdb7d95a1fd4502a3b8ebb8d3c6ce6ad73429239bd",
+    ".github/workflows/ios-performance.yml": "850c7c73584e1574fcba5cc282b890620b29b18c557983164b113b445b67b5c6",
+    ".github/workflows/ios-toggle-diagnostic.yml": "66546a0dca11099f8af2cda227d4a73db7b0a1d0928fbc762f3bc7a0d263417e"
+  },
+  "limits": [
+    "Detects the known failure; unknown zero-exit output is not a general health guarantee.",
+    "No SDK change, simulator erase, new retry, test-selection change, relaxed timeout or suppressed warning.",
+    "No hosted run has used this follow-up yet. Current b359d07 evidence uses its original pinned scripts.",
+    "This does not establish the cause of the unrelated hosted UI01 timeout or old keyboard stalls."
+  ]
+}

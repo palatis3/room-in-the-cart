@@ -429,7 +429,7 @@ jobs:
           xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
       - name: Wait for simulator boot
         timeout-minutes: 8
-        run: xcrun simctl bootstatus "$SIMULATOR_ID" -b
+        run: python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
       - name: Run selected tests and verify complete execution
         timeout-minutes: 40
         run: bash scripts/run_ios_test_shard.sh

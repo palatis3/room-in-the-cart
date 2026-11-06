@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 import plistlib
 import subprocess
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -59,7 +60,8 @@ class DiscoverTests(unittest.TestCase):
                 self.assertEqual(command[-1], "test-without-building")
                 path = Path(command[command.index("-test-enumeration-output-path") + 1])
                 path.write_bytes(next(inventories))
-            return subprocess.CompletedProcess(command, 1 if failure in command else 0)
+            boot = command[0] == sys.executable and Path(command[1]).name == "boot_ios_simulator.py"
+            return subprocess.CompletedProcess(command, 1 if failure in command or (failure == "bootstatus" and boot) else 0)
 
         with_mock = patch("discover_ios_tests.subprocess.run", side_effect=invoke)
         with_mock.start()
@@ -72,6 +74,7 @@ class DiscoverTests(unittest.TestCase):
         self.prepare([encoded()])
         self.discover()
         self.assertEqual(len(self.commands), 2)
+        self.assertEqual(self.commands[0], [sys.executable, str(Path(__file__).with_name("boot_ios_simulator.py")), SIMULATOR])
         self.assertEqual((self.plan / "test-enumeration.json").read_bytes(), encoded())
         self.assertFalse((self.diagnostics / "attempt-2.json").exists())
 

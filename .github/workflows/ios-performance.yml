@@ -132,7 +132,7 @@ jobs:
       - name: Boot and verify a fresh Release installation
         timeout-minutes: 8
         run: |
-          xcrun simctl bootstatus "$SIMULATOR_ID" -b
+          python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
           if xcrun simctl get_app_container "$SIMULATOR_ID" dev.roominthecart.app app >/dev/null 2>&1; then
             echo 'Expected a fresh simulator without the Release app.' >&2
             exit 1

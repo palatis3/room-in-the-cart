@@ -1,0 +1,92 @@
+{
+  "candidate": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "runID": 42184705113,
+  "cases": {
+    "scroll": {
+      "attempt": 1,
+      "artifactID": 13488946378,
+      "sha256": "aa74357faeaaf6b9b56f2b52ea885e9b9411ee700515211f01f2d2028bd58fb2",
+      "digestVerified": true,
+      "strictReplayExit": 0,
+      "measurementReplay": "passed",
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": 0,
+      "comparisons": {
+        "scrollMedianSeconds": {
+          "measured": 2.582032625,
+          "maximum": 3.25,
+          "passed": true
+        },
+        "absoluteMemoryMedianKilobytes": {
+          "measured": 107339.648,
+          "maximum": 150000,
+          "passed": true
+        },
+        "peakMemoryMedianKilobytes": {
+          "measured": 107634.56,
+          "maximum": 155000,
+          "passed": true
+        },
+        "maximumPeakMemoryKilobytes": {
+          "measured": 107962.24,
+          "maximum": 160000,
+          "passed": true
+        }
+      },
+      "calibrationSHA256": "b44dacae4cef0c2d1f944d98e814eee21d1e22676b4d0e9298687d08782f2e14",
+      "hostedPickupReadback": {
+        "sqliteQuickCheck": "ok",
+        "revision": 2,
+        "payloadSHA256": "9106de970eb96da07da973bed70bbc4a79d1d57a082fa17901a82fb8a3395f6a",
+        "lineCount": 500,
+        "contributionCount": 500,
+        "importCount": 1,
+        "source": "paste",
+        "checkedCount": 0,
+        "checkedRowIDs": []
+      },
+      "simulatorHitches": {
+        "status": "unavailable",
+        "detail": "XCTest emitted scroll duration and memory, but no animation hitch samples on this simulator. This run cannot evaluate frame hitches."
+      },
+      "rawLogSHA256": "f649b0eb94aa645104653503101c1ea1463498b8af1db43f1a1c198d1b6b7d6a",
+      "metricIdentifiers": [
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical",
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute",
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak",
+        "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.duration"
+      ]
+    },
+    "launch": {
+      "attempt": 1,
+      "artifactID": 13490241014,
+      "sha256": "3570ea2c9ce65ad35dafd0cd95d612d88128141321b1e1ad4edc3213980f1f99",
+      "digestVerified": true,
+      "strictReplayExit": 0,
+      "measurementReplay": "passed",
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": 0,
+      "metricIdentifiers": [
+        "com.apple.dt.XCTMetric_ApplicationLaunch-ApplicationFirstFramePresentationResponsive.duration"
+      ],
+      "comparisons": {
+        "responsiveLaunchMedianSeconds": {
+          "measured": 4.267583916,
+          "maximum": 5.5,
+          "passed": true
+        }
+      },
+      "calibrationSHA256": "4606c26a80823be545d9fb75286f5bd2e862c91c2586260c83e0f834d5a331b8",
+      "hostedPickupReadback": null,
+      "simulatorHitches": null,
+      "rawLogSHA256": "dd8837c3ee0e1bf521b6f415dd719fa7d549bcf8a40ef1dd82759e90a27f03cb"
+    }
+  },
+  "limits": [
+    "Simulator evidence only. Hosted SQLite reported readback is verified from retained report, not a second local database read."
+  ]
+}

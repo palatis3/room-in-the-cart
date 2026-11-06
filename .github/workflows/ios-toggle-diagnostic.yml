@@ -65,7 +65,7 @@ jobs:
           tar -czf "$EVIDENCE/products.tar.gz" -C .build/form-toggle-products/Build Products
       - name: Boot the dedicated simulator
         timeout-minutes: 8
-        run: xcrun simctl bootstatus "$SIMULATOR_ID" -b
+        run: python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
       - name: Run the single control with normal XCTest idle behavior
         timeout-minutes: 17
         run: bash diagnostics/swiftui-toggle/run-test.sh

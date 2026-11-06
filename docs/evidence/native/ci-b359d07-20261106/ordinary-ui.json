@@ -1,0 +1,42 @@
+{
+  "candidate": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "runID": 42184704871,
+  "groups": {
+    "ui-01": {
+      "artifactID": 13488854247,
+      "sha256": "8b4c6bf2223e8076d95064525e03bfc130309429fd9308ed8ffe8b234adf94b8",
+      "digestVerified": true,
+      "selectors": [
+        "RoomInTheCartUITests/FreeJourneyUITests/testFirstPickupCanStartFromDinnersAndReviewAnEditablePattern",
+        "RoomInTheCartUITests/FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testUnknownPackAmountRemainsUnresolvedAfterSaveAndRestart"
+      ],
+      "selected": 3,
+      "passed": 2,
+      "failed": 1,
+      "skipped": 0,
+      "strictReplayExit": 1,
+      "runtimeWarnings": 0,
+      "rawLogSHA256": "b5370d4f2bfbaa251bdf251109e730894780888bf94544e1555cca055347379e"
+    },
+    "ui-04": {
+      "artifactID": 13489991343,
+      "sha256": "baee9734357130155a6d4373b750330dd6a91581931b27ae577bca82c291ee03",
+      "digestVerified": true,
+      "selectors": [
+        "RoomInTheCartUITests/FreeJourneyUITests/testCorrectFreezerBatchAndReadReservationsAfterRestart",
+        "RoomInTheCartUITests/FreeJourneyUITests/testDinnerMoveAcrossDisplayedWeeksKeepsLunchAndOccurrence",
+        "RoomInTheCartUITests/FreeJourneyUITests/testListCaptureOpensWithTypedDraftAndReopensAfterCancel",
+        "RoomInTheCartUITests/FreeJourneyUITests/testTypedBarcodeNeedsACodeAndFreshMatchConfirmation",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextEditActionGrowsInContentAndReturnsToEntry"
+      ],
+      "selected": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "rawLogSHA256": "b0674158703ec52fb8b7975d5b4cd2db072360b9f5268611bce5554e5950d960"
+    }
+  }
+}

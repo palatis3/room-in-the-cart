@@ -80,7 +80,7 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p .build
-          xcrun simctl bootstatus "$SIMULATOR_ID" -b
+          python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
           xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart-LocalStoreKit \
             -configuration Debug -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
             -only-test-configuration "$STOREKIT_CONFIGURATION" -parallel-testing-enabled NO \
