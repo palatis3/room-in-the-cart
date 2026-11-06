@@ -16,6 +16,10 @@ Root published exact804 plus the reviewed0500ca3 setup helper as `f117439994835e
 
 Agent`ci_core_resume` owns read-only collection under`.build/CIResearch20261106/performance-setup-f117439/`. Do not redispatch on an observation timeout. This run tests setup and performance evidence; it does not erase earlier missing-scroll-series or UI failures.
 
+## Local performance navigation readiness follow-up
+
+Run42301547684 rendered reached native execution but failed its first navigation: the generic reveal helper tried to swipe before the Shop tab or scroll container was queryable. Later failure screenshot/hierarchy show normal Shop. Root added a reviewed explicit10second Shop-existence precondition in `openPickupList`, outside measured samples. Whole RELEASE test-file typecheck passes with zero diagnostics on local Xcode27.1; native validation remains pending. Metric loops, assertions, fixtures, baseline and workflow limits are unchanged; setup may wait up to10seconds per call. [Scope and original failure](evidence/native/performance-launch-readiness-20261106/README.md). This local change is not in f117 or804.
+
 ## Mid-run review and local follow-up
 
 Root independently verified current Swift CodeQL: all254 runtime inputs,27rules/0findings;11compiler diagnostics and292unresolved AST nodes remain. The unchanged consent journey passed locally1/1 with0warnings on Xcode27.1/iOS26.2-23C54; hosted26.3failure is unresolved. Scroll performance stopped in pre-test simulator setup with exit60, producing no native/metric/readback result. This historical mid-run checkpoint is superseded by the terminal counts and separately scoped English recovery above. [Independent review](evidence/native/ci-804030e-20261106/MID-RUN-REVIEW.md).
