@@ -98,12 +98,30 @@ import XCTest
     private func tap(_ target: XCUIElement) { reveal(target); XCTAssertTrue(target.isHittable, target.debugDescription); target.tap() }
     private func enableSwitch(_ label: String) {
         let control = app.switches[label]
-        reveal(control, fullyVisible: true)
-        if control.value as? String == "0" {
-            // The accessibility frame includes the Form label. Tap the trailing switch itself.
-            control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        for attempt in 0..<24 {
+            var area = scrollableArea()
+            let done = app.buttons.matching(NSPredicate(format: "label IN %@", ["Done", "Listo"])).firstMatch
+            if app.keyboards.firstMatch.exists && done.exists {
+                area.size.height = max(0, min(area.maxY, done.frame.minY) - area.minY)
+            }
+            XCTAssertGreaterThanOrEqual(area.height, 80, "Need visible form content before acknowledging \(label)")
+            if control.exists && !control.frame.isEmpty {
+                // The accessibility row includes a multiline label. Its actual
+                // trailing switch can be visible while part of that label is not.
+                let coordinate = control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5))
+                let point = coordinate.screenPoint
+                if control.isEnabled && control.isHittable && area.contains(point) {
+                    print("CONTRIBUTOR_SWITCH_TAP label=\(label) point=\(point) area=\(area)")
+                    if control.value as? String == "0" { coordinate.tap() }
+                    XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
+                    return
+                }
+                scrollContent(upward: point.y > area.midY, distance: abs(point.y - area.midY))
+            } else {
+                scrollContent(upward: attempt < 16)
+            }
         }
-        XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
+        XCTFail("No visible switch tap point after 24 reveal attempts: \(label)")
     }
     private func fill(_ text: String, into id: String, replacing: Bool = false) {
         // A Form can expose both its StaticText label and its input with the

@@ -1,0 +1,36 @@
+{
+  "candidate": "0d33c11d43a97d670bf56d104d3260cad9b3f202",
+  "runID": 42215222541,
+  "artifactID": 13504647847,
+  "case": "ContributorRequestUITests/testSpanishLargeTextReviewStartsAtTheOriginalWording()",
+  "durationSeconds": 245.927,
+  "failureSource": "ios/UITests/ContributorRequestUITests.swift:194",
+  "failure": "Missing actionable UI element after reveal fullyVisible exhausts its24-attempt bound",
+  "appPID": 5623,
+  "outerSwitchFrame": [
+    16,
+    36,
+    370,
+    527.3
+  ],
+  "innerSwitchFrame": [
+    309,
+    285.7,
+    63,
+    28
+  ],
+  "value": "0",
+  "parentWindow": [
+    402,
+    874
+  ],
+  "intendedTrailingTapPoint": [
+    356.4,
+    299.65
+  ],
+  "tapPerformed": false,
+  "observed": "Selected-case teardown screenshot shows inner switch visible and off, top of long label under sheet navigation; no keyboard visible. Original-wording structured review assertion not reached.",
+  "sourceContract": "enableSwitch calls reveal(control,fullyVisible:true); reveal requires full outer label frame to fit observed area before reaching actual trailing-control tap.",
+  "limits": "Screenshot/subtree establish a visible trailing control and partly obscured label at failure. Precise reason bounded centering drags did not settle to a fully visible outer row is not established. No source change/native execution/retry performed.",
+  "sourceLogSHA256": "102542e55eec9919da01bffb1eea22e3ce00c9e14cb236f304dd07f3aafe0de8"
+}
