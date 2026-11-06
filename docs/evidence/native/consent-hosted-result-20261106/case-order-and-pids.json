@@ -1,0 +1,73 @@
+{
+  "RoomInTheCartUITests/ContributorRequestUITests/testSpanishLargeTextReviewStartsAtTheOriginalWording": {
+    "startLine": 18,
+    "pids": [
+      18264
+    ],
+    "endLine": 714,
+    "passedSeconds": 141.434
+  },
+  "RoomInTheCartUITests/ContributorRequestUITests/testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest": {
+    "startLine": 715,
+    "pids": [
+      22549
+    ],
+    "endLine": 2590,
+    "passedSeconds": 396.234
+  },
+  "RoomInTheCartUITests/MeasurementUITests/testAuthenticatedNoticeConsentExplicitClosedShopSendDeleteAndWithdrawal": {
+    "startLine": 2594,
+    "pids": [
+      38835,
+      40041,
+      42077
+    ],
+    "endLine": 3020,
+    "passedSeconds": 95.363
+  },
+  "RoomInTheCartUITests/MeasurementUITests/testLocalSettingsConsentIgnoresLegacyBooleanPersistsRestartAndStaysWorkspaceScoped": {
+    "startLine": 3021,
+    "pids": [
+      43139,
+      44107,
+      45345
+    ],
+    "endLine": 3348,
+    "passedSeconds": 57.863
+  },
+  "RoomInTheCartUITests/StockReviewUITests/testChangedMealRevisionDisablesPreviewWithoutApplyingBatch": {
+    "startLine": 3352,
+    "pids": [
+      46066
+    ],
+    "endLine": 3508,
+    "passedSeconds": 33.249
+  },
+  "RoomInTheCartUITests/StockReviewUITests/testKeyboardDoneAcceptsCenterAndTargetMargins": {
+    "startLine": 3509,
+    "pids": [
+      0,
+      47184,
+      0,
+      48112,
+      0,
+      48753,
+      0,
+      49385,
+      0,
+      50044,
+      0
+    ],
+    "endLine": 3814,
+    "passedSeconds": 102.624
+  },
+  "RoomInTheCartUITests/StockReviewUITests/testPreviewCancelThenConfirmShowsEveryMealAndFreshCookInstructionAfterRestart": {
+    "startLine": 3815,
+    "pids": [
+      51146,
+      52966
+    ],
+    "endLine": 4318,
+    "passedSeconds": 90.541
+  }
+}

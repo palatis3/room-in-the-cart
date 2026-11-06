@@ -1,0 +1,106 @@
+{
+  "synthetic": true,
+  "lane": "adult",
+  "mode": "online",
+  "primedRole": null,
+  "counts": {
+    "authStarts": 0,
+    "verifies": 0,
+    "redeems": 0,
+    "activations": 0,
+    "commandPosts": 0,
+    "commandEffects": 0,
+    "exactCommandRetries": 0,
+    "proposalPosts": 2,
+    "proposalEffects": 1,
+    "exactProposalRetries": 1,
+    "logoutAttempts": 0,
+    "logoutEffects": 0,
+    "forbidden": 0
+  },
+  "events": [
+    {
+      "control": "prime editor"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/views/fixture-grant/current",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/views/fixture-grant/proposals",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/session",
+      "bodySHA256": null
+    },
+    {
+      "control": "lose proposal"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "POST",
+      "path": "/v1/views/fixture-grant/proposals",
+      "bodySHA256": "1da9dcc0071122f625508171c69f8eef0618285d483d7b3d51651b6f820e13d1"
+    },
+    {
+      "control": "advance-view"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "POST",
+      "path": "/v1/views/fixture-grant/proposals",
+      "bodySHA256": "1da9dcc0071122f625508171c69f8eef0618285d483d7b3d51651b6f820e13d1"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/views/fixture-grant/current",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/views/fixture-grant/proposals",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/session",
+      "bodySHA256": null
+    }
+  ],
+  "requestCount": 0,
+  "proposalCount": 1,
+  "childCounts": {
+    "starts": 0,
+    "verifies": 0,
+    "claimPosts": 0,
+    "claims": 0,
+    "finishPosts": 0,
+    "finishes": 0,
+    "ownReads": 0,
+    "forbidden": 0,
+    "exactClaimRetries": 0,
+    "exactFinishRetries": 0
+  }
+}

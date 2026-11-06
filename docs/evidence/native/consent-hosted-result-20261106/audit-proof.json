@@ -1,0 +1,66 @@
+{
+  "runID": 42293938170,
+  "head": "f019f16124a1edf4d825c2a860efb0c2ca1488cd",
+  "hostedConclusion": "success",
+  "nativeExit": 0,
+  "nativeElapsedSeconds": 989.8,
+  "strictReplayExit": 0,
+  "freshExportsExit": {
+    "summary": 0,
+    "tests": 0
+  },
+  "passedTests": 7,
+  "failedTests": 0,
+  "skippedTests": 0,
+  "runtimeWarningCount": 0,
+  "examinedTestCount": 7,
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "D4D7F894-D191-45D7-8B7D-5CD9DF6F61C8",
+    "deviceName": "RITC consent run 85dd33a2-bf58-4a8e-a496-3b4193d4f187",
+    "modelName": "iPhone 17",
+    "osBuildNumber": "23C54",
+    "osVersion": "26.2",
+    "platform": "iOS Simulator"
+  },
+  "exactSevenSelectorsAndOrder": [
+    "RoomInTheCartUITests/ContributorRequestUITests/testSpanishLargeTextReviewStartsAtTheOriginalWording",
+    "RoomInTheCartUITests/ContributorRequestUITests/testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest",
+    "RoomInTheCartUITests/MeasurementUITests/testAuthenticatedNoticeConsentExplicitClosedShopSendDeleteAndWithdrawal",
+    "RoomInTheCartUITests/MeasurementUITests/testLocalSettingsConsentIgnoresLegacyBooleanPersistsRestartAndStaysWorkspaceScoped",
+    "RoomInTheCartUITests/StockReviewUITests/testChangedMealRevisionDisablesPreviewWithoutApplyingBatch",
+    "RoomInTheCartUITests/StockReviewUITests/testKeyboardDoneAcceptsCenterAndTargetMargins",
+    "RoomInTheCartUITests/StockReviewUITests/testPreviewCancelThenConfirmShowsEveryMealAndFreshCookInstructionAfterRestart"
+  ],
+  "sourceManifestsMatchExactCommit": true,
+  "productManifestProofsAgree": true,
+  "binaryArtifactDownloaded": false,
+  "compiledPlanMatchesOriginal": true,
+  "originalZIPAndExtractedResultBytesPreserved": true,
+  "allToolInspectionsUsedCopy": true,
+  "capture": {
+    "ownerExit": -9,
+    "finalReceiptPresent": false,
+    "liveLiveness": {
+      "ownerAliveBeforeStop": true,
+      "completeDeliveryProven": false
+    },
+    "exportExit": 0,
+    "comparison": {
+      "liveOnlyUniqueEvents": 18,
+      "exportOnlyUniqueEvents": 0,
+      "sharedUniqueEvents": 0,
+      "observedEventSetsEqual": false
+    },
+    "liveEventCount": 18,
+    "exportEventCount": 0,
+    "processCount": 6,
+    "liveWallTimeZone": "unknown",
+    "exportWallTimeZone": "UTC",
+    "completeDeliveryEstablished": false,
+    "absentSetterInferencePermitted": false
+  },
+  "diagnosticOnly": true,
+  "releaseAcceptance": false,
+  "nativeExecutionPerformedLocally": false
+}

@@ -1,0 +1,25 @@
+{
+  "observed": "Anonymous after actual Chrome force-stop/restart; session cookies not retained.",
+  "cookies": [
+    {
+      "name": "fixture_auth",
+      "session": true
+    }
+  ],
+  "ownRequestLinks": 0,
+  "invitationEmpty": true,
+  "counts": {
+    "starts": 1,
+    "verifies": 1,
+    "claimPosts": 1,
+    "claims": 1,
+    "finishPosts": 1,
+    "finishes": 1,
+    "ownReads": 0,
+    "forbidden": 0,
+    "exactClaimRetries": 0,
+    "exactFinishRetries": 0
+  },
+  "passedSafeAnonymousBranch": true,
+  "scope": "No replacement claim/finish; no in-memory token recovery. Earlier assertion expecting session survival was an incorrect probe assumption; alternate safe branch was planned."
+}

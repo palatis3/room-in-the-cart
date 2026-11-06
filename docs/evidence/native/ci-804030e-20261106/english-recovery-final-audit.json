@@ -1,0 +1,125 @@
+{
+  "candidate": "804030e68473d022e72b464940061c01c611a0bd",
+  "runID": 42272379472,
+  "attempt": 2,
+  "conclusion": "success",
+  "newJobID": 128165594965,
+  "newJobConclusion": "success",
+  "runnerID": 1000004078,
+  "source": {
+    "expectedMerge": "62b6dced75daffbe4d264a4312b71b0ad811112d",
+    "logAvailable": true,
+    "observedCheckoutCommits": [
+      "62b6dced75daffbe4d264a4312b71b0ad811112d"
+    ],
+    "checkoutExpected": true,
+    "logSHA256": "b4c9888f84049c22afbc0f1e275bb116e64e2c4990e3c3a226879e36dc1a8211",
+    "pinnedDeveloperPathObserved": true
+  },
+  "executionScope": {
+    "candidate": "804030e68473d022e72b464940061c01c611a0bd",
+    "attempt": 2,
+    "newExecutionJobID": 128165594965,
+    "newExecutionName": "storekit (en, US English \u2014 local StoreKit)",
+    "inheritedJobs": [
+      {
+        "name": "sanitizers (thread)",
+        "originalJobID": 128079948353,
+        "attempt2JobID": 128165596934,
+        "exactOriginalExecutionFields": true,
+        "runnerID": 1000004028,
+        "startedAt": "2026-11-06T18:37:38Z",
+        "completedAt": "2026-11-06T18:41:32Z"
+      },
+      {
+        "name": "storekit (es, US Spanish app \u00b7 Spanish (Mexico) offer \u00b7 USA storefront)",
+        "originalJobID": 128079948617,
+        "attempt2JobID": 128165645020,
+        "exactOriginalExecutionFields": true,
+        "runnerID": 1000004029,
+        "startedAt": "2026-11-06T18:37:34Z",
+        "completedAt": "2026-11-06T18:53:13Z"
+      },
+      {
+        "name": "sanitizers (address)",
+        "originalJobID": 128079947828,
+        "attempt2JobID": 128165655080,
+        "exactOriginalExecutionFields": true,
+        "runnerID": 1000004027,
+        "startedAt": "2026-11-06T18:37:36Z",
+        "completedAt": "2026-11-06T18:40:40Z"
+      }
+    ],
+    "scope": "Only English job is recovered. Three successful jobs retain exact original execution fields under new IDs."
+  },
+  "verifierInputsRehashed": 153,
+  "originalAttemptFreezeReverified": {
+    "files": 3138,
+    "sha256": "ae63230b336dfcfb9f5233230e709364c697f65bab2b7bd8a80269a2686ac4ec",
+    "allUnchanged": true
+  },
+  "englishResult": {
+    "artifactID": 13544021267,
+    "sha256": "329350824e2e44c9ef16f51dff99a72f9741d3dfc680bda1af2ab21edc678942",
+    "digestVerified": true,
+    "passed": 15,
+    "failed": 0,
+    "skipped": 0,
+    "strictReplayExit": 0,
+    "runtimeWarnings": 0,
+    "configurations": [
+      "US English \u2014 local StoreKit"
+    ],
+    "failures": [],
+    "hostedJSONExportsPresent": true,
+    "originalZIPMembersReverified": 81,
+    "originalExtractionPristine": true,
+    "runtimeExpected": true,
+    "exactCaseIDsAndStartMultiplicity": true,
+    "executionOrder": [
+      "RoomInTheCartTests/StoreKitScenarioTests/testAskToBuyApprovalRemainsUndelivered",
+      "RoomInTheCartTests/StoreKitScenarioTests/testAskToBuyDeclineGrantsNothing",
+      "RoomInTheCartTests/StoreKitScenarioTests/testBillingGraceStillRequiresServiceVerification",
+      "RoomInTheCartTests/StoreKitScenarioTests/testBillingRetryWithoutGraceDoesNotGrantPaidAccess",
+      "RoomInTheCartTests/StoreKitScenarioTests/testExpirationRemovesCurrentEntitlementAndPreservesFree",
+      "RoomInTheCartTests/StoreKitScenarioTests/testLocalAnnualOfferUsesStoreKitPriceAndLocale",
+      "RoomInTheCartTests/StoreKitScenarioTests/testPurchaseDoesNotFinishOrGrantAccessWithoutDurableServiceDelivery",
+      "RoomInTheCartTests/StoreKitScenarioTests/testRealTransactionObserverAttemptsDeliveryWithoutUnlock",
+      "RoomInTheCartTests/StoreKitScenarioTests/testRefundRevokesTransactionAndPreservesFree",
+      "RoomInTheCartTests/StoreKitScenarioTests/testRelaunchAndExplicitRestoreReplayUnfinishedWithoutUnlock",
+      "RoomInTheCartTests/StoreKitScenarioTests/testRenewalKeepsOriginalPurchaseAndNoLocalUnlock",
+      "RoomInTheCartTests/StoreKitScenarioTests/testRestoredSubscriptionThenCancelledAndDeclinedRepurchasesStayFree",
+      "RoomInTheCartTests/StoreKitScenarioTests/testSimulatedPurchaseCancellationGrantsNothing",
+      "RoomInTheCartTests/StoreKitScenarioTests/testUnavailableProductKeepsFreeRoute",
+      "RoomInTheCartTests/StoreKitScenarioTests/testUnverifiedLocalTransactionGrantsNothing"
+    ],
+    "selectorOrderMatched": true,
+    "rawLifecycleFailures": [],
+    "implicitRestarts": [],
+    "synchronizationDiagnostics": [],
+    "rawLogSHA256": "a26c10009a0139275c79efb9486d53391d48d576e63e5c694decea333f922ae3",
+    "englishStrictGatePassed": true
+  },
+  "collectionErrors": [],
+  "timing": {
+    "reportedJobStartedAt": "2026-11-06T21:36:02Z",
+    "reportedJobCompletedAt": "2026-11-06T21:51:16Z",
+    "firstStepStartedAt": "2026-11-06T21:36:03Z",
+    "lastStepCompletedAt": "2026-11-06T21:51:13Z",
+    "runnerStepSpanSeconds": 910.0,
+    "recoveryRequestUTC": {
+      "utc": "2026-11-06T21:30:14.254577+00:00",
+      "runID": 42272379472,
+      "originalJobID": 128079949194,
+      "candidate": "804030e68473d022e72b464940061c01c611a0bd",
+      "scope": "Only never-started English local StoreKit job. Original acquisition failure preserved. No executed case rerun requested.",
+      "requestedAttempt": 2,
+      "nativeTestsPreviouslyStarted": 0,
+      "manualRecoveryRequestCount": 1,
+      "requestExit": 0
+    },
+    "scope": "Only first/last-step span is runner execution. Workflow creation predates recovery. Pending/dependency/provider waiting not independently attributed."
+  },
+  "releaseAcceptance": false,
+  "scope": "English-only recovery. Original core failures, original deep acquisition failure, original performance setup failure, older missing-scroll-series evidence, and all prior freezes remain preserved. No other inherited job is represented as a new execution. No collector retries/dispatch/native tests/source or Git edits."
+}
