@@ -78,12 +78,14 @@ def verify_runtime(out, phase):
     identity = json.loads((out / "identity.json").read_text())
     proof = {"phase": phase, "simulatorID": device, "runtime": identity["runtime"],
              "expectedBuild": identity["expectedRuntimeBuild"], "actualBuild": None,
-             "matched": False, "observedUTC": time.time()}
+             "matched": False, "observedUTC": time.time(), "queryTimeoutSeconds": 90}
+    started = time.monotonic()
     try:
-        actual = command(["xcrun", "simctl", "getenv", device, "SIMULATOR_RUNTIME_BUILD_VERSION"]).strip()
+        actual = command(["xcrun", "simctl", "getenv", device, "SIMULATOR_RUNTIME_BUILD_VERSION"], timeout=90).strip()
         proof.update(actualBuild=actual, matched=actual == proof["expectedBuild"])
     except (OSError, subprocess.SubprocessError) as error:
         proof["queryError"] = str(error)
+    proof["queryElapsedSeconds"] = time.monotonic() - started
     # Keep every observation, including a mismatch, even if another check is requested later.
     number = len(list(out.glob("runtime-check-*.json"))) + 1
     write(out / f"runtime-check-{number:03d}.json", proof)
@@ -91,7 +93,7 @@ def verify_runtime(out, phase):
     identity["runtimeBuildVerified"] = proof["matched"]
     write(out / "identity.json", identity)
     if not proof["matched"]:
-        raise ValueError(f"Booted runtime build mismatch: expected {proof['expectedBuild']}, observed {proof['actualBuild']!r}; no substitution/retry")
+        raise ValueError(f"Runtime build not verified: expected {proof['expectedBuild']}, observed {proof['actualBuild']!r}; no substitution/retry")
     return device, item
 
 

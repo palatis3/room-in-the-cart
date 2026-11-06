@@ -307,6 +307,8 @@ class RuntimePreflightTests(unittest.TestCase):
         self.runtimes = [{"identifier": run.RUNTIME, "buildversion": build, "isAvailable": True}
                          for build in ("23C52", "23C54")]
         self.actual = "23C54"
+        self.query_error = None
+        self.query_timeouts = []
         self.name = None
         for mocked in (
             patch.dict("os.environ", EXPECTED_SHA="f" * 40, GITHUB_RUN_ATTEMPT="1"),
@@ -335,6 +337,9 @@ class RuntimePreflightTests(unittest.TestCase):
         if args == ["xcrun", "simctl", "list", "devices", "-j"]:
             return json.dumps({"devices": {run.RUNTIME: [{"udid": self.device, "name": self.name, "state": "Booted"}]}})
         if args == ["xcrun", "simctl", "getenv", self.device, "SIMULATOR_RUNTIME_BUILD_VERSION"]:
+            self.query_timeouts.append(_kwargs.get("timeout"))
+            if self.query_error is not None:
+                raise self.query_error
             return self.actual + "\n"
         raise AssertionError("Unexpected fake command: " + str(args))
 
@@ -384,6 +389,27 @@ class RuntimePreflightTests(unittest.TestCase):
         self.assertEqual(selection["exactMatchCount"], 0)
         self.assertFalse(any(a[:3] == ["xcrun", "simctl", "create"] for a in self.commands))
         self.assertFalse((self.out / "identity.json").exists())
+
+    def test_runtime_query_has_one_explicit_bounded_setup_deadline(self):
+        run.prepare(self.out, True, run.RUNTIME, "23C54")
+        proof = json.loads((self.out / "runtime-check-001.json").read_text())
+        self.assertEqual(self.query_timeouts, [90])
+        self.assertEqual(proof["queryTimeoutSeconds"], 90)
+        self.assertGreaterEqual(proof["queryElapsedSeconds"], 0)
+        self.assertTrue(proof["matched"])
+
+    def test_runtime_query_timeout_retains_unknown_and_stops_before_compilation(self):
+        self.query_error = subprocess.TimeoutExpired("runtime-query", 90)
+        with self.assertRaisesRegex(ValueError, "expected 23C54, observed None"):
+            run.prepare(self.out, True, run.RUNTIME, "23C54")
+        proof = json.loads((self.out / "runtime-check-001.json").read_text())
+        self.assertEqual(self.query_timeouts, [90])
+        self.assertIsNone(proof["actualBuild"])
+        self.assertFalse(proof["matched"])
+        self.assertIn("90 seconds", proof["queryError"])
+        self.assertFalse((self.out / "source-sha256.json").exists())
+        self.assertFalse((self.out / "selectors.txt").exists())
+        self.assertEqual([a for a in self.commands if a[0] == "xcodebuild"], [["xcodebuild", "-version"]])
 
     def test_local_build_is_explicit_and_representative_cannot_substitute(self):
         with self.assertRaisesRegex(ValueError, "explicit expected runtime build"):

@@ -72,3 +72,9 @@ actionlint -shellcheck='' -pyflakes='' .github/workflows/ios-fixtures.yml
 ```
 
 The synthetic tests mock every native command/process. They cover sink gaps/duplicates/unknown data/limits, the prior empty-export failure, malformed marker pairs, PNG corruption/oversize/pending-recording text, bounded regular-file collection, graceful/forced capture cleanup, two bounded screenshot commands, unchanged one-selector720/900 invocation, preserving raw failure when collection fails, exact b359 source normalization, duplicate runtime identifiers with exact-build selection, missing-build refusal, actual boot mismatch retention/refusal, cross-PID coverage rejection, and cancellation after a zero test exit. They do not compile or execute the Swift instrumentation. No simulator/native-test/hosted operation was run in preparation.
+
+## Observed hosted setup follow-up
+
+Run42203081911 on commit161ab64 stopped before compilation or XCTest: bootstatus reported Finished, but the single runtime-build getenv query exceeded its30-second command deadline. No wrong build was observed; actualBuild remained unknown. The retained artifact and owned shutdown are separate from any app outcome.
+
+The follow-up allows90seconds for that one metadata query and records its elapsed time and deadline. It still makes one query per required phase, refuses unknown or mismatched builds, and adds no retry. Other command deadlines, overall workflow/step limits, original720/900test allowances, Swift instrumentation, selector and business assertions remain unchanged. Local wiring for the unchanged Swift overlay is retained at161ab64; the two added negative/bounded setup checks exercise only the revised environment guard.
