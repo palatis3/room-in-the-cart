@@ -114,9 +114,11 @@ import XCTest
         addTeardownBlock { [weak self] in
             // Restoring the system setting opens Settings before tearDownWithError.
             // Preserve the failed app screen while it is still on display.
-            await MainActor.run {
-                if let self, (self.testRun?.failureCount ?? 0) > 0 {
-                    self.captureSystemScreen("Reduce-Motion-failure-before-settings-restoration")
+            if let self {
+                await MainActor.run {
+                    if (self.testRun?.failureCount ?? 0) > 0 {
+                        self.captureSystemScreen("Reduce-Motion-failure-before-settings-restoration")
+                    }
                 }
             }
             try await FreeJourneyUITests.restoreReduceMotion(original)

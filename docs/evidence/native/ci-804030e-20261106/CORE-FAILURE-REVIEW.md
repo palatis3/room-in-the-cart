@@ -14,7 +14,7 @@ Original archives remain retained. The agent verified all209 UI10 extracted memb
 
 ## Follow-up screenshot correction (not covered by this run)
 
-The Reduce Motion test now captures a failed screen inside its teardown block before restoring the system setting. XCTest runs teardown blocks before `tearDownWithError`, which previously captured Settings after restoration. The new capture is failure-only; test actions, assertions, waits, system-setting restoration and pass criteria stay unchanged. Swift frontend parsing passes. No native execution of this follow-up has occurred, and it is not a fix for the Close-readiness failure.
+The Reduce Motion test now captures a failed screen inside its teardown block before restoring the system setting. XCTest runs teardown blocks before `tearDownWithError`, which previously captured Settings after restoration. The new capture is failure-only; test actions, assertions, waits, system-setting restoration and pass criteria stay unchanged. The complete FreeJourneyUITests file passes standalone iPhone-simulator type checking with the actual XCTest Swift overlay and zero diagnostics under local Xcode27.1. A weak capture is promoted to an immutable local before crossing into MainActor, avoiding a new concurrency warning. This is not a full target build. [Type-check scope](failure-capture-typecheck.json). No native execution of this follow-up has occurred, and it is not a fix for the Close-readiness failure.
 
 ## Saved-offer recording limitation
 
