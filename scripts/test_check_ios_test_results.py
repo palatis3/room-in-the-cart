@@ -500,6 +500,14 @@ class RuntimeWarningTests(unittest.TestCase):
             with self.subTest(changes=changes), self.assertRaisesRegex(ValueError, error):
                 self.inspect([OBSERVED_WARNING], [OBSERVED_WARNING], **changes)
 
+    def test_warning_without_an_issue_attachment_reports_the_original_message(self):
+        message = "Modifying state during view update, this will cause undefined behavior."
+        activity = {"title": message, "isAssociatedWithFailure": False}
+        with self.assertRaises(ValueError) as failure:
+            self.inspect([message], [message], run_changes={"activities": [activity]})
+        self.assertIn(message, str(failure.exception))
+        self.assertIn("Expected one Complete Issue Description.txt attachment, found 0", str(failure.exception))
+
     def test_new_message_selector_or_environment_does_not_inherit_an_allowance(self):
         for message, kwargs in (
             ("Unexpected layout warning", {}),

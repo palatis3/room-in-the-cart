@@ -198,8 +198,13 @@ def activity_warning_paths(activities, messages, parents=()):
         # XCTest exports runtime warnings as untyped, nonfailure issue records.
         # Assertion failures use the same attachment but are marked as failures.
         if title in messages or title == OBSERVED_WARNING or (kind is None and not failed and issue_files):
-            if kind is not None or failed or len(issue_files) != 1 or not title.strip():
+            if kind is not None or failed or not title.strip():
                 raise ValueError("Malformed XCTest runtime warning activity")
+            if len(issue_files) != 1:
+                raise ValueError(
+                    f"Malformed XCTest runtime warning activity {title!r}. "
+                    f"Expected one Complete Issue Description.txt attachment, found {len(issue_files)}."
+                )
             issue_id = issue_files[0].get("uuid")
             if not isinstance(issue_id, str) or not ISSUE_ATTACHMENT_UUID.fullmatch(issue_id):
                 raise ValueError("Invalid XCTest runtime warning activity attachment UUID")
