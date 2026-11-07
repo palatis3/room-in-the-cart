@@ -336,11 +336,11 @@ All 27 have current source entries. “Pending” below concerns current screen 
 
 | Route | Actual entry / current source | Evidence or next screen gate |
 |---|---|---|
-| S01 Shop | `RestorableAdultTabs` → `ShopView`; active pickup, quick packs, urgent repair, contextual inbox. | ORDINARY; final current root regression. |
+| S01 Shop | Shop opens Compare packs, Start pickup, Check one change, urgent repair and the authorized inbox. A selected pickup presents its name and available checkout or recovery action. | [First-visit comparison on iOS 17](evidence/native/first-pickup-change-20261107/iphone-se-verification.txt), ORDINARY. |
 | S02 List | Shop → `LedgerHomeView`; staged import/history/sort/print. | ORDINARY, SYSTEM-SELECTED-TEXT, SYSTEM-PRINT and IMPORT-VIEWPORT. The [Release list layout](evidence/native/ledger-surfaces-20261104/validation.json) passed standard text and largest system text in dark mode with increased contrast on iOS 17. English reached the full title and add-list action, filtered a row and moved it to Recently checked. Spanish opened the pickup and prior-staples menus, filtered a row and preserved its original food name. The unsigned arm64 device archive passed bundle verification. Physical assistive access, shared text, dictation, AirPrint and device latency remain open. |
 | S03 Facts | List/checkout → `LedgerFactsView` sheet. | N526, PICKUP-FACTS-HOLD; final physical cap/slot/cancel task. |
 | S04 Ingredient | List/meal → `LedgerIngredientView`; pack sheet and matching stock. Standalone `ComparisonView`. | ORDINARY stock pack/no-purchase cases; final promoted artifacts. |
-| S05 Checkout | Shop/list → `LedgerCheckoutEntry` → `PickupCheckoutView`; contextual quote entry. | ORDINARY, QUOTES, PICKUP-FACTS-HOLD; unknown/stock stale review. |
+| S05 Checkout | Shop/list → `LedgerCheckoutEntry` → `PickupCheckoutView`; contextual quote entry. | ORDINARY, QUOTES, PICKUP-FACTS-HOLD; unknown/stock stale review.  The [first-visit regression](evidence/native/first-pickup-change-20261107/iphone-se-verification.txt) also saves, cancels and reopens a retailer comparison with its original cap and observations. |
 | S06 Retailer handoff | Pickup → `PickupHandoffView`; connected `PlacementRecordsEntryView`. | N526, B175, HANDOFF-VERSION, SHARE-CANCELLATION. Physical external open and retailer return remain. |
 | S07 Offer | Pickup or Shop resume → `PickupOfferView` / editor sheet. | Scoped S07 UI and REMINDER-VIEWPORT; physical cutoff. |
 | S08 Arrivals/urgent | Pickup → `PickupArrivalView`; Shop → `UrgentRepairView`. | ORDINARY/STOCK; physical receipt. |
