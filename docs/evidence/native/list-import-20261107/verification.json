@@ -198,5 +198,15 @@
       "LocalStore: 74 passed, 0 deliberately skipped",
       "RecordArchive: 33 passed, 0 deliberately skipped"
     ]
+  },
+  "rangedQuantities": {
+    "nativeSource": "ce8bd62",
+    "testedWorkerCommit": "b28bbdeaf0b0a94e7648e3e93cfccb0339882285",
+    "before": "The list treated \"2 to 3 apples\" as exactly 2 and \"2 packs of 6 to 8 wraps\" as exactly 12. Structured capture could also misread a range endpoint as the destination.",
+    "result": "Retains independently known pack count or per-pack amount, the entered words, explicit destination and exclusions. The shopper can correct the total. The installed app reopened the 14-unit edit while keeping the original per-pack amount unresolved.",
+    "device": "iPhone 17 simulator, iOS 26.2",
+    "passed": 19,
+    "runtimeWarnings": 0,
+    "strictResultSHA256": "e92283a91cc6f5f1d2a507ed69e44d82f97bf1e341d0c56aa146aa857dc5c5f4"
   }
 }

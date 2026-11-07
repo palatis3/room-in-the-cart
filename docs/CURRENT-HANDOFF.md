@@ -10,6 +10,8 @@ Plain and selected-text imports keep the original package wording separately fro
 
 On an iPhone SE simulator running iOS 17.0, the shopper entered “2 cans of seltzer, 12 fl. oz. each” and reopened 24 US fluid ounces after restart. The SQLite record retained both 12-fluid-ounce cans and the exact label. The previous importer read “2 × 12 fl. oz. seltzer” as 24 individual items. Punctuated unsupported measures now ask for review. [Printed label and database checks](evidence/native/list-import-20261107/verification.json)
 
+English and Spanish quantity ranges now stay unresolved until the shopper enters an exact amount. On iOS 26.2 the shopper corrected a two-pack request with an uncertain six-to-eight wraps per pack to 14 units. Reopening the list showed the correction alongside the original range. [Range checks and source wording](evidence/native/list-import-20261107/verification.json)
+
 ## November 7 bilingual list import
 
 An English or Spanish measure now keeps its exact quantity in list entry and structured capture. On an iPhone SE running iOS 17, the shopper entered “1 1/2 cups of arroz”, merged “1 1/2 tazas de arroz”, and reopened the same item after restarting the app. The list showed 3/2 US cups. SQLite held one line, both original contributions and the duplicate link. The native capture regression also covers a two-pack Spanish fluid-ounce entry and unresolved spoon measures. The five new CoreDomain regressions are in the compiled package gate. [Verification record](evidence/native/list-import-20261107/verification.json)
@@ -63,6 +65,8 @@ A grant-bound withdrawal now recovers the original committed receipt after opt-o
 ## Request decision at large text sizes
 
 The protected lunch names and dates used to truncate on the request decision sheet at the largest Dynamic Type setting. Both labels now wrap, guidance contrast measures 7.08:1, and amounts read together with their labels. Eight iPhone 17 simulator checks passed on iOS 26.2. The standard layout still shows the $37.20 current checkout, $40.69 proposed checkout, $2.69 overage and both protected lunches together. Cancel leaves the basket untouched. The unfiltered accessibility audit reported 36 findings, including 14 with matching categories and labels in stock SwiftUI controls. Physical VoiceOver and the remaining audit findings are open. [Audit method and results](../diagnostics/request-review-accessibility/README.md)
+
+The assigned shopper can now open both checkout calculation details and the nested included charges by their named buttons on iOS 17. The cereal request showed a $1.99 fee, $0.75 tax, $0.10 deposit and $0.49 discount. Opening them left the basket and decision unchanged. Revoking shopper access removed the details, and a Spanish-speaking contributor could see their own request status. All eight selected checks passed on the iPhone SE simulator.
 
 ## November 7 release verification through schema 040
 
