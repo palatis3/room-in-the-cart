@@ -288,10 +288,10 @@
 				"RITC_HOUSEHOLD_SUBSCRIPTION_PRODUCT_ID" = "";
 				"RITC_PRIVACY_POLICY_URL" = "";
 				"RITC_TERMS_OF_USE_URL" = "";
-				"RITC_SUPPORT_URL" = "";
+				"RITC_SUPPORT_URL" = "https://room-in-the-cart-staging.vercel.app/support";
 				"RITC_SUPPORT_EMAIL" = "hello@roominthecart.com";
 				"RITC_OPERATOR_NAME" = "Venture House Group LLC";
-				"RITC_HELP_URL" = "";
+				"RITC_HELP_URL" = "https://room-in-the-cart-staging.vercel.app/help";
 				"RITC_EMAIL_OTP_ENABLED" = "NO";
 				"RITC_BUILD_ENVIRONMENT" = "Debug";
 			};
@@ -3316,10 +3316,10 @@
 				"RITC_HOUSEHOLD_SUBSCRIPTION_PRODUCT_ID" = "";
 				"RITC_PRIVACY_POLICY_URL" = "";
 				"RITC_TERMS_OF_USE_URL" = "";
-				"RITC_SUPPORT_URL" = "";
+				"RITC_SUPPORT_URL" = "https://room-in-the-cart-staging.vercel.app/support";
 				"RITC_SUPPORT_EMAIL" = "hello@roominthecart.com";
 				"RITC_OPERATOR_NAME" = "Venture House Group LLC";
-				"RITC_HELP_URL" = "";
+				"RITC_HELP_URL" = "https://room-in-the-cart-staging.vercel.app/help";
 				"RITC_EMAIL_OTP_ENABLED" = "NO";
 				"RITC_BUILD_ENVIRONMENT" = "Staging";
 			};

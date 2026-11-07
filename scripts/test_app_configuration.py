@@ -6,6 +6,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import xml.etree.ElementTree as ET
 
 from app_configuration import (PUBLIC_SETTINGS, build_settings, compiled_metadata,
                                load_configuration, require_release_metadata, valid_page_url, valid_support_email, valid_operator_name)
@@ -13,6 +14,15 @@ from check_built_app import verify_built_app
 
 
 class AppConfigurationTests(unittest.TestCase):
+
+    def test_staging_scheme_keeps_tests_profiles_and_archives_in_the_staging_environment(self):
+        schemes = Path(__file__).resolve().parents[1] / "ios/RoomInTheCart.xcodeproj/xcshareddata/xcschemes"
+        staging = ET.parse(schemes / "RoomInTheCart-Staging.xcscheme")
+        for action in ("TestAction", "LaunchAction", "ProfileAction", "AnalyzeAction", "ArchiveAction"):
+            with self.subTest(action=action):
+                self.assertEqual(staging.find(action).get("buildConfiguration"), "Staging")
+        release = ET.parse(schemes / "RoomInTheCart-Release.xcscheme")
+        self.assertEqual(release.find("ArchiveAction").get("buildConfiguration"), "Release")
     def test_release_does_not_inherit_staging(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

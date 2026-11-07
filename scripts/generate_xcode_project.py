@@ -117,7 +117,9 @@ def scheme(name, config, target_ids, local_storekit=False, performance=False):
     app = ref("app", "RoomInTheCart.app")
     tests = "".join('<TestableReference skipped="NO">' + ref(key, product) + ('<SkippedTests><Test Identifier="StoreKitScenarioTests"/></SkippedTests>' if key == "unit" else '') + '</TestableReference>' for key, product in target_ids)
     test_configuration = '<TestPlans><TestPlanReference reference="container:Tests/LocalStoreKit.xctestplan" default="YES"/></TestPlans>' if local_storekit else '<Testables>' + tests + '</Testables>'
-    test_attributes = 'buildConfiguration="Debug" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.IDEFoundation.Launcher.LLDB" shouldUseLaunchSchemeArgsEnv="YES"'
+    test_build = "Staging" if config == "Staging" else "Debug"
+    distribution_build = "Staging" if config == "Staging" else "Release"
+    test_attributes = f'buildConfiguration="{test_build}" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.IDEFoundation.Launcher.LLDB" shouldUseLaunchSchemeArgsEnv="YES"'
     if performance:
         test_configuration = (
             '<Testables><TestableReference skipped="NO">' + ref("ui", "RoomInTheCartUITests.xctest") +
@@ -135,9 +137,9 @@ def scheme(name, config, target_ids, local_storekit=False, performance=False):
   <BuildAction parallelizeBuildables="YES" buildImplicitDependencies="YES"><BuildActionEntries><BuildActionEntry buildForTesting="YES" buildForRunning="YES" buildForProfiling="YES" buildForArchiving="YES" buildForAnalyzing="YES">{app}</BuildActionEntry></BuildActionEntries></BuildAction>
   <TestAction {test_attributes}>{test_configuration}</TestAction>
   <LaunchAction buildConfiguration="{config}" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.IDEFoundation.Launcher.LLDB" launchStyle="0" useCustomWorkingDirectory="NO" ignoresPersistentStateOnLaunch="NO" debugDocumentVersioning="YES" debugServiceExtension="internal" allowLocationSimulation="YES"><BuildableProductRunnable runnableDebuggingMode="0">{app}</BuildableProductRunnable></LaunchAction>
-  <ProfileAction buildConfiguration="Release" shouldUseLaunchSchemeArgsEnv="YES" savedToolIdentifier="" useCustomWorkingDirectory="NO" debugDocumentVersioning="YES"><BuildableProductRunnable runnableDebuggingMode="0">{app}</BuildableProductRunnable></ProfileAction>
+  <ProfileAction buildConfiguration="{distribution_build}" shouldUseLaunchSchemeArgsEnv="YES" savedToolIdentifier="" useCustomWorkingDirectory="NO" debugDocumentVersioning="YES"><BuildableProductRunnable runnableDebuggingMode="0">{app}</BuildableProductRunnable></ProfileAction>
   <AnalyzeAction buildConfiguration="{config}"/>
-  <ArchiveAction buildConfiguration="Release" revealArchiveInOrganizer="YES"/>
+  <ArchiveAction buildConfiguration="{distribution_build}" revealArchiveInOrganizer="YES"/>
 </Scheme>
 '''
 
