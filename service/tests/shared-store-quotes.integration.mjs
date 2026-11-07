@@ -307,12 +307,20 @@ test('account erasure removes a later shopper’s delivery copy linked to a reda
   ok(await save(f.owner,f.command('shop.transferAuthority',{newShopperId:contributor.id})));
   const line={...f.lines[0],originalItem:'Source description supplied by the former shopper'};
   ok(await save(contributor,f.command('shop.patch',{quote:f.quote,lines:[line]},1,2)));
-  ok(await save(contributor,f.command('shop.reportPlaced',{occurredAt:new Date().toISOString()},2,2)));
-  ok(await save(f.owner,f.command('shop.transferAuthority',{newShopperId:f.owner.id},3,2)));
-  const body={placedRevision:2,supplyRevision:0,lineId:line.lineId,segmentKey:randomUUID(),foodName:line.originalItem,exclusionTags:[]};
-  const retained=f.command('delivery.register',body,3,3);
+  ok(await save(f.owner,f.command('shop.transferAuthority',{newShopperId:f.owner.id},2,2)));
+  const occurrenceId=randomUUID(),meal={title:'Later shopper meal',day:'2026-11-07',kind:'dinner',portions:2,protected:false};
+  ok(await save(f.owner,f.command('shop.patch',{quote:f.quote,lines:[line],mealEdit:{occurrenceId,baseMealRevision:null,meal}},2,3)));
+  ok(await save(f.owner,f.command('shop.reportPlaced',{occurredAt:new Date().toISOString()},3,3)));
+  const body={placedRevision:3,supplyRevision:0,lineId:line.lineId,segmentKey:randomUUID(),foodName:line.originalItem,exclusionTags:[]};
+  const retained=f.command('delivery.register',body,4,3);
   ok(await save(f.owner,retained));
   assert.equal(ok(await call(f.owner,evidence)).sources[0].foodName,line.originalItem);
+  const cook=f.command('cookCopy.save',{occurrenceId,mealRevision:3,placedRevision:3,supplyRevision:1,language:'en',text:line.originalItem},4,3);
+  const {copyId}=ok(await save(f.owner,cook));
+  const mark=f.command('cookCopy.markSent',{copyId,recipient:'Cook',previousSendId:null},4,3);
+  ok(await save(f.owner,mark));
+  const list=async()=>ok(await call(f.owner,f.path+'/cook-copies?occurrenceId='+occurrenceId)).copies;
+  const baseline=async()=>ok(await call(f.owner,f.path+'/cook-copies/baseline','POST',{occurrenceId,recipient:'Cook'})).baseline;
   const deletion={clientKey:randomUUID(),statusToken:randomBytes(32).toString('base64url'),confirm:true,
     households:[{householdId:f.h,organizer:'none',shops:[],eraseChildProfiles:[]}]};
   const earlier=await f.join('Other adult');
@@ -322,10 +330,21 @@ test('account erasure removes a later shopper’s delivery copy linked to a reda
   await maintenance.run({batchSize:1});
   assert.notEqual((await privacy.status(deletion.clientKey,deletion.statusToken)).status,'complete');
   await finishDeletion(deletion);
+  assert.deepEqual(await list(),[]);assert.equal(await baseline(),null);
+  assert.equal((await save(f.owner,cook)).data.error.code,'refresh_required');
+  assert.equal((await save(f.owner,mark)).data.error.code,'refresh_required');
   const erased=ok(await call(f.owner,evidence));
+  assert.equal(erased.meals[0].occurrenceId,occurrenceId);
+
   assert.deepEqual(erased.sources,[]);
   assert.deepEqual(erased.lines,[]);
   assert.equal(erased.supplyRevision,2);
+  const fresh=ok(await save(f.owner,f.command('cookCopy.save',{...cook.body,text:'Only the remaining meal facts',supplyRevision:2},4,3)));
+  const unrelated=await f.join('Later adult');
+  const laterDeletion={...deletion,clientKey:randomUUID(),statusToken:randomBytes(32).toString('base64url')};
+  ok(await call(unrelated,'/v1/privacy/deletions','POST',laterDeletion),202);
+  await finishDeletion(laterDeletion);
+  assert.deepEqual((await list()).map(c=>[c.copyId,c.version]),[[fresh.copyId,2]]);
   assert.equal((await save(f.owner,retained)).data.error.code,'refresh_required');
-  assert.equal((await save(f.owner,f.command('delivery.register',{...body,supplyRevision:2},3,3))).status,404);
+  assert.equal((await save(f.owner,f.command('delivery.register',{...body,supplyRevision:2},4,3))).status,404);
 });

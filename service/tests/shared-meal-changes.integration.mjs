@@ -176,7 +176,15 @@ test('account erasure removes accepted proposal copies and exact retry evidence 
    mealRevision:3,ingredientId:f.changed.planning.ingredients[0].id,groupId:f.changed.planning.groups[1].id,
    predecessorId:null,quantity},4);
  ok(await save(reserved));
+ const occurrenceId=f.proposal.occurrenceId;
+ const cook=send('cookCopy.save',{placedRevision:3,supplyRevision:5,occurrenceId,mealRevision:3,language:'es',text:'Instrucciones privadas del plan.'},4);
+ const dated=ok(await save(cook));
+ const mark=send('cookCopy.markSent',{copyId:dated.copyId,recipient:'Cocinera',previousSendId:null},4);
+ ok(await save(mark));
  await admin.query('SELECT ritc.privacy_erase_extension($1,$2)',[f.h,f.planner.id]);
+ assert.deepEqual(ok(await call(f.owner,f.path+'/cook-copies?occurrenceId='+occurrenceId)),{copies:[],nextCursor:null});
+ assert.deepEqual(ok(await call(f.owner,f.path+'/cook-copies/baseline','POST',{occurrenceId,recipient:'Cocinera'})),{baseline:null});
+ assert.equal((await save(cook)).status,409);assert.equal((await save(mark)).status,409);
  const after=await evidence();
  assert.deepEqual(after.meals,[]);assert.deepEqual(after.sources[0].matches,[]);assert.equal(after.supplyRevision,6);
  assert.deepEqual(after.sources[0].reservations,[]);assert.equal((await save(reserved)).status,409);
@@ -561,4 +569,82 @@ test('reservation erasure removes all revisions involving a former shopper witho
  assert.deepEqual((await f.coverage()).needs.map(n=>n.reservations),[[],[]]);
  assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.delivery_reservation WHERE household_id=$1',[f.h])).rows[0].n,0);
  assert.equal((await f.send(saved)).status,409);
+});
+
+test('dated cook copies keep exact sealed text; only an explicit recipient send advances its baseline',async()=>{
+ const f=await mealFixture(), occurrenceId=f.proposal.occurrenceId;
+ const command=(kind,body,base={shopRevision:3,authorityEpoch:1})=>({v:1,kind,body,base,clientKey:randomUUID(),shopId:f.shopId,replayWindow:f.owner.window});
+ const write=(c,actor=f.owner)=>call(actor,f.base+'/commands','POST',c);
+ const history=(actor=f.owner,cursor=null)=>call(actor,f.path+'/cook-copies?occurrenceId='+occurrenceId+(cursor?'&cursor='+cursor:''));
+ const baseline=(recipient,actor=f.owner)=>call(actor,f.path+'/cook-copies/baseline','POST',{occurrenceId,recipient});
+ const make=(text,language='en',supplyRevision=0)=>command('cookCopy.save',{placedRevision:2,supplyRevision,occurrenceId,mealRevision:2,language,text});
+ const mark=(copyId,recipient,previousSendId)=>command('cookCopy.markSent',{copyId,recipient,previousSendId});
+ const copy=make('  Wraps — ½ cup\nSave two.  ');
+ assert.equal((await history()).status,409);
+ ok(await write(command('shop.reportPlaced',{occurredAt:new Date().toISOString()},{shopRevision:2,authorityEpoch:1})));
+ assert.ok(ok(await call(f.owner,f.base+'/bootstrap')).capabilities.includes('cook_copies'));
+ const saved=ok(await write(copy));
+ assert.equal(saved.copyId,saved.operationId);
+ assert.equal(saved.disposition,'recorded');
+ assert.deepEqual(ok(await write(copy)),saved);
+ assert.equal((await write({...copy,body:{...copy.body,text:copy.body.text.trim()}})).data.error.code,'key_reused');
+ assert.equal((await write({...make('edited'),body:{...copy.body,mealRevision:1}})).status,404);
+ assert.equal((await write({...make('edited'),body:{...copy.body,occurrenceId:randomUUID()}})).status,404);
+ const old=ok(await history()).copies[0];
+ assert.deepEqual(old,{copyId:saved.copyId,shopId:f.shopId,occurrenceId,mealRevision:2,version:1,language:'en',text:copy.body.text,
+   placedRevision:2,shopRevision:3,authorityEpoch:1,supplyRevision:0,createdAt:old.createdAt});
+ assert.ok(Number.isFinite(Date.parse(old.createdAt)));assert.deepEqual(ok(await baseline('Ana')),{baseline:null});
+ assert.equal((await history(f.planner)).status,404);assert.equal((await baseline('Ana',f.planner)).status,404);
+ assert.equal((await write({...copy,replayWindow:f.planner.window},f.planner)).status,404);
+ ok(await write(command('delivery.register',{supplyRevision:0,placedRevision:2,lineId:f.initial.lines[0].lineId,segmentKey:randomUUID(),foodName:'Wraps',exclusionTags:[]})));
+ assert.equal((await write(make('Stale correction'))).data.error.code,'stale_supply');
+ const updated=ok(await write(make('Guardar dos porciones.','es',1)));
+ assert.deepEqual(ok(await baseline('Ana')),{baseline:null});
+ const first=mark(old.copyId,' Ana ',null), sent=ok(await write(first));
+ assert.deepEqual(ok(await write(first)),sent);
+ assert.equal(sent.copyId,old.copyId);assert.notEqual(sent.operationId,sent.copyId);
+ let last=ok(await baseline('Ana')).baseline;
+ assert.deepEqual(last.copy,old);assert.deepEqual(last.send,{sendId:sent.operationId,copyId:old.copyId,recipient:'Ana',sentAt:last.send.sentAt});
+ assert.ok(Number.isFinite(Date.parse(last.send.sentAt)));assert.deepEqual(ok(await baseline('Ben')),{baseline:null});
+ assert.equal((await write(mark(updated.copyId,'Ana',null))).data.error.code,'stale_base');
+ const contenders=[mark(updated.copyId,'Ana',sent.operationId),mark(updated.copyId,'Ana',sent.operationId)];
+ const competing=await Promise.all(contenders.map(c=>write(c)));
+ assert.deepEqual(competing.map(r=>r.status).sort(),[200,409]);
+ last=ok(await baseline('Ana')).baseline;
+ assert.equal(last.copy.version,2);assert.equal(last.copy.language,'es');assert.equal(last.copy.text,'Guardar dos porciones.');
+ assert.equal(last.send.sendId,competing.find(r=>r.status===200).data.operationId);
+ assert.deepEqual(ok(await write(first)),sent);assert.equal(ok(await baseline('Ana')).baseline.copy.copyId,updated.copyId);
+ ok(await write(mark(old.copyId,'Ben',null)));assert.equal(ok(await baseline('Ben')).baseline.copy.copyId,old.copyId);
+ assert.deepEqual(ok(await history()).copies.map(c=>c.copyId),[updated.copyId,old.copyId]);
+ // Household membership and service receipt retention do not own a historical copy.
+ await admin.query('DELETE FROM ritc.billing_seat WHERE household_id=$1',[f.h]);
+ await admin.query('DELETE FROM ritc.operation_response WHERE household_id=$1 AND operation_id=$2',[f.h,saved.operationId]);
+ assert.equal((await write(copy)).status,409);
+ assert.deepEqual(ok(await baseline('Ben')).baseline.copy,old);
+ for(let version=3;version<=22;version++) ok(await write(make('Reviewed version '+version,'en',1)));
+ const page=ok(await history());assert.equal(page.copies.length,20);
+ assert.equal(page.nextCursor,page.copies[19].copyId);
+ const tail=ok(await history(f.owner,page.nextCursor));assert.deepEqual(tail.copies.map(c=>c.version),[2,1]);assert.equal(tail.nextCursor,null);
+ assert.equal((await history(f.owner,randomUUID())).status,404);
+ assert.equal((await write(make('   ','en',1))).status,422);
+ // Shopper authority is rechecked for reads, new sends and exact retries.
+ ok(await write(command('shop.transferAuthority',{newShopperId:f.planner.id})));
+ assert.equal((await history()).status,404);assert.equal((await write(first)).status,404);
+ assert.equal(ok(await baseline('Ben',f.planner)).baseline.copy.copyId,old.copyId);
+ const wrongEpoch={...mark(old.copyId,'Fran',null),replayWindow:f.planner.window};
+ assert.equal((await write(wrongEpoch,f.planner)).status,409);
+ const newHead={...mark(updated.copyId,'Ben',ok(await baseline('Ben',f.planner)).baseline.send.sendId),
+   replayWindow:f.planner.window,base:{shopRevision:3,authorityEpoch:2}};
+ ok(await write(newHead,f.planner));assert.equal(ok(await baseline('Ben',f.planner)).baseline.copy.copyId,updated.copyId);
+ const formerCopy={...make('Later private wording','en',1),replayWindow:f.planner.window,base:{shopRevision:3,authorityEpoch:2}};
+ ok(await write(formerCopy,f.planner));assert.equal(ok(await history(f.planner)).copies[0].version,23);
+ await admin.query('SELECT ritc.privacy_erase_extension($1,$2)',[f.h,f.planner.id]);
+ assert.equal(ok(await baseline('Ben',f.planner)).baseline,null); // No resurrection of the earlier head.
+ assert.equal(ok(await baseline('Ana',f.planner)).baseline.copy.copyId,updated.copyId);
+ assert.equal((await write(newHead,f.planner)).status,409);
+ assert.equal((await write(formerCopy,f.planner)).status,409);
+ assert.equal(ok(await history(f.planner)).copies[0].version,22);
+ ok(await write(command('shop.transferAuthority',{newShopperId:f.owner.id},{shopRevision:3,authorityEpoch:2})));
+ ok(await write({...make('Next reviewed copy','es',1),base:{shopRevision:3,authorityEpoch:3}}));
+ assert.deepEqual(ok(await history()).copies.slice(0,2).map(c=>c.version),[24,22]);
 });

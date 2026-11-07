@@ -141,3 +141,41 @@ export interface DeliveryReservationCoverage {
 export interface DeliveryEvidencePageReservations { reservationsAvailable?: boolean }
 export interface DeliverySourceReservations { reservations?: DeliveryReservationHead[] }
 export interface DeliveryNeedReservations { reservations?: DeliveryReservationCoverage[] }
+
+export interface DatedCookCopyBody {
+  placedRevision: number;
+  supplyRevision: number;
+  occurrenceId: string;
+  mealRevision: number;
+  language: 'en' | 'es';
+  text: string;
+}
+export interface DatedCookCopy extends DatedCookCopyBody {
+  copyId: string;
+  shopId: string;
+  shopRevision: number;
+  authorityEpoch: number;
+  version: number;
+  createdAt: string;
+}
+export interface DatedCookCopyPage {
+  copies: DatedCookCopy[];
+  nextCursor: string | null;
+}
+export interface MarkCookCopySentBody {
+  copyId: string;
+  recipient: string;
+  previousSendId: string | null;
+}
+export interface DatedCookCopyReceipt extends ShopperReceipt {
+  kind: 'cookCopy.save' | 'cookCopy.markSent';
+  disposition: 'recorded';
+  copyId: string;
+}
+export interface CookCopyBaselineRequest { occurrenceId: string; recipient: string }
+export interface CookCopyBaseline {
+  baseline: {
+    copy: DatedCookCopy;
+    send: { sendId: string; copyId: string; recipient: string; sentAt: string };
+  } | null;
+}

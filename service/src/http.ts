@@ -1,3 +1,4 @@
+import { cookCopyBaseline, cookCopyHistory } from './cook-copy.js';
 import { readDelivery, readDeliveryCoverage } from './delivery-evidence.js';
 import { createServer, type IncomingMessage } from 'node:http';
 import { randomUUID, timingSafeEqual } from 'node:crypto';
@@ -300,6 +301,15 @@ export function createHTTPServer(options:HTTPOptions) {
           if(tail==='/placement-reports/current-shop'&&method==='GET')return placementReports.currentShop(ctx,shopId);
           const placementDetail=/^\/placement-reports\/([^/]+)$/.exec(tail??'');
           if(placementDetail&&method==='GET')return placementReports.detail(ctx,shopId,uuid.parse(placementDetail[1]));
+          if(tail==='/cook-copies' && method==='GET') {
+            const shop=await repository.shop(ctx,shopId.toLowerCase());repository.requireShopper(ctx,shop);
+            const cursor=url.searchParams.get('cursor');
+            return cookCopyHistory(ctx,shop,uuid.parse(url.searchParams.get('occurrenceId')),cursor===null?null:uuid.parse(cursor));
+          }
+          if(tail==='/cook-copies/baseline' && method==='POST') {
+            const shop=await repository.shop(ctx,shopId.toLowerCase());repository.requireShopper(ctx,shop);
+            return cookCopyBaseline(ctx,shop,payload);
+          }
           if((tail==='/delivery-evidence' || tail==='/delivery-evidence/coverage') && method==='GET'){
             const shop=await repository.shop(ctx,shopId.toLowerCase());repository.requireShopper(ctx,shop);
             if(tail==='/delivery-evidence/coverage') return readDeliveryCoverage(ctx,shop);
