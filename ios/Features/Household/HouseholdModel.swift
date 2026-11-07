@@ -56,6 +56,7 @@ struct DeviceReminderPersona: Equatable {
     private let sharedShopOutbox: OperationOutbox
     private let lifecycleStore: LifecycleIntentStore
     private let historyStore: HistoryPendingStore
+    let fallbackPendingStore: FallbackPendingStore
     private let quotePendingStore: StoreQuotesPendingStore
     let guardianIntentStore: GuardianIntentStore
     private let deviceRevocationStore: DeviceRevocationStore
@@ -94,6 +95,7 @@ struct DeviceReminderPersona: Equatable {
         lifecycleStore = LifecycleIntentStore(url: queueURL.deletingPathExtension().appendingPathExtension("lifecycle.json"))
         historyStore = HistoryPendingStore(url: queueURL.deletingPathExtension().appendingPathExtension("history.json"))
         placementStore = PlacementPendingStore(url: queueURL.deletingPathExtension().appendingPathExtension("placement.json"))
+        fallbackPendingStore = FallbackPendingStore(url: queueURL.deletingPathExtension().appendingPathExtension("fallback-recipes.json"))
         quotePendingStore = StoreQuotesPendingStore(url: queueURL.deletingPathExtension().appendingPathExtension("store-quotes.json"))
         deviceRevocationStore = DeviceRevocationStore(url: queueURL.deletingPathExtension().appendingPathExtension("devices.json"))
         let guardianNamespace = (bundle.bundleIdentifier ?? "RoomInTheCart") + (guardianChildOnly ? ".covered-child.guardian." : ".guardian.") + (bundle.object(forInfoDictionaryKey: "HouseholdServiceURL") as? String ?? "injected")
@@ -480,6 +482,7 @@ struct DeviceReminderPersona: Equatable {
         do { try await lifecycleStore.purge(householdID: householdID, memberID: intent.memberID, subject: subject) } catch { cleanupFailed = true }
         do { try await historyStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
         do { try await placementStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
+        do { try await fallbackPendingStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
         do { try await quotePendingStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
         do { try await guardianIntentStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
         do { try await deviceRevocationStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
@@ -543,6 +546,7 @@ struct DeviceReminderPersona: Equatable {
         do { try await lifecycleStore.purge() } catch { failed = true }
         do { try await historyStore.purge() } catch { failed = true }
         do { try await placementStore.purge() } catch { failed = true }
+        do { try await fallbackPendingStore.purge() } catch { failed = true }
         do { try await quotePendingStore.purge() } catch { failed = true }
         do { try await guardianIntentStore.purge() } catch { failed = true }
         do { try await deviceRevocationStore.purge() } catch { failed = true }
@@ -668,6 +672,8 @@ struct DeviceReminderPersona: Equatable {
             do { try await historyStore.purge() }
             catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
             do { try await placementStore.purge() }
+            catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
+            do { try await fallbackPendingStore.purge() }
             catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
             do { try await quotePendingStore.purge() }
             catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }

@@ -50,6 +50,11 @@ struct SharedRecoveryDeskView: View {
                         SharedRecoveryCoverageView(model: model, household: household, delivery: delivery)
                     }.accessibilityIdentifier("recovery.currentCoverage")
                 }
+                if model.scope.capabilities.contains("accepted_fallbacks") {
+                    NavigationLink(fallbackText("Household fallback recipes")) {
+                        SharedFallbackRoot(shop: model, household: household, page: page)
+                    }.accessibilityIdentifier("recovery.fallbackLibrary")
+                }
                 ForEach(page.meals) { meal in
                     Button { selection = Selection(meal: meal, page: page); applied = false } label: {
                         VStack(alignment: .leading) {

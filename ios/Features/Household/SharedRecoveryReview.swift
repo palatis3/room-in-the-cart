@@ -163,10 +163,7 @@ struct SharedRecoveryReview: View {
         checking = true
         defer { checking = false }
         let review = presentation
-        let candidate = SharedRecoveryIntent(occurrenceId: intent.occurrenceId, targetDigest: intent.targetDigest,
-            replacement: intent.replacement, reviewedAt: intent.reviewedAt, repeatOfOccurrenceId: intent.repeatOfOccurrenceId,
-            agreesToRepeat: repeatAgreement, proposesExtraTrip: intent.proposesExtraTrip, agreesToExtraTrip: tripAgreement,
-            acceptsUnresolved: unresolvedAgreement)
+        let candidate = intent.withFallbackAgreements(repeatMeal: repeatAgreement, extraTrip: tripAgreement, unresolved: unresolvedAgreement)
         do {
             let checked = try await model.previewMealRecovery(candidate, reviewed: page)
             guard review == presentation, allowed, scene == .active else { return }

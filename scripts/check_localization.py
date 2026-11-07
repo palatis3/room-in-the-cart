@@ -19,7 +19,7 @@ TABLES = {'tr': 'Localizable', 'message': 'Localizable',
           'SurfaceCopy.text': 'DeviceSurfaces', 'HistoryCopy.text': 'History', 'fd': 'History', 'PlacementCopy.text': 'Placement',
           'helpText': 'Help', 'StoreQuoteCopy.text': 'StoreQuotes', 'GuardianCopy.text': 'Guardian',
           'DeviceManagementCopy.text': 'DeviceManagement', 'requestDuplicateText': 'RequestDuplicates',
-          'sharedRecoveryText': 'Recovery', 'cookLabel': 'DeliveryCook'}
+          'sharedRecoveryText': 'Recovery', 'cookLabel': 'DeliveryCook', 'fallbackText': 'SharedFallback'}
 UI_CALLS = {'Text', 'Label', 'Button', 'Toggle', 'Section', 'Picker',
             'NavigationLink', 'ContentUnavailableView'}
 STRING = re.compile(r'"(?:\\.|[^"\\])*"')
