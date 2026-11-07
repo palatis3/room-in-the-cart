@@ -1,6 +1,6 @@
 import {pantryRevision,trackCookStockProvenance} from './pantry-lots.js';
 import type {Context,Shop} from './repository.js';
-import {cookCopyBaselineBody,cookCopySaveBody,cookCopySendBody} from './contracts.js';
+import {cookCorrectionBody,cookCopyBaselineBody,cookCopySaveBody,cookCopySendBody} from './contracts.js';
 import {ServiceError,unavailable} from './errors.js';
 
 type Kind='cookCopy.save'|'cookCopy.markSent';
@@ -51,6 +51,33 @@ export async function cookCopyBaseline(ctx:Context,shop:Shop,input:unknown) {
   return {baseline:{copy,send:{sendId,sentAt,recipient:name,copyId:copy.copyId}}};
 }
 
+// Called only after verifying the live shopper and their named paid seat. The
+// baseline pointer, both immutable versions and the current series head are read
+// together. A later copy or a source revision invalidates differences-only sharing.
+export async function cookCorrectionFacts(ctx:Context,shop:Shop,input:unknown) {
+  const placed=placedRevision(shop), review=cookCorrectionBody.parse(input);
+  const row=(await ctx.db.query(`SELECT cur.fact_index AS current_facts,prev.fact_index AS previous_facts,
+      cur.pantry_revision,cur.recovery_revision,
+      (cur.language=prev.language AND cur.version>=prev.version) AS compatible
+    FROM ritc.dated_cook_copy cur JOIN ritc.cook_copy_series series USING(household_id,shop_id,occurrence_id)
+    JOIN ritc.cook_copy_baseline b USING(household_id,shop_id,occurrence_id)
+    JOIN ritc.cook_copy_send send ON (send.household_id,send.send_id)=(b.household_id,b.send_id)
+    JOIN ritc.dated_cook_copy prev ON (prev.household_id,prev.shop_id,prev.occurrence_id,prev.copy_id)=
+      (b.household_id,b.shop_id,b.occurrence_id,send.copy_id)
+    WHERE (cur.household_id,cur.shop_id,cur.occurrence_id,cur.copy_id)=($1,$2,$3,$4)
+      AND prev.copy_id=$5 AND b.send_id=$6 AND b.recipient=$7 AND send.recipient=b.recipient
+      AND cur.version=series.last_version AND cur.shop_revision=$8 AND cur.placed_revision=$9
+      AND cur.authority_epoch=$10 AND cur.supply_revision=$11`,
+    [ctx.householdId,shop.shop_id,review.occurrenceId,review.copyId,review.previousCopyId,review.previousSendId,
+      review.recipient,shop.revision,placed,shop.authority_epoch,shop.supply_revision])).rows[0];
+  if(!row || (row.recovery_revision!==null && row.recovery_revision!==shop.recovery_revision) ||
+    (row.pantry_revision!==null && row.pantry_revision!==await pantryRevision(ctx))) {
+    throw new ServiceError(409,'stale_base','Review the current cook instruction and recipient again.');
+  }
+  return {copyId:review.copyId,previousCopyId:review.previousCopyId,previousSendId:review.previousSendId,
+    recipient:review.recipient,currentFacts:row.compatible?row.current_facts:null,previousFacts:row.compatible?row.previous_facts:null};
+}
+
 export async function cookCopyStillExists(ctx:Context,shop:Shop,kind:Kind,operationId:string) {
   const result=kind==='cookCopy.save'
     ? await ctx.db.query('SELECT 1 FROM ritc.dated_cook_copy WHERE household_id=$1 AND shop_id=$2 AND copy_id=$3',[ctx.householdId,shop.shop_id,operationId])
@@ -83,10 +110,10 @@ export async function recordCookCopy(ctx:Context,shop:Shop,kind:Kind,input:unkno
       VALUES($1,$2,$3,1) ON CONFLICT(household_id,shop_id,occurrence_id)
       DO UPDATE SET last_version=series.last_version+1 RETURNING last_version`,[...scope,row.occurrenceId]);
     await ctx.db.query(`INSERT INTO ritc.dated_cook_copy(household_id,shop_id,copy_id,occurrence_id,meal_revision,version,
-      shop_revision,placed_revision,authority_epoch,supply_revision,language,reviewed_text,actor_id,created_at,pantry_revision,recovery_revision,recovery_meal_id)
-      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
+      shop_revision,placed_revision,authority_epoch,supply_revision,language,reviewed_text,actor_id,created_at,pantry_revision,recovery_revision,recovery_meal_id,fact_index)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18::jsonb)`,
       [...scope,operationId,row.occurrenceId,row.mealRevision,series.rows[0]!.last_version,shop.revision,placed,shop.authority_epoch,
-        row.supplyRevision,row.language,row.text,ctx.member.member_id,ctx.now,row.pantryRevision??null,row.recoveryRevision??null,row.revisionId??null]);
+        row.supplyRevision,row.language,row.text,ctx.member.member_id,ctx.now,row.pantryRevision??null,row.recoveryRevision??null,row.revisionId??null,row.factIndex?JSON.stringify(row.factIndex):null]);
     if(row.pantryRevision!==undefined) await trackCookStockProvenance(ctx,shop,operationId);
     return operationId;
   }

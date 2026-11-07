@@ -40,11 +40,39 @@ const unicodeText = (maximum:number) => z.string().min(1).max(maximum)
   .refine(value=>value.trim().length>0 && !/[\u0000\uD800-\uDFFF]/u.test(value));
 const recipient = z.string().trim().pipe(unicodeText(80)).refine(value=>!/[\u0000-\u001F\u007F]/u.test(value));
 export const cookCopyBaselineBody = z.object({occurrenceId:copyId,recipient}).strict();
+export const cookCorrectionBody = z.object({
+  occurrenceId:copyId, copyId, previousCopyId:copyId, previousSendId:copyId, recipient,
+  destinationConfirmed:z.literal(true)
+}).strict();
+
+const cookFactSection = z.object({
+  key:z.string().max(300).regex(/^(?:meal|preparation|unplanned|scope|stamp|need(?:\.[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})+)$/),
+  bytes:z.number().int().min(1).max(48000), unresolved:z.boolean()
+}).strict();
+const cookFactIndex = z.object({version:z.literal(1),source:z.enum(['delivery','food','recovered']),sections:z.array(cookFactSection).min(2).max(256)}).strict();
+function matchesReviewedCopy(text:string,index:z.infer<typeof cookFactIndex>) {
+  const {sections}=index;
+  if(sections[0]?.key!=='meal'||sections.at(-2)?.key!=='scope'||sections.at(-1)?.key!=='stamp'||new Set(sections.map(s=>s.key)).size!==sections.length) return false;
+  const bytes=Buffer.from(text);
+  let offset=0;
+  for(const [i,section] of sections.entries()) {
+    const end=offset+section.bytes;
+    if(end>bytes.length || !Buffer.from(bytes.subarray(offset,end).toString('utf8')).equals(bytes.subarray(offset,end))) return false;
+    if(i===sections.length-1) return end===bytes.length && !section.unresolved;
+    if(bytes[end]!==10 || (section.key!=='scope' && bytes[end+1]!==10)) return false;
+    offset=end+(section.key==='scope'?1:2);
+  }
+  return false;
+}
+
 export const cookCopySaveBody = z.object({
   placedRevision:copyRevision, pantryRevision:z.number().int().min(0).max(2_147_483_647).optional(), supplyRevision:z.number().int().min(0).max(2_147_483_647),
   occurrenceId:copyId, mealRevision:copyRevision, language:z.enum(['en','es']), text:unicodeText(16000),
-  recoveryRevision:copyRevision.optional(),revisionId:copyId.optional(),
-}).strict().refine(row=>(row.recoveryRevision===undefined)===(row.revisionId===undefined) && (row.revisionId===undefined || row.pantryRevision!==undefined));
+  recoveryRevision:copyRevision.optional(),revisionId:copyId.optional(), factIndex:cookFactIndex.optional(),
+}).strict().refine(row=>(row.recoveryRevision===undefined)===(row.revisionId===undefined) && (row.revisionId===undefined || row.pantryRevision!==undefined))
+  .refine(row=>row.factIndex===undefined || (matchesReviewedCopy(row.text,row.factIndex)
+    && (row.factIndex.source==='delivery')===(row.pantryRevision===undefined)
+    && (row.revisionId===undefined || row.factIndex.source==='recovered')));
 export const cookCopySendBody = z.object({copyId,recipient,previousSendId:copyId.nullable()}).strict();
 export const recoveryApplyBody = recoveryPreviewSchema.extend({
   previewId:copyId, previewDigest:z.string().regex(/^[0-9a-f]{64}$/),

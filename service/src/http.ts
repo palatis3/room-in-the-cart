@@ -1,6 +1,6 @@
 import {previewCurrentPantryObservation,readSharedRecoveryCoverage} from './shared-recovery-basis.js';
 import {loadRecoveryPublication,previewSharedRecovery,readRecoveryDesk} from './shared-recovery-publication.js';
-import { cookCopyBaseline, cookCopyHistory } from './cook-copy.js';
+import { cookCorrectionFacts, cookCopyBaseline, cookCopyHistory } from './cook-copy.js';
 import { readPantry, readJointCoverage } from './pantry-lots.js';
 import { readDelivery, readDeliveryCoverage } from './delivery-evidence.js';
 import { createServer, type IncomingMessage } from 'node:http';
@@ -322,6 +322,12 @@ export function createHTTPServer(options:HTTPOptions) {
             const shop=await repository.shop(ctx,shopId.toLowerCase());repository.requireShopper(ctx,shop);
             const cursor=url.searchParams.get('cursor');
             return cookCopyHistory(ctx,shop,uuid.parse(url.searchParams.get('occurrenceId')),cursor===null?null:uuid.parse(cursor));
+          }
+          if(tail==='/cook-copies/correction' && method==='POST') {
+            const shop=await repository.shop(ctx,shopId.toLowerCase());repository.requireShopper(ctx,shop);
+            if(!options.billing) throw new ServiceError(503,'billing_unavailable','Try again when membership can be verified.');
+            await options.billing.requirePaidSeat(ctx);
+            return cookCorrectionFacts(ctx,shop,payload);
           }
           if(tail==='/cook-copies/baseline' && method==='POST') {
             const shop=await repository.shop(ctx,shopId.toLowerCase());repository.requireShopper(ctx,shop);

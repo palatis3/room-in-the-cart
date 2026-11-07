@@ -573,6 +573,56 @@ test('reservation erasure removes all revisions involving a former shopper witho
  assert.equal((await f.send(saved)).status,409);
 });
 
+test('reviewed cook sections require the current source, explicit recipient baseline and live named seat',async()=>{
+ const f=await mealFixture(), occurrenceId=f.proposal.occurrenceId;
+ const command=(kind,body,base={shopRevision:3,authorityEpoch:1})=>({
+   v:1,kind,body,base,clientKey:randomUUID(),shopId:f.shopId,replayWindow:f.owner.window});
+ const write=c=>call(f.owner,f.base+'/commands','POST',c);
+ ok(await write(command('shop.reportPlaced',{occurredAt:new Date().toISOString()},{shopRevision:2,authorityEpoch:1})));
+ const ingredient='need.'+randomUUID(), label='Ana 🥣';
+ const save=(amount,generated=true)=>{
+   const rows=[['meal','Cena\n\ncon frijoles',false],[ingredient,amount,true],['scope','Entregas confirmadas',false],['stamp','Revisión 2',false]];
+   const factIndex={version:1,source:'delivery',sections:rows.map(([key,text,unresolved])=>({key,bytes:Buffer.byteLength(text),unresolved}))};
+   return command('cookCopy.save',{placedRevision:2,supplyRevision:0,occurrenceId,mealRevision:2,language:'es',
+     text:rows.slice(0,-1).map(r=>r[1]).join('\n\n')+'\n'+rows.at(-1)[1],...(generated?{factIndex}:{})});
+ };
+ const first=save('Faltan 2 porciones'); const firstId=ok(await write(first)).copyId;
+ const sent=ok(await write(command('cookCopy.markSent',{copyId:firstId,recipient:label,previousSendId:null}))).operationId;
+ const second=save('Falta 1 porción'); const secondId=ok(await write(second)).copyId;
+ const review={occurrenceId,copyId:secondId,previousCopyId:firstId,previousSendId:sent,recipient:label,destinationConfirmed:true};
+ const check=(fields={},actor=f.owner)=>call(actor,f.path+'/cook-copies/correction','POST',{...review,...fields});
+ const facts=ok(await check());assert.deepEqual(facts.currentFacts,second.body.factIndex);assert.deepEqual(facts.previousFacts,first.body.factIndex);
+ assert.equal(facts.previousSendId,sent);
+ assert.equal((await check({recipient:'Ana'})).status,409);
+ assert.equal((await check({destinationConfirmed:false})).status,422);
+ assert.equal((await check({previousSendId:randomUUID()})).status,409);
+ assert.equal((await check({copyId:firstId})).status,409);
+ assert.equal((await check({},f.planner)).status,404);
+ const invalid=save('Invalid index');invalid.body.factIndex.sections[0].bytes--;
+ assert.equal((await write(invalid)).status,422);
+ const manual=ok(await write(save('Mi texto privado',false))).copyId;
+ assert.equal(ok(await check({copyId:manual})).currentFacts,null);
+ assert.equal((await check()).status,409);
+ const manualSend=ok(await write(command('cookCopy.markSent',{copyId:manual,recipient:label,previousSendId:sent}))).operationId;
+ const newer=ok(await write(save('Otra versión'))).copyId;
+ assert.equal(ok(await check({copyId:newer,previousCopyId:manual,previousSendId:manualSend})).previousFacts,null);
+ const latest={copyId:newer,previousCopyId:manual,previousSendId:manualSend};
+ await admin.query("UPDATE ritc.billing_seat SET display_name='Different name' WHERE household_id=$1 AND member_id=$2",[f.h,f.owner.id]);
+ assert.equal(ok(await check(latest)).copyId,newer);
+ const state=(await admin.query('SELECT subscription FROM ritc.billing_state WHERE household_id=$1',[f.h])).rows[0].subscription;
+ await admin.query('UPDATE ritc.billing_state SET subscription=$2 WHERE household_id=$1',[f.h,{...state,expiresAt:Date.now()-1000}]);
+ assert.equal((await check(latest)).data.error.code,'membership_inactive');
+ await admin.query('UPDATE ritc.billing_state SET subscription=$2 WHERE household_id=$1',[f.h,state]);
+ ok(await write(command('delivery.register',{supplyRevision:0,placedRevision:2,lineId:f.initial.lines[0].lineId,segmentKey:randomUUID(),foodName:'Beans',exclusionTags:[]})));
+ assert.equal((await check(latest)).data.error.code,'stale_base');
+ await admin.query('DELETE FROM ritc.billing_seat WHERE household_id=$1 AND member_id=$2',[f.h,f.owner.id]);
+ assert.equal((await check({copyId:newer,previousCopyId:manual,previousSendId:manualSend})).data.error.code,'membership_inactive');
+ const history=ok(await call(f.owner,f.path+'/cook-copies?occurrenceId='+occurrenceId));
+ assert.equal(history.copies.find(c=>c.copyId===firstId).text,first.body.text);
+ assert.equal(history.copies.some(c=>'factIndex' in c),false);
+ assert.equal(ok(await call(f.owner,f.path+'/cook-copies/baseline','POST',{recipient:label,occurrenceId})).baseline.send.sendId,manualSend);
+});
+
 test('dated cook copies keep exact sealed text; only an explicit recipient send advances its baseline',async()=>{
  const f=await mealFixture(), occurrenceId=f.proposal.occurrenceId;
  const command=(kind,body,base={shopRevision:3,authorityEpoch:1})=>({v:1,kind,body,base,clientKey:randomUUID(),shopId:f.shopId,replayWindow:f.owner.window});
