@@ -212,7 +212,7 @@ private struct SharedPantryObservationView: View {
             checked = .init(edit: edit, preview: proposed, quantity: value)
             error = nil
         } catch {
-            error = ht("Check the quantity and refresh the batch before reviewing again.")
+            self.error = ht("Check the quantity and refresh the batch before reviewing again.")
         }
     }
 
