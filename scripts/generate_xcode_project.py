@@ -120,6 +120,13 @@ def scheme(name, config, target_ids, local_storekit=False, performance=False):
     test_build = "Staging" if config == "Staging" else "Debug"
     distribution_build = "Staging" if config == "Staging" else "Release"
     test_attributes = f'buildConfiguration="{test_build}" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.IDEFoundation.Launcher.LLDB" shouldUseLaunchSchemeArgsEnv="YES"'
+    if config == "Staging":
+        smoke_suites = {"unit": "StagingServiceTests", "ui": "StagingHelpUITests"}
+        test_configuration = '<Testables>' + "".join(
+            '<TestableReference skipped="NO">' + ref(key, product) +
+            f'<SelectedTests><Test Identifier="{smoke_suites[key]}"/></SelectedTests></TestableReference>'
+            for key, product in target_ids
+        ) + '</Testables>'
     if performance:
         test_configuration = (
             '<Testables><TestableReference skipped="NO">' + ref("ui", "RoomInTheCartUITests.xctest") +

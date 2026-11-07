@@ -21,6 +21,8 @@ class AppConfigurationTests(unittest.TestCase):
         for action in ("TestAction", "LaunchAction", "ProfileAction", "AnalyzeAction", "ArchiveAction"):
             with self.subTest(action=action):
                 self.assertEqual(staging.find(action).get("buildConfiguration"), "Staging")
+        selected = staging.findall("TestAction/Testables/TestableReference/SelectedTests/Test")
+        self.assertEqual({test.get("Identifier") for test in selected}, {"StagingServiceTests", "StagingHelpUITests"})
         release = ET.parse(schemes / "RoomInTheCart-Release.xcscheme")
         self.assertEqual(release.find("ArchiveAction").get("buildConfiguration"), "Release")
     def test_release_does_not_inherit_staging(self):

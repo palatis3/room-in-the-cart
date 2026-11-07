@@ -56,6 +56,7 @@ final class RequestDuplicateComparisonTests: XCTestCase {
         XCTAssertEqual(before[0].id,after[0].id)
         XCTAssertEqual(after[0].requests.map(\.revision),[2,1])
     }
+    #if DEBUG
     func testFixtureInterceptsUnexpectedNetworkDestinations() {
         let unexpected = URLRequest(url:URL(string:"https://example.com/inbox")!)
         XCTAssertTrue(S23DuplicateFixtureProtocol.canInit(with:unexpected))
@@ -146,4 +147,5 @@ final class RequestDuplicateComparisonTests: XCTestCase {
         XCTAssertEqual(model.requests.first { $0.id == lee.id },lee)
         XCTAssertEqual(model.shop?.lines.first?.packs,1)
     }
+    #endif
 }

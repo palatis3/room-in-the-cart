@@ -2,6 +2,8 @@
 
 `public-contact.json` supplies the user-provided operator business, **Venture House Group LLC**, and public support address, `hello@roominthecart.com`, to all native environments. An environment can explicitly override or blank `operatorName` or `supportEmail`. No email is sent by configuration. `staging.json` supplies Debug and Staging. `release.json` supplies Release. If it is absent, optional connected features and external help/billing destinations remain unconfigured. Copy `release.example.json` to `release.json` when the owner has the real production values, then regenerate the committed Xcode project with `python3 scripts/generate_xcode_project.py`. These files and generated settings are public; keep server keys, passwords, signing material and App Store API keys elsewhere.
 
+Xcode’s RoomInTheCart-Staging scheme runs, tests, profiles and archives the staging bundle. Its test action checks the deployed service anonymously and opens the published Help and Support pages from the native app. Use an internet-connected iPhone simulator with Safari for those checks. The RoomInTheCart scheme runs the ordinary Debug suites.
+
 | JSON key | Compiled app key | Owner-supplied value |
 | --- | --- | --- |
 | `environment` | — | `staging` or `production`, matching the file |
