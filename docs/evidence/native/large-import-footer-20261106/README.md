@@ -1,0 +1,9 @@
+# Large-import confirmation stays reachable
+
+The single Add reviewed list action now occupies a preview-only bottom safe-area inset. It reserves Form space, wraps at large text and retains the same explicit import/duplicate/capture authorization handler. Pending save disables Add. Active saving/error/recovery status moves to a scrollable Form section with a requested scroll/focus; ordinary saved context remains in its prior section when no issue is active. No source row, decision, validation or cancellation behavior was removed.
+
+The existing500-line largest-text native Paste/edit/Review journey gained immediate single-action visibility/geometry assertions. Old production code failed exactly the new presence assertion in69.934s. Fixed code passes that journey (54.915s), duplicate/edit-original/restart/merge (100.24s) and long filtered-list Cancel/detail-return (69.775s). Strict3/3, zero runtime warnings/restarts, on local Xcode27.1/iPhone17/iOS26.2(23C54). Four existing unavailable-Sendable diagnostics appear as eight compiler-warning lines.
+
+Root viewed the scoped largest-text screenshot: the whole wrapped action is visible below the reserved Form region. All457fixed source hashes match; negative and fixed manifests differ only in the production view, with the regression test unchanged. The owned simulator was removed. Full retained runs/source snapshots are in `.build/LargeImportFooter20261106/`, pinned by freeze-reference.json.
+
+Failed-save recovery scrolling/focus, Retry/Discard at large text and actual preview-keyboard behavior remain separate native validation; ordinary passing journeys do not prove them. The retained recovery plan uses a real temporary SQLite writer lock against synthetic data, with acknowledged release and no production hook. Physical VoiceOver and minimum-OS/Spanish footer validation are not claimed. No performance baseline, original hosted result, or release gate was relaxed.

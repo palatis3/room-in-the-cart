@@ -1,0 +1,11 @@
+Executed 3 of 3 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartUITests/FreeJourneyUITests/testStagedListCanReturnToOriginalAndMergeADuplicateAfterRestart | Passed | 100.24 |
+| RoomInTheCartUITests/FreeJourneyUITests/testCancelledImportAndIngredientReturnPreserveLongFilteredListContext | Passed | 69.77 |
+| RoomInTheCartUITests/ContextualNavigationUITests/testLargeTextKeepsLongNativePasteEditableAndReviewReachable | Passed | 54.91 |
+The XCTest log confirms one start and one passing completion per selected test.
+
+The XCTest test export recorded 0 runtime warning occurrences across 3 examined tests.
+

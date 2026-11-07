@@ -122,6 +122,14 @@ import UIKit
         let previewAmount = app.textFields.matching(NSPredicate(format: "placeholderValue == %@", "Amount, unknown if blank")).firstMatch
         XCTAssertTrue(previewAmount.waitForExistence(timeout: 8), "Tapping Review list must show an editable staged row")
         XCTAssertFalse(editor.exists)
+        let commitActions = app.buttons.matching(identifier: "ledgerCommitImport")
+        let commit = commitActions.firstMatch
+        XCTAssertTrue(commit.waitForExistence(timeout: 5), "The reviewed-list action must be present without scrolling through 500 preview rows")
+        XCTAssertEqual(commitActions.count, 1, "Review must have one confirmation action")
+        XCTAssertTrue(commit.isHittable && commit.isEnabled, "A complete distinct-line preview must be confirmable from the current viewport")
+        XCTAssertGreaterThanOrEqual(commit.frame.minY, navigation.frame.maxY)
+        XCTAssertLessThanOrEqual(commit.frame.maxY, app.windows.firstMatch.frame.maxY)
+        XCTAssertGreaterThanOrEqual(commit.frame.height, 44)
         capture("S02-editable-staged-preview-at-largest-text")
     }
 
