@@ -38,7 +38,7 @@ class PlanIOSFixtureTests(unittest.TestCase):
         isolated = {f"{suite}-{method.rsplit('/', 1)[1]}"
                     for suite in ISOLATED_SUITES for method in self.inventory[suite]}
         self.assertCountEqual(actual, grouped | isolated)
-        self.assertEqual(len(actual), 15)
+        self.assertEqual(len(actual), 16)
         self.assertIn("RecipeLibraryAcceptanceUITests", suites_for("contributor"))
         self.assertIn("CorrectionPrivacyAcceptanceUITests", suites_for("contributor"))
         self.assertNotIn("LibraryPrivacyUITestCase", actual)
@@ -82,10 +82,13 @@ class PlanIOSFixtureTests(unittest.TestCase):
         self.assertEqual(set(plans["dinner"]["shards"]), {"DinnerDecisionSheetUITests"})
         self.assertEqual(plans["dinner"]["shards"]["DinnerDecisionSheetUITests"]["suite"], "DinnerDecisionSheetUITests")
         self.assertEqual(sum(len(shard["test_identifiers"]) for plan in plans.values()
-                             for shard in plan["shards"].values()), 57)
+                             for shard in plan["shards"].values()), 59)
         deadline = f"{UI_TARGET}/SharedMealChangeUITests/testShopperReviewsRepeatedClockTimeThenMovesDayWithoutExtendingDeadline"
         shared_edits = plans["contributor"]["shards"]["contributor-balanced-05"]["test_identifiers"]
         self.assertIn(deadline, [value.removesuffix("()") for value in shared_edits])
+        fallbacks = plans["contributor"]["shards"]["SharedFallbackUITests"]
+        self.assertEqual(fallbacks["suite"], "SharedFallbackUITests")
+        self.assertEqual(len(fallbacks["test_identifiers"]), 2)
         delivery = plans["contributor"]["shards"]["SharedDeliveryUITests"]
         self.assertEqual(delivery["suite"], "SharedDeliveryUITests")
         self.assertEqual({identifier.removesuffix("()") for identifier in delivery["test_identifiers"]},

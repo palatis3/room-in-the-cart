@@ -86,6 +86,9 @@ def target(key, name, source_paths, product_type, bundle, dependencies=(), packa
         if storekit.exists():
             resources.append(build_file(str(storekit.relative_to(IOS)), "text.json"))
     elif key == "ui":
+        snapshot = IOS / "UITests/Fixtures/SharedFallbackShop.json"
+        if snapshot.exists():
+            resources.append(build_file(str(snapshot.relative_to(IOS)), "text.json"))
         fixture = IOS / "UITests/Fixtures/ReleaseLedger500.txt"
         if fixture.exists():
             resources.append(build_file(str(fixture.relative_to(IOS)), "text"))

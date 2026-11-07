@@ -1,0 +1,1478 @@
+{
+  "shop": {
+    "shopRevision": 5,
+    "authorityEpoch": 1,
+    "phase": "placed",
+    "lines": [
+      {
+        "lineId": "6273fb67-6a4c-46e7-bcd7-037b509b7369",
+        "originalItem": "Private basket source",
+        "packs": 1,
+        "feeEligible": true,
+        "unitPriceMinor": 10000
+      }
+    ],
+    "frozenRevision": 4,
+    "placedRevision": 4,
+    "storeBasisRevision": null,
+    "storeReviewRequired": false
+  },
+  "delivery": {
+    "shopId": "44444444-4444-4444-8444-444444444444",
+    "placedRevision": 4,
+    "shopRevision": 5,
+    "authorityEpoch": 1,
+    "recoveryRevision": 0,
+    "supplyRevision": 5,
+    "asOf": "2026-11-07T16:40:24.372Z",
+    "coverageAvailable": true,
+    "reservationsAvailable": true,
+    "lines": [{"lineId": "6273fb67-6a4c-46e7-bcd7-037b509b7369", "name": "Private basket source"}],
+    "meals": [
+      {
+        "occurrenceId": "46188eaa-79b6-41e6-8a54-2e794eedc922",
+        "revision": 2,
+        "meal": {
+          "day": "2026-11-05",
+          "kind": "dinner",
+          "title": "Reviewed supper",
+          "planning": {
+            "groups": [
+              {
+                "id": "5dcad6e5-6212-4a93-9ea0-2b73be7dd369",
+                "name": "Dinner group",
+                "servings": {"numerator": 4, "denominator": 1},
+                "protected": false
+              },
+              {
+                "id": "18547ff3-a7a4-4a91-be3e-52dd306b5b2b",
+                "name": "Protected lunch",
+                "servings": {"numerator": 2, "denominator": 1},
+                "protected": true
+              }
+            ],
+            "bindings": [
+              {
+                "id": "449f0f4e-4bdc-4f90-8838-34d3a8cc0f59",
+                "groupId": "5dcad6e5-6212-4a93-9ea0-2b73be7dd369",
+                "quantity": {"unit": "gram", "amount": {"numerator": 400, "denominator": 1}, "originalLiteral": "400 g"},
+                "ingredientId": "5b991304-76fd-4699-8b95-19a877093326"
+              },
+              {
+                "id": "c9f436c5-1633-4fd0-aea1-95559ac64a52",
+                "groupId": "18547ff3-a7a4-4a91-be3e-52dd306b5b2b",
+                "quantity": {"unit": "gram", "amount": {"numerator": 200, "denominator": 1}, "originalLiteral": "200 g"},
+                "ingredientId": "5b991304-76fd-4699-8b95-19a877093326"
+              }
+            ],
+            "ingredients": [
+              {
+                "id": "5b991304-76fd-4699-8b95-19a877093326",
+                "name": "Beans",
+                "groupIds": ["5dcad6e5-6212-4a93-9ea0-2b73be7dd369", "18547ff3-a7a4-4a91-be3e-52dd306b5b2b"],
+                "quantity": {"unit": "gram", "amount": {"numerator": 600, "denominator": 1}, "originalLiteral": "600 g"},
+                "exclusions": ["No sesame"]
+              }
+            ],
+            "sourceOccurrenceId": "b54963fa-b5cd-4abe-9a93-bdca504dfd07"
+          },
+          "portions": 6,
+          "protected": false
+        }
+      },
+      {
+        "occurrenceId": "5b0cbe00-1fcc-4b74-b5ce-ee252ff3debe",
+        "revision": 3,
+        "meal": {
+          "day": "2098-11-11",
+          "kind": "dinner",
+          "title": "Reviewed supper",
+          "planning": {
+            "groups": [
+              {
+                "id": "5dcad6e5-6212-4a93-9ea0-2b73be7dd369",
+                "name": "Dinner group",
+                "servings": {"numerator": 4, "denominator": 1},
+                "protected": false
+              },
+              {
+                "id": "18547ff3-a7a4-4a91-be3e-52dd306b5b2b",
+                "name": "Protected lunch",
+                "servings": {"numerator": 2, "denominator": 1},
+                "protected": true
+              }
+            ],
+            "bindings": [
+              {
+                "id": "449f0f4e-4bdc-4f90-8838-34d3a8cc0f59",
+                "groupId": "5dcad6e5-6212-4a93-9ea0-2b73be7dd369",
+                "quantity": {"unit": "count", "amount": {"numerator": 4, "denominator": 1}, "originalLiteral": "4"},
+                "ingredientId": "5b991304-76fd-4699-8b95-19a877093326"
+              },
+              {
+                "id": "c9f436c5-1633-4fd0-aea1-95559ac64a52",
+                "groupId": "18547ff3-a7a4-4a91-be3e-52dd306b5b2b",
+                "quantity": {"unit": "count", "amount": {"numerator": 2, "denominator": 1}, "originalLiteral": "2"},
+                "ingredientId": "5b991304-76fd-4699-8b95-19a877093326"
+              }
+            ],
+            "deadline": {"at": "2098-11-11T18:00:00.000Z", "zone": "UTC"},
+            "ingredients": [
+              {
+                "id": "5b991304-76fd-4699-8b95-19a877093326",
+                "name": "Beans",
+                "groupIds": ["5dcad6e5-6212-4a93-9ea0-2b73be7dd369", "18547ff3-a7a4-4a91-be3e-52dd306b5b2b"],
+                "quantity": {"unit": "count", "amount": {"numerator": 6, "denominator": 1}, "originalLiteral": "6"},
+                "exclusions": ["No sesame"]
+              }
+            ],
+            "sourceOccurrenceId": "b54963fa-b5cd-4abe-9a93-bdca504dfd07"
+          },
+          "portions": 6,
+          "protected": false
+        }
+      }
+    ],
+    "sources": [
+      {
+        "sourceId": "97cafaf7-7ada-4149-acb5-a3722c1f7443",
+        "foodId": "97cafaf7-7ada-4149-acb5-a3722c1f7443",
+        "lineId": "6273fb67-6a4c-46e7-bcd7-037b509b7369",
+        "segmentKey": "ba69e9e8-8cc0-4384-b86d-5e8b993a1f6b",
+        "foodName": "Wraps",
+        "exclusionTags": [],
+        "matches": [
+          {
+            "ingredientId": "5b991304-76fd-4699-8b95-19a877093326",
+            "mealRevision": 3,
+            "occurrenceId": "5b0cbe00-1fcc-4b74-b5ce-ee252ff3debe"
+          }
+        ],
+        "reservations": [
+          {
+            "groupId": "18547ff3-a7a4-4a91-be3e-52dd306b5b2b",
+            "quantity": {"unit": "count", "amount": {"numerator": 2, "denominator": 1}, "originalLiteral": "2"},
+            "ingredientId": "5b991304-76fd-4699-8b95-19a877093326",
+            "mealRevision": 3,
+            "occurrenceId": "5b0cbe00-1fcc-4b74-b5ce-ee252ff3debe",
+            "reservationId": "44dc8230-146a-43c9-80df-2540f09c1864"
+          }
+        ],
+        "arrival": {
+          "received": {"unit": "count", "amount": {"numerator": 6, "denominator": 1}, "originalLiteral": "6"},
+          "sourceId": "97cafaf7-7ada-4149-acb5-a3722c1f7443",
+          "arrivedAt": "2026-11-07T16:40:22.290Z",
+          "observationId": "3ed72c54-a64f-4cd1-9d44-dda8511fbb13",
+          "predecessorId": null,
+          "supplyRevision": 2
+        },
+        "usable": {
+          "usable": {"unit": "count", "amount": {"numerator": 5, "denominator": 1}, "originalLiteral": "5"},
+          "sourceId": "97cafaf7-7ada-4149-acb5-a3722c1f7443",
+          "confirmedAt": "2026-11-07T16:40:23.312Z",
+          "observationId": "03dc540e-3ed8-405a-8346-fa31d2f42367",
+          "predecessorId": null,
+          "supplyRevision": 3,
+          "arrivalObservationId": "3ed72c54-a64f-4cd1-9d44-dda8511fbb13"
+        },
+        "confirmed": {
+          "sourceId": "97cafaf7-7ada-4149-acb5-a3722c1f7443",
+          "foodId": "97cafaf7-7ada-4149-acb5-a3722c1f7443",
+          "identityRevision": 1,
+          "quantity": {"unit": "count", "amount": {"numerator": 5, "denominator": 1}, "originalLiteral": "5"},
+          "availableAt": "2026-11-07T16:40:23.375Z",
+          "arrivalId": "3ed72c54-a64f-4cd1-9d44-dda8511fbb13",
+          "usableId": "03dc540e-3ed8-405a-8346-fa31d2f42367"
+        }
+      }
+    ],
+    "nextCursor": null
+  },
+  "delivered": {
+    "shopId": "44444444-4444-4444-8444-444444444444",
+    "shopRevision": 5,
+    "placedRevision": 4,
+    "authorityEpoch": 1,
+    "supplyRevision": 5,
+    "asOf": "2026-11-07T16:40:24.382Z",
+    "unplannedOccurrenceIds": [],
+    "needs": [
+      {
+        "occurrenceId": "46188eaa-79b6-41e6-8a54-2e794eedc922",
+        "mealRevision": 2,
+        "ingredientId": "5b991304-76fd-4699-8b95-19a877093326",
+        "groupIds": ["5dcad6e5-6212-4a93-9ea0-2b73be7dd369"],
+        "protected": false,
+        "required": {"unit": "gram", "amount": {"numerator": 400, "denominator": 1}, "originalLiteral": "400 g"},
+        "issues": ["noMatch"],
+        "covered": {"numerator": "0", "denominator": "1"},
+        "missing": {"numerator": "400", "denominator": "1"},
+        "reservations": [],
+        "allocations": []
+      },
+      {
+        "occurrenceId": "46188eaa-79b6-41e6-8a54-2e794eedc922",
+        "mealRevision": 2,
+        "ingredientId": "5b991304-76fd-4699-8b95-19a877093326",
+        "groupIds": ["18547ff3-a7a4-4a91-be3e-52dd306b5b2b"],
+        "protected": true,
+        "required": {"unit": "gram", "amount": {"numerator": 200, "denominator": 1}, "originalLiteral": "200 g"},
+        "issues": ["noMatch"],
+        "covered": {"numerator": "0", "denominator": "1"},
+        "missing": {"numerator": "200", "denominator": "1"},
+        "reservations": [],
+        "allocations": []
+      },
+      {
+        "occurrenceId": "5b0cbe00-1fcc-4b74-b5ce-ee252ff3debe",
+        "mealRevision": 3,
+        "ingredientId": "5b991304-76fd-4699-8b95-19a877093326",
+        "groupIds": ["5dcad6e5-6212-4a93-9ea0-2b73be7dd369"],
+        "protected": false,
+        "required": {"unit": "count", "amount": {"numerator": 4, "denominator": 1}, "originalLiteral": "4"},
+        "issues": [],
+        "covered": {"numerator": "3", "denominator": "1"},
+        "missing": {"numerator": "1", "denominator": "1"},
+        "reservations": [],
+        "allocations": [{"sourceId": "97cafaf7-7ada-4149-acb5-a3722c1f7443", "amount": {"numerator": "3", "denominator": "1"}}]
+      },
+      {
+        "occurrenceId": "5b0cbe00-1fcc-4b74-b5ce-ee252ff3debe",
+        "mealRevision": 3,
+        "ingredientId": "5b991304-76fd-4699-8b95-19a877093326",
+        "groupIds": ["18547ff3-a7a4-4a91-be3e-52dd306b5b2b"],
+        "protected": true,
+        "required": {"unit": "count", "amount": {"numerator": 2, "denominator": 1}, "originalLiteral": "2"},
+        "issues": [],
+        "covered": {"numerator": "2", "denominator": "1"},
+        "missing": {"numerator": "0", "denominator": "1"},
+        "reservations": [
+          {
+            "sourceId": "97cafaf7-7ada-4149-acb5-a3722c1f7443",
+            "reservationId": "44dc8230-146a-43c9-80df-2540f09c1864",
+            "requested": {"numerator": "2", "denominator": "1"},
+            "backed": {"numerator": "2", "denominator": "1"}
+          }
+        ],
+        "allocations": [{"sourceId": "97cafaf7-7ada-4149-acb5-a3722c1f7443", "amount": {"numerator": "2", "denominator": "1"}}]
+      }
+    ]
+  },
+  "pantry": {
+    "shopId": "44444444-4444-4444-8444-444444444444",
+    "shopRevision": 5,
+    "authorityEpoch": 1,
+    "placedRevision": 4,
+    "pantryRevision": 5,
+    "supplyRevision": 5,
+    "asOf": "2026-11-07T16:40:24.394Z",
+    "lots": [],
+    "nextCursor": null
+  },
+  "joint": {
+    "shopId": "44444444-4444-4444-8444-444444444444",
+    "shopRevision": 5,
+    "authorityEpoch": 1,
+    "placedRevision": 4,
+    "pantryRevision": 5,
+    "supplyRevision": 5,
+    "asOf": "2026-11-07T16:40:24.406Z",
+    "unplannedOccurrenceIds": [],
+    "needs": [
+      {
+        "occurrenceId": "46188eaa-79b6-41e6-8a54-2e794eedc922",
+        "mealRevision": 2,
+        "ingredientId": "5b991304-76fd-4699-8b95-19a877093326",
+        "groupIds": ["5dcad6e5-6212-4a93-9ea0-2b73be7dd369"],
+        "protected": false,
+        "required": {"unit": "gram", "amount": {"numerator": 400, "denominator": 1}, "originalLiteral": "400 g"},
+        "issues": ["noMatch"],
+        "covered": {"numerator": "0", "denominator": "1"},
+        "missing": {"numerator": "400", "denominator": "1"},
+        "reservations": [],
+        "allocations": [],
+        "delivered": {"numerator": "0", "denominator": "1"},
+        "pantry": {"numerator": "0", "denominator": "1"},
+        "freezer": {"numerator": "0", "denominator": "1"}
+      },
+      {
+        "occurrenceId": "46188eaa-79b6-41e6-8a54-2e794eedc922",
+        "mealRevision": 2,
+        "ingredientId": "5b991304-76fd-4699-8b95-19a877093326",
+        "groupIds": ["18547ff3-a7a4-4a91-be3e-52dd306b5b2b"],
+        "protected": true,
+        "required": {"unit": "gram", "amount": {"numerator": 200, "denominator": 1}, "originalLiteral": "200 g"},
+        "issues": ["noMatch"],
+        "covered": {"numerator": "0", "denominator": "1"},
+        "missing": {"numerator": "200", "denominator": "1"},
+        "reservations": [],
+        "allocations": [],
+        "delivered": {"numerator": "0", "denominator": "1"},
+        "pantry": {"numerator": "0", "denominator": "1"},
+        "freezer": {"numerator": "0", "denominator": "1"}
+      },
+      {
+        "occurrenceId": "5b0cbe00-1fcc-4b74-b5ce-ee252ff3debe",
+        "mealRevision": 3,
+        "ingredientId": "5b991304-76fd-4699-8b95-19a877093326",
+        "groupIds": ["5dcad6e5-6212-4a93-9ea0-2b73be7dd369"],
+        "protected": false,
+        "required": {"unit": "count", "amount": {"numerator": 4, "denominator": 1}, "originalLiteral": "4"},
+        "issues": [],
+        "covered": {"numerator": "3", "denominator": "1"},
+        "missing": {"numerator": "1", "denominator": "1"},
+        "reservations": [],
+        "allocations": [
+          {
+            "sourceId": "97cafaf7-7ada-4149-acb5-a3722c1f7443",
+            "amount": {"numerator": "3", "denominator": "1"},
+            "kind": "delivery"
+          }
+        ],
+        "delivered": {"numerator": "3", "denominator": "1"},
+        "pantry": {"numerator": "0", "denominator": "1"},
+        "freezer": {"numerator": "0", "denominator": "1"}
+      },
+      {
+        "occurrenceId": "5b0cbe00-1fcc-4b74-b5ce-ee252ff3debe",
+        "mealRevision": 3,
+        "ingredientId": "5b991304-76fd-4699-8b95-19a877093326",
+        "groupIds": ["18547ff3-a7a4-4a91-be3e-52dd306b5b2b"],
+        "protected": true,
+        "required": {"unit": "count", "amount": {"numerator": 2, "denominator": 1}, "originalLiteral": "2"},
+        "issues": [],
+        "covered": {"numerator": "2", "denominator": "1"},
+        "missing": {"numerator": "0", "denominator": "1"},
+        "reservations": [
+          {
+            "sourceId": "97cafaf7-7ada-4149-acb5-a3722c1f7443",
+            "reservationId": "44dc8230-146a-43c9-80df-2540f09c1864",
+            "requested": {"numerator": "2", "denominator": "1"},
+            "backed": {"numerator": "2", "denominator": "1"}
+          }
+        ],
+        "allocations": [
+          {
+            "sourceId": "97cafaf7-7ada-4149-acb5-a3722c1f7443",
+            "amount": {"numerator": "2", "denominator": "1"},
+            "kind": "delivery"
+          }
+        ],
+        "delivered": {"numerator": "2", "denominator": "1"},
+        "pantry": {"numerator": "0", "denominator": "1"},
+        "freezer": {"numerator": "0", "denominator": "1"}
+      }
+    ]
+  },
+  "desk": {
+    "shopId": "44444444-4444-4444-8444-444444444444",
+    "placedRevision": 4,
+    "base": {
+      "shopRevision": 5,
+      "authorityEpoch": 1,
+      "recoveryRevision": 0,
+      "contextRevision": 0,
+      "supplyRevision": 5,
+      "pantryRevision": 5
+    },
+    "asOf": "2026-11-07T16:40:23.457Z",
+    "meals": [
+      {
+        "occurrenceId": "46188eaa-79b6-41e6-8a54-2e794eedc922",
+        "revisionId": "9f42ec1a-20bb-5971-a38a-72f155ab7e99",
+        "sourceMealRevision": 2,
+        "title": "Reviewed supper",
+        "notes": "",
+        "sourceURL": null,
+        "portions": 6,
+        "day": "2026-11-05",
+        "zone": null,
+        "due": null,
+        "exclusions": [],
+        "template": null,
+        "groups": [
+          {
+            "id": "5dcad6e5-6212-4a93-9ea0-2b73be7dd369",
+            "name": "Dinner group",
+            "servings": {"numerator": 4, "denominator": 1},
+            "protected": false,
+            "exclusions": []
+          },
+          {
+            "id": "18547ff3-a7a4-4a91-be3e-52dd306b5b2b",
+            "name": "Protected lunch",
+            "servings": {"numerator": 2, "denominator": 1},
+            "protected": true,
+            "exclusions": []
+          }
+        ],
+        "needs": [
+          {
+            "id": "50a75292-e0ae-526e-acd5-33876150dfba",
+            "foodId": null,
+            "matchedSourceIds": [],
+            "ingredientId": "5b991304-76fd-4699-8b95-19a877093326",
+            "groupId": "5dcad6e5-6212-4a93-9ea0-2b73be7dd369",
+            "name": "Beans",
+            "notes": "",
+            "quantity": {"amount": {"numerator": 400, "denominator": 1}, "unit": "gram", "originalLiteral": "400 g"},
+            "priority": "required",
+            "due": null,
+            "exclusions": ["No sesame"]
+          },
+          {
+            "id": "4aa4e54d-f7d2-51af-af5d-c93e45248a28",
+            "foodId": null,
+            "matchedSourceIds": [],
+            "ingredientId": "5b991304-76fd-4699-8b95-19a877093326",
+            "groupId": "18547ff3-a7a4-4a91-be3e-52dd306b5b2b",
+            "name": "Beans",
+            "notes": "",
+            "quantity": {"amount": {"numerator": 200, "denominator": 1}, "unit": "gram", "originalLiteral": "200 g"},
+            "priority": "protected",
+            "due": null,
+            "exclusions": ["No sesame"]
+          }
+        ],
+        "remainingElapsedMinutes": null,
+        "requiredLeadMinutes": null,
+        "advanceStepsCompleted": false
+      },
+      {
+        "occurrenceId": "5b0cbe00-1fcc-4b74-b5ce-ee252ff3debe",
+        "revisionId": "c27a6763-52ae-52c7-bf25-84582471def6",
+        "sourceMealRevision": 3,
+        "title": "Reviewed supper",
+        "notes": "",
+        "sourceURL": null,
+        "portions": 6,
+        "day": "2098-11-11",
+        "zone": "UTC",
+        "due": "2098-11-11T18:00:00.000Z",
+        "exclusions": [],
+        "template": null,
+        "groups": [
+          {
+            "id": "5dcad6e5-6212-4a93-9ea0-2b73be7dd369",
+            "name": "Dinner group",
+            "servings": {"numerator": 4, "denominator": 1},
+            "protected": false,
+            "exclusions": []
+          },
+          {
+            "id": "18547ff3-a7a4-4a91-be3e-52dd306b5b2b",
+            "name": "Protected lunch",
+            "servings": {"numerator": 2, "denominator": 1},
+            "protected": true,
+            "exclusions": []
+          }
+        ],
+        "needs": [
+          {
+            "id": "65f7c810-bbbd-544a-9616-6e2ee4e33423",
+            "foodId": null,
+            "matchedSourceIds": ["97cafaf7-7ada-4149-acb5-a3722c1f7443"],
+            "ingredientId": "5b991304-76fd-4699-8b95-19a877093326",
+            "groupId": "5dcad6e5-6212-4a93-9ea0-2b73be7dd369",
+            "name": "Beans",
+            "notes": "",
+            "quantity": {"amount": {"numerator": 4, "denominator": 1}, "unit": "count", "originalLiteral": "4"},
+            "priority": "required",
+            "due": "2098-11-11T18:00:00.000Z",
+            "exclusions": ["No sesame"]
+          },
+          {
+            "id": "f08f0390-7d15-51b2-bf8d-ab400531f7f7",
+            "foodId": null,
+            "matchedSourceIds": ["97cafaf7-7ada-4149-acb5-a3722c1f7443"],
+            "ingredientId": "5b991304-76fd-4699-8b95-19a877093326",
+            "groupId": "18547ff3-a7a4-4a91-be3e-52dd306b5b2b",
+            "name": "Beans",
+            "notes": "",
+            "quantity": {"amount": {"numerator": 2, "denominator": 1}, "unit": "count", "originalLiteral": "2"},
+            "priority": "protected",
+            "due": "2098-11-11T18:00:00.000Z",
+            "exclusions": ["No sesame"]
+          }
+        ],
+        "remainingElapsedMinutes": null,
+        "requiredLeadMinutes": null,
+        "advanceStepsCompleted": false
+      }
+    ],
+    "sourceOptions": [
+      {
+        "sourceId": "97cafaf7-7ada-4149-acb5-a3722c1f7443",
+        "name": "Wraps",
+        "exclusionTags": [],
+        "kind": "delivery",
+        "quantity": {"unit": "count", "amount": {"numerator": 5, "denominator": 1}, "originalLiteral": "5"}
+      }
+    ],
+    "mealSources": [
+      {
+        "occurrenceId": "46188eaa-79b6-41e6-8a54-2e794eedc922",
+        "sourceMealRevision": 2,
+        "sealedRevisionId": "9f42ec1a-20bb-5971-a38a-72f155ab7e99",
+        "completedSteps": [],
+        "sourceOccurrenceId": null,
+        "approvedIdea": null
+      },
+      {
+        "occurrenceId": "5b0cbe00-1fcc-4b74-b5ce-ee252ff3debe",
+        "sourceMealRevision": 3,
+        "sealedRevisionId": "c27a6763-52ae-52c7-bf25-84582471def6",
+        "completedSteps": [],
+        "sourceOccurrenceId": null,
+        "approvedIdea": null
+      }
+    ],
+    "unplannedOccurrenceIds": [],
+    "commitmentInventoryComplete": true,
+    "targetDigests": [
+      {
+        "occurrenceId": "46188eaa-79b6-41e6-8a54-2e794eedc922",
+        "digest": "cb382ef5c91596c29b9a830adcc95ebc57d14aea36f9b6bdbca3e11515496cc0"
+      },
+      {
+        "occurrenceId": "5b0cbe00-1fcc-4b74-b5ce-ee252ff3debe",
+        "digest": "0a64c70cd8b7b83ad47d90aa72785808ce98138bf239faa0d123df948c881454"
+      }
+    ]
+  },
+  "effective": {
+    "shopId": "44444444-4444-4444-8444-444444444444",
+    "placedRevision": 4,
+    "shopRevision": 5,
+    "authorityEpoch": 1,
+    "recoveryRevision": 0,
+    "contextRevision": 0,
+    "supplyRevision": 5,
+    "pantryRevision": 5,
+    "asOf": "2026-11-07T16:40:24.421Z",
+    "needs": [
+      {
+        "occurrenceId": "46188eaa-79b6-41e6-8a54-2e794eedc922",
+        "mealRevision": 2,
+        "ingredientId": "5b991304-76fd-4699-8b95-19a877093326",
+        "groupIds": ["5dcad6e5-6212-4a93-9ea0-2b73be7dd369"],
+        "protected": false,
+        "required": {"amount": {"numerator": 400, "denominator": 1}, "unit": "gram", "originalLiteral": "400 g"},
+        "issues": ["noMatch"],
+        "covered": {"numerator": "0", "denominator": "1"},
+        "missing": {"numerator": "400", "denominator": "1"},
+        "reservations": [],
+        "allocations": [],
+        "needId": "50a75292-e0ae-526e-acd5-33876150dfba",
+        "delivered": {"numerator": "0", "denominator": "1"},
+        "pantry": {"numerator": "0", "denominator": "1"},
+        "freezer": {"numerator": "0", "denominator": "1"}
+      },
+      {
+        "occurrenceId": "46188eaa-79b6-41e6-8a54-2e794eedc922",
+        "mealRevision": 2,
+        "ingredientId": "5b991304-76fd-4699-8b95-19a877093326",
+        "groupIds": ["18547ff3-a7a4-4a91-be3e-52dd306b5b2b"],
+        "protected": true,
+        "required": {"amount": {"numerator": 200, "denominator": 1}, "unit": "gram", "originalLiteral": "200 g"},
+        "issues": ["noMatch"],
+        "covered": {"numerator": "0", "denominator": "1"},
+        "missing": {"numerator": "200", "denominator": "1"},
+        "reservations": [],
+        "allocations": [],
+        "needId": "4aa4e54d-f7d2-51af-af5d-c93e45248a28",
+        "delivered": {"numerator": "0", "denominator": "1"},
+        "pantry": {"numerator": "0", "denominator": "1"},
+        "freezer": {"numerator": "0", "denominator": "1"}
+      },
+      {
+        "occurrenceId": "5b0cbe00-1fcc-4b74-b5ce-ee252ff3debe",
+        "mealRevision": 3,
+        "ingredientId": "5b991304-76fd-4699-8b95-19a877093326",
+        "groupIds": ["5dcad6e5-6212-4a93-9ea0-2b73be7dd369"],
+        "protected": false,
+        "required": {"amount": {"numerator": 4, "denominator": 1}, "unit": "count", "originalLiteral": "4"},
+        "issues": [],
+        "covered": {"numerator": "3", "denominator": "1"},
+        "missing": {"numerator": "1", "denominator": "1"},
+        "reservations": [],
+        "allocations": [
+          {
+            "sourceId": "97cafaf7-7ada-4149-acb5-a3722c1f7443",
+            "amount": {"numerator": "3", "denominator": "1"},
+            "kind": "delivery"
+          }
+        ],
+        "needId": "65f7c810-bbbd-544a-9616-6e2ee4e33423",
+        "delivered": {"numerator": "3", "denominator": "1"},
+        "pantry": {"numerator": "0", "denominator": "1"},
+        "freezer": {"numerator": "0", "denominator": "1"}
+      },
+      {
+        "occurrenceId": "5b0cbe00-1fcc-4b74-b5ce-ee252ff3debe",
+        "mealRevision": 3,
+        "ingredientId": "5b991304-76fd-4699-8b95-19a877093326",
+        "groupIds": ["18547ff3-a7a4-4a91-be3e-52dd306b5b2b"],
+        "protected": true,
+        "required": {"amount": {"numerator": 2, "denominator": 1}, "unit": "count", "originalLiteral": "2"},
+        "issues": [],
+        "covered": {"numerator": "2", "denominator": "1"},
+        "missing": {"numerator": "0", "denominator": "1"},
+        "reservations": [
+          {
+            "sourceId": "97cafaf7-7ada-4149-acb5-a3722c1f7443",
+            "reservationId": "44dc8230-146a-43c9-80df-2540f09c1864",
+            "requested": {"numerator": "2", "denominator": "1"},
+            "backed": {"numerator": "2", "denominator": "1"}
+          }
+        ],
+        "allocations": [
+          {
+            "sourceId": "97cafaf7-7ada-4149-acb5-a3722c1f7443",
+            "amount": {"numerator": "2", "denominator": "1"},
+            "kind": "delivery"
+          }
+        ],
+        "needId": "f08f0390-7d15-51b2-bf8d-ab400531f7f7",
+        "delivered": {"numerator": "2", "denominator": "1"},
+        "pantry": {"numerator": "0", "denominator": "1"},
+        "freezer": {"numerator": "0", "denominator": "1"}
+      }
+    ],
+    "unplannedOccurrenceIds": []
+  },
+  "library": {
+    "shopId": "44444444-4444-4444-8444-444444444444",
+    "shopRevision": 5,
+    "authorityEpoch": 1,
+    "registryRevision": 2,
+    "candidates": [
+      {
+        "candidateId": "35360447-9c18-4126-a71f-3c935bc07b30",
+        "revision": 1,
+        "recipe": {
+          "notes": "Keep the entered method",
+          "title": "Three warm wraps",
+          "portions": 4,
+          "sourceURL": null,
+          "exclusions": [],
+          "ingredients": [
+            {
+              "id": "9998b7df-183c-45e1-9022-20b0272188d5",
+              "name": "Wraps",
+              "notes": "Warm before serving",
+              "quantity": {"unit": "count", "amount": {"numerator": 3, "denominator": 1}, "originalLiteral": "3"},
+              "exclusions": []
+            }
+          ],
+          "elapsedMinutes": 10,
+          "requiredLeadMinutes": null
+        },
+        "usual": true
+      },
+      {
+        "candidateId": "f4b0095b-81b2-4e95-b1eb-a99170f24690",
+        "revision": 1,
+        "recipe": {
+          "notes": "Keep the entered method",
+          "title": "Reviewed supper",
+          "portions": 4,
+          "sourceURL": null,
+          "exclusions": [],
+          "ingredients": [
+            {
+              "id": "f57a4630-a82f-4c99-b25d-49ce7b749797",
+              "name": "Wraps",
+              "notes": "Warm before serving",
+              "quantity": {"unit": "count", "amount": {"numerator": 6, "denominator": 1}, "originalLiteral": "6"},
+              "exclusions": []
+            }
+          ],
+          "elapsedMinutes": 8,
+          "requiredLeadMinutes": null
+        },
+        "usual": false
+      }
+    ],
+    "nextCursor": null
+  },
+  "source": {
+    "kind": "meal",
+    "occurrenceId": "5b0cbe00-1fcc-4b74-b5ce-ee252ff3debe",
+    "mealRevision": 3,
+    "revisionId": "c27a6763-52ae-52c7-bf25-84582471def6"
+  },
+  "recipe": {
+    "title": "Reviewed supper",
+    "portions": 6,
+    "notes": "",
+    "sourceURL": null,
+    "exclusions": [],
+    "requiredLeadMinutes": null,
+    "elapsedMinutes": null,
+    "groups": [
+      {
+        "id": "5dcad6e5-6212-4a93-9ea0-2b73be7dd369",
+        "name": "Dinner group",
+        "servings": {"numerator": 4, "denominator": 1},
+        "protected": false,
+        "exclusions": []
+      },
+      {
+        "id": "18547ff3-a7a4-4a91-be3e-52dd306b5b2b",
+        "name": "Protected lunch",
+        "servings": {"numerator": 2, "denominator": 1},
+        "protected": true,
+        "exclusions": []
+      }
+    ],
+    "ingredients": [
+      {
+        "id": "65f7c810-bbbd-544a-9616-6e2ee4e33423",
+        "name": "Beans",
+        "notes": "",
+        "quantity": {"amount": {"numerator": 4, "denominator": 1}, "unit": "count", "originalLiteral": "4"},
+        "exclusions": ["No sesame"],
+        "groupIds": ["5dcad6e5-6212-4a93-9ea0-2b73be7dd369"],
+        "bindings": [
+          {
+            "groupId": "5dcad6e5-6212-4a93-9ea0-2b73be7dd369",
+            "quantity": {"amount": {"numerator": 4, "denominator": 1}, "unit": "count", "originalLiteral": "4"}
+          }
+        ]
+      },
+      {
+        "id": "f08f0390-7d15-51b2-bf8d-ab400531f7f7",
+        "name": "Beans",
+        "notes": "",
+        "quantity": {"amount": {"numerator": 2, "denominator": 1}, "unit": "count", "originalLiteral": "2"},
+        "exclusions": ["No sesame"],
+        "groupIds": ["18547ff3-a7a4-4a91-be3e-52dd306b5b2b"],
+        "bindings": [
+          {
+            "groupId": "18547ff3-a7a4-4a91-be3e-52dd306b5b2b",
+            "quantity": {"amount": {"numerator": 2, "denominator": 1}, "unit": "count", "originalLiteral": "2"}
+          }
+        ]
+      }
+    ]
+  },
+  "receipt": {
+    "operationId": "ded1bc95-ffec-491f-b6ca-21249bc06415",
+    "kind": "mealRecovery.apply",
+    "shopId": "44444444-4444-4444-8444-444444444444",
+    "shopRevision": 5,
+    "authorityEpoch": 1,
+    "disposition": "recorded",
+    "recoveryRevision": 1,
+    "occurrenceId": "5b0cbe00-1fcc-4b74-b5ce-ee252ff3debe",
+    "revisionId": "5d6e3a33-89f1-5f56-8e8d-e56923fb3b88"
+  },
+  "quote": {
+    "fee": {"kind": "fixed", "amountMinor": 0},
+    "scope": "wholeCheckout",
+    "capMinor": 100000,
+    "capScope": "wholeCheckout",
+    "complete": true,
+    "currency": "USD",
+    "expiresAt": "2026-11-07T17:40:21.677Z",
+    "observedAt": "2026-11-07T16:39:21.677Z",
+    "taxesMinor": 0,
+    "depositsMinor": 0,
+    "discountsMinor": 0
+  },
+  "before": {
+    "demands": [
+      {
+        "needId": "50a75292-e0ae-526e-acd5-33876150dfba",
+        "due": null,
+        "deadlineStatus": "unknown",
+        "allocated": {"numerator": "0", "denominator": "1"},
+        "shortfall": {"numerator": "400", "denominator": "1"},
+        "unit": "gram",
+        "issues": ["unknown_food"],
+        "sourceIssues": [],
+        "reservations": []
+      },
+      {
+        "needId": "4aa4e54d-f7d2-51af-af5d-c93e45248a28",
+        "due": null,
+        "deadlineStatus": "unknown",
+        "allocated": {"numerator": "0", "denominator": "1"},
+        "shortfall": {"numerator": "200", "denominator": "1"},
+        "unit": "gram",
+        "issues": ["unknown_food"],
+        "sourceIssues": [],
+        "reservations": []
+      },
+      {
+        "needId": "65f7c810-bbbd-544a-9616-6e2ee4e33423",
+        "due": "2098-11-11T18:00:00.000Z",
+        "deadlineStatus": "notPastDue",
+        "allocated": {"numerator": "3", "denominator": "1"},
+        "shortfall": {"numerator": "1", "denominator": "1"},
+        "unit": "count",
+        "issues": [],
+        "sourceIssues": [],
+        "reservations": []
+      },
+      {
+        "needId": "f08f0390-7d15-51b2-bf8d-ab400531f7f7",
+        "due": "2098-11-11T18:00:00.000Z",
+        "deadlineStatus": "notPastDue",
+        "allocated": {"numerator": "2", "denominator": "1"},
+        "shortfall": {"numerator": "0", "denominator": "1"},
+        "unit": "count",
+        "issues": [],
+        "sourceIssues": [],
+        "reservations": [
+          {
+            "reservationId": "44dc8230-146a-43c9-80df-2540f09c1864",
+            "sourceId": "97cafaf7-7ada-4149-acb5-a3722c1f7443",
+            "requested": {"numerator": "2", "denominator": "1"},
+            "backed": {"numerator": "2", "denominator": "1"}
+          }
+        ]
+      }
+    ],
+    "allocations": [
+      {
+        "needId": "65f7c810-bbbd-544a-9616-6e2ee4e33423",
+        "sourceId": "97cafaf7-7ada-4149-acb5-a3722c1f7443",
+        "amount": {"numerator": "3", "denominator": "1"},
+        "unit": "count"
+      },
+      {
+        "needId": "f08f0390-7d15-51b2-bf8d-ab400531f7f7",
+        "sourceId": "97cafaf7-7ada-4149-acb5-a3722c1f7443",
+        "amount": {"numerator": "2", "denominator": "1"},
+        "unit": "count"
+      }
+    ]
+  },
+  "options": [
+    {
+      "candidateId": "35360447-9c18-4126-a71f-3c935bc07b30",
+      "revision": 1,
+      "title": "Three warm wraps",
+      "kind": "onHand",
+      "minutes": 10,
+      "packCount": 0,
+      "merchandiseMinor": 0,
+      "extraCashMinor": 0,
+      "currency": null,
+      "buys": [],
+      "repeatRequired": false,
+      "intent": {
+        "occurrenceId": "5b0cbe00-1fcc-4b74-b5ce-ee252ff3debe",
+        "targetDigest": "0a64c70cd8b7b83ad47d90aa72785808ce98138bf239faa0d123df948c881454",
+        "replacement": {
+          "occurrenceId": "5b0cbe00-1fcc-4b74-b5ce-ee252ff3debe",
+          "revisionId": "31823ef0-6c1d-5b3e-892b-70eac190b2af",
+          "sourceMealRevision": 3,
+          "title": "Three warm wraps",
+          "notes": "Keep the entered method",
+          "sourceURL": null,
+          "portions": 6,
+          "day": "2098-11-11",
+          "zone": "UTC",
+          "due": "2098-11-11T18:00:00.000Z",
+          "exclusions": [],
+          "template": null,
+          "groups": [
+            {
+              "id": "5dcad6e5-6212-4a93-9ea0-2b73be7dd369",
+              "name": "Dinner group",
+              "servings": {"numerator": 4, "denominator": 1},
+              "protected": false,
+              "exclusions": []
+            },
+            {
+              "id": "18547ff3-a7a4-4a91-be3e-52dd306b5b2b",
+              "name": "Protected lunch",
+              "servings": {"numerator": 2, "denominator": 1},
+              "protected": true,
+              "exclusions": []
+            }
+          ],
+          "needs": [
+            {
+              "id": "f08f0390-7d15-51b2-bf8d-ab400531f7f7",
+              "foodId": null,
+              "matchedSourceIds": ["97cafaf7-7ada-4149-acb5-a3722c1f7443"],
+              "ingredientId": "5b991304-76fd-4699-8b95-19a877093326",
+              "groupId": "18547ff3-a7a4-4a91-be3e-52dd306b5b2b",
+              "name": "Beans",
+              "notes": "",
+              "quantity": {"amount": {"numerator": 2, "denominator": 1}, "unit": "count", "originalLiteral": "2"},
+              "priority": "protected",
+              "due": "2098-11-11T18:00:00.000Z",
+              "exclusions": ["No sesame"]
+            },
+            {
+              "id": "5bfad1ff-a4c8-53b0-ae5f-473103d7fb5c",
+              "ingredientId": "9998b7df-183c-45e1-9022-20b0272188d5",
+              "groupId": "5dcad6e5-6212-4a93-9ea0-2b73be7dd369",
+              "priority": "required",
+              "quantity": {"unit": "count", "amount": {"numerator": 3, "denominator": 1}, "originalLiteral": "3"},
+              "foodId": null,
+              "matchedSourceIds": ["97cafaf7-7ada-4149-acb5-a3722c1f7443"],
+              "name": "Wraps",
+              "notes": "Warm before serving",
+              "due": "2098-11-11T18:00:00.000Z",
+              "exclusions": ["No sesame"]
+            }
+          ],
+          "remainingElapsedMinutes": 10,
+          "requiredLeadMinutes": null,
+          "advanceStepsCompleted": false
+        },
+        "reviewedAt": "2026-11-07T16:40:24.133Z",
+        "repeatOfOccurrenceId": null,
+        "agreesToRepeat": false,
+        "proposesExtraTrip": false,
+        "agreesToExtraTrip": false,
+        "acceptsUnresolved": false,
+        "fallback": {
+          "review": {
+            "candidateId": "35360447-9c18-4126-a71f-3c935bc07b30",
+            "revision": 1,
+            "remainingElapsedMinutes": null,
+            "advanceStepsCompleted": false,
+            "ingredients": [
+              {
+                "ingredientId": "9998b7df-183c-45e1-9022-20b0272188d5",
+                "sourceIds": ["97cafaf7-7ada-4149-acb5-a3722c1f7443"],
+                "offer": null
+              }
+            ]
+          },
+          "trip": {"minutes": 8, "budgetMinor": 500, "chargesMinor": 50, "currency": "USD"}
+        }
+      },
+      "after": {
+        "demands": [
+          {
+            "needId": "50a75292-e0ae-526e-acd5-33876150dfba",
+            "due": null,
+            "deadlineStatus": "unknown",
+            "allocated": {"numerator": "0", "denominator": "1"},
+            "shortfall": {"numerator": "400", "denominator": "1"},
+            "unit": "gram",
+            "issues": ["unknown_food"],
+            "sourceIssues": [],
+            "reservations": []
+          },
+          {
+            "needId": "4aa4e54d-f7d2-51af-af5d-c93e45248a28",
+            "due": null,
+            "deadlineStatus": "unknown",
+            "allocated": {"numerator": "0", "denominator": "1"},
+            "shortfall": {"numerator": "200", "denominator": "1"},
+            "unit": "gram",
+            "issues": ["unknown_food"],
+            "sourceIssues": [],
+            "reservations": []
+          },
+          {
+            "needId": "f08f0390-7d15-51b2-bf8d-ab400531f7f7",
+            "due": "2098-11-11T18:00:00.000Z",
+            "deadlineStatus": "notPastDue",
+            "allocated": {"numerator": "2", "denominator": "1"},
+            "shortfall": {"numerator": "0", "denominator": "1"},
+            "unit": "count",
+            "issues": [],
+            "sourceIssues": [],
+            "reservations": [
+              {
+                "reservationId": "44dc8230-146a-43c9-80df-2540f09c1864",
+                "sourceId": "97cafaf7-7ada-4149-acb5-a3722c1f7443",
+                "requested": {"numerator": "2", "denominator": "1"},
+                "backed": {"numerator": "2", "denominator": "1"}
+              }
+            ]
+          },
+          {
+            "needId": "5bfad1ff-a4c8-53b0-ae5f-473103d7fb5c",
+            "due": "2098-11-11T18:00:00.000Z",
+            "deadlineStatus": "notPastDue",
+            "allocated": {"numerator": "3", "denominator": "1"},
+            "shortfall": {"numerator": "0", "denominator": "1"},
+            "unit": "count",
+            "issues": [],
+            "sourceIssues": [],
+            "reservations": []
+          }
+        ],
+        "allocations": [
+          {
+            "needId": "f08f0390-7d15-51b2-bf8d-ab400531f7f7",
+            "sourceId": "97cafaf7-7ada-4149-acb5-a3722c1f7443",
+            "amount": {"numerator": "2", "denominator": "1"},
+            "unit": "count"
+          },
+          {
+            "needId": "5bfad1ff-a4c8-53b0-ae5f-473103d7fb5c",
+            "sourceId": "97cafaf7-7ada-4149-acb5-a3722c1f7443",
+            "amount": {"numerator": "3", "denominator": "1"},
+            "unit": "count"
+          }
+        ]
+      }
+    },
+    {
+      "candidateId": "f4b0095b-81b2-4e95-b1eb-a99170f24690",
+      "revision": 1,
+      "title": "Reviewed supper",
+      "kind": "topUp",
+      "minutes": 16,
+      "packCount": 2,
+      "merchandiseMinor": 400,
+      "extraCashMinor": 450,
+      "currency": "USD",
+      "buys": [{"ingredientId": "f57a4630-a82f-4c99-b25d-49ce7b749797", "label": "Two wraps", "packs": 2, "subtotalMinor": 400}],
+      "repeatRequired": true,
+      "intent": {
+        "occurrenceId": "5b0cbe00-1fcc-4b74-b5ce-ee252ff3debe",
+        "targetDigest": "0a64c70cd8b7b83ad47d90aa72785808ce98138bf239faa0d123df948c881454",
+        "replacement": {
+          "occurrenceId": "5b0cbe00-1fcc-4b74-b5ce-ee252ff3debe",
+          "revisionId": "5d6e3a33-89f1-5f56-8e8d-e56923fb3b88",
+          "sourceMealRevision": 3,
+          "title": "Reviewed supper",
+          "notes": "Keep the entered method",
+          "sourceURL": null,
+          "portions": 6,
+          "day": "2098-11-11",
+          "zone": "UTC",
+          "due": "2098-11-11T18:00:00.000Z",
+          "exclusions": [],
+          "template": null,
+          "groups": [
+            {
+              "id": "5dcad6e5-6212-4a93-9ea0-2b73be7dd369",
+              "name": "Dinner group",
+              "servings": {"numerator": 4, "denominator": 1},
+              "protected": false,
+              "exclusions": []
+            },
+            {
+              "id": "18547ff3-a7a4-4a91-be3e-52dd306b5b2b",
+              "name": "Protected lunch",
+              "servings": {"numerator": 2, "denominator": 1},
+              "protected": true,
+              "exclusions": []
+            }
+          ],
+          "needs": [
+            {
+              "id": "f08f0390-7d15-51b2-bf8d-ab400531f7f7",
+              "foodId": null,
+              "matchedSourceIds": ["97cafaf7-7ada-4149-acb5-a3722c1f7443"],
+              "ingredientId": "5b991304-76fd-4699-8b95-19a877093326",
+              "groupId": "18547ff3-a7a4-4a91-be3e-52dd306b5b2b",
+              "name": "Beans",
+              "notes": "",
+              "quantity": {"amount": {"numerator": 2, "denominator": 1}, "unit": "count", "originalLiteral": "2"},
+              "priority": "protected",
+              "due": "2098-11-11T18:00:00.000Z",
+              "exclusions": ["No sesame"]
+            },
+            {
+              "id": "57c4d2f7-b207-5ca1-a4b6-fb4330e72f89",
+              "ingredientId": "f57a4630-a82f-4c99-b25d-49ce7b749797",
+              "groupId": "5dcad6e5-6212-4a93-9ea0-2b73be7dd369",
+              "priority": "required",
+              "quantity": {"unit": "count", "amount": {"numerator": 6, "denominator": 1}, "originalLiteral": "6"},
+              "foodId": null,
+              "matchedSourceIds": ["97cafaf7-7ada-4149-acb5-a3722c1f7443"],
+              "name": "Wraps",
+              "notes": "Warm before serving",
+              "due": "2098-11-11T18:00:00.000Z",
+              "exclusions": ["No sesame"]
+            }
+          ],
+          "remainingElapsedMinutes": 8,
+          "requiredLeadMinutes": null,
+          "advanceStepsCompleted": false
+        },
+        "reviewedAt": "2026-11-07T16:40:24.133Z",
+        "repeatOfOccurrenceId": null,
+        "agreesToRepeat": false,
+        "proposesExtraTrip": true,
+        "agreesToExtraTrip": false,
+        "acceptsUnresolved": false,
+        "fallback": {
+          "review": {
+            "candidateId": "f4b0095b-81b2-4e95-b1eb-a99170f24690",
+            "revision": 1,
+            "remainingElapsedMinutes": null,
+            "advanceStepsCompleted": false,
+            "ingredients": [
+              {
+                "ingredientId": "f57a4630-a82f-4c99-b25d-49ce7b749797",
+                "sourceIds": ["97cafaf7-7ada-4149-acb5-a3722c1f7443"],
+                "offer": {
+                  "packId": "31062207-de5f-49e8-9eec-9bf9293af6ff",
+                  "label": "Two wraps",
+                  "exclusionTags": [],
+                  "usablePerPack": {"amount": {"numerator": 2, "denominator": 1}, "unit": "count", "originalLiteral": "2"},
+                  "priceMinor": 200,
+                  "availablePacks": 2
+                }
+              }
+            ]
+          },
+          "trip": {"minutes": 8, "budgetMinor": 500, "chargesMinor": 50, "currency": "USD"}
+        }
+      },
+      "after": {
+        "demands": [
+          {
+            "needId": "50a75292-e0ae-526e-acd5-33876150dfba",
+            "due": null,
+            "deadlineStatus": "unknown",
+            "allocated": {"numerator": "0", "denominator": "1"},
+            "shortfall": {"numerator": "400", "denominator": "1"},
+            "unit": "gram",
+            "issues": ["unknown_food"],
+            "sourceIssues": [],
+            "reservations": []
+          },
+          {
+            "needId": "4aa4e54d-f7d2-51af-af5d-c93e45248a28",
+            "due": null,
+            "deadlineStatus": "unknown",
+            "allocated": {"numerator": "0", "denominator": "1"},
+            "shortfall": {"numerator": "200", "denominator": "1"},
+            "unit": "gram",
+            "issues": ["unknown_food"],
+            "sourceIssues": [],
+            "reservations": []
+          },
+          {
+            "needId": "f08f0390-7d15-51b2-bf8d-ab400531f7f7",
+            "due": "2098-11-11T18:00:00.000Z",
+            "deadlineStatus": "notPastDue",
+            "allocated": {"numerator": "2", "denominator": "1"},
+            "shortfall": {"numerator": "0", "denominator": "1"},
+            "unit": "count",
+            "issues": [],
+            "sourceIssues": [],
+            "reservations": [
+              {
+                "reservationId": "44dc8230-146a-43c9-80df-2540f09c1864",
+                "sourceId": "97cafaf7-7ada-4149-acb5-a3722c1f7443",
+                "requested": {"numerator": "2", "denominator": "1"},
+                "backed": {"numerator": "2", "denominator": "1"}
+              }
+            ]
+          },
+          {
+            "needId": "57c4d2f7-b207-5ca1-a4b6-fb4330e72f89",
+            "due": "2098-11-11T18:00:00.000Z",
+            "deadlineStatus": "notPastDue",
+            "allocated": {"numerator": "3", "denominator": "1"},
+            "shortfall": {"numerator": "3", "denominator": "1"},
+            "unit": "count",
+            "issues": [],
+            "sourceIssues": [],
+            "reservations": []
+          }
+        ],
+        "allocations": [
+          {
+            "needId": "f08f0390-7d15-51b2-bf8d-ab400531f7f7",
+            "sourceId": "97cafaf7-7ada-4149-acb5-a3722c1f7443",
+            "amount": {"numerator": "2", "denominator": "1"},
+            "unit": "count"
+          },
+          {
+            "needId": "57c4d2f7-b207-5ca1-a4b6-fb4330e72f89",
+            "sourceId": "97cafaf7-7ada-4149-acb5-a3722c1f7443",
+            "amount": {"numerator": "3", "denominator": "1"},
+            "unit": "count"
+          }
+        ]
+      }
+    }
+  ],
+  "rejected": {"candidateId": "f4b0095b-81b2-4e95-b1eb-a99170f24690", "revision": 1, "reason": "topUpUnreviewed"},
+  "changedDesk": {
+    "shopId": "44444444-4444-4444-8444-444444444444",
+    "placedRevision": 4,
+    "base": {
+      "shopRevision": 5,
+      "authorityEpoch": 1,
+      "recoveryRevision": 1,
+      "contextRevision": 1,
+      "supplyRevision": 6,
+      "pantryRevision": 6
+    },
+    "asOf": "2026-11-07T16:40:24.679Z",
+    "meals": [
+      {
+        "occurrenceId": "46188eaa-79b6-41e6-8a54-2e794eedc922",
+        "revisionId": "9f42ec1a-20bb-5971-a38a-72f155ab7e99",
+        "sourceMealRevision": 2,
+        "title": "Reviewed supper",
+        "notes": "",
+        "sourceURL": null,
+        "portions": 6,
+        "day": "2026-11-05",
+        "zone": null,
+        "due": null,
+        "exclusions": [],
+        "template": null,
+        "groups": [
+          {
+            "id": "5dcad6e5-6212-4a93-9ea0-2b73be7dd369",
+            "name": "Dinner group",
+            "servings": {"numerator": 4, "denominator": 1},
+            "protected": false,
+            "exclusions": []
+          },
+          {
+            "id": "18547ff3-a7a4-4a91-be3e-52dd306b5b2b",
+            "name": "Protected lunch",
+            "servings": {"numerator": 2, "denominator": 1},
+            "protected": true,
+            "exclusions": []
+          }
+        ],
+        "needs": [
+          {
+            "id": "50a75292-e0ae-526e-acd5-33876150dfba",
+            "foodId": null,
+            "matchedSourceIds": [],
+            "ingredientId": "5b991304-76fd-4699-8b95-19a877093326",
+            "groupId": "5dcad6e5-6212-4a93-9ea0-2b73be7dd369",
+            "name": "Beans",
+            "notes": "",
+            "quantity": {"amount": {"numerator": 400, "denominator": 1}, "unit": "gram", "originalLiteral": "400 g"},
+            "priority": "required",
+            "due": null,
+            "exclusions": ["No sesame"]
+          },
+          {
+            "id": "4aa4e54d-f7d2-51af-af5d-c93e45248a28",
+            "foodId": null,
+            "matchedSourceIds": [],
+            "ingredientId": "5b991304-76fd-4699-8b95-19a877093326",
+            "groupId": "18547ff3-a7a4-4a91-be3e-52dd306b5b2b",
+            "name": "Beans",
+            "notes": "",
+            "quantity": {"amount": {"numerator": 200, "denominator": 1}, "unit": "gram", "originalLiteral": "200 g"},
+            "priority": "protected",
+            "due": null,
+            "exclusions": ["No sesame"]
+          }
+        ],
+        "remainingElapsedMinutes": null,
+        "requiredLeadMinutes": null,
+        "advanceStepsCompleted": false
+      },
+      {
+        "occurrenceId": "5b0cbe00-1fcc-4b74-b5ce-ee252ff3debe",
+        "revisionId": "5d6e3a33-89f1-5f56-8e8d-e56923fb3b88",
+        "sourceMealRevision": 3,
+        "title": "Reviewed supper",
+        "notes": "Keep the entered method",
+        "sourceURL": null,
+        "portions": 6,
+        "day": "2098-11-11",
+        "zone": "UTC",
+        "due": "2098-11-11T18:00:00.000Z",
+        "exclusions": [],
+        "template": null,
+        "groups": [
+          {
+            "id": "5dcad6e5-6212-4a93-9ea0-2b73be7dd369",
+            "name": "Dinner group",
+            "servings": {"numerator": 4, "denominator": 1},
+            "protected": false,
+            "exclusions": []
+          },
+          {
+            "id": "18547ff3-a7a4-4a91-be3e-52dd306b5b2b",
+            "name": "Protected lunch",
+            "servings": {"numerator": 2, "denominator": 1},
+            "protected": true,
+            "exclusions": []
+          }
+        ],
+        "needs": [
+          {
+            "id": "f08f0390-7d15-51b2-bf8d-ab400531f7f7",
+            "foodId": null,
+            "matchedSourceIds": ["97cafaf7-7ada-4149-acb5-a3722c1f7443"],
+            "ingredientId": "5b991304-76fd-4699-8b95-19a877093326",
+            "groupId": "18547ff3-a7a4-4a91-be3e-52dd306b5b2b",
+            "name": "Beans",
+            "notes": "",
+            "quantity": {"amount": {"numerator": 2, "denominator": 1}, "unit": "count", "originalLiteral": "2"},
+            "priority": "protected",
+            "due": "2098-11-11T18:00:00.000Z",
+            "exclusions": ["No sesame"]
+          },
+          {
+            "id": "57c4d2f7-b207-5ca1-a4b6-fb4330e72f89",
+            "foodId": null,
+            "matchedSourceIds": ["97cafaf7-7ada-4149-acb5-a3722c1f7443"],
+            "ingredientId": "f57a4630-a82f-4c99-b25d-49ce7b749797",
+            "groupId": "5dcad6e5-6212-4a93-9ea0-2b73be7dd369",
+            "name": "Wraps",
+            "notes": "Warm before serving",
+            "quantity": {"amount": {"numerator": 6, "denominator": 1}, "unit": "count", "originalLiteral": "6"},
+            "priority": "required",
+            "due": "2098-11-11T18:00:00.000Z",
+            "exclusions": ["No sesame"]
+          }
+        ],
+        "remainingElapsedMinutes": 8,
+        "requiredLeadMinutes": null,
+        "advanceStepsCompleted": false
+      }
+    ],
+    "sourceOptions": [
+      {
+        "sourceId": "97cafaf7-7ada-4149-acb5-a3722c1f7443",
+        "name": "Wraps",
+        "exclusionTags": [],
+        "kind": "delivery",
+        "quantity": {"unit": "count", "amount": {"numerator": 5, "denominator": 1}, "originalLiteral": "5"}
+      }
+    ],
+    "mealSources": [
+      {
+        "occurrenceId": "46188eaa-79b6-41e6-8a54-2e794eedc922",
+        "sourceMealRevision": 2,
+        "sealedRevisionId": "9f42ec1a-20bb-5971-a38a-72f155ab7e99",
+        "completedSteps": [],
+        "sourceOccurrenceId": null,
+        "approvedIdea": null
+      },
+      {
+        "occurrenceId": "5b0cbe00-1fcc-4b74-b5ce-ee252ff3debe",
+        "sourceMealRevision": 3,
+        "sealedRevisionId": "c27a6763-52ae-52c7-bf25-84582471def6",
+        "completedSteps": [],
+        "sourceOccurrenceId": null,
+        "approvedIdea": null
+      }
+    ],
+    "unplannedOccurrenceIds": [],
+    "commitmentInventoryComplete": true,
+    "targetDigests": [
+      {
+        "occurrenceId": "46188eaa-79b6-41e6-8a54-2e794eedc922",
+        "digest": "cb382ef5c91596c29b9a830adcc95ebc57d14aea36f9b6bdbca3e11515496cc0"
+      },
+      {
+        "occurrenceId": "5b0cbe00-1fcc-4b74-b5ce-ee252ff3debe",
+        "digest": "ac101f2f469010fbe100b21ab6182291affb48dfde73db6827809690b40599a9"
+      }
+    ]
+  },
+  "changedEffective": {
+    "shopId": "44444444-4444-4444-8444-444444444444",
+    "placedRevision": 4,
+    "shopRevision": 5,
+    "authorityEpoch": 1,
+    "recoveryRevision": 1,
+    "contextRevision": 1,
+    "supplyRevision": 6,
+    "pantryRevision": 6,
+    "asOf": "2026-11-07T16:40:24.758Z",
+    "needs": [
+      {
+        "occurrenceId": "46188eaa-79b6-41e6-8a54-2e794eedc922",
+        "mealRevision": 2,
+        "ingredientId": "5b991304-76fd-4699-8b95-19a877093326",
+        "groupIds": ["5dcad6e5-6212-4a93-9ea0-2b73be7dd369"],
+        "protected": false,
+        "required": {"amount": {"numerator": 400, "denominator": 1}, "unit": "gram", "originalLiteral": "400 g"},
+        "issues": ["noMatch"],
+        "covered": {"numerator": "0", "denominator": "1"},
+        "missing": {"numerator": "400", "denominator": "1"},
+        "reservations": [],
+        "allocations": [],
+        "needId": "50a75292-e0ae-526e-acd5-33876150dfba",
+        "delivered": {"numerator": "0", "denominator": "1"},
+        "pantry": {"numerator": "0", "denominator": "1"},
+        "freezer": {"numerator": "0", "denominator": "1"}
+      },
+      {
+        "occurrenceId": "46188eaa-79b6-41e6-8a54-2e794eedc922",
+        "mealRevision": 2,
+        "ingredientId": "5b991304-76fd-4699-8b95-19a877093326",
+        "groupIds": ["18547ff3-a7a4-4a91-be3e-52dd306b5b2b"],
+        "protected": true,
+        "required": {"amount": {"numerator": 200, "denominator": 1}, "unit": "gram", "originalLiteral": "200 g"},
+        "issues": ["noMatch"],
+        "covered": {"numerator": "0", "denominator": "1"},
+        "missing": {"numerator": "200", "denominator": "1"},
+        "reservations": [],
+        "allocations": [],
+        "needId": "4aa4e54d-f7d2-51af-af5d-c93e45248a28",
+        "delivered": {"numerator": "0", "denominator": "1"},
+        "pantry": {"numerator": "0", "denominator": "1"},
+        "freezer": {"numerator": "0", "denominator": "1"}
+      },
+      {
+        "occurrenceId": "5b0cbe00-1fcc-4b74-b5ce-ee252ff3debe",
+        "mealRevision": 3,
+        "ingredientId": "5b991304-76fd-4699-8b95-19a877093326",
+        "groupIds": ["18547ff3-a7a4-4a91-be3e-52dd306b5b2b"],
+        "protected": true,
+        "required": {"amount": {"numerator": 2, "denominator": 1}, "unit": "count", "originalLiteral": "2"},
+        "issues": [],
+        "covered": {"numerator": "2", "denominator": "1"},
+        "missing": {"numerator": "0", "denominator": "1"},
+        "reservations": [
+          {
+            "sourceId": "97cafaf7-7ada-4149-acb5-a3722c1f7443",
+            "reservationId": "44dc8230-146a-43c9-80df-2540f09c1864",
+            "requested": {"numerator": "2", "denominator": "1"},
+            "backed": {"numerator": "2", "denominator": "1"}
+          }
+        ],
+        "allocations": [
+          {
+            "sourceId": "97cafaf7-7ada-4149-acb5-a3722c1f7443",
+            "amount": {"numerator": "2", "denominator": "1"},
+            "kind": "delivery"
+          }
+        ],
+        "needId": "f08f0390-7d15-51b2-bf8d-ab400531f7f7",
+        "delivered": {"numerator": "2", "denominator": "1"},
+        "pantry": {"numerator": "0", "denominator": "1"},
+        "freezer": {"numerator": "0", "denominator": "1"}
+      },
+      {
+        "occurrenceId": "5b0cbe00-1fcc-4b74-b5ce-ee252ff3debe",
+        "mealRevision": 3,
+        "ingredientId": "f57a4630-a82f-4c99-b25d-49ce7b749797",
+        "groupIds": ["5dcad6e5-6212-4a93-9ea0-2b73be7dd369"],
+        "protected": false,
+        "required": {"amount": {"numerator": 6, "denominator": 1}, "unit": "count", "originalLiteral": "6"},
+        "issues": [],
+        "covered": {"numerator": "3", "denominator": "1"},
+        "missing": {"numerator": "3", "denominator": "1"},
+        "reservations": [],
+        "allocations": [
+          {
+            "sourceId": "97cafaf7-7ada-4149-acb5-a3722c1f7443",
+            "amount": {"numerator": "3", "denominator": "1"},
+            "kind": "delivery"
+          }
+        ],
+        "needId": "57c4d2f7-b207-5ca1-a4b6-fb4330e72f89",
+        "delivered": {"numerator": "3", "denominator": "1"},
+        "pantry": {"numerator": "0", "denominator": "1"},
+        "freezer": {"numerator": "0", "denominator": "1"}
+      }
+    ],
+    "unplannedOccurrenceIds": []
+  }
+}

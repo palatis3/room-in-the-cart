@@ -17,6 +17,7 @@ private final class S17FixtureServer: @unchecked Sendable {
     static let occurrence = "55555555-5555-4555-8555-555555555555"
     private let lock = NSRecursiveLock()
     private let deliveries = ProcessInfo.processInfo.arguments.contains("--shared-delivery-fixture") ? SharedDeliveryFixtureRecords() : nil
+    private let fallbacks = SharedFallbackUIFixture()
     private var revision = 2
     private let quoteObservedAt = Date().addingTimeInterval(-60)
     private let quoteExpiresAt = Date().addingTimeInterval(3600)
@@ -52,11 +53,12 @@ private final class S17FixtureServer: @unchecked Sendable {
         }
         if path == "/auth/v1/user" { return try json(["id":shopper ? "native-shopper":"native-planner","email_confirmed_at":"date"]) }
         if path == "/v1/me/workspaces" { return try json(["workspaces":[["householdId":Self.household,"label":"Isolated shared meals","role":"contributor"]]]) }
-        if path.hasSuffix("/devices") { return try json(["deviceId":shopper ? "shopper-device":"planner-device","deviceToken":shopper ? "shopper-token":"planner-token"],status:201) }
+        if path.hasSuffix("/devices") { return try json(["deviceId":shopper ? (fallbacks != nil ? "dddddddd-dddd-4ddd-8ddd-dddddddddddd" : "shopper-device") : "planner-device","deviceToken":shopper ? "shopper-token":"planner-token"],status:201) }
         if path.hasSuffix("/bootstrap") {
             var capabilities = shopper ? ["shopper_commands","shopper_inbox","request_preview"] : ["meal_proposals"]
             if shopper, let deliveries {
                 capabilities.append("delivery_evidence")
+                if fallbacks != nil { capabilities.append("accepted_fallbacks") }
                 if deliveries.recovery != nil { capabilities.append("meal_recovery") }
                 if deliveries.pantry != nil { capabilities.append("pantry_lots") }
                 if deliveries.supportsCookCopies { capabilities += ["cook_copies", "cook_corrections"] }
@@ -80,6 +82,12 @@ private final class S17FixtureServer: @unchecked Sendable {
         let pantryPath = deliveryPath + "/pantry-lots"
         let cookPath = deliveryPath + "/cook-copies"
         let recoveryPath = deliveryPath + "/meal-recovery"
+        if let fallbacks, path == deliveryPath || path.hasPrefix(deliveryPath + "/") || path == scoped + "/commands" {
+            guard request.value(forHTTPHeaderField: "Authorization") == "Bearer fixture-shopper",
+                  request.value(forHTTPHeaderField: "X-Device-Token") == "shopper-token" else { return try denied() }
+            let route = path == scoped + "/commands" ? "/commands" : String(path.dropFirst(deliveryPath.count))
+            if let result = try fallbacks.respond(route, method: request.httpMethod ?? "GET", input: input, bytes: bytes) { return result }
+        }
         if let deliveries, [deliveryPath + "/delivery-evidence", deliveryPath + "/delivery-evidence/coverage",
                             pantryPath, pantryPath + "/coverage", pantryPath + "/observation-preview",
                             recoveryPath, recoveryPath + "/coverage", recoveryPath + "/preview",

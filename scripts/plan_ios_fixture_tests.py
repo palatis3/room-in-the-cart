@@ -28,6 +28,7 @@ PROFILES = {
             "RecordsMediaUITests",
             "RequestDuplicateComparisonUITests",
             "SharedDeliveryUITests",
+            "SharedFallbackUITests",
             "SharedMealChangeUITests",
             "SharedMealCivilDateUITests",
             "SharedMealIdeaUITests",
