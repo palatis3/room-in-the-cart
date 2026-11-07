@@ -152,5 +152,51 @@
       "summarySHA256": "3353e70958b3d2e51be0b892e53976cf211191ce34aa74e494b89dc52c3dcc64",
       "deviceBuild": "Unsigned Release build for generic arm64 iPhone passed executable, assets, privacy, environment and both embedded extension checks."
     }
+  },
+  "printedMeasureAbbreviations": {
+    "productCommit": "8a2ded6aebea3df73b958024db9e8bff31323f4f",
+    "before": "The unmodified importer staged \"2 × 12 fl. oz. seltzer\" as a count of 24, used the unit text as part of the item name, and treated \"2 tbsp. cocoa\" as a count. The focused regression failed on 19 assertions.",
+    "selectedDevice": "iPhone SE (3rd generation) simulator running iOS 17.0 (21A328)",
+    "native": {
+      "passed": 17,
+      "recordedRuntimeWarnings": 0,
+      "strictResultSHA256": "b4dd6625b882bcb04adc91974450c38238ed34bb5b020b1ef36207c9fc09f553",
+      "coverage": "16 structured-capture tests and one installed list import, commit and restart journey"
+    },
+    "sqlite": {
+      "integrity": "ok",
+      "headRevision": 2,
+      "headSHA256": "3cf27460a6f0066500bda4d48fe83e1936b4ef1405227515b2366f028a9aad10",
+      "originalText": "2 cans of seltzer, 12 fl. oz. each",
+      "savedQuantity": {
+        "amount": {
+          "denominator": 1,
+          "numerator": 24
+        },
+        "originalLiteral": "2 cans of seltzer, 12 fl. oz. each",
+        "unit": "fluidOunce"
+      },
+      "savedPack": {
+        "amountPerPack": {
+          "amount": {
+            "denominator": 1,
+            "numerator": 12
+          },
+          "originalLiteral": "2 cans of seltzer, 12 fl. oz. each",
+          "unit": "fluidOunce"
+        },
+        "count": 2
+      },
+      "importBatches": 1,
+      "lines": 1,
+      "contributions": 1
+    },
+    "packageGate": [
+      "CoreDomain: 194 passed, 0 deliberately skipped",
+      "DeviceSurfaces: 30 passed, 0 deliberately skipped",
+      "HouseholdClient: 101 passed, 3 deliberately skipped",
+      "LocalStore: 74 passed, 0 deliberately skipped",
+      "RecordArchive: 33 passed, 0 deliberately skipped"
+    ]
   }
 }
