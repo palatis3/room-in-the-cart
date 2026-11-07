@@ -2,6 +2,12 @@
 
 Updated November 7, 2026 UTC. The owner resumed and explicitly approved the reviewed hosted staging update; the full first-version goal is active and release acceptance remains incomplete. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
+## November 7 hosted staging rollout
+
+The approved 031–040 update is live on Room in the Cart Staging. An independent read of the hosted registry matched all 40 SHA-256 migration checksums to the pinned runtime source. Postflight preserved the contents of all 108 original non-registry tables and verified the expected 129-table result, grants and row-level security. The previous encrypted backup and both recovery keys remain on the owner’s Mac.
+
+The staging address serves Vercel deployment `dpl_7Q9S57LPCh1JACsdP6X7sweHT4wr` from the reviewed build. All 29 checks passed on the protected deployment and again after promotion on the public alias. The checks cover exact web assets, authentication boundaries and anonymous maintenance denial. Chrome also opened Help, Privacy, Terms and Support in both English and US Spanish at 375 CSS pixels. Each page rendered without horizontal overflow. Both Support pages linked to the configured email address. Configured live household sign-in, production providers and App Store distribution remain open. [Rollout receipt](evidence/b11/staging-040-preparation-20261107/deployed.json)
+
 ## November 7 release verification through schema 040
 
 The pinned staging candidate at `eae1e72` builds from clean dependency installs. Vercel’s local deployment inspection enumerated 162 regular input files. Each matched the pinned Git revision byte for byte. The current staging alias points to ready deployment `dpl_2tfRmEfTGLW63sSTksJ6xJ9MZ97P` and passed six public boundary checks. The live registry still ends at 030. No 031–040 migration or candidate deployment was applied during preparation. [Candidate inputs, ten migration checksums and build evidence](evidence/b11/staging-040-preparation-20261107/candidate.json)

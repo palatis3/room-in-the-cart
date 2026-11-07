@@ -1,5 +1,7 @@
 # Room in the Cart staging update through migration 040
 
+The approved staging update is live. The [post-promotion record](deployed.json) identifies the deployment, database verification, and public web checks.
+
 The update adds shared delivery and pantry evidence, reviewed dinner recovery and cook instructions, purchase confirmation, and explicit carry of a deferred request to a later pickup. The runtime source is `eae1e721cb08b8d678200a2345f5c3abb18df6c6`.
 
 | Component | Reviewed staging target |

@@ -1,0 +1,95 @@
+{
+  "runtimeSource": "eae1e721cb08b8d678200a2345f5c3abb18df6c6",
+  "liveRegistry": {
+    "version": 40,
+    "independentlyComparedFileSHA256": 40
+  },
+  "databaseRolloutReceiptSHA256": "8ba3c8fec9aacc129f6cdc36e63913819d9753767d0903c7a0d2d4215ef5eae8",
+  "project": "Room in the Cart Staging",
+  "publicURL": "https://room-in-the-cart-staging.vercel.app",
+  "previousDeployment": "dpl_2tfRmEfTGLW63sSTksJ6xJ9MZ97P",
+  "currentReadyDeployment": "dpl_7Q9S57LPCh1JACsdP6X7sweHT4wr",
+  "currentDeployInputSHA256": "5f9dc2c19c1c054d7caa1e1643688aca833caa63ec133b1247c8649d2c620b8c",
+  "httpChecks": {
+    "protected": {
+      "verifiedAt": "2026-11-07T18:47:45.182337+00:00",
+      "passed": 29,
+      "receiptSHA256": "7fda5809734b39e85f8c2c208efc4d4b2e066b1f97010fee0f9b2de77c89e33d"
+    },
+    "public": {
+      "verifiedAt": "2026-11-07T18:48:14.825471+00:00",
+      "passed": 29,
+      "receiptSHA256": "32ecd0a3f68cfc5ef3e3dc5af9f2d8e2beaf9c73afee433f18b126738b9b4c5b"
+    }
+  },
+  "publicBrowser": {
+    "engine": "Google Chrome for Testing 158.0.8127.18",
+    "scope": "Desktop Chrome in a 375 CSS pixel mobile viewport. Anonymous public pages.",
+    "checks": [
+      {
+        "locale": "en-US",
+        "route": "help",
+        "heading": "Help",
+        "lang": "en",
+        "viewport": 375,
+        "content": 375
+      },
+      {
+        "locale": "en-US",
+        "route": "privacy",
+        "heading": "Privacy and data",
+        "lang": "en",
+        "viewport": 375,
+        "content": 375
+      },
+      {
+        "locale": "en-US",
+        "route": "terms",
+        "heading": "Terms of use",
+        "lang": "en",
+        "viewport": 375,
+        "content": 375
+      },
+      {
+        "locale": "en-US",
+        "route": "support",
+        "heading": "Support",
+        "lang": "en",
+        "viewport": 375,
+        "content": 375
+      },
+      {
+        "locale": "es-US",
+        "route": "help",
+        "heading": "Ayuda",
+        "lang": "es",
+        "viewport": 375,
+        "content": 375
+      },
+      {
+        "locale": "es-US",
+        "route": "privacy",
+        "heading": "Privacidad y datos",
+        "lang": "es",
+        "viewport": 375,
+        "content": 375
+      },
+      {
+        "locale": "es-US",
+        "route": "terms",
+        "heading": "T\u00e9rminos de uso",
+        "lang": "es",
+        "viewport": 375,
+        "content": 375
+      },
+      {
+        "locale": "es-US",
+        "route": "support",
+        "heading": "Soporte",
+        "lang": "es",
+        "viewport": 375,
+        "content": 375
+      }
+    ]
+  }
+}

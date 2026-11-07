@@ -2,7 +2,7 @@
 
 ## November 7 purchase, closeout and next-shop acceptance
 
-The [current handoff](CURRENT-HANDOFF.md) records the native S11 purchase and financial-closeout tests, real-service Android contributor checks in both languages and the local 039 restore. S12 now has a Free path for an assigned shopper to bring an eligible earlier family request to a fresh shared inbox and price it there. The local 040 regression suite covers source and destination authority, child consent, erasure, pagination and competing destinations. A previous store review is excluded from the new-shop command. End-to-end access on physical phones and the hosted rollout remain open.
+The [current handoff](CURRENT-HANDOFF.md) records the native S11 purchase and financial-closeout tests, real-service Android contributor checks in both languages and the local 039 restore. S12 now has a Free path for an assigned shopper to bring an eligible earlier family request to a fresh shared inbox and price it there. The local 040 regression suite covers source and destination authority, child consent, erasure, pagination and competing destinations. A previous store review is excluded from the new-shop command. The approved [hosted rollout through 040](evidence/b11/staging-040-preparation-20261107/deployed.json) has passed its database and deployed-web checks. The mixed-phone grocery test used a local service and synthetic accounts. End-to-end access with production providers and physical phones remains open.
 
 ## November 7 delivery coverage and dinner recovery
 
