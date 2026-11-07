@@ -2,6 +2,14 @@
 
 Updated November 7, 2026 UTC. The owner resumed and explicitly approved the reviewed hosted staging update; the full first-version goal is active and release acceptance remains incomplete. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
+## Household pantry and freezer, November 7
+
+From **What came home → Pantry and freezer**, the assigned shopper can register a household batch, select it for a shop, link ingredients and reserve food for a named group. Storing a confirmed delivery retains its physical identity. A correction previews the effect on each linked meal and its named reservations before the shopper confirms it. Other shops' commitments count toward availability while their meal details stay private.
+
+The full iPhone journey passed on iOS 17.0 (iPhone SE) and 26.2 (iPhone 17 Pro), with zero XCTest runtime warnings. It verified the original five-unit count, two protected lunch units, three covered dinner units and one missing unit. After previewing a correction to three units, cancelling kept the original counts. Confirming left lunch covered and three dinner units missing. English and US Spanish cook previews showed the corrected dinner. Both simulators previously exposed a missing household dependency on navigation to joint coverage. The fixed unsigned Release build passed bundle checks.
+
+Local migration 035 passed 194 PostgreSQL and 439 service tests, and six Swift HTTPS scenarios exercised the service. Populated backups restored all 91 pre-upgrade and 95 post-upgrade tables with matching row hashes, permissions and row-security policies. The restored shopper reopened the partially backed reservation and the Spanish dated cook copy. Staging was last verified at migration 030. The shared post-arrival replacement editor, publication and final release acceptance continue separately.
+
 ## Dated instructions from a shared delivery, November 7
 
 From **What came home → Delivered food by meal**, the assigned shopper can open one meal, review or edit the cook’s wording in English or US Spanish, and share the dated text. The preview includes the meal date, serving groups, meal and ingredient exclusions, preparation facts, confirmed delivery quantities, and any difference between food promised and food still backed. Delivery and meal revisions appear with the coverage check time. Readback uses the unedited projection. A separate action opens the scoped live-instruction composer.
