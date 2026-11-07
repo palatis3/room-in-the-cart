@@ -1,0 +1,22 @@
+{
+  "runID": 42337977943,
+  "attempt": 1,
+  "candidate": "8d1a79b22981148839c6e3d0827c6710f877a369",
+  "artifactID": 13560692753,
+  "name": "storekit-en-1",
+  "apiSize": 1125338,
+  "apiDigest": "sha256:f2d7d89ed4221654e391043fed88249249c36f6e1325c2f39ac6350d67fd432c",
+  "extracted": true,
+  "limits": {
+    "archive": 256000000,
+    "member": 50000000,
+    "total": 1000000000,
+    "members": 50000,
+    "ratio": 1000
+  },
+  "sha256": "f2d7d89ed4221654e391043fed88249249c36f6e1325c2f39ac6350d67fd432c",
+  "digestVerified": true,
+  "members": 83,
+  "expandedBytes": 2112709,
+  "oversizedMembers": []
+}

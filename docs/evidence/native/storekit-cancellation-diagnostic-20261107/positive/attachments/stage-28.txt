@@ -1,0 +1,1 @@
+StoreKitCancellationTrace seq=28 elapsed=0.203387208 seconds stage=history.begin

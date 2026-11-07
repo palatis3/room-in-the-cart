@@ -1,0 +1,205 @@
+{
+  "decoder": "Node built-in node:zlib.zstdDecompressSync; maximum output 4096 bytes per allowlisted plain-text payload",
+  "payloads": [
+    {
+      "name": "StoreKitCancellation-stage-1",
+      "payloadID": "0~PUo4aonN-xvtT7fBZfEeHK4xlNQoRw0esZW7L24RFfwAWGbOHeBcFcrFlDB25-OKWwy6cLziRKNJ0n13ENCOMQ==",
+      "encoding": "raw",
+      "storedSHA256": "58374058718f4514d44f4580d65fe62ceb22c57590185197fb191317f8380a2a",
+      "decodedSHA256": "58374058718f4514d44f4580d65fe62ceb22c57590185197fb191317f8380a2a",
+      "decodedBytes": 81
+    },
+    {
+      "name": "StoreKitCancellation-stage-2",
+      "payloadID": "0~fUgKGEzZwl3fBhEhHe5mIFWikxUDWAE4SJDQrBbt1b-zevFkJx24O8UuHZv40ftoTkpVLqfleRHrYukafD7JNA==",
+      "encoding": "raw",
+      "storedSHA256": "c628565c6fa75603e6b654670beb3cb62bf4d7d6d187a2b4a67b7188ce04b0f8",
+      "decodedSHA256": "c628565c6fa75603e6b654670beb3cb62bf4d7d6d187a2b4a67b7188ce04b0f8",
+      "decodedBytes": 81
+    },
+    {
+      "name": "StoreKitCancellation-stage-3",
+      "payloadID": "0~xKMxUlOpKEyR_4Kny-PbTpCNUwNCPjRpeEyU9lHfwOH24SHHFXRauK8b9EPeareYlLA5DE07zAp8XOxWBMFaHw==",
+      "encoding": "zstd",
+      "storedSHA256": "27c072a07db10ca3a41bf6c17e07a5fd36251eb4a4af0f2504a64031a3d5954f",
+      "decodedSHA256": "f2d86b27133562459c8637fd5ceaa9afa6370b0780c468d1c98a94a0ea6287b8",
+      "decodedBytes": 103
+    },
+    {
+      "name": "StoreKitCancellation-stage-4",
+      "payloadID": "0~I1t6eD9zDmVvUXlaEyAk44Xwe_Su8N3AkJE6yAYEpEkZiKT-UJi1MXwtETes-6ssKd4iXRvi27n_izY5v9cLXA==",
+      "encoding": "zstd",
+      "storedSHA256": "d3c04a55a8cb6f2c0f0ad11d8341d963344d704d2afc6dff09576158c4f1bbfd",
+      "decodedSHA256": "335b95cec743e3a98551a7ea295184590f7e94889e3c1f5f509959a6c1320962",
+      "decodedBytes": 101
+    },
+    {
+      "name": "StoreKitCancellation-stage-5",
+      "payloadID": "0~gO0i2jccz4b4awq9lx9oQ1_RKaTxe7ocY_bqBZzM0a2p9NQCyGv188jPMXGFin6hPXlyfJcNb4ES2-qQgFOxaw==",
+      "encoding": "raw",
+      "storedSHA256": "c9924eaac1d97ed00172fabfb0cbe578fa3bf12d2ba6d1fe1efd9ed9b78c9a3b",
+      "decodedSHA256": "c9924eaac1d97ed00172fabfb0cbe578fa3bf12d2ba6d1fe1efd9ed9b78c9a3b",
+      "decodedBytes": 82
+    },
+    {
+      "name": "StoreKitCancellation-stage-6",
+      "payloadID": "0~6nbO9brzRr2mkFFKSk7_vrulk3Sd91_YzZ_p4i3SssMgdvt2OG8yUWsmc0qIAqL3WiRyJXFBbwBu7_fDLFdtCw==",
+      "encoding": "raw",
+      "storedSHA256": "a2c7036397868f6ffa3fd45a06c645fb01898aaf77079b90afe99976410eccdb",
+      "decodedSHA256": "a2c7036397868f6ffa3fd45a06c645fb01898aaf77079b90afe99976410eccdb",
+      "decodedBytes": 79
+    },
+    {
+      "name": "StoreKitCancellation-stage-7",
+      "payloadID": "0~9Ow8YIOY1cc6fU7Gv_OynoJs2qZOJymP_OC7iCtBdoehoGcDYsGl3w5F9cF9NswgaOrG0oi92JpVbNEvIkaGeg==",
+      "encoding": "raw",
+      "storedSHA256": "b3e77ca2c7390985b55959c7bc3886c89fdf45caa5d59d159a10e3511c44ec9c",
+      "decodedSHA256": "b3e77ca2c7390985b55959c7bc3886c89fdf45caa5d59d159a10e3511c44ec9c",
+      "decodedBytes": 76
+    },
+    {
+      "name": "StoreKitCancellation-stage-8",
+      "payloadID": "0~77lcyksDRLxINyhcDWtQE7SMOFB1antb795aI0-ln9scbQ10Dd-usSR8CDN-XcU6RR1WUSG6D-dH5fvxJiMBYA==",
+      "encoding": "raw",
+      "storedSHA256": "b6b486881d6d77db8e63de302c31d28f01bae98c634b1b513759ea823815a8c7",
+      "decodedSHA256": "b6b486881d6d77db8e63de302c31d28f01bae98c634b1b513759ea823815a8c7",
+      "decodedBytes": 83
+    },
+    {
+      "name": "StoreKitCancellation-stage-9",
+      "payloadID": "0~v4kN1B5q0rFWsJyIKYbklFdl0mnvpu4tCs0G11DMUoSfRts0sEkw4hwkTV4VV1wPvFAzCynWSkhU_Uf_Ju2KVA==",
+      "encoding": "zstd",
+      "storedSHA256": "37017d23328467656f7f36492fd5c5ee89ec6608202b52a302609a57509e58d0",
+      "decodedSHA256": "3fae78a568fdb51e74372455dd790f7c2d50b01fd64215eb612ebb12ed3305e3",
+      "decodedBytes": 87
+    },
+    {
+      "name": "StoreKitCancellation-stage-10",
+      "payloadID": "0~I58TpQbPKItYAiSSUuf1JM6C9nZzINee8oW-XN6TkuSy2hvkwKk8D8f-7VBUFAnYMn4FYphGkw-yiyzjpwkLSw==",
+      "encoding": "raw",
+      "storedSHA256": "6e9e8206003b137ba02414c76bc1666ff0f770f74614af1cc291acfa9669835e",
+      "decodedSHA256": "6e9e8206003b137ba02414c76bc1666ff0f770f74614af1cc291acfa9669835e",
+      "decodedBytes": 85
+    },
+    {
+      "name": "StoreKitCancellation-stage-11",
+      "payloadID": "0~8lvue4guENuyZmjRW837NBQxQmOTjNL5xXlTxmHEol333CeRoomH9amrRGsszWgS7kdLxYsNdb5C9dBj9YkLOw==",
+      "encoding": "raw",
+      "storedSHA256": "8bcc88e98010f932867ed3c0e69d84eabf5bf74713f5c829a6162fb0160e79c3",
+      "decodedSHA256": "8bcc88e98010f932867ed3c0e69d84eabf5bf74713f5c829a6162fb0160e79c3",
+      "decodedBytes": 91
+    },
+    {
+      "name": "StoreKitCancellation-stage-12",
+      "payloadID": "0~XfoO_gZRHNON1ySzzZxGYoDGhocRHJ1zcGRbenr66_OXYsoJgCvys_dn4pmYF9ZdQSA6WgRFbVM00GYlrBvGfw==",
+      "encoding": "raw",
+      "storedSHA256": "59091c16a680d03a79936d8fd961bf61a1f99b781eb33f00bfff89980394d810",
+      "decodedSHA256": "59091c16a680d03a79936d8fd961bf61a1f99b781eb33f00bfff89980394d810",
+      "decodedBytes": 89
+    },
+    {
+      "name": "StoreKitCancellation-stage-13",
+      "payloadID": "0~2bkWo3BM4UIkZvw5T65dECWjHtxDjswYSS-qQwYIkAc20xCGF3umGl__6LNHMSYQ1E06KfMYGJM8w1PeKiGjjw==",
+      "encoding": "zstd",
+      "storedSHA256": "ade8326e79b54d2dbd9723e2a711a0e97b61b077cdbd982f39904d051b7f771a",
+      "decodedSHA256": "1882f0699c8c4375c94169859a71365e0fd4618b53e5adf65494353ca151e58a",
+      "decodedBytes": 94
+    },
+    {
+      "name": "StoreKitCancellation-stage-14",
+      "payloadID": "0~ZP-mnYe8mXort_gQ-DEm6YiUuxn-_lzJKcx7gtX_OMh9Jr7EUr7SYswxQdCnuxyZGWhUp81uk0mTC78WJqr-fQ==",
+      "encoding": "raw",
+      "storedSHA256": "e2154df9645372997dbea46c9ddee9396b62cbe9eb8b89fa550c2bb12446a33d",
+      "decodedSHA256": "e2154df9645372997dbea46c9ddee9396b62cbe9eb8b89fa550c2bb12446a33d",
+      "decodedBytes": 92
+    },
+    {
+      "name": "StoreKitCancellation-stage-15",
+      "payloadID": "0~r5ZI_BNNp3SgHXJP9FIu87YQk_tBJ6q9veuQ7S6wvFJNSlQ3DvbknK1k1YxbAysHq3YJ67PouZvG9iQbppfwzg==",
+      "encoding": "raw",
+      "storedSHA256": "dc2b6792f1e01c433d2a9867d3c28bf39438c85b7fd29a4df1a1a50d64be8741",
+      "decodedSHA256": "dc2b6792f1e01c433d2a9867d3c28bf39438c85b7fd29a4df1a1a50d64be8741",
+      "decodedBytes": 91
+    },
+    {
+      "name": "StoreKitCancellation-stage-16",
+      "payloadID": "0~qphFMwm1CddIvlLbYzws3Rc87e3dK1oGKDQNT1pf2uR9p43TiXeU0cE0f1FoDXHlwLcIould2HfijfOu9IbbDA==",
+      "encoding": "zstd",
+      "storedSHA256": "d563c393e95dfe8eb997edfc3cf4417db23b98750e2054fb15c159e14f173fce",
+      "decodedSHA256": "8438bb520e79e25e0ed725b31856e5ee27567c8ca10ca87aeed633e1245cf8ee",
+      "decodedBytes": 89
+    },
+    {
+      "name": "StoreKitCancellation-stage-17",
+      "payloadID": "0~GoOWIyGNuTvy48eNANxprIfBiNxKiarQIdlb7ncChbg6ZQqalh9z29_ihR8tPDMxCLeSPp3V3-DqU4rIaPoWVQ==",
+      "encoding": "raw",
+      "storedSHA256": "ceac091500f41ae41ba0959063c6a764dee9d2a90e39f723c7f9f18a791e9189",
+      "decodedSHA256": "ceac091500f41ae41ba0959063c6a764dee9d2a90e39f723c7f9f18a791e9189",
+      "decodedBytes": 81
+    },
+    {
+      "name": "StoreKitCancellation-stage-18",
+      "payloadID": "0~tqDgiaerafERBw6_ss-7PeTy7UIJNKlQxctOuAomaFUx_fUxXeMzINaDyqBTAUheVBCW1JxGsjlOaLFAiwH4QQ==",
+      "encoding": "raw",
+      "storedSHA256": "e6711c146073d783e6004b461e1b022fed5d7949c7a5ebbd32ea8d62b5deecac",
+      "decodedSHA256": "e6711c146073d783e6004b461e1b022fed5d7949c7a5ebbd32ea8d62b5deecac",
+      "decodedBytes": 87
+    },
+    {
+      "name": "StoreKitCancellation-stage-19",
+      "payloadID": "0~5zByrw-_0314CThubYZ9ugPtEmPC_xjD_xQAxHgmEMzOmJ9ul5lp9J5u79bRbStuaxV68F311OoYytIm7oCRsA==",
+      "encoding": "raw",
+      "storedSHA256": "d1e68ffc2e3db7e9518d55c757f5244b4e43a4dc06cc2347efe8ceaff682aaa4",
+      "decodedSHA256": "d1e68ffc2e3db7e9518d55c757f5244b4e43a4dc06cc2347efe8ceaff682aaa4",
+      "decodedBytes": 85
+    },
+    {
+      "name": "StoreKitCancellation-stage-20",
+      "payloadID": "0~z6-BXCO9ECA6MrUnC9B_bSXquTm9zQGtGiz0gIJYAspGkB3rWbadyHfhxs6ZcJPcE0pJsm7DCsfBpXBCpjY3vg==",
+      "encoding": "raw",
+      "storedSHA256": "23b3756b9393127530afea9e678bea60d3ffa6f022351c583f89cf8b3dce1d6c",
+      "decodedSHA256": "23b3756b9393127530afea9e678bea60d3ffa6f022351c583f89cf8b3dce1d6c",
+      "decodedBytes": 88
+    },
+    {
+      "name": "StoreKitCancellation-stage-21",
+      "payloadID": "0~aM6hC0y59hro01OKC45X6aahC2cY_wdSXzWckI_fzlDfemifXsql2ajnnN0Awb-Ny6sBUgwuHXEe4X8f5ojaiA==",
+      "encoding": "raw",
+      "storedSHA256": "5fb8165ce61cf4c6dd1d93023b91b3ecb6e8f63c66ed0df6b56e5fe8397e266d",
+      "decodedSHA256": "5fb8165ce61cf4c6dd1d93023b91b3ecb6e8f63c66ed0df6b56e5fe8397e266d",
+      "decodedBytes": 86
+    },
+    {
+      "name": "StoreKitCancellation-stage-22",
+      "payloadID": "0~fqgNdnhhUFbK6Qek8Xj60POlc4ik6wm42MsFmeJFey3CMfyuU2bWOPBgcx9PH8lWQYZpw2VX21HKAiLBmcXnSQ==",
+      "encoding": "raw",
+      "storedSHA256": "87bd593669293e62581024b5858d98540c84f4517c3c555d11264bded5630597",
+      "decodedSHA256": "87bd593669293e62581024b5858d98540c84f4517c3c555d11264bded5630597",
+      "decodedBytes": 87
+    },
+    {
+      "name": "StoreKitCancellation-stage-23",
+      "payloadID": "0~esV6PWkKYr4NMgIIgVhpNTeBs9ers8qF5YEr6GKJT1LbZ4jBHhzUSBCF01XR_O-wQFD7oKTrDauY6TpPeKe8ag==",
+      "encoding": "raw",
+      "storedSHA256": "70b5e373fa0ede69a88274626b1fa669da59e66991fed7a2be1d68dc6f0fd35d",
+      "decodedSHA256": "70b5e373fa0ede69a88274626b1fa669da59e66991fed7a2be1d68dc6f0fd35d",
+      "decodedBytes": 94
+    },
+    {
+      "name": "StoreKitCancellation-stage-24",
+      "payloadID": "0~TCvqSjMjxfJKop695V6G2-ITefwW2dYj4UNC8g2KFoRcBgKf81JMbneZ4h63PS1XhWnxK6wi_1PJvZoACYrNRA==",
+      "encoding": "raw",
+      "storedSHA256": "65108028a8530e114b208989094baa57846812e4db342c800b794bcd749d27f4",
+      "decodedSHA256": "65108028a8530e114b208989094baa57846812e4db342c800b794bcd749d27f4",
+      "decodedBytes": 92
+    },
+    {
+      "name": "StoreKitCancellation-stage-25",
+      "payloadID": "0~7H5QNmuRb1v5FqDMfl4RFGwiNCvjQtjk2lyhj7wSjNR0PVuGMuX9Xo3waUKSc2ECI8whmfUaKS0jscBQHksq0Q==",
+      "encoding": "raw",
+      "storedSHA256": "c2dbf4c725b0a346e4d1db01a760a1ae072aa69c3dc40c2c1ecd6894e0b60842",
+      "decodedSHA256": "c2dbf4c725b0a346e4d1db01a760a1ae072aa69c3dc40c2c1ecd6894e0b60842",
+      "decodedBytes": 92
+    }
+  ]
+}

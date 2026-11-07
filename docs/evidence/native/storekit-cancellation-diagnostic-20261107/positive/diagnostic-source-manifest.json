@@ -1,0 +1,16 @@
+{
+  "candidate": "8d1a79b22981148839c6e3d0827c6710f877a369",
+  "sourceSHA256": {
+    "ios/Tests/StoreKitScenarioTests.swift": "181bbbea2391771a55f1f1e345fdc0118b64eeeef4639aff6f01e78003d17764",
+    "ios/Features/Membership/MembershipModel.swift": "a5815360acc53d80b522f35104fe830a9c6a08eae913fde6d2c93abe2075efd1",
+    "ios/Features/Membership/MembershipStoreKit.swift": "483eed984ae19e274cd4115207bb20cbb4c99d4f5523793d5311b4507381d056",
+    "ios/Features/Membership/MembershipDomain.swift": "c16d4d9793d0d47c9f541e4a9c2fb6d8dca4efa2b2955206295899e1dadcfe32",
+    "ios/Tests/LocalStoreKit.xctestplan": "77d789396c8521d079002ffcc150e5b434206bd460a21c56778b4109dab5b879",
+    ".github/workflows/ios-deep.yml": "d5fe2f5afee8eaa363a7dbc0ed3cb064ddb26d2668a3ef9913fffa8f104605f2"
+  },
+  "proposalSHA256": "f5efe4f674f5708dc784cd5cacf8e67e854f92302b0d83cb0aa80ad522d12c88",
+  "patchSHA256": "6b9a7053581b7d70f18447fb8d75fda134bb2b235b0bcb16b761e5aae5003ee2",
+  "compiled": false,
+  "nativeTestsExecuted": false,
+  "diagnosticOnly": true
+}

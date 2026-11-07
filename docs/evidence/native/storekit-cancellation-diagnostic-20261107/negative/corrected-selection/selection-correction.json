@@ -1,0 +1,10 @@
+{
+  "reason": "Root supervisor used nonexistent target RoomInTheCartStoreKitTests; original log contains no Test Case execution",
+  "previousResult": {
+    "exit": 70,
+    "supervisorExpired": false,
+    "end": 1794027805.986869
+  },
+  "productManifestUnchanged": true,
+  "scope": "First actual negative-case execution; no test retry"
+}

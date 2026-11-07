@@ -1,0 +1,45 @@
+{
+  "candidate": "8d1a79b22981148839c6e3d0827c6710f877a369",
+  "runID": 42337977943,
+  "locales": {
+    "es": {
+      "artifactID": 13559864981,
+      "sha256": "ecf2d713fa9fa705a6fa076e9dfc5932454ce1cc9c8f806aea12abaa16d7b072",
+      "digestVerified": true,
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "configurations": [
+        "US Spanish app \u00b7 Spanish (Mexico) offer \u00b7 USA storefront"
+      ],
+      "failures": [],
+      "hostedJSONExportsPresent": true
+    },
+    "en": {
+      "artifactID": 13560692753,
+      "sha256": "f2d7d89ed4221654e391043fed88249249c36f6e1325c2f39ac6350d67fd432c",
+      "digestVerified": true,
+      "passed": 14,
+      "failed": 1,
+      "skipped": 0,
+      "strictReplayExit": 1,
+      "runtimeWarnings": 0,
+      "configurations": [
+        "US English \u2014 local StoreKit"
+      ],
+      "failures": [
+        {
+          "failureText": "Test exceeded execution time allowance of 2 minutes",
+          "targetName": "RoomInTheCartTests",
+          "testIdentifier": 13,
+          "testIdentifierString": "StoreKitScenarioTests/testSimulatedPurchaseCancellationGrantsNothing()",
+          "testIdentifierURL": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/StoreKitScenarioTests/testSimulatedPurchaseCancellationGrantsNothing",
+          "testName": "testSimulatedPurchaseCancellationGrantsNothing()"
+        }
+      ],
+      "hostedJSONExportsPresent": true
+    }
+  }
+}

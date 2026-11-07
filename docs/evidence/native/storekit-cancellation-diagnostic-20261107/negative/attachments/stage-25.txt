@@ -1,0 +1,1 @@
+StoreKitCancellationTrace seq=25 elapsed=0.818443709 seconds stage=storefront.purchase.begin

@@ -1,0 +1,1 @@
+StoreKitCancellationTrace seq=21 elapsed=0.810028542 seconds stage=simulated-error.end

@@ -1,0 +1,1 @@
+StoreKitCancellationTrace seq=3 elapsed=0.002038833 seconds stage=setup.session-and-configuration.begin

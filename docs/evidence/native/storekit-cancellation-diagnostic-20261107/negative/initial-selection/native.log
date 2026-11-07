@@ -1,0 +1,7 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -xctestrun "/Users/palatis/Room in the Cart/.build/StoreKitCancellation20261106/timeout-negative/DerivedData/Build/Products/RoomInTheCart-LocalStoreKit_LocalStoreKit_iphonesimulator27.1-arm64.xctestrun" -destination "platform=iOS Simulator,id=A9582E86-7A3B-4A26-977C-A2A27C51C4AC" -only-test-configuration "US English — local StoreKit" -parallel-testing-enabled NO -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 120 -collect-test-diagnostics never -resultBundlePath "/Users/palatis/Room in the Cart/.build/StoreKitCancellation20261106/timeout-negative/StoreKit.xcresult" "-only-testing:RoomInTheCartStoreKitTests/StoreKitScenarioTests/testSimulatedPurchaseCancellationGrantsNothing" test-without-building
+
+Writing result bundle at path:
+	/Users/palatis/Room in the Cart/.build/StoreKitCancellation20261106/timeout-negative/StoreKit.xcresult
+
+xcodebuild: error: Failed to build workspace RoomInTheCart with scheme RoomInTheCart-LocalStoreKit.: Tests in the target “RoomInTheCartStoreKitTests” can’t be run because “RoomInTheCartStoreKitTests” isn’t a member of the specified test plan or scheme.

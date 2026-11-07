@@ -1,0 +1,1 @@
+StoreKitCancellationTrace seq=10 elapsed=0.78316975 seconds stage=storefront.load.end

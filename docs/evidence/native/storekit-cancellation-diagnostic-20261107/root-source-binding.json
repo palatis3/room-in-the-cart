@@ -1,0 +1,8 @@
+{
+  "installedSourceFiles": 459,
+  "allMatchPositiveBuild": true,
+  "testSourceSHA256": "f5efe4f674f5708dc784cd5cacf8e67e854f92302b0d83cb0aa80ad522d12c88",
+  "negativeOverlayInstalled": false,
+  "hostedFailureResolved": false,
+  "scope": "Diagnostic test-only instrumentation; native positive result already executed on exactly matching source"
+}

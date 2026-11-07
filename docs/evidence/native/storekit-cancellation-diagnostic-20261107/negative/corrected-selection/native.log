@@ -1,0 +1,68 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -xctestrun "/Users/palatis/Room in the Cart/.build/StoreKitCancellation20261106/timeout-negative/DerivedData/Build/Products/RoomInTheCart-LocalStoreKit_LocalStoreKit_iphonesimulator27.1-arm64.xctestrun" -destination "platform=iOS Simulator,id=A9582E86-7A3B-4A26-977C-A2A27C51C4AC" -only-test-configuration "US English — local StoreKit" -parallel-testing-enabled NO -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 120 -collect-test-diagnostics never -resultBundlePath "/Users/palatis/Room in the Cart/.build/StoreKitCancellation20261106/timeout-negative/corrected-selection/StoreKit.xcresult" "-only-testing:RoomInTheCartTests/StoreKitScenarioTests/testSimulatedPurchaseCancellationGrantsNothing" test-without-building
+
+Writing result bundle at path:
+	/Users/palatis/Room in the Cart/.build/StoreKitCancellation20261106/timeout-negative/corrected-selection/StoreKit.xcresult
+
+2026-11-07 00:03:35.932 xcodebuild[99425:20249638] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+Test Suite 'Selected tests' started at 2026-11-07 00:03:50.349.
+Test Suite 'RoomInTheCartTests.xctest' started at 2026-11-07 00:03:50.350.
+Test Suite 'StoreKitScenarioTests' started at 2026-11-07 00:03:50.350.
+Test Case '-[RoomInTheCartTests.StoreKitScenarioTests testSimulatedPurchaseCancellationGrantsNothing]' started.
+StoreKitCancellationTrace seq=1 elapsed=9.125e-06 seconds stage=setup.super.begin
+StoreKitCancellationTrace seq=2 elapsed=0.006025167 seconds stage=setup.super.end
+StoreKitCancellationTrace seq=3 elapsed=0.007706792 seconds stage=setup.session-and-configuration.begin
+StoreKitCancellationTrace seq=4 elapsed=0.516502709 seconds stage=setup.session-and-configuration.end
+StoreKitCancellationTrace seq=5 elapsed=0.517388375 seconds stage=setup.sync.begin
+StoreKitCancellationTrace seq=6 elapsed=0.65015325 seconds stage=setup.sync.end
+StoreKitCancellationTrace seq=7 elapsed=0.656444917 seconds stage=body.begin
+StoreKitCancellationTrace seq=8 elapsed=0.660370292 seconds stage=model.start.begin
+StoreKitCancellationTrace seq=9 elapsed=0.661426917 seconds stage=storefront.load.begin
+StoreKitCancellationTrace seq=10 elapsed=0.78316975 seconds stage=storefront.load.end
+StoreKitCancellationTrace seq=11 elapsed=0.785779625 seconds stage=storefront.updates.begin
+StoreKitCancellationTrace seq=12 elapsed=0.786579917 seconds stage=storefront.updates.end
+StoreKitCancellationTrace seq=13 elapsed=0.787288042 seconds stage=storefront.unfinished.begin
+StoreKitCancellationTrace seq=14 elapsed=0.794650167 seconds stage=storefront.unfinished.end
+StoreKitCancellationTrace seq=15 elapsed=0.795662209 seconds stage=storefront.current.begin
+StoreKitCancellationTrace seq=16 elapsed=0.802758625 seconds stage=storefront.current.end
+StoreKitCancellationTrace seq=17 elapsed=0.80616425 seconds stage=model.start.end
+StoreKitCancellationTrace seq=18 elapsed=0.807116625 seconds stage=observer-yield.begin
+StoreKitCancellationTrace seq=19 elapsed=0.807783667 seconds stage=observer-yield.end
+StoreKitCancellationTrace seq=20 elapsed=0.808362542 seconds stage=simulated-error.begin
+StoreKitCancellationTrace seq=21 elapsed=0.810028542 seconds stage=simulated-error.end
+StoreKitCancellationTrace seq=22 elapsed=0.810865917 seconds stage=model.purchase.begin
+StoreKitCancellationTrace seq=23 elapsed=0.811695834 seconds stage=storefront.unfinished.begin
+StoreKitCancellationTrace seq=24 elapsed=0.817680667 seconds stage=storefront.unfinished.end
+StoreKitCancellationTrace seq=25 elapsed=0.818443709 seconds stage=storefront.purchase.begin
+Test Case '-[RoomInTheCartTests.StoreKitScenarioTests testSimulatedPurchaseCancellationGrantsNothing]' exceeded execution time allowance of 2 minutes. The test may have hung; check Xcode's test report for additional diagnostics. If the test requires additional time, use -[XCTestCase executionTimeAllowance] or one of xcodebuild's command-line overrides.
+
+
+*** If you believe this error represents a bug, please attach the result bundle at /Users/palatis/Room in the Cart/.build/StoreKitCancellation20261106/timeout-negative/corrected-selection/StoreKit.xcresult
+
+2026-11-07 00:06:39.299 xcodebuild[99425:20249638] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-07 00:06:39.306 xcodebuild[99425:20249638] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-07 00:06:39.726 xcodebuild[99425:20249638] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+
+Restarting after unexpected exit, crash, or test timeout; summary will include totals from previous launches.
+
+Test Suite 'Selected tests' started at 2026-11-07 00:06:42.386.
+Test Suite 'RoomInTheCartTests.xctest' started at 2026-11-07 00:06:42.386.
+Test Suite 'RoomInTheCartTests.xctest' passed at 2026-11-07 00:06:42.387.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-07 00:06:42.387.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+2026-11-07 00:06:42.448 xcodebuild[99425:20249638] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-07 00:06:42.449 xcodebuild[99425:20249638] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-07 00:06:42.738 xcodebuild[99425:20249638] [MT] IDETestOperationsObserverDebug: 187.747 elapsed -- Testing started completed.
+2026-11-07 00:06:42.738 xcodebuild[99425:20249638] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-11-07 00:06:42.738 xcodebuild[99425:20249638] [MT] IDETestOperationsObserverDebug: 187.747 sec, +187.747 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/palatis/Room in the Cart/.build/StoreKitCancellation20261106/timeout-negative/corrected-selection/StoreKit.xcresult
+
+Failing tests:
+	StoreKitScenarioTests.testSimulatedPurchaseCancellationGrantsNothing()
+
+** TEST EXECUTE FAILED **
+
+Testing started

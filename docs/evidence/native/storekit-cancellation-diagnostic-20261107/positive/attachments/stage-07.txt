@@ -1,0 +1,1 @@
+StoreKitCancellationTrace seq=7 elapsed=0.048672666 seconds stage=body.begin

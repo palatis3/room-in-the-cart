@@ -1,0 +1,1 @@
+StoreKitCancellationTrace seq=41 elapsed=0.238520166 seconds stage=teardown.unfinished.end

@@ -1,0 +1,23 @@
+Executed 15 of 15 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartTests/StoreKitScenarioTests/testAskToBuyApprovalRemainsUndelivered | Passed | 2.25 |
+| RoomInTheCartTests/StoreKitScenarioTests/testRelaunchAndExplicitRestoreReplayUnfinishedWithoutUnlock | Passed | 0.91 |
+| RoomInTheCartTests/StoreKitScenarioTests/testRefundRevokesTransactionAndPreservesFree | Passed | 0.80 |
+| RoomInTheCartTests/StoreKitScenarioTests/testRealTransactionObserverAttemptsDeliveryWithoutUnlock | Passed | 0.77 |
+| RoomInTheCartTests/StoreKitScenarioTests/testRenewalKeepsOriginalPurchaseAndNoLocalUnlock | Passed | 0.77 |
+| RoomInTheCartTests/StoreKitScenarioTests/testRestoredSubscriptionThenCancelledAndDeclinedRepurchasesStayFree | Passed | 0.69 |
+| RoomInTheCartTests/StoreKitScenarioTests/testBillingGraceStillRequiresServiceVerification | Passed | 0.57 |
+| RoomInTheCartTests/StoreKitScenarioTests/testBillingRetryWithoutGraceDoesNotGrantPaidAccess | Passed | 0.50 |
+| RoomInTheCartTests/StoreKitScenarioTests/testPurchaseDoesNotFinishOrGrantAccessWithoutDurableServiceDelivery | Passed | 0.46 |
+| RoomInTheCartTests/StoreKitScenarioTests/testAskToBuyDeclineGrantsNothing | Passed | 0.43 |
+| RoomInTheCartTests/StoreKitScenarioTests/testExpirationRemovesCurrentEntitlementAndPreservesFree | Passed | 0.28 |
+| RoomInTheCartTests/StoreKitScenarioTests/testSimulatedPurchaseCancellationGrantsNothing | Passed | 0.27 |
+| RoomInTheCartTests/StoreKitScenarioTests/testUnverifiedLocalTransactionGrantsNothing | Passed | 0.25 |
+| RoomInTheCartTests/StoreKitScenarioTests/testLocalAnnualOfferUsesStoreKitPriceAndLocale | Passed | 0.17 |
+| RoomInTheCartTests/StoreKitScenarioTests/testUnavailableProductKeepsFreeRoute | Passed | 0.10 |
+The XCTest log confirms one start and one passing completion per selected test.
+
+The XCTest test export recorded 0 runtime warning occurrences across 15 examined tests.
+

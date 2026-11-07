@@ -1,0 +1,190 @@
+--- a/ios/Tests/StoreKitScenarioTests.swift
++++ b/ios/Tests/StoreKitScenarioTests.swift
+@@ -8,14 +8,36 @@
+     private let productID = "local.testing.household.annual"
+     private let accountToken = UUID()
+     private var session: SKTestSession!
++    private var cancellationTraceStart: ContinuousClock.Instant?
++    private var cancellationTraceCount = 0
++
++    // Temporary diagnostic: fixed stage labels only, persisted before the next await.
++    // No identities, tokens, receipts, error descriptions, or transaction payloads.
++    private func traceCancellation(_ stage: StaticString) {
++        guard let start = cancellationTraceStart, cancellationTraceCount < 96 else { return }
++        cancellationTraceCount += 1
++        let line = "StoreKitCancellationTrace seq=\(cancellationTraceCount) elapsed=\(start.duration(to: .now)) stage=\(stage)"
++        FileHandle.standardError.write(Data((line + "\n").utf8))
++        let attachment = XCTAttachment(string: line)
++        attachment.name = "StoreKitCancellation-stage-\(cancellationTraceCount)"
++        attachment.lifetime = .keepAlways
++        add(attachment)
++    }
+ 
+     override func setUp() async throws {
++        if name.contains("testSimulatedPurchaseCancellationGrantsNothing") {
++            cancellationTraceStart = .now
++            cancellationTraceCount = 0
++        }
++        traceCancellation("setup.super.begin")
+         try await super.setUp()
++        traceCancellation("setup.super.end")
+         guard ProcessInfo.processInfo.environment["RITC_LOCAL_STOREKIT_TESTS"] == "1" else {
+             throw XCTSkip("Run the serial LocalStoreKit test plan to enable the isolated StoreKit environment.")
+         }
+         let url = try XCTUnwrap(Bundle(for: Self.self).url(forResource: "HouseholdLocalTesting", withExtension: "storekit"),
+                                 "Add HouseholdLocalTesting.storekit to the test target's resources only.")
++        traceCancellation("setup.session-and-configuration.begin")
+         session = try SKTestSession(contentsOf: url)
+         session.resetToDefaultState()
+         session.clearTransactions()
+@@ -24,27 +46,46 @@
+         session.storefront = "USA"
+         let requestedLocale = ProcessInfo.processInfo.environment["RITC_STOREKIT_LOCALE"] ?? "en_US"
+         session.locale = Locale(identifier: requestedLocale)
++        traceCancellation("setup.session-and-configuration.end")
++        traceCancellation("setup.sync.begin")
+         try await AppStore.sync()
++        traceCancellation("setup.sync.end")
+         XCTAssertEqual(session.locale.identifier.replacingOccurrences(of: "-", with: "_"), requestedLocale,
+                        "Use the explicit supported product-metadata locale from the plan; never silently change it.")
+     }
+ 
+     override func tearDown() async throws {
++        traceCancellation("teardown.begin")
+         if let session {
++            traceCancellation("teardown.reset.begin")
+             session.resetToDefaultState()
+             session.disableDialogs = true
++            traceCancellation("teardown.reset.end")
++            traceCancellation("teardown.unfinished.begin")
+             for await result in StoreKit.Transaction.unfinished {
+                 if case .verified(let transaction) = result,
+                    transaction.environment == .xcode && transaction.productID == productID {
++                    traceCancellation("teardown.finish.begin")
+                     await transaction.finish()
++                    traceCancellation("teardown.finish.end")
+                 }
+             }
++            traceCancellation("teardown.unfinished.end")
++            traceCancellation("teardown.clear.begin")
+             session.clearTransactions()
++            traceCancellation("teardown.clear.end")
++            traceCancellation("teardown.sync.begin")
+             try await AppStore.sync()
++            traceCancellation("teardown.sync.end")
++            traceCancellation("teardown.final-reset.begin")
+             session.resetToDefaultState()
++            traceCancellation("teardown.final-reset.end")
+         }
+         session = nil
++        traceCancellation("teardown.super.begin")
+         try await super.tearDown()
++        traceCancellation("teardown.super.end")
++        traceCancellation("teardown.end")
+     }
+ 
+     func testLocalAnnualOfferUsesStoreKitPriceAndLocale() async throws {
+@@ -345,14 +386,33 @@
+     }
+ 
+     func testSimulatedPurchaseCancellationGrantsNothing() async throws {
+-        let (storefront, model) = try await loadedModel()
+-        defer { model.stop() }
++        traceCancellation("body.begin")
++        let storefront = CancellationTracingStorefront(trace: traceCancellation)
++        let model = makeModel(storefront: storefront)
++        traceCancellation("model.start.begin")
++        await model.start()
++        traceCancellation("model.start.end")
++        traceCancellation("observer-yield.begin")
++        await Task.yield()
++        traceCancellation("observer-yield.end")
++        _ = try XCTUnwrap(model.offer, "The local fixture must load before checking transaction state")
++        defer {
++            traceCancellation("model.stop.begin")
++            model.stop()
++            traceCancellation("model.stop.end")
++        }
++        traceCancellation("simulated-error.begin")
+         try await session.setSimulatedError(.generic(.userCancelled), forAPI: .purchase)
++        traceCancellation("simulated-error.end")
++        traceCancellation("model.purchase.begin")
+         await model.purchase()
++        traceCancellation("model.purchase.end")
+         // StoreKit may deliver a cancellation result or throw its simulated cancellation error.
+         XCTAssertTrue(model.notice == .cancelled || model.notice == .failed(.unavailable))
+         // Some StoreKitTest runtimes retain a failed transaction for the cancelled attempt.
++        traceCancellation("history.begin")
+         let history = session.allTransactions()
++        traceCancellation("history.end")
+         XCTAssertTrue(history.allSatisfy { $0.state == .failed && !$0.pendingAskToBuyConfirmation },
+                       "Unexpected cancellation history states: \(history.map { $0.state.rawValue })")
+         let current = await storefront.currentTransactions()
+@@ -364,6 +424,7 @@
+         summary.lifetime = .keepAlways
+         add(summary)
+         assertFree(model)
++        traceCancellation("body.end")
+     }
+ 
+     func testUnverifiedLocalTransactionGrantsNothing() async throws {
+@@ -467,6 +528,50 @@
+         return (storefront, model)
+     }
+ 
++    // One forwarding call in the original task for each StoreKit operation.
++    // Returning the original update stream avoids adding a consumer/task/retry.
++    @MainActor private final class CancellationTracingStorefront: MembershipStorefront {
++        private let base = StoreKitMembershipStorefront()
++        private let trace: (StaticString) -> Void
++        init(trace: @escaping (StaticString) -> Void) { self.trace = trace }
++
++        func load(productID: String) async throws -> MembershipOffer {
++            trace("storefront.load.begin")
++            defer { trace("storefront.load.end") }
++            return try await base.load(productID: productID)
++        }
++        func purchase(appAccountToken: UUID) async throws -> MembershipPurchaseOutcome {
++            trace("storefront.purchase.begin")
++            defer { trace("storefront.purchase.end") }
++            return try await base.purchase(appAccountToken: appAccountToken)
++        }
++        func currentTransactions() async -> [MembershipPurchaseOutcome] {
++            trace("storefront.current.begin")
++            defer { trace("storefront.current.end") }
++            return await base.currentTransactions()
++        }
++        func unfinishedTransactions() async -> [MembershipPurchaseOutcome] {
++            trace("storefront.unfinished.begin")
++            defer { trace("storefront.unfinished.end") }
++            return await base.unfinishedTransactions()
++        }
++        func updates() -> AsyncStream<MembershipPurchaseOutcome> {
++            trace("storefront.updates.begin")
++            defer { trace("storefront.updates.end") }
++            return base.updates()
++        }
++        func finish(transactionID: String) async {
++            trace("storefront.finish.begin")
++            defer { trace("storefront.finish.end") }
++            await base.finish(transactionID: transactionID)
++        }
++        func sync() async throws {
++            trace("storefront.sync.begin")
++            defer { trace("storefront.sync.end") }
++            try await base.sync()
++        }
++    }
++
+     private final class PurchaseProbe {
+         var finished = false
+         var task: Task<Void, Never>?
+@@ -480,7 +585,7 @@
+         return probe
+     }
+ 
+-    private func makeModel(storefront: StoreKitMembershipStorefront) -> MembershipModel {
++    private func makeModel(storefront: any MembershipStorefront) -> MembershipModel {
+         MembershipModel(configuration: MembershipConfiguration(productID: productID,
+             privacyURL: URL(string: "https://example.invalid/privacy"), termsURL: URL(string: "https://example.invalid/terms")),
+             context: MembershipContext(purchaserID: "local-test-adult", purchaserName: "Local test adult",
