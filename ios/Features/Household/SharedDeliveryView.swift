@@ -150,7 +150,7 @@ private struct DeliveryMealMatches: View {
                                                 if group.protected || occurrence.meal.protected {
                                                     Label(group.name, systemImage: "lock").accessibilityLabel(group.name + ", " + ht("Protected portions"))
                                                 } else { Text(group.name) }
-                                                groupReservation(group, ingredient: ingredient, target: target, plan: plan, matched: matched)
+                                                groupReservation(group, ingredient: ingredient, target: target, matched: matched)
                                             }
                                         }
                                         if model.shop?.phase == "placed", model.pending == nil {
@@ -194,10 +194,8 @@ private struct DeliveryMealMatches: View {
     }
 
     @ViewBuilder private func groupReservation(_ group: SharedMealPlanning.Group, ingredient: SharedMealPlanning.Ingredient,
-                                               target: SharedDeliveryPage.IngredientMatch, plan: SharedMealPlanning, matched: Bool) -> some View {
-        let bindings = (plan.bindings ?? []).filter { $0.ingredientId == ingredient.id }
-        let groupAmount = bindings.first(where: { $0.groupId == group.id })?.quantity
-            ?? (ingredient.groupIds.count == 1 ? ingredient.quantity : nil)
+                                               target: SharedDeliveryPage.IngredientMatch, matched: Bool) -> some View {
+        let groupAmount = reviewed.reservableQuantity(for: target, group: group.id)
         LabeledContent(ht("Required for group"), value: deliveryQuantityText(groupAmount))
         let head = source.reservations?.first { $0.occurrenceId == target.occurrenceId && $0.mealRevision == target.mealRevision
             && $0.ingredientId == target.ingredientId && $0.groupId == group.id }
@@ -206,7 +204,6 @@ private struct DeliveryMealMatches: View {
         }
         if matched, reviewed.reservationsAvailable == true, model.shop?.phase == "placed", model.pending == nil,
            let groupAmount, let unit = UnitOfMeasure(rawValue: groupAmount.unit),
-           (ingredient.groupIds.count == 1 || bindings.count == ingredient.groupIds.count),
            head?.quantity != nil || source.confirmed != nil {
             NavigationLink {
                 DeliveryReservationEditor(model: model, source: source, group: group, ingredient: ingredient, target: target,
@@ -266,7 +263,7 @@ private struct DeliveryReservationEditor: View {
                     LabeledContent(ht("Set aside from this delivery"), value: deliveryQuantityText(current))
                 }
             }
-            if source.confirmed != nil {
+            if source.confirmed != nil || head?.quantity != nil {
                 Section {
                     TextField(ht("Amount to set aside"), text: $amount)
                         .accessibilityIdentifier("delivery.reservation.amount")

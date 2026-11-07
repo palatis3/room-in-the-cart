@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Review the usable amount, ingredient match and existing reservations before setting food aside.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the usable amount, ingredient match and existing reservations before setting food aside."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa la cantidad utilizable, el ingrediente vinculado y las reservas existentes antes de apartar alimentos."
+          }
+        }
+      }
+    },
     "Required for group": {
       "extractionState": "manual",
       "localizations": {
