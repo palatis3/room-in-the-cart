@@ -1,0 +1,209 @@
+{
+  "candidate": "775961d11315eb5c0eeed94b4ce3da62a6eec285",
+  "runID": 42309808686,
+  "cases": {
+    "launch": {
+      "attempt": 1,
+      "artifactID": 13550060825,
+      "sha256": "e9b3f29f0cbe84302334e2d3f15ca1d16fb34f7fd05718282eed22be62c8d152",
+      "digestVerified": true,
+      "strictReplayExit": 0,
+      "measurementReplay": "passed",
+      "independentSidecarNotAcceptance": true,
+      "failures": [],
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": 0,
+      "environment": {
+        "osVersion": "26.2",
+        "osBuildNumber": "23C54",
+        "modelName": "iPhone 17",
+        "architecture": "arm64",
+        "xcode": "Xcode 26.3\nBuild version 17C529",
+        "buildConfiguration": "Release",
+        "testConfiguration": "Test Scheme Action"
+      },
+      "runtimeExpected": true,
+      "independentMeasurementStructure": "passed",
+      "sidecarSHA256": "fa91d0246bb1d5678a26ce41b628086236f805e911a232dbe91326b909afd720",
+      "sidecarConsistentWithIndependentChecks": true,
+      "sidecarStatus": "complete",
+      "metricIdentifiers": [
+        "com.apple.dt.XCTMetric_ApplicationLaunch-ApplicationFirstFramePresentationResponsive.duration"
+      ],
+      "comparisons": {
+        "responsiveLaunchMedianSeconds": {
+          "measured": 4.359679125,
+          "maximum": 5.5,
+          "passed": true
+        }
+      },
+      "calibrationSHA256": "04675b8820505159b7846fc95ecac9d39bf516bb6a72681dbe790cbb80d7a540",
+      "simulatorHitches": null,
+      "rawLogSHA256": "92c16e79173f2cf61525fb809bc5b955f7b592da34594bbddd9bd836058dedc3",
+      "originalGatesPassed": true,
+      "acceptancePassed": false,
+      "diagnosticOnly": true
+    },
+    "rendered": {
+      "attempt": 1,
+      "artifactID": 13549384177,
+      "sha256": "a7e24d093b1d518d7239ea76282d309656596483fb1c46daf9f7c673de6c723b",
+      "digestVerified": true,
+      "strictReplayExit": 0,
+      "measurementReplay": "passed",
+      "independentSidecarNotAcceptance": true,
+      "failures": [],
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": 0,
+      "environment": {
+        "osVersion": "26.2",
+        "osBuildNumber": "23C54",
+        "modelName": "iPhone 17",
+        "architecture": "arm64",
+        "xcode": "Xcode 26.3\nBuild version 17C529",
+        "buildConfiguration": "Release",
+        "testConfiguration": "Test Scheme Action"
+      },
+      "runtimeExpected": true,
+      "independentMeasurementStructure": "passed",
+      "sidecarSHA256": "538ce0db5473df7ae0fdc1c813dc8a619a1e9aa463c1a61250de1f7375c1a04d",
+      "hostedPickupStructuralStatus": "passed",
+      "hostedPickupReadback": {
+        "sqliteQuickCheck": "ok",
+        "revision": 22,
+        "payloadSHA256": "febc842de881e8fd63a04be8853c34fdfabfcced919098c8c30ed1a728898891",
+        "lineCount": 500,
+        "contributionCount": 500,
+        "importCount": 1,
+        "source": "paste",
+        "checkedCount": 20,
+        "checkedRowIDs": [
+          "10377e3b-9d21-406e-a026-ce37a6b97808",
+          "1231be91-d347-4541-8539-178d1fc2232c",
+          "13a50972-bcbc-41ce-bf8d-cd2059d8c6ef",
+          "3a0969bc-d441-45c2-9f73-3464aa4b12bd",
+          "3d874199-7a01-41da-a1a5-8ce4b4df42df",
+          "412def8b-e833-4549-968c-dbba83ee2407",
+          "6dece95c-69f1-4715-9d4f-98952b0c61e1",
+          "76d5c586-d756-4d55-9d3c-03e8194ce445",
+          "7a94ee58-960d-464b-92a0-ebfd6dc7de16",
+          "8132ae5b-219a-40c4-909c-806ab1ed0a4d",
+          "88b62f70-49aa-43a0-a9ea-9943b8b32631",
+          "9cc0b0d2-6696-40e6-86e7-1a22217d4932",
+          "a1a57a30-0a12-40be-a78d-6670d519c8e9",
+          "b8e56510-2e5f-4e20-bc27-834568c61914",
+          "ca223c3e-2501-4e9b-a6f4-01496216db3a",
+          "e8da9c86-a5e7-4b71-a9fc-6ad5bef8aed5",
+          "e938c0bd-bbc4-418b-9d57-c32f7564f632",
+          "f050fa86-4852-42a2-936c-758ce24a028d",
+          "f3c03eca-617d-4676-976c-dec95b4ec655",
+          "f3d2c9e3-e4a7-49ab-9701-c7cbc6ca8a14"
+        ]
+      },
+      "sidecarConsistentWithIndependentChecks": true,
+      "sidecarStatus": "complete",
+      "comparisons": {
+        "searchP95Milliseconds": {
+          "measured": 3081.904874999964,
+          "maximum": 4750,
+          "passed": true
+        },
+        "checkP95Milliseconds": {
+          "measured": 2320.8815000000413,
+          "maximum": 3750,
+          "passed": true
+        }
+      },
+      "calibrationSHA256": "7985da3668951aa14e418b8860e0960351076717dbd3097c95d0cf8a8ae1dcfb",
+      "simulatorHitches": null,
+      "rawLogSHA256": "7cf481367c7b38e10b20deb01985d62ed13e709760be3f8744c9dd5bc4548891",
+      "originalGatesPassed": true,
+      "acceptancePassed": false,
+      "diagnosticOnly": true
+    },
+    "scroll": {
+      "attempt": 1,
+      "artifactID": 13550343334,
+      "sha256": "34334fae1dc28b647a2fa0abce09bbe4912db52cba79f730c18aa28cc015a81d",
+      "digestVerified": true,
+      "strictReplayExit": 0,
+      "measurementReplay": "passed",
+      "independentSidecarNotAcceptance": true,
+      "failures": [],
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": 0,
+      "environment": {
+        "osVersion": "26.2",
+        "osBuildNumber": "23C54",
+        "modelName": "iPhone 17",
+        "architecture": "arm64",
+        "xcode": "Xcode 26.3\nBuild version 17C529",
+        "buildConfiguration": "Release",
+        "testConfiguration": "Test Scheme Action"
+      },
+      "runtimeExpected": true,
+      "independentMeasurementStructure": "passed",
+      "sidecarSHA256": "d46128113450831af9e5f525e89927a55759e35777c39a57fe10d6ef9cbe7a1f",
+      "hostedPickupStructuralStatus": "passed",
+      "hostedPickupReadback": {
+        "sqliteQuickCheck": "ok",
+        "revision": 2,
+        "payloadSHA256": "f6ad78d3f180012823a850f7d7ae769c1be80ff7ab7ad45f8deb360f240ca026",
+        "lineCount": 500,
+        "contributionCount": 500,
+        "importCount": 1,
+        "source": "paste",
+        "checkedCount": 0,
+        "checkedRowIDs": []
+      },
+      "sidecarConsistentWithIndependentChecks": true,
+      "sidecarStatus": "complete",
+      "metricIdentifiers": [
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical",
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute",
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak",
+        "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.duration"
+      ],
+      "comparisons": {
+        "scrollMedianSeconds": {
+          "measured": 2.581787917,
+          "maximum": 3.25,
+          "passed": true
+        },
+        "absoluteMemoryMedianKilobytes": {
+          "measured": 116727.808,
+          "maximum": 150000,
+          "passed": true
+        },
+        "peakMemoryMedianKilobytes": {
+          "measured": 117022.72,
+          "maximum": 155000,
+          "passed": true
+        },
+        "maximumPeakMemoryKilobytes": {
+          "measured": 117366.784,
+          "maximum": 160000,
+          "passed": true
+        }
+      },
+      "calibrationSHA256": "f5c0aafd3d2a051d2695644e9bb53b63498588c827ff3d0cfcfb624354073e85",
+      "simulatorHitches": {
+        "status": "unavailable",
+        "detail": "XCTest emitted scroll duration and memory, but no animation hitch samples on this simulator. This run cannot evaluate frame hitches."
+      },
+      "rawLogSHA256": "91edf3eb96280eae057af1c4672873dc4a6f257736827a9cb121f94d4668192d",
+      "originalGatesPassed": true,
+      "acceptancePassed": false,
+      "diagnosticOnly": true
+    }
+  },
+  "limits": [
+    "Simulator evidence only. Hosted SQLite readback is verified from retained independent sidecar/report fields, not a second local raw database read. Structural sidecar success never substitutes for missing metrics or baseline acceptance."
+  ]
+}

@@ -1,0 +1,155 @@
+{
+  "diagnosticOnly": true,
+  "releaseAcceptance": false,
+  "previousChronologyPath": "/Users/palatis/Room in the Cart/.build/ScrollSignpostChronologyReview20261106/chronology.json",
+  "previousChronologySHA256": "80a0e1ea7df10ee6c7cab2dd0e1d439e4545ac31fd63e7e00273dcb27fde4c3e",
+  "currentReceiptProofSHA256": "90165f28d3c31e1600cb4076a3aa73cae1951a16b9d7ffec2260636414ffb395",
+  "runs": [
+    {
+      "candidate": "f117",
+      "requiredDurationSeriesPresent": true,
+      "instrumentedBoundaries": false,
+      "windows": [
+        {
+          "invocation": 0,
+          "postSwipeActivityGapSeconds": 2.639,
+          "eventCount": 2,
+          "pairCount": 1
+        },
+        {
+          "invocation": 1,
+          "postSwipeActivityGapSeconds": 1.235,
+          "eventCount": 2,
+          "pairCount": 1
+        },
+        {
+          "invocation": 2,
+          "postSwipeActivityGapSeconds": 1.153,
+          "eventCount": 2,
+          "pairCount": 1
+        },
+        {
+          "invocation": 3,
+          "postSwipeActivityGapSeconds": 1.155,
+          "eventCount": 2,
+          "pairCount": 1
+        },
+        {
+          "invocation": 4,
+          "postSwipeActivityGapSeconds": 1.158,
+          "eventCount": 2,
+          "pairCount": 1
+        },
+        {
+          "invocation": 5,
+          "postSwipeActivityGapSeconds": 1.407,
+          "eventCount": 2,
+          "pairCount": 1
+        }
+      ]
+    },
+    {
+      "candidate": "807",
+      "requiredDurationSeriesPresent": false,
+      "instrumentedBoundaries": false,
+      "windows": [
+        {
+          "invocation": 0,
+          "postSwipeActivityGapSeconds": 16.908,
+          "eventCount": 1,
+          "pairCount": 0
+        },
+        {
+          "invocation": 1,
+          "postSwipeActivityGapSeconds": 1.126,
+          "eventCount": 1,
+          "pairCount": 0
+        },
+        {
+          "invocation": 2,
+          "postSwipeActivityGapSeconds": 1.141,
+          "eventCount": 2,
+          "pairCount": 1
+        },
+        {
+          "invocation": 3,
+          "postSwipeActivityGapSeconds": 1.135,
+          "eventCount": 2,
+          "pairCount": 1
+        },
+        {
+          "invocation": 4,
+          "postSwipeActivityGapSeconds": 1.3,
+          "eventCount": 2,
+          "pairCount": 1
+        },
+        {
+          "invocation": 5,
+          "postSwipeActivityGapSeconds": 1.172,
+          "eventCount": 2,
+          "pairCount": 1
+        }
+      ]
+    },
+    {
+      "candidate": "775961d",
+      "requiredDurationSeriesPresent": true,
+      "instrumentedBoundaries": true,
+      "windows": [
+        {
+          "invocation": 0,
+          "postSwipeActivityGapSeconds": 3.5859999656677246,
+          "stopCallSeconds": 3.586425166666686,
+          "startCallSeconds": 0.0009696666667196041,
+          "eventCount": 2,
+          "pairCount": 1
+        },
+        {
+          "invocation": 1,
+          "postSwipeActivityGapSeconds": 1.2269999980926514,
+          "stopCallSeconds": 1.2261681666667528,
+          "startCallSeconds": 0.0003743750000921864,
+          "eventCount": 2,
+          "pairCount": 1
+        },
+        {
+          "invocation": 2,
+          "postSwipeActivityGapSeconds": 1.1710000038146973,
+          "stopCallSeconds": 1.1681489166667234,
+          "startCallSeconds": 0.00025379166663697106,
+          "eventCount": 2,
+          "pairCount": 1
+        },
+        {
+          "invocation": 3,
+          "postSwipeActivityGapSeconds": 1.1500000953674316,
+          "stopCallSeconds": 1.1488281666667035,
+          "startCallSeconds": 0.0003967500000499058,
+          "eventCount": 2,
+          "pairCount": 1
+        },
+        {
+          "invocation": 4,
+          "postSwipeActivityGapSeconds": 1.1440000534057617,
+          "stopCallSeconds": 1.1431525416667228,
+          "startCallSeconds": 0.00020612499997696432,
+          "eventCount": 2,
+          "pairCount": 1
+        },
+        {
+          "invocation": 5,
+          "postSwipeActivityGapSeconds": 1.128000020980835,
+          "stopCallSeconds": 1.1271401666666634,
+          "startCallSeconds": 0.0002640416666963574,
+          "eventCount": 2,
+          "pairCount": 1
+        }
+      ]
+    }
+  ],
+  "limits": [
+    "Previous runs have activity windows only; no retroactive measurement-call attribution.",
+    "The instrumented passing run is nonreproduction, not a fix or proof of causality.",
+    "Signpost pairs do not substitute for the required XCTest duration series."
+  ]
+}

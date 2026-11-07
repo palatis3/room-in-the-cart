@@ -1,0 +1,700 @@
+{
+  "candidate": "775961d11315eb5c0eeed94b4ce3da62a6eec285",
+  "runID": 42309808686,
+  "diagnosticOnly": true,
+  "releaseAcceptance": false,
+  "status": "verified diagnostic receipts",
+  "limits": [
+    "Timestamp reads and buffering perturb timing. Public-call brackets are not internal XCTest collection boundaries.",
+    "Endpoint capture is bounded and cannot prove XCTest consumption or complete OS emission.",
+    "UTC anchors permit approximate correlation only; endpoint log precision and possible clock drift/jumps remain uncertain.",
+    "Observed first invocation is expected warm-up only after checking six-invocation shape; no sample is discarded or substituted."
+  ],
+  "inputs": {
+    "iphone-performance-scroll-1/attachments/manifest.json": "409d5d59a021ff64c1f85446b40b0e42e21f3e4a1aa731a4fb9f5c8ccc8578fe",
+    "iphone-performance-scroll-1/scroll-signpost-diagnostic.json": "982e9f7b44412ee0768e62d0801abaef463f9763f5d35d03b2826abffb601f4c",
+    "iphone-performance-scroll-1/attachments/869A5578-3502-409E-9FB5-78FB0B3C37B5.json": "6e9a80961ed2e566330b4010834a70d865ebc29c5847684346b80ff18d2f342e",
+    "metric-sqlite-inspection/database.sqlite3": "1c6af40c91fd934148bd8b535b859a79b5a9f6f11e2ceb1f3501fa6a7a28691d"
+  },
+  "signpostSummary": {
+    "schemaVersion": 2,
+    "diagnosticOnly": true,
+    "captureStatus": "ok",
+    "activityStatus": "ok",
+    "metric": "com.apple.UIKit:ScrollView Scroll_DraggingAndDeceleration",
+    "windows": [
+      {
+        "case": "warm-up",
+        "eventCount": 2,
+        "pairCount": 1,
+        "pairs": [
+          {
+            "durationSeconds": 2.582
+          }
+        ]
+      },
+      {
+        "case": "measured swipe 1",
+        "eventCount": 2,
+        "pairCount": 1,
+        "pairs": [
+          {
+            "durationSeconds": 2.551
+          }
+        ]
+      },
+      {
+        "case": "measured swipe 2",
+        "eventCount": 2,
+        "pairCount": 1,
+        "pairs": [
+          {
+            "durationSeconds": 2.584
+          }
+        ]
+      },
+      {
+        "case": "measured swipe 3",
+        "eventCount": 2,
+        "pairCount": 1,
+        "pairs": [
+          {
+            "durationSeconds": 2.567
+          }
+        ]
+      },
+      {
+        "case": "measured swipe 4",
+        "eventCount": 2,
+        "pairCount": 1,
+        "pairs": [
+          {
+            "durationSeconds": 2.581
+          }
+        ]
+      },
+      {
+        "case": "measured swipe 5",
+        "eventCount": 2,
+        "pairCount": 1,
+        "pairs": [
+          {
+            "durationSeconds": 2.599
+          }
+        ]
+      }
+    ],
+    "endpointEvidence": {
+      "diagnosticOnly": true,
+      "maximumRetainedEvents": 128,
+      "marginSeconds": 5.0,
+      "timestampBasis": "seconds from first enclosing swipe activity start; not measurement boundaries",
+      "status": "retained",
+      "originUnixUTC": 1794009694.757,
+      "scopeStartOffsetSeconds": -6.185,
+      "scopeEndOffsetSeconds": 48.47,
+      "scopedEventCount": 24,
+      "retainedEventCount": 24,
+      "omittedEventCount": 0,
+      "ordering": "captured log order; tokens preserve equality, not unique gesture identity",
+      "windows": [
+        {
+          "invocationIndex": 0,
+          "swipeStartOffsetSeconds": 0.0,
+          "synthesisStartOffsetSeconds": 0.163,
+          "followingActivityStartOffsetSeconds": 6.459
+        },
+        {
+          "invocationIndex": 1,
+          "swipeStartOffsetSeconds": 9.892,
+          "synthesisStartOffsetSeconds": 10.134,
+          "followingActivityStartOffsetSeconds": 14.062
+        },
+        {
+          "invocationIndex": 2,
+          "swipeStartOffsetSeconds": 16.939,
+          "synthesisStartOffsetSeconds": 17.116,
+          "followingActivityStartOffsetSeconds": 21.019
+        },
+        {
+          "invocationIndex": 3,
+          "swipeStartOffsetSeconds": 24.77,
+          "synthesisStartOffsetSeconds": 24.973,
+          "followingActivityStartOffsetSeconds": 28.874
+        },
+        {
+          "invocationIndex": 4,
+          "swipeStartOffsetSeconds": 32.471,
+          "synthesisStartOffsetSeconds": 32.713,
+          "followingActivityStartOffsetSeconds": 36.6
+        },
+        {
+          "invocationIndex": 5,
+          "swipeStartOffsetSeconds": 39.444,
+          "synthesisStartOffsetSeconds": 39.639,
+          "followingActivityStartOffsetSeconds": 43.47
+        }
+      ],
+      "events": [
+        {
+          "offsetSeconds": -0.848,
+          "kind": "begin",
+          "processToken": "process-1",
+          "signpostToken": "signpost-1",
+          "windowIndices": []
+        },
+        {
+          "offsetSeconds": -0.831,
+          "kind": "end",
+          "processToken": "process-1",
+          "signpostToken": "signpost-1",
+          "windowIndices": []
+        },
+        {
+          "offsetSeconds": 0.287,
+          "kind": "begin",
+          "processToken": "process-1",
+          "signpostToken": "signpost-1",
+          "windowIndices": [
+            0
+          ]
+        },
+        {
+          "offsetSeconds": 2.869,
+          "kind": "end",
+          "processToken": "process-1",
+          "signpostToken": "signpost-1",
+          "windowIndices": [
+            0
+          ]
+        },
+        {
+          "offsetSeconds": 7.452,
+          "kind": "begin",
+          "processToken": "process-1",
+          "signpostToken": "signpost-1",
+          "windowIndices": []
+        },
+        {
+          "offsetSeconds": 8.452,
+          "kind": "end",
+          "processToken": "process-1",
+          "signpostToken": "signpost-1",
+          "windowIndices": []
+        },
+        {
+          "offsetSeconds": 10.269,
+          "kind": "begin",
+          "processToken": "process-1",
+          "signpostToken": "signpost-1",
+          "windowIndices": [
+            1
+          ]
+        },
+        {
+          "offsetSeconds": 12.82,
+          "kind": "end",
+          "processToken": "process-1",
+          "signpostToken": "signpost-1",
+          "windowIndices": [
+            1
+          ]
+        },
+        {
+          "offsetSeconds": 14.986,
+          "kind": "begin",
+          "processToken": "process-1",
+          "signpostToken": "signpost-1",
+          "windowIndices": []
+        },
+        {
+          "offsetSeconds": 15.97,
+          "kind": "end",
+          "processToken": "process-1",
+          "signpostToken": "signpost-1",
+          "windowIndices": []
+        },
+        {
+          "offsetSeconds": 17.252,
+          "kind": "begin",
+          "processToken": "process-1",
+          "signpostToken": "signpost-1",
+          "windowIndices": [
+            2
+          ]
+        },
+        {
+          "offsetSeconds": 19.836,
+          "kind": "end",
+          "processToken": "process-1",
+          "signpostToken": "signpost-1",
+          "windowIndices": [
+            2
+          ]
+        },
+        {
+          "offsetSeconds": 21.688,
+          "kind": "begin",
+          "processToken": "process-1",
+          "signpostToken": "signpost-1",
+          "windowIndices": []
+        },
+        {
+          "offsetSeconds": 22.669,
+          "kind": "end",
+          "processToken": "process-1",
+          "signpostToken": "signpost-1",
+          "windowIndices": []
+        },
+        {
+          "offsetSeconds": 25.152,
+          "kind": "begin",
+          "processToken": "process-1",
+          "signpostToken": "signpost-1",
+          "windowIndices": [
+            3
+          ]
+        },
+        {
+          "offsetSeconds": 27.719,
+          "kind": "end",
+          "processToken": "process-1",
+          "signpostToken": "signpost-1",
+          "windowIndices": [
+            3
+          ]
+        },
+        {
+          "offsetSeconds": 29.719,
+          "kind": "begin",
+          "processToken": "process-1",
+          "signpostToken": "signpost-1",
+          "windowIndices": []
+        },
+        {
+          "offsetSeconds": 30.702,
+          "kind": "end",
+          "processToken": "process-1",
+          "signpostToken": "signpost-1",
+          "windowIndices": []
+        },
+        {
+          "offsetSeconds": 32.871,
+          "kind": "begin",
+          "processToken": "process-1",
+          "signpostToken": "signpost-1",
+          "windowIndices": [
+            4
+          ]
+        },
+        {
+          "offsetSeconds": 35.452,
+          "kind": "end",
+          "processToken": "process-1",
+          "signpostToken": "signpost-1",
+          "windowIndices": [
+            4
+          ]
+        },
+        {
+          "offsetSeconds": 37.138,
+          "kind": "begin",
+          "processToken": "process-1",
+          "signpostToken": "signpost-1",
+          "windowIndices": []
+        },
+        {
+          "offsetSeconds": 38.12,
+          "kind": "end",
+          "processToken": "process-1",
+          "signpostToken": "signpost-1",
+          "windowIndices": []
+        },
+        {
+          "offsetSeconds": 39.737,
+          "kind": "begin",
+          "processToken": "process-1",
+          "signpostToken": "signpost-1",
+          "windowIndices": [
+            5
+          ]
+        },
+        {
+          "offsetSeconds": 42.336,
+          "kind": "end",
+          "processToken": "process-1",
+          "signpostToken": "signpost-1",
+          "windowIndices": [
+            5
+          ]
+        }
+      ]
+    },
+    "parsedEventCount": 102,
+    "candidateLineCount": 102,
+    "unparsedCandidateCount": 0,
+    "timeZoneOfLog": "UTC",
+    "windowBasis": "enclosing swipe activity start to following activity start; not XCTest measurement boundaries",
+    "matchedProcessCount": 1,
+    "status": "captured"
+  },
+  "boundaryAttachmentManifestEntry": {
+    "configurationName": "Test Scheme Action",
+    "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+    "deviceName": "iPhone 17",
+    "exportedFileName": "869A5578-3502-409E-9FB5-78FB0B3C37B5.json",
+    "isAssociatedWithFailure": false,
+    "suggestedHumanReadableName": "scroll-measurement-boundaries_0_7201D0A2-FB36-415A-9999-591C311D29A7.json",
+    "timestamp": 1794009739.682
+  },
+  "boundaryReceipt": {
+    "boundaries": [
+      {
+        "afterGesture": 656.1546835,
+        "afterStartMeasuring": 653.2739555,
+        "afterStopMeasuring": 659.7411087500001,
+        "beforeGesture": 653.273955625,
+        "beforeStartMeasuring": 653.2729858333333,
+        "beforeStopMeasuring": 656.1546835833334,
+        "invocationIndex": 0
+      },
+      {
+        "afterGesture": 666.1177864583334,
+        "afterStartMeasuring": 663.1466535416668,
+        "afterStopMeasuring": 667.3439547916668,
+        "beforeGesture": 663.1466538333334,
+        "beforeStartMeasuring": 663.1462791666667,
+        "beforeStopMeasuring": 666.117786625,
+        "invocationIndex": 1
+      },
+      {
+        "afterGesture": 673.1313240833334,
+        "afterStartMeasuring": 670.2149798333334,
+        "afterStopMeasuring": 674.2994731666668,
+        "beforeGesture": 670.2149799166667,
+        "beforeStartMeasuring": 670.2147260416667,
+        "beforeStopMeasuring": 673.13132425,
+        "invocationIndex": 2
+      },
+      {
+        "afterGesture": 681.0063529583334,
+        "afterStartMeasuring": 678.0428859166667,
+        "afterStopMeasuring": 682.1551812083334,
+        "beforeGesture": 678.0428860000001,
+        "beforeStartMeasuring": 678.0424891666667,
+        "beforeStopMeasuring": 681.0063530416667,
+        "invocationIndex": 3
+      },
+      {
+        "afterGesture": 688.7385101250001,
+        "afterStartMeasuring": 685.736671,
+        "afterStopMeasuring": 689.8816627916667,
+        "beforeGesture": 685.7366710833334,
+        "beforeStartMeasuring": 685.736464875,
+        "beforeStopMeasuring": 688.73851025,
+        "invocationIndex": 4
+      },
+      {
+        "afterGesture": 695.6243686666667,
+        "afterStartMeasuring": 692.7191915416668,
+        "afterStopMeasuring": 696.7515089583334,
+        "beforeGesture": 692.7191916666667,
+        "beforeStartMeasuring": 692.7189275000001,
+        "beforeStopMeasuring": 695.6243687916667,
+        "invocationIndex": 5
+      }
+    ],
+    "clock": "ProcessInfo.systemUptime seconds; UTC anchors are approximate",
+    "diagnosticOnly": true,
+    "expectedInvocationCount": 6,
+    "finalClockAnchor": {
+      "unixUTC": 1794009739.669841,
+      "uptimeAfter": 698.1946479166667,
+      "uptimeBefore": 698.1946458333334
+    },
+    "initialClockAnchor": {
+      "unixUTC": 1794009693.567533,
+      "uptimeAfter": 652.09234025,
+      "uptimeBefore": 652.0923314166668
+    },
+    "invocationMapping": "Zero-based observed order. First is expected warm-up only when six invocations complete; no sample is discarded here.",
+    "limits": "Clock reads and buffering perturb timing. Calls are bracketed, not XCTest internal collection boundaries. No duration-series substitution or acceptance claim.",
+    "observedInvocationCount": 6,
+    "schemaVersion": 1
+  },
+  "clockCorrelation": {
+    "anchors": [
+      {
+        "name": "initialClockAnchor",
+        "bracketWidthSeconds": 8.833333254187892e-06,
+        "utcMinusUptimeLower": 1794009041.4751928,
+        "utcMinusUptimeUpper": 1794009041.4752016
+      },
+      {
+        "name": "finalClockAnchor",
+        "bracketWidthSeconds": 2.083333242808294e-06,
+        "utcMinusUptimeLower": 1794009041.475193,
+        "utcMinusUptimeUpper": 1794009041.4751952
+      }
+    ],
+    "offsetMidpointChangeSeconds": -3.337860107421875e-06,
+    "limits": "Intervals bracket each anchor only, not arbitrary intermediate wall-clock jumps. Initial-midpoint UTC estimates below are approximate, not guaranteed bounds."
+  },
+  "sixInvocationShapeVerified": true,
+  "invocations": [
+    {
+      "invocationIndex": 0,
+      "expectedRole": "warm-up",
+      "startCallSeconds": 0.0009696666667196041,
+      "gestureCallSeconds": 2.880727875000048,
+      "stopCallSeconds": 3.586425166666686,
+      "recordedSwipeActivitySeconds": 2.873000144958496,
+      "postSwipeActivityGapSeconds": 3.5859999656677246,
+      "estimatedUTCUsingInitialAnchor": {
+        "beforeStartMeasuring": 1794009694.7481833,
+        "afterStartMeasuring": 1794009694.749153,
+        "beforeGesture": 1794009694.749153,
+        "afterGesture": 1794009697.629881,
+        "beforeStopMeasuring": 1794009697.629881,
+        "afterStopMeasuring": 1794009701.216306
+      },
+      "swipeActivityStartUnixUTC": 1794009694.757,
+      "swipeActivityFinishUnixUTC": 1794009697.63,
+      "followingActivityStartUnixUTC": 1794009701.216,
+      "signpostWindowSummary": {
+        "case": "warm-up",
+        "eventCount": 2,
+        "pairCount": 1,
+        "pairs": [
+          {
+            "durationSeconds": 2.582
+          }
+        ]
+      },
+      "endpointAlignmentUsingInitialAnchor": [
+        {
+          "kind": "begin",
+          "afterStartReturnedMilliseconds": 294.847012,
+          "beforeStopCalledMilliseconds": 2585.880995
+        },
+        {
+          "kind": "end",
+          "afterStartReturnedMilliseconds": 2876.847029,
+          "beforeStopCalledMilliseconds": 3.880978
+        }
+      ]
+    },
+    {
+      "invocationIndex": 1,
+      "expectedRole": "measured swipe 1",
+      "startCallSeconds": 0.0003743750000921864,
+      "gestureCallSeconds": 2.9711326249999956,
+      "stopCallSeconds": 1.2261681666667528,
+      "recordedSwipeActivitySeconds": 2.943000078201294,
+      "postSwipeActivityGapSeconds": 1.2269999980926514,
+      "estimatedUTCUsingInitialAnchor": {
+        "beforeStartMeasuring": 1794009704.6214764,
+        "afterStartMeasuring": 1794009704.621851,
+        "beforeGesture": 1794009704.6218512,
+        "afterGesture": 1794009707.5929837,
+        "beforeStopMeasuring": 1794009707.592984,
+        "afterStopMeasuring": 1794009708.819152
+      },
+      "swipeActivityStartUnixUTC": 1794009704.649,
+      "swipeActivityFinishUnixUTC": 1794009707.592,
+      "followingActivityStartUnixUTC": 1794009708.819,
+      "signpostWindowSummary": {
+        "case": "measured swipe 1",
+        "eventCount": 2,
+        "pairCount": 1,
+        "pairs": [
+          {
+            "durationSeconds": 2.551
+          }
+        ]
+      },
+      "endpointAlignmentUsingInitialAnchor": [
+        {
+          "kind": "begin",
+          "afterStartReturnedMilliseconds": 404.149055,
+          "beforeStopCalledMilliseconds": 2566.983938
+        },
+        {
+          "kind": "end",
+          "afterStartReturnedMilliseconds": 2955.148935,
+          "beforeStopCalledMilliseconds": 15.984058
+        }
+      ]
+    },
+    {
+      "invocationIndex": 2,
+      "expectedRole": "measured swipe 2",
+      "startCallSeconds": 0.00025379166663697106,
+      "gestureCallSeconds": 2.916344166666704,
+      "stopCallSeconds": 1.1681489166667234,
+      "recordedSwipeActivitySeconds": 2.9089999198913574,
+      "postSwipeActivityGapSeconds": 1.1710000038146973,
+      "estimatedUTCUsingInitialAnchor": {
+        "beforeStartMeasuring": 1794009711.6899233,
+        "afterStartMeasuring": 1794009711.6901772,
+        "beforeGesture": 1794009711.6901772,
+        "afterGesture": 1794009714.6065214,
+        "beforeStopMeasuring": 1794009714.6065216,
+        "afterStopMeasuring": 1794009715.7746706
+      },
+      "swipeActivityStartUnixUTC": 1794009711.696,
+      "swipeActivityFinishUnixUTC": 1794009714.605,
+      "followingActivityStartUnixUTC": 1794009715.776,
+      "signpostWindowSummary": {
+        "case": "measured swipe 2",
+        "eventCount": 2,
+        "pairCount": 1,
+        "pairs": [
+          {
+            "durationSeconds": 2.584
+          }
+        ]
+      },
+      "endpointAlignmentUsingInitialAnchor": [
+        {
+          "kind": "begin",
+          "afterStartReturnedMilliseconds": 318.822861,
+          "beforeStopCalledMilliseconds": 2597.521544
+        },
+        {
+          "kind": "end",
+          "afterStartReturnedMilliseconds": 2902.822733,
+          "beforeStopCalledMilliseconds": 13.521671
+        }
+      ]
+    },
+    {
+      "invocationIndex": 3,
+      "expectedRole": "measured swipe 3",
+      "startCallSeconds": 0.0003967500000499058,
+      "gestureCallSeconds": 2.963466958333356,
+      "stopCallSeconds": 1.1488281666667035,
+      "recordedSwipeActivitySeconds": 2.9539999961853027,
+      "postSwipeActivityGapSeconds": 1.1500000953674316,
+      "estimatedUTCUsingInitialAnchor": {
+        "beforeStartMeasuring": 1794009719.5176864,
+        "afterStartMeasuring": 1794009719.5180833,
+        "beforeGesture": 1794009719.5180833,
+        "afterGesture": 1794009722.4815502,
+        "beforeStopMeasuring": 1794009722.4815505,
+        "afterStopMeasuring": 1794009723.6303785
+      },
+      "swipeActivityStartUnixUTC": 1794009719.527,
+      "swipeActivityFinishUnixUTC": 1794009722.481,
+      "followingActivityStartUnixUTC": 1794009723.631,
+      "signpostWindowSummary": {
+        "case": "measured swipe 3",
+        "eventCount": 2,
+        "pairCount": 1,
+        "pairs": [
+          {
+            "durationSeconds": 2.567
+          }
+        ]
+      },
+      "endpointAlignmentUsingInitialAnchor": [
+        {
+          "kind": "begin",
+          "afterStartReturnedMilliseconds": 390.916586,
+          "beforeStopCalledMilliseconds": 2572.550535
+        },
+        {
+          "kind": "end",
+          "afterStartReturnedMilliseconds": 2957.916737,
+          "beforeStopCalledMilliseconds": 5.550385
+        }
+      ]
+    },
+    {
+      "invocationIndex": 4,
+      "expectedRole": "measured swipe 4",
+      "startCallSeconds": 0.00020612499997696432,
+      "gestureCallSeconds": 3.001839041666699,
+      "stopCallSeconds": 1.1431525416667228,
+      "recordedSwipeActivitySeconds": 2.9850001335144043,
+      "postSwipeActivityGapSeconds": 1.1440000534057617,
+      "estimatedUTCUsingInitialAnchor": {
+        "beforeStartMeasuring": 1794009727.2116623,
+        "afterStartMeasuring": 1794009727.2118683,
+        "beforeGesture": 1794009727.2118683,
+        "afterGesture": 1794009730.2137074,
+        "beforeStopMeasuring": 1794009730.2137074,
+        "afterStopMeasuring": 1794009731.3568602
+      },
+      "swipeActivityStartUnixUTC": 1794009727.228,
+      "swipeActivityFinishUnixUTC": 1794009730.213,
+      "followingActivityStartUnixUTC": 1794009731.357,
+      "signpostWindowSummary": {
+        "case": "measured swipe 4",
+        "eventCount": 2,
+        "pairCount": 1,
+        "pairs": [
+          {
+            "durationSeconds": 2.581
+          }
+        ]
+      },
+      "endpointAlignmentUsingInitialAnchor": [
+        {
+          "kind": "begin",
+          "afterStartReturnedMilliseconds": 416.131735,
+          "beforeStopCalledMilliseconds": 2585.707426
+        },
+        {
+          "kind": "end",
+          "afterStartReturnedMilliseconds": 2997.131586,
+          "beforeStopCalledMilliseconds": 4.707575
+        }
+      ]
+    },
+    {
+      "invocationIndex": 5,
+      "expectedRole": "measured swipe 5",
+      "startCallSeconds": 0.0002640416666963574,
+      "gestureCallSeconds": 2.9051769999999806,
+      "stopCallSeconds": 1.1271401666666634,
+      "recordedSwipeActivitySeconds": 2.8980000019073486,
+      "postSwipeActivityGapSeconds": 1.128000020980835,
+      "estimatedUTCUsingInitialAnchor": {
+        "beforeStartMeasuring": 1794009734.1941247,
+        "afterStartMeasuring": 1794009734.1943889,
+        "beforeGesture": 1794009734.1943889,
+        "afterGesture": 1794009737.099566,
+        "beforeStopMeasuring": 1794009737.0995662,
+        "afterStopMeasuring": 1794009738.2267063
+      },
+      "swipeActivityStartUnixUTC": 1794009734.201,
+      "swipeActivityFinishUnixUTC": 1794009737.099,
+      "followingActivityStartUnixUTC": 1794009738.227,
+      "signpostWindowSummary": {
+        "case": "measured swipe 5",
+        "eventCount": 2,
+        "pairCount": 1,
+        "pairs": [
+          {
+            "durationSeconds": 2.599
+          }
+        ]
+      },
+      "endpointAlignmentUsingInitialAnchor": [
+        {
+          "kind": "begin",
+          "afterStartReturnedMilliseconds": 299.611092,
+          "beforeStopCalledMilliseconds": 2605.566263
+        },
+        {
+          "kind": "end",
+          "afterStartReturnedMilliseconds": 2898.611069,
+          "beforeStopCalledMilliseconds": 6.566286
+        }
+      ]
+    }
+  ],
+  "endpointWindowOriginsVerifiedAgainstSQLite": true,
+  "endpointSummaryIndependentlyRecomputed": true
+}

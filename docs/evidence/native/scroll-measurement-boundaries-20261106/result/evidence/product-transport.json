@@ -1,0 +1,50 @@
+{
+  "candidate": "775961d11315eb5c0eeed94b4ce3da62a6eec285",
+  "runID": 42309808686,
+  "productArtifactID": 13548986938,
+  "apiDigest": "sha256:22bd04b35bc8784bc04d82db35f64efbd6ea489b9d2aa1dc50591234bd43783f",
+  "bytes": 85645487,
+  "cases": {
+    "launch": {
+      "jobID": 128216207075,
+      "logAvailable": true,
+      "verified": true,
+      "logSHA256": "a0ec270f9e6f955e32abb1267f46dca7e9c4e36212d51250580572ae8667fb0a",
+      "requestedArtifactIDs": [
+        "13548986938"
+      ],
+      "downloadedDigests": [
+        "22bd04b35bc8784bc04d82db35f64efbd6ea489b9d2aa1dc50591234bd43783f"
+      ],
+      "expectedMetadataListed": true
+    },
+    "rendered": {
+      "jobID": 128216207159,
+      "logAvailable": true,
+      "verified": true,
+      "logSHA256": "929b5120c1ca5d79a6d70b50df1c1b7d22d9ce43bcb7d1d2c57785730d47f6eb",
+      "requestedArtifactIDs": [
+        "13548986938"
+      ],
+      "downloadedDigests": [
+        "22bd04b35bc8784bc04d82db35f64efbd6ea489b9d2aa1dc50591234bd43783f"
+      ],
+      "expectedMetadataListed": true
+    },
+    "scroll": {
+      "jobID": 128216207641,
+      "logAvailable": true,
+      "verified": true,
+      "logSHA256": "a69b0c541f0d0665931f55aadcd1e808eb2388504c406368de842bccc1a68d18",
+      "requestedArtifactIDs": [
+        "13548986938"
+      ],
+      "downloadedDigests": [
+        "22bd04b35bc8784bc04d82db35f64efbd6ea489b9d2aa1dc50591234bd43783f"
+      ],
+      "expectedMetadataListed": true
+    }
+  },
+  "scope": "Case restore logs identify the same product artifact and downloaded ZIP digest; independent archived product inventory is recorded separately.",
+  "allThreeCasesRestoredVerifiedProduct": true
+}
