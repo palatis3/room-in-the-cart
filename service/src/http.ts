@@ -298,7 +298,7 @@ export function createHTTPServer(options:HTTPOptions) {
         if(path==='/commands'&&method==='POST') {
           const command=parseCommand(payload), header=req.headers['x-request-queue-grant'];
           const queueGrant=header===undefined?undefined:uuid.parse(header).toLowerCase();
-          if(queueGrant && !['request.send','request.edit'].includes(command.kind))throw invalid();
+          if(queueGrant && !['request.send','request.edit','request.withdraw'].includes(command.kind))throw invalid();
           return repository.execute(ctx,command,options.billing,queueGrant);
         }
         const shopMatch=/^\/shops\/([^/]+)(.*)$/.exec(path);

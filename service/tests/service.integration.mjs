@@ -76,6 +76,33 @@ if(process.env.RITC_TEST_NATIVE_WIRE==='1') test('assigned iPhone shopper carrie
     deferredRequestId:f.original.requestId});
 });
 
+test('a device-bound withdrawal recovers its committed receipt and rejects uncommitted withdrawals after opt-out',async()=>{
+  const f=await fixture();
+  const first=(await f.send('Alex')).request, second=(await f.send('Alex')).request;
+  const other=(await f.send('Sam')).request;
+  const {requestQueueGrant}= (await f.http('Alex','PUT','/devices/current/request-queue',{enabled:true})).data;
+  const withdraw=request=>f.envelope('Alex','request.withdraw',{requestId:request.requestId},
+    {shopRevision:0,authorityEpoch:0,requestRevision:request.revision});
+  const submit=(envelope,grant=requestQueueGrant)=>f.http('Alex','POST','/commands',envelope,{'X-Request-Queue-Grant':grant});
+  const committed=withdraw(first), uncommitted=withdraw(second);
+  const receipt=await submit(committed);
+  assert.equal(receipt.status,200,JSON.stringify(receipt.data));
+  assert.equal(receipt.data.request.status,'withdrawn');
+  const foreign=await submit(withdraw(other));
+  assert.equal(foreign.status,404);
+  assert.equal(foreign.data.error.code,'unavailable');
+  await f.http('Alex','PUT','/devices/current/request-queue',{enabled:false});
+  assert.deepEqual((await submit(committed)).data,receipt.data);
+  assert.equal((await submit(uncommitted)).data.error.code,'queue_permission_ended');
+  const renewed=(await f.http('Alex','PUT','/devices/current/request-queue',{enabled:true})).data.requestQueueGrant;
+  assert.notEqual(requestQueueGrant,renewed);
+  assert.equal((await submit(committed,renewed)).data.error.code,'key_reused');
+  assert.equal((await submit(uncommitted)).data.error.code,'queue_permission_ended');
+  const rows=(await f.http('Alex','GET','/requests/mine')).data.requests;
+  assert.equal(rows.find(r=>r.requestId===second.requestId).status,'pending');
+  assert.equal(rows.find(r=>r.requestId===first.requestId).revision,first.revision+1);
+});
+
 test('pending own requests require the current opted-in device, an unexpired grant and fresh contribution rights',async()=>{
   const f=await fixture(),route='/devices/current/request-queue';
   const permission=(actor,enabled)=>f.http(actor,'PUT',route,{enabled});
