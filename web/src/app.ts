@@ -232,7 +232,9 @@ export class WebApp {
     if(e.status===401) {
       this.session=null;this.requests=[];this.view=null;this.pending=[];
       this.receivedSuggestions=[];this.suggestionsState='unchecked';
-      this.notice='Sign in again to continue. Your text stays on this page.';
+      this.notice=this.draft.item || this.draft.amount || this.correction
+        ? 'Sign in again to continue. Your text stays on this page.'
+        : 'Sign in again to continue.';
       this.codeRequested=false;this.loginCode='';
       this.render();
       const historyGeneration=this.historyGeneration;

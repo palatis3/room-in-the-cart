@@ -48,6 +48,7 @@ const es: Record<string, string> = {
   'An adult signs in before joining. Child access requires verified guardian setup.':'Una persona adulta debe iniciar sesión antes de unirse. El acceso de menores requiere una configuración verificada de su tutor.',
   'Child enrollment is not available here yet. Ask a guardian to use the verified setup.':'El registro de menores aún no está disponible aquí. Pide a un tutor que use la configuración verificada.',
   'This page is not available.':'Esta página no está disponible.', 'Open your requests':'Abrir tus solicitudes',
+  'Sign in again to continue.':'Vuelve a iniciar sesión para continuar.',
   'Sign in again to continue. Your text stays on this page.':'Vuelve a iniciar sesión para continuar. Tu texto permanece en esta página.',
   'Sign-out could not be confirmed. Retry before sharing this browser.':'No se pudo confirmar el cierre de sesión. Reintenta antes de compartir este navegador.',
   'Finish signing out':'Terminar de cerrar sesión', 'Retry sign-out':'Reintentar el cierre de sesión',

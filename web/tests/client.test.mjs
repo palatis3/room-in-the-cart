@@ -485,12 +485,13 @@ test('a retired queue grant leaves an authorized contributor able to send online
  assert.deepEqual(attempts[1],{item:'New online request',grant:undefined});
 });
 
-test('a grant rejected during send clears the draft and checks current household access', async () => {
+for (const [denial, code, expected] of [[403,'access_ended',/Access has ended/],[401,'session_needed',/Sign in again to continue/]]) {
+test(`a grant rejected during send checks household access and clears the draft on ${denial}`, async () => {
  const active = {...session(), canSetRequestQueue:true, queueConsent:true, requestQueueGrant:'original-grant'};
  const outbox = new Outbox(new IDBFactory());
  let ended = false;
  const {root,dom} = await setup(fakeAPI({session:async()=>{
-   if (ended) throw new ApiError('access_ended',403);
+   if (ended) throw new ApiError(code,denial);
    return active;
  },requests:async()=>[own()],command:async()=>{
    ended = true;
@@ -499,9 +500,11 @@ test('a grant rejected during send clears the draft and checks current household
  type(dom,'item','Revoked private draft');submit(root,dom);submit(root,dom);await waitForIdle(root);
  assert.deepEqual(await outbox.list(scopeFor(active)),[]);
  assert.doesNotMatch(root.textContent,/Revoked private draft|No-salt frijoles|Family A/);
- assert.match(root.textContent,/Access has ended/);
+ assert.match(root.textContent,expected);
+ assert.doesNotMatch(root.textContent,/Your text stays on this page/);
  assert.equal(root.querySelector('#item'),null);
 });
+}
 
 test('queue cleanup while disconnected offers a fresh access check without replay', async () => {
  const active = {...session(), canSetRequestQueue:true, queueConsent:true, requestQueueGrant:'original-grant'};
