@@ -1004,6 +1004,40 @@
         }
       }
     },
+    "This pickup is closed. You can read its saved dinner instructions.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This pickup is closed. You can read its saved dinner instructions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta compra está cerrada. Puedes consultar las instrucciones guardadas para la cena."
+          }
+        }
+      }
+    },
+    "This pickup was saved without the original dinner links. In Shop, open Repair a meal to review portions and save manual instructions.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This pickup was saved without the original dinner links. In Shop, open Repair a meal to review portions and save manual instructions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta compra se guardó sin los vínculos originales de las cenas. En Compras, abre Resolver una comida para revisar las porciones y guardar instrucciones manuales."
+          }
+        }
+      }
+    },
     "This replacement proposes an extra trip": {
       "extractionState": "manual",
       "localizations": {

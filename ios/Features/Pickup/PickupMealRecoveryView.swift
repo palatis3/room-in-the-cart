@@ -20,7 +20,11 @@ struct PickupMealRecoveryEntry: View {
             PickupSaveStatus(model: model)
             Section {
                 Text(recoveryText("Private pickup · Free manual recovery"))
-                Text(recoveryText("Review a whole dinner replacement. The purchased basket, receipts and charges stay as recorded. Shared meal recovery is not available here."))
+                if model.journey?.closedAt != nil {
+                    Text(recoveryText("This pickup is closed. You can read its saved dinner instructions."))
+                } else {
+                    Text(recoveryText("Review a whole dinner replacement. The purchased basket, receipts and charges stay as recorded. Shared meal recovery is not available here."))
+                }
             }
             if currentAuthority() != nil {
                 switch definitions {
@@ -29,21 +33,27 @@ struct PickupMealRecoveryEntry: View {
                     ForEach(values.filter { occurrenceID == nil || $0.meal.id == occurrenceID }, id: \.meal.id) { value in
                         Section(value.meal.title) {
                             PickupRecoveryMealSummary(definition: value, allocation: model.stockAllocation)
-                            if model.journey?.mealRecovery?.domain.events.contains(where: { $0.request.target.id == value.meal.id }) == true {
-                                NavigationLink(dinnerText("Move this dinner")) {
-                                    PickupRecoveryCalendarView(model: model, original: value, currentAuthority: currentAuthority)
+                            if model.journey?.closedAt == nil {
+                                if model.journey?.mealRecovery?.domain.events.contains(where: { $0.request.target.id == value.meal.id }) == true {
+                                    NavigationLink(dinnerText("Move this dinner")) {
+                                        PickupRecoveryCalendarView(model: model, original: value, currentAuthority: currentAuthority)
+                                            .id(leaseID)
+                                    }.accessibilityIdentifier("mealRecovery.move." + value.meal.id.uuidString)
+                                }
+                                NavigationLink(recoveryText("Replace this whole dinner")) {
+                                    PickupMealRecoveryEditor(model: model, original: value,
+                                        currentAuthority: currentAuthority)
                                         .id(leaseID)
-                                }.accessibilityIdentifier("mealRecovery.move." + value.meal.id.uuidString)
+                                }.accessibilityIdentifier("mealRecovery.target." + value.meal.id.uuidString)
                             }
-                            NavigationLink(recoveryText("Replace this whole dinner")) {
-                                PickupMealRecoveryEditor(model: model, original: value,
-                                    currentAuthority: currentAuthority)
-                                    .id(leaseID)
-                            }.accessibilityIdentifier("mealRecovery.target." + value.meal.id.uuidString)
                         }
                     }
                 case .failure:
-                    Text(recoveryText("The original meal links cannot be verified. Review the source pickup before replacing a dinner."))
+                    if model.journey?.mealSource == nil {
+                        Text(recoveryText("This pickup was saved without the original dinner links. In Shop, open Repair a meal to review portions and save manual instructions."))
+                    } else {
+                        Text(recoveryText("The original meal links cannot be verified. Review the source pickup before replacing a dinner."))
+                    }
                 }
             } else {
                 Text(recoveryText("Return to the same unlocked private pickup to review its dinners."))
@@ -131,6 +141,9 @@ private struct PickupMealRecoveryEditor: View {
     @State private var draft: PickupRecoveryDraft
     @State private var review: PickupMealRecoveryReview?
     @State private var error: String?
+    @State private var agreesTrip = false
+    @State private var agreesRepeat = false
+    @State private var acceptsUnresolved = false
     @State private var effectsReviewed = false
     @State private var applied = false
     @FocusState private var focused: String?
@@ -170,11 +183,15 @@ private struct PickupMealRecoveryEditor: View {
         .scrollDismissesKeyboard(.interactively)
         .keyboardDoneAction(visible: focused != nil, title: tr("Done")) { focused = nil }
         .disabled(model.saving)
-        .onChange(of: draft) { old, new in
-            var comparable = old
-            comparable.identityReviewed = new.identityReviewed
-            if comparable != new { draft.identityReviewed = false }
+        .onChange(of: model.journey?.revision) { _, _ in
+            guard liveAuthority() != nil, let review, let history = model.journey?.mealRecovery,
+                  history.domain.events.contains(where: { $0.request == confirmed(review).domain.request }),
+                  history.definitions.contains(where: { $0.operationID == review.id && $0.definition == review.definition }) else { return }
+            applied = true
+            self.review = nil
+            resultFocused = true
         }
+        .onChange(of: draft.rows) { _, _ in draft.identityReviewed = false }
     }
     @ViewBuilder private var editorSections: some View {
         Section(recoveryText("Original current dinner")) {
@@ -204,9 +221,6 @@ private struct PickupMealRecoveryEditor: View {
             }
             Toggle(recoveryText("I reviewed every food identity, usable unit and inherited exclusion"), isOn: $draft.identityReviewed)
             Toggle(recoveryText("This replacement proposes an extra trip"), isOn: $draft.proposesTrip)
-            if draft.proposesTrip { Toggle(recoveryText("I agree to this extra trip"), isOn: $draft.agreesTrip) }
-            Toggle(recoveryText("I agree if this replacement repeats an accepted meal"), isOn: $draft.agreesRepeat)
-            Toggle(recoveryText("I accept that unresolved food or timing remains open"), isOn: $draft.acceptsUnresolved)
             Text(recoveryText("Agreeing to a trip does not add stock or confirm a delivery."))
             Button(recoveryText("Preview whole-dinner replacement")) { preview() }
                 .buttonStyle(PrimaryAction()).disabled(!draft.identityReviewed || model.hasPendingSave)
@@ -237,6 +251,7 @@ private struct PickupMealRecoveryEditor: View {
     }
     @ViewBuilder private func reviewSections(_ value: PickupMealRecoveryReview) -> some View {
         Section(recoveryText("Before replacement")) {
+            Text(original.meal.title).font(.headline)
             PickupRecoveryMealSummary(definition: original, allocation: value.domain.beforeAllocation)
         }
         Section(recoveryText("Review every current meal")) {
@@ -254,7 +269,7 @@ private struct PickupMealRecoveryEditor: View {
                         }
                         Text(recoveryText("After") + ": " + recoveryCoverage(value.domain.afterAllocation.demands.first { $0.id == item.need.id }))
                     }
-                }.accessibilityIdentifier("mealRecovery.previewMeal." + meal.id.uuidString)
+                }.accessibilityElement(children: .combine).accessibilityIdentifier("mealRecovery.previewMeal." + meal.id.uuidString)
             }
             ForEach(value.domain.after.outsideDemands, id: \.id) { need in
                 VStack(alignment: .leading) {
@@ -276,15 +291,31 @@ private struct PickupMealRecoveryEditor: View {
             }
         }
         Section(recoveryText("Complete replacement instructions")) {
+            Text(value.definition.meal.title).font(.headline)
             PickupRecoveryMealSummary(definition: value.definition, allocation: value.domain.afterAllocation)
-            Toggle(recoveryText("I reviewed the replacement and every other meal’s remaining shortage"), isOn: $effectsReviewed)
+            Group {
+                if value.domain.repeatRequired {
+                    Toggle(recoveryText("I agree if this replacement repeats an accepted meal"), isOn: $agreesRepeat)
+                }
+                if value.domain.request.proposesExtraTrip {
+                    Toggle(recoveryText("I agree to this extra trip"), isOn: $agreesTrip)
+                }
+                if !value.domain.feasible {
+                    Toggle(recoveryText("I accept that unresolved food or timing remains open"), isOn: $acceptsUnresolved)
+                }
+                Toggle(recoveryText("I reviewed the replacement and every other meal’s remaining shortage"), isOn: $effectsReviewed)
+            }.disabled(model.hasPendingSave)
             Button(recoveryText("Apply reviewed dinner replacement")) {
+                let approved = confirmed(value)
                 Task {
-                    if await model.applyMealRecovery(value, currentAuthority: liveAuthority) {
+                    if await model.applyMealRecovery(approved, currentAuthority: liveAuthority) {
                         applied = true; review = nil; resultFocused = true
                     }
                 }
-            }.buttonStyle(PrimaryAction()).disabled(!effectsReviewed || liveAuthority() == nil)
+            }.buttonStyle(PrimaryAction())
+                .disabled(!effectsReviewed || (value.domain.repeatRequired && !agreesRepeat) ||
+                    (value.domain.request.proposesExtraTrip && !agreesTrip) || (!value.domain.feasible && !acceptsUnresolved) ||
+                    liveAuthority() == nil)
                 .accessibilityIdentifier("mealRecovery.apply")
             Button(recoveryText("Continue editing")) { review = nil; effectsReviewed = false }
                 .foregroundStyle(Theme.action).disabled(model.hasPendingSave)
@@ -294,6 +325,11 @@ private struct PickupMealRecoveryEditor: View {
         workingTextField(recoveryText(key), text: text, axis: multiline ? .vertical : .horizontal)
             .accessibilityLabel(recoveryText(key)).accessibilityIdentifier("mealRecovery." + id)
             .focused($focused, equals: id)
+    }
+    private func confirmed(_ value: PickupMealRecoveryReview) -> PickupMealRecoveryReview {
+        var approved = value
+        approved.domain = value.domain.confirming(repeatMeal: agreesRepeat, extraTrip: agreesTrip, unresolved: acceptsUnresolved)
+        return approved
     }
     private func liveAuthority() -> PickupRecoveryAuthority? {
         guard let authority = currentAuthority(), authority == draftAuthority else { return nil }
@@ -305,9 +341,10 @@ private struct PickupMealRecoveryEditor: View {
             focused = nil
             review = try model.prepareMealRecovery(definition: draft.definition(), operationID: draft.operationID,
                 confirmedUnknownDeadline: draft.confirmsDeadline ? draft.deadline : nil,
-                agreesToRepeat: draft.agreesRepeat, proposesExtraTrip: draft.proposesTrip,
-                agreesToExtraTrip: draft.agreesTrip, acceptsUnresolved: draft.acceptsUnresolved, authority: authority)
+                agreesToRepeat: false, proposesExtraTrip: draft.proposesTrip,
+                agreesToExtraTrip: false, acceptsUnresolved: false, authority: authority)
             error = nil; effectsReviewed = false; resultFocused = true
+            agreesRepeat = false; agreesTrip = false; acceptsUnresolved = false
         } catch {
             self.error = recoveryText("Review the complete dinner, amounts, food matches, preserved exclusions and agreements. If the pickup changed, return and open the current dinner again.")
         }

@@ -70,6 +70,14 @@ struct PickupRecoveryCalendarView: View {
         .navigationTitle(dinnerText("Move this dinner"))
         .environment(\.timeZone, TimeZone(identifier: original.meal.timeZoneID) ?? .current)
         .disabled(model.saving)
+        .onChange(of: model.journey?.revision) { _, _ in
+            guard authorized, let review,
+                  model.journey?.mealRecovery?.domain.contextChanges.contains(where: {
+                      $0.request == review.domain.request
+                  }) == true else { return }
+            applied = true
+            error = nil
+        }
     }
     private var authorized: Bool {
         guard let draftAuthority, let current = currentAuthority() else { return false }

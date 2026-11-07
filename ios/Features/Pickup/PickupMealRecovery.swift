@@ -14,7 +14,7 @@ struct PickupRecoveryAuthority: Equatable {
 }
 
 struct PickupMealRecoveryReview {
-    let domain: MealRecoveryReview
+    var domain: MealRecoveryReview
     let definition: PickupRecoveryMealDefinition
     let authority: PickupRecoveryAuthority
     let journeyRevision: Int64
@@ -164,7 +164,7 @@ extension PickupJourney {
 
 extension PickupModel {
     private func recoverySourceState(at contextInstant: Date? = nil) throws -> (PickupJourney, PickupMealRecoveryHistory, UUID, ShoppingLedger) {
-        guard ready, !saving, !hasPendingSave, let current = journey, current.closedAt == nil,
+        guard ready, let current = journey,
               let ledger = recoveryLedger, ledger.ready, !ledger.saving, !ledger.hasPendingSave,
               let workspaceID = ledger.sourceWorkspaceID,
               let shop = ledger.workspace.shops.first(where: { $0.id == current.id }) else { throw PickupMealRecoveryError.unavailable }

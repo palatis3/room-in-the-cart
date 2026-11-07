@@ -222,8 +222,16 @@ final class MealRecoveryTests: XCTestCase {
             XCTAssertEqual($0 as? MealRecoveryError, .consentRequired)
         }
         XCTAssertEqual(f.state, before)
-        let agreed = try preview(request(f.state, target: f.wednesday, replacement: replacement(f.wednesday),
-            trip: true, tripOK: true, unresolvedOK: true), f)
+        let agreed = noConsent.confirming(repeatMeal: true, extraTrip: true, unresolved: true)
+        XCTAssertEqual(agreed.afterAllocation, noConsent.afterAllocation)
+        XCTAssertEqual(agreed.request.reviewedAt, noConsent.request.reviewedAt)
+        XCTAssertEqual(agreed.request.id, noConsent.request.id)
+        XCTAssertFalse(agreed.request.agreesToRepeat)
+        let revoked = agreed.confirming(repeatMeal: false, extraTrip: true, unresolved: false)
+        XCTAssertThrowsError(try MealRecoveryEngine.apply(revoked, to: &f.state, stockEvidence: f.stock, reservations: [], at: now)) {
+            XCTAssertEqual($0 as? MealRecoveryError, .unresolved)
+        }
+        XCTAssertEqual(f.state, before)
         XCTAssertFalse(agreed.foodConfirmed)
         try MealRecoveryEngine.apply(agreed, to: &f.state, stockEvidence: f.stock, reservations: [], at: now)
         XCTAssertEqual(agreed.afterAllocation.demands.first { $0.id == id(51) }?.shortfall, try Rational(4))
@@ -236,8 +244,9 @@ final class MealRecoveryTests: XCTestCase {
         XCTAssertThrowsError(try MealRecoveryEngine.apply(repeatReview, to: &repeated.state, stockEvidence: repeated.stock, reservations: [], at: now)) {
             XCTAssertEqual($0 as? MealRecoveryError, .consentRequired)
         }
-        let permitted = try preview(request(repeated.state, target: repeated.wednesday,
-            replacement: replacement(repeated.wednesday, template: repeated.tuesday.templateID), repeatOK: true), repeated)
+        let permitted = repeatReview.confirming(repeatMeal: true, extraTrip: true, unresolved: true)
+        XCTAssertFalse(permitted.request.agreesToExtraTrip)
+        XCTAssertFalse(permitted.request.acceptsUnresolved)
         try MealRecoveryEngine.apply(permitted, to: &repeated.state, stockEvidence: repeated.stock, reservations: [], at: now)
         XCTAssertEqual(repeated.state.events.count, 1)
     }

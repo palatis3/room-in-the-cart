@@ -63,10 +63,10 @@ public struct MealRecoveryRequest: Codable, Equatable, Sendable, Identifiable {
     public let target: RecoveryMeal
     public let replacement: RecoveryMeal
     public let reviewedAt: Date
-    public let agreesToRepeat: Bool
+    public fileprivate(set) var agreesToRepeat: Bool
     public let proposesExtraTrip: Bool
-    public let agreesToExtraTrip: Bool
-    public let acceptsUnresolved: Bool
+    public fileprivate(set) var agreesToExtraTrip: Bool
+    public fileprivate(set) var acceptsUnresolved: Bool
     public init(id: UUID, shopID: UUID, baseRevisionID: UUID, target: RecoveryMeal, replacement: RecoveryMeal,
                 reviewedAt: Date, agreesToRepeat: Bool = false, proposesExtraTrip: Bool = false,
                 agreesToExtraTrip: Bool = false, acceptsUnresolved: Bool = false) {
@@ -123,7 +123,7 @@ public struct MealRecoveryState: Codable, Equatable, Sendable {
 }
 
 public struct MealRecoveryReview: Equatable, Sendable {
-    public let request: MealRecoveryRequest
+    public private(set) var request: MealRecoveryRequest
     public let source: MealRecoveryState
     public let stockEvidence: [RecoveryStockEvidence]
     public let reservations: [ConfirmedStockReservation]
@@ -135,6 +135,16 @@ public struct MealRecoveryReview: Equatable, Sendable {
     public let timingConfirmed: Bool
     public let repeatRequired: Bool
     public var feasible: Bool { foodConfirmed && timingConfirmed }
+
+    /// Approval applies to these displayed results, including their original
+    /// review instant. Commit independently rechecks the live allocation and time.
+    public func confirming(repeatMeal: Bool, extraTrip: Bool, unresolved: Bool) -> Self {
+        var confirmed = self
+        confirmed.request.agreesToRepeat = repeatRequired && repeatMeal
+        confirmed.request.agreesToExtraTrip = request.proposesExtraTrip && extraTrip
+        confirmed.request.acceptsUnresolved = !feasible && unresolved
+        return confirmed
+    }
 }
 
 public enum MealRecoveryEngine {

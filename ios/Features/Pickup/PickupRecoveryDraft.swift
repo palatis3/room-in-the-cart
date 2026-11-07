@@ -30,9 +30,6 @@ struct PickupRecoveryDraft: Equatable {
     var deadline = Date()
     var identityReviewed = false
     var proposesTrip = false
-    var agreesTrip = false
-    var agreesRepeat = false
-    var acceptsUnresolved = false
 
     init(_ original: PickupRecoveryMealDefinition) {
         self.original = original

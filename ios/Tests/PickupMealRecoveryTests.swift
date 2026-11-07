@@ -357,6 +357,7 @@ import SQLite3
         var live: PickupRecoveryAuthority? = f.authority
         let failed = await f.model.applyRecoveryMove(reviewed, currentAuthority: { live })
         XCTAssertFalse(failed); XCTAssertTrue(f.model.hasPendingSave); XCTAssertEqual(f.model.journey, old)
+        XCTAssertEqual(try f.model.recoveryDefinitions().first { $0.meal.id == f.wednesday }, replacement.definition)
         XCTAssertEqual(try dinners.currentMealDestination(f.wednesday, pickup: f.model), route,
             "The recovery destination must stay mounted so its live lease and exact retry are retained")
         XCTAssertEqual(sqlite3_exec(lock, "ROLLBACK", nil, nil, nil), SQLITE_OK)
@@ -366,6 +367,30 @@ import SQLite3
         let saved = await f.model.applyRecoveryMove(reviewed, currentAuthority: { live }); XCTAssertTrue(saved)
         XCTAssertEqual(try dinners.currentMeals(pickup: f.model).on(day).map(\.id), [f.wednesday])
         XCTAssertEqual(f.model.journey?.revision, old.revision + 1)
+    }
+
+    func testClosedPickupKeepsRecoveredDinnerReadableAndRejectsFurtherChanges() async throws {
+        let f = try await fixture(), dinners = dinnerModel(f)
+        let reviewed = try review(f)
+        let saved = await f.model.applyMealRecovery(reviewed, currentAuthority: { f.authority })
+        XCTAssertTrue(saved)
+        let dayReview = try f.model.prepareRecoveryMove(occurrenceID: f.wednesday, to: nil,
+            operationID: UUID(), authority: f.authority)
+        let closed = await f.model.change { $0.closedAt = now }
+        XCTAssertTrue(closed)
+        let closedJourney = try XCTUnwrap(f.model.journey)
+        let current = try dinners.currentMeals(pickup: f.model)
+        guard case .recovered(_, let definition) = try current.occurrence(f.wednesday) else {
+            return XCTFail("The chosen dinner must show the saved replacement after closure")
+        }
+        XCTAssertEqual(definition, reviewed.definition)
+        XCTAssertThrowsError(try f.model.prepareRecoveryMove(occurrenceID: f.wednesday, to: nil,
+            operationID: UUID(), authority: f.authority))
+        let moved = await f.model.applyRecoveryMove(dayReview, currentAuthority: { f.authority })
+        XCTAssertFalse(moved)
+        let replayed = await f.model.applyMealRecovery(reviewed, currentAuthority: { f.authority })
+        XCTAssertFalse(replayed)
+        XCTAssertEqual(f.model.journey, closedJourney)
     }
 
     func testLegacyJourneyWithoutRecoveryFieldsStillDecodesWithoutInventingMealAuthority() async throws {
