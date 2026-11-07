@@ -40,8 +40,12 @@ final class SharedFallbackUITests: XCTestCase {
     }
     private func toggle(_ element: XCUIElement, to value: String = "1", file: StaticString = #filePath, line: UInt = #line) {
         reveal(element,file:file,line:line)
+        // A partially visible SwiftUI switch can report hittable while its trailing knob is under the home indicator.
+        if element.frame.midY > app.frame.maxY - 72 { app.swipeUp() }
+        if element.frame.midY < app.frame.minY + 72 { app.swipeDown() }
         element.coordinate(withNormalizedOffset: CGVector(dx:0.92,dy:0.5)).tap()
-        XCTAssertEqual(element.value as? String,value,file:file,line:line)
+        let applied = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", value), object: element)
+        XCTAssertEqual(XCTWaiter.wait(for: [applied], timeout: 3), .completed, file: file, line: line)
     }
     private func enter(_ value: String, _ field: String, done: String) {
         let element = app.textFields[field]
@@ -136,6 +140,7 @@ final class SharedFallbackUITests: XCTestCase {
             XCTAssertTrue(rows.allElementsBoundByIndex.contains(where: { $0.isHittable }), label)
         }
         captureScreen("Confirmed trip price and comparison alongside separate agreements")
+        reveal(app.buttons["recovery.keepCurrent"])
         toggle(app.switches["recovery.agreeRepeat"])
         toggle(app.switches["recovery.agreeTrip"])
         toggle(app.switches["recovery.agreeUnresolved"])
