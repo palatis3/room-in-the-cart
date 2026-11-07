@@ -12,7 +12,7 @@ import XCTest
         app.terminate()
     }
 
-    func testSavedOfferReopensAndUpdatesResponseAfterRestart() throws {
+    private func freezeReviewedPickup() {
         launch(reset: true)
         tap(app.buttons["openPickupList"])
         tap(app.buttons["ledgerImport"]); fill("2 wraps", into: "ledgerImportText", fieldType: .textView)
@@ -31,16 +31,54 @@ import XCTest
         let checkout = app.buttons["Review whole checkout"]
         XCTAssertTrue(checkout.waitForExistence(timeout: 8), "Applying the reviewed copy should open the pickup")
         tap(checkout)
-        fill("Family market", into: "Store", replacing: true)
-        fill("Main branch", into: "Branch", replacing: true)
-        fill("Tuesday 5 PM", into: "Pickup or delivery slot", replacing: true)
-        fill("Retailer preview", into: "Source of these prices", replacing: true)
+        for (name, value) in [("Store", "Family market"), ("Branch", "Main branch"),
+                              ("Pickup or delivery slot", "Tuesday 5 PM"), ("Source of these prices", "Retailer preview")] {
+            let field = app.textFields[name]
+            tap(field)
+            XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+            if let current = field.value as? String, !current.isEmpty, current != field.placeholderValue {
+                field.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+                field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: current.count))
+            }
+            field.typeText(value)
+            XCTAssertEqual(field.value as? String, value, name)
+        }
+        tap(app.buttons["Done"])
         enableSwitch("Retailer total already includes all charges")
         fill("3.00", into: "Inclusive total")
         tap(app.buttons["Save and evaluate checkout"])
         back(to: "Prepare retailer handoff")
         tap(app.buttons["Prepare retailer handoff"])
         tap(app.buttons["Freeze reviewed basket"])
+    }
+
+    func testStillCheckingOutAndReportedOrderKeepTheReviewedSnapshotAfterRestart() {
+        freezeReviewedPickup()
+        let pending = app.buttons["Still checking out"]
+        reveal(app.buttons["I placed this order"])
+        XCTAssertTrue(pending.waitForExistence(timeout: 5), "Offer an explicit return with placement unconfirmed")
+        tap(pending)
+        XCTAssertTrue(app.staticTexts["Frozen · placement unconfirmed"].waitForExistence(timeout: 8))
+        tap(app.buttons["Prepare retailer handoff"])
+        tap(app.buttons["I placed this order"])
+        app.terminate()
+        launch(reset: false)
+        shopRoot()
+        tap(app.buttons["Pickup, repairs and handoffs"])
+        tap(app.buttons["View placed order"])
+        let receipt = app.staticTexts["pickup.placedSnapshot"]
+        reveal(receipt)
+        XCTAssertTrue(receipt.label.contains("wraps"))
+        XCTAssertTrue(receipt.label.contains("2 units"))
+        let reporter = app.descendants(matching: .any).matching(identifier: "pickup.placementReporter").firstMatch
+        XCTAssertTrue(reporter.label.contains("Local shopper on this iPhone") || reporter.value as? String == "Local shopper on this iPhone")
+        XCTAssertFalse(app.buttons["I placed this order"].exists)
+        XCTAssertFalse(app.buttons["Reopen draft and recheck prices"].exists)
+        capture("S06-reopened-reported-order")
+    }
+
+    func testSavedOfferReopensAndUpdatesResponseAfterRestart() throws {
+        freezeReviewedPickup()
         tap(app.buttons["I placed this order"])
         back(to: "Review a store offer")
         tap(app.buttons["Review a store offer"])

@@ -551,19 +551,23 @@ struct PickupPersistenceLocation {
             value.carriedMeals.removeAll { restored.contains($0.orderLineID) }
         }
     }
-    @discardableResult func freeze() async -> Bool {
+    @discardableResult func freeze(reviewing reviewed: PickupJourney? = nil) async -> Bool {
         guard hasCurrentBasketStockBasis else { error = ledgerText("Confirmed stock changed. Review ingredient needs and whole packs before continuing checkout."); return false }
         return await change { value in
+            if let reviewed, value.id != reviewed.id || value.revision != reviewed.revision {
+                throw PickupModelError.invalid
+            }
             guard var basket = value.basket, !basket.current.lines.isEmpty, let quote = value.quote, value.quotedRevisionID == basket.current.id else { throw PickupModelError.missing }
             if basket.snapshots.contains(where: { $0.revision.id == basket.current.id }) { return }
             let snapshot = try basket.freeze(snapshotID: UUID(), expectedRevision: basket.current.id, at: clock())
             value.frozenQuotes[snapshot.id] = quote; value.basket = basket
         }
     }
-    @discardableResult func reopenDraft() async -> Bool {
-        await change { value in
-            guard var basket = value.basket, basket.phase != .reportedPlaced,
-                  !basket.current.lines.isEmpty else { throw PickupModelError.invalid }
+    @discardableResult func reopenDraft(reviewing reviewed: HandoffSnapshot? = nil) async -> Bool {
+        guard let snapshot = currentFrozenSnapshot(reviewing: reviewed) else { return false }
+        return await change { value in
+            guard var basket = value.basket, basket.phase == .frozen, basket.id == snapshot.basketID,
+                  basket.current.id == snapshot.revision.id, !basket.current.lines.isEmpty else { throw PickupModelError.invalid }
             let revision = BasketProposal(id: UUID(), baseRevisionID: basket.current.id, revisionID: UUID(), changes: basket.current.lines.map { .upsert($0) })
             try basket.apply(revision, at: clock())
             value.basket = basket; value.quote = nil; value.quotedRevisionID = nil
@@ -572,6 +576,14 @@ struct PickupPersistenceLocation {
     var frozenSnapshot: HandoffSnapshot? {
         guard let basket = journey?.basket else { return nil }
         return basket.snapshots.last { $0.revision.id == basket.current.id }
+    }
+    private func currentFrozenSnapshot(reviewing reviewed: HandoffSnapshot?) -> HandoffSnapshot? {
+        let current = frozenSnapshot
+        if let reviewed, reviewed != current {
+            error = pTr("The saved pickup changed or was removed. Reopen its current details before trying again.")
+            return nil
+        }
+        return current
     }
     static func datedRetailerText(_ snapshot: HandoffSnapshot) -> String {
         "\(pTr("Reviewed pickup")) · \(snapshot.createdAt.formatted())\n\(pTr("Revision")) \(snapshot.revision.number)\n" + snapshot.revision.lines.map { "\($0.name) — \(pQuantity($0.quantity))" }.joined(separator: "\n")
@@ -604,16 +616,20 @@ struct PickupPersistenceLocation {
         value.cookShareEvents.append(PickupCookShareEvent(id: UUID(), noteID: note.id, occurredAt: clock(), action: kind, destination: destination))
         return await save(value, selecting: false)
     }
-    @discardableResult func reportPlaced(acknowledgingChangedStock: Bool = false) async -> Bool {
-        if journey?.basket?.phase == .reportedPlaced { return true }
+    @discardableResult func reportPlaced(reviewing reviewed: HandoffSnapshot? = nil, by localActorID: UUID? = nil,
+                                         acknowledgingChangedStock: Bool = false) async -> Bool {
+        guard let snapshot = currentFrozenSnapshot(reviewing: reviewed) else { return false }
+        if let existing = journey?.basket?.placements.first { return existing.snapshotID == snapshot.id }
         guard hasCurrentBasketStockBasis || acknowledgingChangedStock else {
             error = ledgerText("Confirmed stock changed. If you already placed this frozen order with the retailer, record that original order explicitly."); return false
         }
-        guard let snapshot = frozenSnapshot, !snapshot.revision.lines.isEmpty else { return false }
+        guard !snapshot.revision.lines.isEmpty else { return false }
         return await change { value in
-            guard var basket = value.basket, let context = value.context else { throw PickupModelError.missing }
-            if !basket.placements.isEmpty { return }
-            let placement = ReportedPlacement(id: UUID(), intentID: UUID(), snapshotID: snapshot.id, reportedAt: clock())
+            guard var basket = value.basket, basket.id == snapshot.basketID,
+                  basket.current.id == snapshot.revision.id, basket.placements.isEmpty,
+                  let context = value.context else { throw PickupModelError.invalid }
+            let placement = ReportedPlacement(id: UUID(), intentID: UUID(), snapshotID: snapshot.id,
+                                              reportedAt: clock(), reportedByLocalActorID: localActorID)
             try basket.reportPlaced(placement); value.basket = basket
             value.needs = value.plannedNeeds
             value.pickup = try PickupLedger(orderID: placement.id, orderLines: snapshot.revision.lines.map { PickupOrderLine(id: $0.id, branchID: context.branchID, name: $0.name, ordered: $0.quantity) })

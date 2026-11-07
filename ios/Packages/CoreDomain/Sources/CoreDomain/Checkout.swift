@@ -322,8 +322,11 @@ public struct ReportedPlacement: Codable, Equatable, Sendable, Identifiable {
     public let intentID: UUID
     public let snapshotID: UUID
     public let reportedAt: Date
-    public init(id: UUID, intentID: UUID, snapshotID: UUID, reportedAt: Date) {
+    /// Earlier private reports have no recorded actor.
+    public let reportedByLocalActorID: UUID?
+    public init(id: UUID, intentID: UUID, snapshotID: UUID, reportedAt: Date, reportedByLocalActorID: UUID? = nil) {
         self.id = id; self.intentID = intentID; self.snapshotID = snapshotID; self.reportedAt = reportedAt
+        self.reportedByLocalActorID = reportedByLocalActorID
     }
 }
 public struct ConfirmedAmendment: Codable, Equatable, Sendable, Identifiable {

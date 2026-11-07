@@ -252,7 +252,7 @@ struct ShopView: View {
                             }
                             if basket.phase == .frozen {
                                 NavigationLink(pTr("Prepare retailer handoff")) {
-                                    pickupDestination(journey.id) { PickupHandoffView(model: pickup) }
+                                    pickupDestination(journey.id) { PickupHandoffView(model: pickup, shopID: journey.id) }
                                 }.frame(minHeight: 44)
                             } else if journey.nextUnfilledOffer(at: .now) == nil, journey.pickup?.receipts.isEmpty == true {
                                 NavigationLink(pTr("Record what came home")) {
