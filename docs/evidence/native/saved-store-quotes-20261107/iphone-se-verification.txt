@@ -1,0 +1,11 @@
+Executed 4 of 4 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartUITests/ContextualNavigationUITests/testEnteredStoreQuotesKeepTripCostsSeparateAndAdoptOnlyReviewedSavedProof | Passed | 328.82 |
+| RoomInTheCartTests/DinnerFeatureModelTests/testEnteredUnreviewedQuoteTotalSurvivesSavingWithoutMakingCheckoutExact | Passed | 0.03 |
+| RoomInTheCartTests/DinnerFeatureModelTests/testQuoteProofSavedThenBasisAdoptionIsExplicitAndStalesOnEdit | Passed | 0.01 |
+| RoomInTheCartTests/DinnerFeatureModelTests/testSavedQuoteEditPreservesImportedEvidenceAndSeparateCommitmentsOnTheCurrentBasis | Passed | 0.01 |
+The XCTest log confirms one start and one passing completion per selected test.
+
+The XCTest test export recorded 0 runtime warning occurrences across 4 examined tests.
