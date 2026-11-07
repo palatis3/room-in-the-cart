@@ -2,6 +2,18 @@
 
 Updated November 7, 2026 UTC. The owner resumed and explicitly approved the reviewed hosted staging update; the full first-version goal is active and release acceptance remains incomplete. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
+## Shared purchase confirmation, closeout and next pickup, November 7
+
+From **What came home**, the assigned shopper can confirm, correct or clear the purchase of an added family request. The review compares the requested quantity with the known pack count on the sealed order line. An older line with no pack count shows an unknown quantity. The contributor can read their own outcome in English or US Spanish. A posted charge, refund or reported placement alone leaves the purchase unconfirmed.
+
+The iPhone 17 Pro simulator on iOS 26.2 passed the shopper and Spanish contributor journeys with zero runtime warnings. On Android 14, Chrome 156.0.8078.79 refreshed the compiled companion app against the local service and PostgreSQL 17.11 at migration 039. The author saw unconfirmed, bought, corrected to not bought and cleared across revisions 2–5. An independently invited adult saw zero requests at every revision. Both sessions cleared their receipts on sign-out and cold reload. All sixteen real-service captures fit the 411 CSS-pixel viewport. Identities and household data were synthetic.
+
+An assigned shopper can close a shared pickup with incomplete financial evidence, then settle it from the shop or its history. The iPhone closeout test recovered a lost reply, kept $37.20 paid with a $2.40 pending credit, closed the pickup, and linked the credit to the existing net charge. The paid total stayed at $37.20 and the two missing food units remained open. The PostgreSQL and Swift tests exercised the same flow after the paid seat expired. The purchase and closeout changes passed together over pinned HTTPS in five service cases and nine Swift scenarios.
+
+A later shared draft can show individually deferred family requests from earlier placed or closed pickups assigned to that shopper. Bringing a request forward preserves its original author and leaves the new basket untouched until a fresh price or match is reviewed and accepted. The old trip remains sealed. A separate iPhone model regression confirms that a store review on the previous shop cannot enter the strict new-shop command or carry its prices into the new basket. Migration 040 passed 215 database integration tests and 454 service and billing tests locally. The last hosted staging schema verified in this handoff remains 030.
+
+A local upgrade and restore rehearsal through migration 039 preserved 102 tables, 485 synthetic rows, schema and access controls. The original shopper recovered the exact purchase receipt after restore. The author saw only their outcome. Live hosted upgrades and physical-device acceptance remain open.
+
 ## Household fallback recipes and dated cook corrections, November 7
 
 The local service accepts individually reviewed household recipes, including a recipe disclosed by the shopper, a scheduled meal, or an approved idea. P04 compares confirmed stock, protected portions, preparation time and reviewed top-up offers. A shopper can clear a previously known preparation time. That leaves the dish conditional and preserves the original deadline. The iPhone shows the extra pack cost, trip charges and time difference from the usual fallback again when it asks for trip agreement.

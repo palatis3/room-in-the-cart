@@ -1,5 +1,9 @@
 # Current implementation and acceptance map
 
+## November 7 purchase, closeout and next-shop acceptance
+
+The [current handoff](CURRENT-HANDOFF.md) records the native S11 purchase and financial-closeout tests, real-service Android contributor checks in both languages and the local 039 restore. S12 now has a Free path for an assigned shopper to bring an eligible earlier family request to a fresh shared inbox and price it there. The local 040 regression suite covers source and destination authority, child consent, erasure, pagination and competing destinations. A previous store review is excluded from the new-shop command. End-to-end access on physical phones and the hosted rollout remain open.
+
 ## November 7 delivery coverage and dinner recovery
 
 The [current handoff](CURRENT-HANDOFF.md) records the verified private and shared post-placement meal changes. S09.01 now has two shared shopper walkthroughs on iOS 17.0 and 26.2. Replacing Wednesday preserves Tuesday’s exact protected shortage, and declining an unresolved replacement preserves the original dinner. A separate shopper walkthrough verifies that five freezer portions cover two protected lunches and three of four dinner plates (S09.02). Service tests cover immutable orders, cross-shop commitments, stale decisions, retry and scoped cook instructions. For S09.03 and P04, the service and Swift client now reject an unworkable set of accepted recipes while preserving the current meal. An explicitly unknown preparation time stays conditional. Seven live Swift-to-PostgreSQL scenarios passed, including receipt recovery and rejection of new approvals after membership expiry. Both iOS 26.2 shopper journeys for recipe approval, withdrawal, a dated no-fit result and a two-pack top-up passed together. The top-up test reopened cook instructions with the protected lunch and the remaining three-unit shortage. Human fallback and travel comparison is pending. Remaining release requirements are open.
