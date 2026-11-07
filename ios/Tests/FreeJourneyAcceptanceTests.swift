@@ -273,6 +273,35 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
         XCTAssertEqual(reopened.journeys.count, 2)
     }
 
+    @MainActor func testFreshHandledAndDismissedChoicesDoNotReviveLinkedMealNeeds() async throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("pickup.sqlite")
+        let pickup = PickupModel(databaseURL: url)
+        try requireSaved(await pickup.addUrgent(UrgentMealNeed(id: UUID(), food: "Rice", meal: "Dinner", required: quantity(4), available: quantity(4), due: nil, confirmedAt: now)))
+        let origin = try XCTUnwrap(pickup.journey?.id)
+        let lines = (0..<3).map { _ in BasketLine(id: UUID(), name: "Coffee", quantity: quantity(1), expectedCost: .exact(Money(minorUnits: 460))) }
+        let deferred = lines.map { DeferredPickupNeed(id: UUID(), sourceShopID: origin, line: $0, status: "review") }
+        let needs = lines.map { AllocationNeed(id: UUID(), orderLineID: $0.id, name: $0.name, amount: $0.quantity, priority: .required) }
+        try requireSaved(await pickup.change { $0.deferred = deferred; $0.carriedMeals = needs })
+        let before = try XCTUnwrap(pickup.journey)
+        let closing: [UUID: NextShopDisposition] = [deferred[0].id: .handled, deferred[1].id: .dismissed]
+        try requireSaved(await pickup.startNextShop(accept: [], closing: closing, sourceID: origin, sourceRevision: before.revision))
+        let next = try XCTUnwrap(pickup.journey)
+        XCTAssertEqual(next.carriedMeals, [needs[2]], "Fresh closing choices must remove only their source-linked meal needs")
+        XCTAssertEqual(next.deferred.map(\.status), ["handled", "dismissed", "review"])
+        XCTAssertEqual(next.deferred.map(\.id), deferred.map(\.id))
+        XCTAssertTrue(try XCTUnwrap(next.basket?.current.lines).isEmpty)
+        let reopened = PickupModel(databaseURL: url)
+        await reopened.load()
+        XCTAssertEqual(reopened.journeys.first { $0.id == next.id }, next)
+        reopened.selectedID = origin
+        try requireSaved(await reopened.startNextShop(accept: [], closing: closing, sourceID: origin, sourceRevision: before.revision))
+        XCTAssertEqual(reopened.journey, next)
+        XCTAssertEqual(reopened.journeys.first { $0.id == origin }, before)
+        XCTAssertEqual(reopened.journeys.count, 2)
+    }
+
     @MainActor func testReviewedNextShopDispositionIsScopedAndNeverRewritesSource() async throws {
         let directory = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }

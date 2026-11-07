@@ -1,0 +1,125 @@
+{
+  "devices" : [
+    {
+      "architecture" : "arm64",
+      "deviceId" : "789A7C41-16B3-4C42-AC3E-B65EC5423104",
+      "deviceName" : "RITC S02 System Share Context 20261106",
+      "modelName" : "iPhone 17",
+      "osBuildNumber" : "24A434",
+      "osVersion" : "27.0",
+      "platform" : "iOS Simulator"
+    }
+  ],
+  "testNodes" : [
+    {
+      "children" : [
+        {
+          "children" : [
+            {
+              "children" : [
+                {
+                  "duration" : "0.69s",
+                  "durationInSeconds" : 0.6897509098052979,
+                  "name" : "testConcurrentPickupChangesAndCompetingNextShopsRequireAFreshReview()",
+                  "nodeIdentifier" : "FreeJourneyAcceptanceTests/testConcurrentPickupChangesAndCompetingNextShopsRequireAFreshReview()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/FreeJourneyAcceptanceTests/testConcurrentPickupChangesAndCompetingNextShopsRequireAFreshReview",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.15s",
+                  "durationInSeconds" : 0.1519479751586914,
+                  "name" : "testCurrentDinnerFeatureFreeReusableChoiceProjectsLunchAndSurvivesNewShopRestart()",
+                  "nodeIdentifier" : "FreeJourneyAcceptanceTests/testCurrentDinnerFeatureFreeReusableChoiceProjectsLunchAndSurvivesNewShopRestart()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/FreeJourneyAcceptanceTests/testCurrentDinnerFeatureFreeReusableChoiceProjectsLunchAndSurvivesNewShopRestart",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.26s",
+                  "durationInSeconds" : 0.25964999198913574,
+                  "name" : "testFreeManualJourneySurvivesRestartFromMealsThroughNextShop()",
+                  "nodeIdentifier" : "FreeJourneyAcceptanceTests/testFreeManualJourneySurvivesRestartFromMealsThroughNextShop()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/FreeJourneyAcceptanceTests/testFreeManualJourneySurvivesRestartFromMealsThroughNextShop",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.019s",
+                  "durationInSeconds" : 0.019482016563415527,
+                  "name" : "testFreshHandledAndDismissedChoicesDoNotReviveLinkedMealNeeds()",
+                  "nodeIdentifier" : "FreeJourneyAcceptanceTests/testFreshHandledAndDismissedChoicesDoNotReviveLinkedMealNeeds()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/FreeJourneyAcceptanceTests/testFreshHandledAndDismissedChoicesDoNotReviveLinkedMealNeeds",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.022s",
+                  "durationInSeconds" : 0.021628975868225098,
+                  "name" : "testHandledAndDismissedCarryoversUseSourceIdentityInsteadOfName()",
+                  "nodeIdentifier" : "FreeJourneyAcceptanceTests/testHandledAndDismissedCarryoversUseSourceIdentityInsteadOfName()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/FreeJourneyAcceptanceTests/testHandledAndDismissedCarryoversUseSourceIdentityInsteadOfName",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.014s",
+                  "durationInSeconds" : 0.01416003704071045,
+                  "name" : "testInjectedNestedPickupCreatesItsOwnDirectoryAndSurvivesResetArguments()",
+                  "nodeIdentifier" : "FreeJourneyAcceptanceTests/testInjectedNestedPickupCreatesItsOwnDirectoryAndSurvivesResetArguments()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/FreeJourneyAcceptanceTests/testInjectedNestedPickupCreatesItsOwnDirectoryAndSurvivesResetArguments",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.0011s",
+                  "durationInSeconds" : 0.0010700225830078125,
+                  "name" : "testInjectedPickupLocationNeverResolvesDefaultSupportOrHonorsResetFlags()",
+                  "nodeIdentifier" : "FreeJourneyAcceptanceTests/testInjectedPickupLocationNeverResolvesDefaultSupportOrHonorsResetFlags()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/FreeJourneyAcceptanceTests/testInjectedPickupLocationNeverResolvesDefaultSupportOrHonorsResetFlags",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.019s",
+                  "durationInSeconds" : 0.018597960472106934,
+                  "name" : "testReviewedNextShopDispositionIsScopedAndNeverRewritesSource()",
+                  "nodeIdentifier" : "FreeJourneyAcceptanceTests/testReviewedNextShopDispositionIsScopedAndNeverRewritesSource()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/FreeJourneyAcceptanceTests/testReviewedNextShopDispositionIsScopedAndNeverRewritesSource",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "0.044s",
+                  "durationInSeconds" : 0.04378199577331543,
+                  "name" : "testWrongItemCannotFeedLunchAndLateSegmentRetryNeverDuplicatesFood()",
+                  "nodeIdentifier" : "FreeJourneyAcceptanceTests/testWrongItemCannotFeedLunchAndLateSegmentRetryNeverDuplicatesFood()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/FreeJourneyAcceptanceTests/testWrongItemCannotFeedLunchAndLateSegmentRetryNeverDuplicatesFood",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                }
+              ],
+              "name" : "FreeJourneyAcceptanceTests",
+              "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/FreeJourneyAcceptanceTests",
+              "nodeType" : "Test Suite",
+              "result" : "Passed"
+            }
+          ],
+          "name" : "RoomInTheCartTests",
+          "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests",
+          "nodeType" : "Unit test bundle",
+          "result" : "Passed"
+        }
+      ],
+      "name" : "RoomInTheCart",
+      "nodeType" : "Test Plan",
+      "result" : "Passed"
+    }
+  ],
+  "testPlanConfigurations" : [
+    {
+      "configurationId" : "1",
+      "configurationName" : "Test Scheme Action"
+    }
+  ]
+}

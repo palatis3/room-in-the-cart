@@ -1,0 +1,14 @@
+# Independent review — fresh next-shop closing
+
+**Approved within this two-file scope; no blocking finding.** Inspected the current read-only diff and surrounding guards, save/replay paths and new regression. No native commands, test execution, tracked edits or Git mutation performed. The owner's positive suite was still in progress at task assignment; this approval concerns source correctness, not a claimed completed run.
+
+- `ios/Features/Pickup/PickupModel.swift:726–730` now derives each deferred line's effective status from this review's closing choice, falling back to its saved status. The earlier guards (`:683–688`) allow closing only for reviewable deferred IDs, only handled/dismissed values, and disjoint accepted/closed IDs. Existing closed rows therefore remain excluded; accepted or still-reviewable siblings are unaffected.
+- Mapping uses deferred-need ID for the decision, then original line ID for meal filtering. Same-name unrelated needs remain untouched. Both pre-existing carried meals and allocation-derived shortfalls use the resulting set (`:730–736`). No change to stock confirmation, urgent needs, charge calculations, source history, stale revision checks, replay identity, or persistence gates.
+- `ios/Tests/FreeJourneyAcceptanceTests.swift:276–303` is a meaningful regression: three identical names with distinct identities, fresh handled and dismissed decisions, one surviving meal, retained deferred IDs/statuses, and an empty new purchase basket. SQLite reload compares the entire next journey; repeating the same reviewed operation preserves it; the original source remains equal and only two journeys exist. The old pre-closed fixture remains unchanged.
+- Independently read the retained `before-summary.json`: one failure, the new selector, at the expected carriedMeals equality (three versus one); no runtime warnings. `before-exit.json` records exit 65. The test source hash is identical in the before/after metadata, supporting the unchanged-test negative control.
+
+Limits: this test directly covers previously carried meal needs, not the separate allocation-derived construction branch; that branch uses the same corrected filter, so lack of a second fixture is not a blocker for this narrow change. No new visible UI run is claimed. The existing-draft replay branch (`PickupModel.swift:691–698`) intentionally returns already-saved drafts unchanged, so this is a forward creation fix, not a migration of drafts made by older code. Do not describe it as repairing historical saved carryovers automatically.
+
+Reviewed source SHA256 (matches `after-fix.json`):
+- `ios/Features/Pickup/PickupModel.swift`: `c57b837b2983d7c0c565817b3d0598b862f043cc901ffde3890849d207a102c1`
+- `ios/Tests/FreeJourneyAcceptanceTests.swift`: `736ddc0813453f3fa7fef7930ec0ae8197b8049e85f11d301176c701cd0d34cd`

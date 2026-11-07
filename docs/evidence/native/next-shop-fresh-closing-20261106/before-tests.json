@@ -1,0 +1,63 @@
+{
+  "devices" : [
+    {
+      "architecture" : "arm64",
+      "deviceId" : "789A7C41-16B3-4C42-AC3E-B65EC5423104",
+      "deviceName" : "RITC S02 System Share Context 20261106",
+      "modelName" : "iPhone 17",
+      "osBuildNumber" : "24A434",
+      "osVersion" : "27.0",
+      "platform" : "iOS Simulator"
+    }
+  ],
+  "testNodes" : [
+    {
+      "children" : [
+        {
+          "children" : [
+            {
+              "children" : [
+                {
+                  "children" : [
+                    {
+                      "name" : "XCTAssertEqual failed: (\"[CoreDomain.AllocationNeed(id: 7EE98382-1589-4540-99D9-A81B1F177E13, orderLineID: 2D25503C-60A3-404D-8C5B-57D514CB53FA, name: \"Coffee\", amount: CoreDomain.Quantity(amount: 1, unit: CoreDomain.UnitOfMeasure.count, originalLiteral: \"1\", confirmedConversion: nil), priority: CoreDomain.AllocationPriority.required), CoreDomain.AllocationNeed(id: D06847E1-243D-400F-8DBD-19E45E29D63C, orderLineID: C6AE95C0-5C2B-4267-87D0-F68FEA25EE49, name: \"Coffee\", amount: CoreDomain.Quantity(amount: 1, unit: CoreDomain.UnitOfMeasure.count, originalLiteral: \"1\", confirmedConversion: nil), priority: CoreDomain.AllocationPriority.required), CoreDomain.AllocationNeed(id: C6C1C7A8-CF25-4F0E-86CF-7F8FA762EA99, orderLineID: 4E190471-E3DC-451B-873B-F6B32848BC6E, name: \"Coffee\", amount: CoreDomain.Quantity(amount: 1, unit: CoreDomain.UnitOfMeasure.count, originalLiteral: \"1\", confirmedConversion: nil), priority: CoreDomain.AllocationPriority.required)]\") is not equal to (\"[CoreDomain.AllocationNeed(id: C6C1C7A8-CF25-4F0E-86CF-7F8FA762EA99, orderLineID: 4E190471-E3DC-451B-873B-F6B32848BC6E, name: \"Coffee\", amount: CoreDomain.Quantity(amount: 1, unit: CoreDomain.UnitOfMeasure.count, originalLiteral: \"1\", confirmedConversion: nil), priority: CoreDomain.AllocationPriority.required)]\") - Fresh closing choices must remove only their source-linked meal needs",
+                      "nodeType" : "Failure Message",
+                      "sourceLocation" : {
+                        "filePath" : "/Users/palatis/Room in the Cart/ios/Tests/FreeJourneyAcceptanceTests.swift",
+                        "lineNumber" : 291
+                      }
+                    }
+                  ],
+                  "duration" : "1s",
+                  "durationInSeconds" : 1.7588969469070435,
+                  "name" : "testFreshHandledAndDismissedChoicesDoNotReviveLinkedMealNeeds()",
+                  "nodeIdentifier" : "FreeJourneyAcceptanceTests/testFreshHandledAndDismissedChoicesDoNotReviveLinkedMealNeeds()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/FreeJourneyAcceptanceTests/testFreshHandledAndDismissedChoicesDoNotReviveLinkedMealNeeds",
+                  "nodeType" : "Test Case",
+                  "result" : "Failed"
+                }
+              ],
+              "name" : "FreeJourneyAcceptanceTests",
+              "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/FreeJourneyAcceptanceTests",
+              "nodeType" : "Test Suite",
+              "result" : "Failed"
+            }
+          ],
+          "name" : "RoomInTheCartTests",
+          "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests",
+          "nodeType" : "Unit test bundle",
+          "result" : "Failed"
+        }
+      ],
+      "name" : "RoomInTheCart",
+      "nodeType" : "Test Plan",
+      "result" : "Failed"
+    }
+  ],
+  "testPlanConfigurations" : [
+    {
+      "configurationId" : "1",
+      "configurationName" : "Test Scheme Action"
+    }
+  ]
+}

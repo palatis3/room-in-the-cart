@@ -723,7 +723,10 @@ struct PickupPersistenceLocation {
             next.stockNeeds = next.urgent.map { need in
                 StockNeed(id: need.id, foodID: need.id, name: need.meal, amount: need.required, priority: .required)
             }
-            let handledLineIDs = Set(previous.deferred.filter { ["handled", "dismissed"].contains($0.status) }.map { $0.line.id })
+            let handledLineIDs = Set(previous.deferred.filter { need in
+                // Apply this review's closing choices without rewriting prior history.
+                ["handled", "dismissed"].contains(closing[need.id]?.rawValue ?? need.status)
+            }.map { $0.line.id })
             next.carriedMeals = previous.carriedMeals.filter { !handledLineIDs.contains($0.orderLineID) }
             if let coverage = allocation {
                 for unmet in coverage.demands where unmet.shortfall != .zero {
