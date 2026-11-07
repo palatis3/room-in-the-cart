@@ -77,12 +77,22 @@ enum PickupCookProjection {
             // Lunch and dinner allocations can share the same original ingredient instructions.
             let sourceID = detail.sourceContributionID ?? detail.id
             var lines: [String] = []
-            if !detail.exclusions.isEmpty { lines.append("\(detail.mealName) · \(pCook("Keep these exclusions", language: language)): \(detail.exclusions.joined(separator: ", "))") }
+            var seenExclusions = Set<String>()
+            let exclusions = detail.exclusions.filter { seenExclusions.insert($0).inserted }
+            if !exclusions.isEmpty { lines.append("\(detail.mealName) · \(pCook("Keep these exclusions", language: language)): \(exclusions.joined(separator: ", "))") }
             if let day = detail.scheduledDay { lines.append("\(detail.mealName): \(day.iso8601) · \(day.timeZoneIdentifier)") }
             if let due = detail.due { lines.append("\(pCook("Needed by", language: language)): \(formatter.string(from: due))") }
             lines += detail.preparationNotes ?? []
             if let source = detail.sourceURL { lines.append(source) }
             if let minutes = detail.leadTimeMinutes { lines.append("\(pCook("Saved elapsed preparation minutes", language: language)): \(minutes)") }
+            if let prep = detail.recoveryPreparation {
+                if detail.due == nil { lines.append(pCook("Deadline unknown", language: language)) }
+                if detail.leadTimeMinutes == nil { lines.append(pCook("Remaining preparation time unknown", language: language)) }
+                if let lead = prep.requiredLeadMinutes {
+                    lines.append(pCook("Required advance preparation (minutes)", language: language) + ": " + String(lead))
+                }
+                if prep.advanceComplete { lines.append(pCook("Advance preparation confirmed complete", language: language)) }
+            }
             if !detail.completedSteps.isEmpty { lines.append("\(pCook("Steps already marked complete", language: language)): \(detail.completedSteps.joined(separator: "; "))") }
             let text = lines.joined(separator: "\n\n")
             if !text.isEmpty, renderedDetails[sourceID, default: []].insert(text).inserted {

@@ -10,6 +10,7 @@ struct PickupRecoveryAuthority: Equatable {
     let ledgerRevisionID: UUID
     let selectedPickupID: UUID
     let leaseID: UUID
+    var permitsAcceptedDinner = false
     var scope: PickupStockReviewScope? { presentation.scope(presentationID: leaseID) }
 }
 
@@ -117,7 +118,9 @@ extension PickupJourney {
                         ? [] : (history.source.details.first(where: { $0.id == item.need.id })?.completedSteps ?? []),
                     sourceContributionID: item.ingredientID, sourceOccurrenceID: meal.id, sourceGroupID: item.groupID,
                     sourceLedgerRevisionID: history.source.shop.revisionID, due: meal.due,
-                    preparationNotes: [definition.notes, rule?.notes ?? ""].filter { !$0.isEmpty }, sourceURL: definition.sourceURL))
+                    preparationNotes: [definition.notes, rule?.notes ?? ""].filter { !$0.isEmpty },
+                    recoveryPreparation: .init(requiredLeadMinutes: meal.requiredLeadMinutes, advanceComplete: meal.advanceStepsCompleted),
+                    sourceURL: definition.sourceURL))
             }
         }
         return result
@@ -223,7 +226,7 @@ extension PickupModel {
                              confirmedUnknownDeadline: Date? = nil, agreesToRepeat: Bool,
                              proposesExtraTrip: Bool, agreesToExtraTrip: Bool, acceptsUnresolved: Bool,
                              authority: PickupRecoveryAuthority) throws -> PickupMealRecoveryReview {
-        guard permitsRecovery(authority) else { throw PickupMealRecoveryError.forbidden }
+        guard permitsRecovery(authority), definition.acceptedTemplate == nil || authority.permitsAcceptedDinner else { throw PickupMealRecoveryError.forbidden }
         let instant = stockReviewDate
         let (current, initial, _, _) = try recoverySourceState(at: instant)
         var history = initial
@@ -251,7 +254,8 @@ extension PickupModel {
     }
     func applyMealRecovery(_ review: PickupMealRecoveryReview,
                            currentAuthority: @escaping @MainActor () -> PickupRecoveryAuthority?) async -> Bool {
-        guard let authority = currentAuthority(), authority == review.authority, permitsRecovery(authority, allowPending: true) else {
+        guard let authority = currentAuthority(), authority == review.authority, permitsRecovery(authority, allowPending: true),
+              review.definition.acceptedTemplate == nil || authority.permitsAcceptedDinner else {
             error = recoveryText("The meal or your access changed. Review the replacement again."); return false
         }
         if hasPendingSave {

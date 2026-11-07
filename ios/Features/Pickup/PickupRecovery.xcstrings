@@ -851,6 +851,23 @@
         }
       }
     },
+    "Review the saved recipe’s quantities, serving groups and exclusions before using it for this dinner.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the saved recipe’s quantities, serving groups and exclusions before using it for this dinner."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa las cantidades, los grupos de porciones y las exclusiones de la receta guardada antes de usarla para esta cena."
+          }
+        }
+      }
+    },
     "Reviewed matching food": {
       "extractionState": "manual",
       "localizations": {

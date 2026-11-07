@@ -110,6 +110,7 @@ import SQLite3
         XCTAssertTrue(Set(after.physicalStockNeeds.map(\.id)).isDisjoint(with: reviewed.domain.request.target.needs.map(\.id)))
         let text = PickupCookProjection.text(journey: try XCTUnwrap(f.model.cookJourney), allocation: f.model.allocation,
             result: nil, language: "en-US", at: now, timeZone: TimeZone(identifier: "America/New_York")!)
+        XCTAssertFalse(text.contains("garlic, garlic"))
         XCTAssertTrue(text.contains("Wednesday beans")); XCTAssertTrue(text.contains("Warm the beans"))
         XCTAssertTrue(text.contains("Tuesday tacos")); XCTAssertFalse(text.contains("Wednesday quesadillas"))
         XCTAssertEqual(after.recoveryCurrentDetails.first { $0.id == reviewed.definition.meal.needs[0].id }?.due, reviewed.definition.meal.due)
@@ -367,6 +368,101 @@ import SQLite3
         let saved = await f.model.applyRecoveryMove(reviewed, currentAuthority: { live }); XCTAssertTrue(saved)
         XCTAssertEqual(try dinners.currentMeals(pickup: f.model).on(day).map(\.id), [f.wednesday])
         XCTAssertEqual(f.model.journey?.revision, old.revision + 1)
+    }
+
+    func testAcceptedReplacementUsesReviewedTemplateScaleAndRechecksPaidAccessBeforeSaving() async throws {
+        let f = try await fixture()
+        let original = try XCTUnwrap(f.model.recoveryDefinitions().first { $0.meal.id == f.wednesday })
+        let recipe = MealTemplate(title: "Family bean bowls", servings: try Rational(3),
+            ingredients: [.init(name: "Beans", quantity: q(3), notes: "Drain first", exclusions: ["onion"])],
+            notes: "Warm gently", sourceURL: "https://example.invalid/family-beans",
+            exclusions: ["pepper"], revision: 2, leadTimeMinutes: 12)
+        var draft = try PickupRecoveryDraft(original, using: recipe)
+        XCTAssertEqual(draft.rows.count, 1)
+        XCTAssertNil(draft.rows[0].foodID, "A recipe name cannot establish a stock match")
+        draft.rows[0].foodID = f.beans
+        draft.minutes = "15"
+        draft.confirmsDeadline = true
+        draft.deadline = now.addingTimeInterval(1800)
+        let definition = try draft.definition()
+        XCTAssertEqual(definition.acceptedTemplate, recipe)
+        XCTAssertEqual(definition.meal.needs[0].amount.amount, try Rational(4))
+        XCTAssertEqual(definition.meal.requiredLeadMinutes, 12)
+        XCTAssertEqual(definition.notes, recipe.notes)
+        XCTAssertEqual(Set(definition.meal.exclusions), ["pepper", "garlic"])
+        XCTAssertEqual(Set(definition.ingredientRules[0].exclusions), ["onion", "garlic"])
+        var bad = draft
+        bad.rows[0].name = "Different food"
+        XCTAssertThrowsError(try bad.definition().validate(replacing: original))
+        var paid = f.authority
+        paid.permitsAcceptedDinner = true
+        func prepare(_ authority: PickupRecoveryAuthority) throws -> PickupMealRecoveryReview {
+            try f.model.prepareMealRecovery(definition: definition, operationID: draft.operationID,
+                confirmedUnknownDeadline: draft.deadline, agreesToRepeat: false, proposesExtraTrip: false,
+                agreesToExtraTrip: false, acceptsUnresolved: false, authority: authority)
+        }
+        XCTAssertThrowsError(try prepare(paid), "The exact fallback version must be in the accepted library")
+        let authorized = DinnerAccessContext(scope: .local(workspaceID: f.authority.ledgerWorkspaceID), actorID: "local",
+            shopID: f.authority.selectedPickupID, assignedShopperID: "local", canPlan: true,
+            canReadBudget: true, hasPaidTools: true, roleRevision: 0, verifiedAt: now, validUntil: draft.deadline)
+        let accepted = await f.ledger.change(key: "accept-family-beans") { workspace in
+            try workspace.dinnerPlanning.accept(.init(id: UUID(), template: recipe, acceptedAt: now, acceptedFallback: true),
+                access: authorized, at: now)
+        }
+        XCTAssertTrue(accepted)
+        XCTAssertThrowsError(try prepare(f.authority), "A private workspace alone cannot authorize assisted recovery")
+        let review = try prepare(paid), before = f.model.journey
+        let denied = await f.model.applyMealRecovery(review, currentAuthority: { f.authority })
+        XCTAssertFalse(denied)
+        XCTAssertEqual(f.model.journey, before)
+        XCTAssertTrue(review.domain.feasible)
+        let saved = await f.model.applyMealRecovery(review, currentAuthority: { paid })
+        XCTAssertTrue(saved)
+        XCTAssertEqual(try f.model.recoveryDefinitions().first { $0.meal.id == f.wednesday }, definition)
+        let journey = try XCTUnwrap(f.model.cookJourney)
+        let pieces = PickupCookProjection.pieces(journey: journey, allocation: f.model.allocation, language: "es-US")
+        let detail = try XCTUnwrap(pieces.first { $0.key == "detail/\(definition.meal.needs[0].id)" })
+        XCTAssertTrue(detail.text.contains("Preparación previa necesaria (minutos): 12"))
+        XCTAssertTrue(detail.text.contains("Drain first"))
+        XCTAssertEqual(f.ledger.workspace.dinnerPlanning.acceptedDinners.first?.template, recipe)
+        XCTAssertEqual(f.model.journey?.basket, before?.basket)
+    }
+
+    func testAcceptedRecipeScalesEachDinnerGroupAndLeavesProtectedIngredientsExact() throws {
+        let family = ServingGroup(name: "Family", servings: try Rational(3))
+        let lunch = ServingGroup(name: "Lunch", servings: try Rational(2), isProtected: true)
+        func ingredient(group: UUID?, count: Int64, priority: AllocationPriority) -> RecoveryIngredient {
+            .init(ingredientID: UUID(), groupID: group, foodName: "Wraps",
+                need: .init(id: UUID(), foodID: UUID(), name: "Wraps", amount: q(count), priority: priority))
+        }
+        let familyWraps = ingredient(group: family.id, count: 3, priority: .required)
+        let unassigned = ingredient(group: nil, count: 1, priority: .required)
+        let protected = ingredient(group: lunch.id, count: 2, priority: .protected)
+        let old = RecoveryMeal(id: UUID(), revisionID: UUID(), templateID: nil, templateVersion: nil,
+            title: "Wrap dinner", servings: try Rational(6), ingredients: [familyWraps, unassigned, protected],
+            scheduledDay: nil, due: nil, timeZoneID: "America/New_York", exclusions: [],
+            remainingElapsedMinutes: nil, requiredLeadMinutes: nil, advanceStepsCompleted: false)
+        let original = PickupRecoveryMealDefinition(meal: old, groups: [family, lunch], notes: "", sourceURL: nil,
+            ingredientRules: old.ingredients.map { .init(needID: $0.need.id, notes: "", exclusions: ["sesame"]) },
+            acceptedTemplate: nil)
+        let recipe = MealTemplate(title: "Rice", servings: try Rational(2),
+            ingredients: [.init(name: "Rice", quantity: q(1))])
+        var draft = try PickupRecoveryDraft(original, using: recipe)
+        let definition = try draft.definition()
+        XCTAssertEqual(definition.meal.ingredients.filter { $0.need.priority == .protected }, [protected])
+        XCTAssertEqual(definition.groups, original.groups)
+        XCTAssertEqual(try XCTUnwrap(definition.meal.ingredients.first { $0.groupID == family.id }).need.amount.amount, try Rational(3, 2))
+        XCTAssertEqual(try XCTUnwrap(definition.meal.ingredients.first { $0.groupID == nil }).need.amount.amount, try Rational(1, 2))
+        XCTAssertEqual(Set(definition.meal.needs.map(\.id)).count, 3)
+        // Keeping the same total cannot move a family's quantity into another serving group.
+        guard let familyIndex = draft.rows.firstIndex(where: { $0.groupID == family.id }),
+              let otherIndex = draft.rows.firstIndex(where: { $0.groupID == nil }) else { return XCTFail("Missing group") }
+        draft.rows[familyIndex].amount = "1"
+        draft.rows[otherIndex].amount = "1"
+        XCTAssertThrowsError(try draft.definition().validate(replacing: original))
+        var unknown = recipe
+        unknown.ingredients[0].quantity = nil
+        XCTAssertThrowsError(try PickupRecoveryDraft(original, using: unknown))
     }
 
     func testClosedPickupKeepsRecoveredDinnerReadableAndRejectsFurtherChanges() async throws {

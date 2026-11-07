@@ -10,6 +10,7 @@ struct PickupMealRecoveryEntry: View {
     var occurrenceID: UUID? = nil
     @EnvironmentObject private var access: WorkspaceAccess
     @EnvironmentObject private var household: HouseholdModel
+    @EnvironmentObject private var membership: MembershipCoordinator
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.guardianChildCoordinator) private var guardianChild
     @State private var session = PickupStockReviewSession()
@@ -45,6 +46,11 @@ struct PickupMealRecoveryEntry: View {
                                         currentAuthority: currentAuthority)
                                         .id(leaseID)
                                 }.accessibilityIdentifier("mealRecovery.target." + value.meal.id.uuidString)
+                                if membership.model?.hasPaidAccess == true {
+                                    NavigationLink(dinnerText("Recover with an accepted dinner")) {
+                                        acceptedDinners(for: value)
+                                    }.accessibilityIdentifier("mealRecovery.accepted." + value.meal.id.uuidString)
+                                }
                             }
                         }
                     }
@@ -62,9 +68,34 @@ struct PickupMealRecoveryEntry: View {
         .navigationTitle(recoveryText("Current dinners after arrival"))
         .onAppear { refreshBoundary() }
         .onChange(of: presentation) { _, _ in refreshBoundary() }
+        .onChange(of: membership.model?.hasPaidAccess) { _, _ in rotateLease() }
         .onChange(of: model.selectedID) { _, _ in rotateLease() }
         .onChange(of: ledger.shop?.revisionID) { _, _ in rotateLease() }
         .onChange(of: ledger.sourceWorkspaceID) { _, _ in rotateLease() }
+    }
+    private func acceptedDinners(for original: PickupRecoveryMealDefinition) -> some View {
+        let library = ledger.workspace.dinnerPlanning.acceptedDinners.filter(\.acceptedFallback)
+        return WorkingForm {
+            if acceptedAuthority() != nil {
+                if library.isEmpty { Text(dinnerText("No household dinner is marked as an accepted fallback.")) }
+                ForEach(library) { dinner in
+                    NavigationLink(dinner.template.title) {
+                        if let draft = try? PickupRecoveryDraft(original, using: dinner.template) {
+                            PickupMealRecoveryEditor(model: model, original: original, initialDraft: draft,
+                                currentAuthority: acceptedAuthority)
+                                .id("\(leaseID)/\(dinner.id)/\(dinner.template.revision)")
+                        } else {
+                            Text(recoveryText("Review the saved recipe’s quantities, serving groups and exclusions before using it for this dinner."))
+                        }
+                    }
+                }
+            } else { Text(dinnerText("This assisted tool requires paid access. Manual dinner editing remains available.")) }
+        }.navigationTitle(dinnerText("Accepted fallbacks"))
+    }
+    private func acceptedAuthority() -> PickupRecoveryAuthority? {
+        guard membership.model?.hasPaidAccess == true, var authority = currentAuthority() else { return nil }
+        authority.permitsAcceptedDinner = true
+        return authority
     }
     private var definitions: Result<[PickupRecoveryMealDefinition], Error> {
         Result { try model.recoveryDefinitions() }
@@ -115,6 +146,13 @@ private struct PickupRecoveryMealSummary: View {
             }.accessibilityElement(children: .combine)
                 .accessibilityIdentifier("mealRecovery.need." + item.need.id.uuidString)
         }
+        if let minutes = meal.remainingElapsedMinutes {
+            Text(pTr("Saved elapsed preparation minutes") + ": " + String(minutes))
+        } else { Text(pTr("Remaining preparation time unknown")) }
+        if let minutes = meal.requiredLeadMinutes {
+            Text(pTr("Required advance preparation (minutes)") + ": " + String(minutes))
+        }
+        if meal.advanceStepsCompleted { Text(pTr("Advance preparation confirmed complete")) }
         if !definition.notes.isEmpty { Text(definition.notes) }
         if let source = definition.sourceURL { Text(source).textSelection(.enabled) }
     }
@@ -149,10 +187,10 @@ private struct PickupMealRecoveryEditor: View {
     @FocusState private var focused: String?
     @AccessibilityFocusState private var resultFocused: Bool
 
-    init(model: PickupModel, original: PickupRecoveryMealDefinition,
+    init(model: PickupModel, original: PickupRecoveryMealDefinition, initialDraft: PickupRecoveryDraft? = nil,
          currentAuthority: @escaping () -> PickupRecoveryAuthority?) {
         self.model = model; self.original = original; self.currentAuthority = currentAuthority
-        _draft = State(initialValue: PickupRecoveryDraft(original))
+        _draft = State(initialValue: initialDraft ?? PickupRecoveryDraft(original))
         _draftAuthority = State(initialValue: currentAuthority())
     }
     var body: some View {
@@ -197,15 +235,23 @@ private struct PickupMealRecoveryEditor: View {
         Section(recoveryText("Original current dinner")) {
             PickupRecoveryMealSummary(definition: original, allocation: model.stockAllocation)
         }
-        Section(recoveryText("Manual replacement")) {
-            field("Dinner title", text: $draft.title, id: "title")
-            field("Notes and preparation instructions", text: $draft.notes, id: "notes", multiline: true)
-            field("Recipe source URL (optional)", text: $draft.sourceURL, id: "source")
-            Text(recoveryText("This is a new manual dinner version. It does not edit the reusable recipe. Serving groups, protected portions and saved exclusions remain in force."))
+        Section(draft.template == nil ? recoveryText("Manual replacement") : dinnerText("Accepted fallbacks")) {
+            if let template = draft.template {
+                Text(template.title).font(.headline)
+                if !template.notes.isEmpty { Text(template.notes) }
+                if let url = template.sourceURL { Text(url).textSelection(.enabled) }
+                if !template.exclusions.isEmpty { Text(recoveryText("Keep these exclusions") + ": " + template.exclusions.joined(separator: ", ")) }
+                if let minutes = template.leadTimeMinutes { Text(pTr("Saved elapsed preparation minutes") + ": " + String(minutes)) }
+            } else {
+                field("Dinner title", text: $draft.title, id: "title")
+                field("Notes and preparation instructions", text: $draft.notes, id: "notes", multiline: true)
+                field("Recipe source URL (optional)", text: $draft.sourceURL, id: "source")
+                Text(recoveryText("This is a new manual dinner version. It does not edit the reusable recipe. Serving groups, protected portions and saved exclusions remain in force."))
+            }
             ForEach(Array(draft.rows.indices), id: \.self) { index in
                 ingredient(index)
             }
-            ForEach(draft.editableGroups, id: \.self) { groupID in
+            ForEach(draft.template == nil ? draft.editableGroups : [], id: \.self) { groupID in
                 Button(recoveryText("Add ingredient") + " · " + draft.groupName(groupID)) { draft.add(groupID: groupID) }
                     .foregroundStyle(Theme.action)
             }
@@ -231,22 +277,32 @@ private struct PickupMealRecoveryEditor: View {
         let row = draft.rows[index]
         VStack(alignment: .leading, spacing: 10) {
             Text(draft.groupName(row.groupID)).font(.headline)
-            field("Food name", text: $draft.rows[index].name, id: row.id.uuidString + ".name")
+            if draft.template != nil {
+                Text(row.name)
+                if let quantity = try? DinnerEntry.quantity(row.amount, unit: row.unit) { Text(pQuantity(quantity)) }
+                if !row.notes.isEmpty { Text(row.notes) }
+            } else {
+                field("Food name", text: $draft.rows[index].name, id: row.id.uuidString + ".name")
+            }
             Picker(recoveryText("Reviewed matching food"), selection: $draft.rows[index].foodID) {
                 Text(recoveryText("No confirmed matching food · unresolved")).tag(UUID?.none)
                 ForEach(model.recoveryStockMatches) { Text($0.name).tag(Optional($0.id)) }
             }
-            field("Required usable amount", text: $draft.rows[index].amount, id: row.id.uuidString + ".amount")
-                .keyboardType(.decimalPad)
-            Picker(recoveryText("Usable unit"), selection: $draft.rows[index].unit) {
-                ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pTr($0.rawValue)).tag($0) }
+            if draft.template == nil {
+                field("Required usable amount", text: $draft.rows[index].amount, id: row.id.uuidString + ".amount")
+                    .keyboardType(.decimalPad)
+                Picker(recoveryText("Usable unit"), selection: $draft.rows[index].unit) {
+                    ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pTr($0.rawValue)).tag($0) }
+                }
+                field("Ingredient notes", text: $draft.rows[index].notes, id: row.id.uuidString + ".notes", multiline: true)
             }
-            field("Ingredient notes", text: $draft.rows[index].notes, id: row.id.uuidString + ".notes", multiline: true)
             Text(recoveryText("Keep these exclusions") + ": " + row.requiredExclusions.joined(separator: ", "))
             field("Additional exclusions, one per line", text: $draft.rows[index].extraExclusions,
                   id: row.id.uuidString + ".exclusions", multiline: true)
-            Button(recoveryText("Remove ingredient"), role: .destructive) { draft.rows.remove(at: index) }
-                .foregroundStyle(Theme.error)
+            if draft.template == nil {
+                Button(recoveryText("Remove ingredient"), role: .destructive) { draft.rows.remove(at: index) }
+                    .foregroundStyle(Theme.error)
+            }
         }
     }
     @ViewBuilder private func reviewSections(_ value: PickupMealRecoveryReview) -> some View {

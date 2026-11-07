@@ -23,6 +23,18 @@ struct PickupRecoveryMealDefinition: Codable, Equatable {
         .init(meal: current, groups: groups, notes: notes, sourceURL: sourceURL,
               ingredientRules: ingredientRules, acceptedTemplate: acceptedTemplate)
     }
+    func servings(for groupID: UUID?) throws -> Rational {
+        if let groupID {
+            guard let group = groups.first(where: { $0.id == groupID }), !group.isProtected else {
+                throw PickupMealRecoveryError.invalid
+            }
+            return group.servings
+        }
+        let assigned = try groups.reduce(Rational.zero) { try $0.adding($1.servings) }
+        let unassigned = try meal.servings.subtracting(assigned)
+        guard unassigned > .zero else { throw PickupMealRecoveryError.invalid }
+        return unassigned
+    }
     func validate(replacing previous: Self? = nil) throws {
         guard Set(ingredientRules.map(\.needID)).count == ingredientRules.count,
               Set(ingredientRules.map(\.needID)) == Set(meal.needs.map(\.id)),
@@ -56,6 +68,10 @@ struct PickupRecoveryMealDefinition: Codable, Equatable {
             try acceptedTemplate.validate()
             guard meal.templateID == acceptedTemplate.id, meal.templateVersion == acceptedTemplate.revision,
                   Set(acceptedTemplate.exclusions).isSubset(of: Set(meal.exclusions)) else { throw PickupMealRecoveryError.invalid }
+            guard meal.title == acceptedTemplate.title, notes == acceptedTemplate.notes,
+                  sourceURL == acceptedTemplate.sourceURL, meal.requiredLeadMinutes == acceptedTemplate.leadTimeMinutes else {
+                throw PickupMealRecoveryError.metadataChanged
+            }
             let protectedServings = try groups.filter(\.isProtected).reduce(Rational.zero) { try $0.adding($1.servings) }
             let dinnerServings = try meal.servings.subtracting(protectedServings)
             guard dinnerServings > .zero else { throw PickupMealRecoveryError.invalid }
@@ -66,8 +82,12 @@ struct PickupRecoveryMealDefinition: Codable, Equatable {
                 guard let quantity = ingredient.quantity else { throw PickupMealRecoveryError.invalid }
                 let matches = ingredients.filter { $0.ingredientID == ingredient.id }
                 let total = try matches.reduce(Rational.zero) { total, item in
-                    guard let amount = try item.need.amount.converted(to: quantity.unit),
+                    let groupScale = try servings(for: item.groupID).divided(by: acceptedTemplate.servings)
+                    guard item.foodName == ingredient.name,
+                          let amount = try item.need.amount.converted(to: quantity.unit),
+                          amount == (try quantity.amount.multiplied(by: groupScale)),
                           let rule = ingredientRules.first(where: { $0.needID == item.need.id }),
+                          rule.notes == ingredient.notes,
                           Set(ingredient.exclusions).isSubset(of: Set(rule.exclusions)) else { throw PickupMealRecoveryError.invalid }
                     return try total.adding(amount)
                 }

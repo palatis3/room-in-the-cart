@@ -11575,6 +11575,57 @@
           }
         }
       }
+    },
+    "Remaining preparation time unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remaining preparation time unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se desconoce el tiempo de preparación restante"
+          }
+        }
+      }
+    },
+    "Required advance preparation (minutes)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Required advance preparation (minutes)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparación previa necesaria (minutos)"
+          }
+        }
+      }
+    },
+    "Advance preparation confirmed complete": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Advance preparation confirmed complete"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparación previa confirmada como completada"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

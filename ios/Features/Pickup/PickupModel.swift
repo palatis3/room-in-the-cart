@@ -104,6 +104,10 @@ struct PickupOffer: Codable, Equatable, Identifiable {
     var retailerResponse: String
     var evaluation: PickupOfferEvaluationEvidence? = nil
 }
+struct PickupRecoveryPreparation: Codable, Equatable {
+    let requiredLeadMinutes: Int?
+    let advanceComplete: Bool
+}
 struct PickupNeedDetail: Codable, Equatable, Identifiable {
     let id: UUID
     let mealName: String
@@ -117,6 +121,7 @@ struct PickupNeedDetail: Codable, Equatable, Identifiable {
     var sourceLedgerRevisionID: UUID? = nil
     var due: Date? = nil
     var preparationNotes: [String]? = nil
+    var recoveryPreparation: PickupRecoveryPreparation? = nil
     var sourceURL: String? = nil
 }
 struct PickupJourney: Codable, Equatable, Identifiable {
@@ -688,7 +693,8 @@ struct PickupPersistenceLocation {
             }
             try detail.scheduledDay?.validate()
             guard detail.due.map({ $0.timeIntervalSince1970.isFinite }) ?? true else { throw PickupModelError.invalid }
-            guard detail.leadTimeMinutes.map({ $0 >= 0 && $0 <= 525_600 }) ?? true else { throw PickupModelError.invalid }
+            guard [detail.leadTimeMinutes, detail.recoveryPreparation?.requiredLeadMinutes]
+                .compactMap({ $0 }).allSatisfy({ (0...525_600).contains($0) }) else { throw PickupModelError.invalid }
         }
         let plannedLineIDs = Set(value.basket?.current.lines.map(\.id) ?? []).union(noPurchaseLineIDs)
         guard Set(value.plannedNeeds.map(\.id)).count == value.plannedNeeds.count,

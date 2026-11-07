@@ -5,7 +5,7 @@ import CoreDomain
 struct PickupRecoveryDraft: Equatable {
     struct Ingredient: Identifiable, Equatable {
         let id = UUID()
-        let ingredientID = UUID()
+        var ingredientID = UUID()
         let unknownFoodID = UUID()
         let groupID: UUID?
         let priority: AllocationPriority
@@ -17,6 +17,7 @@ struct PickupRecoveryDraft: Equatable {
         var notes = ""
         var extraExclusions = ""
     }
+    private(set) var template: MealTemplate?
     let original: PickupRecoveryMealDefinition
     let operationID = UUID()
     let revisionID = UUID()
@@ -35,6 +36,33 @@ struct PickupRecoveryDraft: Equatable {
         self.original = original
         // Start new manual instructions blank, not with an old recipe under a new title.
         for group in editableGroups { add(groupID: group) }
+    }
+    init(_ original: PickupRecoveryMealDefinition, using template: MealTemplate) throws {
+        self.init(original)
+        try template.validate()
+        guard !template.ingredients.isEmpty, !rows.isEmpty else { throw PickupMealRecoveryError.invalid }
+        self.template = template
+        title = template.title
+        notes = template.notes
+        sourceURL = template.sourceURL ?? ""
+        let groups = rows
+        rows = []
+        for group in groups {
+            let servings = try original.servings(for: group.groupID)
+            let scale = try servings.divided(by: template.servings)
+            for ingredient in template.ingredients {
+                guard let quantity = ingredient.quantity, quantity.amount > .zero else { throw PickupMealRecoveryError.invalid }
+                var row = Ingredient(groupID: group.groupID, priority: .required,
+                    requiredExclusions: Array(Set(group.requiredExclusions + ingredient.exclusions)).sorted())
+                row.ingredientID = ingredient.id
+                row.name = ingredient.name
+                row.amount = try quantity.amount.multiplied(by: scale).description
+                row.unit = quantity.unit
+                row.notes = ingredient.notes
+                rows.append(row)
+            }
+        }
+        try definition().validate(replacing: original)
     }
     var editableGroups: [UUID?] {
         var seen = Set<UUID?>()
@@ -67,14 +95,15 @@ struct PickupRecoveryDraft: Equatable {
             rules.append(.init(needID: row.id, notes: row.notes,
                 exclusions: Array(Set(row.requiredExclusions + DinnerEntry.list(row.extraExclusions))).sorted()))
         }
-        let meal = RecoveryMeal(id: original.meal.id, revisionID: revisionID, templateID: nil, templateVersion: nil,
-            title: title.trimmingCharacters(in: .whitespacesAndNewlines), servings: original.meal.servings,
+        let meal = RecoveryMeal(id: original.meal.id, revisionID: revisionID, templateID: template?.id, templateVersion: template?.revision,
+            title: template?.title ?? title.trimmingCharacters(in: .whitespacesAndNewlines), servings: original.meal.servings,
             ingredients: ingredients, scheduledDay: original.meal.scheduledDay,
             due: original.meal.due ?? (confirmsDeadline ? deadline : nil), timeZoneID: original.meal.timeZoneID,
-            exclusions: original.meal.exclusions, remainingElapsedMinutes: try DinnerEntry.minutes(minutes),
-            requiredLeadMinutes: original.meal.requiredLeadMinutes, advanceStepsCompleted: advanceComplete)
+            exclusions: Array(Set(original.meal.exclusions + (template?.exclusions ?? []))).sorted(), remainingElapsedMinutes: try DinnerEntry.minutes(minutes),
+            requiredLeadMinutes: template == nil ? original.meal.requiredLeadMinutes : template?.leadTimeMinutes, advanceStepsCompleted: advanceComplete)
+        let manualURL = sourceURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : sourceURL
         return .init(meal: meal, groups: original.groups, notes: notes,
-            sourceURL: sourceURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : sourceURL,
-            ingredientRules: rules, acceptedTemplate: nil)
+            sourceURL: template == nil ? manualURL : template?.sourceURL,
+            ingredientRules: rules, acceptedTemplate: template)
     }
 }
