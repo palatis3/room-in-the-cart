@@ -1,0 +1,20 @@
+{
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "cb62c559e13b9e60e7cc046bf00342dc92ff9b64ee2fbf75b42dc66c62d79002"
+    },
+    {
+      "path": "case-log-and-restart.txt",
+      "sha256": "3eb4c31e75a7f2cb66309e74d7772fd07922e73e2c990faa57c951e4d347552c"
+    },
+    {
+      "path": "proof.json",
+      "sha256": "7c3605a350114014f154f6a7ccfd6d5c385968404027e0752597b4b75f42ef62"
+    },
+    {
+      "path": "source-excerpt.txt",
+      "sha256": "4d3314abbdfd71e1d0ac77e22166e4b8782729eda75ddda07739bbd001f2c42f"
+    }
+  ]
+}

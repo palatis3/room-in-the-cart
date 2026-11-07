@@ -1,0 +1,52 @@
+110:     func testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced() async throws {
+111:         let settings = XCUIApplication(bundleIdentifier: "com.apple.Preferences")
+112:         let control = try Self.reduceMotionSwitch(in: settings)
+113:         let original = try Self.switchValue(control)
+114:         addTeardownBlock { [weak self] in
+115:             // Restoring the system setting opens Settings before tearDownWithError.
+116:             // Preserve the failed app screen while it is still on display.
+117:             if let self {
+118:                 await MainActor.run {
+119:                     if (self.testRun?.failureCount ?? 0) > 0 {
+120:                         self.captureSystemScreen("Reduce-Motion-failure-before-settings-restoration")
+121:                     }
+122:                 }
+123:             }
+124:             try await FreeJourneyUITests.restoreReduceMotion(original)
+125:         }
+126:         try Self.setReduceMotion(true, using: control)
+127:         try await Self.requireRunnerReduceMotion(true)
+128:         captureSystemScreen("System Settings - Reduce Motion enabled")
+129: 
+130:         avoidIOS17SnapshotLoggingCrash()
+131:         try exerciseRetailerShareCancellation()
+132:         XCTAssertTrue(UIAccessibility.isReduceMotionEnabled, "Reduce Motion must stay enabled through relaunch")
+133:     }
+134: 
+135:     private func exerciseRetailerShareCancellation() throws {
+136:         launch(reset: true)
+205: 
+206:     private static func reduceMotionSwitch(in settings: XCUIApplication) throws -> XCUIElement {
+207:         settings.activate()
+208:         let control = settings.switches["Reduce Motion"]
+209:         if !control.waitForExistence(timeout: 3) {
+210:             let motion = settings.staticTexts["Motion"]
+211:             if !motion.exists {
+212:                 let accessibility = settings.staticTexts["Accessibility"]
+213:                 for _ in 0..<6 {
+214:                     if accessibility.exists && accessibility.isHittable { break }
+215:                     settings.swipeUp()
+216:                 }
+217:                 try XCTUnwrap(accessibility.exists && accessibility.isHittable ? accessibility : nil,
+218:                               "Find the native Accessibility settings").tap()
+219:             }
+220:             try XCTUnwrap(motion.waitForExistence(timeout: 8) && motion.isHittable ? motion : nil,
+221:                           "Find the native Motion settings").tap()
+222:         }
+223:         return try XCTUnwrap(control.waitForExistence(timeout: 8) ? control : nil, "Find the native Reduce Motion switch")
+224:     }
+225: 
+226:     private static func switchValue(_ control: XCUIElement) throws -> Bool {
+227:         let value = control.value as? String ?? ""
+228:         return try XCTUnwrap(["0": false, "1": true][value],
+229:                              "Read the native Reduce Motion switch")
