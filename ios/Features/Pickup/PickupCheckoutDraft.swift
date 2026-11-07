@@ -5,13 +5,36 @@ enum PickupCheckoutDraftError: Error, Equatable {
     case staleSource, missingContext, reviewReplacement
 }
 
+/// The retailer facts that determine whether prices can describe this checkout.
+struct PickupPricingTerms: Codable, Equatable {
+    let store: String, branch: String, slot: String
+    let mode: ShoppingMode
+    let scope: CheckoutScope
+
+    static func from(_ context: CheckoutContext, scope: CheckoutScope) -> Self {
+        Self(store: context.storeID, branch: context.branchID, slot: context.slot, mode: context.mode, scope: scope)
+    }
+
+    static func scope(cap: CheckoutCap?, basis: ShopBasis?) -> CheckoutScope {
+        if let cap { return cap.scope }
+        switch basis?.capScope {
+        case .dinnersOnly: return .dinner
+        case .selectedItems: return .item
+        default: return .wholeCheckout
+        }
+    }
+}
+
 /// The form is an edit of saved evidence, not a reconstruction from its result.
 /// Unchanged fields keep their original evidence and the metadata they do not edit.
 struct PickupCheckoutDraft {
-    var store = "", branch = "", slot = "", source = ""
+    var store = "" { willSet { pinEditedPricing() } }
+    var branch = "" { willSet { pinEditedPricing() } }
+    var slot = "" { willSet { pinEditedPricing() } }
+    var source = ""
     var observed = Date()
-    var mode: ShoppingMode = .pickup
-    var scope: CheckoutScope = .wholeCheckout
+    var mode: ShoppingMode = .pickup { willSet { pinEditedPricing() } }
+    var scope: CheckoutScope = .wholeCheckout { willSet { pinEditedPricing() } }
     var capScope: CheckoutScope = .wholeCheckout
     var cap = ""
     var inclusive = false
@@ -19,15 +42,19 @@ struct PickupCheckoutDraft {
     var prices: [UUID: String] = [:]
     var fee = "", threshold = "", discount = "", tax = "", deposits = ""
     var complete = true
+    private var sourceWorkspaceID: UUID?
     private(set) var journeyID: UUID?
     private(set) var basketRevisionID: UUID?
     private(set) var replacingPricing = false
     private(set) var hasSavedPricing = false
     private(set) var originalPricing: CheckoutPricing?
+    var reviewedQuote: CheckoutQuote? { hasSavedPricing ? originalQuote : nil }
     private var originalQuote: CheckoutQuote?
+    private var earlierQuoteRevision: Int64?
+    private var ledgerSourceRevisionID: UUID?
     private var originalQuotedRevisionID: UUID?
     private var originalContext: CheckoutContext?
-    private var originalCap: CheckoutCap?
+    private(set) var originalCap: CheckoutCap?
     private var basketLines: [BasketLine] = []
     private var initialInput: PricingInput?
     private var initialDetails: DetailsInput?
@@ -55,7 +82,15 @@ struct PickupCheckoutDraft {
         .init(store: store, branch: branch, slot: slot, source: source, observed: observed,
               mode: mode, scope: scope, capScope: capScope, cap: cap)
     }
-    var pricingNeedsReplacement: Bool { !supportsEditing && !replacingPricing }
+    private var terms: PickupPricingTerms { .init(store: store, branch: branch, slot: slot, mode: mode, scope: scope) }
+    private var originalTerms: PickupPricingTerms?
+    private var pricingTerms: PickupPricingTerms?
+    private mutating func pinEditedPricing() {
+        if pricingTerms == nil, let initialInput, pricingInput != initialInput { pricingTerms = terms }
+    }
+    var termsNeedFreshPricing: Bool { pricingTerms.map { $0 != terms } ?? false }
+    var changedRetailerTerms: Bool { originalTerms.map { $0 != terms } ?? false }
+    var pricingNeedsReplacement: Bool { termsNeedFreshPricing || (!supportsEditing && !replacingPricing) }
     var displayLines: [BasketLine] { basketLines }
     var hasUnsavedChanges: Bool {
         guard let initialInput, let initialDetails else { return false }
@@ -64,8 +99,11 @@ struct PickupCheckoutDraft {
 
     init() {}
 
-    init(journey: PickupJourney, now: Date = Date()) {
+    init(journey: PickupJourney, workspaceID: UUID? = nil, now: Date = Date()) {
+        sourceWorkspaceID = workspaceID
         journeyID = journey.id; basketRevisionID = journey.basket?.current.id
+        earlierQuoteRevision = journey.earlierQuotes.last?.id
+        ledgerSourceRevisionID = journey.ledgerSourceRevisionID
         originalQuote = journey.quote; originalQuotedRevisionID = journey.quotedRevisionID
         originalContext = journey.context; originalCap = journey.cap
         basketLines = journey.basket?.current.lines ?? []
@@ -74,12 +112,18 @@ struct PickupCheckoutDraft {
         store = context?.storeID ?? ""; branch = context?.branchID ?? ""
         slot = context?.slot ?? ""; source = context?.source ?? ""
         observed = context?.observedAt ?? now; mode = context?.mode ?? .pickup
-        scope = currentQuote?.scope ?? journey.cap?.scope ?? .wholeCheckout
+        scope = currentQuote?.scope ?? PickupPricingTerms.scope(cap: journey.cap, basis: journey.ledgerBasis)
         capScope = journey.cap?.scope ?? scope
         cap = journey.cap.map { Self.literal($0.amount) } ?? ""
-        for line in basketLines { prices[line.id] = Self.literal(line.expectedCost) }
+        // An inclusive (or cleared) quote can sit on an older basket revision.
+        // A line's original pack price still belongs to the retailer that supplied it.
+        let canUseBasketPricing = journey.basketPriceTerms.map { $0 == terms } ?? (currentQuote == nil && journey.earlierQuotes.isEmpty)
+        func lineCost(_ line: BasketLine) -> CostEvidence {
+            canUseBasketPricing ? line.expectedCost : .unknown(reason: pTr("Recheck the price for this shop"))
+        }
+        for line in basketLines { prices[line.id] = Self.literal(lineCost(line)) }
         let pricing = currentQuote?.pricing ?? .components(
-            lines: basketLines.map { CheckoutLine(id: $0.id, name: $0.name, cost: $0.expectedCost) },
+            lines: basketLines.map { CheckoutLine(id: $0.id, name: $0.name, cost: lineCost($0)) },
             lineSetComplete: true,
             fees: [CheckoutFee(id: "retailer-fee", rule: .fixed(.unknown(reason: pTr("Not confirmed"))))],
             discounts: [CheckoutDiscount(id: "eligible-discount", amount: .unknown(reason: pTr("Not confirmed")), reducesEligibleSubtotal: true)],
@@ -101,35 +145,44 @@ struct PickupCheckoutDraft {
             tax = Self.literal(savedTax); deposits = Self.literal(savedDeposits)
         }
         supportsEditing = Self.canEdit(pricing, basketLines: basketLines)
+        originalTerms = terms
+        if currentQuote != nil || basketLines.contains(where: {
+            if case .unknown = lineCost($0) { return false }
+            return true
+        }) { pricingTerms = terms }
         initialInput = pricingInput
         initialDetails = detailsInput
     }
 
     /// Source updates can refresh an untouched form, but cannot discard edits or
     /// retarget an edited checkout to another pickup or basket revision.
-    @discardableResult mutating func refreshIfPristine(from journey: PickupJourney, hasLocalReview: Bool = false,
+    @discardableResult mutating func refreshIfPristine(from journey: PickupJourney, workspaceID: UUID? = nil, hasLocalReview: Bool = false,
                                                      now: Date = Date()) -> Bool {
-        guard !matchesSource(journey), !hasUnsavedChanges, !hasLocalReview else { return false }
-        self = PickupCheckoutDraft(journey: journey, now: now)
+        guard !matchesSource(journey, workspaceID: workspaceID), !hasUnsavedChanges, !hasLocalReview else { return false }
+        self = PickupCheckoutDraft(journey: journey, workspaceID: workspaceID, now: now)
         return true
     }
 
     /// This is called only after the person confirms the replacement in the UI.
     /// The original pricing stays available for comparison until a save succeeds.
-    mutating func beginPricingReplacement() {
+    mutating func beginPricingReplacement(now: Date = Date()) {
+        if termsNeedFreshPricing { source = ""; observed = now }
+        pricingTerms = terms
         replacingPricing = true
         inclusive = false; total = ""; prices = [:]
         fee = ""; threshold = ""; discount = ""; tax = ""; deposits = ""; complete = false
     }
 
-    func matchesSource(_ journey: PickupJourney) -> Bool {
-        journey.id == journeyID && basketRevisionID != nil && journey.basket?.current.id == basketRevisionID
+    func matchesSource(_ journey: PickupJourney, workspaceID: UUID? = nil) -> Bool {
+        (sourceWorkspaceID == nil || sourceWorkspaceID == workspaceID) && journey.id == journeyID && basketRevisionID != nil && journey.basket?.current.id == basketRevisionID
             && journey.quote == originalQuote && journey.quotedRevisionID == originalQuotedRevisionID
+            && journey.earlierQuotes.last?.id == earlierQuoteRevision && journey.ledgerSourceRevisionID == ledgerSourceRevisionID
             && journey.context == originalContext && journey.cap == originalCap
     }
 
-    func submission(for journey: PickupJourney) throws -> (quote: CheckoutQuote, cap: CheckoutCap?) {
-        guard matchesSource(journey) else { throw PickupCheckoutDraftError.staleSource }
+    func submission(for journey: PickupJourney, workspaceID: UUID? = nil) throws -> (quote: CheckoutQuote, cap: CheckoutCap?) {
+        guard matchesSource(journey, workspaceID: workspaceID) else { throw PickupCheckoutDraftError.staleSource }
+        guard !termsNeedFreshPricing else { throw PickupCheckoutDraftError.reviewReplacement }
         guard !store.isEmpty, !branch.isEmpty, !slot.isEmpty, !source.isEmpty else {
             throw PickupCheckoutDraftError.missingContext
         }

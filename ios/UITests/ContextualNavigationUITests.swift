@@ -282,6 +282,47 @@ import UIKit
         capture("S03-saved-dinner-cap-and-cancelled-slot-after-relaunch")
     }
 
+    func testChangedPickupTermsKeepEarlierFeesAndPreviewUnderTheirOriginalBranch() {
+        launch(reset: true)
+        tap(element("openPickupList"))
+        func openFacts() {
+            tap(element("ledgerFacts"))
+            XCTAssertTrue(app.navigationBars["Describe this pickup"].waitForExistence(timeout: 5))
+        }
+        func saveFacts() {
+            tap(element("ledgerCommitFacts"))
+            XCTAssertTrue(app.navigationBars["Describe this pickup"].waitForNonExistence(timeout: 8))
+        }
+        openFacts()
+        fill("West Market", into: "ledgerBranch")
+        fill("2.40", into: "Known fees (USD, unknown if blank)")
+        enableSwitch("Record a retailer preview")
+        fill("37.20", into: "Retailer total (USD, unknown if blank)")
+        fill("West retailer page", into: "Source of the retailer preview")
+        tap(element("ledgerReviewFacts"))
+        assertText("Retailer preview: $37.20")
+        saveFacts()
+
+        openFacts()
+        replaceRetailerField("ledgerBranch", with: "East Market")
+        tap(element("ledgerReviewFacts"))
+        assertText("West Market"); assertText("Retailer preview: $37.20")
+        assertText("East Market"); assertText("Fees: Unknown")
+        saveFacts()
+        restart()
+        shopRoot(); tap(element("openPickupList")); openFacts()
+        let branch = element("ledgerBranch")
+        revealContent(branch)
+        XCTAssertEqual(branch.value as? String, "East Market")
+        let activePreview = app.switches["Record a retailer preview"]
+        revealContent(activePreview)
+        XCTAssertEqual(activePreview.value as? String, "0")
+        tap(app.buttons["Earlier retailer evidence"])
+        assertText("West Market"); assertText("Fees: $2.40")
+        assertText("West retailer page"); assertText("Retailer preview: $37.20")
+        capture("S03-earlier-retailer-evidence-after-branch-change")
+    }
+
     func testAuthorizationHoldIsOptionalAndSeparateFromCheckoutCap() {
         launch(reset: true)
         shopRoot(); tap(element("openPickupList"))
@@ -338,6 +379,54 @@ import UIKit
         reveal(compareHold)
         XCTAssertEqual(compareHold.value as? String, "0")
         assertText(capResult)
+    }
+
+    func testCheckoutRequiresFreshBranchPricingAndPreservesEarlierInclusiveQuote() {
+        launch(reset: true)
+        shopRoot(); tap(element("openPickupList"))
+        tap(element("ledgerImport")); fill("2 wraps", into: "ledgerImportText")
+        tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
+        shopRoot(); tap(app.buttons["Review checkout"]); tap(app.buttons["Continue to checkout review"])
+        tap(app.buttons["Apply reviewed checkout copy"]); tap(app.buttons["Review whole checkout"])
+        fill("Market", into: "Store", replacing: true)
+        fill("West branch", into: "Branch", replacing: true)
+        fill("Tuesday 5 PM", into: "Pickup or delivery slot", replacing: true)
+        replaceRetailerField("Source of these prices", with: "West checkout")
+        enableSwitch("Retailer total already includes all charges")
+        fill("37.20", into: "Inclusive total")
+        tap(app.buttons["Save and evaluate checkout"])
+        assertText("Saved checkout result")
+
+        for _ in 0..<4 where !app.textFields["Branch"].isHittable { scrollContent(upward: false) }
+        replaceRetailerField("Branch", with: "East")
+        let save = app.buttons["Save and evaluate checkout"]
+        revealContent(save)
+        XCTAssertFalse(save.isEnabled)
+        tap(app.buttons["Replace pricing after review"])
+        tap(app.buttons["Start replacement pricing"])
+        let source = app.textFields["Source of these prices"]
+        for _ in 0..<4 where !source.isHittable { scrollContent(upward: false) }
+        revealContent(source)
+        XCTAssertEqual(source.value as? String, source.placeholderValue)
+        fill("East checkout", into: "Source of these prices")
+        enableSwitch("Retailer total already includes all charges")
+        let amount = app.textFields["Inclusive total"]
+        revealContent(amount)
+        XCTAssertEqual(amount.value as? String, amount.placeholderValue)
+        amount.tap()
+        amount.typeText("39.05")
+        XCTAssertEqual(amount.value as? String, "39.05")
+        app.buttons["Done"].tap()
+        tap(save)
+        XCTAssertTrue(app.navigationBars["Review checkout changes"].waitForExistence(timeout: 5))
+        assertText("Market · West branch"); assertText("West checkout"); assertText("$37.20")
+        assertText("Market · East"); assertText("East checkout"); assertText("$39.05")
+        tap(app.buttons["Save reviewed checkout"])
+        XCTAssertTrue(app.navigationBars["Review checkout changes"].waitForNonExistence(timeout: 8))
+        assertText("Saved checkout result"); assertText("$39.05")
+        tap(app.buttons["Earlier checkout quotes"])
+        assertText("Market · West branch"); assertText("West checkout"); assertText("$37.20")
+        capture("S05-original-and-reviewed-replacement-checkout")
     }
 
     private func enterWeighedPickup(knownTax: Bool) {
@@ -645,6 +734,20 @@ import UIKit
         details.name = "S27-quote-switch-" + phase + "-public-state"
         details.lifetime = .keepAlways; add(details)
         capture("S27-quote-switch-" + phase)
+    }
+    private func replaceRetailerField(_ id: String, with text: String) {
+        let field = element(id)
+        revealContent(field)
+        field.tap()
+        field.press(forDuration: 1.2)
+        let item = app.menuItems["Select All"]
+        let selectAll = item.exists ? item : app.buttons["Select All"]
+        XCTAssertTrue(selectAll.waitForExistence(timeout: 5))
+        selectAll.tap()
+        field.typeText(text)
+        XCTAssertEqual(field.value as? String, text)
+        let done = app.buttons["Done"]
+        if done.isHittable { done.tap() }
     }
     private func fill(_ text: String, into id: String, replacing: Bool = false) {
         let field = element(id)

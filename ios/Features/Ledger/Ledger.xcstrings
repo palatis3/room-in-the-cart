@@ -5747,6 +5747,86 @@
           }
         }
       }
+    },
+    "Close": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrar"
+          }
+        }
+      }
+    },
+    "Earlier fees and retailer evidence belong to different pickup details. The proposed fees and preview are unknown.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Earlier fees and retailer evidence belong to different pickup details. The proposed fees and preview are unknown."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los cargos y los datos anteriores de la tienda corresponden a otro contexto del pedido. Se desconocen los cargos y el resumen propuestos."
+          }
+        }
+      }
+    },
+    "Earlier retailer evidence": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Earlier retailer evidence"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datos anteriores de la tienda"
+          }
+        }
+      }
+    },
+    "Enter evidence for these pickup details": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter evidence for these pickup details"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresar datos para estas condiciones del pedido"
+          }
+        }
+      }
+    },
+    "This pickup changed. Close these edits and reopen the current pickup details.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This pickup changed. Close these edits and reopen the current pickup details."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este pedido cambió. Cierra esta edición y vuelve a abrir los detalles actuales del pedido."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

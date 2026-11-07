@@ -508,6 +508,42 @@ final class ShoppingLedgerTests: XCTestCase {
         XCTAssertEqual(ledger.contributions[0].productName, "wraps")
     }
 
+    func testRetailerTermsKeepDisplacedObservationsAndRejectStaleReview() throws {
+        let original = ShopBasis(branch: "West", mode: .pickup, slot: instant, timeZoneIdentifier: "America/New_York",
+            cap: Money(minorUnits: 3800), knownFees: .zero,
+            retailerPreview: .init(total: Money(minorUnits: 3670), source: "Retailer page", capturedAt: instant,
+                                   includedCharges: ["Service, delivery", "Tax"]))
+        let changes: [(inout ShopBasis) -> Void] = [
+            { $0.branch = "East" }, { $0.slot = nil }, { $0.mode = .delivery },
+            { $0.timeZoneIdentifier = "America/Chicago" }, { $0.capScope = .dinnersOnly }
+        ]
+        for change in changes {
+            var ledger = ShoppingLedger(basis: original)
+            var proposed = original
+            change(&proposed)
+            let revision = ledger.revisionID
+            try ledger.updateBasis(proposed, reviewing: revision)
+            XCTAssertNil(ledger.basis.retailerPreview); XCTAssertNil(ledger.basis.knownFees)
+            let restored = try roundTrip(ledger)
+            XCTAssertEqual(restored.revisions.last?.previousRetailerBasis, original)
+            XCTAssertThrowsError(try ledger.updateBasis(original, reviewing: revision))
+            XCTAssertEqual(ledger, restored)
+        }
+        var ledger = ShoppingLedger(basis: original)
+        var newCap = original
+        newCap.cap = Money(minorUnits: 4000); newCap.fixedReserve = .zero
+        try ledger.updateBasis(newCap)
+        XCTAssertEqual(ledger.basis.retailerPreview, original.retailerPreview)
+        XCTAssertEqual(ledger.basis.knownFees, .zero); XCTAssertNil(ledger.revisions.last?.previousRetailerBasis)
+
+        var confirmed = newCap
+        confirmed.branch = "East"
+        confirmed.retailerPreview = .init(total: nil, source: "East app", capturedAt: instant, includedCharges: [])
+        try ledger.updateBasis(confirmed, evidenceFor: confirmed.retailerTerms, reviewing: ledger.revisionID)
+        XCTAssertEqual(ledger.basis, confirmed, "A freshly entered zero fee remains an observed zero")
+        XCTAssertEqual(try roundTrip(ledger).revisions.last?.previousRetailerBasis, newCap)
+    }
+
     func testRetailerPreviewStoresScopeAndUnknownFactsWithoutInventingTotals() throws {
         var ledger = ShoppingLedger()
         var basis = ledger.basis

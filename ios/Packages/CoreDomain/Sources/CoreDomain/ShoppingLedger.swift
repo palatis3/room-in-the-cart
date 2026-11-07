@@ -55,6 +55,20 @@ public struct ShopBasis: Codable, Equatable, Sendable {
         self.fixedReserve = fixedReserve; self.knownFees = knownFees; self.retailerPreview = retailerPreview
     }
 
+    public struct RetailerTerms: Equatable, Sendable {
+        let branch: String
+        let mode: FulfillmentMode
+        let slot: Date?
+        let timeZoneIdentifier: String
+        let scope: BudgetScope
+        let currency: Currency
+    }
+
+    public var retailerTerms: RetailerTerms {
+        RetailerTerms(branch: branch, mode: mode, slot: slot, timeZoneIdentifier: timeZoneIdentifier,
+                      scope: capScope, currency: currency)
+    }
+
     public func validate() throws {
         try ledgerText(branch, maximum: 512)
         guard TimeZone(identifier: timeZoneIdentifier) != nil else { throw LedgerError.invalid("timeZone") }
@@ -349,6 +363,7 @@ public struct LedgerRevision: Codable, Equatable, Sendable, Identifiable {
     public let basisRevision: Int
     public let createdAt: Date
     public let operation: String
+    public let previousRetailerBasis: ShopBasis?
 }
 
 public struct LedgerWorkspace: Codable, Equatable, Sendable {
@@ -756,7 +771,14 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         }
     }
 
-    public mutating func updateBasis(_ newBasis: ShopBasis, at: Date = Date()) throws {
+    public mutating func updateBasis(_ proposed: ShopBasis, evidenceFor terms: ShopBasis.RetailerTerms? = nil,
+                                     reviewing expectedRevisionID: UUID? = nil, at: Date = Date()) throws {
+        guard expectedRevisionID == nil || expectedRevisionID == revisionID else { throw LedgerError.stalePreview }
+        var newBasis = proposed
+        if basis.retailerTerms != proposed.retailerTerms, terms != proposed.retailerTerms {
+            if basis.retailerPreview != nil { newBasis.retailerPreview = nil }
+            if basis.knownFees != nil { newBasis.knownFees = nil }
+        }
         try newBasis.validate()
         guard basis != newBasis else { return }
         try mutate("updateBasis", at: at) { next in
@@ -992,6 +1014,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
             guard entry.number == number, entry.basisRevision >= 0, entry.basisRevision <= basisRevision,
                   entry.parentID == parent else { throw LedgerError.invalid("revisionChain") }
             try ledgerDate(entry.createdAt); try ledgerText(entry.operation, nonempty: true, maximum: 128)
+            try entry.previousRetailerBasis?.validate()
             parent = entry.id
         }
         guard revisions.count == revision, revisions.last.map({ $0.id == revisionID }) ?? (revision == 0)
@@ -1093,8 +1116,11 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         let parent = next.revisions.last?.id
         next.revisionID = proposedRevisionID ?? UUID()
         guard !next.revisions.contains(where: { $0.id == next.revisionID }) else { throw LedgerError.invalid("duplicateRevision") }
+        let replacedEvidence = basis.knownFees != next.basis.knownFees || basis.retailerPreview != next.basis.retailerPreview
+            || basis.retailerTerms != next.basis.retailerTerms
+        let previousBasis = replacedEvidence && (basis.knownFees != nil || basis.retailerPreview != nil) ? basis : nil
         next.revisions.append(LedgerRevision(id: next.revisionID, parentID: parent, number: next.revision,
-            basisRevision: next.basisRevision, createdAt: at, operation: operation))
+            basisRevision: next.basisRevision, createdAt: at, operation: operation, previousRetailerBasis: previousBasis))
         next.quoteReference = nil
         try next.validate()
         self = next

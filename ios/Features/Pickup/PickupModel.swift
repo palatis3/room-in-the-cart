@@ -133,6 +133,13 @@ struct PickupNeedDetail: Codable, Equatable, Identifiable {
     var recoveryPreparation: PickupRecoveryPreparation? = nil
     var sourceURL: String? = nil
 }
+struct EarlierCheckoutQuote: Codable, Equatable, Identifiable {
+    let id: Int64 // The durable pickup revision that held this quote.
+    let basketRevisionID: UUID
+    let quote: CheckoutQuote
+    let cap: CheckoutCap?
+}
+
 struct PickupJourney: Codable, Equatable, Identifiable {
     let id: UUID
     var version = 1
@@ -142,6 +149,8 @@ struct PickupJourney: Codable, Equatable, Identifiable {
     var cap: CheckoutCap?
     var quote: CheckoutQuote?
     var quotedRevisionID: UUID?
+    var basketPriceTerms: PickupPricingTerms?
+    var earlierQuotes: [EarlierCheckoutQuote] = []
     var frozenQuotes: [UUID: CheckoutQuote] = [:]
     var pickup: PickupLedger?
     var needs: [AllocationNeed] = []
@@ -190,7 +199,7 @@ extension PickupJourney {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case recipientSends, mealSource, mealRecovery
+        case recipientSends, mealSource, mealRecovery, earlierQuotes, basketPriceTerms
         case awayCarryovers, id, savedAt, version, revision, basket, context, cap, quote, quotedRevisionID, frozenQuotes, pickup, needs, plannedNeeds, needDetails, ledgerBasis, ledgerSourceRevisionID, ledgerPackSelections, originShopID, nextShopReview, carriedMeals, urgent, stockLots, stockNeeds, repairs, deferred, flexible, proposals, undoneProposals, offers, offerActions, notes, cookShareEvents, settlement, closedAt, feedback
     }
     init(from decoder: Decoder) throws {
@@ -203,6 +212,8 @@ extension PickupJourney {
         cap = try container.decodeIfPresent(CheckoutCap.self, forKey: .cap)
         quote = try container.decodeIfPresent(CheckoutQuote.self, forKey: .quote)
         quotedRevisionID = try container.decodeIfPresent(UUID.self, forKey: .quotedRevisionID)
+        basketPriceTerms = try container.decodeIfPresent(PickupPricingTerms.self, forKey: .basketPriceTerms)
+        earlierQuotes = try container.decodeIfPresent([EarlierCheckoutQuote].self, forKey: .earlierQuotes) ?? []
         if let decoded = try container.decodeIfPresent([UUID: CheckoutQuote].self, forKey: .frozenQuotes) { frozenQuotes = decoded }
         pickup = try container.decodeIfPresent(PickupLedger.self, forKey: .pickup)
         if let decoded = try container.decodeIfPresent([AllocationNeed].self, forKey: .needs) { needs = decoded }
@@ -421,6 +432,7 @@ struct PickupPersistenceLocation {
         do {
             let basket = try BasketPlan(id: shopID, revisionID: UUID(), lines: lines, createdAt: clock())
             var value = PickupJourney(id: shopID, savedAt: clock())
+            value.basketPriceTerms = .from(context, scope: PickupPricingTerms.scope(cap: cap, basis: ledgerBasis))
             value.basket = basket; value.context = context; value.cap = cap; value.plannedNeeds = plannedNeeds
             value.ledgerBasis = ledgerBasis; value.ledgerSourceRevisionID = ledgerSourceRevisionID; value.needDetails = needDetails
             value.ledgerPackSelections = ledgerPackSelections; value.mealSource = mealSource
@@ -433,6 +445,16 @@ struct PickupPersistenceLocation {
         do {
             let instant = clock()
             var candidate = value; candidate.savedAt = instant
+            let previous = journeys.first(where: { $0.id == value.id })
+            guard candidate.revision == (previous?.revision ?? 0) else {
+                error = pTr("The saved pickup changed or was removed. Reopen its current details before trying again.")
+                return false
+            }
+            if let previous, let quote = previous.quote, let basketRevisionID = previous.quotedRevisionID,
+               previous.quote != candidate.quote || previous.cap != candidate.cap || previous.quotedRevisionID != candidate.quotedRevisionID {
+                candidate.earlierQuotes.append(EarlierCheckoutQuote(id: previous.revision, basketRevisionID: basketRevisionID,
+                                                                    quote: quote, cap: previous.cap))
+            }
             try candidate.synchronizeRecoveryOutside(at: instant)
             let increment = candidate.revision.addingReportingOverflow(1)
             guard !increment.overflow else { throw PickupModelError.invalid }
@@ -478,11 +500,18 @@ struct PickupPersistenceLocation {
         do { try edit(&value); return await save(value) }
         catch { self.error = pTr("Check the amounts and units. Your saved pickup has not changed."); return false }
     }
-    @discardableResult func setQuote(_ quote: CheckoutQuote, cap: CheckoutCap?) async -> Bool {
+    @discardableResult func setQuote(_ quote: CheckoutQuote, cap: CheckoutCap?, reviewed draft: PickupCheckoutDraft? = nil) async -> Bool {
         guard hasCurrentBasketStockBasis else { error = ledgerText("Confirmed stock changed. Review ingredient needs and whole packs before continuing checkout."); return false }
         return await change { value in
             guard let basket = value.basket, basket.phase != .reportedPlaced else { throw PickupModelError.invalid }
+            if let draft {
+                let expected = try draft.submission(for: value, workspaceID: sourceWorkspaceID)
+                guard expected.quote == quote, expected.cap == cap else { throw PickupCheckoutDraftError.staleSource }
+            }
             _ = try CheckoutEngine.evaluate(quote, cap: cap)
+            if value.basketPriceTerms == nil, value.quote == nil, let source = value.context {
+                value.basketPriceTerms = .from(source, scope: PickupPricingTerms.scope(cap: value.cap, basis: value.ledgerBasis))
+            }
             value.quote = quote; value.context = quote.context; value.cap = cap; value.quotedRevisionID = basket.current.id
         }
     }
@@ -719,6 +748,14 @@ struct PickupPersistenceLocation {
             _ = try pickup.allocate(value.needs.filter { actualLineIDs.contains($0.orderLineID) })
         } else {
             guard value.needs.isEmpty, value.settlement.entries.isEmpty, value.basket?.placements.isEmpty != false else { throw PickupModelError.invalid }
+        }
+        let basketRevisionIDs = Set(value.basket?.revisions.map(\.id) ?? [])
+        var previousRevision: Int64 = -1
+        for earlier in value.earlierQuotes {
+            guard earlier.id > previousRevision, earlier.id < value.revision, basketRevisionIDs.contains(earlier.basketRevisionID)
+            else { throw PickupModelError.invalid }
+            _ = try CheckoutEngine.evaluate(earlier.quote, cap: earlier.cap)
+            previousRevision = earlier.id
         }
         if let quote = value.quote {
             guard let revisionID = value.quotedRevisionID,

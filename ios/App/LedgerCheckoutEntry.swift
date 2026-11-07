@@ -185,6 +185,7 @@ enum LedgerCheckoutAdapter {
             return await pickup.change { value in
                 guard value.revision == review.previousJourneyRevision, var basket = value.basket else { throw LedgerCheckoutError.staleCheckout }
                 if let proposal = review.proposal { try basket.apply(proposal, at: Date()) }
+                value.basketPriceTerms = .from(review.context, scope: PickupPricingTerms.scope(cap: review.cap, basis: review.source.basis))
                 value.basket = basket; value.context = review.context; value.cap = review.cap
                 value.plannedNeeds = review.needs; value.needDetails = review.details; value.mealSource = mealSource
                 value.ledgerPackSelections = review.packSelections

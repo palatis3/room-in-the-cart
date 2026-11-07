@@ -82,12 +82,13 @@ struct PickupStockBasisNotice: View {
 
 struct PickupSaveStatus: View {
     @ObservedObject var model: PickupModel
+    var onRetried: (() -> Void)? = nil
     var body: some View {
         if let error = model.error {
             Section {
                 Text(error).foregroundStyle(.red).accessibilityIdentifier("pickup-save-error")
                 if model.hasPendingSave {
-                    Button(pTr("Retry save")) { Task { await model.retrySave() } }
+                    Button(pTr("Retry save")) { Task { if await model.retrySave() { onRetried?() } } }
                     Button(pTr("Discard unsaved change"), role: .destructive) { model.discardPending() }
                 } else if !model.ready { Button(pTr("Retry opening")) { Task { await model.load() } } }
             }
@@ -151,6 +152,13 @@ struct PickupCheckoutView: View {
     }
     @FocusState private var field: Field?
     @State private var draft = PickupCheckoutDraft()
+    private struct QuoteReview: Identifiable {
+        let id = UUID()
+        let draft: PickupCheckoutDraft
+        let quote: CheckoutQuote
+        let cap: CheckoutCap?
+    }
+    @State private var quoteReview: QuoteReview?
     @State private var reviewingReplacement = false
     @State private var reopeningCurrent = false
     @State private var selected: Set<UUID> = []
@@ -164,7 +172,7 @@ struct PickupCheckoutView: View {
     }
     private var draftIsStale: Bool {
         guard draft.journeyID != nil else { return false }
-        return model.journey.map { !draft.matchesSource($0) } ?? true
+        return model.journey.map { !draft.matchesSource($0, workspaceID: model.sourceWorkspaceID) } ?? true
     }
     var body: some View {
         Form {
@@ -184,8 +192,10 @@ struct PickupCheckoutView: View {
                 TextField(pTr("Store"), text: $draft.store).focused($field, equals: .store)
                 TextField(pTr("Branch"), text: $draft.branch).focused($field, equals: .branch)
                 TextField(pTr("Pickup or delivery slot"), text: $draft.slot).focused($field, equals: .slot)
-                TextField(pTr("Source of these prices"), text: $draft.source).focused($field, equals: .source)
-                DatePicker(pTr("Observed"), selection: $draft.observed)
+                if !draft.termsNeedFreshPricing {
+                    TextField(pTr("Source of these prices"), text: $draft.source).focused($field, equals: .source)
+                    DatePicker(pTr("Observed"), selection: $draft.observed)
+                }
                 Picker(pTr("Shopping mode"), selection: $draft.mode) {
                     Text(pTr("Pickup")).tag(ShoppingMode.pickup)
                     Text(pTr("Delivery")).tag(ShoppingMode.delivery)
@@ -206,10 +216,17 @@ struct PickupCheckoutView: View {
             Section(pTr("Expected charges · USD")) {
                 if draft.pricingNeedsReplacement || draft.replacingPricing, let pricing = draft.originalPricing {
                     Text(pTr("Pricing details to preserve")).font(.headline)
+                    if let original = draft.reviewedQuote {
+                        PickupQuoteTermsView(quote: original, cap: draft.originalCap)
+                    }
                     PickupSavedCheckoutPricingView(pricing: pricing)
                 }
                 if draft.pricingNeedsReplacement {
-                    Text(pTr("These pricing details stay intact when you save. Review them before starting replacement pricing."))
+                    if draft.termsNeedFreshPricing {
+                        Text(pTr("These prices belong to different checkout terms. Review them and enter fresh evidence."))
+                    } else {
+                        Text(pTr("These pricing details stay intact when you save. Review them before starting replacement pricing."))
+                    }
                     Button(pTr("Replace pricing after review")) { reviewingReplacement = true }
                 } else {
                     Toggle(pTr("Retailer total already includes all charges"), isOn: $draft.inclusive)
@@ -229,9 +246,9 @@ struct PickupCheckoutView: View {
                     }
                 }
                 Button(pTr("Save and evaluate checkout")) { saveQuote() }.buttonStyle(.borderedProminent)
-                    .disabled(draftIsStale || !model.hasCurrentBasketStockBasis)
+                    .disabled(draftIsStale || draft.termsNeedFreshPricing || !model.hasCurrentBasketStockBasis)
                 if let formError { Text(formError).foregroundStyle(.red) }
-                if !draftIsStale, let result = model.result, let id = model.journey?.id {
+                if !draftIsStale, !draft.hasUnsavedChanges, let result = model.result, let id = model.journey?.id {
                     NavigationLink(pTr("Check price by weight")) { PickupWeightReview(model: model, shopID: id) }
                         .accessibilityIdentifier("checkout.weightReview")
                     Text(pTr("Saved checkout result")).font(.headline)
@@ -239,6 +256,18 @@ struct PickupCheckoutView: View {
                 }
             }.disabled(draftIsStale)
             if !draftIsStale {
+                if let history = model.journey?.earlierQuotes, !history.isEmpty {
+                    DisclosureGroup(pTr("Earlier checkout quotes")) {
+                        ForEach(history.reversed()) { record in
+                            PickupQuoteTermsView(quote: record.quote, cap: record.cap)
+                            PickupSavedCheckoutPricingView(pricing: record.quote.pricing)
+                            if let result = try? CheckoutEngine.evaluate(record.quote, cap: record.cap) {
+                                PickupResultView(result: result)
+                            }
+                            Divider()
+                        }
+                    }
+                }
                 Section(pTr("Payment hold · separate from spending")) {
                     Toggle(pTr("Compare an authorization hold"), isOn: $comparingHold)
                     if comparingHold {
@@ -250,7 +279,7 @@ struct PickupCheckoutView: View {
                     }
                 }
             }
-            if !draftIsStale, !draft.inclusive, !draft.pricingNeedsReplacement, model.result != nil {
+            if !draftIsStale, !draft.hasUnsavedChanges, !draft.inclusive, !draft.pricingNeedsReplacement, model.result != nil {
                 Section(pTr("Protect or defer · preview before applying")) {
                     Text(pTr("Only lines you explicitly mark flexible can be deferred. Protected meal needs stay recorded."))
                     ForEach(model.journey?.basket?.current.lines ?? []) { line in
@@ -290,10 +319,43 @@ struct PickupCheckoutView: View {
         .onChange(of: model.journey?.quote) { _, _ in populate() }
         .onChange(of: model.journey?.context) { _, _ in populate() }
         .onChange(of: model.journey?.cap) { _, _ in populate() }
+        .sheet(item: $quoteReview) { review in
+            NavigationStack {
+                Form {
+                    if let earlier = review.draft.reviewedQuote {
+                        Section(pTr("Earlier checkout quote")) {
+                            PickupQuoteTermsView(quote: earlier, cap: review.draft.originalCap)
+                            PickupSavedCheckoutPricingView(pricing: earlier.pricing)
+                        }
+                    }
+                    Section(pTr("Proposed checkout quote")) {
+                        PickupQuoteTermsView(quote: review.quote, cap: review.cap)
+                        PickupSavedCheckoutPricingView(pricing: review.quote.pricing)
+                        if let result = try? CheckoutEngine.evaluate(review.quote, cap: review.cap) {
+                            PickupResultView(result: result)
+                        }
+                    }
+                    if model.journey.map({ review.draft.matchesSource($0, workspaceID: model.sourceWorkspaceID) }) == true {
+                        Button(pTr("Save reviewed checkout")) { Task { await commit(review) } }.disabled(model.saving || model.hasPendingSave)
+                    } else {
+                        Text(pTr("This checkout changed. Go back and reopen its current details before saving."))
+                    }
+                    PickupSaveStatus(model: model) {
+                        if let saved = model.journey, saved.id == review.draft.journeyID,
+                           saved.quote == review.quote, saved.cap == review.cap {
+                            draft = PickupCheckoutDraft(journey: saved, workspaceID: model.sourceWorkspaceID)
+                            quoteReview = nil
+                        }
+                    }
+                }
+                .navigationTitle(pTr("Review checkout changes"))
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button(pTr("Cancel")) { quoteReview = nil } } }
+            }
+        }
         .confirmationDialog(pTr("Discard unsaved checkout edits?"), isPresented: $reopeningCurrent, titleVisibility: .visible) {
             Button(pTr("Discard edits and reopen"), role: .destructive) {
                 guard let value = model.journey else { return }
-                draft = PickupCheckoutDraft(journey: value)
+                draft = PickupCheckoutDraft(journey: value, workspaceID: model.sourceWorkspaceID)
                 preview = nil; selected = []; formError = nil
                 field = nil; comparingHold = false; hold = ""; availableFunds = ""
             }
@@ -317,27 +379,64 @@ struct PickupCheckoutView: View {
         }
     }
     private func populate() {
-        guard let value = model.journey, draft.refreshIfPristine(from: value, hasLocalReview: hasLocalReview) else { return }
+        guard let value = model.journey, draft.refreshIfPristine(from: value, workspaceID: model.sourceWorkspaceID, hasLocalReview: hasLocalReview) else { return }
         preview = nil; selected = []; formError = nil
     }
     private func saveQuote() {
         let reviewed = draft
         formError = nil; preview = nil
-        Task {
-            do {
-                guard let value = model.journey else { throw PickupCheckoutDraftError.staleSource }
-                let submission = try reviewed.submission(for: value)
-                if await model.setQuote(submission.quote, cap: submission.cap), let saved = model.journey,
-                   saved.id == reviewed.journeyID {
-                    draft = PickupCheckoutDraft(journey: saved)
-                }
-            } catch PickupCheckoutDraftError.staleSource {
-                formError = pTr("This checkout changed. Go back and reopen its current details before saving.")
-            } catch PickupCheckoutDraftError.reviewReplacement {
-                formError = pTr("Review the saved pricing before starting a replacement.")
-            } catch {
-                formError = pTr("Enter source, store, branch and slot, and valid dollar amounts with at most two decimal places.")
+        do {
+            guard let value = model.journey else { throw PickupCheckoutDraftError.staleSource }
+            let submission = try reviewed.submission(for: value, workspaceID: model.sourceWorkspaceID)
+            let review = QuoteReview(draft: reviewed, quote: submission.quote, cap: submission.cap)
+            if reviewed.changedRetailerTerms && reviewed.replacingPricing {
+                quoteReview = review
+            } else {
+                Task { await commit(review) }
             }
+        } catch PickupCheckoutDraftError.staleSource {
+            formError = pTr("This checkout changed. Go back and reopen its current details before saving.")
+        } catch PickupCheckoutDraftError.reviewReplacement {
+            formError = pTr("Review the saved pricing before starting a replacement.")
+        } catch {
+            formError = pTr("Enter source, store, branch and slot, and valid dollar amounts with at most two decimal places.")
+        }
+    }
+    @MainActor private func commit(_ review: QuoteReview) async {
+        if await model.setQuote(review.quote, cap: review.cap, reviewed: review.draft), let saved = model.journey,
+           saved.id == review.draft.journeyID {
+            draft = PickupCheckoutDraft(journey: saved, workspaceID: model.sourceWorkspaceID)
+            quoteReview = nil
+        }
+    }
+}
+
+private struct PickupQuoteTermsView: View {
+    let quote: CheckoutQuote
+    let cap: CheckoutCap?
+    private var mode: String {
+        switch quote.context.mode {
+        case .pickup: pTr("Pickup")
+        case .delivery: pTr("Delivery")
+        case .inStore: pTr("In store")
+        }
+    }
+    private func scopeLabel(_ scope: CheckoutScope) -> String {
+        switch scope {
+        case .wholeCheckout: pTr("Whole checkout")
+        case .dinner: pTr("Dinners only")
+        case .item: pTr("Selected items only")
+        }
+    }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(quote.context.storeID + " · " + quote.context.branchID)
+            Text(mode + " · " + quote.context.slot)
+            Text(scopeLabel(quote.scope))
+            if let cap { LabeledContent(pTr("Spending cap"), value: pMoney(cap.amount) + " · " + scopeLabel(cap.scope)) }
+            else { Text(pTr("No spending cap supplied")) }
+            Text(quote.context.source)
+            Text(quote.context.observedAt.formatted(date: .complete, time: .standard))
         }
     }
 }

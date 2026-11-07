@@ -11626,6 +11626,102 @@
           }
         }
       }
+    },
+    "Earlier checkout quote": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Earlier checkout quote"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cotización anterior"
+          }
+        }
+      }
+    },
+    "Earlier checkout quotes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Earlier checkout quotes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cotizaciones anteriores"
+          }
+        }
+      }
+    },
+    "Proposed checkout quote": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proposed checkout quote"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cotización propuesta"
+          }
+        }
+      }
+    },
+    "Review checkout changes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review checkout changes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar cambios de la compra"
+          }
+        }
+      }
+    },
+    "Save reviewed checkout": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save reviewed checkout"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar la cotización revisada"
+          }
+        }
+      }
+    },
+    "These prices belong to different checkout terms. Review them and enter fresh evidence.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These prices belong to different checkout terms. Review them and enter fresh evidence."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estos precios corresponden a otras condiciones de compra. Revísalos e ingresa los datos actuales."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

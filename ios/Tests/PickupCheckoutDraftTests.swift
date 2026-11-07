@@ -156,6 +156,99 @@ final class PickupCheckoutDraftTests: XCTestCase {
         XCTAssertEqual(fees, [CheckoutFee(id: "delivery", rule: .waivedAt(threshold: maximum, belowThreshold: .exact(.zero), basis: .eligibleItemsAfterEligibleDiscounts))])
     }
 
+    func testPricesAreBoundToReviewedTermsIncludingReplacementAndUnquotedBasketPrices() throws {
+        let old = try journey(.inclusiveTotal(.bounded(lower: money(300), upper: money(450), reason: "Weight varies")))
+        let edits: [(inout PickupCheckoutDraft) -> Void] = [
+            { $0.store = "Other market" }, { $0.branch = "East" }, { $0.slot = "Wednesday" },
+            { $0.mode = .delivery }, { $0.scope = .dinner }
+        ]
+        for edit in edits {
+            var draft = PickupCheckoutDraft(journey: old)
+            edit(&draft)
+            XCTAssertTrue(draft.termsNeedFreshPricing)
+            XCTAssertThrowsError(try draft.submission(for: old)) {
+                XCTAssertEqual($0 as? PickupCheckoutDraftError, .reviewReplacement)
+            }
+            draft.beginPricingReplacement(now: now.addingTimeInterval(60))
+            XCTAssertEqual(draft.source, ""); XCTAssertEqual(draft.observed, now.addingTimeInterval(60))
+            XCTAssertFalse(draft.complete); XCTAssertEqual(draft.prices, [:]); XCTAssertEqual(draft.fee, "")
+            XCTAssertThrowsError(try draft.submission(for: old))
+            draft.source = "New retailer page"; draft.inclusive = true; draft.total = "4.05"
+            let new = try draft.submission(for: old).quote
+            XCTAssertEqual(new.pricing, .inclusiveTotal(.exact(money(405))))
+            XCTAssertEqual(new.context.source, "New retailer page")
+            XCTAssertEqual(draft.reviewedQuote, old.quote)
+            draft.slot += " afternoon"
+            XCTAssertThrowsError(try draft.submission(for: old))
+        }
+        var unquoted = old
+        unquoted.quote = nil; unquoted.quotedRevisionID = nil
+        var fromBasket = PickupCheckoutDraft(journey: unquoted)
+        fromBasket.branch = "Other branch"
+        XCTAssertThrowsError(try fromBasket.submission(for: unquoted))
+        XCTAssertNil(fromBasket.reviewedQuote)
+        unquoted.ledgerBasis = ShopBasis(capScope: .dinnersOnly)
+        let workspaceID = UUID()
+        let scoped = PickupCheckoutDraft(journey: unquoted, workspaceID: workspaceID)
+        XCTAssertEqual(scoped.scope, .dinner)
+        XCTAssertThrowsError(try scoped.submission(for: unquoted, workspaceID: UUID())) {
+            XCTAssertEqual($0 as? PickupCheckoutDraftError, .staleSource)
+        }
+        XCTAssertEqual(try scoped.submission(for: unquoted, workspaceID: workspaceID).quote.scope, .dinner)
+    }
+
+    @MainActor func testReplacementKeepsOldRangeAndCapAfterRestartAndRefusesObsoleteEditor() async throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let store = try ComparisonStore(url: url)
+        let model = PickupModel(store: store, clock: { self.now })
+        let old = try journey(.inclusiveTotal(.bounded(lower: money(3450), upper: money(3750), reason: "Weight at pickup")),
+                              cap: .init(scope: .wholeCheckout, commitmentsID: shopID, amount: money(3800)))
+        let started = await model.start(from: [line()], shopID: shopID, context: context(), cap: old.cap)
+        XCTAssertTrue(started)
+        let saved = await model.setQuote(try XCTUnwrap(old.quote), cap: old.cap)
+        XCTAssertTrue(saved)
+        let baseline = try XCTUnwrap(model.journey)
+        let competingStore = try ComparisonStore(url: url)
+        let competingModel = PickupModel(store: competingStore)
+        await competingModel.load()
+        let competingSource = try XCTUnwrap(competingModel.journey)
+        var competingDraft = PickupCheckoutDraft(journey: competingSource)
+        competingDraft.cap = "41"
+        let competingEdit = try competingDraft.submission(for: competingSource)
+        var draft = PickupCheckoutDraft(journey: baseline)
+        draft.branch = "East"; draft.slot = "Wednesday evening"; draft.mode = .delivery
+        draft.beginPricingReplacement(now: now.addingTimeInterval(3600))
+        draft.source = "East preview"; draft.inclusive = true; draft.total = "39.05"
+        let edit = try draft.submission(for: baseline)
+        let applied = await model.setQuote(edit.quote, cap: edit.cap, reviewed: draft)
+        XCTAssertTrue(applied)
+        let stale = await model.setQuote(edit.quote, cap: edit.cap, reviewed: draft)
+        XCTAssertFalse(stale)
+        let overwritten = await competingModel.setQuote(competingEdit.quote, cap: competingEdit.cap, reviewed: competingDraft)
+        XCTAssertFalse(overwritten)
+        XCTAssertEqual(competingModel.journey?.quote, edit.quote)
+        XCTAssertEqual(competingModel.journey?.earlierQuotes.count, 1)
+        try await competingStore.close()
+        try await store.close()
+        let reopened = try ComparisonStore(url: url)
+        let restarted = PickupModel(store: reopened)
+        await restarted.load()
+        let current = try XCTUnwrap(restarted.journey)
+        XCTAssertEqual(current.earlierQuotes, [.init(id: baseline.revision, basketRevisionID: try XCTUnwrap(baseline.quotedRevisionID),
+                                                    quote: try XCTUnwrap(baseline.quote), cap: old.cap)])
+        XCTAssertEqual(current.quote, edit.quote); XCTAssertEqual(current.cap, old.cap)
+        var components = PickupCheckoutDraft(journey: current)
+        components.inclusive = false
+        XCTAssertEqual(components.prices[lineID], "", "The original basket’s $9.99 pack belongs to West")
+        guard case .components(let lines, _, _, _, _, _) = try components.submission(for: current).quote.pricing,
+              case .unknown = lines.first?.cost else { return XCTFail("East has no reviewed pack price") }
+        var cleared = current
+        cleared.quote = nil; cleared.quotedRevisionID = nil
+        XCTAssertEqual(PickupCheckoutDraft(journey: cleared).prices[lineID], "")
+        try await reopened.close()
+    }
+
     func testStaleQuoteDoesNotHydrateAndChangedSourceCannotBeOverwritten() throws {
         var value = try journey(.inclusiveTotal(.exact(money(300))))
         value.quotedRevisionID = UUID()

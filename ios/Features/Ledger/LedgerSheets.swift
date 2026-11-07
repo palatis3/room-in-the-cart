@@ -430,7 +430,7 @@ private struct LedgerImportRowView: View {
 
 struct LedgerFactsView: View {
     @ObservedObject var model: LedgerModel
-    let shop: ShoppingLedger
+    @State private var original: ShoppingLedger
     @Environment(\.dismiss) private var dismiss
     @State private var basis: ShopBasis
     @State private var cap: String
@@ -444,16 +444,16 @@ struct LedgerFactsView: View {
     @State private var hasSlot: Bool
     @State private var slot: Date
     @State private var reviewing = false
-    @State private var reviewedRevision: Int
-    @State private var reviewedBase: ShopBasis
+    @State private var workspaceID: UUID?
+    @State private var evidenceTerms: ShopBasis.RetailerTerms
     @State private var validation: String?
     private enum Input: Hashable { case branch, timeZone, cap, reserve, fees, retailerTotal, retailerSource, includedCharges }
     @FocusState private var inputFocus: Input?
     init(model: LedgerModel, shop: ShoppingLedger) {
         self.model = model
-        self.shop = shop
-        _reviewedRevision = State(initialValue: shop.revision)
-        _reviewedBase = State(initialValue: shop.basis)
+        _original = State(initialValue: shop)
+        _workspaceID = State(initialValue: model.sourceWorkspaceID)
+        _evidenceTerms = State(initialValue: shop.basis.retailerTerms)
         _basis = State(initialValue: shop.basis)
         _cap = State(initialValue: shop.basis.cap.map { NSDecimalNumber(decimal: Decimal($0.minorUnits) / 100).stringValue } ?? "")
         _reserve = State(initialValue: shop.basis.fixedReserve.map { NSDecimalNumber(decimal: Decimal($0.minorUnits) / 100).stringValue } ?? "")
@@ -466,17 +466,33 @@ struct LedgerFactsView: View {
         _hasSlot = State(initialValue: shop.basis.slot != nil)
         _slot = State(initialValue: shop.basis.slot ?? Date())
     }
+    private var currentTerms: ShopBasis.RetailerTerms {
+        var edited = basis
+        edited.slot = hasSlot ? slot : nil
+        return edited.retailerTerms
+    }
+    private var isCurrent: Bool {
+        workspaceID != nil && model.sourceWorkspaceID == workspaceID && model.shop?.id == original.id
+            && model.shop?.revisionID == original.revisionID
+    }
+    private var needsFreshEvidence: Bool {
+        currentTerms != evidenceTerms && (hasRetailerPreview || !fees.isEmpty || !retailerSource.isEmpty
+            || !retailerTotal.isEmpty || !includedCharges.isEmpty)
+    }
     var body: some View {
         Form {
-            if reviewing {
-                Section(ledgerText("Previously saved")) { summary(reviewedBase) }
+            if !isCurrent {
+                Text(ledgerText("This pickup changed. Close these edits and reopen the current pickup details."))
+                Button(ledgerText("Close")) { dismiss() }
+            } else if reviewing {
+                Section(ledgerText("Previously saved")) { summary(original.basis) }
                 Section(ledgerText("Proposed pickup details")) { summary(basis) }
                 Section {
                     Text(ledgerText("Changing the store, mode, date or costs invalidates earlier pickup quotes. Review them again before relying on a total."))
                     Button(ledgerText("Save pickup details")) {
-                        Task { if await model.editShop(key: "basis-\(shop.id)", shopID: shop.id, {
-                            guard $0.revision == reviewedRevision else { throw LedgerError.stalePreview }
-                            try $0.updateBasis(basis)
+                        Task { if await model.editShop(key: "basis-\(original.id)", shopID: original.id, {
+                            guard isCurrent else { throw LedgerError.stalePreview }
+                            try $0.updateBasis(basis, evidenceFor: evidenceTerms, reviewing: original.revisionID)
                         }) { dismiss() } }
                     }.buttonStyle(PrimaryAction()).disabled(model.saving || model.hasPendingSave)
                         .accessibilityIdentifier("ledgerCommitFacts")
@@ -515,15 +531,25 @@ struct LedgerFactsView: View {
                     }
                     TextField(ledgerText("Fixed reserve (USD, optional)"), text: $reserve).keyboardType(.decimalPad)
                         .focused($inputFocus, equals: .reserve)
-                    TextField(ledgerText("Known fees (USD, unknown if blank)"), text: $fees).keyboardType(.decimalPad)
-                        .focused($inputFocus, equals: .fees)
+                    if !needsFreshEvidence {
+                        TextField(ledgerText("Known fees (USD, unknown if blank)"), text: $fees).keyboardType(.decimalPad)
+                            .focused($inputFocus, equals: .fees)
+                    }
                     Text(ledgerText("Currency: USD"))
                 } header: { Text(ledgerText("Spending cap")) } footer: {
                     Text(ledgerText("A dinner-only cap does not cover the whole pickup. Missing prices and fees remain unknown."))
                 }.disabled(model.saving || model.hasPendingSave)
                 Section {
-                    Toggle(ledgerText("Record a retailer preview"), isOn: $hasRetailerPreview)
-                    if hasRetailerPreview {
+                    if needsFreshEvidence {
+                        Text(ledgerText("Earlier fees and retailer evidence belong to different pickup details. The proposed fees and preview are unknown."))
+                        Button(ledgerText("Enter evidence for these pickup details")) {
+                            fees = ""; hasRetailerPreview = false; retailerTotal = ""; retailerSource = ""
+                            retailerDate = Date(); includedCharges = ""; evidenceTerms = currentTerms
+                        }
+                    } else {
+                        Toggle(ledgerText("Record a retailer preview"), isOn: $hasRetailerPreview)
+                    }
+                    if hasRetailerPreview && !needsFreshEvidence {
                         TextField(ledgerText("Retailer total (USD, unknown if blank)"), text: $retailerTotal).keyboardType(.decimalPad)
                             .focused($inputFocus, equals: .retailerTotal)
                         TextField(ledgerText("Source of the retailer preview"), text: $retailerSource, axis: .vertical)
@@ -541,9 +567,24 @@ struct LedgerFactsView: View {
                         .accessibilityIdentifier("ledgerReviewFacts")
                 }
             }
+            if isCurrent {
+                let history = original.revisions.reversed().filter { $0.previousRetailerBasis != nil }
+                if !history.isEmpty {
+                    DisclosureGroup(ledgerText("Earlier retailer evidence")) {
+                        ForEach(history) { revision in
+                            if let earlier = revision.previousRetailerBasis { summary(earlier); Divider() }
+                        }
+                    }
+                }
+            }
             if let validation { Text(validation).foregroundStyle(Theme.warning) }
             LedgerSaveStatus(model: model, onRetried: { dismiss() })
         }.scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(ledgerText("Describe this pickup"))
+            .onChange(of: currentTerms) { old, new in
+                if old == evidenceTerms, !hasRetailerPreview, fees.isEmpty, retailerSource.isEmpty, retailerTotal.isEmpty, includedCharges.isEmpty {
+                    evidenceTerms = new; retailerDate = Date()
+                }
+            }
             .keyboardDoneAction(visible: inputFocus != nil, title: ledgerText("Done"), identifier: "ledgerFactsKeyboardDone") { inputFocus = nil }
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() }.disabled(model.saving) } }
             .interactiveDismissDisabled(model.saving)
@@ -557,17 +598,21 @@ struct LedgerFactsView: View {
             }
             basis.cap = try ComparisonModel.money(cap)
             basis.fixedReserve = try ComparisonModel.money(reserve)
-            basis.knownFees = try ComparisonModel.money(fees)
-            if hasRetailerPreview {
+            basis.knownFees = needsFreshEvidence ? nil : try ComparisonModel.money(fees)
+            if hasRetailerPreview && !needsFreshEvidence {
+                let charges: [String]
+                if let saved = original.basis.retailerPreview, currentTerms == original.basis.retailerTerms,
+                   includedCharges == saved.includedCharges.joined(separator: ", ") {
+                    charges = saved.includedCharges
+                } else {
+                    charges = includedCharges.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+                }
                 basis.retailerPreview = LedgerRetailerPreview(total: try ComparisonModel.money(retailerTotal), source: retailerSource,
-                                                              capturedAt: retailerDate, includedCharges: includedCharges.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty })
+                                                              capturedAt: retailerDate, includedCharges: charges)
             } else { basis.retailerPreview = nil }
             basis.slot = hasSlot ? slot : nil
             try basis.validate()
-            if let latest = model.workspace.shops.first(where: { $0.id == shop.id }) {
-                reviewedRevision = latest.revision
-                reviewedBase = latest.basis
-            }
+            guard isCurrent else { return }
             validation = nil
             reviewing = true
         } catch { validation = ledgerText("Use a nonnegative USD amount with no more than two decimal places.") }
@@ -579,7 +624,7 @@ struct LedgerFactsView: View {
             if let date = value.slot { Text(ledgerDate(date, zone: value.timeZoneIdentifier)) }
             else { Text(ledgerText("Date not set")); Text(value.timeZoneIdentifier) }
             if let cap = value.cap { Text("\(moneyText(cap)) · \(value.capScope.ledgerLabel)") }
-            else { Text(ledgerText("No spending cap entered")) }
+            else { Text(ledgerText("No spending cap entered")); Text(value.capScope.ledgerLabel) }
             Text(ledgerText(value.capFirmness == .firm ? "Firm limit" : "Flexible limit"))
             Text(ledgerFormat("Fixed reserve: %@", value.fixedReserve.map(moneyText) ?? ledgerText("Unknown")))
             Text(ledgerFormat("Fees: %@", value.knownFees.map(moneyText) ?? ledgerText("Unknown")))
@@ -588,7 +633,7 @@ struct LedgerFactsView: View {
                 Text(preview.source)
                 Text(ledgerDate(preview.capturedAt, zone: value.timeZoneIdentifier))
                 Text(ledgerFormat("Included charges: %@", preview.includedCharges.joined(separator: ", ")))
-            }
+            } else { Text(ledgerFormat("Retailer preview: %@", ledgerText("Unknown"))) }
         }.fixedSize(horizontal: false, vertical: true)
     }
 }
