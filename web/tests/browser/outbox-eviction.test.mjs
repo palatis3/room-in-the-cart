@@ -14,6 +14,7 @@ const requestsPath = '/v1/households/test/requests/mine';
 
 test('Refresh reconciles a queued request after IndexedDB eviction without resending it', async t => {
   const posts = [];
+  const commandGrants = [];
   const grant = '4f14be8f-efc9-48c4-af14-cb09a8489f38';
   let currentSession = session;
   const server = await preview({
@@ -29,6 +30,7 @@ test('Refresh reconciles a queued request after IndexedDB eviction without resen
           if (!req.url.startsWith('/v1/')) return next();
           if (req.method === 'POST') posts.push(req.url);
           if (req.method === 'POST' && req.url === commandsPath) {
+            commandGrants.push(req.headers['x-request-queue-grant']);
             // Consume the command, then drop the connection before sending any receipt.
             req.on('end', () => res.destroy());
             req.resume();
@@ -76,6 +78,7 @@ test('Refresh reconciles a queued request after IndexedDB eviction without resen
   const status = page.getByRole('status');
   assert.equal((await status.textContent()).trim(), 'Waiting to send from this browser');
   assert.deepEqual(posts, [commandsPath]);
+  assert.deepEqual(commandGrants, [grant], 'The persisted command must use the grant acknowledged by this device');
 
   const database = 'room-in-the-cart-own-outbox-v1';
   const { origins } = await page.context().storageState({ indexedDB: true });
