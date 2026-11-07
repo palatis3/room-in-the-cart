@@ -1,5 +1,7 @@
 # Current implementation and acceptance map
 
+The ordinary S14 recipe journey now verifies editing with an unavailable source, explicit portion bindings, restart persistence and separation from the reusable recipe. It also exposed and verifies a persistent localized name for filled Notes. [The unchanged complete case passes locally](evidence/native/recipe-source-editing-20261107/README.md) and is installed as permanent ordinary CI coverage; human accessibility and hosted acceptance remain separate.
+
 The dinner idea model now has permanent regressions for abandoned preparation, repeated save/approval, a separate explicit shop apply, and revoked planning access. [All 27 selected model tests pass locally](evidence/native/dinner-idea-model-20261107/README.md), with exact compiled selection and zero runtime warnings. This covers the production model with an in-memory store; it does not replace native interaction or SQLite persistence evidence.
 
 S26 now has an exact ordinary-contributor save/approval denial check with unchanged idea, receipt and full-shop snapshots, valid adult controls and idempotent retries. [Seven real HTTP/PostgreSQL tests pass](evidence/b11/idea-authority-20261107/README.md) on a fresh local cluster under the restricted runtime role. Current catalog preparation is synchronous; this does not claim in-flight generation cancellation or replace native access/UI evidence.

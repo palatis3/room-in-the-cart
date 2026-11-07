@@ -1,0 +1,14 @@
+[
+  {
+    "action": "shutdown",
+    "simulator": "87F93DE8-670E-463D-8FAA-E3A256326B94",
+    "exit": 0,
+    "output": ""
+  },
+  {
+    "action": "delete",
+    "simulator": "87F93DE8-670E-463D-8FAA-E3A256326B94",
+    "exit": 0,
+    "output": ""
+  }
+]

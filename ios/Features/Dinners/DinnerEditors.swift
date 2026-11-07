@@ -163,6 +163,7 @@ struct DinnerTemplateFields: View {
             TextField(dinnerText("Dinner name"), text: $draft.title).focused(focus, equals: "title").accessibilityIdentifier("ledgerDinnerTitle")
             TextField(dinnerText("Total servings"), text: $draft.servings).focused(focus, equals: "servings").accessibilityIdentifier("ledgerDinnerServings")
             TextField(dinnerText("Notes"), text: $draft.notes, axis: .vertical).focused(focus, equals: "notes")
+                .accessibilityLabel(dinnerText("Notes"))
             TextField(dinnerText("Source URL, optional"), text: $draft.source).focused(focus, equals: "source")
             TextField(dinnerText("Hard exclusions, one per line"), text: $draft.exclusions, axis: .vertical).focused(focus, equals: "exclusions")
             TextField(dinnerText("Remaining lead time in minutes, optional"), text: $draft.lead).focused(focus, equals: "leadTime")

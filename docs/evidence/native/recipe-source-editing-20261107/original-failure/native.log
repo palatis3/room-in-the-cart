@@ -1,0 +1,555 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -xctestrun "/Users/palatis/Room in the Cart/.build/S14BrokenRecipeLinkReview20261107/run1/DerivedData/Build/Products/RoomInTheCart_iphonesimulator27.1-arm64.xctestrun" -destination "platform=iOS Simulator,id=F1429485-FDE2-480F-9F8A-6CAB16E52695" -parallel-testing-enabled NO -resultBundlePath "/Users/palatis/Room in the Cart/.build/S14BrokenRecipeLinkReview20261107/run1/S14.xcresult" -collect-test-diagnostics never -test-timeouts-enabled YES -default-test-execution-time-allowance 720 -maximum-test-execution-time-allowance 900 "-only-testing:RoomInTheCartUITests/FreeJourneyUITests/testUnavailableRecipeSourceLeavesServingsAndPortionAllocationEditableAfterRestart" test-without-building
+
+Writing result bundle at path:
+	/Users/palatis/Room in the Cart/.build/S14BrokenRecipeLinkReview20261107/run1/S14.xcresult
+
+2026-11-07 00:24:59.941 xcodebuild[6680:20317780] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-07 00:25:09.789262-0500 RoomInTheCartUITests-Runner[6733:20318507] [Default] Running tests...
+2026-11-07 00:25:09.854584-0500 RoomInTheCartUITests-Runner[6733:20318735] [General] Failed to send CA Event for app launch measurements for ca_event_type: 0 event_name: com.apple.app_launch_measurement.FirstFramePresentationMetric
+2026-11-07 00:25:09.896817-0500 RoomInTheCartUITests-Runner[6733:20318732] [General] Failed to send CA Event for app launch measurements for ca_event_type: 1 event_name: com.apple.app_launch_measurement.ExtendedLaunchMetrics
+objc[6733]: Class UIAccessibilityLoaderWebShared is implemented in both /private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x10ad44310) and /private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x10adbc398). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-11-07 00:25:12.829.
+Test Suite 'RoomInTheCartUITests.xctest' started at 2026-11-07 00:25:12.830.
+Test Suite 'FreeJourneyUITests' started at 2026-11-07 00:25:12.830.
+Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testUnavailableRecipeSourceLeavesServingsAndPortionAllocationEditableAfterRestart]' started.
+    t =     0.00s Start Test at 2026-11-07 00:25:12.832
+    t =     0.35s Set Up
+    t =     0.36s Open dev.roominthecart.app.debug
+    t =     0.36s     Launch dev.roominthecart.app.debug
+2026-11-07 00:25:13.775 xcodebuild[6680:20317780] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-07 00:25:13.776 xcodebuild[6680:20317780] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-11-07 00:25:13.833 xcodebuild[6680:20317780] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+    t =     5.10s         Setting up automation session
+    t =     6.92s         Wait for dev.roominthecart.app.debug to idle
+    t =     9.29s Waiting 15.0s for "Shop" Button to exist
+    t =    10.34s     Checking `Expect predicate `existsNoRetry == 1` for object "Shop" Button`
+    t =    10.34s         Checking existence of `"Shop" Button`
+    t =    10.46s Checking existence of `"Dinners" Button`
+    t =    10.50s Find the "Dinners" Button
+    t =    10.57s Tap "Dinners" Button
+    t =    10.57s     Wait for dev.roominthecart.app.debug to idle
+    t =    10.59s     Find the "Dinners" Button
+    t =    10.63s     Check for interrupting elements affecting "Dinners" Button
+    t =    10.69s     Synthesize event
+    t =    11.11s     Wait for dev.roominthecart.app.debug to idle
+    t =    12.90s Checking existence of `"dinnerStartPickup" Any`
+    t =    13.08s Find the "dinnerStartPickup" Any
+    t =    13.25s Tap "dinnerStartPickup" Button
+    t =    13.25s     Wait for dev.roominthecart.app.debug to idle
+    t =    13.25s     Find the "dinnerStartPickup" Button
+    t =    13.39s     Check for interrupting elements affecting "dinnerStartPickup" Button
+    t =    13.49s     Synthesize event
+    t =    13.80s     Wait for dev.roominthecart.app.debug to idle
+    t =    13.85s Checking existence of `"ledgerShopName" Any`
+    t =    14.08s Find the "ledgerShopName" Any
+    t =    14.31s Tap "ledgerShopName" TextField
+    t =    14.31s     Wait for dev.roominthecart.app.debug to idle
+    t =    14.90s     Find the "ledgerShopName" TextField
+    t =    15.07s     Check for interrupting elements affecting "ledgerShopName" TextField
+    t =    15.18s     Synthesize event
+    t =    15.48s     Wait for dev.roominthecart.app.debug to idle
+    t =    16.40s Type 'Unavailable-source...' into "ledgerShopName" TextField
+    t =    16.40s     Wait for dev.roominthecart.app.debug to idle
+    t =    16.78s     Find the "ledgerShopName" TextField
+    t =    17.12s     Check for interrupting elements affecting "ledgerShopName" TextField
+    t =    17.26s     Synthesize event
+    t =    17.89s     Wait for dev.roominthecart.app.debug to idle
+    t =    17.89s Checking existence of `Button (First Match)`
+    t =    18.11s Checking existence of `"ledgerShopName" Any`
+    t =    18.42s Find the "ledgerShopName" Any
+    t =    19.75s Checking `Expect predicate `value == "Unavailable-source pickup"` for object "ledgerShopName" TextField`
+    t =    19.75s     Find the "ledgerShopName" TextField
+    t =    20.04s Find the "ledgerShopName" TextField
+    t =    20.26s Checking existence of `"ledgerCreateShop" Any`
+    t =    20.49s Find the "ledgerCreateShop" Any
+    t =    20.74s Tap "ledgerCreateShop" Button
+    t =    20.74s     Wait for dev.roominthecart.app.debug to idle
+    t =    20.74s     Find the "ledgerCreateShop" Button
+    t =    20.99s     Check for interrupting elements affecting "ledgerCreateShop" Button
+    t =    21.09s     Synthesize event
+    t =    21.39s     Wait for dev.roominthecart.app.debug to idle
+    t =    21.87s Checking existence of `"dinnerLibrary" Any`
+    t =    22.22s Find the "dinnerLibrary" Any
+    t =    22.61s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    22.77s Find the "dinnerLibrary" Button
+    t =    23.12s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    23.17s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 655.2) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 298.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    23.17s     Wait for dev.roominthecart.app.debug to idle
+    t =    23.18s     Find the Target Application 'dev.roominthecart.app.debug'
+    t =    23.23s     Check for interrupting elements affecting "Room in the Cart" Application
+    t =    23.29s     Synthesize event
+    t =    23.30s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    23.34s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    23.40s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    23.44s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    23.49s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    24.54s     Wait for dev.roominthecart.app.debug to idle
+    t =    25.66s Checking existence of `"dinnerLibrary" Button`
+    t =    25.95s Find the "dinnerLibrary" Button
+    t =    26.23s Tap "dinnerLibrary" Button
+    t =    26.23s     Wait for dev.roominthecart.app.debug to idle
+    t =    26.46s     Find the "dinnerLibrary" Button
+    t =    26.76s     Check for interrupting elements affecting "dinnerLibrary" Button
+    t =    26.87s     Synthesize event
+    t =    27.17s     Wait for dev.roominthecart.app.debug to idle
+    t =    28.02s Checking existence of `"ledgerNewTemplate" Any`
+    t =    28.23s Find the "ledgerNewTemplate" Any
+    t =    28.39s Tap "ledgerNewTemplate" Button
+    t =    28.39s     Wait for dev.roominthecart.app.debug to idle
+    t =    28.40s     Find the "ledgerNewTemplate" Button
+    t =    28.51s     Check for interrupting elements affecting "ledgerNewTemplate" Button
+    t =    28.59s     Synthesize event
+    t =    28.89s     Wait for dev.roominthecart.app.debug to idle
+    t =    28.97s Checking existence of `"ledgerDinnerTitle" Any`
+    t =    29.28s Find the "ledgerDinnerTitle" Any
+    t =    29.59s Tap "ledgerDinnerTitle" TextField
+    t =    29.59s     Wait for dev.roominthecart.app.debug to idle
+    t =    29.60s     Find the "ledgerDinnerTitle" TextField
+    t =    29.80s     Check for interrupting elements affecting "ledgerDinnerTitle" TextField
+    t =    29.93s     Synthesize event
+    t =    30.23s     Wait for dev.roominthecart.app.debug to idle
+    t =    30.59s Type 'Unavailable-source...' into "ledgerDinnerTitle" TextField
+    t =    30.60s     Wait for dev.roominthecart.app.debug to idle
+    t =    30.61s     Find the "ledgerDinnerTitle" TextField
+    t =    30.92s     Check for interrupting elements affecting "ledgerDinnerTitle" TextField
+    t =    31.03s     Synthesize event
+    t =    31.76s     Wait for dev.roominthecart.app.debug to idle
+    t =    31.76s Checking existence of `Button (First Match)`
+    t =    31.86s Find the Button (First Match)
+    t =    31.97s Tap "Done" Button
+    t =    31.97s     Wait for dev.roominthecart.app.debug to idle
+    t =    31.98s     Find the "Done" Button
+    t =    32.07s     Check for interrupting elements affecting "Done" Button
+    t =    32.16s     Synthesize event
+    t =    32.47s     Wait for dev.roominthecart.app.debug to idle
+    t =    32.73s Checking existence of `"ledgerDinnerTitle" Any`
+    t =    32.97s Find the "ledgerDinnerTitle" Any
+    t =    34.26s Checking `Expect predicate `value == "Unavailable-source lentil wraps"` for object "ledgerDinnerTitle" TextField`
+    t =    34.26s     Find the "ledgerDinnerTitle" TextField
+    t =    34.42s Find the "ledgerDinnerTitle" TextField
+    t =    34.58s Checking existence of `"ledgerDinnerServings" Any`
+    t =    34.75s Find the "ledgerDinnerServings" Any
+    t =    34.92s Tap "ledgerDinnerServings" TextField
+    t =    34.92s     Wait for dev.roominthecart.app.debug to idle
+    t =    34.93s     Find the "ledgerDinnerServings" TextField
+    t =    35.10s     Check for interrupting elements affecting "ledgerDinnerServings" TextField
+    t =    35.18s     Synthesize event
+    t =    35.48s     Wait for dev.roominthecart.app.debug to idle
+    t =    35.78s Type '3' into "ledgerDinnerServings" TextField
+    t =    35.78s     Wait for dev.roominthecart.app.debug to idle
+    t =    35.78s     Find the "ledgerDinnerServings" TextField
+    t =    36.03s     Check for interrupting elements affecting "ledgerDinnerServings" TextField
+    t =    36.13s     Synthesize event
+    t =    36.35s     Wait for dev.roominthecart.app.debug to idle
+    t =    36.35s Checking existence of `Button (First Match)`
+    t =    36.42s Find the Button (First Match)
+    t =    36.51s Tap "Done" Button
+    t =    36.51s     Wait for dev.roominthecart.app.debug to idle
+    t =    36.51s     Find the "Done" Button
+    t =    36.60s     Check for interrupting elements affecting "Done" Button
+    t =    36.66s     Synthesize event
+    t =    36.96s     Wait for dev.roominthecart.app.debug to idle
+    t =    37.20s Checking existence of `"ledgerDinnerServings" Any`
+    t =    37.41s Find the "ledgerDinnerServings" Any
+    t =    38.62s Checking `Expect predicate `value == "3"` for object "ledgerDinnerServings" TextField`
+    t =    38.62s     Find the "ledgerDinnerServings" TextField
+    t =    38.80s Find the "ledgerDinnerServings" TextField
+    t =    39.01s Checking existence of `"Notes" Any`
+    t =    39.19s Find the "Notes" Any
+    t =    39.39s Tap "Notes" TextField
+    t =    39.39s     Wait for dev.roominthecart.app.debug to idle
+    t =    39.39s     Find the "Notes" TextField
+    t =    39.58s     Check for interrupting elements affecting "Notes" TextField
+    t =    39.67s     Synthesize event
+    t =    39.97s     Wait for dev.roominthecart.app.debug to idle
+    t =    40.26s Type 'Warm the wraps and...' into "Notes" TextField
+    t =    40.26s     Wait for dev.roominthecart.app.debug to idle
+    t =    40.27s     Find the "Notes" TextField
+    t =    40.53s     Check for interrupting elements affecting "Notes" TextField
+    t =    40.64s     Synthesize event
+    t =    41.65s     Wait for dev.roominthecart.app.debug to idle
+    t =    41.66s Checking existence of `Button (First Match)`
+    t =    41.80s Find the Button (First Match)
+    t =    41.91s Tap "Done" Button
+    t =    41.91s     Wait for dev.roominthecart.app.debug to idle
+    t =    41.91s     Find the "Done" Button
+    t =    42.01s     Check for interrupting elements affecting "Done" Button
+    t =    42.09s     Synthesize event
+    t =    42.40s     Wait for dev.roominthecart.app.debug to idle
+    t =    42.65s Checking existence of `"Notes" Any`
+    t =    42.88s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    43.01s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    43.05s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 655.2) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 298.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    43.05s     Wait for dev.roominthecart.app.debug to idle
+    t =    43.06s     Find the Target Application 'dev.roominthecart.app.debug'
+    t =    43.11s     Check for interrupting elements affecting "Room in the Cart" Application
+    t =    43.16s     Synthesize event
+    t =    43.17s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    43.21s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    43.26s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    43.30s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    43.35s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    44.40s     Wait for dev.roominthecart.app.debug to idle
+    t =    45.93s Checking existence of `"Notes" Any`
+    t =    46.24s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    46.38s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    46.43s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 644.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 257.2) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    46.44s     Wait for dev.roominthecart.app.debug to idle
+    t =    46.44s     Find the Target Application 'dev.roominthecart.app.debug'
+    t =    46.49s     Check for interrupting elements affecting "Room in the Cart" Application
+    t =    46.55s     Synthesize event
+    t =    46.56s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    46.61s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    46.67s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    46.72s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    46.79s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    47.91s     Wait for dev.roominthecart.app.debug to idle
+    t =    48.29s Checking existence of `"Notes" Any`
+    t =    48.63s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    48.79s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    48.84s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 644.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 257.2) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    48.84s     Wait for dev.roominthecart.app.debug to idle
+    t =    48.85s     Find the Target Application 'dev.roominthecart.app.debug'
+    t =    48.91s     Check for interrupting elements affecting "Room in the Cart" Application
+    t =    48.98s     Synthesize event
+    t =    48.99s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    49.03s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    49.09s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    49.14s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    49.20s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    50.32s     Wait for dev.roominthecart.app.debug to idle
+    t =    50.78s Checking existence of `"Notes" Any`
+    t =    50.98s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    51.08s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    51.13s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 644.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 257.2) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    51.13s     Wait for dev.roominthecart.app.debug to idle
+    t =    51.13s     Find the Target Application 'dev.roominthecart.app.debug'
+    t =    51.18s     Check for interrupting elements affecting "Room in the Cart" Application
+    t =    51.24s     Synthesize event
+    t =    51.24s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    51.29s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    51.33s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    51.38s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    51.43s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    52.54s     Wait for dev.roominthecart.app.debug to idle
+    t =    53.00s Checking existence of `"Notes" Any`
+    t =    53.24s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    53.37s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    53.42s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 644.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 257.2) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    53.42s     Wait for dev.roominthecart.app.debug to idle
+    t =    53.43s     Find the Target Application 'dev.roominthecart.app.debug'
+    t =    53.48s     Check for interrupting elements affecting "Room in the Cart" Application
+    t =    53.55s     Synthesize event
+    t =    53.56s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    53.60s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    53.65s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    53.69s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    53.73s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    54.84s     Wait for dev.roominthecart.app.debug to idle
+    t =    55.29s Checking existence of `"Notes" Any`
+    t =    55.48s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    55.58s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    55.63s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 644.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 257.2) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    55.63s     Wait for dev.roominthecart.app.debug to idle
+    t =    55.63s     Find the Target Application 'dev.roominthecart.app.debug'
+    t =    55.68s     Check for interrupting elements affecting "Room in the Cart" Application
+    t =    55.73s     Synthesize event
+    t =    55.73s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    55.77s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    55.82s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    55.85s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    55.90s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    57.01s     Wait for dev.roominthecart.app.debug to idle
+    t =    57.46s Checking existence of `"Notes" Any`
+    t =    57.66s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    57.77s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    57.81s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 644.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 257.2) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    57.81s     Wait for dev.roominthecart.app.debug to idle
+    t =    57.81s     Find the Target Application 'dev.roominthecart.app.debug'
+    t =    57.86s     Check for interrupting elements affecting "Room in the Cart" Application
+    t =    57.92s     Synthesize event
+    t =    57.92s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    57.96s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    58.01s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    58.05s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    58.10s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    59.22s     Wait for dev.roominthecart.app.debug to idle
+    t =    59.78s Checking existence of `"Notes" Any`
+    t =    59.98s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    60.09s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    60.14s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 644.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 257.2) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    60.14s     Wait for dev.roominthecart.app.debug to idle
+    t =    60.14s     Find the Target Application 'dev.roominthecart.app.debug'
+    t =    60.20s     Check for interrupting elements affecting "Room in the Cart" Application
+    t =    60.26s     Synthesize event
+    t =    60.27s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    60.32s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    60.37s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    60.43s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    60.48s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    61.61s     Wait for dev.roominthecart.app.debug to idle
+    t =    62.04s Checking existence of `"Notes" Any`
+    t =    62.24s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    62.35s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    62.39s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 644.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 257.2) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    62.39s     Wait for dev.roominthecart.app.debug to idle
+    t =    62.40s     Find the Target Application 'dev.roominthecart.app.debug'
+    t =    62.44s     Check for interrupting elements affecting "Room in the Cart" Application
+    t =    62.49s     Synthesize event
+    t =    62.50s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    62.54s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    62.58s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    62.62s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    62.67s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    63.78s     Wait for dev.roominthecart.app.debug to idle
+    t =    64.25s Checking existence of `"Notes" Any`
+    t =    64.45s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    64.55s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    64.59s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 644.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 257.2) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    64.59s     Wait for dev.roominthecart.app.debug to idle
+    t =    64.60s     Find the Target Application 'dev.roominthecart.app.debug'
+    t =    64.64s     Check for interrupting elements affecting "Room in the Cart" Application
+    t =    64.69s     Synthesize event
+    t =    64.69s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    64.73s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    64.77s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    64.81s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    64.85s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    65.96s     Wait for dev.roominthecart.app.debug to idle
+    t =    66.53s Checking existence of `"Notes" Any`
+    t =    66.73s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    66.84s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    66.89s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 644.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 257.2) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    66.89s     Wait for dev.roominthecart.app.debug to idle
+    t =    66.89s     Find the Target Application 'dev.roominthecart.app.debug'
+    t =    66.93s     Check for interrupting elements affecting "Room in the Cart" Application
+    t =    66.99s     Synthesize event
+    t =    66.99s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    67.03s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    67.07s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    67.11s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    67.15s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    68.26s     Wait for dev.roominthecart.app.debug to idle
+    t =    68.71s Checking existence of `"Notes" Any`
+    t =    68.89s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    68.99s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    69.03s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 644.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 257.2) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    69.03s     Wait for dev.roominthecart.app.debug to idle
+    t =    69.03s     Find the Target Application 'dev.roominthecart.app.debug'
+    t =    69.08s     Check for interrupting elements affecting "Room in the Cart" Application
+    t =    69.12s     Synthesize event
+    t =    69.13s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    69.17s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    69.21s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    69.24s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    69.29s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    70.39s     Wait for dev.roominthecart.app.debug to idle
+    t =    70.84s Checking existence of `"Notes" Any`
+    t =    71.06s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    71.19s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    71.25s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 644.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 257.2) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    71.25s     Wait for dev.roominthecart.app.debug to idle
+    t =    71.26s     Find the Target Application 'dev.roominthecart.app.debug'
+    t =    71.31s     Check for interrupting elements affecting "Room in the Cart" Application
+    t =    71.37s     Synthesize event
+    t =    71.38s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    71.42s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    71.47s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    71.51s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    71.56s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    72.66s     Wait for dev.roominthecart.app.debug to idle
+    t =    73.28s Checking existence of `"Notes" Any`
+    t =    73.48s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    73.59s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    73.64s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 644.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 257.2) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    73.64s     Wait for dev.roominthecart.app.debug to idle
+    t =    73.66s     Find the Target Application 'dev.roominthecart.app.debug'
+    t =    73.71s     Check for interrupting elements affecting "Room in the Cart" Application
+    t =    73.78s     Synthesize event
+    t =    73.78s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    73.83s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    73.88s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    73.93s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    73.99s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    75.11s     Wait for dev.roominthecart.app.debug to idle
+    t =    75.55s Checking existence of `"Notes" Any`
+    t =    75.79s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    75.91s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    75.96s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 644.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 257.2) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    75.96s     Wait for dev.roominthecart.app.debug to idle
+    t =    75.96s     Find the Target Application 'dev.roominthecart.app.debug'
+    t =    76.01s     Check for interrupting elements affecting "Room in the Cart" Application
+    t =    76.08s     Synthesize event
+    t =    76.08s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    76.13s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    76.18s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    76.22s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    76.28s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    77.40s     Wait for dev.roominthecart.app.debug to idle
+    t =    78.02s Checking existence of `"Notes" Any`
+    t =    78.21s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    78.31s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    78.35s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 644.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 257.2) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    78.35s     Wait for dev.roominthecart.app.debug to idle
+    t =    78.36s     Find the Target Application 'dev.roominthecart.app.debug'
+    t =    78.40s     Check for interrupting elements affecting "Room in the Cart" Application
+    t =    78.45s     Synthesize event
+    t =    78.45s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    78.49s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    78.53s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    78.57s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    78.71s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    79.81s     Wait for dev.roominthecart.app.debug to idle
+    t =    80.24s Checking existence of `"Notes" Any`
+    t =    80.42s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    80.52s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    80.55s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 257.2) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 644.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    80.56s     Wait for dev.roominthecart.app.debug to idle
+    t =    80.56s     Find the Target Application 'dev.roominthecart.app.debug'
+    t =    80.60s     Check for interrupting elements affecting "Room in the Cart" Application
+    t =    80.65s     Synthesize event
+    t =    80.65s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    80.69s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    80.73s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    80.77s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    80.81s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    81.93s     Wait for dev.roominthecart.app.debug to idle
+    t =    82.01s Checking existence of `"Notes" Any`
+    t =    82.31s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    82.44s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    82.49s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 257.2) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 644.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    82.49s     Wait for dev.roominthecart.app.debug to idle
+    t =    82.49s     Find the Target Application 'dev.roominthecart.app.debug'
+    t =    82.54s     Check for interrupting elements affecting "Room in the Cart" Application
+    t =    82.61s     Synthesize event
+    t =    82.61s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    82.66s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    82.72s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    82.77s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    82.83s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    83.95s     Wait for dev.roominthecart.app.debug to idle
+    t =    84.75s Checking existence of `"Notes" Any`
+    t =    84.99s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    85.10s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    85.15s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 298.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 655.2) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    85.15s     Wait for dev.roominthecart.app.debug to idle
+    t =    85.16s     Find the Target Application 'dev.roominthecart.app.debug'
+    t =    85.22s     Check for interrupting elements affecting "Room in the Cart" Application
+    t =    85.28s     Synthesize event
+    t =    85.29s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    85.33s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    85.39s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    85.44s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    85.50s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    86.56s     Wait for dev.roominthecart.app.debug to idle
+    t =    87.05s Checking existence of `"Notes" Any`
+    t =    87.27s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    87.38s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    87.42s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 298.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 655.2) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    87.42s     Wait for dev.roominthecart.app.debug to idle
+    t =    87.43s     Find the Target Application 'dev.roominthecart.app.debug'
+    t =    87.47s     Check for interrupting elements affecting "Room in the Cart" Application
+    t =    87.53s     Synthesize event
+    t =    87.53s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    87.57s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    87.62s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    87.66s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    87.71s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    88.77s     Wait for dev.roominthecart.app.debug to idle
+    t =    89.33s Checking existence of `"Notes" Any`
+    t =    89.61s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    89.73s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    89.77s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 298.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 655.2) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    89.77s     Wait for dev.roominthecart.app.debug to idle
+    t =    89.78s     Find the Target Application 'dev.roominthecart.app.debug'
+    t =    89.82s     Check for interrupting elements affecting "Room in the Cart" Application
+    t =    89.88s     Synthesize event
+    t =    89.88s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    89.93s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    89.97s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    90.01s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    90.06s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    91.11s     Wait for dev.roominthecart.app.debug to idle
+    t =    91.88s Checking existence of `"Notes" Any`
+    t =    92.11s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    92.25s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    92.30s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 298.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 655.2) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    92.30s     Wait for dev.roominthecart.app.debug to idle
+    t =    92.31s     Find the Target Application 'dev.roominthecart.app.debug'
+    t =    92.36s     Check for interrupting elements affecting "Room in the Cart" Application
+    t =    92.43s     Synthesize event
+    t =    92.44s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    92.49s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    92.54s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    92.59s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    92.65s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    93.71s     Wait for dev.roominthecart.app.debug to idle
+    t =    94.35s Checking existence of `"Notes" Any`
+    t =    94.58s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    94.71s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    94.77s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 298.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 655.2) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    94.77s     Wait for dev.roominthecart.app.debug to idle
+    t =    94.77s     Find the Target Application 'dev.roominthecart.app.debug'
+    t =    94.83s     Check for interrupting elements affecting "Room in the Cart" Application
+    t =    94.90s     Synthesize event
+    t =    94.91s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    94.96s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    95.02s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    95.07s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    95.13s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    96.18s     Wait for dev.roominthecart.app.debug to idle
+    t =    96.80s Checking existence of `"Notes" Any`
+    t =    97.07s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    97.21s Find the Target Application 'dev.roominthecart.app.debug'
+    t =    97.26s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 298.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 655.2) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    97.26s     Wait for dev.roominthecart.app.debug to idle
+    t =    97.26s     Find the Target Application 'dev.roominthecart.app.debug'
+    t =    97.32s     Check for interrupting elements affecting "Room in the Cart" Application
+    t =    97.38s     Synthesize event
+    t =    97.38s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    97.43s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    97.48s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    97.52s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    97.57s         Find the Target Application 'dev.roominthecart.app.debug'
+    t =    98.62s     Wait for dev.roominthecart.app.debug to idle
+    t =    99.31s Find the "Notes" Any
+    t =   100.53s     Find the "Notes" Any (retry 1)
+    t =   101.73s     Find the "Notes" Any (retry 2)
+    t =   101.91s Requesting snapshot of accessibility hierarchy for app with pid 6787
+/Users/palatis/Room in the Cart/.build/S14BrokenRecipeLinkReview20261107/run1/source/ios/UITests/FreeJourneyUITests.swift:1450: error: -[RoomInTheCartUITests.FreeJourneyUITests testUnavailableRecipeSourceLeavesServingsAndPortionAllocationEditableAfterRestart] : XCTAssertTrue failed - Missing actionable UI element: Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  ↪︎Find: Descendants matching type Any
+    ↪︎Find: Elements matching predicate '"Notes" IN identifiers'
+      ↪︎Find: Elements matching predicate 'elementType IN {49, 52}'
+        ↪︎Find: First Match
+No matches found for first query match sequence: `Descendants matching type Any` -> `Elements matching predicate '"Notes" IN identifiers'` -> `Elements matching predicate 'elementType IN {49, 52}'`, given input Application, pid: 6787, label: 'Room in the Cart'
+
+    t =   102.04s Tear Down
+    t =   102.17s     Added attachment named 'Free-flow-failure'
+    t =   102.17s     Terminate dev.roominthecart.app.debug:6787
+2026-11-07 00:26:55.026 xcodebuild[6680:20317780] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-07 00:26:55.027 xcodebuild[6680:20317780] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testUnavailableRecipeSourceLeavesServingsAndPortionAllocationEditableAfterRestart]' failed (103.569 seconds).
+Test Suite 'FreeJourneyUITests' failed at 2026-11-07 00:26:56.401.
+	 Executed 1 test, with 1 failure (0 unexpected) in 103.569 (103.570) seconds
+Test Suite 'RoomInTheCartUITests.xctest' failed at 2026-11-07 00:26:56.401.
+	 Executed 1 test, with 1 failure (0 unexpected) in 103.569 (103.571) seconds
+Test Suite 'Selected tests' failed at 2026-11-07 00:26:56.402.
+	 Executed 1 test, with 1 failure (0 unexpected) in 103.569 (103.573) seconds
+2026-11-07 00:26:56.474 xcodebuild[6680:20317780] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-07 00:26:56.475 xcodebuild[6680:20317780] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-07 00:26:56.810 xcodebuild[6680:20317780] [MT] IDETestOperationsObserverDebug: 117.502 elapsed -- Testing started completed.
+2026-11-07 00:26:56.810 xcodebuild[6680:20317780] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-11-07 00:26:56.810 xcodebuild[6680:20317780] [MT] IDETestOperationsObserverDebug: 117.502 sec, +117.502 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/palatis/Room in the Cart/.build/S14BrokenRecipeLinkReview20261107/run1/S14.xcresult
+
+Failing tests:
+	FreeJourneyUITests.testUnavailableRecipeSourceLeavesServingsAndPortionAllocationEditableAfterRestart()
+
+** TEST EXECUTE FAILED **
+
+Testing started
