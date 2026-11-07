@@ -137,6 +137,16 @@ jobs:
           python3 scripts/generate_xcode_project.py --check
           python3 -m unittest discover -s scripts -p 'test_*.py'
           bash -n scripts/run_ios_test_shard.sh
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        id: foundation-python
+        with:
+          python-version: '3.13'
+          update-environment: false
+      - name: Verify the Foundation 2.1 product contracts and reference scenarios
+        working-directory: docs/product/foundation-gen2.1
+        env:
+          FOUNDATION_PYTHON: ${{ steps.foundation-python.outputs.python-path }}
+        run: '"$FOUNDATION_PYTHON" -B verify.py'
   swift-packages:
     concurrency:
       group: ritc-macos-slot-0
