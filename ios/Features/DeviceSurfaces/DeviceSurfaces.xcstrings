@@ -609,6 +609,38 @@
         }
       }
     },
+    "Share a smaller selection, or finish another selected-text review and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share a smaller selection, or finish another selected-text review and try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparte una selección más pequeña o termina de revisar otro texto seleccionado y vuelve a intentarlo."
+          }
+        }
+      }
+    },
+    "Share up to 500 lines and 64 KiB of plain text, including edits. Choose a smaller selection or shorten the edit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share up to 500 lines and 64 KiB of plain text, including edits. Choose a smaller selection or shorten the edit."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparte hasta 500 líneas y 64 KiB de texto sin formato, incluidos los cambios. Selecciona menos texto o acorta la versión editada."
+          }
+        }
+      }
+    },
     "That reminder time has passed. Review the current item.": {
       "localizations": {
         "en": {

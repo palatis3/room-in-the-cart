@@ -20,6 +20,7 @@ public struct SelectedTextEntry: Equatable, Sendable, Identifiable {
 /// Only selected text and bounded deduplication receipts belong in this database.
 /// It contains no shop IDs, persona IDs, grants, financial records or auth credentials.
 public actor SelectedTextInbox {
+    public enum ReviewLimit: Error { case tooManyItems }
     public static let maximumEntryBytes = 65_536
     public static let maximumLines = 500
     public static let maximumPending = 20
@@ -43,6 +44,9 @@ public actor SelectedTextInbox {
                 guard existing.digest == digest else { throw SurfaceError.changedReplay }
                 return existing
             }
+            // Prior receipts bind the original and edited text, even if this wording
+            // could not open a ledger review. Apply fresh limits only to new writes.
+            try Self.validateReviewItems(editedText ?? originalText)
             let counts = try database.rows("SELECT COUNT(*), COALESCE(SUM(CASE WHEN disposition='pending' THEN 1 ELSE 0 END),0), COALESCE(SUM(bytes),0) FROM inbox")[0]
             guard let all = Int(counts[0] ?? ""), let pending = Int(counts[1] ?? ""), let bytes = Int(counts[2] ?? "") else { throw SurfaceError.corrupt }
             let size = originalText.utf8.count + (editedText?.utf8.count ?? 0)
@@ -94,12 +98,32 @@ public actor SelectedTextInbox {
         guard validDate(a), validDate(b), b > a else { throw SurfaceError.corrupt }
         return InboxReceipt(operationID: id, digest: digest, createdAt: a, expiresAt: b, disposition: disposition)
     }
+    public static func fitsEnvelope(original: String, edited: String? = nil) -> Bool {
+        let remaining = maximumEntryBytes - original.utf8.count
+        guard remaining >= 0, (edited?.utf8.count ?? 0) <= remaining else { return false }
+        func fitsSourceLines(_ text: String) -> Bool {
+            text.lazy.filter { $0 == "\n" }.prefix(maximumLines).count < maximumLines
+        }
+        return fitsSourceLines(original) && (edited.map(fitsSourceLines) ?? true)
+    }
+
+    private static func validateReviewItems(_ text: String) throws {
+        // The ledger recognizes CRLF, bare CR and Unicode newline scalars as well as LF.
+        var items = 0
+        var atStart = true
+        for scalar in text.unicodeScalars {
+            if CharacterSet.newlines.contains(scalar) { atStart = true }
+            else if atStart && !CharacterSet.whitespaces.contains(scalar) {
+                items += 1
+                guard items <= maximumLines else { throw ReviewLimit.tooManyItems }
+                atStart = false
+            }
+        }
+    }
+
     private static func digest(original: String, edited: String?) throws -> String {
-        let size = original.utf8.count + (edited?.utf8.count ?? 0)
-        guard size <= maximumEntryBytes, !original.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+        guard fitsEnvelope(original: original, edited: edited), !original.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
               !original.contains("\0"), edited?.contains("\0") != true,
-              original.split(separator: "\n", omittingEmptySubsequences: false).count <= maximumLines,
-              (edited?.split(separator: "\n", omittingEmptySubsequences: false).count ?? 0) <= maximumLines,
               edited == nil || !edited!.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw SurfaceError.invalid }
         struct Body: Encodable { let original: String; let edited: String? }
         return SHA256.hash(data: try canonical(Body(original: original, edited: edited))).map { String(format: "%02x", $0) }.joined()

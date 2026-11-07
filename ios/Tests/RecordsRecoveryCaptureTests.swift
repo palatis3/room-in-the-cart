@@ -15,7 +15,7 @@ import UIKit
     }
     private func original() throws -> ArchiveRecord {
         var shop = ShoppingLedger(title: "Recovered Tuesday")
-        let staged = shop.stageImport(text: "2 rice", source: .typed)
+        let staged = try shop.stageImport(text: "2 rice", source: .typed)
         _ = try shop.commitImport(staged, decisions: [staged.lines[0].id: .addNew], at: Date(timeIntervalSince1970: 100))
         let payload = try RecordsNativeCodec.canonical(LedgerDocument(workspace: .init(shops: [shop], selectedShopID: shop.id)))
         return ArchiveRecord(id: shop.id.uuidString, origin: "legacy-local-ledger", revision: ArchiveCodec.digest(payload), kind: .ledger,

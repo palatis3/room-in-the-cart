@@ -7,7 +7,7 @@ final class LedgerIndexSafetyTests: XCTestCase {
     func testLargeImportKeepsExactReceiptAfterChecksAndRoundTrip() throws {
         var ledger = ShoppingLedger()
         let text = (0..<500).map { "1 Arroz item \($0)" }.joined(separator: "\n")
-        let preview = ledger.stageImport(text: text, source: .paste)
+        let preview = try ledger.stageImport(text: text, source: .paste)
         try ledger.commitImport(preview, at: at)
         let ids = ledger.lines.map(\.id)
         for id in ids.prefix(20) { try ledger.setChecked(lineID: id, checked: true, at: at) }
@@ -25,7 +25,7 @@ final class LedgerIndexSafetyTests: XCTestCase {
 
     func testSkippedDuplicateDoesNotBecomeAnExistingLineAndSearchKeepsSourceHistory() throws {
         var ledger = ShoppingLedger()
-        let preview = ledger.stageImport(text: "1 café\n2 CAFE", source: .paste)
+        let preview = try ledger.stageImport(text: "1 café\n2 CAFE", source: .paste)
         XCTAssertEqual(preview.lines[1].duplicateLineIDs, [preview.lines[0].proposedLineID])
         try ledger.commitImport(preview, decisions: [preview.lines[0].id: .skip], at: at)
         let id = try XCTUnwrap(ledger.lines.first?.id)
@@ -43,13 +43,13 @@ final class LedgerIndexSafetyTests: XCTestCase {
 
     func testGroupedQuantityValidationStillRejectsLateOverflowAtomically() throws {
         var ledger = ShoppingLedger()
-        let preview = ledger.stageImport(text: (0..<500).map { "1 item \($0)" }.joined(separator: "\n"))
+        let preview = try ledger.stageImport(text: (0..<500).map { "1 item \($0)" }.joined(separator: "\n"))
         try ledger.commitImport(preview, at: at)
         let line = ledger.lines[499]
         let source = try XCTUnwrap(ledger.contributions(forLineID: line.id).first)
         try ledger.updateContribution(contributionID: source.id,
             quantity: Quantity(amount: try Rational(Int64.max), unit: .count, originalLiteral: "maximum"), notes: "", at: at)
-        let overflow = ledger.stageImport(text: "1 new item\n1 item 499")
+        let overflow = try ledger.stageImport(text: "1 new item\n1 item 499")
         let before = ledger
         XCTAssertThrowsError(try ledger.commitImport(overflow, decisions: [overflow.lines[1].id: .addToLine(line.id)], at: at)) {
             XCTAssertEqual($0 as? DomainError, .overflow)
@@ -60,7 +60,7 @@ final class LedgerIndexSafetyTests: XCTestCase {
 
     func testReceiptMembershipAndOriginalOrderRemainValidatedAfterDecode() throws {
         var ledger = ShoppingLedger()
-        let preview = ledger.stageImport(text: (0..<100).map { "1 item \($0)" }.joined(separator: "\n"))
+        let preview = try ledger.stageImport(text: (0..<100).map { "1 item \($0)" }.joined(separator: "\n"))
         try ledger.commitImport(preview, at: at)
         var json = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(ledger)) as? [String: Any])
         var batches = try XCTUnwrap(json["importBatches"] as? [[String: Any]])

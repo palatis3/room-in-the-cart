@@ -124,6 +124,46 @@ import UIKit
         assertText("Amount per pack on the original label: 15 ounces (weight)")
     }
 
+    func testOversizedNativePasteKeepsTheOriginalAndAcceptsASmallerList() {
+        let original = Array(repeating: "2 wraps", count: 1_001).joined(separator: "\n")
+        UIPasteboard.general.string = original
+        launch(reset: true)
+        tap(element("openPickupList"))
+        tap(element("ledgerImport"))
+        let paste = app.buttons["Paste list"]
+        let editor = app.textViews["ledgerImportText"]
+        let review = element("ledgerReviewImport")
+        func pasteAndReview(_ text: String) {
+            revealContent(paste)
+            XCTAssertTrue(paste.isEnabled)
+            paste.coordinate(withNormalizedOffset: CGVector(dx: 0.14, dy: 0.5)).tap()
+            let pasted = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", text), object: editor)
+            XCTAssertEqual(XCTWaiter.wait(for: [pasted], timeout: 8), .completed)
+            tap(review)
+        }
+        pasteAndReview(original)
+        let feedback = app.staticTexts["ledgerImportSizeError"]
+        XCTAssertTrue(feedback.waitForExistence(timeout: 8), "An oversized source must stay in the editable list form")
+        XCTAssertTrue(feedback.label.contains("nonblank items"), feedback.label)
+        XCTAssertEqual(editor.value as? String, original)
+        XCTAssertFalse(element("ledgerCommitImport").exists)
+
+        UIPasteboard.general.string = "3 pears"
+        pasteAndReview("3 pears")
+        XCTAssertFalse(feedback.exists)
+        tap(element("ledgerCommitImport"))
+        let items = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "ledgerInspect-"))
+        XCTAssertTrue(items.firstMatch.waitForExistence(timeout: 8))
+        XCTAssertEqual(items.count, 1)
+        XCTAssertEqual(items.firstMatch.label, "Inspect pears")
+        let identity = items.firstMatch.identifier
+        restart()
+        shopRoot()
+        tap(element("openPickupList"))
+        XCTAssertTrue(element(identity).waitForExistence(timeout: 8))
+        XCTAssertEqual(items.count, 1)
+    }
+
     func testLargeTextKeepsLongNativePasteEditableAndReviewReachable() throws {
         let url = try XCTUnwrap(Bundle(for: Self.self).url(forResource: "ReleaseLedger500", withExtension: "txt"))
         let fixture = try String(contentsOf: url, encoding: .utf8)

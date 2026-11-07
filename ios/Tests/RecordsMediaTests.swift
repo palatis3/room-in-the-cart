@@ -16,7 +16,7 @@ import UIKit
     private func package() throws -> (ArchiveRecord, SourceMediaRecord) {
         let workspaceID = UUID()
         var shop = ShoppingLedger(title: "Tuesday")
-        let preview = shop.stageImport(text: "2 rice", source: .typed)
+        let preview = try shop.stageImport(text: "2 rice", source: .typed)
         _ = try shop.commitImport(preview, decisions: [preview.lines[0].id: .addNew], at: Date(timeIntervalSince1970: 100))
         let workspace = LedgerWorkspace(shops: [shop], selectedShopID: shop.id)
         let bytes = try RecordsNativeCodec.canonical(LedgerDocument(workspace: workspace))

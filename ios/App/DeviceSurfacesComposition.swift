@@ -254,6 +254,8 @@ import DeviceSurfaces
         busy = true; defer { busy = false }
         let start = nonce
         do { let result = try await bridge.open(entry, shopID: shopID); guard nonce == start else { return }; draft = result; reviewBaseline = result; await sourceDidChange() }
+        catch let limit as ImportTextLimit { message = ledgerImportLimitMessage(limit) }
+        catch SurfaceError.capacity { message = SurfaceCopy.text("Share a smaller selection, or finish another selected-text review and try again.") }
         catch { message = SurfaceCopy.text("Review could not finish. Reopen this entry to check its saved result.") }
     }
     func saveDraft(_ updated: SurfaceImportDraft) {
@@ -319,6 +321,8 @@ import DeviceSurfaces
             let refreshed = try await bridge.refreshReview(draft.id)
             guard nonce == start else { return }; self.draft = refreshed; reviewBaseline = refreshed
             await sourceDidChange()
+        } catch let limit as ImportTextLimit {
+            message = ledgerImportLimitMessage(limit)
         } catch { message = SurfaceCopy.text("This list changed. Reopen the saved list before reviewing again.") }
     }
     func discard(_ entry: SelectedTextEntry) async {

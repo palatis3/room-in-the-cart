@@ -9,6 +9,17 @@ func ledgerFormat(_ key: String, _ arguments: CVarArg...) -> String {
     String(format: ledgerText(key), locale: Locale.current, arguments: arguments)
 }
 
+func ledgerImportLimitMessage(_ limit: ImportTextLimit) -> String {
+    switch limit {
+    case .totalBytes:
+        ledgerFormat("Split this list into parts of up to %lld UTF-8 bytes each.", Int64(StagedListImport.maximumTextBytes))
+    case .nonblankLines(let maximum):
+        ledgerFormat("Split this list into parts of up to %lld nonblank items each.", Int64(maximum))
+    case .originalLineBytes(let item):
+        ledgerFormat("Shorten item %lld to %lld UTF-8 bytes or less.", Int64(item), Int64(StagedListImport.maximumOriginalLineBytes))
+    }
+}
+
 func ledgerQuantity(_ quantity: Quantity?) -> String {
     guard let quantity else { return ledgerText("Quantity unresolved") }
     return "\(amountText(quantity.amount)) \(quantity.unit.displayName)"

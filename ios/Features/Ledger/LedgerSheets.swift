@@ -10,6 +10,7 @@ struct LedgerImportView: View {
     let shopID: UUID
     @Environment(\.dismiss) private var dismiss
     @State private var original = ""
+    @State private var inputLimit: ImportTextLimit?
     @State private var preview: StagedListImport?
     @State private var choices: [UUID: ImportResolution] = [:]
     @State private var explicitSeparate: Set<UUID> = []
@@ -21,7 +22,7 @@ struct LedgerImportView: View {
     @State private var capturePresentation: LedgerCapturePresentation?
     @ScaledMetric(relativeTo: .body) private var importEditorHeight: CGFloat = 180
     @FocusState private var originalFocused: Bool
-    private enum Focus: Hashable { case preview, status }
+    private enum Focus: Hashable { case preview, status, inputLimit }
     @AccessibilityFocusState private var focus: Focus?
     private var shop: ShoppingLedger? { model.workspace.shops.first { $0.id == shopID } }
 
@@ -82,14 +83,27 @@ struct LedgerImportView: View {
                         Button(ledgerText("Review list")) {
                             guard let shop else { return }
                             originalFocused = false
-                            let staged = shop.stageImport(text: original, source: source, importID: importID)
-                            preview = staged
-                            choices = LedgerImportReview.initialChoices(staged)
-                            explicitSeparate = []
-                            matchesAreCurrent = true
-                            focus = .preview
-                        }.buttonStyle(PrimaryAction()).disabled(original.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                            do {
+                                let staged = try shop.stageImport(text: original, source: source, importID: importID)
+                                preview = staged
+                                choices = LedgerImportReview.initialChoices(staged)
+                                explicitSeparate = []
+                                matchesAreCurrent = true
+                                inputLimit = nil
+                                focus = .preview
+                            } catch let limit as ImportTextLimit {
+                                inputLimit = limit
+                                focus = .inputLimit
+                            } catch {
+                                model.error = ledgerText("Check the amounts, units and links. This change could not be applied; your saved pickup is unchanged.")
+                            }
+                        }.buttonStyle(PrimaryAction()).disabled(!original.unicodeScalars.contains { !CharacterSet.whitespacesAndNewlines.contains($0) })
                             .accessibilityIdentifier("ledgerReviewImport")
+                        if let inputLimit {
+                            Text(ledgerImportLimitMessage(inputLimit))
+                                .accessibilityFocused($focus, equals: .inputLimit)
+                                .accessibilityIdentifier("ledgerImportSizeError")
+                        }
                     }
                 }
                 if !showingImportStatus {
@@ -116,6 +130,7 @@ struct LedgerImportView: View {
                             authorize: { liveCaptureBinding == binding }, onReviewed: { receiveCapture($0, binding: binding) })
                     }
                 }
+                .onChange(of: original) { _, _ in inputLimit = nil }
                 .onChange(of: liveCaptureBinding) { _, current in
                     if let binding = capturePresentation?.binding ?? captureBinding, current != binding { invalidateCapture() }
                 }

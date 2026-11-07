@@ -95,7 +95,7 @@ import DeviceSurfaces
         let bridge = SurfaceImportBridge(inbox: inbox, journal: journal, port: port, clock: { self.now })
         let originalResult = try await bridge.open(entry, shopID: port.value.id)
         let original = try XCTUnwrap(originalResult)
-        var invalid = original; invalid.preview = port.value.stageImport(text: "12 wraps", source: .selectedText)
+        var invalid = original; invalid.preview = try port.value.stageImport(text: "12 wraps", source: .selectedText)
         XCTAssertThrowsError(try journal.save(invalid, replacing: original))
         XCTAssertEqual(try journal.read(entry.id), original)
     }
@@ -177,7 +177,7 @@ import DeviceSurfaces
     func shop(_ id: UUID) -> ShoppingLedger? { value.id == id ? value : nil }
     func stage(_ entry: SelectedTextEntry, shopID: UUID) throws -> StagedListImport {
         stageCalls += 1
-        return value.stageImport(text: entry.textForReview, source: .selectedText, importID: entry.id)
+        return try value.stageImport(text: entry.textForReview, source: .selectedText, importID: entry.id)
     }
     func reload() async throws {}
     func commit(_ draft: SurfaceImportDraft) async throws {

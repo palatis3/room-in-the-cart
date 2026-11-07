@@ -324,7 +324,42 @@ private extension StagedImportLine {
     }
 }
 
+public enum ImportTextLimit: Error, Equatable, Sendable {
+    case totalBytes
+    case nonblankLines(maximum: Int)
+    case originalLineBytes(item: Int)
+}
+
 public struct StagedListImport: Codable, Equatable, Sendable, Identifiable {
+    public static let maximumTextBytes = 262_144
+    public static let maximumLines = 1_000
+    public static let maximumOriginalLineBytes = 8_192
+
+    /// Count nonblank ledger rows before assigning identities or expanding duplicate candidates.
+    /// The original slices keep whitespace and spelling, including combining marks.
+    fileprivate static func sourceLines(_ text: String, maximum: Int) throws -> [Substring] {
+        guard text.utf8.count <= maximumTextBytes else { throw ImportTextLimit.totalBytes }
+        var rows: [Substring] = []
+        let scalars = text.unicodeScalars
+        var start = scalars.startIndex
+        func finish(at end: String.Index) throws {
+            let slice = scalars[start..<end]
+            guard !slice.allSatisfy(CharacterSet.whitespaces.contains) else { return }
+            guard rows.count < maximum else { throw ImportTextLimit.nonblankLines(maximum: maximum) }
+            let row = Substring(slice)
+            guard row.utf8.count <= maximumOriginalLineBytes else {
+                throw ImportTextLimit.originalLineBytes(item: rows.count + 1)
+            }
+            rows.append(row)
+        }
+        for index in scalars.indices where CharacterSet.newlines.contains(scalars[index]) {
+            try finish(at: index)
+            start = scalars.index(after: index)
+        }
+        try finish(at: scalars.endIndex)
+        return rows
+    }
+
     public let id: UUID
     public let shopID: UUID
     public let baseRevision: Int
@@ -557,10 +592,14 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     /// External capture/inbox callers persist the returned preview before Apply.
     /// Reuse its full bytes for retries; re-staging a new preview with this ID is
     /// deliberately not equivalent to replaying an already committed preview.
-    public func stageImport(text: String, source: ImportSource = .typed, importID: UUID = UUID()) -> StagedListImport {
+    public func stageImport(text: String, source: ImportSource = .typed, importID: UUID = UUID(),
+                            maximumLines: Int = StagedListImport.maximumLines) throws -> StagedListImport {
+        guard maximumLines > 0, maximumLines <= StagedListImport.maximumLines else { throw LedgerError.invalid("importSize") }
+        let originals = try StagedListImport.sourceLines(text, maximum: maximumLines)
         var staged: [StagedImportLine] = []
         var candidatesByName = importCandidatesByName()
-        for original in text.components(separatedBy: .newlines) where !original.trimmingCharacters(in: .whitespaces).isEmpty {
+        for slice in originals {
+            let original = String(slice)
             let parsed = Self.parseLine(original)
             let name = normalizedProduct(parsed.name), proposedLineID = UUID()
             staged.append(StagedImportLine(id: UUID(), proposedLineID: proposedLineID, originalText: original,
@@ -1303,11 +1342,11 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     }
 
     private func validatePreview(_ preview: StagedListImport) throws {
-        try ledgerText(preview.originalText, maximum: 262_144)
-        guard preview.baseRevision >= 0, preview.lines.count <= 1_000 else { throw LedgerError.invalid("importSize") }
+        try ledgerText(preview.originalText, maximum: StagedListImport.maximumTextBytes)
+        guard preview.baseRevision >= 0, preview.lines.count <= StagedListImport.maximumLines else { throw LedgerError.invalid("importSize") }
         try uniqueIDs(preview.lines.map(\.id)); try uniqueIDs(preview.lines.map(\.proposedLineID))
         for line in preview.lines {
-            try ledgerText(line.originalText); try ledgerText(line.name, nonempty: true, maximum: 512)
+            try ledgerText(line.originalText, maximum: StagedListImport.maximumOriginalLineBytes); try ledgerText(line.name, nonempty: true, maximum: 512)
             try line.quantity?.validate()
             try line.originalPack?.validate()
             try validateExclusions(line.exclusions)

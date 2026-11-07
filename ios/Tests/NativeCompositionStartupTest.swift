@@ -1,6 +1,7 @@
 import XCTest
 import Combine
 import DeviceSurfaces
+import CoreDomain
 @testable import RoomInTheCart
 
 #if DEBUG
@@ -205,6 +206,33 @@ import DeviceSurfaces
         XCTAssertEqual(f.ledger.shop?.lines.count, 2)
         XCTAssertEqual(f.ledger.shop?.importBatches.count, 2)
         XCTAssertEqual(f.ledger.revision, savedRevision + 1)
+    }
+
+    func testSelectedTextShowsUneditableSourceLimitAndAcceptsAShorterSelection() async throws {
+        let f = try await coldURLFixture()
+        let now = Date(timeIntervalSince1970: 1_793_664_000)
+        let shop = try XCTUnwrap(f.ledger.shop)
+        let inbox = try SelectedTextInbox(url: f.base.appendingPathComponent("surfaces/TestInbox/selected-text.sqlite"))
+        let old = UUID()
+        let tooLong = String(repeating: " ", count: StagedListImport.maximumOriginalLineBytes) + "rice"
+        _ = try await inbox.stage(operationID: old, originalText: tooLong, now: now)
+        let first = try await inbox.pending(now: now)
+        let entry = try XCTUnwrap(first.first)
+        await f.composition.review(entry, shopID: shop.id)
+        XCTAssertNil(f.composition.draft)
+        XCTAssertEqual(f.composition.message, ledgerImportLimitMessage(.originalLineBytes(item: 1)))
+        XCTAssertEqual(f.ledger.shop, shop)
+
+        let corrected = UUID()
+        _ = try await inbox.stage(operationID: corrected, originalText: "3 pears", now: now)
+        let pending = try await inbox.pending(now: now)
+        XCTAssertEqual(pending.first { $0.id == old }?.originalText, tooLong)
+        let fresh = try XCTUnwrap(pending.first { $0.id == corrected })
+        await f.composition.review(fresh, shopID: shop.id)
+        await f.composition.addReviewedList()
+        XCTAssertEqual(f.ledger.shop?.importBatches.last?.originalText, "3 pears")
+        let remaining = try await inbox.pending(now: now)
+        XCTAssertEqual(remaining.map(\.id), [old])
     }
 
     func testSelectedTextRevalidatesDependentChoicesAcrossSavedEdits() async throws {

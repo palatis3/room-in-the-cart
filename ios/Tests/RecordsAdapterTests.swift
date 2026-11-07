@@ -42,7 +42,7 @@ final class RecordsAdapterTests: XCTestCase {
     @MainActor func testLedgerCanonicalRoundTripPreservesOriginalImportAndUUIDDecisionMap() throws {
         var shop = ShoppingLedger(title: "Tuesday")
         let original = "2 rice\nsalt to taste"
-        let preview = shop.stageImport(text: original, source: .paste)
+        let preview = try shop.stageImport(text: original, source: .paste)
         let decisions = Dictionary(uniqueKeysWithValues: preview.lines.map { ($0.id, ImportResolution.addNew) })
         _ = try shop.commitImport(preview, decisions: decisions, at: Date(timeIntervalSince1970: 100))
         let workspace = LedgerWorkspace(shops: [shop], selectedShopID: shop.id)

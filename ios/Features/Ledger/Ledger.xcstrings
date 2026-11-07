@@ -3075,6 +3075,22 @@
         }
       }
     },
+    "Shorten item %lld to %lld UTF-8 bytes or less.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shorten item %lld to %lld UTF-8 bytes or less."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acorta el artículo %lld a un máximo de %lld bytes UTF-8."
+          }
+        }
+      }
+    },
     "Show dinner": {
       "localizations": {
         "en": {
@@ -3183,6 +3199,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Límite de gasto (USD, opcional)"
+          }
+        }
+      }
+    },
+    "Split this list into parts of up to %lld UTF-8 bytes each.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Split this list into parts of up to %lld UTF-8 bytes each."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Divide esta lista en partes de hasta %lld bytes UTF-8 cada una."
+          }
+        }
+      }
+    },
+    "Split this list into parts of up to %lld nonblank items each.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Split this list into parts of up to %lld nonblank items each."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Divide esta lista en partes de hasta %lld artículos cada una. Las líneas en blanco no cuentan."
           }
         }
       }

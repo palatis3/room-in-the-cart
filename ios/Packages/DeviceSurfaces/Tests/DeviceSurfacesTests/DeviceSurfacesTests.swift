@@ -1,4 +1,5 @@
 import XCTest
+import CryptoKit
 @testable import DeviceSurfaces
 
 final class DeviceSurfacesTests: XCTestCase {
@@ -66,6 +67,44 @@ final class DeviceSurfacesTests: XCTestCase {
         do { _ = try await inbox.stage(operationID: UUID(), originalText: "extra", now: now); XCTFail() } catch { XCTAssertEqual(error as? SurfaceError, .capacity) }
         let rows = try await inbox.pending(now: now); XCTAssertEqual(rows.count, 20)
     }
+    func testSelectedTextRejectsNewOversizedReviewButResolvesAnExactLegacyReceipt() async throws {
+        let url = try file()
+        let inbox = try SelectedTextInbox(url: url)
+        let source = Array(repeating: "beans", count: 500).joined(separator: "\r\n") + "\u{2028}  \u{85}rice"
+        let id = UUID()
+        do {
+            _ = try await inbox.stage(operationID: id, originalText: source, now: now)
+            XCTFail("The ledger would receive 501 nonblank rows")
+        } catch SelectedTextInbox.ReviewLimit.tooManyItems {}
+        let absent = try await inbox.receipt(id)
+        XCTAssertNil(absent)
+        let corrected = Array(repeating: "rice", count: 500).joined(separator: "\r")
+        _ = try await inbox.stage(operationID: id, originalText: source, editedText: corrected, now: now)
+        let pending = try await inbox.pending(now: now)
+        XCTAssertEqual(pending.first?.originalText, source)
+        XCTAssertEqual(pending.first?.textForReview, corrected)
+
+        // Schema-v1 receipts used this canonical payload and accepted 501 CRLF-separated items.
+        struct LegacyBody: Encodable { let original: String }
+        let digest = SHA256.hash(data: try canonical(LegacyBody(original: source))).map { String(format: "%02x", $0) }.joined()
+        let legacy = UUID()
+        let database = try SurfaceDatabase(url: url, kind: "selected-text-inbox", schema: "")
+        try database.execute("INSERT INTO inbox (id,digest,created,expires,disposition,original,edited,bytes) VALUES(?,?,?,?,?,?,?,?)", [.text(legacy.uuidString), .text(digest),
+            .double(now.timeIntervalSince1970), .double(now.addingTimeInterval(SelectedTextInbox.lifetime).timeIntervalSince1970),
+            .text("pending"), .text(source), .null, .integer(Int64(source.utf8.count))])
+        let retry = try await inbox.stage(operationID: legacy, originalText: source, now: now)
+        XCTAssertEqual(retry.disposition, .pending)
+        let older = try await inbox.pending(now: now)
+        XCTAssertEqual(older.first { $0.id == legacy }?.textForReview, source)
+        do {
+            _ = try await inbox.stage(operationID: legacy, originalText: "changed", now: now)
+            XCTFail("Changed text cannot reuse the legacy receipt")
+        } catch SurfaceError.changedReplay {}
+        _ = try await inbox.discard(operationID: legacy, digest: retry.digest, now: now)
+        let terminal = try await inbox.stage(operationID: legacy, originalText: source, now: now)
+        XCTAssertEqual(terminal.disposition, .discarded)
+    }
+
     func testConcurrentConnectionsReturnOneDurableReceipt() async throws {
         let url = try file(), a = try SelectedTextInbox(url: url), b = try SelectedTextInbox(url: url), id = UUID(), date = now
         async let first = a.stage(operationID: id, originalText: "12 wraps", now: date)
