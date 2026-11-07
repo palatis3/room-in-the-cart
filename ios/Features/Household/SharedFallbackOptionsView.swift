@@ -57,7 +57,7 @@ struct SharedFallbackOptionsView: View {
                         Toggle(draft.candidate.recipe.title, isOn: $draft.selected).accessibilityIdentifier("fallback.select." + draft.id.uuidString)
                         if draft.selected {
                             NavigationLink(fallbackText("Review ingredients, food and time")) {
-                                FallbackIngredientReview(draft: $draft, page: page, includeOffers: trip.include)
+                                SharedFallbackIngredientView(draft: $draft, page: page, includeOffers: trip.include)
                             }
                         }
                     }

@@ -102,7 +102,7 @@ struct SharedFallbackLibraryView: View {
                     DisclosureGroup(fallbackText("Review a scheduled meal or approved idea"), isExpanded: $displayingSources) {
                         ForEach(recovery.meals) { meal in
                             Button { Task { await loadSource(.meal(occurrenceId: meal.id, mealRevision: meal.sourceMealRevision,
-                                revisionId: recovery.mealSources.first(where: { $0.occurrenceId == meal.id })?.sealedRevisionId == meal.revisionId ? nil : meal.revisionId), library) } } label: {
+                                revisionId: meal.revisionId), library) } } label: {
                                 Text(verbatim: meal.title + " · " + (sharedMealDayText(meal.day, locale: .current) ?? meal.day))
                             }
                         }

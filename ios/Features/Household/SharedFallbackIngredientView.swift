@@ -2,7 +2,7 @@ import CoreDomain
 import HouseholdClient
 import SwiftUI
 
-struct FallbackIngredientReview: View {
+struct SharedFallbackIngredientView: View {
     @Binding var draft: CandidateReviewDraft
     let page: SharedRecoveryPage
     let includeOffers: Bool
