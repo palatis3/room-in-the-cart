@@ -240,6 +240,9 @@ struct ShopView: View {
                             .font(.headline).fixedSize(horizontal: false, vertical: true)
                             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
                     }.foregroundStyle(Theme.action).accessibilityIdentifier("openPickupList")
+                    if ledger.shop == nil && (ledger.saving || ledger.hasPendingSave || ledger.error != nil) {
+                        LedgerSaveStatus(model: ledger)
+                    }
                     if let shop = ledger.shop {
                         if let closed = pickup.journeys.first(where: { $0.id == shop.id })?.closedAt {
                             Text(pTr("Closed") + " · " + closed.formatted(date: .abbreviated, time: .shortened))
