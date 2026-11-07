@@ -1,4 +1,4 @@
-import { pantryBodies, deliveryReservationBody, deliveryMatchBody, deliverySourceBody, deliveryArrivalBody, deliveryUsableBody } from './recovery-contracts.js';
+import { recoveryPreviewSchema, pantryBodies, deliveryReservationBody, deliveryMatchBody, deliverySourceBody, deliveryArrivalBody, deliveryUsableBody } from './recovery-contracts.js';
 import { z } from 'zod';
 import { sharedMealSchema } from './shared-meal-planning.js';
 import {reviewedPackEvidenceSchema,matchesReviewedPack} from './request-pack-evidence.js';
@@ -27,7 +27,7 @@ export const decisionSchema = z.discriminatedUnion('choice', [
 export const previewSchema = z.object({ requestId: uuid, base: z.object({ shopRevision: z.number().int().positive(), authorityEpoch: z.number().int().positive(), requestRevision: z.number().int().positive() }).strict(), decision: decisionSchema }).strict();
 export const envelopeSchema = z.object({
   v: z.literal(1), replayWindow: uuid, clientKey: uuid, shopId: uuid,
-  kind: z.enum(['pantry.create','pantry.storeDelivery','pantry.observe','pantry.select','pantry.match','pantry.reserve','cookCopy.save','cookCopy.markSent','delivery.reserve','delivery.match','delivery.register','delivery.arrival','delivery.usable','shop.create','shop.patch','shop.freeze','shop.reopen','shop.reportPlaced','shop.reconcileReport','shop.transferAuthority','request.send','request.edit','request.withdraw','request.clarify','request.apply']),
+  kind: z.enum(['mealRecovery.apply','pantry.create','pantry.storeDelivery','pantry.observe','pantry.select','pantry.match','pantry.reserve','cookCopy.save','cookCopy.markSent','delivery.reserve','delivery.match','delivery.register','delivery.arrival','delivery.usable','shop.create','shop.patch','shop.freeze','shop.reopen','shop.reportPlaced','shop.reconcileReport','shop.transferAuthority','request.send','request.edit','request.withdraw','request.clarify','request.apply']),
   base: z.object({ shopRevision: z.number().int().min(0), authorityEpoch: z.number().int().min(0), requestRevision: z.number().int().positive().optional() }).strict(),
   body: z.record(z.string(),z.unknown()),
 }).strict();
@@ -43,9 +43,14 @@ export const cookCopyBaselineBody = z.object({occurrenceId:copyId,recipient}).st
 export const cookCopySaveBody = z.object({
   placedRevision:copyRevision, pantryRevision:z.number().int().min(0).max(2_147_483_647).optional(), supplyRevision:z.number().int().min(0).max(2_147_483_647),
   occurrenceId:copyId, mealRevision:copyRevision, language:z.enum(['en','es']), text:unicodeText(16000),
-}).strict();
+  recoveryRevision:copyRevision.optional(),revisionId:copyId.optional(),
+}).strict().refine(row=>(row.recoveryRevision===undefined)===(row.revisionId===undefined) && (row.revisionId===undefined || row.pantryRevision!==undefined));
 export const cookCopySendBody = z.object({copyId,recipient,previousSendId:copyId.nullable()}).strict();
+export const recoveryApplyBody = recoveryPreviewSchema.extend({
+  previewId:copyId, previewDigest:z.string().regex(/^[0-9a-f]{64}$/),
+});
 export const bodySchemas = {
+  'mealRecovery.apply':recoveryApplyBody,
   ...pantryBodies,
   'cookCopy.save':cookCopySaveBody, 'cookCopy.markSent':cookCopySendBody,
   'delivery.reserve': deliveryReservationBody, 'delivery.match': deliveryMatchBody, 'delivery.register': deliverySourceBody, 'delivery.arrival': deliveryArrivalBody, 'delivery.usable': deliveryUsableBody,

@@ -1,7 +1,8 @@
+import {recordCurrentDelivery,recordCurrentPantry} from './shared-recovery-basis.js';
+import {loadRecoveryPublication,recordSharedRecovery} from './shared-recovery-publication.js';
 import { sharedMealSchema, preserveProtectedMeal } from './shared-meal-planning.js';
 import { cookCopyStillExists, recordCookCopy } from './cook-copy.js';
-import { isPantryCommand, recordPantry, pantryOperationExists, guardDeliveryEdit } from './pantry-lots.js';
-import { recordDelivery } from './delivery-evidence.js';
+import { isPantryCommand, pantryOperationExists } from './pantry-lots.js';
 import { consumeSharedMealChange } from './shared-meal-changes.js';
 import { randomBytes, randomUUID } from 'node:crypto';
 import type { OwnRequest, ShopperReceipt, RequestPreview, QuoteBasis, BasketLine } from '../../shared/contracts/service-v1.js';
@@ -13,7 +14,7 @@ import { checkout } from './checkout.js';
 export interface AuthContext { identity:VerifiedIdentity; deviceToken?:string; trustedDeviceId?:string;viewGrantId?:string;selectedShopId?:string;historicalReportShopId?:string }
 export interface Member { member_id:string; kind:'adult'|'child'; organizer:boolean; can_contribute:boolean; alias:string; state:string }
 export interface Context { db:Transaction; householdId:string; member:Member; deviceId:string; now:Date;viewGrantId?:string;selectedShopId?:string }
-export interface Shop { household_id:string;shop_id:string;shopper_id:string;authority_epoch:number;revision:number;phase:string;quote:QuoteBasis;frozen_revision:number|null;placed_revision:number|null;supply_revision:number;store_basis_revision?:number|null;store_review_required?:boolean }
+export interface Shop { household_id:string;shop_id:string;shopper_id:string;authority_epoch:number;revision:number;phase:string;quote:QuoteBasis;frozen_revision:number|null;placed_revision:number|null;supply_revision:number;recovery_revision?:number;store_basis_revision?:number|null;store_review_required?:boolean }
 interface RequestRow { request_id:string;author_id:string;shop_id:string;original_item:string;own_quantity:string|null;revision:number;authored_at:Date;received_at:Date;route:'current'|'next';status:OwnRequest['status'];clarification:string|null;followup_to:string|null }
 const editable=(r:RequestRow)=>r.status==='pending'||r.status==='clarified';
 export function ownRequest(r:RequestRow):OwnRequest {
@@ -151,7 +152,7 @@ export class HouseholdRepository {
     return{household:{id:ctx.householdId,label:house.label as string},memberId:ctx.member.member_id,
       canSelectShop:!helperRole&&!ctx.viewGrantId&&ctx.member.kind==='adult'&&(ctx.member.can_contribute||ctx.member.organizer||isShopper||hasBudgetAccess),
       selectionRequired:!helperRole&&!ctx.viewGrantId&&!ctx.selectedShopId&&candidates.length>1,role:isShopper?'shopper':ctx.member.organizer?'organizer':helperRole?(helper.mode==='edit'?'editor':'helper'):'contributor',shopId:helperRole?helper.shop_id:shop?.shop_id??null,...(helperRole?{grantId:helper.grant_id}:{}),enrolled:true,queueConsent:false,
-      capabilities:[...(!helperRole&&!ctx.viewGrantId&&(isShopper||shop?.budget_access)?['store_quotes']:[]),...(isShopper && shop?.placed_revision!=null?['delivery_evidence','cook_copies','pantry_lots']:[]),...(planning?['meal_proposals']:[]),...(ctx.member.can_contribute?['own_requests']:[]),...(isShopper?['shopper_inbox','request_preview','shopper_commands']:[]),...(ctx.member.organizer?['household_admin']:[]),...(helperRole?['helper_view',...(helper.mode==='edit'?['helper_propose']:[])]:[])]};
+      capabilities:[...(!helperRole&&!ctx.viewGrantId&&(isShopper||shop?.budget_access)?['store_quotes']:[]),...(isShopper && shop?.placed_revision!=null?['delivery_evidence','cook_copies','pantry_lots','meal_recovery']:[]),...(planning?['meal_proposals']:[]),...(ctx.member.can_contribute?['own_requests']:[]),...(isShopper?['shopper_inbox','request_preview','shopper_commands']:[]),...(ctx.member.organizer?['household_admin']:[]),...(helperRole?['helper_view',...(helper.mode==='edit'?['helper_propose']:[])]:[])]};
   }
   async shops(ctx:Context,scope:'active'|'owned',after:string|null){
     if(ctx.viewGrantId||ctx.member.kind!=='adult')throw unavailable();
@@ -273,6 +274,11 @@ export class HouseholdRepository {
       // Reauthorize the original scope before returning anything about a prior result.
       if(prior.response_scope==='shopper'){
         const shop=await this.shop(ctx,prior.shop_id);this.requireShopper(ctx,shop);
+        if(prior.kind==='mealRecovery.apply') {
+          if(prior.response?.authorityEpoch!==shop.authority_epoch || !(await ctx.db.query(
+            'SELECT 1 FROM ritc.meal_recovery_revision WHERE household_id=$1 AND shop_id=$2 AND operation_id=$3 AND current_meal IS NOT NULL',
+            [ctx.householdId,shop.shop_id,prior.operation_id])).rowCount) throw refresh();
+        }
         if(prior.kind==='cookCopy.save' || prior.kind==='cookCopy.markSent') {
           if(prior.response?.authorityEpoch!==shop.authority_epoch ||
              !await cookCopyStillExists(ctx,shop,prior.kind,prior.operation_id)) throw refresh();
@@ -363,8 +369,12 @@ export class HouseholdRepository {
     return{operationId,kind:c.kind,request:ownRequest(await this.request(ctx,id,shop.shop_id,true))};
   }
   private async shopperCommand(ctx:Context,shop:Shop,c:Envelope,operationId:string) {
+    if(c.kind==='mealRecovery.apply') {
+      const applied=await recordSharedRecovery(ctx,shop,c.body,operationId);
+      return {...await this.receipt(ctx,c,operationId,'recorded'),...applied};
+    }
     if(isPantryCommand(c.kind)) {
-      const lot=await recordPantry(ctx,shop,c.kind,c.body,operationId);
+      const lot=await recordCurrentPantry(ctx,shop,c.kind,c.body,operationId,loadRecoveryPublication);
       return {...await this.receipt(ctx,c,operationId,'recorded'),...lot};
     }
     if(c.kind==='cookCopy.save' || c.kind==='cookCopy.markSent') {
@@ -372,9 +382,7 @@ export class HouseholdRepository {
       return {...await this.receipt(ctx,c,operationId,'recorded'),copyId};
     }
     if(c.kind==='delivery.reserve'||c.kind==='delivery.match'||c.kind==='delivery.register'||c.kind==='delivery.arrival'||c.kind==='delivery.usable'){
-      const validate=await guardDeliveryEdit(ctx,shop,c.kind,c.body);
-      const delivery=await recordDelivery(ctx,shop,c.kind,c.body,operationId);
-      await validate?.();
+      const delivery=await recordCurrentDelivery(ctx,shop,c.kind,c.body,operationId,loadRecoveryPublication);
       return {...await this.receipt(ctx,c,operationId,'recorded'),...delivery};
     }
     if(c.kind==='request.clarify') {

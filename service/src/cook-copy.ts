@@ -13,7 +13,11 @@ function placedRevision(shop:Shop):number {
 
 const copyFields=`c.copy_id AS "copyId",c.shop_id AS "shopId",c.shop_revision AS "shopRevision",
   c.placed_revision AS "placedRevision",c.authority_epoch AS "authorityEpoch",c.supply_revision AS "supplyRevision",
-  c.pantry_revision AS "pantryRevision",c.occurrence_id AS "occurrenceId",c.meal_revision AS "mealRevision",c.version,c.language,c.reviewed_text AS text,c.created_at AS "createdAt"`;
+  c.pantry_revision AS "pantryRevision",c.recovery_revision AS "recoveryRevision",c.recovery_meal_id AS "revisionId",c.occurrence_id AS "occurrenceId",c.meal_revision AS "mealRevision",c.version,c.language,c.reviewed_text AS text,c.created_at AS "createdAt"`;
+
+function omitAbsentSeals(row:Record<string,unknown>) {
+  for(const field of ['pantryRevision','recoveryRevision','revisionId']) if(row[field]===null) delete row[field];
+}
 
 export async function cookCopyHistory(ctx:Context,shop:Shop,occurrenceId:string,cursor:string|null) {
   placedRevision(shop);
@@ -29,7 +33,7 @@ export async function cookCopyHistory(ctx:Context,shop:Shop,occurrenceId:string,
     WHERE c.household_id=$1 AND c.shop_id=$2 AND c.occurrence_id=$3 AND ($4::int IS NULL OR c.version<$4)
     ORDER BY c.version DESC LIMIT 21`,[...scope,before]);
   const copies=result.rows.slice(0,20);
-  for(const copy of copies) if(copy.pantryRevision===null) delete copy.pantryRevision;
+  for(const copy of copies) omitAbsentSeals(copy);
   return {copies,nextCursor:result.rows.length>20?copies.at(-1)!.copyId:null};
 }
 
@@ -43,7 +47,7 @@ export async function cookCopyBaseline(ctx:Context,shop:Shop,input:unknown) {
     [ctx.householdId,shop.shop_id,occurrenceId,recipient])).rows[0];
   if(!row) return {baseline:null};
   const {sendId,sentAt,recipient:name,...copy}=row;
-  if(copy.pantryRevision===null) delete copy.pantryRevision;
+  omitAbsentSeals(copy);
   return {baseline:{copy,send:{sendId,sentAt,recipient:name,copyId:copy.copyId}}};
 }
 
@@ -70,14 +74,19 @@ export async function recordCookCopy(ctx:Context,shop:Shop,kind:Kind,input:unkno
       AND EXISTS(SELECT 1 FROM jsonb_array_elements(ss.snapshot->'mealRefs') ref
         WHERE (ref->>'occurrenceId')::uuid=m.occurrence_id AND (ref->>'revision')::int=m.revision)`,[...scope,placed,row.occurrenceId,row.mealRevision]);
     if(!sealed.rowCount) throw unavailable();
+    const recovery=(await ctx.db.query(`SELECT new_revision_id,current_meal IS NOT NULL AS available FROM ritc.meal_recovery_revision
+      WHERE household_id=$1 AND shop_id=$2 AND occurrence_id=$3 ORDER BY recovery_revision DESC LIMIT 1`,
+      [...scope,row.occurrenceId])).rows[0];
+    if(recovery ? !recovery.available || row.revisionId!==recovery.new_revision_id || row.recoveryRevision!==shop.recovery_revision
+                : row.revisionId!==undefined) throw new ServiceError(409,'stale_meal','Review the current dinner before saving its cook instructions.');
     const series=await ctx.db.query(`INSERT INTO ritc.cook_copy_series AS series(household_id,shop_id,occurrence_id,last_version)
       VALUES($1,$2,$3,1) ON CONFLICT(household_id,shop_id,occurrence_id)
       DO UPDATE SET last_version=series.last_version+1 RETURNING last_version`,[...scope,row.occurrenceId]);
     await ctx.db.query(`INSERT INTO ritc.dated_cook_copy(household_id,shop_id,copy_id,occurrence_id,meal_revision,version,
-      shop_revision,placed_revision,authority_epoch,supply_revision,language,reviewed_text,actor_id,created_at,pantry_revision)
-      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
+      shop_revision,placed_revision,authority_epoch,supply_revision,language,reviewed_text,actor_id,created_at,pantry_revision,recovery_revision,recovery_meal_id)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
       [...scope,operationId,row.occurrenceId,row.mealRevision,series.rows[0]!.last_version,shop.revision,placed,shop.authority_epoch,
-        row.supplyRevision,row.language,row.text,ctx.member.member_id,ctx.now,row.pantryRevision??null]);
+        row.supplyRevision,row.language,row.text,ctx.member.member_id,ctx.now,row.pantryRevision??null,row.recoveryRevision??null,row.revisionId??null]);
     if(row.pantryRevision!==undefined) await trackCookStockProvenance(ctx,shop,operationId);
     return operationId;
   }

@@ -109,6 +109,7 @@ export async function readDelivery(ctx: Context, shop: Shop, cursor: string|null
   const asOf = ctx.now.toISOString();
   const sources = result.rows.slice(0,50).map(row=>sourceEvidence(row,asOf));
   return {shopId:shop.shop_id, placedRevision:shop.placed_revision, shopRevision:shop.revision, authorityEpoch:shop.authority_epoch,
+    recoveryRevision:shop.recovery_revision??0,
     supplyRevision:shop.supply_revision, asOf, coverageAvailable:true, reservationsAvailable:true, lines, meals, sources, nextCursor:result.rows.length>50?sources.at(-1)!.sourceId:null};
 }
 
