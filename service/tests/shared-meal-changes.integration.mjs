@@ -129,7 +129,10 @@ if(process.env.RITC_TEST_NATIVE_WIRE==='1') test('actual Swift planner proposal 
  await exerciseSharedMealClient({service:server,owner:f.planner,householdId:f.h,shopId:f.shopId,shopper:false});
  assert.equal(ok(await call(f.owner,f.path)).shopRevision,2);
  await exerciseSharedMealClient({service:server,owner:f.owner,householdId:f.h,shopId:f.shopId,shopper:true});
- const current=ok(await call(f.owner,f.path));assert.equal(current.shopRevision,3);assert.equal(current.meals[0].meal.title,'Reviewed native guest plan');
+ const current=ok(await call(f.owner,f.path));assert.equal(current.shopRevision,4);assert.equal(current.placedRevision,3);
+ assert.equal(current.meals[0].meal.title,'Reviewed native guest plan');
+ const saved=ok(await call(f.owner,f.path+'/delivery-evidence'));
+ assert.equal(saved.sources.length,1);assert.equal(saved.sources[0].confirmed.quantity.amount.numerator,7);
  assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.shared_meal_change WHERE household_id=$1',[f.h])).rows[0].n,1);
 });
 
@@ -159,6 +162,8 @@ test('placed delivery corrections, split arrivals, replay and shopper changes pr
   assert.equal((await save(command('delivery.register',segment,1))).status,409);
   ok(await save(command('shop.reportPlaced',{occurredAt:new Date().toISOString()},1)));
   const sealed=ok(await call(f.owner,path));
+  assert.ok(ok(await call(f.owner,f.base+'/bootstrap')).capabilities.includes('delivery_evidence'));
+  assert.deepEqual((await read()).lines,[{lineId,name:shop.lines[0].originalItem}]);
   assert.deepEqual((await read()).sources,[]);
   assert.equal((await save(command('delivery.register',{...segment,lineId:randomUUID()}))).status,404);
   const create=command('delivery.register',segment), created=ok(await save(create)), id=created.sourceId;
@@ -212,6 +217,7 @@ test('placed delivery corrections, split arrivals, replay and shopper changes pr
   adult.id=ok(await call(adult,'/v1/invites/redeem','POST',{token:invite.token,intent:'join',adultAttestation:true,alias:'New shopper'})).memberId;
   await enroll(adult,f.h);
   assert.equal((await call(adult,evidence)).status,404);
+  assert.ok(!ok(await call(adult,f.base+'/bootstrap')).capabilities.includes('delivery_evidence'));
   ok(await save(command('shop.transferAuthority',{newShopperId:adult.id})));
   assert.equal((await save(create)).status,404);
   assert.equal((await call(f.owner,evidence)).status,404);

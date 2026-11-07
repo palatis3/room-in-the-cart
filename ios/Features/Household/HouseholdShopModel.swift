@@ -61,6 +61,7 @@ struct SharedShopTransfer: Equatable {
 /// The shared shop is explicitly entered and reviewed here. It never reads the private local ledger.
 @MainActor final class HouseholdShopModel: ObservableObject {
     @Published private(set) var scope: HouseholdBootstrap
+    @Published private(set) var deliveryRecord: SharedDeliveryPage?
     @Published private(set) var financialEntries: [ShopperFinancialEntry]?
     @Published private(set) var lastShopSync: Date?
     @Published private(set) var shop: ShopperShop?
@@ -91,6 +92,7 @@ struct SharedShopTransfer: Equatable {
     }
     var canCreate: Bool { authorized && !requiresRefresh && scope.grantId == nil && scope.role == "organizer" && scope.capabilities.contains("household_admin") && scope.shopId == nil && scope.selectionRequired != true }
     var canManage: Bool { authorized && !requiresRefresh && scope.grantId == nil && scope.role == "shopper" && scope.capabilities.contains("shopper_commands") && scope.shopId != nil }
+    var canReadDelivery: Bool { canManage && scope.capabilities.contains("delivery_evidence") }
     var canStartAnother: Bool {
         authorized && !requiresRefresh && scope.canSelectShop == true && scope.grantId == nil &&
         scope.capabilities.contains("household_admin") && !canCreate
@@ -102,7 +104,7 @@ struct SharedShopTransfer: Equatable {
     func updateScope(_ value: HouseholdBootstrap) {
         guard value.household.id == householdID, value.memberId == memberID, value.grantId == nil else { clear(); return }
         if scope.shopId != value.shopId || scope.role != value.role || Set(scope.capabilities) != Set(value.capabilities) {
-            financialEntries = nil
+            financialEntries = nil; deliveryRecord = nil; review = nil; acknowledged = false
             draft = .init()
             editing = false; creatingAnother = false
             shop = nil
@@ -124,7 +126,8 @@ struct SharedShopTransfer: Equatable {
                     delivery = matches ? .waiting : .needsReview
                 }
             }
-            reviewedCurrentFacts = pending != nil
+            if pendingDelivery && !canReadDelivery { delivery = .needsReview }
+            reviewedCurrentFacts = pending != nil && (!pendingDelivery || !canReadDelivery)
         } catch { await handle(error, start: start) }
     }
     private func refreshFacts(start: UUID) async throws {
@@ -136,6 +139,7 @@ struct SharedShopTransfer: Equatable {
             let value = try await service.shopperShop(shopID: id)
             guard start == generation, scope == fresh else { throw ClientError.cancelled }
             if shop != value {
+                deliveryRecord = nil
                 review = nil; acknowledged = false
                 if editing {
                     draft = .init(); editing = false; creatingAnother = false
@@ -144,8 +148,51 @@ struct SharedShopTransfer: Equatable {
             }
             shop = value
             lastShopSync = Date()
-        } else { shop = nil; lastShopSync = nil }
+        } else { shop = nil; deliveryRecord = nil; lastShopSync = nil }
         requiresRefresh = false
+    }
+    func loadDelivery() async {
+        guard canReadDelivery, let shop, shop.placedRevision != nil, !busy else { return }
+        let start = generation
+        busy = true; defer { busy = false }
+        do {
+            let page = try await service.deliveryEvidence(shopID: shop.shopId)
+            guard start == generation, canReadDelivery, scope.shopId == shop.shopId, self.shop == shop,
+                  UUID(uuidString: shop.shopId) == page.shopId else { return }
+            guard page.shopRevision == shop.shopRevision, page.authorityEpoch == shop.authorityEpoch,
+                  page.placedRevision == shop.placedRevision else {
+                throw ClientError.service(status: 409, code: "stale_supply", correlationID: nil, retryAfter: nil)
+            }
+            deliveryRecord = page; notice = nil
+            if pendingDelivery { reviewedCurrentFacts = true }
+        } catch {
+            guard start == generation else { return }
+            deliveryRecord = nil
+            await handle(error, start: start)
+        }
+    }
+    var pendingDelivery: Bool {
+        guard let pending, let envelope = try? JSONDecoder().decode(CommandEnvelope.self, from: pending.bytes) else { return false }
+        return envelope.kind.hasPrefix("delivery.")
+    }
+
+    func saveDelivery(_ edit: SharedDeliveryEdit, reviewed page: SharedDeliveryPage) async -> Bool {
+        guard canReadDelivery, !busy, pending == nil, let shop, shop.phase == "placed", scope.shopId == shop.shopId,
+              page == deliveryRecord, UUID(uuidString: shop.shopId) == page.shopId, page.shopRevision == shop.shopRevision,
+              page.authorityEpoch == shop.authorityEpoch, page.placedRevision == shop.placedRevision else { return false }
+        busy = true; let start = generation
+        defer { busy = false }
+        do {
+            let body = try edit.body(reviewed: page)
+            let window = try await service.replayWindow()
+            guard start == generation, scope.shopId == shop.shopId, self.shop == shop, deliveryRecord == page, canReadDelivery else { return false }
+            let envelope = CommandEnvelope(replayWindow: window.id, shopId: shop.shopId, kind: edit.kind,
+                base: .init(shopRevision: page.shopRevision, authorityEpoch: page.authorityEpoch), body: body)
+            try await queueAndDeliver(envelope, start: start)
+            guard start == generation else { return false }
+            if case .confirmed = delivery { deliveryRecord = nil; return true }
+            return pending != nil
+        } catch { await handle(error, start: start); return false }
     }
     func loadFinancialEntries() async {
         guard canManage, let id = scope.shopId, !busy else { return }
@@ -225,12 +272,18 @@ struct SharedShopTransfer: Equatable {
             var body = try review.candidate?.commandBody() ?? [:]
             if let transfer = review.transfer { body["newShopperId"] = .string(transfer.adultID.uuidString.lowercased()) }
             if let edit = review.mealEdit { body["mealEdit"] = try edit.commandValue() }
-            let operation = try await service.prepare(envelope: .init(replayWindow: window.id, shopId: review.shopID, kind: review.kind,
-                base: review.base, body: body), bootstrap: scope)
-            guard start == generation else { return }; try await outbox.append(operation)
-            guard start == generation else { return }; pending = operation; delivery = .waiting; attempts = 0; reviewedCurrentFacts = false
-            await deliver(operation, start: start)
+            let envelope = CommandEnvelope(replayWindow: window.id, shopId: review.shopID, kind: review.kind, base: review.base, body: body)
+            try await queueAndDeliver(envelope, start: start)
         } catch { await handle(error, start: start) }
+    }
+    private func queueAndDeliver(_ envelope: CommandEnvelope, start: UUID) async throws {
+        let actorScope = scope
+        let operation = try await service.prepare(envelope: envelope, bootstrap: actorScope)
+        guard start == generation, scope == actorScope else { throw ClientError.cancelled }
+        try await outbox.append(operation)
+        guard start == generation, scope == actorScope else { throw ClientError.cancelled }
+        pending = operation; delivery = .waiting; attempts = 0; reviewedCurrentFacts = false
+        await deliver(operation, start: start)
     }
     func retry() async {
         guard authorized, !busy, let pending, delivery == .waiting else { return }
@@ -275,7 +328,7 @@ struct SharedShopTransfer: Equatable {
             self.pending = nil; delivery = .none; review = nil; acknowledged = false; attempts = 0
         } catch { await handle(error, start: start) }
     }
-    func clear() { generation = UUID(); lastShopSync = nil; financialEntries = nil; authorized = false; shop = nil; review = nil; pending = nil; draft = .init(); notice = nil; editing = false; acknowledged = false; delivery = .none }
+    func clear() { generation = UUID(); lastShopSync = nil; financialEntries = nil; deliveryRecord = nil; authorized = false; shop = nil; review = nil; pending = nil; draft = .init(); notice = nil; editing = false; acknowledged = false; delivery = .none }
     private func handle(_ error: Error, start: UUID) async {
         guard start == generation else { return }
         switch error as? ClientError {

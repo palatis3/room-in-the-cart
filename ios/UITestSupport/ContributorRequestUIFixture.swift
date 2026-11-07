@@ -33,6 +33,7 @@ import HouseholdClient
             PaidPickupRecoveryFixtureRoot()
             #endif
         }
+        else if ProcessInfo.processInfo.arguments.contains("--shared-delivery-fixture") { SharedDeliveryFixtureRoot() }
         else if ProcessInfo.processInfo.arguments.contains("--shared-meal-fixture") { S17SharedMealFixtureRoot() }
         else if ProcessInfo.processInfo.arguments.contains("--shared-store-quotes-fixture") { S27StoreQuotesFixtureRoot() }
         else if ProcessInfo.processInfo.arguments.contains("--records-media-fixture") { RecordsMediaUIFixtureRoot() }

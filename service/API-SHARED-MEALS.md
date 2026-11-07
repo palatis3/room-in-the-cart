@@ -33,7 +33,7 @@ Focused evidence lives in `/tmp/ritc-shared-meal`: host model/store tests, isola
 
 ## Physical delivery evidence for a placed shared order
 
-The assigned adult shopper can open `GET /v1/households/{householdId}/shops/{shopId}/delivery-evidence`. A closed order keeps its evidence readable. Each page returns the placed snapshot revision, current shop revision, authority epoch, supply revision, server time, up to 50 delivery sources and an optional UUID cursor. When combining pages, restart the read if the authority epoch or supply revision changes.
+The assigned adult shopper can open `GET /v1/households/{householdId}/shops/{shopId}/delivery-evidence`. A closed order keeps its evidence readable. The bootstrap advertises `delivery_evidence` for an assigned shopper with a placed snapshot. The first page includes selectable lines from that snapshot, excluding erased line descriptions. Each page returns the placed snapshot revision, current shop revision, authority epoch, supply revision, server time, up to 50 delivery sources and an optional UUID cursor. When combining pages, restart the read if the authority epoch or supply revision changes.
 
 Use the regular household command endpoint, device-bound replay window, client key and shop base for these three actions. Save the exact original command for a retry. Each successful action increments the supply revision by one. The shop revision and sealed order stay intact.
 

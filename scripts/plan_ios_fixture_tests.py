@@ -27,6 +27,7 @@ PROFILES = {
             "RecipeLibraryAcceptanceUITests",
             "RecordsMediaUITests",
             "RequestDuplicateComparisonUITests",
+            "SharedDeliveryUITests",
             "SharedMealChangeUITests",
             "SharedMealCivilDateUITests",
             "SharedMealIdeaUITests",
@@ -46,7 +47,7 @@ ISOLATED_SUITES = {"SharedMealIdeaUITests", "SharedStoreQuoteUITests"}
 BALANCED_SUITES = {
     "contributor-balanced-01": ("DinnerAwayCarryoverUITests", "RequestDuplicateComparisonUITests"),
     "contributor-balanced-02": ("ContributorRequestUITests", "ImportRecoveryUITests", "MeasurementUITests", "StockReviewUITests"),
-    "contributor-balanced-03": ("HouseholdDevicesUITests", "HouseholdRequestPackUITests", "SharedMealCivilDateUITests"),
+    "contributor-balanced-03": ("HouseholdDevicesUITests", "HouseholdRequestPackUITests", "SharedMealCivilDateUITests", "SharedDeliveryUITests"),
     "contributor-balanced-04": ("HistoryGrantReadUITests", "RecipeLibraryAcceptanceUITests", "PaidPickupRecoveryUITests"),
     "contributor-balanced-05": ("CorrectionPrivacyAcceptanceUITests", "GuardianEnrollmentUITests", "SharedMealChangeUITests"),
 }

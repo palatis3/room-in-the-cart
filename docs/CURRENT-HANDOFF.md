@@ -2,11 +2,19 @@
 
 Updated November 7, 2026 UTC. The owner resumed and explicitly approved the reviewed hosted staging update; the full first-version goal is active and release acceptance remains incomplete. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
+## Recording shared deliveries on iPhone, November 7
+
+The assigned shopper can open “What came home” after placing an order, pick a sealed order line and record what actually arrived. Received and usable quantities are separate. The shopper can correct a count and reopen it later. Shared recovery still needs to match this recorded food to dinner requirements, reserve protected portions and publish the reviewed outcome to the household.
+
+Both English and Spanish walkthroughs passed on iPhone 17 Pro with iOS 26.2. The Spanish case covered decimal-comma input, a fractional usable quantity, zero and an unknown quantity. The English case also passed on iPhone SE with iOS 17.0 after moving Save above the keyboard. Both tests are present in the compiled contributor-balanced-03 CI selection. Nine existing shared shop tests passed. The Swift client also replayed synthetic shopper operations over HTTPS against disposable PostgreSQL, including a correction from six usable to seven. All 177 database integration tests passed. Account erasure tests now wait for the relevant request’s receipt when multiple requests are queued.
+
+The unsigned arm64 Release build passed its device-bundle check. The distribution metadata check still requires the production subscription product ID and the privacy, terms and support URLs. The native editor and migration 031 were verified locally. Staging is at migration 029.
+
 ## Shared delivery evidence, November 7
 
 The assigned shopper can record arrival and usable quantities separately for each delivery segment of a placed shared order through the household service. The sealed line, current shopper, replay window, supply revision and prior observation are checked inside the same transaction. A corrected arrival requires a new usable confirmation. Two deliveries remain distinct, and a forecast arrival cannot become usable because time passed. Closing the order preserves its readable evidence.
 
-On a disposable PostgreSQL 17.11 instance, all 177 integration tests passed with the web client enabled. They exercised concurrent corrections, restricted runtime access, replay after shopper changes, and account erasure of another shopper’s copy when the underlying sealed line was redacted. The service unit run had 413 passes and one database-only skip, covered separately by the integration suite. The upgrade and backup restore rehearsal also passed with migration 031. This is local service work. The iPhone’s shared delivery editor, shared dinner allocation and publication, and staging rollout of this migration are still open.
+On a disposable PostgreSQL 17.11 instance, all 177 integration tests passed with the web client enabled. They exercised concurrent corrections, restricted runtime access, replay after shopper changes, and account erasure of another shopper’s copy when the underlying sealed line was redacted. The service unit run had 413 passes and one database-only skip, covered separately by the integration suite. The upgrade and backup restore rehearsal also passed with migration 031. This is local service work. The subsequent checkpoint covers the iPhone editor. Shared dinner allocation, publication and staging rollout of this migration remain open.
 
 ## Recovering a paid dinner and reopening its saved instructions, November 7
 

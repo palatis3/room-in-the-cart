@@ -54,6 +54,13 @@ final class SharedMealNativeWireTests: XCTestCase {
             let updated = try await service.sharedMealChanges(shopID: shopID)
             XCTAssertEqual(updated.proposals.first?.state, "applied")
             XCTAssertEqual(updated.meals.first?.meal, proposal.request.meal)
+            let reviewedShop = try await service.shopperShop(shopID: current.shopId)
+            XCTAssertEqual(reviewedShop.shopRevision, current.shopRevision + 1)
+            let prepared = try await service.preparePlacementSnapshot(reviewed: reviewedShop)
+            let placed = try await service.executePlacementReport(try .init(prepared: prepared, occurredAt: ISO8601DateFormatter().string(from: Date())))
+            XCTAssertEqual(placed.disposition, "placed")
+            try await exerciseDelivery(service, scope: scope, shopID: current.shopId)
+
         } else {
             XCTAssertFalse(page.shopper)
             let occurrence = try XCTUnwrap(page.meals.first)
@@ -66,4 +73,39 @@ final class SharedMealNativeWireTests: XCTestCase {
             XCTAssertEqual(updated.meals, page.meals)
         }
     }
+    private func exerciseDelivery(_ service: HouseholdService, scope: HouseholdBootstrap, shopID: String) async throws {
+        func save(_ change: SharedDeliveryEdit, page: SharedDeliveryPage) async throws -> ShopperReceipt {
+            let window = try await service.replayWindow()
+            let operation = try await service.prepare(envelope: .init(replayWindow: window.id, shopId: shopID, kind: change.kind,
+                base: .init(shopRevision: page.shopRevision, authorityEpoch: page.authorityEpoch), body: change.body(reviewed: page)), bootstrap: scope)
+            let first = try await service.executeSharedShop(operation)
+            let replay = try await service.executeSharedShop(operation)
+            XCTAssertEqual(replay, first)
+            return first
+        }
+        let empty = try await service.deliveryEvidence(shopID: shopID)
+        XCTAssertTrue(empty.sources.isEmpty)
+        let sealed = try XCTUnwrap(empty.lines.first)
+        let receipt = try await save(.register(lineID: sealed.id, segment: UUID(), name: "Wraps", exclusions: ["sesame"]), page: empty)
+        let source = try XCTUnwrap(receipt.sourceId)
+        let registered = try await service.deliveryEvidence(shopID: shopID)
+        let amount: (Int) -> SharedMealQuantity = { .init(amount: .init(numerator: $0), unit: "count", originalLiteral: String($0)) }
+        let arrival = UUID()
+        _ = try await save(.arrival(source: source, previous: nil, observation: arrival, date: Date().addingTimeInterval(-90), received: amount(8)), page: registered)
+        let arrived = try await service.deliveryEvidence(shopID: shopID)
+        XCTAssertNil(arrived.sources.first?.confirmed)
+        let usable = UUID()
+        _ = try await save(.usable(source: source, previous: nil, arrival: arrival, observation: usable, date: Date(), quantity: amount(6)), page: arrived)
+        let counted = try await service.deliveryEvidence(shopID: shopID)
+        XCTAssertEqual(counted.sources.first?.confirmed?.quantity, amount(6))
+        _ = try await save(.usable(source: source, previous: usable, arrival: arrival, observation: UUID(), date: Date(), quantity: amount(7)), page: counted)
+        let corrected = try await service.deliveryEvidence(shopID: shopID)
+        XCTAssertEqual(corrected.lines, empty.lines)
+        XCTAssertEqual(corrected.shopRevision, empty.shopRevision)
+        XCTAssertEqual(corrected.supplyRevision, 4)
+        XCTAssertEqual(corrected.sources.count, 1)
+        XCTAssertEqual(corrected.sources.first?.confirmed?.quantity, amount(7))
+        XCTAssertEqual(corrected.sources.first?.arrival?.received, amount(8))
+    }
+
 }

@@ -16,6 +16,7 @@ private final class S17FixtureServer: @unchecked Sendable {
     static let shop = "44444444-4444-4444-8444-444444444444"
     static let occurrence = "55555555-5555-4555-8555-555555555555"
     private let lock = NSRecursiveLock()
+    private let deliveries = ProcessInfo.processInfo.arguments.contains("--shared-delivery-fixture") ? SharedDeliveryFixtureRecords() : nil
     private var revision = 2
     private let quoteObservedAt = Date().addingTimeInterval(-60)
     private let quoteExpiresAt = Date().addingTimeInterval(3600)
@@ -44,7 +45,7 @@ private final class S17FixtureServer: @unchecked Sendable {
         if path == "/auth/v1/user" { return try json(["id":shopper ? "native-shopper":"native-planner","email_confirmed_at":"date"]) }
         if path == "/v1/me/workspaces" { return try json(["workspaces":[["householdId":Self.household,"label":"Isolated shared meals","role":"contributor"]]]) }
         if path.hasSuffix("/devices") { return try json(["deviceId":shopper ? "shopper-device":"planner-device","deviceToken":shopper ? "shopper-token":"planner-token"],status:201) }
-        if path.hasSuffix("/bootstrap") { return try json(["household":["id":Self.household,"label":"Isolated shared meals"],"memberId":shopper ? Self.shopper:Self.planner,"role":shopper ? "shopper":"contributor","shopId":Self.shop,"enrolled":true,"queueConsent":false,"capabilities":shopper ? ["shopper_commands","shopper_inbox","request_preview"]:["meal_proposals"]]) }
+        if path.hasSuffix("/bootstrap") { return try json(["household":["id":Self.household,"label":"Isolated shared meals"],"memberId":shopper ? Self.shopper:Self.planner,"role":shopper ? "shopper":"contributor","shopId":Self.shop,"enrolled":true,"queueConsent":false,"capabilities":shopper ? ["shopper_commands","shopper_inbox","request_preview"] + (deliveries == nil ? [] : ["delivery_evidence"]):["meal_proposals"]]) }
         if path == "/v1/households/\(Self.household)/entitlements", request.httpMethod == "GET" {
             guard request.value(forHTTPHeaderField: "Authorization") == "Bearer fixture-shopper",
                   request.value(forHTTPHeaderField: "X-Device-Token") == "shopper-token" else { return try denied() }
@@ -55,6 +56,11 @@ private final class S17FixtureServer: @unchecked Sendable {
                 "status": expired ? "expired" : "active", "expiresAt": expired ? format.string(from: now) : end,
                 "verifiedAt": format.string(from: now), "validUntil": end,
                 "seats": [["userID": Self.shopper, "displayName": "Fixture shopper", "isAdult": true]]])
+        }
+        if let deliveries, path.hasSuffix("/delivery-evidence") || path.hasSuffix("/commands") {
+            guard shopper, request.value(forHTTPHeaderField: "X-Device-Token") == "shopper-token" else { return try denied() }
+            if path.hasSuffix("/delivery-evidence") { return try json(deliveries.page(shop: Self.shop)) }
+            return try json(deliveries.record(shop: Self.shop, command: input))
         }
         if path.hasSuffix("/inbox") { return try json(["requests":[],"nextCursor":NSNull()]) }
         if path.hasSuffix("/requests/mine") { return try json(["requests":[],"nextCursor":NSNull()]) }
@@ -70,7 +76,7 @@ private final class S17FixtureServer: @unchecked Sendable {
         if path.hasSuffix("/shops/"+Self.shop) {
             guard shopper else { return try denied() }
             let quote = try ShopperQuote(scope:"wholeCheckout",complete:true,capMinor:1000,capScope:"wholeCheckout",fee:.fixed(0),taxesMinor:0,depositsMinor:0,discountsMinor:0,observedAt:quoteObservedAt,expiresAt:quoteExpiresAt)
-            return try json(["shopId":Self.shop,"shopRevision":revision,"authorityEpoch":1,"phase":"draft","meals":[occurrence],"quote":try JSONSerialization.jsonObject(with:JSONEncoder().encode(quote)),"lines":[["lineId":"66666666-6666-4666-8666-666666666666","originalItem":"Entered soup packs","packs":1,"unitPriceMinor":500,"feeEligible":true]]])
+            return try json(["shopId":Self.shop,"shopRevision":revision,"authorityEpoch":1,"phase":deliveries == nil ? "draft" : "placed","placedRevision":deliveries == nil ? NSNull() as Any : 1 as Any,"meals":[occurrence],"quote":try JSONSerialization.jsonObject(with:JSONEncoder().encode(quote)),"lines":[["lineId":"66666666-6666-4666-8666-666666666666","originalItem":"Entered soup packs","packs":1,"unitPriceMinor":500,"feeEligible":true]]])
         }
         if path.hasSuffix("/replay-windows") { return try json(["id":"77777777-7777-4777-8777-777777777777","expiresAt":"2099-01-01T00:00:00Z"]) }
         if path.hasSuffix("/commands"), let key = input["clientKey"] as? String {

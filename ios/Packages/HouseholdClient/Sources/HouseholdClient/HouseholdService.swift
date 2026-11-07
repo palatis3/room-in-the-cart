@@ -370,6 +370,34 @@ public actor HouseholdService {
         guard start == generation else { throw ClientError.cancelled }
         return try await perform("shops/\(shopID)", method: "GET")
     }
+    public func deliveryEvidence(shopID: String) async throws -> SharedDeliveryPage {
+        let start = generation
+        try await authorizeShopper(shopID: shopID)
+        var record: SharedDeliveryPage?
+        var seen = Set<UUID>()
+        repeat {
+            guard start == generation else { throw ClientError.cancelled }
+            let page: SharedDeliveryPage = try await perform("shops/\(shopID)/delivery-evidence", method: "GET",
+                query: record?.nextCursor.map { [.init(name: "cursor", value: $0.uuidString.lowercased())] } ?? [])
+            guard page.shopId == UUID(uuidString: shopID), page.sources.count <= 50, page.placedRevision > 0,
+                  page.authorityEpoch > 0, page.shopRevision >= page.placedRevision, page.supplyRevision >= 0,
+                  Set(page.lines.map(\.id)).count == page.lines.count, page.lines.count <= 200,
+                  page.sources.allSatisfy({ seen.insert($0.id).inserted }),
+                  page.nextCursor == nil || (page.sources.count == 50 && page.nextCursor == page.sources.last?.id) else { throw ClientError.invalidResponse }
+            try page.sources.forEach { try $0.validate() }
+            if record != nil {
+                guard page.supplyRevision == record?.supplyRevision, page.shopRevision == record?.shopRevision,
+                      page.authorityEpoch == record?.authorityEpoch, page.placedRevision == record?.placedRevision else {
+                    throw ClientError.service(status: 409, code: "stale_supply", correlationID: nil, retryAfter: nil)
+                }
+                guard page.lines.isEmpty else { throw ClientError.invalidResponse }
+                record?.sources.append(contentsOf: page.sources)
+                record?.nextCursor = page.nextCursor
+            } else { record = page }
+        } while record?.nextCursor != nil
+        guard let record else { throw ClientError.invalidResponse }
+        return record
+    }
     public func shopperFinancialEvidence(shopID: String) async throws -> [ShopperFinancialEntry] {
         let start = generation
         try await authorizeShopper(shopID: shopID)
@@ -427,7 +455,8 @@ public actor HouseholdService {
               operation.deviceID == enrollment.deviceId else { throw ClientError.accessEnded }
         let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes)
         guard envelope.clientKey == operation.clientKey, UUID(uuidString: envelope.shopId) != nil,
-              ["shop.create", "shop.patch", "shop.freeze", "shop.reopen", "shop.transferAuthority"].contains(envelope.kind) else { throw ClientError.configuration }
+              ["shop.create", "shop.patch", "shop.freeze", "shop.reopen", "shop.transferAuthority",
+               "delivery.register", "delivery.arrival", "delivery.usable"].contains(envelope.kind) else { throw ClientError.configuration }
         if envelope.kind == "shop.create" {
             guard envelope.base.shopRevision == 0, envelope.base.authorityEpoch == 0 else { throw ClientError.configuration }
             try await authorizeAdmin()
@@ -436,7 +465,17 @@ public actor HouseholdService {
         } else { try await authorizeShopper(shopID: envelope.shopId) }
         guard start == generation else { throw ClientError.cancelled }
         guard operation.memberID == memberID else { throw ClientError.accessEnded }
-        return try await perform("commands", method: "POST", body: operation.bytes, creatingShop: envelope.kind == "shop.create")
+        let receipt: ShopperReceipt = try await perform("commands", method: "POST", body: operation.bytes, creatingShop: envelope.kind == "shop.create")
+        if envelope.kind.hasPrefix("delivery.") {
+            guard case .integer(let revision) = envelope.body["supplyRevision"], (0..<Int(Int32.max)).contains(revision),
+                  let sourceID = receipt.sourceId, receipt.supplyRevision == revision + 1, receipt.disposition == "recorded",
+                  receipt.shopId == envelope.shopId, receipt.kind == envelope.kind, receipt.authorityEpoch == envelope.base.authorityEpoch,
+                  receipt.shopRevision == envelope.base.shopRevision else { throw ClientError.invalidResponse }
+            if envelope.kind == "delivery.register" {
+                guard UUID(uuidString: receipt.operationId) == sourceID else { throw ClientError.invalidResponse }
+            } else if envelope.body["sourceId"] != .string(sourceID.uuidString.lowercased()) { throw ClientError.invalidResponse }
+        }
+        return receipt
     }
     /// For other native service adapters; returning a token never grants a role.
     public func currentDeviceToken(householdID: String, memberID: String) async throws -> String {

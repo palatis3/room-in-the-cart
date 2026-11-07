@@ -31,6 +31,11 @@ const heads = `SELECT s.*,a.body AS arrival,a.recorded_at AS arrival_recorded,u.
 
 export async function readDelivery(ctx: Context, shop: Shop, cursor: string|null) {
   requirePlaced(shop, true);
+  const lines = cursor === null ? (await ctx.db.query(`SELECT lower(line->>'lineId') AS "lineId", line->>'originalItem' AS name
+    FROM ritc.shop_snapshot ss CROSS JOIN LATERAL jsonb_array_elements(ss.snapshot->'lines') WITH ORDINALITY AS item(line,position)
+    WHERE ss.household_id=$1 AND ss.shop_id=$2 AND ss.revision=$3
+      AND NOT (ss.digest=repeat('0',64) AND line->>'originalItem'='Removed item') ORDER BY position`,
+    [ctx.householdId,shop.shop_id,shop.placed_revision])).rows : [];
   const result = await ctx.db.query<SourceRow>(heads+' AND ($3::uuid IS NULL OR s.source_id>$3) ORDER BY s.source_id LIMIT 51',
     [ctx.householdId,shop.shop_id,cursor]);
   const asOf = ctx.now.toISOString();
@@ -45,7 +50,7 @@ export async function readDelivery(ctx: Context, shop: Shop, cursor: string|null
       exclusionTags:row.exclusion_tags, arrival:a, usable:u, confirmed:lot??null};
   });
   return {shopId:shop.shop_id, placedRevision:shop.placed_revision, shopRevision:shop.revision, authorityEpoch:shop.authority_epoch,
-    supplyRevision:shop.supply_revision, asOf, sources, nextCursor:result.rows.length>50?sources.at(-1)!.sourceId:null};
+    supplyRevision:shop.supply_revision, asOf, lines, sources, nextCursor:result.rows.length>50?sources.at(-1)!.sourceId:null};
 }
 
 // Called in HouseholdRepository's household-locked command transaction, after device,
