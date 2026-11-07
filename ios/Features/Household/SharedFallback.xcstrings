@@ -800,6 +800,23 @@
         }
       }
     },
+    "Time has passed. Compare the recipes again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time has passed. Compare the recipes again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El tiempo disponible cambió. Vuelve a comparar las recetas."
+          }
+        }
+      }
+    },
     "Too few packs are available for this recipe.": {
       "extractionState": "manual",
       "localizations": {

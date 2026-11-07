@@ -78,11 +78,6 @@ private struct SharedFallbackMenu: View {
             if let notice = model.notice { Text(verbatim: notice) }
             Button(ht("Refresh")) { Task { await model.load() } }.disabled(!model.live || model.busy)
         }
-        .task(id: model.paidUntil) {
-            guard let until = model.paidUntil else { return }
-            let seconds = max(0, until.timeIntervalSinceNow)
-            do { try await Task.sleep(for: .seconds(seconds)) } catch { return }
-            model.expireSuggestions()
-        }
+
     }
 }

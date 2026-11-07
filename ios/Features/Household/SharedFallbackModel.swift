@@ -11,8 +11,19 @@ final class SharedFallbackModel: ObservableObject {
     private var generation = UUID()
     private var storeEpoch: UUID?
     private var rankingID = UUID()
+    private var seatExpiryTask: Task<Void, Never>?
+    private var rankingExpiryTask: Task<Void, Never>?
     @Published private(set) var library: SharedFallbackLibrary?
-    @Published private(set) var paidUntil: Date?
+    @Published private(set) var paidUntil: Date? {
+        didSet {
+            seatExpiryTask?.cancel()
+            guard let until = paidUntil else { return }
+            seatExpiryTask = Task { [weak self] in
+                do { try await Task.sleep(for: .seconds(max(0, until.timeIntervalSinceNow))) } catch { return }
+                self?.expireSuggestions()
+            }
+        }
+    }
     @Published private(set) var pending: PendingFallbackWrite?
     @Published private(set) var ranking: SharedFallbackOptions?
     @Published private(set) var busy = false
@@ -31,9 +42,9 @@ final class SharedFallbackModel: ObservableObject {
 
     func invalidate() {
         generation = UUID()
+        discardRanking()
         library = nil
         pending = nil
-        ranking = nil
         paidUntil = nil
         storeEpoch = nil
         notice = nil
@@ -50,7 +61,7 @@ final class SharedFallbackModel: ObservableObject {
         guard live, !busy else { return }
         let token = generation
         busy = true
-        defer { if current(token) { busy = false } }
+        defer { if generation == token { busy = false } }
         do {
             try await refresh(token)
             guard current(token) else { return }
@@ -86,7 +97,7 @@ final class SharedFallbackModel: ObservableObject {
         guard live, canSuggest, !busy, pending == nil, library == reviewed else { throw ClientError.cancelled }
         let token = generation
         busy = true
-        defer { if current(token) { busy = false } }
+        defer { if generation == token { busy = false } }
         do {
             let result = try await service.fallbackSource(source, reviewed: reviewed)
             guard current(token), canSuggest, library == reviewed else { throw ClientError.cancelled }
@@ -102,7 +113,7 @@ final class SharedFallbackModel: ObservableObject {
         if case .accept = edit, !canSuggest { return false }
         let token = generation
         busy = true
-        defer { if current(token) { busy = false } }
+        defer { if generation == token { busy = false } }
         do {
             let intent = try await service.prepareFallback(edit, reviewed: reviewed, clientKey: UUID())
             guard current(token), library == reviewed else { throw ClientError.cancelled }
@@ -122,7 +133,7 @@ final class SharedFallbackModel: ObservableObject {
         guard live, !busy, let pending, let library, library.belongsToSameDevice(as: pending), let epoch = storeEpoch else { return }
         let token = generation
         busy = true
-        defer { if current(token) { busy = false } }
+        defer { if generation == token { busy = false } }
         do { try await deliver(pending, epoch: epoch, token: token) }
         catch { fail(error, token: token) }
     }
@@ -141,7 +152,7 @@ final class SharedFallbackModel: ObservableObject {
         guard live, !busy, let pending, let epoch = storeEpoch, library == reviewed else { return }
         let token = generation
         busy = true
-        defer { if current(token) { busy = false } }
+        defer { if generation == token { busy = false } }
         do {
             let currentLibrary = try await service.acceptedFallbacks(shopID: shopID.uuidString.lowercased())
             guard current(token), currentLibrary == reviewed, currentLibrary.belongsToSameDevice(as: pending) else {
@@ -162,17 +173,41 @@ final class SharedFallbackModel: ObservableObject {
         busy = true
         discardRanking()
         let read = rankingID
-        defer { if current(token) { busy = false } }
+        defer { if generation == token { busy = false } }
         do {
             let result = try await service.recoveryOptions(reviews, trip: trip, for: occurrence, reviewed: page, library: reviewed)
             guard current(token), rankingID == read, library == reviewed, canSuggest, let expiry = result.assistanceValidUntil, expiry > Date() else { return }
             paidUntil = expiry
             ranking = result
+            scheduleRankingExpiry(result)
             notice = nil
         } catch { fail(error, token: token) }
     }
 
-    func discardRanking() { rankingID = UUID(); ranking = nil }
+    private func scheduleRankingExpiry(_ result: SharedFallbackOptions) {
+        rankingExpiryTask?.cancel()
+        let deadline = result.target.due.flatMap(serviceDate)
+        var boundaries = result.options.compactMap { option in
+            deadline?.addingTimeInterval(-Double(option.minutes) * 60)
+        }
+        boundaries += result.options.filter { $0.kind == "topUp" }.compactMap {
+            serviceDate($0.intent.reviewedAt)?.addingTimeInterval(600)
+        }
+        guard let until = boundaries.min() else { return }
+        let read = rankingID
+        rankingExpiryTask = Task { [weak self] in
+            do { try await Task.sleep(for: .seconds(max(0, until.timeIntervalSinceNow))) } catch { return }
+            guard let self, self.rankingID == read, self.ranking == result else { return }
+            self.discardRanking()
+            self.notice = fallbackText("Time has passed. Compare the recipes again.")
+        }
+    }
+
+    func discardRanking() {
+        rankingExpiryTask?.cancel()
+        rankingID = UUID()
+        ranking = nil
+    }
 
     private func fail(_ error: Error, token: UUID) {
         guard current(token) else { return }
