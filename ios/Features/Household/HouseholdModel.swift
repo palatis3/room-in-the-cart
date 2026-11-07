@@ -650,7 +650,7 @@ struct DeviceReminderPersona: Equatable {
         }
         sharedShop?.clear()
         let start = generation
-        sharedShop = HouseholdShopModel(scope: projection, service: service, outbox: sharedShopOutbox) { [weak self] in
+        sharedShop = HouseholdShopModel(scope: projection, service: service, outbox: sharedShopOutbox, financialStore: historyStore, financialSubject: identity?.subject) { [weak self] in
             guard let self, self.generation == start else { return }; await self.refresh()
         } onAccessEnded: { [weak self] in await self?.show(ClientError.accessEnded, start: start) }
     }

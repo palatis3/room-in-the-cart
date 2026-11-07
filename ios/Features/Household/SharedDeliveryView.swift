@@ -41,6 +41,8 @@ struct SharedDeliveryView: View {
     var body: some View {
         Form {
             if model.canReadDelivery, model.scope.shopId == shopID {
+                NavigationLink(ht("Shared financial evidence")) { SharedFinancialEvidenceView(model: model, shopID: shopID) }
+                    .accessibilityIdentifier("delivery.financial")
                 if let page = model.deliveryRecord, page.shopId == UUID(uuidString: shopID) {
                     if let inbox = household.shopperInbox, inbox.supportsPurchaseConfirmation,
                        model.scope.capabilities.contains("request_purchase_confirmation"), inbox.shopID == shopID {

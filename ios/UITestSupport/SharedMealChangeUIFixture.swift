@@ -19,6 +19,7 @@ private final class S17FixtureServer: @unchecked Sendable {
     private let deliveries = ProcessInfo.processInfo.arguments.contains("--shared-delivery-fixture") ? SharedDeliveryFixtureRecords() : nil
     private let purchases = ProcessInfo.processInfo.arguments.contains("--request-purchase-fixture") ? RequestPurchaseFixture() : nil
     private let fallbacks = SharedFallbackUIFixture()
+    private let financial = ProcessInfo.processInfo.arguments.contains("--financial-closeout-fixture") ? SharedFinancialFixture() : nil
     private var revision = 2
     private let quoteObservedAt = Date().addingTimeInterval(-60)
     private let quoteExpiresAt = Date().addingTimeInterval(3600)
@@ -81,6 +82,11 @@ private final class S17FixtureServer: @unchecked Sendable {
         }
         let scoped = "/v1/households/" + Self.household
         let deliveryPath = scoped + "/shops/" + Self.shop
+        if let financial, path == deliveryPath + "/financial-evidence" || path == deliveryPath + "/financial-reviews" {
+            guard request.value(forHTTPHeaderField: "Authorization") == "Bearer fixture-shopper",
+                  request.value(forHTTPHeaderField: "X-Device-Token") == "shopper-token" else { return try denied() }
+            return try financial.respond(shop: Self.shop, method: request.httpMethod, path: path, body: input, revision: &revision)
+        }
         let pantryPath = deliveryPath + "/pantry-lots"
         let cookPath = deliveryPath + "/cook-copies"
         let recoveryPath = deliveryPath + "/meal-recovery"
@@ -96,8 +102,16 @@ private final class S17FixtureServer: @unchecked Sendable {
                             cookPath, cookPath + "/baseline", cookPath + "/correction", scoped + "/commands"].contains(path) {
             guard request.value(forHTTPHeaderField: "Authorization") == "Bearer fixture-shopper",
                   request.value(forHTTPHeaderField: "X-Device-Token") == "shopper-token" else { return try denied() }
-            if path.hasSuffix("/delivery-evidence/coverage") { return try json(deliveries.coverage(shop: Self.shop)) }
-            if path.hasSuffix("/delivery-evidence") { return try json(deliveries.page(shop: Self.shop)) }
+            if path.hasSuffix("/delivery-evidence/coverage") {
+                var coverage = try deliveries.coverage(shop: Self.shop)
+                if financial != nil { coverage["shopRevision"] = revision }
+                return try json(coverage)
+            }
+            if path.hasSuffix("/delivery-evidence") {
+                var page = deliveries.page(shop: Self.shop)
+                if financial != nil { page["shopRevision"] = revision }
+                return try json(page)
+            }
             do {
                 if path == recoveryPath || path.hasPrefix(recoveryPath + "/") {
                     guard let recovery = deliveries.recovery else { return try denied() }
@@ -168,7 +182,7 @@ private final class S17FixtureServer: @unchecked Sendable {
             guard shopper else { return try denied() }
             let quote = try ShopperQuote(scope:"wholeCheckout",complete:true,capMinor:1000,capScope:"wholeCheckout",fee:.fixed(0),taxesMinor:0,depositsMinor:0,discountsMinor:0,observedAt:quoteObservedAt,expiresAt:quoteExpiresAt)
             let placedMeals = deliveries?.page(shop: Self.shop)["meals"] as? [[String:Any]]
-            return try json(["shopId":Self.shop,"shopRevision":revision,"authorityEpoch":1,"phase":deliveries == nil ? "draft" : "placed","placedRevision":deliveries == nil ? NSNull() as Any : 1 as Any,"meals":placedMeals ?? [occurrence],"quote":try JSONSerialization.jsonObject(with:JSONEncoder().encode(quote)),"lines":[["lineId":"66666666-6666-4666-8666-666666666666","originalItem":"Entered soup packs","packs":1,"unitPriceMinor":500,"feeEligible":true]]])
+            return try json(["shopId":Self.shop,"shopRevision":revision,"authorityEpoch":1,"phase":deliveries == nil ? "draft" : (financial?.closed == true ? "closed" : "placed"),"placedRevision":deliveries == nil ? NSNull() as Any : 1 as Any,"meals":placedMeals ?? [occurrence],"quote":try JSONSerialization.jsonObject(with:JSONEncoder().encode(quote)),"lines":[["lineId":"66666666-6666-4666-8666-666666666666","originalItem":"Entered soup packs","packs":1,"unitPriceMinor":500,"feeEligible":true]]])
         }
         if path.hasSuffix("/replay-windows") { return try json(["id":"77777777-7777-4777-8777-777777777777","expiresAt":"2099-01-01T00:00:00Z"]) }
         if path.hasSuffix("/commands"), let key = input["clientKey"] as? String {

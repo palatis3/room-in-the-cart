@@ -533,5 +533,57 @@ extension SharedMealNativeWireTests {
         } catch ClientError.service(status: 403, code: "membership_inactive", correlationID: _, retryAfter: _) {}
         let stillSaved = try await service.mealRecoveryFacts(shopID: id)
         XCTAssertEqual(stillSaved.page.base, saved.page.base)
+        try await exerciseFreeCloseout(service, shopID: id)
+    }
+}
+
+extension SharedMealNativeWireTests {
+    private func exerciseFreeCloseout(_ service: HouseholdService, shopID: String) async throws {
+        let automatic = try await service.selectShop(nil)
+        XCTAssertEqual(automatic.shopId, shopID)
+        let delivery = try await service.deliveryEvidence(shopID: shopID)
+        let coverage = try await service.deliveryCoverage(reviewed: delivery)
+        XCTAssertTrue(coverage.needs.contains { $0.missing.map { $0.numerator != "0" } == true })
+        let current = try await service.mealRecoveryFacts(shopID: shopID).page
+        let effective = try await service.effectiveCoverage(reviewed: current)
+        XCTAssertTrue(effective.needs.contains { $0.missing.map { $0.numerator != "0" } == true })
+        let empty = try await service.shopperFinancialRecord(shopID: shopID)
+        XCTAssertTrue(empty.entries.isEmpty)
+        let date = Date().ISO8601Format()
+        let charge = ShopperFinancialEntry(kind: .postedCharge, amountMinor: 3720, occurredAt: date, sourceText: "Net receipt $37.20")
+        let chargeIntent = try await service.prepareFinancial(.append(charge), reviewed: empty)
+        try await service.executeFinancial(chargeIntent)
+        let recovered = try JSONDecoder().decode(ShopperFinancialIntent.self, from: JSONEncoder().encode(chargeIntent))
+        try await service.executeFinancial(recovered)
+        let charged = try await service.shopperFinancialRecord(shopID: shopID)
+        XCTAssertEqual(charged.entries.map(\.id), [charge.id])
+        let credit = UUID()
+        let promised = ShopperFinancialEntry(kind: .pendingCredit, amountMinor: 240, occurredAt: date,
+            sourceText: "Refund pending $2.40", creditId: credit, chargeEvidenceKey: charge.evidenceKey)
+        try await service.executeFinancial(service.prepareFinancial(.append(promised), reviewed: charged))
+        let pending = try await service.shopperFinancialRecord(shopID: shopID)
+        XCTAssertEqual(pending.entries.map(\.amountMinor), [3720,240])
+        let close = try await service.prepareFinancial(.close, reviewed: pending)
+        try await service.executeFinancial(close)
+        try await service.executeFinancial(close)
+        let closed = try await service.shopperShop(shopID: shopID)
+        XCTAssertEqual(closed.phase, "closed"); XCTAssertEqual(closed.placedRevision, delivery.placedRevision)
+        let retained = try await service.shopperFinancialRecord(shopID: shopID)
+        XCTAssertEqual(retained.entries, pending.entries)
+        let included = ShopperFinancialEntry(kind: .includedCredit, amountMinor: 240, occurredAt: date,
+            sourceText: "Statement confirms included in original net receipt", creditId: credit, chargeEvidenceKey: charge.evidenceKey)
+        try await service.executeFinancial(service.prepareFinancial(.append(included), reviewed: retained))
+        let final = try await service.shopperFinancialRecord(shopID: shopID)
+        XCTAssertEqual(final.entries.map(\.kind), [.postedCharge,.pendingCredit,.includedCredit])
+        XCTAssertEqual(final.entries.map(\.creditId), [nil,credit,credit])
+        XCTAssertEqual(final.entries.map(\.chargeEvidenceKey), [nil,charge.evidenceKey,charge.evidenceKey])
+        let after = try await service.deliveryEvidence(shopID: shopID)
+        XCTAssertEqual(after.meals, delivery.meals); XCTAssertEqual(after.sources, delivery.sources)
+        let stillNeeded = try await service.deliveryCoverage(reviewed: after)
+        XCTAssertEqual(coverage.needs, stillNeeded.needs)
+        let reopened = try await service.mealRecoveryFacts(shopID: shopID).page
+        XCTAssertEqual(current.meals, reopened.meals)
+        let reopenedNeeds = try await service.effectiveCoverage(reviewed: reopened)
+        XCTAssertEqual(effective.needs, reopenedNeeds.needs)
     }
 }

@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import HouseholdClient
+import CoreDomain
 
 struct SharedShopLineDraft: Identifiable, Equatable {
     let id: UUID
@@ -78,7 +79,14 @@ struct SharedShopTransfer: Equatable {
     private var reviewedObservation: (edit: SharedPantryEdit, pantry: SharedPantryPage, preview: SharedPantryObservationPreview)?
     private var observationRead = UUID()
     private var reviewedPantryOperation: String?
-    @Published private(set) var financialEntries: [ShopperFinancialEntry]?
+    @Published private(set) var financialRecord: ShopperFinancialRecord? {
+        didSet { if financialRecord == nil { financialSummary = nil } }
+    }
+    private(set) var financialSummary: SettlementSummary?
+    @Published private(set) var financialRetry: ShopperFinancialIntent?
+    private let financialStore: HistoryPendingStore?
+    private let financialSubject: String?
+    var financialEntries: [ShopperFinancialEntry]? { financialRecord?.entries }
     @Published private(set) var lastShopSync: Date?
     @Published private(set) var shop: ShopperShop?
     @Published private(set) var busy = false
@@ -106,7 +114,9 @@ struct SharedShopTransfer: Equatable {
     private var pendingMarkOccurrence: UUID?
     private var reviewedCookOperation: String?
     init(scope: HouseholdBootstrap, service: HouseholdService, outbox: OperationOutbox,
+         financialStore: HistoryPendingStore? = nil, financialSubject: String? = nil,
          onConfirmed: @escaping @MainActor () async -> Void, onAccessEnded: @escaping @MainActor () async -> Void) {
+        self.financialStore = financialStore; self.financialSubject = financialSubject
         self.scope = scope; self.service = service; self.outbox = outbox; self.onConfirmed = onConfirmed; self.onAccessEnded = onAccessEnded
         householdID = scope.household.id; memberID = scope.memberId
     }
@@ -128,7 +138,7 @@ struct SharedShopTransfer: Equatable {
     func updateScope(_ value: HouseholdBootstrap) {
         guard value.household.id == householdID, value.memberId == memberID, value.grantId == nil else { clear(); return }
         if scope.shopId != value.shopId || scope.role != value.role || Set(scope.capabilities) != Set(value.capabilities) {
-            financialEntries = nil; deliveryRecord = nil; review = nil; acknowledged = false
+            financialRecord = nil; financialRetry = nil; deliveryRecord = nil; review = nil; acknowledged = false
             reviewedCookRecipient = nil; pendingMarkOccurrence = nil; reviewedCookOperation = nil
             if scope.shopId != value.shopId, pendingCookCopy || pendingPantry || pendingMealRecovery { pending = nil; delivery = .none; reviewedCurrentFacts = false }
             draft = .init()
@@ -177,6 +187,7 @@ struct SharedShopTransfer: Equatable {
             let value = try await service.shopperShop(shopID: id)
             guard start == generation, scope == fresh else { throw ClientError.cancelled }
             if shop != value {
+                financialRecord = nil; financialRetry = nil
                 deliveryRecord = nil
                 review = nil; acknowledged = false
                 if editing {
@@ -556,15 +567,70 @@ struct SharedShopTransfer: Equatable {
     func loadFinancialEntries() async {
         guard canManage, let id = scope.shopId, !busy else { return }
         busy = true
-        financialEntries = nil
         let start = generation
         defer { busy = false }
+        do { try await readFinancial(shopID: id, start: start) }
+        catch { await handle(error, start: start) }
+    }
+    private func readFinancial(shopID: String, start: UUID) async throws {
+        financialRecord = nil; financialRetry = nil
+        let record = try await service.shopperFinancialRecord(shopID: shopID)
+        let stored = try await financialStore?.read().financialChanges?.first {
+            $0.subject == financialSubject && $0.householdID == householdID && $0.memberID == memberID && $0.shopID == record.shopID
+        }
+        guard generation == start, scope.shopId == shopID, canManage else { throw ClientError.cancelled }
+        if let stored, stored.version.authorityEpoch != record.version.authorityEpoch, let financialStore {
+            // A transfer invalidates the previous assignment even if this adult later returns.
+            let epoch = await financialStore.epoch()
+            try await financialStore.finishFinancial(stored, expectedEpoch: epoch)
+        }
+        guard generation == start, scope.shopId == shopID, canManage else { throw ClientError.cancelled }
+        financialRetry = stored?.version.authorityEpoch == record.version.authorityEpoch ? stored : nil
+        financialSummary = try SettlementLedger.summary(of: record.entries.map { try $0.settlementEntry() })
+        financialRecord = record; notice = nil
+    }
+    func writeFinancial(_ action: ShopperFinancialAction, reviewed record: ShopperFinancialRecord) async -> Bool {
+        guard canManage, !busy, financialRetry == nil, financialRecord == record, let financialStore,
+              let shop, UUID(uuidString: shop.shopId) == record.shopID, shop.placedRevision != nil,
+              shop.shopRevision == record.version.shopRevision, shop.authorityEpoch == record.version.authorityEpoch,
+              shop.phase == "placed" || (shop.phase == "closed" && action != .close) else { return false }
+        busy = true; defer { busy = false }
+        let start = generation, epoch = await financialStore.epoch()
         do {
-            let entries = try await service.shopperFinancialEvidence(shopID: id)
-            guard generation == start, scope.shopId == id, canManage else { return }
-            financialEntries = entries
-            notice = nil
-        } catch { await handle(error, start: start) }
+            let intent = try await service.prepareFinancial(action, reviewed: record)
+            guard generation == start, scope.shopId == shop.shopId, canManage, intent.subject == financialSubject else { throw ClientError.cancelled }
+            try await financialStore.stageFinancial(intent, expectedEpoch: epoch)
+            guard generation == start, scope.shopId == shop.shopId, canManage else { throw ClientError.cancelled }
+            financialRetry = intent
+            return try await deliverFinancial(intent, store: financialStore, epoch: epoch, start: start)
+        } catch { await handle(error, start: start); return false }
+    }
+    func retryFinancial() async -> Bool {
+        guard canManage, !busy, let intent = financialRetry, let financialStore, let shopID = scope.shopId,
+              UUID(uuidString: shopID) == intent.shopID, financialRecord?.version.authorityEpoch == intent.version.authorityEpoch else { return false }
+        busy = true; defer { busy = false }
+        let start = generation, epoch = await financialStore.epoch()
+        do { return try await deliverFinancial(intent, store: financialStore, epoch: epoch, start: start) }
+        catch { await handle(error, start: start); return false }
+    }
+    private func deliverFinancial(_ intent: ShopperFinancialIntent, store: HistoryPendingStore, epoch: UUID, start: UUID) async throws -> Bool {
+        let id = intent.shopID.uuidString.lowercased()
+        do { try await service.executeFinancial(intent) }
+        catch ClientError.service(let status, let code, _, _) where status == 422 || (status == 409 && code == "stale_source") {
+            try await store.finishFinancial(intent, expectedEpoch: epoch)
+            guard generation == start, scope.shopId == id else { throw ClientError.cancelled }
+            financialRetry = nil; financialRecord = nil
+            try await refreshFacts(start: start)
+            try await readFinancial(shopID: id, start: start)
+            notice = status == 422 ? pTr("Enter a valid amount and evidence ID. Credits must link to an original posted charge.") : ht("The shop or shopper authority changed. Refresh the current shop and review again.")
+            return false
+        }
+        try await store.finishFinancial(intent, expectedEpoch: epoch)
+        guard generation == start, scope.shopId == id else { throw ClientError.cancelled }
+        financialRetry = nil; financialRecord = nil
+        try await refreshFacts(start: start)
+        try await readFinancial(shopID: id, start: start)
+        return true
     }
     func beginEditing() {
         guard authorized, !busy, pending == nil else { return }
@@ -726,7 +792,7 @@ struct SharedShopTransfer: Equatable {
     func clear() {
         reviewedCookRecipient = nil; pendingMarkOccurrence = nil; reviewedCookOperation = nil
         recoveryRecord = nil; reviewedRecovery = nil; reviewedRecoveryOperation = nil
-        generation = UUID(); lastShopSync = nil; financialEntries = nil; deliveryRecord = nil
+        generation = UUID(); lastShopSync = nil; financialRecord = nil; financialRetry = nil; deliveryRecord = nil
         authorized = false; shop = nil; review = nil; pending = nil; draft = .init()
         notice = nil; editing = false; acknowledged = false; delivery = .none
     }

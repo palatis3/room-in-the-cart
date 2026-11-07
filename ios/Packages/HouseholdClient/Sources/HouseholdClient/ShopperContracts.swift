@@ -171,31 +171,6 @@ public struct ShopperReceipt: Codable, Equatable, Sendable {
     public let authorityEpoch: Int; public let disposition: String; public let requestId: String?; public let requestRevision: Int?
 }
 
-public struct ShopperFinancialEntry: Decodable, Equatable, Identifiable, Sendable {
-    public enum Kind: String, Decodable, Sendable {
-        case postedCharge, postedTopUp, pendingCredit, postedCredit, includedCredit, paymentHold, holdRelease
-    }
-    public let id: UUID
-    public let kind: Kind
-    public let amountMinor: Int
-    public let currency: String
-    public let occurredAt: String
-    public let sourceText: String
-}
-
-struct ShopperFinancialPage: Decodable, Sendable {
-    struct Version: Decodable, Equatable, Sendable {
-        let shopRevision: Int
-        let authorityEpoch: Int
-        let financialRevision: Int
-    }
-    let shopId: UUID
-    let sourceVersion: Version
-    let evidenceSource: String
-    let entries: [ShopperFinancialEntry]
-    let nextCursor: UUID?
-}
-
 public struct SharedMealPlan: Decodable, Sendable {
     public struct Adult: Decodable, Identifiable, Sendable {
         public let id: UUID

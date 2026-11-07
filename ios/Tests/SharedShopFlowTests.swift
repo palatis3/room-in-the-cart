@@ -210,9 +210,18 @@ import HouseholdClient
         XCTAssertEqual(entries.map(\.kind), [.paymentHold])
         XCTAssertEqual(entries.first?.amountMinor, 3200)
         XCTAssertEqual(entries.first?.sourceText, "Hold on the entered receipt")
+        let service = try XCTUnwrap(mia.service)
+        let reviewed = try XCTUnwrap(shared.financialRecord)
+        let entry = ShopperFinancialEntry(kind: .postedCharge, amountMinor: 3720,
+                                         occurredAt: Date().ISO8601Format(), sourceText: "Net receipt")
+        let priorIntent = try await service.prepareFinancial(.append(entry), reviewed: reviewed)
         fixture.shopperTransferred = true
         await mia.refresh()
         XCTAssertNil(shared.financialEntries)
+        do {
+            try await service.executeFinancial(priorIntent)
+            XCTFail("Former shopper could submit financial evidence")
+        } catch ClientError.accessEnded {}
         XCTAssertNil(shared.lastShopSync)
         XCTAssertFalse(shared.canManage)
     }
@@ -326,7 +335,7 @@ private final class SharedFlowService {
         }
         if path.hasSuffix("/financial-evidence"), let shopID {
             return try ok(["shopId": shopID, "sourceVersion": ["shopRevision": revision, "authorityEpoch": 1, "financialRevision": 1],
-                "evidenceSource": "shopper_reported", "entries": [["id": UUID().uuidString, "kind": "paymentHold", "amountMinor": 3200,
+                "evidenceSource": "shopper_reported", "entries": [["id": UUID().uuidString, "evidenceKey": UUID().uuidString, "kind": "paymentHold", "amountMinor": 3200,
                 "currency": "USD", "occurredAt": "2026-01-01T12:00:00.000Z", "sourceText": "Hold on the entered receipt"]], "nextCursor": NSNull()])
         }
         if path.hasSuffix("/inbox") { return try ok(["requests":requests.map { $0.merging(["authorAlias":"Sam"]) { _, new in new } },"nextCursor":NSNull()]) }

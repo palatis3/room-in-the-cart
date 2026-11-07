@@ -492,11 +492,14 @@ public actor HouseholdService {
     }
 
     public func shopperFinancialEvidence(shopID: String) async throws -> [ShopperFinancialEntry] {
+        try await shopperFinancialRecord(shopID: shopID).entries
+    }
+    public func shopperFinancialRecord(shopID: String) async throws -> ShopperFinancialRecord {
         let start = generation
         try await authorizeShopper(shopID: shopID)
         var entries: [ShopperFinancialEntry] = []
         var seen = Set<UUID>()
-        var version: ShopperFinancialPage.Version?
+        var version: HistorySourceVersion?
         var cursor: UUID?
         repeat {
             guard start == generation else { throw ClientError.cancelled }
@@ -507,12 +510,35 @@ public actor HouseholdService {
                   page.entries.allSatisfy({ $0.currency == "USD" && $0.amountMinor >= 0 && seen.insert($0.id).inserted }),
                   page.nextCursor == nil || (page.entries.count == 50 && page.nextCursor == page.entries.last?.id)
             else { throw ClientError.invalidResponse }
+            try page.sourceVersion.validate()
             if let version, version != page.sourceVersion { throw ClientError.service(status: 409, code: "source_changed", correlationID: nil, retryAfter: nil) }
             version = page.sourceVersion
             entries += page.entries
             cursor = page.nextCursor
         } while cursor != nil
-        return entries
+        guard generation == start, let version, let id = UUID(uuidString: shopID) else { throw ClientError.cancelled }
+        return ShopperFinancialRecord(shopID: id, version: version, entries: entries)
+    }
+    public func prepareFinancial(_ action: ShopperFinancialAction, reviewed record: ShopperFinancialRecord) async throws -> ShopperFinancialIntent {
+        let start = generation
+        let scope = try await authorizeShopper(shopID: record.shopID.uuidString.lowercased())
+        guard start == generation, let subject, let enrollment else { throw ClientError.cancelled }
+        return .init(clientKey: UUID(), subject: subject, householdID: scope.household.id, memberID: scope.memberId,
+                     deviceID: enrollment.deviceId, shopID: record.shopID, version: record.version, action: action)
+    }
+    public func executeFinancial(_ intent: ShopperFinancialIntent) async throws {
+        let start = generation
+        try matchesHistory(subject: intent.subject, household: intent.householdID, member: intent.memberID, device: intent.deviceID)
+        let id = intent.shopID.uuidString.lowercased()
+        _ = try await authorizeShopper(shopID: id)
+        guard start == generation else { throw ClientError.cancelled }
+        try matchesHistory(subject: intent.subject, household: intent.householdID, member: intent.memberID, device: intent.deviceID)
+        // Closing the sole active shop removes it from automatic selection. Keep the
+        // reviewed shop selected for its receipt, including a lost-response retry.
+        if intent.action == .close && selectedShopID == nil { selectedShopID = intent.shopID }
+        let receipt: ShopperFinancialReceipt = try await perform("shops/\(id)/" + intent.endpoint, method: "POST", body: encoded(intent.body))
+        guard start == generation else { throw ClientError.cancelled }
+        try receipt.validate(intent)
     }
     public func shopperInbox(shopID: String, cursor: String? = nil) async throws -> OwnRequestsPage {
         if let cursor, UUID(uuidString: cursor) == nil { throw ClientError.configuration }

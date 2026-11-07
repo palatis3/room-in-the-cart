@@ -12,8 +12,9 @@ import XCTest
         app.terminate()
     }
 
-    private func launch(_ language: String, locale: String, cookCopies: Bool = false, pantry: Bool = false, recovery: Bool = false) {
+    private func launch(_ language: String, locale: String, cookCopies: Bool = false, pantry: Bool = false, recovery: Bool = false, financial: Bool = false) {
         app.launchArguments = ["--ui-testing", "--shared-delivery-fixture", "-AppleLanguages", "(\(language))", "-AppleLocale", locale]
+        if financial { app.launchArguments += ["--financial-closeout-fixture", "--expired-recovery-seat"] }
         if pantry || recovery { app.launchArguments.append("--shared-pantry-fixture") }
         if recovery { app.launchArguments.append("--shared-recovery-fixture") }
         if cookCopies { app.launchArguments.append("--shared-cook-copies-fixture") }
@@ -521,6 +522,46 @@ import XCTest
         tap(ingredient)
         reveal(app.buttons["Match this ingredient"])
     }
+    func testShopperClosesWithPendingCreditThenLinksItToTheOriginalNetCharge() {
+        launch("en", locale: "en_US", financial: true)
+        tap(app.buttons["delivery.financial"])
+        func record(_ kind: String?, amount: String, evidence: String, settled: Bool = false) {
+            tap(app.buttons["financial.add"])
+            if let kind {
+                tap(app.buttons["financial.kind"]); tap(app.buttons[kind])
+                tap(app.buttons["financial.link"]); tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Net receipt · $37.20")).firstMatch)
+                if settled {
+                    tap(app.buttons["financial.credit"]); tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Promised refund · $2.40")).firstMatch)
+                }
+            }
+            enter(amount, in: app.textFields["financial.amount"])
+            tap(app.buttons["financial.doneTyping"])
+            enter(evidence, in: app.textFields["financial.evidence"])
+            if app.buttons["financial.doneTyping"].isHittable { app.buttons["financial.doneTyping"].tap() }
+            tap(app.buttons["financial.save"])
+        }
+        record(nil, amount: "37.20", evidence: "Net receipt")
+        // Server saved the evidence but the first response was lost. Re-enter from the shop.
+        XCTAssertTrue(app.buttons["financial.retry"].waitForExistence(timeout: 8))
+        tap(app.navigationBars["Shared financial evidence"].buttons.firstMatch)
+        tap(app.buttons["delivery.financial"])
+        tap(app.buttons["financial.retry"])
+        assertFact("Paid so far", "$37.20")
+        record("Pending credit", amount: "2.40", evidence: "Promised refund")
+        assertFact("Paid so far", "$37.20"); assertFact("Pending credits", "$2.40")
+        tap(app.buttons["financial.close"])
+        tap(app.sheets.buttons["Close this pickup"])
+        XCTAssertTrue(app.staticTexts["Closed"].waitForExistence(timeout: 6))
+        assertFact("Pending credits", "$2.40")
+        record("Credit already included in net charge", amount: "2.40", evidence: "Included on statement", settled: true)
+        assertFact("Paid so far", "$37.20"); assertFact("Pending credits", "$0.00")
+        assertFact("Credits already included in charges", "$2.40")
+        tap(app.navigationBars["Shared financial evidence"].buttons.firstMatch)
+        tap(app.buttons["Refresh deliveries"])
+        tap(app.buttons["Delivered food by meal"])
+        assertFact("Uncovered by deliveries", "2 units")
+    }
+
     func testSpanishShopperDistinguishesFractionalUsableFoodZeroAndUnknown() {
         launch("es", locale: "es_US")
         tap(app.buttons["Alimentos entregados por comida"])
