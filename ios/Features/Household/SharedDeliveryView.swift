@@ -271,9 +271,6 @@ private struct DeliveryReservationEditor: View {
                     if let proposed {
                         LabeledContent(ht("New total set aside"), value: deliveryQuantityText(proposed))
                     }
-                    Button(ht("Save amount set aside")) {
-                        if let proposed { Task { await submit(proposed) } }
-                    }.disabled(proposed == nil)
                 } footer: {
                     Text(ht("Enter the total to keep for this group from this delivery."))
                 }
@@ -288,6 +285,15 @@ private struct DeliveryReservationEditor: View {
             if let error { Text(error) }
         }
         .navigationTitle(ht("Set food aside"))
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button(ht("Save")) {
+                    if let proposed { Task { await submit(proposed) } }
+                }
+                .accessibilityLabel(ht("Save amount set aside"))
+                .disabled(proposed == nil || model.busy)
+            }
+        }
         .scrollDismissesKeyboard(.interactively)
         .disabled(model.busy)
     }
