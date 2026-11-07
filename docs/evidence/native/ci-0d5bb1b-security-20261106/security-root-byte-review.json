@@ -1,0 +1,6 @@
+{
+  "frozenFilesRehashed": 13,
+  "freezeSHA256": "5f9f24f30773f1d8999f25f2cdbdf50b47202c8262af886fe73c9c67881369db",
+  "mismatches": [],
+  "scope": "Root rehashed all original frozen security files; collector audit retains SARIF/input limitations."
+}
