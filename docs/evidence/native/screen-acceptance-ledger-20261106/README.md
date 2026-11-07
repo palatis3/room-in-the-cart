@@ -69,3 +69,7 @@ No tracked changes, Git, native/browser/network/hosted operations, test executio
 ## Root integrity review and snapshot limits
 
 Root independently verified all six original package hashes and 96 input hashes, then replayed the verifier on copied inputs. The two inputs changed during follow-up work (`CURRENT-ACCEPTANCE.md` and `LedgerIngredientView.swift`) were restored in that copy from `6f1b4e4`, matching their original pinned hashes. Original evidence was unchanged. All 27 paragraphs, 123 clauses and 131 selectors passed those integrity checks. This is a historical mapping snapshot before the protected-need visibility fix, not current pass/fail coverage for every requirement. It remains a bounded traceability draft; the existing package/service proof needs further binding before using classifications to prioritize new tests.
+
+## Subsequent evidence binding
+
+The [S14 whole-batch undo addendum](s14-undo/README.md) binds existing exact-804 native assertions and a per-case pass to S14.02. Root reviewed its assertions and rehashed all 22 referenced inputs. With that scoped addendum, this snapshot has 16 scoped-proof clauses and 102 indirect/unmapped clauses; no new product test was required and no broad release acceptance is implied. The original ledger JSON remains unchanged for provenance.

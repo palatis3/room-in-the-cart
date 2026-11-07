@@ -1,0 +1,239 @@
+{
+  "schema_version": 1,
+  "clause": "S14.02",
+  "classification_recommendation": "proven-in-scoped-run",
+  "frozen_ledger_modified": false,
+  "selector": "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo",
+  "source_commit": "804030e68473d022e72b464940061c01c611a0bd",
+  "attempt": 1,
+  "run_id": 42272379477,
+  "job_id": 128091087432,
+  "artifact_id": 13534597432,
+  "archive_receipt": {
+    "artifactName": "iphone-fixture-results-contributor-balanced-04-1",
+    "sha256": "55944bcf84c5c24d520d2e4ea4d752dbe2f695ef23ba55d9b6a8b718f64e1e8f",
+    "size": 9050290,
+    "digestVerified": true
+  },
+  "archive_receipt_limit": "Relies on retained digest-verification receipt; no new download/extraction or archive rehash in this review.",
+  "case_result": {
+    "duration": "5m 33s",
+    "durationInSeconds": 333.8069689273834,
+    "name": "testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo()",
+    "nodeIdentifier": "RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo()",
+    "nodeIdentifierURL": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo",
+    "nodeType": "Test Case",
+    "result": "Passed"
+  },
+  "log_case_lines": [
+    {
+      "line": 1232,
+      "text": "Test Case '-[RoomInTheCartUITests.RecipeLibraryAcceptanceUITests testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo]' started."
+    },
+    {
+      "line": 4691,
+      "text": "Test Case '-[RoomInTheCartUITests.RecipeLibraryAcceptanceUITests testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo]' passed (333.807 seconds)."
+    }
+  ],
+  "test_source": {
+    "path": ".build/CIResearch20261106/candidate-804030e/fixture-collection/fixture-source/ios/UITests/LibraryPrivacyUITests.swift",
+    "sha256": "068b3c6ac0065957cb5468a25f6d61313fa3b035f11b6423048b38d4680fdffe",
+    "lines": [
+      140,
+      186,
+      201,
+      206
+    ]
+  },
+  "source_manifest": {
+    "path": ".build/CIResearch20261106/candidate-804030e/fixture-collection/fixture-source-manifest.json",
+    "sha256": "591aa06d055b22e2c0e5568b8ad84f46253dc0d9a4d0689d2e17b62785e7bc80"
+  },
+  "source_matches": [
+    {
+      "path": "ios/UITestSupport/LibraryPrivacyUIFixture.swift",
+      "sha256": "e43d439fa77f5ce81cca4abc6396fd9c4b92bac6aae757c5d0c590eee35b019b",
+      "lines": [
+        108,
+        114,
+        138,
+        163,
+        192,
+        200,
+        226,
+        241
+      ],
+      "matches_exact_804_manifest": true,
+      "expected_sha256": "e43d439fa77f5ce81cca4abc6396fd9c4b92bac6aae757c5d0c590eee35b019b"
+    },
+    {
+      "path": "ios/Packages/RecordArchive/Tests/RecordArchiveTests/RecordArchiveTests.swift",
+      "sha256": "f01f96d8f37365ad858a53992ab2535d4442b2e4c8c1cc2a72627f935d163850",
+      "lines": [
+        4,
+        8,
+        140,
+        148
+      ],
+      "matches_exact_804_manifest": true,
+      "expected_sha256": "f01f96d8f37365ad858a53992ab2535d4442b2e4c8c1cc2a72627f935d163850"
+    },
+    {
+      "path": "ios/Features/Records/RecordsToolsView.swift",
+      "sha256": "14692363dbd3287e91d2bcbb949ae0fe2cb56d6d9b36760772d5633e6f8db599",
+      "lines": [
+        64
+      ],
+      "matches_exact_804_manifest": true,
+      "expected_sha256": "14692363dbd3287e91d2bcbb949ae0fe2cb56d6d9b36760772d5633e6f8db599"
+    },
+    {
+      "path": "ios/Features/Records/RecordsToolsModel.swift",
+      "sha256": "907271d92938333b195c47aa1ea869bed80546c1b4f782c7f18c111927c32101",
+      "lines": [
+        217,
+        225
+      ],
+      "matches_exact_804_manifest": true,
+      "expected_sha256": "907271d92938333b195c47aa1ea869bed80546c1b4f782c7f18c111927c32101"
+    }
+  ],
+  "immutable_manifest": {
+    "path": ".build/CIResearch20261106/candidate-804030e/core-collection/immutable-source-manifest.json",
+    "sha256": "d98f88d95902f4b269f36e4a153ec5eac68fe52fff79db98574b52346ff84b95"
+  },
+  "source_proof": {
+    "path": ".build/CIResearch20261106/candidate-804030e/core-collection/source-proof.json",
+    "sha256": "7512e4df8db2aaada1075f775ab877dc19cc38e2950c52b4ffb682a6d5a867fb"
+  },
+  "runtime": {
+    "device": {
+      "architecture": "arm64",
+      "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+      "deviceName": "iPhone 17",
+      "modelName": "iPhone 17",
+      "osBuildNumber": "23C54",
+      "osVersion": "26.2",
+      "platform": "iOS Simulator"
+    },
+    "expectedFailures": 0,
+    "failedTests": 0,
+    "passedTests": 4,
+    "skippedTests": 0,
+    "testPlanConfiguration": {
+      "configurationId": "1",
+      "configurationName": "Test Scheme Action"
+    }
+  },
+  "result_references": [
+    {
+      "path": ".build/CIResearch20261106/candidate-804030e/fixture-collection/fixture-artifacts/iphone-fixture-results-contributor-balanced-04-1/test-details.json",
+      "sha256": "d0a65ac7ba791ff01f0e67c57ed0976aabaa5eaca28f4d6b776deb6e4e289bd5"
+    },
+    {
+      "path": ".build/CIResearch20261106/candidate-804030e/fixture-collection/fixture-artifacts/iphone-fixture-results-contributor-balanced-04-1/test-summary.json",
+      "sha256": "be83540ae0f9f9b206a9465b1e9407f5703386773e9832c45e2090a142529a78"
+    },
+    {
+      "path": ".build/CIResearch20261106/candidate-804030e/fixture-collection/fixture-artifacts/iphone-fixture-results-contributor-balanced-04-1/Tests.log",
+      "sha256": "f49ebf519ae53ba96b7637cd2e26d37679083525459d4f0af43917e2500e9ec7"
+    },
+    {
+      "path": ".build/CIResearch20261106/candidate-804030e/fixture-collection/fixture-artifacts/iphone-fixture-results-contributor-balanced-04-1/fixture-strict-replay.log",
+      "sha256": "7b95fbd0a88edc731563915f029907e2993e7b29e1b0c48c3e51d9444d0b176c"
+    },
+    {
+      "path": ".build/CIResearch20261106/candidate-804030e/fixture-collection/fixture-artifacts/iphone-fixture-results-contributor-balanced-04-1/fixture-strict-exit.txt",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    }
+  ],
+  "provenance_references": [
+    {
+      "path": ".build/CIResearch20261106/candidate-804030e/fixture-collection/fixture-evidence/contributor-balanced-04.json",
+      "sha256": "fcc32f10b6e449162a3e86e0f0cdbdd83809871d8fd2fa545a0434e2e266b321"
+    },
+    {
+      "path": ".build/CIResearch20261106/candidate-804030e/fixture-collection/fixture-review-manifest.json",
+      "sha256": "26e22d45333ffd8944f293300e9b190c61f0d3f359c90049eb27c917155a1197"
+    },
+    {
+      "path": ".build/CIResearch20261106/candidate-804030e/fixture-collection/fixture-terminal-summary.json",
+      "sha256": "520099803862117f7a66d63684758dc632516a928e7f2a0e0428c1c4cc91dfb5"
+    },
+    {
+      "path": ".build/CIResearch20261106/candidate-804030e/fixture-collection/fixture-runtime-audit.json",
+      "sha256": "4a4a97c5ac6ccb14233c7afa4478404c618352f96b987c81b33160e1a326406f"
+    },
+    {
+      "path": ".build/CIResearch20261106/candidate-804030e/fixture-collection/fixture-build-runtime.json",
+      "sha256": "1039dd3307eca5e20338a889d12fb0d412aff415aa69b64562517f0cdb4036ce"
+    }
+  ],
+  "package_selector": "RecordArchiveTests/RecordArchiveTests/testRecipeBatchUndoPreservesExistingCopyAndAllowsRetry",
+  "package_results": [
+    {
+      "run_id": 42272379454,
+      "path": ".build/CIResearch20261106/candidate-804030e/core-collection/swift-package-results-1/.build/package-results/RecordArchive.log",
+      "sha256": "234f108703767bc3c9ff3d94747b1780e52a74f42c1389feaaa886c34889a9e4",
+      "case_lines": [
+        {
+          "line": 70,
+          "text": "Test Case '-[RecordArchiveTests.RecordArchiveTests testRecipeBatchUndoPreservesExistingCopyAndAllowsRetry]' started."
+        },
+        {
+          "line": 71,
+          "text": "Test Case '-[RecordArchiveTests.RecordArchiveTests testRecipeBatchUndoPreservesExistingCopyAndAllowsRetry]' passed (0.006 seconds)."
+        }
+      ]
+    },
+    {
+      "run_id": 42272379472,
+      "path": ".build/CIResearch20261106/candidate-804030e/core-collection/swift-address-1/RecordArchive.log",
+      "sha256": "ae8e8cf05f5eab0150be56a56266907fa864b81a39404e35487f895a4302d2dc",
+      "case_lines": [
+        {
+          "line": 70,
+          "text": "Test Case '-[RecordArchiveTests.RecordArchiveTests testRecipeBatchUndoPreservesExistingCopyAndAllowsRetry]' started."
+        },
+        {
+          "line": 71,
+          "text": "Test Case '-[RecordArchiveTests.RecordArchiveTests testRecipeBatchUndoPreservesExistingCopyAndAllowsRetry]' passed (0.017 seconds)."
+        }
+      ]
+    },
+    {
+      "run_id": 42272379472,
+      "path": ".build/CIResearch20261106/candidate-804030e/core-collection/swift-thread-1/RecordArchive.log",
+      "sha256": "602438a560657091613b925ab85852fe000a480c8a97af2f4208672daae0c815",
+      "case_lines": [
+        {
+          "line": 72,
+          "text": "Test Case '-[RecordArchiveTests.RecordArchiveTests testRecipeBatchUndoPreservesExistingCopyAndAllowsRetry]' started."
+        },
+        {
+          "line": 73,
+          "text": "Test Case '-[RecordArchiveTests.RecordArchiveTests testRecipeBatchUndoPreservesExistingCopyAndAllowsRetry]' passed (0.019 seconds)."
+        }
+      ]
+    }
+  ],
+  "package_provenance": {
+    "path": "docs/evidence/native/ci-804030e-20261106/original-core-deep-performance-audit.json",
+    "sha256": "e7adee2579311cd004292020ab1dc9db15d965a9c3546e33aa4dfa30722570a4"
+  },
+  "validation": {
+    "frozen_test_source_hash_matches": true,
+    "fixture_and_package_sources_equal_804": true,
+    "raw_xctest_log_hash_matches_frozen_receipt": true,
+    "single_start_and_pass_agree_with_unique_json_case": true,
+    "native_executions_this_review": 0,
+    "raw_records_media_read": false
+  },
+  "limits": [
+    "English Debug CONTRIBUTOR_CAPTURE_UI_FIXTURE; OS_ACTIVITY_MODE=disable",
+    "OS file picker selected URL is injected; production review/apply/undo exercised",
+    "Registry original-record equality and canonical live-ledger export equality; not a database-byte equivalence assertion",
+    "No crash/relaunch/concurrent-edit or all-record-types universal claim",
+    "Generic package fixture uses comparison records; native case provides recipe-specific proof"
+  ]
+}
