@@ -249,6 +249,7 @@ struct HouseholdRequestDecisionView: View {
 }
 struct ShopperDeliverySection: View {
     @ObservedObject var model: HouseholdInboxModel
+    @State private var reachedRetryDeadline: Date?
     var body: some View {
         switch model.delivery {
         case .none: EmptyView()
@@ -256,10 +257,20 @@ struct ShopperDeliverySection: View {
             Section(ht("Pending decision")) {
                 Text(ht("The result is not confirmed. Refresh current requests before creating another decision."))
                 if model.delivery == .waiting {
-                    TimelineView(.explicit([Date.now, max(.now, model.retryAfter)])) { tick in
-                        Button(ht("Retry the same decision")) { Task { await model.retry() } }
-                            .disabled(model.busy || tick.date < model.retryAfter)
-                    }
+                    Button(ht("Retry the same decision")) { Task { await model.retry() } }
+                        .disabled(model.busy || (reachedRetryDeadline != model.retryAfter && Date.now < model.retryAfter))
+                        .task(id: model.retryAfter) {
+                            let deadline = model.retryAfter
+                            do {
+                                while deadline > .now {
+                                    try await Task.sleep(for: .seconds(max(0, deadline.timeIntervalSinceNow)))
+                                }
+                                try Task.checkCancellation()
+                                reachedRetryDeadline = deadline
+                            } catch is CancellationError {
+                                // A new deadline or a dismissed action cancels this wait.
+                            } catch { return }
+                        }
                 }
                 Button(ht("Refresh current requests")) { Task { await model.load() } }.disabled(model.busy)
                 Button(ht("I reviewed the current requests; clear this retry")) { Task { await model.clearPendingAfterReview() } }
