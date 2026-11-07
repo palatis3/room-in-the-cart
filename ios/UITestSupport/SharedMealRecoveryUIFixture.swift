@@ -46,6 +46,13 @@ final class SharedMealRecoveryFixture {
         }
     }
     private var meals: [Row] { [original(1), replacement ?? original(2)] }
+    func version(of occurrence: String) -> String? {
+        let meal = meals.first { ($0["occurrenceId"] as? String)?.lowercased() == occurrence }
+        return (meal?["revisionId"] as? String)?.lowercased()
+    }
+
+    var replacedOccurrence: String? { (replacement?["occurrenceId"] as? String)?.lowercased() }
+
     private var base: [String: Int] {
         ["shopRevision": 2, "authorityEpoch": 1, "recoveryRevision": revision, "supplyRevision": revision,
          "pantryRevision": revision, "contextRevision": revision]

@@ -71,7 +71,7 @@ import XCTest
         return row.waitForExistence(timeout: 8)
     }
     func testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage() {
-        launch("en", locale: "en_US", recovery: true)
+        launch("en", locale: "en_US", cookCopies: true, recovery: true)
         let tuesday = "EEEEEEEE-EEEE-4EEE-8EEE-000000000001"
         let wednesday = "EEEEEEEE-EEEE-4EEE-8EEE-000000000002"
         func enable(_ identifier: String) {
@@ -113,6 +113,16 @@ import XCTest
         tap(app.buttons["Español (EE. UU.)"])
         reveal(copy)
         XCTAssertTrue(copy.label.contains("Aún falta: 4 unidades"), copy.label)
+        let revisedSpanish = copy.label
+        tap(app.buttons["delivery.cook.save"])
+        reveal(app.staticTexts["Dated copy saved"])
+        tap(app.buttons["delivery.cook.history"])
+        tap(app.buttons["delivery.cook.saved.1"])
+        let saved = app.staticTexts["delivery.cook.savedText"]
+        reveal(saved)
+        XCTAssertEqual(saved.label, revisedSpanish)
+        tap(app.navigationBars["Dated copy"].buttons.firstMatch)
+        tap(app.navigationBars["Saved cook notes"].buttons.firstMatch)
         tap(app.navigationBars["Tell the cook"].buttons.firstMatch)
         tap(app.buttons["recovery.cook." + tuesday])
         reveal(copy)

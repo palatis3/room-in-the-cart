@@ -24,9 +24,13 @@ final class SharedDeliveryFixtureRecords {
     let recovery = ProcessInfo.processInfo.arguments.contains("--shared-recovery-fixture") ? SharedMealRecoveryFixture() : nil
     let pantry = ProcessInfo.processInfo.arguments.contains("--shared-pantry-fixture") ? SharedPantryFixtureRecords() : nil
     let supportsCookCopies = ProcessInfo.processInfo.arguments.contains("--shared-cook-copies-fixture")
-    private var copies: [[String:Any]] = [] // Newest first for the fixture's single placed meal.
+    private var copies: [[String:Any]] = []
     // PostgreSQL keys recipient labels by their exact UTF-8 spelling.
-    private var recipientHeads: [Data:[String:Any]] = [:]
+    private struct Recipient: Hashable {
+        let occurrence: String
+        let spelling: Data
+    }
+    private var recipientHeads: [Recipient:[String:Any]] = [:]
     private var recordedCommands: [String:Data] = [:]
     private(set) var revision = 0
     private var source: [String:Any]?
@@ -83,15 +87,22 @@ final class SharedDeliveryFixtureRecords {
     }
     enum CookFailure: Error { case invalid, staleBase, staleSupply, replayConflict }
 
+    private func placedOccurrence(_ raw: String?) throws -> String {
+        guard let id = raw?.lowercased(), supportsCookCopies,
+              recovery.map({ $0.version(of: id) != nil }) ?? (id == occurrence) else { throw CookFailure.invalid }
+        return id
+    }
+
     func cookCopies(occurrenceID: String?, cursor: String?) throws -> [String:Any] {
-        guard supportsCookCopies, occurrenceID?.lowercased() == occurrence else { throw CookFailure.invalid }
+        let id = try placedOccurrence(occurrenceID)
+        let mealCopies = copies.filter { $0["occurrenceId"] as? String == id }
         let start: Int
         if let cursor {
-            guard let index = copies.firstIndex(where: { $0["copyId"] as? String == cursor.lowercased() }) else { throw CookFailure.invalid }
+            guard let index = mealCopies.firstIndex(where: { $0["copyId"] as? String == cursor.lowercased() }) else { throw CookFailure.invalid }
             start = index + 1
         } else { start = 0 }
-        let page = Array(copies.dropFirst(start).prefix(20))
-        let next = start + page.count < copies.count ? page.last?["copyId"] : nil
+        let page = Array(mealCopies.dropFirst(start).prefix(20))
+        let next = start + page.count < mealCopies.count ? page.last?["copyId"] : nil
         return ["copies":page,"nextCursor":next ?? NSNull()]
     }
 
@@ -103,9 +114,9 @@ final class SharedDeliveryFixtureRecords {
     }
 
     func cookBaseline(_ body: [String:Any]) throws -> [String:Any] {
-        guard supportsCookCopies, (body["occurrenceId"] as? String)?.lowercased() == occurrence else { throw CookFailure.invalid }
+        let occurrenceID = try placedOccurrence(body["occurrenceId"] as? String)
         let name = try recipient(body)
-        guard let send = recipientHeads[Data(name.utf8)], let id = send["copyId"] as? String,
+        guard let send = recipientHeads[Recipient(occurrence: occurrenceID, spelling: Data(name.utf8))], let id = send["copyId"] as? String,
               let copy = copies.first(where: { $0["copyId"] as? String == id }) else { return ["baseline":NSNull()] }
         return ["baseline":["copy": copy, "send": send]]
     }
@@ -118,21 +129,36 @@ final class SharedDeliveryFixtureRecords {
         switch kind {
         case "cookCopy.save":
             guard body["placedRevision"] as? Int == 1, body["supplyRevision"] as? Int == revision else { throw CookFailure.staleSupply }
-            guard (body["occurrenceId"] as? String)?.lowercased() == occurrence, body["mealRevision"] as? Int == 1,
+            let occurrenceID = try placedOccurrence(body["occurrenceId"] as? String)
+            guard body["mealRevision"] as? Int == 1,
                   let language = body["language"] as? String, ["en","es"].contains(language),
                   let text = body["text"] as? String, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw CookFailure.invalid }
             copyID = operation
-            let copy: [String:Any] = ["copyId":copyID,"occurrenceId":occurrence,"mealRevision":1,"shopId":shop,"shopRevision":2,
+            let version = copies.filter { $0["occurrenceId"] as? String == occurrenceID }.count + 1
+            var copy: [String:Any] = ["copyId":copyID,"occurrenceId":occurrenceID,"mealRevision":1,"shopId":shop,"shopRevision":2,
                                       "placedRevision":1,"authorityEpoch":1,"supplyRevision":revision,"language":language,
-                                      "text":text,"version":copies.count + 1,"createdAt":at]
+                                      "text":text,"version":version,"createdAt":at]
+            if let pantryRevision = body["pantryRevision"] as? Int {
+                guard pantryRevision == pantry?.revision else { throw CookFailure.staleSupply }
+                copy["pantryRevision"] = pantryRevision
+            }
+            if body["recoveryRevision"] != nil || body["revisionId"] != nil || recovery?.replacedOccurrence == occurrenceID {
+                guard let recovery, let recoveryRevision = body["recoveryRevision"] as? Int, recoveryRevision == recovery.revision,
+                      copy["pantryRevision"] != nil, let mealVersion = (body["revisionId"] as? String)?.lowercased(),
+                      recovery.version(of: occurrenceID) == mealVersion else { throw CookFailure.staleSupply }
+                copy["recoveryRevision"] = recoveryRevision
+                copy["revisionId"] = mealVersion
+            }
             copies.insert(copy, at: 0)
         case "cookCopy.markSent":
-            guard let id = (body["copyId"] as? String)?.lowercased(), copies.contains(where: { $0["copyId"] as? String == id }),
+            guard let id = (body["copyId"] as? String)?.lowercased(), let saved = copies.first(where: { $0["copyId"] as? String == id }),
+                  let occurrenceID = saved["occurrenceId"] as? String,
                   let previous = body["previousSendId"], previous is NSNull || previous is String else { throw CookFailure.invalid }
             let name = try recipient(body)
-            guard (previous as? String)?.lowercased() == recipientHeads[Data(name.utf8)]?["sendId"] as? String else { throw CookFailure.staleBase }
+            let recipientKey = Recipient(occurrence: occurrenceID, spelling: Data(name.utf8))
+            guard (previous as? String)?.lowercased() == recipientHeads[recipientKey]?["sendId"] as? String else { throw CookFailure.staleBase }
             copyID = id
-            recipientHeads[Data(name.utf8)] = ["sendId":operation,"copyId":copyID,"recipient":name,"sentAt":at]
+            recipientHeads[recipientKey] = ["sendId":operation,"copyId":copyID,"recipient":name,"sentAt":at]
         default: throw CookFailure.invalid
         }
         return ["kind":kind,"operationId":operation,"shopId":shop,"shopRevision":2,"authorityEpoch":1,
