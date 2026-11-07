@@ -87,6 +87,7 @@ import XCTest
         let edit = app.buttons["Edit cook wording"]
         let field = app.textViews["Editable cook instruction"]
         let marker = "Warm the wraps."
+        let addition = " Pack separately."
 
         tap(edit)
         tap(field)
@@ -113,21 +114,35 @@ import XCTest
 
         tap(play)
         let pause = app.buttons["Pause readback"]
+        let unavailable = app.staticTexts["A local voice is unavailable. The complete instruction remains readable."]
+        // The real audio session activates asynchronously after an explicit Play.
+        let playbackReady = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            pause.exists || unavailable.exists
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [playbackReady], timeout: 8), .completed,
+                       "Expected playback controls or the readable local-voice fallback after Play")
         if pause.exists {
             tap(pause)
             tap(app.buttons["Resume readback"])
             tap(stop)
         } else {
-            XCTAssertTrue(app.staticTexts["A local voice is unavailable. The complete instruction remains readable."].exists)
+            XCTAssertTrue(unavailable.exists)
         }
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label == %@", edited)).firstMatch.exists)
         tap(edit)
         tap(field)
-        field.typeText(" Pack separately.")
+        field.typeText(addition)
         tap(app.buttons["delivery.cook.finishEditing"])
+        reveal(preview)
+        let revised = preview.label
+        XCTAssertNotEqual(revised, edited)
+        XCTAssertTrue(revised.contains(addition))
         tap(prepare)
         reveal(confirm)
         XCTAssertFalse(play.exists)
         tap(app.buttons["delivery.cook.cancelReadback"])
+        XCTAssertEqual(preview.label, revised)
+        XCTAssertFalse(play.exists)
     }
 
     func testShopperConfirmsCorrectsAndClearsTheLinkedFamilyPurchase() {
