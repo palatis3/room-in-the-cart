@@ -49,6 +49,7 @@ private final class S17FixtureServer: @unchecked Sendable {
             var capabilities = shopper ? ["shopper_commands","shopper_inbox","request_preview"] : ["meal_proposals"]
             if shopper, let deliveries {
                 capabilities.append("delivery_evidence")
+                if deliveries.recovery != nil { capabilities.append("meal_recovery") }
                 if deliveries.pantry != nil { capabilities.append("pantry_lots") }
                 if deliveries.supportsCookCopies { capabilities.append("cook_copies") }
             }
@@ -70,14 +71,25 @@ private final class S17FixtureServer: @unchecked Sendable {
         let deliveryPath = scoped + "/shops/" + Self.shop
         let pantryPath = deliveryPath + "/pantry-lots"
         let cookPath = deliveryPath + "/cook-copies"
+        let recoveryPath = deliveryPath + "/meal-recovery"
         if let deliveries, [deliveryPath + "/delivery-evidence", deliveryPath + "/delivery-evidence/coverage",
                             pantryPath, pantryPath + "/coverage", pantryPath + "/observation-preview",
+                            recoveryPath, recoveryPath + "/coverage", recoveryPath + "/preview",
                             cookPath, cookPath + "/baseline", scoped + "/commands"].contains(path) {
             guard request.value(forHTTPHeaderField: "Authorization") == "Bearer fixture-shopper",
                   request.value(forHTTPHeaderField: "X-Device-Token") == "shopper-token" else { return try denied() }
             if path.hasSuffix("/delivery-evidence/coverage") { return try json(deliveries.coverage(shop: Self.shop)) }
             if path.hasSuffix("/delivery-evidence") { return try json(deliveries.page(shop: Self.shop)) }
             do {
+                if path == recoveryPath || path.hasPrefix(recoveryPath + "/") {
+                    guard let recovery = deliveries.recovery else { return try denied() }
+                    switch (request.httpMethod, path) {
+                    case ("GET", recoveryPath): return try json(recovery.desk(shop: Self.shop))
+                    case ("GET", recoveryPath + "/coverage"): return try json(recovery.coverage(shop: Self.shop))
+                    case ("POST", recoveryPath + "/preview"): return try json(recovery.preview(shop: Self.shop, input: input))
+                    default: return try denied()
+                    }
+                }
                 if path == pantryPath || path.hasPrefix(pantryPath + "/") {
                     guard let pantry = deliveries.pantry else { return try denied() }
                     switch (request.httpMethod, path) {

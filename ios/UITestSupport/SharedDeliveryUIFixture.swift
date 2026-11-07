@@ -21,6 +21,7 @@ struct SharedDeliveryFixtureRoot: View {
 /// Deterministic HTTP responses for the iPhone controls. The pinned HTTPS suite
 /// exercises these same Swift commands against the real service and PostgreSQL.
 final class SharedDeliveryFixtureRecords {
+    let recovery = ProcessInfo.processInfo.arguments.contains("--shared-recovery-fixture") ? SharedMealRecoveryFixture() : nil
     let pantry = ProcessInfo.processInfo.arguments.contains("--shared-pantry-fixture") ? SharedPantryFixtureRecords() : nil
     let supportsCookCopies = ProcessInfo.processInfo.arguments.contains("--shared-cook-copies-fixture")
     private var copies: [[String:Any]] = [] // Newest first for the fixture's single placed meal.
@@ -44,7 +45,7 @@ final class SharedDeliveryFixtureRecords {
             "groups":[["id":group,"name":"School lunch","servings":["numerator":2,"denominator":1],"protected":true]],
             "ingredients":[["id":ingredient,"name":"Tortillas","quantity":quantity,"groupIds":[group],"exclusions":["sesame"]]]]
         let meal: [String:Any] = ["title":"Lunch wraps","day":"2026-11-08","kind":"lunch","portions":2,"protected":true,"planning":plan]
-        return ["shopId":shop, "coverageAvailable":true,"reservationsAvailable":true,"meals":pantry?.meals ?? [["occurrenceId":occurrence,"revision":1,"meal":meal]], "placedRevision":1, "shopRevision":2, "authorityEpoch":1, "supplyRevision":revision,
+        return ["shopId":shop, "coverageAvailable":true,"reservationsAvailable":true,"recoveryRevision":recovery?.revision ?? 0,"meals":recovery?.sealedMeals ?? pantry?.meals ?? [["occurrenceId":occurrence,"revision":1,"meal":meal]], "placedRevision":1, "shopRevision":2, "authorityEpoch":1, "supplyRevision":revision,
          "lines":[["lineId":line,"name":"Ordered wraps"]], "sources":source.map { [$0] } ?? [], "nextCursor":NSNull()]
     }
     func coverage(shop: String) throws -> [String:Any] {
@@ -146,11 +147,17 @@ final class SharedDeliveryFixtureRecords {
             guard recordedCommands[key] == bytes else { throw CookFailure.replayConflict }
             return receipt
         }
-        if kind.hasPrefix("cookCopy.") || kind.hasPrefix("pantry.") {
+        if kind.hasPrefix("cookCopy.") || kind.hasPrefix("pantry.") || kind == "mealRecovery.apply" {
             guard command["v"] as? Int == 1, command["shopId"] as? String == shop,
                   command["replayWindow"] as? String == "77777777-7777-4777-8777-777777777777" else { throw CookFailure.invalid }
             let receipt: [String:Any]
-            if kind.hasPrefix("pantry.") {
+            if kind == "mealRecovery.apply" {
+                guard let recovery, let pantry, let base = command["base"] as? [String:Any],
+                      base["shopRevision"] as? Int == 2, base["authorityEpoch"] as? Int == 1 else { throw CookFailure.staleBase }
+                receipt = try recovery.apply(shop: shop, body: body)
+                revision += 1
+                pantry.revision += 1
+            } else if kind.hasPrefix("pantry.") {
                 guard let pantry, let base = command["base"] as? [String:Any], base["shopRevision"] as? Int == 2,
                       base["authorityEpoch"] as? Int == 1 else { throw CookFailure.staleBase }
                 receipt = try pantry.record(shop: shop, supply: revision, kind: kind, body: body)

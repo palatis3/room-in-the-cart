@@ -12,9 +12,10 @@ import XCTest
         app.terminate()
     }
 
-    private func launch(_ language: String, locale: String, cookCopies: Bool = false, pantry: Bool = false) {
+    private func launch(_ language: String, locale: String, cookCopies: Bool = false, pantry: Bool = false, recovery: Bool = false) {
         app.launchArguments = ["--ui-testing", "--shared-delivery-fixture", "-AppleLanguages", "(\(language))", "-AppleLocale", locale]
-        if pantry { app.launchArguments.append("--shared-pantry-fixture") }
+        if pantry || recovery { app.launchArguments.append("--shared-pantry-fixture") }
+        if recovery { app.launchArguments.append("--shared-recovery-fixture") }
         if cookCopies { app.launchArguments.append("--shared-cook-copies-fixture") }
         app.launch()
         tap(app.buttons["sharedShop.deliveryEvidence"])
@@ -69,6 +70,58 @@ import XCTest
             "identifier BEGINSWITH %@ AND (label CONTAINS %@ OR value CONTAINS %@)", "delivery.confirmed.", text, text)).firstMatch
         return row.waitForExistence(timeout: 8)
     }
+    func testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage() {
+        launch("en", locale: "en_US", recovery: true)
+        let tuesday = "EEEEEEEE-EEEE-4EEE-8EEE-000000000001"
+        let wednesday = "EEEEEEEE-EEEE-4EEE-8EEE-000000000002"
+        func enable(_ identifier: String) {
+            let control = app.switches[identifier]
+            reveal(control)
+            control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+            XCTAssertEqual(control.value as? String, "1")
+        }
+        tap(app.buttons["recovery.open"])
+        tap(app.buttons["recovery.meal." + wednesday])
+        enter("Wednesday rice", in: app.textFields["recovery.title"])
+        enter("Cooked rice", in: app.textFields["recovery.ingredient"])
+        enter("4", in: app.textFields["recovery.quantity"])
+        enable("recovery.extraTrip")
+        tap(app.buttons["recovery.preview"])
+        reveal(app.staticTexts["Tuesday tortillas · Protected lunch"])
+        assertFact("Still needed", "2 units")
+        reveal(app.staticTexts["Cooked rice · Dinner plates"])
+        assertFact("Still needed", "4 units")
+        let review = app.buttons["recovery.reviewAgreements"]
+        reveal(review)
+        XCTAssertFalse(review.isEnabled)
+        enable("recovery.agreeTrip")
+        XCTAssertFalse(review.isEnabled)
+        enable("recovery.agreeUnresolved")
+        tap(review)
+        tap(app.buttons["recovery.apply"])
+        reveal(app.staticTexts["recovery.saved"])
+        tap(app.buttons["recovery.currentCoverage"])
+        tap(app.buttons["recovery.cook." + wednesday])
+        let copy = app.staticTexts["delivery.cook.preview"]
+        reveal(copy)
+        for fact in ["Wednesday rice", "Cooked rice", "Dinner plates", "Still needed: 4 units", "No sesame"] {
+            XCTAssertTrue(copy.label.contains(fact), copy.label)
+        }
+        XCTAssertFalse(copy.label.contains("Wednesday beans"))
+        XCTAssertFalse(copy.label.contains("Tuesday tortillas"))
+        tap(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Recipient language")).firstMatch)
+        tap(app.buttons["Español (EE. UU.)"])
+        reveal(copy)
+        XCTAssertTrue(copy.label.contains("Aún falta: 4 unidades"), copy.label)
+        tap(app.navigationBars["Tell the cook"].buttons.firstMatch)
+        tap(app.buttons["recovery.cook." + tuesday])
+        reveal(copy)
+        XCTAssertTrue(copy.label.contains("Tuesday tortillas"), copy.label)
+        XCTAssertTrue(copy.label.contains("Protected lunch"), copy.label)
+        XCTAssertTrue(copy.label.contains("Still needed: 2 units") || copy.label.contains("Aún falta: 2 unidades"), copy.label)
+        XCTAssertFalse(copy.label.contains("Cooked rice"))
+    }
+
     func testShopperReviewsFreezerBatchCoverageBeforeCorrectingFiveToThree() {
         launch("en", locale: "en_US", pantry: true)
         let lunch = "AAAAAAA1-AAAA-4AAA-8AAA-AAAAAAAAAAAA", dinner = "BBBBBBB1-BBBB-4BBB-8BBB-BBBBBBBBBBBB"
