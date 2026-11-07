@@ -75,6 +75,15 @@ struct SharedDeliveryCoverageView: View {
                 if let unit = need.required.flatMap({ UnitOfMeasure(rawValue: $0.unit) }), let covered = need.covered, let missing = need.missing {
                     LabeledContent(ht("Covered by deliveries"), value: quantity(covered, unit: unit))
                     LabeledContent(ht("Uncovered by deliveries"), value: quantity(missing, unit: unit))
+                    ForEach(need.reservations ?? [], id: \.reservationId) { reservation in
+                        if let source = page.sources.first(where: { $0.id == reservation.sourceId }) {
+                            VStack(alignment: .leading) {
+                                Text(source.foodName + " · " + source.segmentKey.uuidString.prefix(8)).font(.subheadline)
+                                LabeledContent(ht("Amount set aside"), value: quantity(reservation.requested, unit: unit))
+                                LabeledContent(ht("Still backed by this delivery"), value: quantity(reservation.backed, unit: unit))
+                            }
+                        }
+                    }
                     ForEach(need.allocations, id: \.sourceId) { allocation in
                         if let source = page.sources.first(where: { $0.id == allocation.sourceId }) {
                             LabeledContent(source.foodName + " · " + source.segmentKey.uuidString.prefix(8), value: quantity(allocation.amount, unit: unit))
@@ -101,6 +110,7 @@ struct SharedDeliveryCoverageView: View {
         case "unconfirmed": return ht("A matched delivery is waiting for a usable count.")
         case "exclusion": return ht("A matched delivery conflicts with a recorded exclusion.")
         case "unitMismatch": return ht("A matched delivery uses an incompatible unit.")
+        case "reservationShortfall": return ht("This delivery no longer covers the full amount set aside.")
         case "protectedQuantityUnknown": return ht("Matched food is held for a protected group whose quantity is unknown.")
         default: return ht("Refresh deliveries and review the current record.")
         }

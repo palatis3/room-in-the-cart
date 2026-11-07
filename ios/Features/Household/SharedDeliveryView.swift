@@ -150,18 +150,22 @@ private struct DeliveryMealMatches: View {
                                                 if group.protected || occurrence.meal.protected {
                                                     Label(group.name, systemImage: "lock").accessibilityLabel(group.name + ", " + ht("Protected portions"))
                                                 } else { Text(group.name) }
-                                                let binding = plan.bindings?.first { $0.ingredientId == ingredient.id && $0.groupId == group.id }
-                                                let quantity = binding?.quantity ?? (ingredient.groupIds.count == 1 ? ingredient.quantity : nil)
-                                                LabeledContent(ht("Reserved for group"), value: deliveryQuantityText(quantity))
+                                                groupReservation(group, ingredient: ingredient, target: target, plan: plan, matched: matched)
                                             }
                                         }
                                         if model.shop?.phase == "placed", model.pending == nil {
                                             Section {
                                                 Button(matched ? ht("Remove ingredient match") : ht("Match this ingredient")) {
-                                                    Task { await save(target, matched: !matched) }
+                                                    Task { error = await save(.match(source: source.id, ingredient: target, matched: !matched)) }
                                                 }
-                                                .disabled(model.busy)
-                                            } footer: { Text(ht("Matching identifies the food. Portions are reserved separately.")) }
+                                                .disabled(model.busy || hasActiveReservation(target))
+                                            } footer: {
+                                                if hasActiveReservation(target) {
+                                                    Text(ht("Release the amounts set aside before removing this match."))
+                                                } else {
+                                                    Text(ht("Matching identifies the food. Portions are reserved separately."))
+                                                }
+                                            }
                                         }
                                         if let error { Text(error) }
                                     }
@@ -182,11 +186,121 @@ private struct DeliveryMealMatches: View {
         .interactiveDismissDisabled(model.busy)
     }
 
-    private func save(_ target: SharedDeliveryPage.IngredientMatch, matched: Bool) async {
-        if await model.saveDelivery(.match(source: source.id, ingredient: target, matched: matched), reviewed: reviewed) {
+    private func hasActiveReservation(_ target: SharedDeliveryPage.IngredientMatch) -> Bool {
+        source.reservations?.contains { head in
+            head.occurrenceId == target.occurrenceId && head.mealRevision == target.mealRevision
+                && head.ingredientId == target.ingredientId && head.quantity != nil
+        } == true
+    }
+
+    @ViewBuilder private func groupReservation(_ group: SharedMealPlanning.Group, ingredient: SharedMealPlanning.Ingredient,
+                                               target: SharedDeliveryPage.IngredientMatch, plan: SharedMealPlanning, matched: Bool) -> some View {
+        let bindings = (plan.bindings ?? []).filter { $0.ingredientId == ingredient.id }
+        let groupAmount = bindings.first(where: { $0.groupId == group.id })?.quantity
+            ?? (ingredient.groupIds.count == 1 ? ingredient.quantity : nil)
+        LabeledContent(ht("Required for group"), value: deliveryQuantityText(groupAmount))
+        let head = source.reservations?.first { $0.occurrenceId == target.occurrenceId && $0.mealRevision == target.mealRevision
+            && $0.ingredientId == target.ingredientId && $0.groupId == group.id }
+        if let reserved = head?.quantity {
+            LabeledContent(ht("Set aside from this delivery"), value: deliveryQuantityText(reserved))
+        }
+        if matched, reviewed.reservationsAvailable == true, model.shop?.phase == "placed", model.pending == nil,
+           let groupAmount, let unit = UnitOfMeasure(rawValue: groupAmount.unit),
+           (ingredient.groupIds.count == 1 || bindings.count == ingredient.groupIds.count),
+           head?.quantity != nil || source.confirmed != nil {
+            NavigationLink {
+                DeliveryReservationEditor(model: model, source: source, group: group, ingredient: ingredient, target: target,
+                                          required: groupAmount, unit: unit, head: head, reviewed: reviewed, save: save)
+            } label: {
+                Text(String(format: ht("Review amount to set aside for %@"), group.name))
+            }
+        }
+    }
+
+    private func save(_ edit: SharedDeliveryEdit) async -> String? {
+        if await model.saveDelivery(edit, reviewed: reviewed) {
             dismiss()
             if model.pending == nil { await model.loadDelivery() }
-        } else { error = model.notice ?? ht("Refresh deliveries and review the current record.") }
+            return nil
+        }
+        return model.notice ?? ht("Refresh deliveries and review the current record.")
+    }
+}
+
+private struct DeliveryReservationEditor: View {
+    @ObservedObject var model: HouseholdShopModel
+    let source: SharedDeliveryPage.Source
+    let group: SharedMealPlanning.Group
+    let ingredient: SharedMealPlanning.Ingredient
+    let target: SharedDeliveryPage.IngredientMatch
+    let required: SharedMealQuantity
+    let unit: UnitOfMeasure
+    let head: SharedDeliveryPage.Reservation?
+    let reviewed: SharedDeliveryPage
+    let save: (SharedDeliveryEdit) async -> String?
+    @State private var amount = ""
+    @State private var releasing = false
+    @State private var error: String?
+
+    private var proposed: SharedMealQuantity? {
+        guard let value = try? DinnerEntry.positive(amount) else { return nil }
+        return .init(amount: .init(numerator: Int(value.numerator), denominator: Int(value.denominator)),
+                     unit: unit.rawValue, originalLiteral: amount)
+    }
+
+    var body: some View {
+        Form {
+            Section {
+                if let meal = reviewed.meals?.first(where: { $0.id == target.occurrenceId })?.meal {
+                    LabeledContent(ht("Meal name"), value: meal.title)
+                    Text(verbatim: meal.day)
+                    if let plan = meal.planning { SharedMealPreparationFacts(planning: plan) }
+                }
+                LabeledContent(ht("Serving group"), value: group.name)
+                LabeledContent(ht("Ingredient"), value: ingredient.name)
+                LabeledContent(ht("Required for group"), value: deliveryQuantityText(required))
+                LabeledContent(ht("Food that came home"), value: source.foodName)
+                LabeledContent(ht("Delivery reference"), value: String(source.segmentKey.uuidString.prefix(8)))
+                LabeledContent(ht("Confirmed usable quantity"), value: deliveryQuantityText(source.confirmed?.quantity))
+                if let current = head?.quantity {
+                    LabeledContent(ht("Set aside from this delivery"), value: deliveryQuantityText(current))
+                }
+            }
+            if source.confirmed != nil {
+                Section {
+                    TextField(ht("Amount to set aside"), text: $amount)
+                        .accessibilityIdentifier("delivery.reservation.amount")
+                    LabeledContent(ht("Unit"), value: dinnerUnit(unit))
+                    if let proposed {
+                        LabeledContent(ht("New total set aside"), value: deliveryQuantityText(proposed))
+                    }
+                    Button(ht("Save amount set aside")) {
+                        if let proposed { Task { await submit(proposed) } }
+                    }.disabled(proposed == nil)
+                } footer: {
+                    Text(ht("Enter the total to keep for this group from this delivery."))
+                }
+            }
+            if head?.quantity != nil {
+                Button(ht("Release this reservation"), role: .destructive) { releasing = true }
+                    .confirmationDialog(ht("Release this reservation?"), isPresented: $releasing, titleVisibility: .visible) {
+                        Button(ht("Release amount set aside"), role: .destructive) { Task { await submit(nil) } }
+                        Button(ht("Cancel"), role: .cancel) {}
+                    } message: { Text(ht("The group keeps its requirement. This delivery can cover other matched meals.")) }
+            }
+            if let error { Text(error) }
+        }
+        .navigationTitle(ht("Set food aside"))
+        .scrollDismissesKeyboard(.interactively)
+        .disabled(model.busy)
+    }
+
+    private func submit(_ quantity: SharedMealQuantity?) async {
+        let edit = SharedDeliveryEdit.reserve(source: source.id, ingredient: target, group: group.id,
+                                              previous: head?.reservationId, quantity: quantity)
+        do { _ = try edit.body(reviewed: reviewed) }
+        catch { self.error = ht("Check the amount, group requirement and usable delivery before saving."); return }
+        error = await save(edit)
     }
 }
 

@@ -29,6 +29,7 @@ final class SharedDeliveryFixtureRecords {
     private let occurrence = "aaaaaaa1-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
     private let ingredient = "aaaaaaa2-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
     private let group = "aaaaaaa3-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+    private var reservation: [String:Any]?
     private var matches: [[String:Any]] = []
 
     func page(shop: String) -> [String:Any] {
@@ -37,7 +38,7 @@ final class SharedDeliveryFixtureRecords {
             "groups":[["id":group,"name":"School lunch","servings":["numerator":2,"denominator":1],"protected":true]],
             "ingredients":[["id":ingredient,"name":"Tortillas","quantity":quantity,"groupIds":[group],"exclusions":["sesame"]]]]
         let meal: [String:Any] = ["title":"Lunch wraps","day":"2026-11-08","kind":"lunch","portions":2,"protected":true,"planning":plan]
-        return ["shopId":shop, "coverageAvailable":true,"meals":[["occurrenceId":occurrence,"revision":1,"meal":meal]], "placedRevision":1, "shopRevision":2, "authorityEpoch":1, "supplyRevision":revision,
+        return ["shopId":shop, "coverageAvailable":true,"reservationsAvailable":true,"meals":[["occurrenceId":occurrence,"revision":1,"meal":meal]], "placedRevision":1, "shopRevision":2, "authorityEpoch":1, "supplyRevision":revision,
          "lines":[["lineId":line,"name":"Ordered wraps"]], "sources":source.map { [$0] } ?? [], "nextCursor":NSNull()]
     }
     func coverage(shop: String) throws -> [String:Any] {
@@ -56,9 +57,19 @@ final class SharedDeliveryFixtureRecords {
             covered = min(target, try Rational(Int64(numerator), Int64(denominator)))
             if covered > .zero { allocations = [["sourceId":id, "amount":fraction(covered)]] }
         }
+        var issues = matches.isEmpty ? ["noMatch"] : []
+        var reservations: [[String:Any]] = []
+        if let reservation, let id = source?["sourceId"], let head = reservation["reservationId"],
+           let q = reservation["quantity"] as? [String:Any], let amount = q["amount"] as? [String:Int],
+           let n = amount["numerator"], let d = amount["denominator"] {
+            let requested = try Rational(Int64(n), Int64(d))
+            let backed = min(requested, covered)
+            reservations = [["sourceId":id, "reservationId":head, "requested":fraction(requested), "backed":fraction(backed)]]
+            if backed < requested { issues.append("reservationShortfall") }
+        }
         let need: [String:Any] = ["occurrenceId":occurrence,"mealRevision":1,"ingredientId":ingredient,"groupIds":[group],
             "protected":true,"required":required,"covered":fraction(covered),"missing":fraction(try target.subtracting(covered)),"allocations":allocations,
-            "issues":matches.isEmpty ? ["noMatch"] : []]
+            "issues":issues, "reservations":reservations]
         return ["shopId":shop,"shopRevision":2,"placedRevision":1,"authorityEpoch":1,"supplyRevision":revision,
                 "asOf":"2026-11-07T12:00:00Z","unplannedOccurrenceIds":[],"needs":[need]]
     }
@@ -73,13 +84,22 @@ final class SharedDeliveryFixtureRecords {
             guard source == nil, body["lineId"] as? String == line, let food = body["foodName"] as? String,
                   let tags = body["exclusionTags"] as? [String], let segment = body["segmentKey"] as? String else { throw URLError(.badServerResponse) }
             source = ["sourceId":op,"foodId":op,"lineId":line,"segmentKey":segment,"foodName":food,"exclusionTags":tags,
-                      "matches":matches,"arrival":NSNull(),"usable":NSNull(),"confirmed":NSNull()]
+                      "reservations":[],"matches":matches,"arrival":NSNull(),"usable":NSNull(),"confirmed":NSNull()]
         case "delivery.match":
             guard body["occurrenceId"] as? String == occurrence, body["mealRevision"] as? Int == 1,
                   body["ingredientId"] as? String == ingredient, let matched = body["matched"] as? Bool,
                   source?["sourceId"] as? String == body["sourceId"] as? String else { throw URLError(.badServerResponse) }
             matches = matched ? [["occurrenceId":occurrence,"mealRevision":1,"ingredientId":ingredient]] : []
             source?["matches"] = matches
+        case "delivery.reserve":
+            guard !matches.isEmpty, body["occurrenceId"] as? String == occurrence, body["groupId"] as? String == group,
+                  body["ingredientId"] as? String == ingredient, body["mealRevision"] as? Int == 1,
+                  let amount = body["quantity"], source?["sourceId"] as? String == body["sourceId"] as? String,
+                  body["predecessorId"] as? String == reservation?["reservationId"] as? String else { throw URLError(.badServerResponse) }
+            let head: [String:Any] = ["reservationId":op, "occurrenceId":occurrence, "mealRevision":1,
+                                      "ingredientId":ingredient, "groupId":group, "quantity":amount]
+            reservation = head
+            source?["reservations"] = [head]
         case "delivery.arrival":
             source?["arrival"] = body; source?["confirmed"] = NSNull()
         case "delivery.usable":

@@ -71,6 +71,29 @@ import XCTest
             "label CONTAINS %@ AND (label CONTAINS %@ OR value CONTAINS %@)", "Uncovered by deliveries", "0 units", "0 units")).firstMatch
         XCTAssertTrue(missing.exists)
         tap(app.buttons["Done"])
+        let reviewReservation = app.buttons["Review amount to set aside for School lunch"]
+        tap(openMatches)
+        tap(ingredient)
+        tap(reviewReservation)
+        enter("2", in: app.textFields["delivery.reservation.amount"])
+        tap(app.buttons["Save amount set aside"])
+        tap(app.buttons["Record usable quantity"])
+        enter(XCUIKeyboardKey.delete.rawValue + "1", in: app.textFields["delivery.amount"])
+        tap(save)
+        XCTAssertTrue(hasUsable("1 unit"))
+        tap(app.buttons["Delivered food by meal"])
+        for (label, value) in [("Amount set aside", "2 units"), ("Still backed by this delivery", "1 unit")] {
+            let row = app.descendants(matching: .any).matching(NSPredicate(format:
+                "label CONTAINS %@ AND (label CONTAINS %@ OR value CONTAINS %@)", label, value, value)).firstMatch
+            XCTAssertTrue(row.waitForExistence(timeout: 8), label)
+        }
+        tap(app.buttons["Done"])
+        tap(openMatches)
+        tap(ingredient)
+        XCTAssertFalse(app.buttons["Remove ingredient match"].isEnabled)
+        tap(reviewReservation)
+        tap(app.buttons["Release this reservation"])
+        tap(app.buttons["Release amount set aside"])
         tap(openMatches)
         tap(ingredient)
         tap(app.buttons["Remove ingredient match"])

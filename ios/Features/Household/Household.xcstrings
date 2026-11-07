@@ -1,6 +1,295 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Required for group": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Required for group"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad necesaria para el grupo"
+          }
+        }
+      }
+    },
+    "Set aside from this delivery": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set aside from this delivery"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad apartada de esta entrega"
+          }
+        }
+      }
+    },
+    "Review amount to set aside for %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review amount to set aside for %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar cuánto apartar para %@"
+          }
+        }
+      }
+    },
+    "Release the amounts set aside before removing this match.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Release the amounts set aside before removing this match."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Libera las cantidades apartadas antes de desvincular este alimento."
+          }
+        }
+      }
+    },
+    "Amount to set aside": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amount to set aside"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad para apartar"
+          }
+        }
+      }
+    },
+    "New total set aside": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New total set aside"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nuevo total apartado"
+          }
+        }
+      }
+    },
+    "Save amount set aside": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save amount set aside"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar cantidad apartada"
+          }
+        }
+      }
+    },
+    "Enter the total to keep for this group from this delivery.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the total to keep for this group from this delivery."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresa el total de esta entrega que quieres apartar para este grupo."
+          }
+        }
+      }
+    },
+    "Release this reservation": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Release this reservation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liberar esta reserva"
+          }
+        }
+      }
+    },
+    "Release this reservation?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Release this reservation?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Liberar esta reserva?"
+          }
+        }
+      }
+    },
+    "Release amount set aside": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Release amount set aside"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liberar cantidad apartada"
+          }
+        }
+      }
+    },
+    "The group keeps its requirement. This delivery can cover other matched meals.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The group keeps its requirement. This delivery can cover other matched meals."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El grupo conserva la cantidad que necesita. Esta entrega podrá cubrir otras comidas vinculadas."
+          }
+        }
+      }
+    },
+    "Set food aside": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set food aside"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apartar alimentos"
+          }
+        }
+      }
+    },
+    "Check the amount, group requirement and usable delivery before saving.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the amount, group requirement and usable delivery before saving."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa la cantidad, lo que necesita el grupo y la cantidad utilizable de la entrega antes de guardar."
+          }
+        }
+      }
+    },
+    "Amount set aside": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amount set aside"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad apartada"
+          }
+        }
+      }
+    },
+    "Still backed by this delivery": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Still backed by this delivery"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad que aún cubre esta entrega"
+          }
+        }
+      }
+    },
+    "This delivery no longer covers the full amount set aside.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This delivery no longer covers the full amount set aside."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta entrega ya no cubre toda la cantidad apartada."
+          }
+        }
+      }
+    },
     "Meal exclusions": {
       "extractionState": "manual",
       "localizations": {
