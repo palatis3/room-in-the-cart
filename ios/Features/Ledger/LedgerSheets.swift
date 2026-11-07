@@ -11,7 +11,9 @@ struct LedgerImportView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var original = ""
     @State private var preview: StagedListImport?
-    @State private var choices: [UUID: String] = [:]
+    @State private var choices: [UUID: ImportResolution] = [:]
+    @State private var explicitSeparate: Set<UUID> = []
+    @State private var matchesAreCurrent = true
     @State private var source: ImportSource = .typed
     @State private var importID = UUID()
     @State private var captured: ReviewedCapture?
@@ -24,13 +26,14 @@ struct LedgerImportView: View {
     private var shop: ShoppingLedger? { model.workspace.shops.first { $0.id == shopID } }
 
     var body: some View {
-        ScrollViewReader { scroll in
+        let review = preview.map { LedgerImportReview(shop: shop, preview: $0, choices: choices) }
+        return ScrollViewReader { scroll in
             Form {
                 if showingImportStatus {
                     Section { importSaveStatus }
                         .id("ledgerImportSaveStatus")
                 }
-                if let preview {
+                if let preview, let review {
                     Section(ledgerText("Original wording")) {
                         Text(original).textSelection(.enabled).accessibilityFocused($focus, equals: .preview)
                         if let data = captured?.previewImageData ?? captured?.sourceImageData, let image = UIImage(data: data) {
@@ -39,18 +42,12 @@ struct LedgerImportView: View {
                         }
                     }
                     Section {
-                        let rows = Binding<[StagedImportLine]>(get: {
-                            guard let current = self.preview, current.id == preview.id else { return [] }
-                            return current.lines
-                        }, set: { updated in
-                            guard self.preview?.id == preview.id else { return }
-                            self.preview?.lines = updated
-                        })
-                        ForEach(preview.lines) { row in
-                            LedgerImportRowView(line: captureDraftBinding(row, in: rows),
-                                                matches: matches(for: row, preview: preview),
-                                                choice: Binding(get: { choices[row.id] ?? "" }, set: { setChoice($0, for: row) }),
-                                                onEdited: { refreshMatches(changedID: row.id) })
+                        ForEach(Array(preview.lines.enumerated()), id: \.element.id) { index, row in
+                            LedgerImportRowView(number: index + 1, line: rowBinding(row, at: index, previewID: preview.id),
+                                                matches: review.matches[row.id] ?? [],
+                                                choice: Binding(get: { review.choices[row.id] },
+                                                                set: { setChoice($0, for: row.id) }),
+                                                onEdited: { refreshMatches() })
                         }
                     } header: { Text(ledgerText("Review every line")) } footer: {
                         Text(ledgerText("Merge confirms the same need. Add amount keeps an additional contribution. Unresolved amounts remain visibly unknown."))
@@ -87,7 +84,9 @@ struct LedgerImportView: View {
                             originalFocused = false
                             let staged = shop.stageImport(text: original, source: source, importID: importID)
                             preview = staged
-                            choices = Dictionary(uniqueKeysWithValues: staged.lines.filter { $0.duplicateLineIDs.isEmpty }.map { ($0.id, "new") })
+                            choices = LedgerImportReview.initialChoices(staged)
+                            explicitSeparate = []
+                            matchesAreCurrent = true
                             focus = .preview
                         }.buttonStyle(PrimaryAction()).disabled(original.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                             .accessibilityIdentifier("ledgerReviewImport")
@@ -99,8 +98,8 @@ struct LedgerImportView: View {
             }.accessibilityIdentifier("ledgerImportForm")
                 .scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(ledgerText("Bring the list"))
                 .safeAreaInset(edge: .bottom, spacing: 0) {
-                    if let preview {
-                        importConfirmation(preview)
+                    if let preview, let review {
+                        importConfirmation(preview, review: review)
                             .padding(.horizontal, 16).padding(.vertical, 12)
                             .background(Theme.canvas)
                     }
@@ -149,21 +148,19 @@ struct LedgerImportView: View {
             .accessibilityFocused($focus, equals: .status)
     }
 
-    private func importConfirmation(_ preview: StagedListImport) -> some View {
+    private func importConfirmation(_ preview: StagedListImport, review: LedgerImportReview) -> some View {
         Button(ledgerText("Add reviewed list")) {
             Task {
                 guard captured == nil || captureAuthorized else {
                     model.error = captureText("This capture belongs to an earlier workspace or list revision. Review it again before adding anything.")
                     focus = .status; return
                 }
-                let decisions = Dictionary(uniqueKeysWithValues: preview.lines.map { row in
-                    (row.id, resolution(choices[row.id] ?? "new"))
-                })
+                let decisions = review.choices
                 if await model.editShop(key: "import-\(preview.id)", shopID: shopID, { try $0.commitImport(preview, decisions: decisions) }) {
                     dismiss()
                 } else { focus = .status }
             }
-        }.buttonStyle(PrimaryAction()).disabled(model.saving || model.hasPendingSave || !allDecided(preview))
+        }.buttonStyle(PrimaryAction()).disabled(model.saving || model.hasPendingSave || !matchesAreCurrent || !review.isComplete)
             .accessibilityIdentifier("ledgerCommitImport")
     }
 
@@ -194,7 +191,9 @@ struct LedgerImportView: View {
             captureBinding = binding
             captured = capture; importID = capture.id; original = capture.originalText
             source = staged.preview.source; preview = staged.preview
-            choices = Dictionary(uniqueKeysWithValues: staged.preview.lines.filter { $0.duplicateLineIDs.isEmpty }.map { ($0.id, "new") })
+            choices = LedgerImportReview.initialChoices(staged.preview)
+            explicitSeparate = []
+            matchesAreCurrent = true
             capturePresentation = nil; focus = .preview; model.error = nil
         } catch {
             model.error = captureText("Review each item. Use a positive amount or leave it explicitly unknown; pack counts must be whole numbers.")
@@ -207,60 +206,42 @@ struct LedgerImportView: View {
         preview = nil; choices = [:]; original = ""; importID = UUID()
     }
 
-    private func allDecided(_ preview: StagedListImport) -> Bool {
-        !preview.lines.isEmpty && preview.lines.allSatisfy { !(choices[$0.id] ?? "").isEmpty }
+    private func rowBinding(_ row: StagedImportLine, at index: Int, previewID: UUID) -> Binding<StagedImportLine> {
+        Binding(get: {
+            guard let preview, preview.id == previewID, preview.lines.indices.contains(index),
+                  preview.lines[index].id == row.id else { return row }
+            return preview.lines[index]
+        }, set: { updated in
+            guard updated.id == row.id, preview?.id == previewID,
+                  preview?.lines.indices.contains(index) == true, preview?.lines[index].id == row.id else { return }
+            preview?.lines[index] = updated
+        })
     }
-    private func matches(for row: StagedImportLine, preview: StagedListImport) -> [ImportMatch] {
-        let saved = (shop?.lines ?? []).filter { row.duplicateLineIDs.contains($0.id) }.map {
-            ImportMatch(id: $0.id, name: ledgerFormat("Item %lld: %@", Int64($0.originalOrder + 1), $0.name))
-        }
-        let staged = preview.lines.enumerated().filter {
-            row.duplicateLineIDs.contains($0.element.proposedLineID) && choices[$0.element.id] == "new"
-        }.map {
-            ImportMatch(id: $0.element.proposedLineID, name: ledgerFormat("Preview line %lld: %@", Int64($0.offset + 1), $0.element.name))
-        }
-        return saved + staged
+
+    private func setChoice(_ value: ImportResolution?, for id: UUID) {
+        guard let preview, let shop else { return }
+        var next = choices
+        next[id] = value
+        if value == .addNew { explicitSeparate.insert(id) } else { explicitSeparate.remove(id) }
+        choices = LedgerImportReview(shop: shop, preview: preview, choices: next).choices
     }
-    private func setChoice(_ value: String, for row: StagedImportLine) {
-        guard let preview, preview.lines.contains(where: { $0.id == row.id }) else { return }
-        choices[row.id] = value
-        if value != "new" {
-            for other in preview.lines where choices[other.id]?.hasSuffix(":\(row.proposedLineID)") == true {
-                choices[other.id] = ""
-            }
-        }
-    }
-    private func refreshMatches(changedID: UUID) {
-        guard let shop, let preview, preview.lines.contains(where: { $0.id == changedID }) else { return }
-        if preview.lines.contains(where: { $0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) {
-            choices[changedID] = ""
-            return
-        }
+
+    private func refreshMatches() {
+        guard let shop, let preview else { return }
+        matchesAreCurrent = false
+        if preview.lines.contains(where: { $0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) { return }
         do {
             let refreshed = try shop.refreshImportMatches(preview)
-            for row in refreshed.lines {
-                let old = preview.lines.first { $0.id == row.id }
-                if row.id == changedID || old?.duplicateLineIDs != row.duplicateLineIDs {
-                    choices[row.id] = row.duplicateLineIDs.isEmpty ? "new" : ""
-                }
-            }
+            choices = LedgerImportReview.afterEdit(from: preview, to: refreshed, shop: shop,
+                                                   choices: choices, explicitSeparate: explicitSeparate)
             self.preview = refreshed
+            matchesAreCurrent = true
             model.error = nil
         } catch LedgerError.stalePreview {
             model.error = ledgerText("This pickup changed after your preview. Return to the original text and review it again before adding it.")
         } catch {
-            choices[changedID] = ""
             model.error = ledgerText("Check the amounts, units and links. This change could not be applied; your saved pickup is unchanged.")
         }
-    }
-    private func resolution(_ value: String) -> ImportResolution {
-        if value == "skip" { return .skip }
-        let parts = value.split(separator: ":", maxSplits: 1)
-        if parts.count == 2, let id = UUID(uuidString: String(parts[1])) {
-            if parts[0] == "merge" { return .mergeDuplicate(id) }
-            if parts[0] == "add" { return .addToLine(id) }
-        }
-        return .addNew
     }
 }
 
@@ -285,16 +266,109 @@ private struct LedgerCapturePresentation: Identifiable {
     let reviewed: ReviewedCapture?
 }
 
-private struct ImportMatch: Identifiable { let id: UUID; let name: String }
+struct LedgerImportReview {
+    struct Match: Identifiable {
+        let option: ImportMatchOption
+        let name: String
+        var id: UUID { option.lineID }
+    }
+
+    var matches: [UUID: [Match]] = [:]
+    var choices: [UUID: ImportResolution]
+    let isComplete: Bool
+
+    static func initialChoices(_ preview: StagedListImport) -> [UUID: ImportResolution] {
+        Dictionary(uniqueKeysWithValues: preview.lines.filter { $0.duplicateLineIDs.isEmpty }.map { ($0.id, .addNew) })
+    }
+
+    static func afterEdit(from previous: StagedListImport, to preview: StagedListImport, shop: ShoppingLedger,
+                          choices: [UUID: ImportResolution], explicitSeparate: Set<UUID>) -> [UUID: ImportResolution] {
+        var updated = choices
+        for (old, row) in zip(previous.lines, preview.lines)
+        where old.duplicateLineIDs.isEmpty && !row.duplicateLineIDs.isEmpty && updated[row.id] == .addNew && !explicitSeparate.contains(row.id) {
+            updated[row.id] = nil
+        }
+        return Self(shop: shop, preview: preview, choices: updated).choices
+    }
+
+    init(shop: ShoppingLedger?, preview: StagedListImport, choices: [UUID: ImportResolution]) {
+        self.choices = choices
+        guard let shop, shop.id == preview.shopID, shop.revision == preview.baseRevision else {
+            self.choices = choices.filter { $0.value == .skip || $0.value == .addNew }
+            isComplete = false
+            return
+        }
+        // An invalidated link stays undecided even if its target was renamed away.
+        // It must not supply a new target for a later row before another review.
+        var projected = choices
+        for row in preview.lines where choices[row.id] == nil && row.duplicateLineIDs.isEmpty {
+            projected[row.id] = .skip
+        }
+        let options = shop.importMatchOptions(for: preview, decisions: projected)
+        if !options.isEmpty {
+            let targets = Set(options.values.flatMap { $0.map(\.lineID) })
+            var labels: [UUID: String] = [:]
+            for line in shop.lines where targets.contains(line.id) {
+                labels[line.id] = ledgerFormat("Item %lld: %@", Int64(line.originalOrder + 1), line.name)
+            }
+            for (index, row) in preview.lines.enumerated() where targets.contains(row.proposedLineID) {
+                labels[row.proposedLineID] = ledgerFormat("Preview line %lld: %@", Int64(index + 1), row.name)
+            }
+            matches = options.mapValues { candidates in
+                candidates.compactMap { candidate in labels[candidate.lineID].map { Match(option: candidate, name: $0) } }
+            }
+        }
+        for (id, choice) in choices {
+            switch choice {
+            case .mergeDuplicate(let target) where options[id]?.contains(where: { $0.lineID == target && $0.canMerge }) != true:
+                self.choices[id] = nil
+            case .addToLine(let target) where options[id]?.contains(where: { $0.lineID == target && $0.canAdd }) != true:
+                self.choices[id] = nil
+            default: break
+            }
+        }
+        let retained = self.choices
+        isComplete = !preview.lines.isEmpty && preview.lines.allSatisfy {
+            retained[$0.id] != nil && !$0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+    }
+}
+
+struct LedgerImportResolutionPicker: View {
+    let identifier: String
+    let matches: [LedgerImportReview.Match]
+    @Binding var choice: ImportResolution?
+    var body: some View {
+        if !matches.isEmpty && !matches.contains(where: { $0.option.canMerge || $0.option.canAdd }) {
+            Text(ledgerText("The matching items cannot take this amount. Choose a separate line or skip it."))
+                .font(.subheadline)
+        }
+        Picker(ledgerText("How to add this line"), selection: $choice) {
+            if choice == nil { Text(ledgerText("Choose how to add")).tag(nil as ImportResolution?) }
+            Text(ledgerText("Add as a separate line")).tag(ImportResolution.addNew as ImportResolution?)
+            ForEach(matches) { match in
+                if match.option.canMerge {
+                    Text(ledgerFormat("Merge same need: %@", match.name)).tag(ImportResolution.mergeDuplicate(match.id) as ImportResolution?)
+                }
+                if match.option.canAdd {
+                    Text(ledgerFormat("Add amount to: %@", match.name)).tag(ImportResolution.addToLine(match.id) as ImportResolution?)
+                }
+            }
+            Text(ledgerText("Skip this line")).tag(ImportResolution.skip as ImportResolution?)
+        }.pickerStyle(.menu).accessibilityIdentifier(identifier)
+    }
+}
 
 private struct LedgerImportRowView: View {
+    let number: Int
     @Binding var line: StagedImportLine
-    let matches: [ImportMatch]
-    @Binding var choice: String
+    let matches: [LedgerImportReview.Match]
+    @Binding var choice: ImportResolution?
     let onEdited: () -> Void
     @State private var amount: String
     @State private var unit: UnitOfMeasure
-    init(line: Binding<StagedImportLine>, matches: [ImportMatch], choice: Binding<String>, onEdited: @escaping () -> Void) {
+    init(number: Int, line: Binding<StagedImportLine>, matches: [LedgerImportReview.Match], choice: Binding<ImportResolution?>, onEdited: @escaping () -> Void) {
+        self.number = number
         _line = line
         self.matches = matches
         _choice = choice
@@ -316,6 +390,7 @@ private struct LedgerImportRowView: View {
             } else {
             TextField(ledgerText("Item name"), text: $line.name, axis: .vertical)
             TextField(ledgerText("Amount, unknown if blank"), text: $amount).keyboardType(.decimalPad)
+                .accessibilityIdentifier("ledgerImportAmount-\(number)")
             Picker(ledgerText("Unit"), selection: $unit) {
                 ForEach(UnitOfMeasure.allCases, id: \.self) { Text($0.displayName).tag($0) }
             }
@@ -324,19 +399,11 @@ private struct LedgerImportRowView: View {
                 Label(ledgerText("Quantity unresolved"), systemImage: "questionmark.circle").foregroundStyle(Theme.warning)
                 if let reason = line.unresolvedReason { Text(ledgerContributionNote(reason)).font(.footnote) }
             }
-            if !matches.isEmpty {
+            if matches.contains(where: { $0.option.canMerge }) && matches.contains(where: { $0.option.canAdd }) {
                 Text(ledgerText("A matching item is already listed. Is this the same need or an additional amount?"))
                     .font(.subheadline)
             }
-            Picker(ledgerText("How to add this line"), selection: $choice) {
-                if choice.isEmpty { Text(ledgerText("Choose how to add")).tag("") }
-                Text(ledgerText("Add as a separate line")).tag("new")
-                ForEach(matches, id: \.id) { match in
-                    Text(ledgerFormat("Merge same need: %@", match.name)).tag("merge:\(match.id)")
-                    Text(ledgerFormat("Add amount to: %@", match.name)).tag("add:\(match.id)")
-                }
-                Text(ledgerText("Skip this line")).tag("skip")
-            }.pickerStyle(.menu)
+            LedgerImportResolutionPicker(identifier: "ledgerImportResolution-\(number)", matches: matches, choice: $choice)
         }.padding(.vertical, 8).fixedSize(horizontal: false, vertical: true)
             .onChange(of: amount) { _, _ in updateQuantity() }
             .onChange(of: unit) { _, _ in updateQuantity() }

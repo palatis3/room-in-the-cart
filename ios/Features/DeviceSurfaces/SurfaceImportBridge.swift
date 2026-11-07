@@ -24,6 +24,8 @@ struct SurfaceImportDraft: Codable, Equatable, Identifiable {
     var preview: StagedListImport
     var decisions: [UUID: ImportResolution]
     var phase: Phase
+    // Older journals contain the decided actions without tracking explicit separate choices.
+    var explicitSeparate: Set<UUID>?
     var confirmedAttempts: [SurfaceImportAttempt] = []
 }
 
@@ -67,6 +69,7 @@ final class SurfaceImportJournal {
               result.preview.baseRevision >= 0, result.preview.lines.count <= SelectedTextInbox.maximumLines,
               Set(result.preview.lines.map(\.id)).count == result.preview.lines.count,
               Set(result.decisions.keys).isSubset(of: Set(result.preview.lines.map(\.id))),
+              (result.explicitSeparate ?? []).allSatisfy({ result.decisions[$0] == .addNew }),
               result.confirmedAttempts.count <= 3,
               result.confirmedAttempts.allSatisfy({ $0.preview.id == result.id && $0.preview.shopID == result.preview.shopID && $0.preview.source == .selectedText && $0.preview.originalText == result.preview.originalText }),
               result.expiresAt.timeIntervalSince1970.isFinite else { throw SurfaceError.corrupt }
@@ -224,6 +227,7 @@ final class SurfaceImportJournal {
             fresh.confirmedAttempts.append(SurfaceImportAttempt(preview: saved.preview, decisions: saved.decisions))
         }
         fresh.preview = try port.stage(entry, shopID: saved.preview.shopID)
+        fresh.explicitSeparate = nil
         fresh.decisions = Dictionary(uniqueKeysWithValues: fresh.preview.lines.filter { $0.duplicateLineIDs.isEmpty }.map { ($0.id, .addNew) })
         fresh.phase = .review
         try journal.save(fresh, replacing: saved, explicitlyRefreshed: true)

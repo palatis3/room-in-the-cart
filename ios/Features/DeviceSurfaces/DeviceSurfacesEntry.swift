@@ -47,6 +47,7 @@ private struct SurfaceImportReview: View {
     var body: some View {
         Group {
             if let draft = composition.draft, composition.privateAuthorized {
+                let review = LedgerImportReview(shop: composition.shop(draft.preview.shopID), preview: draft.preview, choices: draft.decisions)
                 Form {
                     Section(SurfaceCopy.text("Original wording")) { Text(draft.originalText).textSelection(.enabled) }
                     ForEach(draft.preview.lines) { row in
@@ -54,21 +55,12 @@ private struct SurfaceImportReview: View {
                             SurfaceImportedLineEditor(row: row, locked: draft.phase == .committing) { name, amount, unit in composition.editDraftLine(row.id, name: name, amount: amount, unit: unit) }
                             Text(row.originalText).font(.footnote)
                             if row.quantity == nil { Text(SurfaceCopy.text("Quantity unresolved")) }
-                            Picker(SurfaceCopy.text("How to add this line"), selection: Binding(get: { choice(draft.decisions[row.id]) }, set: { setChoice($0, row: row, draft: draft) })) {
-                                Text(SurfaceCopy.text("Choose how to add")).tag("")
-                                Text(SurfaceCopy.text("Add as a separate line")).tag("new")
-                                if let shop = composition.shop(draft.preview.shopID) {
-                                    ForEach(shop.lines.filter { row.duplicateLineIDs.contains($0.id) }, id: \.id) { line in
-                                        Text(SurfaceCopy.text("Merge same need") + ": " + line.name).tag("merge:" + line.id.uuidString)
-                                        Text(SurfaceCopy.text("Add amount") + ": " + line.name).tag("add:" + line.id.uuidString)
-                                    }
-                                }
-                                ForEach(draft.preview.lines.filter { row.duplicateLineIDs.contains($0.proposedLineID) && draft.decisions[$0.id] == .addNew }) { previous in
-                                    Text(SurfaceCopy.text("Merge same need") + ": " + previous.name).tag("merge:" + previous.proposedLineID.uuidString)
-                                    Text(SurfaceCopy.text("Add amount") + ": " + previous.name).tag("add:" + previous.proposedLineID.uuidString)
-                                }
-                                Text(SurfaceCopy.text("Skip this line")).tag("skip")
-                            }.disabled(draft.phase == .committing)
+                            if draft.phase == .committing {
+                                if let choice = draft.decisions[row.id] { Text(confirmedChoice(choice, row: row)) }
+                            } else {
+                                LedgerImportResolutionPicker(identifier: "surfaceImportResolution-\(row.id)", matches: review.matches[row.id] ?? [],
+                                    choice: Binding(get: { review.choices[row.id] }, set: { composition.chooseImportResolution($0, for: row.id) }))
+                            }
                         }
                     }
                     Section {
@@ -76,7 +68,8 @@ private struct SurfaceImportReview: View {
                             .disabled(draft.phase == .committing)
                         Text(SurfaceCopy.text("Cancel discards unsaved review changes."))
                         Button(SurfaceCopy.text(draft.phase == .committing ? "Retry reviewed import" : "Add reviewed list")) { Task { await composition.addReviewedList() } }
-                            .disabled(!draft.preview.lines.allSatisfy { draft.decisions[$0.id] != nil } || draft.preview.lines.isEmpty)
+                            .disabled(draft.phase == .review ? !review.isComplete :
+                                draft.preview.lines.isEmpty || draft.decisions.count != draft.preview.lines.count)
                         Button(SurfaceCopy.text("Reopen saved list before retry")) { Task { await composition.recoverImport() } }
                         Text(SurfaceCopy.text("An interrupted import reopens the same reviewed operation. It never adds the list again automatically."))
                         if let message = composition.message { Text(message) }
@@ -87,24 +80,14 @@ private struct SurfaceImportReview: View {
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(SurfaceCopy.text("Cancel")) { composition.cancelReview() }.disabled(composition.busy) } }
             .interactiveDismissDisabled(composition.busy)
     }
-    private func choice(_ value: ImportResolution?) -> String {
-        switch value { case .addNew: return "new"; case .skip: return "skip"; case .addToLine(let id): return "add:" + id.uuidString; case .mergeDuplicate(let id): return "merge:" + id.uuidString; case nil: return "" }
-    }
-    private func setChoice(_ value: String, row: StagedImportLine, draft: SurfaceImportDraft) {
-        var next = draft
-        if value == "new" { next.decisions[row.id] = .addNew }
-        else if value == "skip" { next.decisions[row.id] = .skip }
-        else {
-            let parts = value.split(separator: ":", maxSplits: 1)
-            if parts.count == 2, let id = UUID(uuidString: String(parts[1])) { next.decisions[row.id] = parts[0] == "add" ? .addToLine(id) : .mergeDuplicate(id) }
-            else { next.decisions[row.id] = nil }
+
+    private func confirmedChoice(_ choice: ImportResolution, row: StagedImportLine) -> String {
+        switch choice {
+        case .addNew: return ledgerText("Add as a separate line")
+        case .skip: return ledgerText("Skip this line")
+        case .mergeDuplicate: return ledgerFormat("Merge same need: %@", row.name)
+        case .addToLine: return ledgerFormat("Add amount to: %@", row.name)
         }
-        if next.decisions[row.id] != .addNew {
-            for other in next.preview.lines {
-                if next.decisions[other.id] == .mergeDuplicate(row.proposedLineID) || next.decisions[other.id] == .addToLine(row.proposedLineID) { next.decisions[other.id] = nil }
-            }
-        }
-        composition.saveDraft(next)
     }
 }
 

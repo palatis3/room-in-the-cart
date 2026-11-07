@@ -4227,6 +4227,22 @@
         }
       }
     },
+    "The matching items cannot take this amount. Choose a separate line or skip it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The matching items cannot take this amount. Choose a separate line or skip it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los artículos que coinciden no admiten esta cantidad. Añádela por separado u omite esta línea."
+          }
+        }
+      }
+    },
     "The earlier pack choice needs a new review because this list changed.": {
       "localizations": {
         "en": {

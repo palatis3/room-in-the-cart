@@ -269,6 +269,16 @@ import DeviceSurfaces
             message = SurfaceCopy.text("Review draft saved on this iPhone.")
         } catch { message = SurfaceCopy.text("This list changed. Reopen the saved list before reviewing again.") }
     }
+    func chooseImportResolution(_ value: ImportResolution?, for id: UUID) {
+        guard var next = draft, next.phase == .review, next.preview.lines.contains(where: { $0.id == id }),
+              let shop = shop(next.preview.shopID) else { return }
+        next.decisions[id] = value
+        var explicit = next.explicitSeparate ?? []
+        if value == .addNew { explicit.insert(id) } else { explicit.remove(id) }
+        next.explicitSeparate = explicit
+        next.decisions = LedgerImportReview(shop: shop, preview: next.preview, choices: next.decisions).choices
+        saveDraft(next)
+    }
     func editDraftLine(_ id: UUID, name: String, amount: String, unit: UnitOfMeasure) {
         guard var next = draft, next.phase == .review, let index = next.preview.lines.firstIndex(where: { $0.id == id }), let shop = shop(next.preview.shopID) else { return }
         do {
@@ -276,13 +286,10 @@ import DeviceSurfaces
             next.preview.lines[index].name = name
             next.preview.lines[index].quantity = try LedgerEntry.quantity(amount, unit)
             next.preview.lines[index].unresolvedReason = next.preview.lines[index].quantity == nil ? "quantityUnknown" : nil
-            next.preview = try shop.refreshImportMatches(next.preview)
-            // A changed row or match set always needs a fresh duplicate decision.
-            for row in next.preview.lines {
-                if row.id == id || draft?.preview.lines.first(where: { $0.id == row.id })?.duplicateLineIDs != row.duplicateLineIDs {
-                    next.decisions[row.id] = row.duplicateLineIDs.isEmpty ? .addNew : nil
-                }
-            }
+            let previous = next.preview
+            next.preview = try shop.refreshImportMatches(previous)
+            next.decisions = LedgerImportReview.afterEdit(from: previous, to: next.preview, shop: shop,
+                choices: next.decisions, explicitSeparate: next.explicitSeparate ?? [])
             saveDraft(next)
         } catch { message = SurfaceCopy.text("Review the item name, amount and matching lines before continuing.") }
     }

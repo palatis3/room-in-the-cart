@@ -1033,6 +1033,87 @@ import XCTest
         reveal(element(id))
     }
 
+    func testDuplicateImportChoicesFollowReviewedAmountsAndCheckedLines() {
+        let commit = element("ledgerCommitImport")
+        let separate = app.buttons["Add as a separate line"]
+        let mergeSaved = app.buttons["Merge same need: Item 1: wraps"]
+        let addSaved = app.buttons["Add amount to: Item 1: wraps"]
+        let mergePreview = app.buttons["Merge same need: Preview line 1: wraps"]
+        let addPreview = app.buttons["Add amount to: Preview line 1: wraps"]
+        func stage(_ text: String) {
+            tap(element("ledgerImport"))
+            fill(text, into: "ledgerImportText")
+            tap(element("ledgerReviewImport"))
+            XCTAssertTrue(commit.waitForExistence(timeout: 8))
+        }
+        func revealPreviewControl(_ control: XCUIElement, upward: Bool) {
+            let form = app.collectionViews["ledgerImportForm"]
+            let top = app.navigationBars["Bring the list"].frame.maxY
+            for _ in 0..<8 {
+                let bottom = commit.frame.minY
+                if control.exists && control.isHittable && control.frame.midY > top + 8 && control.frame.midY < bottom - 8 { return }
+                let origin = app.coordinate(withNormalizedOffset: .zero)
+                let x = form.frame.maxX - 12
+                let high = origin.withOffset(CGVector(dx: x, dy: top + (bottom - top) * 0.25))
+                let low = origin.withOffset(CGVector(dx: x, dy: top + (bottom - top) * 0.75))
+                (upward ? low : high).press(forDuration: 0.05, thenDragTo: upward ? high : low)
+            }
+            XCTFail("Review control did not reach the visible area above Add reviewed list: " + control.debugDescription)
+        }
+        func openChoices(_ number: Int) {
+            let picker = app.buttons["ledgerImportResolution-\(number)"]
+            revealPreviewControl(picker, upward: true)
+            picker.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+            XCTAssertTrue(separate.waitForExistence(timeout: 5), app.debugDescription)
+        }
+        launch(reset: true)
+        openShoppingList()
+        stage("2 wraps")
+        tap(commit)
+        let first = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "ledgerInspect-")).firstMatch
+        reveal(first)
+        let checkFirst = first.identifier.replacingOccurrences(of: "ledgerInspect-", with: "ledgerCheck-")
+
+        stage("3 wraps\n3 wraps")
+        openChoices(1)
+        XCTAssertTrue(addSaved.exists)
+        XCTAssertFalse(mergeSaved.exists)
+        separate.tap()
+        openChoices(2)
+        XCTAssertTrue(addSaved.exists && addPreview.exists)
+        XCTAssertFalse(mergeSaved.exists)
+        tap(mergePreview)
+        XCTAssertTrue(commit.isEnabled)
+        let earlierAmount = element("ledgerImportAmount-1")
+        revealPreviewControl(earlierAmount, upward: false)
+        fill("4", into: "ledgerImportAmount-1", replacing: true)
+        XCTAssertFalse(commit.isEnabled, "Changing the earlier supply must invalidate the later same-need choice")
+        openChoices(2)
+        XCTAssertFalse(mergePreview.exists || mergeSaved.exists)
+        tap(addPreview)
+        XCTAssertTrue(commit.isEnabled, "The earlier explicit separate choice must survive its amount edit")
+        tap(commit)
+        reveal(element(checkFirst))
+        tap(element(checkFirst))
+
+        stage("2 wraps")
+        openChoices(1)
+        XCTAssertTrue(mergeSaved.exists, "An exact original need can be identified after check-off")
+        XCTAssertFalse(addSaved.exists, "A checked line cannot receive a new purchase need")
+        XCTAssertTrue(app.buttons["Add amount to: Item 2: wraps"].exists)
+        XCTAssertFalse(app.buttons["Merge same need: Item 2: wraps"].exists)
+        tap(mergeSaved)
+        tap(commit)
+        restart()
+        openShoppingList()
+        let active = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "ledgerInspect-"))
+        XCTAssertEqual(active.count, 1, "Reviewing the duplicate must leave the original purchase checked")
+        tap(active.firstMatch)
+        let total = element("ledgerIngredientTotal")
+        XCTAssertTrue(total.waitForExistence(timeout: 8))
+        XCTAssertEqual(total.label, "7 items")
+    }
+
     func testCancelledImportAndIngredientReturnPreserveLongFilteredListContext() {
         launch(reset: true)
         openShoppingList()
