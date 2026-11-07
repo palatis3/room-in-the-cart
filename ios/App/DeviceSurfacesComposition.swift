@@ -288,12 +288,18 @@ import DeviceSurfaces
     }
     func addReviewedList() async {
         guard !busy, let draft, let reviewBaseline, let bridge else { return }; busy = true; defer { busy = false }
+        let start = nonce
         do {
             // An explicit Add confirms these edits. Persist before committing so
             // interruption/retry still recognizes the exact reviewed operation.
             if draft.phase == .review { try bridge.saveReview(draft, replacing: reviewBaseline) }
-            try await bridge.commit(draft); self.draft = nil; await sourceDidChange()
+            try await bridge.commit(draft)
+            guard nonce == start else { return }
+            self.draft = nil; await sourceDidChange()
         } catch {
+            // A completion from an earlier presentation must not restore private
+            // review state cleared by background or an authority change.
+            guard nonce == start else { return }
             self.draft = try? journal?.read(draft.id); self.reviewBaseline = self.draft
             message = SurfaceCopy.text("Review could not finish. Reopen this entry to check its saved result.")
         }

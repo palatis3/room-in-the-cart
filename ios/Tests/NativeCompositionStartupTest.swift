@@ -1,4 +1,5 @@
 import XCTest
+import Combine
 import DeviceSurfaces
 @testable import RoomInTheCart
 
@@ -206,6 +207,63 @@ import DeviceSurfaces
         XCTAssertEqual(f.ledger.revision, savedRevision + 1)
     }
 
+    func testBackgroundDuringConfirmedImportDoesNotRepublishReviewAndStillRecoversOnce() async throws {
+        let now = Date(timeIntervalSince1970: 1_793_664_000)
+        var interruptSave: (() -> Void)?
+        let f = try await coldURLFixture(ledgerClock: { interruptSave?(); return now })
+        defer { interruptSave = nil }
+        let shopID = try XCTUnwrap(f.ledger.shop?.id)
+        let inbox = try SelectedTextInbox(url: f.base.appendingPathComponent("surfaces/TestInbox/selected-text.sqlite"))
+        _ = try await inbox.stage(operationID: UUID(), originalText: "3 pears", now: now)
+        let pending = try await inbox.pending(now: now)
+        let entry = try XCTUnwrap(pending.first)
+        await f.composition.review(entry, shopID: shopID)
+        let approved = try XCTUnwrap(f.composition.draft)
+        let previousRevision = f.ledger.revision
+        var interrupted = false
+        var republished: [UUID] = []
+        let observation = f.composition.$draft.sink { draft in
+            if interrupted, let draft { republished.append(draft.id) }
+        }
+        defer { observation.cancel() }
+        // The injected ledger clock runs at the real save boundary, after the
+        // journal records confirmation and before the SQLite write is awaited.
+        interruptSave = {
+            guard !interrupted else { return }
+            interrupted = true
+            f.composition.background()
+        }
+        await f.composition.addReviewedList()
+        interruptSave = nil
+        XCTAssertTrue(interrupted)
+        guard republished.isEmpty else {
+            return XCTFail("An old import completion must not republish a review after background clears it")
+        }
+        XCTAssertFalse(f.composition.privateAuthorized)
+        XCTAssertNil(f.composition.draft)
+        let journal = try SurfaceImportJournal(directory: f.base.appendingPathComponent("surfaces/Reviews"))
+        let confirmed = try XCTUnwrap(journal.read(entry.id))
+        XCTAssertEqual(confirmed.phase, .committing)
+        XCTAssertEqual(confirmed.preview, approved.preview)
+        XCTAssertEqual(confirmed.decisions, approved.decisions)
+        let unacknowledged = try await inbox.receipt(entry.id)
+        XCTAssertEqual(unacknowledged?.disposition, .pending)
+        XCTAssertEqual(f.ledger.shop?.importBatches.count, 1)
+        XCTAssertEqual(f.ledger.revision, previousRevision + 1)
+
+        // Return explicitly, reconcile the exact saved receipt, and never import twice.
+        await f.composition.foreground()
+        XCTAssertTrue(f.composition.privateAuthorized)
+        await f.composition.review(entry, shopID: shopID)
+        XCTAssertNil(f.composition.draft)
+        XCTAssertNil(try journal.read(entry.id))
+        let acknowledged = try await inbox.receipt(entry.id)
+        XCTAssertEqual(acknowledged?.disposition, .consumed)
+        XCTAssertEqual(f.ledger.shop?.importBatches.count, 1)
+        XCTAssertEqual(f.ledger.shop?.lines.count, 1)
+        XCTAssertEqual(f.ledger.revision, previousRevision + 1)
+    }
+
     private func waitForSurfaceDestination(_ surfaces: DeviceSurfacesComposition) async {
         for _ in 0..<100 {
             if surfaces.destination != nil { return }
@@ -218,14 +276,14 @@ import DeviceSurfaces
         let ledger: LedgerModel, pickup: PickupModel, household: HouseholdModel, access: WorkspaceAccess
         let composition: DeviceSurfacesComposition, codec: SurfaceURLCodec, handle: RouteHandle
     }
-    private func coldURLFixture() async throws -> ColdURLFixture {
+    private func coldURLFixture(ledgerClock: @escaping () -> Date = Date.init) async throws -> ColdURLFixture {
         let base = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         let cleanup = SQLiteFixtureDirectory(base, test: self)
         let bundleURL = base.appendingPathComponent("Surface.bundle")
         try FileManager.default.createDirectory(at: bundleURL, withIntermediateDirectories: true)
         try PropertyListSerialization.data(fromPropertyList: ["CFBundleIdentifier": "invalid.fixture.cold", SurfaceInfo.schemeKey: "roominthecart-fixture"], format: .xml, options: 0).write(to: bundleURL.appendingPathComponent("Info.plist"))
         let bundle = try XCTUnwrap(Bundle(url: bundleURL))
-        let ledger = LedgerModel(databaseURL: base.appendingPathComponent("ledger.sqlite")); cleanup.track(ledger); await ledger.open()
+        let ledger = LedgerModel(databaseURL: base.appendingPathComponent("ledger.sqlite"), clock: ledgerClock); cleanup.track(ledger); await ledger.open()
         let started = await ledger.startShop(title: "Fictional cold A"); XCTAssertTrue(started)
         let pickup = PickupModel(databaseURL: base.appendingPathComponent("pickup.sqlite"), launchArguments: []); cleanup.track(pickup); await pickup.load()
         let household = HouseholdModel(bundle: bundle, outboxURL: base.appendingPathComponent("outbox.json"))
