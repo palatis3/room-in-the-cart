@@ -6,7 +6,7 @@ Room in the Cart has its own Supabase organization and project. Its Vercel team 
 - Project: `uwjxrotnocxxomqdetzk` (Room in the Cart Staging), US West Oregon.
 - Auth URL: `https://uwjxrotnocxxomqdetzk.supabase.co`.
 - PostgreSQL transaction pooler: `aws-1-us-west-2.pooler.supabase.com:6543/postgres`, verified in the project dashboard.
-- Migrations 001–040 are live. The hosted registry matched all 40 migration checksums on November 7. The upgrade preserved all 108 original non-registry tables. [Deployment evidence](evidence/b11/staging-040-preparation-20261107/deployed.json)
+- Migrations 001–041 are live. All 41 hosted migration checksums matched the reviewed source. The upgrade preserved the 128 existing non-registry tables and began with zero device grants. [Deployment evidence](evidence/b11/staging-041-preparation-20261107/deployed.json)
 - Runtime role `ritc_runtime` inherits `ritc_app`, is not a table owner, superuser or RLS bypass role. It has no tenant scope by default.
 
 The public client configuration in `config/staging.json` contains a publishable key, never the database password or a service-role key. Debug and Staging builds receive this configuration; Release requires its own production configuration.

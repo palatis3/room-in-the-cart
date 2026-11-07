@@ -2,11 +2,17 @@
 
 Updated November 7, 2026 UTC. The owner resumed and explicitly approved the reviewed hosted staging update; the full first-version goal is active and release acceptance remains incomplete. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
-## November 7 hosted staging rollout
+## November 7 staging update through 041
 
-The approved 031–040 update is live on Room in the Cart Staging. An independent read of the hosted registry matched all 40 SHA-256 migration checksums to the pinned runtime source. Postflight preserved the contents of all 108 original non-registry tables and verified the expected 129-table result, grants and row-level security. The previous encrypted backup and both recovery keys remain on the owner’s Mac.
+Room in the Cart Staging now serves the per-device offline request permission and retry update. All 41 hosted migration checksums matched the reviewed source. The 128 existing non-registry tables retained their contents and no device permission rows were created by migration.
 
-The staging address serves Vercel deployment `dpl_7Q9S57LPCh1JACsdP6X7sweHT4wr` from the reviewed build. All 29 checks passed on the protected deployment and again after promotion on the public alias. The checks cover exact web assets, authentication boundaries and anonymous maintenance denial. Chrome also opened Help, Privacy, Terms and Support in both English and US Spanish at 375 CSS pixels. Each page rendered without horizontal overflow. Both Support pages linked to the configured email address. Configured live household sign-in, production providers and App Store distribution remain open. [Rollout receipt](evidence/b11/staging-040-preparation-20261107/deployed.json)
+The protected candidate passed 29 HTTP checks and the public staging address passed the same 29 after promotion. English and US Spanish Help, Privacy, Terms and Support rendered at 375 CSS pixels. Installed iPhone simulator builds reached the live service and opened Help and Support in Safari on iOS 17.0 and 26.2. Email-based household sign-in still awaits provider configuration. [Deployment receipt](evidence/b11/staging-041-preparation-20261107/deployed.json)
+
+## Earlier November 7 staging rollout through 040
+
+The approved 031–040 update went live on Room in the Cart Staging. An independent read of the hosted registry matched all 40 SHA-256 migration checksums to the pinned runtime source. Postflight preserved the contents of all 108 original non-registry tables and verified the expected 129-table result, grants and row-level security. The previous encrypted backup and both recovery keys remain on the owner’s Mac.
+
+The staging address initially served Vercel deployment `dpl_7Q9S57LPCh1JACsdP6X7sweHT4wr` from the reviewed build. All 29 checks passed on the protected deployment and again after promotion on the public alias. The checks cover exact web assets, authentication boundaries and anonymous maintenance denial. Chrome also opened Help, Privacy, Terms and Support in both English and US Spanish at 375 CSS pixels. Each page rendered without horizontal overflow. Both Support pages linked to the configured email address. Configured live household sign-in, production providers and App Store distribution remain open. [Rollout receipt](evidence/b11/staging-040-preparation-20261107/deployed.json)
 
 ## Staging iPhone build and live service checks
 
@@ -18,7 +24,7 @@ The Staging scheme now uses Staging for testing, launching, profiling, analysis 
 
 The candidate gives an enrolled adult contributor an explicit, per-device option to retain pending requests for up to 24 hours. The web client now confirms a successful change using the grant and expiry for that household member. Earlier clients can still send immediate requests. The compatibility test loaded the originally released 040 JavaScript, which declined offline storage when talking to the corrected 041 service. Another test restored an older snapshot that still contained a withdrawn grant. The verified recovery procedure clears queue grants before the service starts accepting traffic again. The rehearsal preserved all 103 original tables on upgrade and all 104 on restore. [Compatibility and restore checks](evidence/b11/offline-requests-20261107/restore-and-compatibility.json)
 
-The browser suite exercised enabling retention, losing a send response and then losing the IndexedDB entry. On refresh the contributor saw the missing-request message and the browser issued no second command. All 14 Chrome cases and 136 web cases passed locally. Hosted staging remains at 040.
+The browser suite exercised enabling retention, losing a send response and then losing the IndexedDB entry. On refresh the contributor saw the missing-request message and the browser issued no second command. All 14 Chrome cases and 136 web cases passed locally. Staging was at 040 during this test.
 
 ### Checking the released client and device permission changes
 
