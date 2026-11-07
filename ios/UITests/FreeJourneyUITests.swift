@@ -681,6 +681,73 @@ import XCTest
         reveal(element(id))
     }
 
+    func testCancelledImportAndIngredientReturnPreserveLongFilteredListContext() {
+        launch(reset: true)
+        openShoppingList()
+        tap(element("ledgerStartShop"))
+        fill("Filtered family pickup", into: "ledgerShopName")
+        tap(element("ledgerCreateShop"))
+        tap(element("ledgerImport"))
+        let lines = Array("abcdefghijklmnopqrstuvwx").enumerated().flatMap { index, letter in
+            var rows = ["2 Wrap \(letter)"]
+            if index.isMultiple(of: 4) { rows.append("1 Soap \(letter)") }
+            return rows
+        }.joined(separator: "\n")
+        fill(lines, into: "ledgerImportText", requireDone: true)
+        tap(element("ledgerReviewImport"))
+        let commit = element("ledgerCommitImport")
+        for _ in 0..<40 {
+            if commit.exists && commit.isHittable { break }
+            app.collectionViews.firstMatch.swipeUp(velocity: 6_000)
+        }
+        tap(commit)
+        XCTAssertTrue(commit.waitForNonExistence(timeout: 10))
+
+        let search = app.textFields["ledgerSearch"]
+        tap(search); search.typeText("Wrap\n")
+        XCTAssertEqual(search.value as? String, "Wrap")
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+        let row = app.buttons["Inspect Wrap n"]
+        XCTAssertFalse(row.exists && row.isHittable, "The anchor must start beyond the filtered viewport")
+        reveal(row)
+        let rowID = row.identifier
+        let originalY = row.frame.minY
+        XCTAssertTrue(rowID.hasPrefix("ledgerInspect-"))
+        capture("long-filtered-list-before-leaving")
+
+        // Cancelling an ordinary import preview must not insert its new line
+        // or reset the list behind the sheet. System share has separate proof.
+        tap(element("ledgerImport"))
+        fill("1 Wrap cancelled", into: "ledgerImportText", requireDone: true)
+        tap(element("ledgerReviewImport"))
+        tap(app.navigationBars["Bring the list"].buttons["Cancel"])
+        XCTAssertTrue(search.waitForExistence(timeout: 8))
+        XCTAssertEqual(search.value as? String, "Wrap")
+        XCTAssertTrue(element(rowID).isHittable)
+        XCTAssertEqual(element(rowID).frame.minY, originalY, accuracy: 4)
+        XCTAssertFalse(app.buttons["Inspect Wrap cancelled"].exists)
+
+        tap(element(rowID))
+        XCTAssertTrue(app.navigationBars["Inspect ingredient"].waitForExistence(timeout: 8))
+        XCTAssertEqual(element("ledgerIngredientTotal").label, "2 items")
+        tap(app.navigationBars["Inspect ingredient"].buttons.element(boundBy: 0))
+        XCTAssertTrue(search.waitForExistence(timeout: 8))
+        XCTAssertEqual(search.value as? String, "Wrap")
+        XCTAssertTrue(element(rowID).isHittable)
+        XCTAssertEqual(element(rowID).frame.minY, originalY, accuracy: 4)
+        capture("long-filtered-list-after-import-cancel-and-detail-return")
+
+        // Search the complete list for the cancelled row; absence from a lazy
+        // offscreen accessibility tree alone would not prove cancellation.
+        tap(search); search.press(forDuration: 1.2)
+        let menuItem = app.menuItems["Select All"]
+        let selectAll = menuItem.exists ? menuItem : app.buttons["Select All"]
+        XCTAssertTrue(selectAll.waitForExistence(timeout: 5))
+        selectAll.tap(); search.typeText("cancelled\n")
+        XCTAssertEqual(search.value as? String, "cancelled")
+        XCTAssertTrue(app.staticTexts["No active items match your search."].waitForExistence(timeout: 8))
+    }
+
     func testManualListOrderSurvivesRestartAndOpensLargePrint() throws {
         func chooseListOption(_ label: String) {
             let menu = app.buttons.matching(identifier: "ledgerListOptions").firstMatch

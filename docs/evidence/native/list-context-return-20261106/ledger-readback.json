@@ -1,0 +1,23 @@
+{
+  "scope": "Copied SQLite from this isolated simulator and synthetic UITestWorkspace only; post-run readback, not a separately captured pre-action database",
+  "sqliteQuickCheck": "ok",
+  "revisions": [
+    1,
+    2
+  ],
+  "headRevision": 2,
+  "onlyCommits": "Empty pickup creation then original reviewed import; no later ledger revision",
+  "lineCount": 30,
+  "contributionCount": 30,
+  "importCount": 1,
+  "importSource": "typed",
+  "filteredMatchingNames": 24,
+  "unmatchedSoapNames": 6,
+  "originalNamesOrderQuantitiesAndUnitsMatch": true,
+  "allLineAndContributionIdentitiesMatchOriginalImportPreview": true,
+  "noCheckedHandledTrashedRemovedOrUndoneRows": true,
+  "cancelledItemAbsent": true,
+  "fixtureSHA256": "38cab7986231a84ddb74d2f7bc44d196fee0c5ff2248a0d368a04dbb17b5d196",
+  "payloadSHA256": "cb1bba8f7ed046fb780653dd323339f085e3276612425f82c0d1d9f3c843066a",
+  "copiedDatabaseSHA256": "a57a64b54df8ed2da0a1d6a02e5d5d02473053e2d81b215679a7c800978502bf"
+}

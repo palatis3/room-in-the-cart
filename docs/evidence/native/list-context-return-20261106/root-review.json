@@ -1,0 +1,18 @@
+{
+  "nativeFirstExecutionPassed": true,
+  "strictExit": 0,
+  "runtimeWarnings": 0,
+  "restarts": 0,
+  "sourceUnchangedDuringBuildAndTest": true,
+  "localFrozenFiles": 50,
+  "freezeSHA256": "1225af9a603f2eb5700daf0a873115bcbfb65f09198972982bccc22394655ec8",
+  "ledgerRevisions": [
+    1,
+    2
+  ],
+  "all30FixtureRowsAndImportPreviewIdentitiesVerified": true,
+  "actualSystemShareSequenceInThisRun": false,
+  "includedInHostedCandidate0d5bb1b": false,
+  "ownedSimulatorRemoved": true,
+  "releaseAcceptance": false
+}
