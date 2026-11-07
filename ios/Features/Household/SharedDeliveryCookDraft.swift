@@ -99,6 +99,7 @@ struct SharedDeliveryCookDraft {
         let restrictions = plan?.exclusions ?? []
         let steps = plan?.completedSteps ?? []
         let preparation = [
+            field("Meal deadline", plan?.deadline?.display(locale: Locale(identifier: language)) ?? label("Unknown"), table: "Recovery"),
             field("Meal exclusions", restrictions.isEmpty ? noRecord : restrictions.joined(separator: ", ")),
             field("Preparation time in minutes", plan?.leadTimeMinutes.map(String.init) ?? label("Unknown")),
             field("Completed preparation steps", steps.isEmpty ? noRecord : "\n" + steps.joined(separator: "\n"))
@@ -283,12 +284,8 @@ extension SharedDeliveryCookDraft {
         }
         if meal.advanceStepsCompleted { header.append(label("Advance steps confirmed complete", table: "Recovery")) }
         else { header.append(label("Advance steps not confirmed complete", table: "Recovery")) }
-        let date = DateFormatter()
-        date.locale = Locale(identifier: language)
-        let zone = meal.zone.flatMap(TimeZone.init(identifier:))
-        date.timeZone = zone ?? TimeZone(secondsFromGMT: 0)
-        date.dateStyle = .long; date.timeStyle = .medium
-        header.append(field("Meal deadline", meal.due.flatMap(serviceDate).map { date.string(from: $0) + " " + (zone?.identifier ?? "UTC") } ?? unknown, table: "Recovery"))
+        let deadline = meal.due.flatMap { SharedMealDeadline(at: $0, zone: meal.zone ?? "UTC").display(locale: Locale(identifier: language)) }
+        header.append(field("Meal deadline", deadline ?? unknown, table: "Recovery"))
         var sections = [header.joined(separator: "\n")]
         for row in coverage.needs where row.occurrenceId == meal.id {
             sections.append(recoveryNeed(row, meal: meal, record: record).joined(separator: "\n"))

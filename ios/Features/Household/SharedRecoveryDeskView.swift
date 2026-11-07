@@ -137,7 +137,7 @@ private struct SharedRecoveryEditor: View {
                     Text(verbatim: target.title).font(.headline)
                     LabeledContent(sharedRecoveryText("Scheduled day"), value: sharedMealDayText(target.day, locale: .current) ?? target.day)
                     LabeledContent(sharedRecoveryText("Scheduled time zone"), value: target.zone ?? ht("Unknown"))
-                    LabeledContent(sharedRecoveryText("Meal deadline"), value: target.due.flatMap(serviceDate)?.formatted() ?? ht("Unknown"))
+                    LabeledContent(sharedRecoveryText("Meal deadline"), value: target.due.flatMap { SharedMealDeadline(at: $0, zone: target.zone ?? "UTC").display(locale: .current) } ?? ht("Unknown"))
                     LabeledContent(ht("Portions"), value: String(target.portions))
                     ForEach(target.groups, id: \.id) { group in
                         let servings = group.servings.denominator == 1 ? String(group.servings.numerator) : "\(group.servings.numerator)/\(group.servings.denominator)"

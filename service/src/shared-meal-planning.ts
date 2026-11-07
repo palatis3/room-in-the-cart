@@ -10,8 +10,16 @@ export const mealQuantity = z.object({
   unit: z.enum(['count','gram','kilogram','ounce','pound','milliliter','liter','fluidOunce','cup']),
   originalLiteral: z.string().trim().min(1).max(240),
 }).strict();
+// A deadline records one instant and the civil zone in which the shopper
+// scheduled it. A numeric UTC offset cannot describe that zone across a move.
+const mealDeadline = z.object({
+  at: z.iso.datetime({offset:true}),
+  zone: z.string().max(100).regex(/^(?:UTC|GMT|[A-Za-z][A-Za-z0-9_+.-]*(?:\/[A-Za-z0-9_+.-]+)+)$/)
+    .refine(zone => { try { new Intl.DateTimeFormat('en', {timeZone:zone}); return true; } catch { return false; } }),
+}).strict();
 export const mealPlanning = z.object({
   sourceOccurrenceId: id.optional(),
+  deadline: mealDeadline.optional(),
   exclusions: z.array(label).max(20).optional(),
   leadTimeMinutes: z.number().int().min(0).max(1_000_000).optional(),
   completedSteps: z.array(label).max(100).optional(),
@@ -48,8 +56,24 @@ export const mealPlanning = z.object({
 export const sharedMealSchema = z.object({
   title: label, day: z.iso.date(), kind: z.enum(['dinner','lunch','side']),
   portions: z.number().int().min(1).max(1000), protected: z.boolean(), planning: mealPlanning.optional(),
-}).strict();
+}).strict().superRefine((meal,ctx) => {
+  const deadline = meal.planning?.deadline;
+  if (!deadline) return;
+  try {
+    const day = new Intl.DateTimeFormat('en', {calendar:'gregory',numberingSystem:'latn',timeZone:deadline.zone,
+      year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(deadline.at));
+    const parts = Object.fromEntries(day.map(part => [part.type,part.value]));
+    if ([parts.year?.padStart(4,'0'),parts.month,parts.day].join('-') === meal.day) return;
+  } catch { /* The deadline field also reports an invalid instant or zone. */ }
+  ctx.addIssue({code:'custom',path:['planning','deadline'],message:'Use a deadline on the scheduled day in the selected time zone.'});
+});
 export type SharedMealValue = z.infer<typeof sharedMealSchema>;
+/** A date-only move cannot establish the deadline for a different civil day. */
+export function moveSharedMeal(original:SharedMealValue, day:string):SharedMealValue {
+  if (!original.planning?.deadline || original.day === day) return {...original,day};
+  const {deadline,...planning} = original.planning;
+  return {...original,day,planning};
+}
 function atLeast(next: z.infer<typeof mealAmount>, original: z.infer<typeof mealAmount>) {
   return BigInt(next.numerator) * BigInt(original.denominator) >= BigInt(original.numerator) * BigInt(next.denominator);
 }

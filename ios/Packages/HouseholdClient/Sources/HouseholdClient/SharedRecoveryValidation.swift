@@ -50,6 +50,7 @@ extension SharedRecoveryPage {
                   meal.sourceMealRevision == sealed.revision, meal.day == sealed.meal.day, meal.portions == sealed.meal.portions,
                   let provenance = mealSources.first(where: { $0.occurrenceId == meal.id }), provenance.sourceMealRevision == sealed.revision,
                   (base.recoveryRevision > 0 || provenance.sealedRevisionId == meal.revisionId),
+                  meal.due == sealed.meal.planning?.deadline?.at, meal.zone == sealed.meal.planning?.deadline?.zone,
                   provenance.completedSteps == (sealed.meal.planning?.completedSteps ?? []),
                   provenance.sourceOccurrenceId.map({ $0 != meal.id && ids.contains($0) && $0 == sealed.meal.planning?.sourceOccurrenceId }) ?? true,
                   provenance.approvedIdea.map({ $0.revision > 0 }) ?? true,

@@ -109,7 +109,7 @@ struct SharedRecoveryReview: View {
 
     @ViewBuilder private func mealFacts(_ meal: SharedRecoveryMeal, projection: SharedRecoveryPreview.Projection) -> some View {
         Text(verbatim: meal.title).font(.headline)
-        LabeledContent(sharedRecoveryText("Meal deadline"), value: meal.due.flatMap(serviceDate)?.formatted() ?? ht("Unknown"))
+        LabeledContent(sharedRecoveryText("Meal deadline"), value: meal.due.flatMap { SharedMealDeadline(at: $0, zone: meal.zone ?? "UTC").display(locale: .current) } ?? ht("Unknown"))
         LabeledContent(ht("Portions"), value: String(meal.portions))
         ForEach(meal.groups) { group in
             let amount = group.servings.denominator == 1 ? String(group.servings.numerator) : "\(group.servings.numerator)/\(group.servings.denominator)"

@@ -156,7 +156,11 @@ private struct SharedMealChangeContent: View {
             }.accessibilityIdentifier("meal-change-occurrence")
             .onChange(of: selected) { _, id in
                 candidate = page.meals.first(where: { $0.id == id })?.meal
-                if let seed, candidate != nil { candidate?.title = seed.title; candidate?.portions = seed.portions; candidate?.planning = seed.planning }
+                if let seed, let original = candidate {
+                    var replacement = seed.planning
+                    replacement.deadline = original.planning?.deadline
+                    candidate?.title = seed.title; candidate?.portions = seed.portions; candidate?.planning = replacement
+                }
                 reason = ""; model.cancelReview()
             }
             if page.phase != "draft" { Text(ht("The order is frozen or placed. This remains an amendment proposal; it cannot change the placed basket.")) }

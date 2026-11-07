@@ -171,6 +171,23 @@
         }
       }
     },
+    "Clear meal deadline": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear meal deadline"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar la hora límite"
+          }
+        }
+      }
+    },
     "Confirmed": {
       "extractionState": "manual",
       "localizations": {
@@ -698,6 +715,23 @@
         }
       }
     },
+    "Repeated clock time": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repeated clock time"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hora local repetida"
+          }
+        }
+      }
+    },
     "Replace meal": {
       "extractionState": "manual",
       "localizations": {
@@ -902,6 +936,23 @@
         }
       }
     },
+    "Set meal deadline": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set meal deadline"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Establecer la hora límite"
+          }
+        }
+      }
+    },
     "Still backed": {
       "extractionState": "manual",
       "localizations": {
@@ -966,6 +1017,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ya no se cubre toda la cantidad apartada"
+          }
+        }
+      }
+    },
+    "The new day has no deadline until you set one.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The new day has no deadline until you set one."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El nuevo día no tendrá hora límite hasta que establezcas una."
+          }
+        }
+      }
+    },
+    "This date does not occur in the selected time zone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This date does not occur in the selected time zone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta fecha no existe en la zona horaria seleccionada."
           }
         }
       }
@@ -1051,6 +1136,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Usa el plan actual de comidas para preparar nuevas instrucciones."
+          }
+        }
+      }
+    },
+    "Use this deadline": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use this deadline"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar esta hora límite"
           }
         }
       }

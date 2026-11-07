@@ -1,6 +1,6 @@
 import {recordCurrentDelivery,recordCurrentPantry} from './shared-recovery-basis.js';
 import {loadRecoveryPublication,recordSharedRecovery} from './shared-recovery-publication.js';
-import { sharedMealSchema, preserveProtectedMeal } from './shared-meal-planning.js';
+import { sharedMealSchema, moveSharedMeal, preserveProtectedMeal } from './shared-meal-planning.js';
 import { cookCopyStillExists, recordCookCopy } from './cook-copy.js';
 import { isPantryCommand, pantryOperationExists } from './pantry-lots.js';
 import { consumeSharedMealChange } from './shared-meal-changes.js';
@@ -410,7 +410,7 @@ export class HouseholdRepository {
             WHERE m.household_id=$1 AND m.shop_id=$2 AND m.proposal_id=$3 AND m.occurrence_id=$4 AND m.shop_revision=$5
             AND m.authority_epoch=$6 AND m.state='pending' AND p.planner_id=m.actor_id AND m.grant_revision=p.revision`,
             [ctx.householdId,shop.shop_id,b.mealEdit.proposalId,occurrenceId,shop.revision,shop.authority_epoch])).rows[0];
-          if(!proposal || !original || digest(meal)!==digest({...original.meal,day:proposal.proposed_day}))
+          if(!proposal || !original || digest(meal)!==digest(moveSharedMeal(sharedMealSchema.parse(original.meal),proposal.proposed_day)))
             throw new ServiceError(409,'stale_proposal','Read the current proposal and review its exact move.');
           await ctx.db.query("UPDATE ritc.meal_move SET state='applied' WHERE household_id=$1 AND shop_id=$2 AND proposal_id=$3",
             [ctx.householdId,shop.shop_id,b.mealEdit.proposalId]);

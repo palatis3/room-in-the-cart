@@ -42,17 +42,19 @@ public struct SharedMealPlanning: Codable, Equatable, Sendable {
     public var groups: [Group]; public var ingredients: [Ingredient]
     public var sourceOccurrenceId: UUID?
     public var exclusions: [String]?
+    public var deadline: SharedMealDeadline?
     public var leadTimeMinutes: Int?
     public var completedSteps: [String]?
 
     public init(groups: [Group], ingredients: [Ingredient], sourceOccurrenceId: UUID? = nil,
                 bindings: [Allocation]? = nil, exclusions: [String]? = nil,
-                leadTimeMinutes: Int? = nil, completedSteps: [String]? = nil) {
+                leadTimeMinutes: Int? = nil, completedSteps: [String]? = nil, deadline: SharedMealDeadline? = nil) {
         self.groups = groups
         self.ingredients = ingredients
         self.sourceOccurrenceId = sourceOccurrenceId
         self.bindings = bindings
         self.exclusions = exclusions
+        self.deadline = deadline
         self.leadTimeMinutes = leadTimeMinutes
         self.completedSteps = completedSteps
     }
@@ -90,6 +92,7 @@ extension SharedMeal {
         guard sharedMealText(title, 240), ["dinner","lunch","side"].contains(kind), (1...1000).contains(portions) else { throw ClientError.configuration }
         let f = DateFormatter(); f.locale = Locale(identifier: "en_US_POSIX"); f.timeZone = TimeZone(secondsFromGMT: 0); f.dateFormat = "yyyy-MM-dd"; f.isLenient = false
         guard let date = f.date(from: day), f.string(from: date) == day else { throw ClientError.configuration }
+        try planning?.deadline?.validate(day: day)
         try planning?.validate()
     }
 }

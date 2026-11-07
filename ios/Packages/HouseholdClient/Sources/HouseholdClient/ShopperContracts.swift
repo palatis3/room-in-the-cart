@@ -79,6 +79,17 @@ public struct SharedMeal: Codable, Equatable, Sendable {
     public var portions: Int
     public var protected: Bool
     public var planning: SharedMealPlanning?
+    private enum CodingKeys: CodingKey { case title, day, kind, portions, protected, planning }
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        title = try values.decode(String.self, forKey: .title)
+        day = try values.decode(String.self, forKey: .day)
+        kind = try values.decode(String.self, forKey: .kind)
+        portions = try values.decode(Int.self, forKey: .portions)
+        protected = try values.decode(Bool.self, forKey: .protected)
+        planning = try values.decodeIfPresent(SharedMealPlanning.self, forKey: .planning)
+        try planning?.deadline?.validate(day: day)
+    }
     public init(title: String, day: String, kind: String, portions: Int, protected: Bool, planning: SharedMealPlanning? = nil) {
         self.title = title; self.day = day; self.kind = kind; self.portions = portions; self.protected = protected; self.planning = planning
     }
@@ -99,6 +110,7 @@ public struct SharedMealEdit: Equatable, Sendable {
         self.occurrenceID = occurrenceID; self.meal = meal; self.proposalID = proposalID; self.changeProposalID = changeProposalID
     }
     public func commandValue() throws -> JSONValue {
+        try meal?.validatePlanning()
         let value = try meal.map { try JSONDecoder().decode(JSONValue.self, from: encoded($0)) } ?? .null
         var fields: [String: JSONValue] = ["occurrenceId": .string(occurrenceID.uuidString.lowercased()), "meal": value]
         fields["baseMealRevision"] = baseMealRevision.map(JSONValue.integer) ?? .null

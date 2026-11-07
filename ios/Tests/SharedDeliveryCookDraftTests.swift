@@ -308,3 +308,19 @@ extension SharedDeliveryCookDraftTests {
         XCTAssertNil(try foodDraft(record.delivery, record.pantry, report))
     }
 }
+
+extension SharedDeliveryCookDraftTests {
+    func testSealedCookCopyReportsDeadlineWithItsOwnZoneAndShowsUnknownWhenAbsent() throws {
+        var p=page, edited=meal
+        var plan=try XCTUnwrap(edited["planning"] as? Object)
+        plan["deadline"]=["at":"2026-11-01T06:30:00Z","zone":"America/New_York"]
+        edited["planning"]=plan
+        p["meals"]=[["occurrenceId":occurrence.uuidString,"revision":4,"meal":edited] as Object]
+        for language in ["en-US","es-US"] {
+            let note=try XCTUnwrap(draft(p,coverage,language:language))
+            XCTAssertTrue(note.contains("America/New_York (UTC−05:00)"))
+            XCTAssertTrue(note.contains(language=="en-US" ? "Meal deadline:" : "Hora límite de la comida:"))
+        }
+        XCTAssertTrue(try XCTUnwrap(draft(page,coverage)).contains("Meal deadline: Unknown"))
+    }
+}

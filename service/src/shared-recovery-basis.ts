@@ -5,6 +5,7 @@ import {unavailable,ServiceError} from './errors.js';
 import {jointInputs,pantryRevision,guardDeliveryEdit,recordPantry,previewPantryObservation,type PantryProjectionLoader} from './pantry-lots.js';
 import {add,amount,cmp,dimension,inUnit,sub,wire,zero,type Rat} from './physical-quantity.js';
 import {deliveryReservationBody,pantryBodies,recoveryBasisSchema,recoveryMealSchema,type Quantity,type RecoveryBasis,type RecoveryMeal,type RecoveryNeed} from './recovery-contracts.js';
+import {sharedMealSchema} from './shared-meal-planning.js';
 import {exclusionConflict,previewRecovery,recoveryDigest,RecoveryError} from './recovery-domain.js';
 import type {Context,Shop} from './repository.js';
 
@@ -27,26 +28,27 @@ function reviewedID(occurrence:string,...parts:(string|number)[]){
   return [hex.slice(0,8),hex.slice(8,12),hex.slice(12,16),hex.slice(16,20),hex.slice(20)].join('-');
 }
 const unique=<T>(values:T[])=>[...new Set(values)];
-function sealedDefinition(fact:SealedMeal,shopId:string,stock:Stock):RecoveryMeal {
-  const {revision,meal}=fact,occurrenceId=fact.occurrenceId.split('/')[1]!,plan=meal.planning;
+export function sealedRecoveryMeal(fact:SealedMeal,shopId:string,sources:Stock['sources']):RecoveryMeal {
+  const meal=sharedMealSchema.parse(fact.meal);
+  const {revision}=fact,occurrenceId=fact.occurrenceId.split('/')[1]!,plan=meal.planning;
   const groups=(plan?.groups??[]).map(g=>({...g,protected:meal.protected||g.protected,exclusions:[]}));
   const exclusions=plan?.exclusions??[];
   const needs=(plan?.ingredients??[]).flatMap(ingredient=>{
     const bindings=(plan?.bindings??[]).filter(b=>b.ingredientId===ingredient.id);
     const complete=bindings.length>0 && bindings.length===ingredient.groupIds.length;
     const parts=complete?bindings.map(b=>({ids:[b.groupId],quantity:b.quantity})):[{ids:ingredient.groupIds,quantity:ingredient.quantity}];
-    const matchedSourceIds=stock.sources.filter(s=>s.matches.some(m=>m.occurrenceId===fact.occurrenceId &&
+    const matchedSourceIds=sources.filter(s=>s.matches.some(m=>m.occurrenceId===fact.occurrenceId &&
       m.mealRevision===revision && m.ingredientId===ingredient.id)).map(s=>s.sourceId);
     return parts.map(({ids,quantity})=>{
       const groupId=ids.length===1?ids[0]!:null;
       return {id:reviewedID(occurrenceId,shopId,revision,'need',ingredient.id,...ids),foodId:null,ingredientId:ingredient.id,
         groupId,...(groupId===null?{groupIds:ids}:{}),name:ingredient.name,notes:'',quantity,matchedSourceIds,
         priority:meal.protected||groups.some(g=>g.protected&&ids.includes(g.id))?'protected' as const:'required' as const,
-        due:null,exclusions:unique([...exclusions,...ingredient.exclusions])};
+        due:plan?.deadline?.at??null,exclusions:unique([...exclusions,...ingredient.exclusions])};
     });
   });
   return recoveryMealSchema.parse({occurrenceId,revisionId:reviewedID(occurrenceId,shopId,revision,'meal'),sourceMealRevision:revision,
-    title:meal.title,notes:'',sourceURL:null,portions:meal.portions,day:meal.day,zone:null,due:null,exclusions,template:null,
+    title:meal.title,notes:'',sourceURL:null,portions:meal.portions,day:meal.day,zone:plan?.deadline?.zone??null,due:plan?.deadline?.at??null,exclusions,template:null,
     groups,needs,remainingElapsedMinutes:null,requiredLeadMinutes:plan?.leadTimeMinutes??null,advanceStepsCompleted:false});
 }
 
@@ -78,7 +80,7 @@ async function effectiveMeals(ctx:Context,stock:Stock,load:RecoveryPublicationLo
   for(const id of stock.shopIds) publications.set(id,await load(ctx,id));
   const meals:ScopedMeal[]=stock.meals.map(sealed=>{
     const shopId=sealed.occurrenceId.split('/')[0]!,p=publications.get(shopId)!;
-    const original=sealedDefinition(sealed,shopId,stock);
+    const original=sealedRecoveryMeal(sealed,shopId,stock.sources);
     const accepted=p.meals.find(m=>m.occurrenceId===original.occurrenceId);
     if(accepted && accepted.sourceMealRevision!==sealed.revision) throw unavailable();
     // Original identities follow current reviews; replacement identities use their
