@@ -82,8 +82,9 @@ enum StructuredCaptureParser {
         var purpose = "", requestedDestination = "", exclusions = ""
         // Split bounded suffix labels in their actual order, preserving every source word.
         let expression = try! NSRegularExpression(pattern: #"\s+(for|para|to|destination:?|destino:?|without|except|sin|excepto)\s+"#, options: .caseInsensitive)
-        let matches = expression.matches(in: body, range: NSRange(body.startIndex..., in: body))
         let source = body
+        let labels = expression.matches(in: source, range: NSRange(source.startIndex..., in: source))
+        let matches = suffixLabels(in: source, candidates: labels)
         if let first = matches.first, let range = Range(first.range, in: source) { body = String(source[..<range.lowerBound]) }
         for (index, match) in matches.enumerated() {
             guard let range = Range(match.range, in: source), let keyRange = Range(match.range(at: 1), in: source) else { continue }
@@ -99,7 +100,9 @@ enum StructuredCaptureParser {
         var unit = UnitOfMeasure.count, packUnit = UnitOfMeasure.count
         var warnings: [CaptureInterpretationWarning] = []
         let originalTokens = tokens
-        if let number = try? ListQuantityParser.takeAmount(from: &tokens, allowingWords: true), number > .zero {
+        let ranged = ListQuantityParser.takeRange(from: &tokens)
+        let number = ranged ? nil : try? ListQuantityParser.takeAmount(from: &tokens, allowingWords: true)
+        if ranged || number.map({ $0 > .zero }) == true {
             if let label = ListQuantityParser.takePackLabel(count: number, from: &tokens, original: original) {
                 if let count = label.count { packCount = String(count) }
                 if let contents = label.amountPerPack, contents.amount > .zero {
@@ -107,11 +110,11 @@ enum StructuredCaptureParser {
                     packUnit = contents.unit
                 }
                 if label.count == nil || perPack.isEmpty { warnings.append(.packUnknown) }
-            } else {
+            } else if let number {
                 amount = number.description
                 if let known = ListQuantityParser.takeUnit(from: &tokens) { unit = known }
                 else if ListQuantityParser.needsUnitReview(tokens.first) { amount = ""; warnings.append(.ambiguous) }
-            }
+            } else { warnings.append(.quantityUnknown) }
         } else { tokens = originalTokens; warnings.append(.quantityUnknown) }
         if tokens.contains(where: ListQuantityParser.isPackMarker) {
             if !warnings.contains(.packUnknown) { warnings.append(.packUnknown) }
@@ -131,6 +134,37 @@ enum StructuredCaptureParser {
         draft.purpose = purpose; draft.destination = chosenDestination; draft.exclusions = exclusions; draft.warnings = warnings
         return draft
     }
+    /// An amount range can also occur in a purpose, such as "for two to three lunches".
+    /// Analyze each field between unambiguous labels at most twice, leaving its source text intact.
+    private static func suffixLabels(in source: String, candidates: [NSTextCheckingResult]) -> [NSTextCheckingResult] {
+        var labels: [NSTextCheckingResult] = []
+        var valueStart = source.startIndex
+        var firstTo = 0
+        for boundary in 0...candidates.count {
+            if boundary < candidates.count, let key = Range(candidates[boundary].range(at: 1), in: source),
+               source[key].lowercased() == "to" { continue }
+            if firstTo < boundary {
+                func clause(before index: Int) -> String {
+                    let end = index == candidates.count ? source.endIndex : Range(candidates[index].range, in: source)!.lowerBound
+                    return String(source[valueStart..<end])
+                }
+                var consumed = ListQuantityParser.quantityConnectorCount(in: clause(before: boundary))
+                let next = firstTo + consumed + 1
+                if next < boundary {
+                    // A destination after "6 to 8 oz each" may hide the trailing pack label.
+                    consumed = max(consumed, ListQuantityParser.quantityConnectorCount(in: clause(before: next)))
+                }
+                labels.append(contentsOf: candidates[firstTo..<boundary].dropFirst(consumed))
+            }
+            if boundary < candidates.count {
+                labels.append(candidates[boundary])
+                valueStart = Range(candidates[boundary].range, in: source)!.upperBound
+                firstTo = boundary + 1
+            }
+        }
+        return labels
+    }
+
     private static func suffix(_ text: String, pattern: String) -> (String, String)? {
         guard let expression = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
               let match = expression.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),

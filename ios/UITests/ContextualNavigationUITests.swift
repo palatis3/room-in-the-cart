@@ -98,6 +98,33 @@ import UIKit
         enterWeighedPickup(knownTax: false)
     }
 
+    func testRangedPackNeedsAnExactAmountAndKeepsItsOriginalAfterRelaunch() {
+        launch(reset: true)
+        tap(element("openPickupList"))
+        tap(element("ledgerImport"))
+        let source = "2 packs of 6 to 8 wraps"
+        fill(source, into: "ledgerImportText")
+        tap(element("ledgerReviewImport"))
+        assertText("Packs on the original label: 2")
+        let unresolved = "Amount per pack on the original label: Quantity unresolved"
+        assertText(unresolved)
+        let amount = element("ledgerImportAmount-1")
+        reveal(amount)
+        let value = amount.value as? String
+        XCTAssertTrue(value == "" || (value != nil && value == amount.placeholderValue))
+        fill("14", into: "ledgerImportAmount-1")
+        tap(element("ledgerCommitImport"))
+        let food = app.buttons["Inspect wraps"]
+        reveal(food)
+        let id = food.identifier
+        restart()
+        if !element("ledgerSearch").waitForExistence(timeout: 4) { tap(element("openPickupList")) }
+        tap(element(id))
+        assertText("14 items")
+        assertText(source)
+        assertText(unresolved)
+    }
+
     func testReviewedQuantityAndOriginalPackLabelSurviveRestartIndependently() {
         launch(reset: true)
         tap(element("openPickupList"))

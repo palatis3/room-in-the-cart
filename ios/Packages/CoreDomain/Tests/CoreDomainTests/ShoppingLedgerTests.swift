@@ -109,6 +109,51 @@ final class ShoppingLedgerTests: XCTestCase {
         }
     }
 
+    func testRangedImportsKeepUncertainAmountsOutOfSavedSupply() throws {
+        var shop = ShoppingLedger()
+        let examples = [
+            ("2 to 3 apples", "apples"), ("two to three apples", "apples"),
+            ("2 to thirty apples", "apples"), ("2 to one hundred and five apples", "apples"),
+            ("entre cien y doscientos limones", "limones"), ("twenty-five to thirty pears", "pears"),
+            ("veintidós a treinta y cinco manzanas", "manzanas"), ("2 -3 pears", "pears"), ("2– 3 pears", "pears"),
+            ("dos a tres manzanas", "manzanas"), ("entre dos y tres manzanas", "manzanas"),
+            ("2–3 cups of rice", "rice"), ("1/2 to 3/4 cup of rice", "rice"), ("1½–2kg rice", "rice"), ("2 packs of 6 to 8 wraps", "wraps"),
+            ("2 cajas de seis a ocho tortillas", "tortillas"),
+            ("2 packs of wraps, 6 to 8 oz each", "wraps"), ("2×6–8oz beans", "beans"), ("2–3oz Cup Noodles", "Cup Noodles"),
+            ("between two and three cups of rice", "rice"), ("dos o tres cajas de seis tortillas", "tortillas"),
+            ("2 6–8 oz cans of beans", "beans"), ("2 packs of 6 to 8 oz Cup Noodles", "Cup Noodles"),
+            ("2 latas de frijoles, seis a ocho onzas cada una", "frijoles"),
+            ("2 to 3 packs of 6 wraps", "wraps"), ("2 packs of 3 to 4 boxes of 6 wraps", "wraps")
+        ]
+        for (source, name) in examples {
+            let row = try XCTUnwrap(shop.stageImport(text: source).lines.first)
+            XCTAssertEqual(row.name, name, source)
+            XCTAssertNil(row.quantity, source)
+            XCTAssertNotNil(row.unresolvedReason, source)
+            XCTAssertEqual(row.originalText, source)
+        }
+        let ordinary = try XCTUnwrap(shop.stageImport(text: "2 cups of Half and Half").lines.first)
+        XCTAssertEqual(ordinary.name, "Half and Half")
+        XCTAssertEqual(ordinary.quantity?.amount, try Rational(2))
+        XCTAssertEqual(ordinary.quantity?.unit, .cup)
+        let unknownCount = try XCTUnwrap(shop.stageImport(text: "2 to 3 packs of 6 wraps").lines.first)
+        XCTAssertNil(unknownCount.originalPack?.count)
+        XCTAssertEqual(unknownCount.originalPack?.amountPerPack?.amount, try Rational(6))
+        try shop.commitImport(shop.stageImport(text: "two to three apples"))
+        XCTAssertNil(try shop.quantity(forLineID: XCTUnwrap(shop.lines.first?.id)))
+        let source = "2 packs of 6 to 8 wraps"
+        var preview = try shop.stageImport(text: source, source: .paste)
+        XCTAssertEqual(preview.lines[0].originalPack?.count, 2)
+        XCTAssertNil(preview.lines[0].originalPack?.amountPerPack)
+        preview.lines[0].quantity = Quantity(amount: try Rational(14), unit: .count, originalLiteral: "14")
+        preview.lines[0].unresolvedReason = nil
+        try shop.commitImport(preview)
+        let saved = try roundTrip(shop)
+        XCTAssertEqual(try saved.quantity(forLineID: preview.lines[0].proposedLineID)?.amount, try Rational(14))
+        XCTAssertEqual(saved.contributions.last?.originalText, source)
+        XCTAssertNil(saved.contributions.last?.originalPack?.amountPerPack)
+    }
+
     func testPackLabelsKeepTheirExactContentsAndOriginalWordingAcrossImport() throws {
         var shop = ShoppingLedger()
         let text = "2 × 15 oz pinto beans\n2 cajas de 6 paquetes de 8 tortillas\n2 packs of 6 packs of wraps"

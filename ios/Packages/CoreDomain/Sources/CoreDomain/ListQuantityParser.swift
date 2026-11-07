@@ -8,9 +8,13 @@ public enum ListQuantityParser {
         // Only expand a leading printed multiplier. Keep identifiers such as X15 in the product name.
         if let first = tokens.first, let index = first.firstIndex(where: { "xX×".contains($0) }) {
             let left = first[..<index], right = first[first.index(after: index)...]
-            if !left.isEmpty, !right.isEmpty, left.utf8.allSatisfy({ (48...57).contains($0) }),
-               (try? number(separatingUnit(String(right))?.amount ?? String(right), allowingWords: false)) != nil {
-                tokens.replaceSubrange(tokens.startIndex...tokens.startIndex, with: [String(left), "×", String(right)])
+            if !left.isEmpty, !right.isEmpty, left.utf8.allSatisfy({ (48...57).contains($0) }) {
+                let size = String(right)
+                var range = [size][...]
+                if (try? number(separatingUnit(size)?.amount ?? size, allowingWords: false)) != nil
+                    || (takeRange(from: &range) && range.isEmpty) {
+                    tokens.replaceSubrange(tokens.startIndex...tokens.startIndex, with: [String(left), "×", size])
+                }
             }
         }
         return tokens
@@ -38,6 +42,123 @@ public enum ListQuantityParser {
         }
         tokens = rest
         return amount
+    }
+
+    /// Consume both endpoints together. Neither endpoint is an exact purchase quantity.
+    /// Leave product names (including model numbers) outside amount positions alone.
+    public static func takeRange(from tokens: inout ArraySlice<String>) -> Bool {
+        var rest = tokens
+        let prefix = rest.first?.lowercased()
+        let between = prefix == "between" || prefix == "entre"
+        if between || prefix == "from" || prefix == "de" { rest = rest.dropFirst() }
+        guard let first = rest.first else { return false }
+        let dashes = "-–—"
+        if !isHyphenatedTens(first.lowercased()),
+           let dash = first.firstIndex(where: dashes.contains), dash != first.startIndex {
+            var low = [String(first[..<dash])][...]
+            if takeRangeEndpoint(from: &low) {
+                _ = takeUnit(from: &low)
+                if low.isEmpty {
+                    let upper = first[first.index(after: dash)...]
+                    var end = rest
+                    if upper.isEmpty { end = end.dropFirst() }
+                    else { end[end.startIndex] = String(upper) }
+                    if takeRangeEndpoint(from: &end) {
+                        _ = takeUnit(from: &end)
+                        tokens = end
+                        return true
+                    }
+                }
+            }
+        }
+        guard takeRangeEndpoint(from: &rest, allowingAnd: !between) else { return false }
+        _ = takeUnit(from: &rest)
+        guard let connector = rest.first?.lowercased() else { return false }
+        if between {
+            guard connector == "and" || connector == "y" else { return false }
+            rest = rest.dropFirst()
+        } else if let mark = connector.first, dashes.contains(mark) {
+            if connector.count == 1 { rest = rest.dropFirst() }
+            else { rest[rest.startIndex] = String(connector.dropFirst()) }
+        } else {
+            guard ["to", "through", "a", "hasta", "or", "o"].contains(connector) else { return false }
+            rest = rest.dropFirst()
+        }
+        guard takeRangeEndpoint(from: &rest) else { return false }
+        _ = takeUnit(from: &rest)
+        tokens = rest
+        return true
+    }
+
+    // These words establish a range without assigning a numeric value to either end.
+    // Standalone exact number parsing keeps its existing vocabulary.
+    private static let englishTens: Set<String> = ["twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"]
+    private static let spanishTens: Set<String> = ["treinta", "cuarenta", "cincuenta", "sesenta", "setenta", "ochenta", "noventa"]
+    private static let spanishTwenties: Set<String> = ["veintiuno", "veintiuna", "veintiún", "veintiun", "veintidós", "veintidos",
+        "veintitrés", "veintitres", "veinticuatro", "veinticinco", "veintiséis", "veintiseis", "veintisiete", "veintiocho", "veintinueve"]
+
+    private static func singleDigitWord(_ word: String) -> Bool {
+        guard let digit = words[word], (1...9).contains(digit) else { return false }
+        return word != "a" && word != "an"
+    }
+
+    private static func isHyphenatedTens(_ word: String) -> Bool {
+        let parts = word.split(separator: "-", maxSplits: 1)
+        return parts.count == 2 && englishTens.contains(String(parts[0])) && singleDigitWord(String(parts[1]))
+    }
+
+    private static let scales: Set<String> = [
+        "hundred", "thousand", "million", "billion", "trillion", "cien", "ciento", "mil", "millón", "millon", "millones",
+        "doscientos", "doscientas", "trescientos", "trescientas", "cuatrocientos", "cuatrocientas", "quinientos", "quinientas",
+        "seiscientos", "seiscientas", "setecientos", "setecientas", "ochocientos", "ochocientas", "novecientos", "novecientas"
+    ]
+
+    private static func takeRangeEndpoint(from tokens: inout ArraySlice<String>, allowingAnd: Bool = true) -> Bool {
+        var rest = tokens
+        if rest.first.map({ scales.contains($0.lowercased()) }) != true,
+           !takeNumberPart(from: &rest) { return false }
+        while rest.first.map({ scales.contains($0.lowercased()) }) == true {
+            rest = rest.dropFirst()
+            var remainder = rest
+            if allowingAnd, remainder.first?.lowercased() == "and" { remainder = remainder.dropFirst() }
+            // Spanish "a" between endpoints must remain available to the range parser.
+            if remainder.first?.lowercased() != "a", takeNumberPart(from: &remainder) { rest = remainder }
+        }
+        tokens = rest
+        return true
+    }
+
+    private static func takeNumberPart(from tokens: inout ArraySlice<String>) -> Bool {
+        guard let word = tokens.first?.lowercased() else { return false }
+        var rest = tokens.dropFirst()
+        if englishTens.contains(word) {
+            if rest.first.map({ singleDigitWord($0.lowercased()) }) == true { rest = rest.dropFirst() }
+        } else if spanishTens.contains(word) {
+            if rest.first?.lowercased() == "y", rest.dropFirst().first.map({ singleDigitWord($0.lowercased()) }) == true {
+                rest = rest.dropFirst(2)
+            }
+        } else if !spanishTwenties.contains(word) && !isHyphenatedTens(word) {
+            return (try? takeAmount(from: &tokens, allowingWords: true)) != nil
+        }
+        tokens = rest
+        return true
+    }
+
+    /// Count initial "to" markers consumed by an amount or its pack label.
+    /// The first marker still in the product text can start a named destination.
+    public static func quantityConnectorCount(in clause: String) -> Int {
+        let words = itemTokens(clause)
+        var product = words
+        let ranged = takeRange(from: &product)
+        let count = ranged ? nil : try? takeAmount(from: &product, allowingWords: true)
+        guard ranged || count != nil else { return 0 }
+        _ = takePackLabel(count: count, from: &product, original: clause)
+        var consumed = 0
+        for index in words.indices where words[index].lowercased() == "to" {
+            if product.indices.contains(index) { break }
+            consumed += 1
+        }
+        return consumed
     }
 
     /// Consume a unit before interpreting a bare number as an item count.
@@ -87,30 +208,37 @@ public enum ListQuantityParser {
 
     /// Parse an explicit pack chain, leaving the source product name in tokens.
     /// Inner package counts qualify the contents of one outer pack.
-    public static func takePackLabel(count: Rational, from tokens: inout ArraySlice<String>, original: String) -> PackLabel? {
-        let count = count.denominator == 1 ? Int(exactly: count.numerator) : nil
+    public static func takePackLabel(count: Rational?, from tokens: inout ArraySlice<String>, original: String) -> PackLabel? {
+        let count = count.flatMap { $0.denominator == 1 ? Int(exactly: $0.numerator) : nil }
+        let unresolved = PackLabel(count: count, amountPerPack: nil)
         if !consumePackMarker(from: &tokens) {
             // "2 15 oz cans of beans" places the size before the container.
             var rest = tokens
-            guard let amount = try? takeAmount(from: &rest), let unit = takeUnit(from: &rest),
-                  rest.first.map({ containers.contains($0.lowercased()) }) == true,
+            let size: Quantity?
+            if takeRange(from: &rest) { size = nil }
+            else {
+                guard let amount = try? takeAmount(from: &rest), let unit = takeUnit(from: &rest) else { return nil }
+                size = Quantity(amount: amount, unit: unit, originalLiteral: original)
+            }
+            guard rest.first.map({ containers.contains($0.lowercased()) }) == true,
                   consumePackMarker(from: &rest) else { return nil }
             tokens = rest
-            return PackLabel(count: count, amountPerPack: Quantity(amount: amount, unit: unit, originalLiteral: original))
+            return PackLabel(count: count, amountPerPack: size)
         }
-        let unresolved = PackLabel(count: count, amountPerPack: nil)
-        if let labelled = trailingSize(in: &tokens, original: original) {
-            return PackLabel(count: count, amountPerPack: labelled)
-        }
-        var multiplier = Rational.one
-        while let amount = try? takeAmount(from: &tokens, allowingWords: true) {
+        if let labelled = trailingSize(in: &tokens, count: count, original: original) { return labelled }
+        var multiplier: Rational? = .one
+        while !tokens.isEmpty {
+            let amount: Rational?
+            if takeRange(from: &tokens) { amount = nil }
+            else if let exact = try? takeAmount(from: &tokens, allowingWords: true) { amount = exact }
+            else { return unresolved }
             if consumePackMarker(from: &tokens) {
-                guard amount.denominator == 1, let nested = try? multiplier.multiplied(by: amount) else { return unresolved }
-                multiplier = nested
+                if let amount, amount.denominator == 1 { multiplier = try? multiplier?.multiplied(by: amount) }
+                else { multiplier = nil }
                 continue
             }
-            let measure = takeUnit(from: &tokens)
-            guard !(measure == nil && needsUnitReview(tokens.first)), !tokens.isEmpty,
+            let measure = amount == nil ? nil : takeUnit(from: &tokens)
+            guard let amount, let multiplier, !(measure == nil && needsUnitReview(tokens.first)), !tokens.isEmpty,
                   !tokens.contains(where: isPackMarker), let contents = try? multiplier.multiplied(by: amount)
             else { return unresolved }
             return PackLabel(count: count, amountPerPack: Quantity(amount: contents, unit: measure ?? .count,
@@ -121,7 +249,7 @@ public enum ListQuantityParser {
 
     /// Both "beans, 15 oz each" and "frijoles, 15 onzas cada una" explicitly
     /// identify a per-pack amount. A bare number in the product name does not.
-    private static func trailingSize(in tokens: inout ArraySlice<String>, original: String) -> Quantity? {
+    private static func trailingSize(in tokens: inout ArraySlice<String>, count: Int?, original: String) -> PackLabel? {
         guard let last = tokens.last?.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: ")")) else { return nil }
         var body = tokens.dropLast()
         if last == "una" || last == "uno" {
@@ -129,17 +257,23 @@ public enum ListQuantityParser {
             body = body.dropLast()
         } else if last != "each" { return nil }
 
-        // A mixed fraction and a two-word unit occupy at most four tokens.
-        for position in body.suffix(4).indices where position > body.startIndex {
-            var suffix = Array(body[position...])[...]
+        // Work forward so a range consumes its upper bound before it can be mistaken for an exact label.
+        for position in body.indices.dropFirst() {
+            var suffix = body[position...]
             if let first = suffix.first, first.hasPrefix("(") { suffix[suffix.startIndex] = String(first.dropFirst()) }
-            guard let amount = try? takeAmount(from: &suffix), let unit = takeUnit(from: &suffix), suffix.isEmpty else { continue }
+            let size: Quantity?
+            if takeRange(from: &suffix) { size = nil }
+            else {
+                guard let amount = try? takeAmount(from: &suffix), let unit = takeUnit(from: &suffix) else { continue }
+                size = Quantity(amount: amount, unit: unit, originalLiteral: original)
+            }
+            guard suffix.isEmpty else { continue }
             var name = body[..<position]
             if name.last == "de" { name = name.dropLast() }
             if let tail = name.last, tail.hasSuffix(",") { name[name.index(before: name.endIndex)] = String(tail.dropLast()) }
             guard !name.isEmpty, !name.contains(where: isPackMarker) else { return nil }
             tokens = name
-            return Quantity(amount: amount, unit: unit, originalLiteral: original)
+            return PackLabel(count: count, amountPerPack: size)
         }
         return nil
     }

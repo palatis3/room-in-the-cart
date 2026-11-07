@@ -1366,7 +1366,9 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         // Spoken number words are explicit on a pack label ("dos cajas"). A
         // single product name such as "Half and Half" must retain its wording.
         let packFollows = ListQuantityParser.isPackMarker(tokens.dropFirst().first ?? "")
-        guard let number = try? ListQuantityParser.takeAmount(from: &tokens, allowingWords: packFollows) else {
+        let ranged = ListQuantityParser.takeRange(from: &tokens)
+        let number = ranged ? nil : try? ListQuantityParser.takeAmount(from: &tokens, allowingWords: packFollows)
+        guard ranged || number != nil else {
             return (text, nil, "Review the quantity and unit.", nil)
         }
         if let label = ListQuantityParser.takePackLabel(count: number, from: &tokens, original: original) {
@@ -1375,8 +1377,9 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
             let quantity = label.total
             return (name, quantity, quantity == nil ? "Review the pack count and usable amount in each pack." : nil, label)
         }
-        let parsedUnit = ListQuantityParser.takeUnit(from: &tokens)
+        let parsedUnit = ranged ? nil : ListQuantityParser.takeUnit(from: &tokens)
         let name = tokens.joined(separator: " ")
+        guard let number else { return (name.isEmpty ? text : name, nil, "Review the quantity and unit.", nil) }
         if parsedUnit == nil && ListQuantityParser.needsUnitReview(tokens.first) {
             return (name, nil, "Review the unsupported or approximate unit.", nil)
         }

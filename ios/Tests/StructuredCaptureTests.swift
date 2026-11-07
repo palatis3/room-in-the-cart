@@ -4,6 +4,46 @@ import CoreDomain
 
 final class StructuredCaptureTests: XCTestCase {
     private let destination = "Saturday pickup"
+    func testRangeConnectorsRemainAmountsAndKeepTheRealDestination() throws {
+        let simple = try row("2 to 3 apples")
+        XCTAssertEqual(simple.amount, "")
+        XCTAssertEqual(simple.name, "apples")
+        XCTAssertEqual(simple.destination, destination)
+        let source = "two packs of six to eight wraps for lunch to Saturday pickup without sesame"
+        var draft = try row(source)
+        XCTAssertEqual(draft.amount, ""); XCTAssertEqual(draft.packCount, "2")
+        XCTAssertEqual(draft.amountPerPack, ""); XCTAssertEqual(draft.name, "wraps")
+        XCTAssertEqual(draft.destination, destination); XCTAssertEqual(draft.purpose, "lunch")
+        XCTAssertEqual(draft.exclusions, "sesame")
+        let trailing = try row("2 cans of beans, 6 to 8 oz each to 3 Oaks")
+        XCTAssertEqual(trailing.name, "beans"); XCTAssertEqual(trailing.destination, "3 Oaks")
+        XCTAssertEqual(trailing.packCount, "2"); XCTAssertEqual(trailing.amountPerPack, "")
+        let chained = try row("two to three packs of six to eight wraps to Saturday pickup without sesame")
+        XCTAssertEqual(chained.name, "wraps"); XCTAssertEqual(chained.packCount, "")
+        XCTAssertEqual(chained.amountPerPack, ""); XCTAssertEqual(chained.destination, destination)
+        XCTAssertEqual(chained.exclusions, "sesame")
+        let lunches = try row("2 apples for two to three lunches to 3 Oaks without sesame")
+        XCTAssertEqual(lunches.name, "apples"); XCTAssertEqual(lunches.amount, "2")
+        XCTAssertEqual(lunches.purpose, "two to three lunches"); XCTAssertEqual(lunches.destination, "3 Oaks")
+        XCTAssertEqual(lunches.exclusions, "sesame")
+        let named = try row("2 apples to 3 Oaks")
+        XCTAssertEqual(named.amount, "2"); XCTAssertEqual(named.destination, "3 Oaks")
+        let spanish = try row("entre dos y tres tazas de arroz para cena destino esta compra sin nueces")
+        XCTAssertEqual(spanish.amount, ""); XCTAssertEqual(spanish.name, "arroz")
+        XCTAssertEqual(spanish.destination, destination); XCTAssertEqual(spanish.purpose, "cena")
+        XCTAssertEqual(spanish.exclusions, "nueces")
+        let branded = try row("2 Formula 1 to 3 Oaks")
+        XCTAssertEqual(branded.name, "Formula 1"); XCTAssertEqual(branded.destination, "3 Oaks")
+        draft.amountPerPack = "7"; draft.confirmed = true
+        let reviewed = try XCTUnwrap(draft.reviewed(expectedDestination: destination))
+        var shop = ShoppingLedger()
+        let preview = try shop.stageCaptureImport(id: UUID(), originalText: source, source: .voice, lines: [reviewed])
+        try shop.commitImport(preview)
+        let saved = try JSONDecoder().decode(ShoppingLedger.self, from: JSONEncoder().encode(shop))
+        XCTAssertEqual(try saved.quantity(forLineID: draft.proposedLineID)?.amount, try Rational(14))
+        XCTAssertEqual(saved.contributions.first?.originalText, source)
+        XCTAssertEqual(saved.contributions.first?.exclusions, ["sesame"])
+    }
     func testEnglishAndSpanishQuantitiesRemainExact() throws {
         let english = try row("half kg rice for dinner to this pickup")
         let spanish = try row("medio kg arroz para la cena destino esta compra")
