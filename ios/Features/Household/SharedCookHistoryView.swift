@@ -104,7 +104,7 @@ private struct SharedCookSavedView: View {
                     Button(ht("Check previous send")) { Task { await checkRecipient() } }
                         .disabled(!canCheck || name.isEmpty || name.utf16.count > 80)
                         .accessibilityIdentifier("delivery.cook.checkRecipient")
-                    if let reviewed, reviewed.name == name {
+                    if let reviewed, reviewed.name.utf8.elementsEqual(name.utf8) {
                         if let prior = reviewed.baseline {
                             LabeledContent(ht("Last version marked sent"), value: prior.copy.version.formatted())
                                 .accessibilityIdentifier("delivery.cook.lastSent")
@@ -148,7 +148,7 @@ private struct SharedCookSavedView: View {
         defer { if requestID == id { requestID = nil } }
         do {
             let baseline = try await model.cookCopyBaseline(recipient: selected, occurrence: occurrence, reviewed: page)
-            guard requestID == id, allowed, selected == name else { return }
+            guard requestID == id, allowed, selected.utf8.elementsEqual(name.utf8) else { return }
             reviewed = .init(name: selected, baseline: baseline)
         } catch {
             if requestID == id { failure = true }
@@ -156,7 +156,8 @@ private struct SharedCookSavedView: View {
     }
 
     private func markSent(_ review: RecipientReview) async {
-        guard canMark, review.name == name, reviewed?.name == name,
+        guard canMark, review.name.utf8.elementsEqual(name.utf8),
+              reviewed?.name.utf8.elementsEqual(name.utf8) == true,
               reviewed?.baseline?.send.sendId == review.baseline?.send.sendId else { return }
         let id = UUID()
         enteringName = false
@@ -165,7 +166,7 @@ private struct SharedCookSavedView: View {
         failure = false
         let saved = await model.markCookCopySent(copy, recipient: review.name,
                                                  previousSendId: review.baseline?.send.sendId, reviewed: page)
-        guard requestID == id, allowed, review.name == name else { return }
+        guard requestID == id, allowed, review.name.utf8.elementsEqual(name.utf8) else { return }
         requestID = nil
         if saved { await checkRecipient() } else { failure = true }
     }
