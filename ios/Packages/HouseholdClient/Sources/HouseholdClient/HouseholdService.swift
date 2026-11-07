@@ -520,6 +520,17 @@ public actor HouseholdService {
         guard start == generation else { throw ClientError.cancelled }
         return try await perform("shops/\(shopID)/inbox", method: "GET", query: cursor.map { [.init(name: "cursor", value: $0)] } ?? [])
     }
+    public func deferredRequests(shopID: String, after cursor: UUID? = nil) async throws -> DeferredRequestsPage {
+        guard let destination = UUID(uuidString: shopID) else { throw ClientError.configuration }
+        let start = generation
+        try await authorizeShopper(shopID: shopID, capability: "deferred_requests")
+        guard start == generation else { throw ClientError.cancelled }
+        let page: DeferredRequestsPage = try await perform("shops/\(shopID)/deferred-requests", method: "GET",
+            query: cursor.map { [.init(name: "cursor", value: $0.uuidString.lowercased())] } ?? [])
+        guard start == generation else { throw ClientError.cancelled }
+        try page.validate(destination: destination)
+        return page
+    }
     public func shopperPreview(shopID: String, requestID: String, base: CommandBase, decision: ShopperDecision) async throws -> ShopperPreview {
         guard UUID(uuidString: requestID) != nil, base.shopRevision > 0, base.authorityEpoch > 0,
               (base.requestRevision ?? 0) > 0 else { throw ClientError.configuration }
@@ -534,8 +545,15 @@ public actor HouseholdService {
         guard let enrollment, operation.householdID == householdID, operation.deviceID == enrollment.deviceId else { throw ClientError.accessEnded }
         let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes)
         let confirming = envelope.kind == "request.confirmPurchase"
-        guard envelope.clientKey == operation.clientKey, confirming || ["request.apply", "request.clarify"].contains(envelope.kind) else { throw ClientError.configuration }
-        try await authorizeShopper(shopID: envelope.shopId, capability: confirming ? "request_purchase_confirmation" : nil)
+        let capability: String?
+        switch envelope.kind {
+        case "request.carry": capability = "deferred_requests"
+        case "request.confirmPurchase": capability = "request_purchase_confirmation"
+        case "request.apply", "request.clarify": capability = nil
+        default: throw ClientError.configuration
+        }
+        guard envelope.clientKey == operation.clientKey else { throw ClientError.configuration }
+        try await authorizeShopper(shopID: envelope.shopId, capability: capability)
         guard start == generation else { throw ClientError.cancelled }
         guard operation.memberID == memberID else { throw ClientError.accessEnded }
         let receipt: ShopperReceipt = try await perform("commands", method: "POST", body: operation.bytes)
@@ -547,6 +565,15 @@ public actor HouseholdService {
                   receipt.requestRevision == revision + 1, let request = receipt.requestId,
                   envelope.body["requestId"] == .string(request), let outcome = receipt.purchaseOutcome,
                   ["bought", "notBought", "unknown"].contains(outcome), envelope.body["outcome"] == .string(outcome)
+            else { throw ClientError.invalidResponse }
+        }
+        if envelope.kind == "request.carry" {
+            guard let operationID = UUID(uuidString: receipt.operationId),
+                  receipt.requestId.flatMap(UUID.init(uuidString:)) == operationID,
+                  receipt.kind == envelope.kind, receipt.shopId == envelope.shopId,
+                  receipt.shopRevision == envelope.base.shopRevision, receipt.authorityEpoch == envelope.base.authorityEpoch,
+                  receipt.disposition == "recorded", receipt.requestRevision == 1,
+                  let source = receipt.sourceRequestId, envelope.body["requestId"] == .string(source)
             else { throw ClientError.invalidResponse }
         }
         return receipt
