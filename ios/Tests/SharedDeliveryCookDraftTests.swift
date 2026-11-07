@@ -170,3 +170,141 @@ final class SharedDeliveryCookDraftTests: XCTestCase {
         XCTAssertNil(try draft(page,coverage,language:"fr-FR"))
     }
 }
+
+extension SharedDeliveryCookDraftTests {
+    /// Six cups were promised across two meals. The corrected freezer count is five.
+    /// A separate delivery contributes the last cup to dinner.
+    private func jointRecord() throws -> (delivery: Object, pantry: Object, report: Object) {
+        let evening = UUID().uuidString, dinnerGroup = UUID().uuidString, freezer = UUID().uuidString
+        let dinnerTarget = target.merging(["occurrenceId":evening]) { _, new in new }
+        func occurrenceRow(_ id: String, _ name: String, _ kind: String, _ groupID: String,
+                           _ groupName: String, _ cups: Int, protected: Bool) throws -> Object {
+            var entry = meal
+            var plan = try XCTUnwrap(entry["planning"] as? Object)
+            let beans: Object = ["id":ingredient.uuidString, "name":"Beans", "quantity":q(cups),
+                                 "groupIds":[groupID], "exclusions":["no sesame"]]
+            var ingredients = [beans]
+            if kind == "dinner" { ingredients.append(try XCTUnwrap((plan["ingredients"] as? [Object])?.last)) }
+            plan["ingredients"] = ingredients
+            plan["groups"] = [["id":groupID, "name":groupName, "servings":["numerator":2, "denominator":1],
+                               "protected":protected] as Object]
+            entry["title"] = name; entry["kind"] = kind; entry["planning"] = plan
+            return ["occurrenceId":id, "revision":4, "meal":entry]
+        }
+        var delivery = page
+        var sourceRows = try XCTUnwrap(delivery["sources"] as? [Object])
+        sourceRows[0]["matches"] = [dinnerTarget]; sourceRows[0]["reservations"] = []
+        delivery["sources"] = sourceRows
+        delivery["meals"] = try [occurrenceRow(occurrence.uuidString, "School lunch", "lunch", group.uuidString, groupName, 2, protected: true),
+                             occurrenceRow(evening, "Frijoles familiares", "dinner", dinnerGroup, "Familia", 4, protected: false)]
+        let lunchClaim = UUID().uuidString, dinnerClaim = UUID().uuidString
+        func head(_ target: Object, groupID: String, claim: String, cups: Int) -> Object {
+            target.merging(["groupId":groupID, "reservationId":claim, "quantity":q(cups)]) { _, new in new }
+        }
+        let time = "2026-11-01T04:05:06.000Z"
+        let lot: Object = ["lotId":freezer, "location":"freezer", "origin":"manual", "foodName":"Frozen black beans",
+                           "selected":true, "storedAt":time, "useFirstAt":NSNull(), "exclusionTags":["stored separately"],
+                           "matches":[target,dinnerTarget], "reservations":[head(target, groupID:group.uuidString, claim:lunchClaim, cups:2),
+                                                                         head(dinnerTarget, groupID:dinnerGroup, claim:dinnerClaim, cups:4)],
+                           "observation":["observationId":UUID().uuidString,"confirmedAt":time,"quantity":q(5)] as Object]
+        let unused: Object = ["lotId":UUID().uuidString, "location":"pantry", "origin":"manual", "foodName":"Unselected other shop's stock",
+                              "selected":false, "storedAt":time, "useFirstAt":NSNull(), "observation":NSNull(), "exclusionTags":[], "matches":[], "reservations":[]]
+        let pantry = seal.merging(["pantryRevision":12,"asOf":time,"lots":[lot,unused]]) { _, new in new }
+        func need(_ target: Object, groupID: String, claim: String, cups: Int, frozen: Int, delivered: Int) -> Object {
+            var allocations: [Object] = [["sourceId":freezer, "kind":"freezer", "amount":f(String(frozen))]]
+            if delivered > 0 { allocations.append(["sourceId":source.uuidString, "kind":"delivery", "amount":f(String(delivered))]) }
+            let reservation: Object = ["sourceId":freezer, "reservationId":claim, "requested":f(String(cups)), "backed":f(String(frozen))]
+            return target.merging(["groupIds":[groupID], "protected":groupID == group.uuidString, "required":q(cups),
+                                   "covered":f(String(frozen+delivered)), "missing":f("0"), "freezer":f(String(frozen)),
+                                   "pantry":f("0"), "delivered":f(String(delivered)), "allocations":allocations, "reservations":[reservation],
+                                   "issues":frozen < cups ? ["reservationShortfall"] : []]) { _, new in new }
+        }
+        var unknown = try XCTUnwrap((coverage["needs"] as? [Object])?.last)
+        unknown["occurrenceId"] = evening
+        for key in ["delivered", "pantry", "freezer"] { unknown[key] = NSNull() }
+        let needs = [need(target, groupID:group.uuidString, claim:lunchClaim, cups:2, frozen:2, delivered:0),
+                     need(dinnerTarget, groupID:dinnerGroup, claim:dinnerClaim, cups:4, frozen:3, delivered:1), unknown]
+        let report = seal.merging(["asOf":time, "pantryRevision":12, "unplannedOccurrenceIds":[], "needs":needs]) { _, new in new }
+        return (delivery, pantry, report)
+    }
+
+    private func foodDraft(_ delivery: Object, _ pantry: Object, _ report: Object, dinner: Bool = true, language: String = "en-US") throws -> String? {
+        let page = try decode(SharedDeliveryPage.self, delivery)
+        let copy = SharedCookCoverage.food(try decode(SharedPantryPage.self, pantry), try decode(SharedFoodCoverage.self, report))
+        let meals = try XCTUnwrap(page.meals)
+        return SharedDeliveryCookDraft.make(page: page, report: copy, occurrence: meals[dinner ? 1 : 0], language: language)
+    }
+
+    func testCorrectedFreezerPromisesAndIndependentDeliveryAppearOnceOnNamedJointCookDrafts() throws {
+        let fixture = try jointRecord()
+        let dinner = try XCTUnwrap(foodDraft(fixture.delivery, fixture.pantry, fixture.report))
+        let lunch = try XCTUnwrap(foodDraft(fixture.delivery, fixture.pantry, fixture.report, dinner:false))
+        let spanish = try XCTUnwrap(foodDraft(fixture.delivery, fixture.pantry, fixture.report, language:"es-US"))
+        for fact in ["Frijoles familiares", "Serving group: Familia", "Covered by deliveries: 1 cup", "Covered by pantry stock: 0 cups",
+                     "Covered by freezer stock: 3 cups", "Still needed: 0 cups", "Amount set aside: 4 cups", "Still backed by this source: 3 cups",
+                     "Latest confirmed usable count: 5 cups", "A source no longer covers the full amount set aside.", "Source exclusions: stored separately",
+                     "Pantry revision: 12", "Covered by freezer stock: Unknown", "Still needed: Unknown", "UTC"] {
+            XCTAssertTrue(dinner.contains(fact), fact)
+        }
+        XCTAssertTrue(lunch.contains("Serving group: " + groupName))
+        XCTAssertTrue(lunch.contains("Covered by deliveries: 0 cups"))
+        XCTAssertTrue(lunch.contains("Still backed by this source: 2 cups"))
+        XCTAssertFalse(lunch.contains(sourceName))
+        XCTAssertFalse(dinner.contains(groupName))
+        XCTAssertFalse(dinner.contains("Uncovered by deliveries"))
+        for note in [lunch, dinner, spanish] { XCTAssertFalse(note.contains("Unselected other shop's stock")) }
+        for fact in ["Cubierto por el congelador: 3 tazas", "Aún falta: 0 tazas", "Cantidad apartada: 4 tazas",
+                     "Cantidad que aún cubre esta fuente: 3 tazas", "Versión de la despensa: 12", "Frozen black beans", sourceName] {
+            XCTAssertTrue(spanish.contains(fact), fact)
+        }
+    }
+
+    func testUnknownPhysicalCountKeepsBothFreezerPromisesAndShowsExactRemainingNeed() throws {
+        var record = try jointRecord()
+        var lots = try XCTUnwrap(record.pantry["lots"] as? [Object])
+        var observation = try XCTUnwrap(lots[0]["observation"] as? Object)
+        observation["quantity"] = NSNull()
+        lots[0]["observation"] = observation
+        record.pantry["lots"] = lots
+        var needs = try XCTUnwrap(record.report["needs"] as? [Object])
+        for index in 0...1 {
+            var reservations = try XCTUnwrap(needs[index]["reservations"] as? [Object])
+            reservations[0]["backed"] = f("0")
+            needs[index]["reservations"] = reservations
+            let allocations = try XCTUnwrap(needs[index]["allocations"] as? [Object])
+            needs[index]["allocations"] = allocations.filter { ($0["kind"] as? String) == "delivery" }
+            needs[index]["covered"] = f(index == 0 ? "0" : "1")
+            needs[index]["freezer"] = f("0")
+            needs[index]["missing"] = f(index == 0 ? "2" : "3")
+            needs[index]["issues"] = ["unconfirmed", "reservationShortfall"]
+        }
+        record.report["needs"] = needs
+        let dinner = try XCTUnwrap(foodDraft(record.delivery, record.pantry, record.report))
+        let lunch = try XCTUnwrap(foodDraft(record.delivery, record.pantry, record.report, dinner:false))
+        for note in [lunch,dinner] {
+            XCTAssertTrue(note.contains("Latest confirmed usable count: Unknown"))
+            XCTAssertTrue(note.contains("Still backed by this source: 0 cups"))
+            XCTAssertTrue(note.contains("A matched source is waiting for a usable count."))
+        }
+        XCTAssertTrue(lunch.contains("Amount set aside: 2 cups"))
+        XCTAssertTrue(lunch.contains("Still needed: 2 cups"))
+        XCTAssertTrue(dinner.contains("Amount set aside: 4 cups"))
+        XCTAssertTrue(dinner.contains("Covered by deliveries: 1 cup"))
+        XCTAssertTrue(dinner.contains("Still needed: 3 cups"))
+    }
+
+    func testJointCookDraftRejectsWrongShopStaleEpochAndPantryRevisionAndUnmatchedPhysicalSource() throws {
+        let record = try jointRecord()
+        for (field, bad): (String, Any) in [("shopId",UUID().uuidString), ("pantryRevision",13), ("authorityEpoch",3), ("supplyRevision",8)] {
+            var report = record.report; report[field] = bad
+            XCTAssertNil(try foodDraft(record.delivery, record.pantry, report), field)
+            var pantry = record.pantry; pantry[field] = bad
+            XCTAssertNil(try foodDraft(record.delivery, pantry, record.report), field)
+        }
+        var report = record.report
+        var needs = try XCTUnwrap(report["needs"] as? [Object])
+        needs[1]["allocations"] = [["sourceId":UUID().uuidString, "kind":"freezer", "amount":f("4")] as Object]
+        report["needs"] = needs
+        XCTAssertNil(try foodDraft(record.delivery, record.pantry, report))
+    }
+}

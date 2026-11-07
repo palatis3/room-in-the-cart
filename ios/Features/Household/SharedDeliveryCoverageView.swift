@@ -31,7 +31,7 @@ struct SharedDeliveryCoverageView: View {
                                 requirement(need, occurrence: occurrence)
                             }
                             NavigationLink(pTr("Preview a dated cook instruction")) {
-                                SharedDeliveryCookView(model: model, page: page, coverage: result, occurrence: occurrence)
+                                SharedDeliveryCookView(model: model, page: page, coverage: .delivery(result), occurrence: occurrence)
                             }
                             .accessibilityIdentifier("delivery.cook." + occurrence.id.uuidString)
                         } header: { Text(occurrence.meal.title + " · " + occurrence.meal.day) }
@@ -109,10 +109,10 @@ struct SharedDeliveryCoverageView: View {
 
 }
 
-private struct SharedDeliveryCookView: View {
+struct SharedDeliveryCookView: View {
     @ObservedObject var model: HouseholdShopModel
     let page: SharedDeliveryPage
-    let coverage: SharedDeliveryCoverage
+    let coverage: SharedCookCoverage
     let occurrence: SharedMealOccurrence
     @EnvironmentObject private var household: HouseholdModel
     @Environment(\.scenePhase) private var scenePhase
@@ -136,9 +136,15 @@ private struct SharedDeliveryCookView: View {
     }
 
     private var allowed: Bool {
-        !household.locked && household.sharedShop === model && model.canReadDelivery &&
+        if let pantry = coverage.reviewedPantry, !model.canReadPantry || model.pantryRecord != pantry { return false }
+        return !household.locked && household.sharedShop === model && model.canReadDelivery &&
+        model.scope.shopId.flatMap(UUID.init(uuidString:)) == page.shopId && model.shop?.shopId == model.scope.shopId &&
         model.deliveryRecord == page && model.shop?.shopRevision == page.shopRevision &&
         model.shop?.authorityEpoch == page.authorityEpoch
+    }
+    private var refreshMessage: String {
+        coverage.reviewedPantry == nil ? ht("Refresh deliveries and review the current record.") :
+            String(localized: "Review the current pantry and delivery records.", table: "DeliveryCook")
     }
     private var text: String { wording[language] ?? original ?? "" }
     private var canReview: Bool { allowed && model.pending == nil && !model.busy && !stale && !checking && scenePhase == .active && original != nil }
@@ -188,16 +194,19 @@ private struct SharedDeliveryCookView: View {
                         }
                         if checking { ProgressView() }
                         if let notice = model.notice { Text(notice) }
-                        if retry { Text(ht("Couldn’t check the delivery. Reconnect and try again.")) }
+                        if retry {
+                            Text(coverage.reviewedPantry == nil ? ht("Couldn’t check the delivery. Reconnect and try again.") :
+                                    String(localized: "Couldn’t check food coverage. Reconnect and try again.", table: "DeliveryCook"))
+                        }
                         if let lifecycle = household.lifecycle, lifecycle.canShare {
                             NavigationLink(pTr("Prepare a current shared view")) { HouseholdHelperComposer(model: lifecycle) }
                         }
                     }
                 } else {
-                    Text(ht("Refresh deliveries and review the current record."))
+                    Text(refreshMessage)
                 }
             } else {
-                Text(ht("Refresh deliveries and review the current record."))
+                Text(refreshMessage)
             }
             if model.canReadCookCopies && !household.locked && household.sharedShop === model {
                 NavigationLink(pTr("Saved cook notes")) {
@@ -227,12 +236,12 @@ private struct SharedDeliveryCookView: View {
         cancelReview()
         retry = false
         editing = false
-        original = SharedDeliveryCookDraft.make(page: page, coverage: coverage, occurrence: occurrence, language: language)
+        original = SharedDeliveryCookDraft.make(page: page, report: coverage, occurrence: occurrence, language: language)
     }
 
     private func clear() {
+        cancelReview()
         sharing = nil
-        readback = nil
         original = nil
         wording = [:]
     }
@@ -248,10 +257,20 @@ private struct SharedDeliveryCookView: View {
         checking = true
         defer { checking = false }
         do {
-            let current = try await model.coverage(reviewed: page)
+            let unchanged: Bool
+            switch coverage {
+            case .delivery(let reviewed):
+                let current = try await model.coverage(reviewed: page)
+                unchanged = current.needs.filter { $0.occurrenceId == occurrence.id } == reviewed.needs.filter { $0.occurrenceId == occurrence.id }
+                    && current.unplannedOccurrenceIds.contains(occurrence.id) == reviewed.unplannedOccurrenceIds.contains(occurrence.id)
+            case let .food(pantry, reviewed):
+                let current = try await model.foodCoverage(reviewed: pantry, delivery: page)
+                unchanged = current.pantryRevision == reviewed.pantryRevision &&
+                    current.needs.filter { $0.occurrenceId == occurrence.id } == reviewed.needs.filter { $0.occurrenceId == occurrence.id }
+                    && current.unplannedOccurrenceIds.contains(occurrence.id) == reviewed.unplannedOccurrenceIds.contains(occurrence.id)
+            }
             guard reviewID == presentation else { return }
-            guard current.needs.filter({ $0.occurrenceId == occurrence.id }) == coverage.needs.filter({ $0.occurrenceId == occurrence.id }),
-                  current.unplannedOccurrenceIds.contains(occurrence.id) == coverage.unplannedOccurrenceIds.contains(occurrence.id) else {
+            guard unchanged else {
                 stale = true; clear(); return
             }
             guard allowed, model.pending == nil, !model.busy, scenePhase == .active, !editing, language == reviewedLanguage, text == reviewedText else { return }
@@ -262,7 +281,7 @@ private struct SharedDeliveryCookView: View {
             case .save:
                 guard model.canReadCookCopies, canSaveWording, savedWording[reviewedLanguage] != reviewedText else { return }
                 let locale = reviewedLanguage == "es-US" ? "es" : "en"
-                if await model.saveCookCopy(text: reviewedText, language: locale, occurrence: occurrence, reviewed: page),
+                if await model.saveCookCopy(text: reviewedText, language: locale, occurrence: occurrence, reviewed: page, pantry: coverage.reviewedPantry),
                    allowed && reviewID == presentation {
                     savedWording[reviewedLanguage] = reviewedText
                 }
