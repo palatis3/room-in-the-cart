@@ -137,7 +137,8 @@ test('an implicit or selected helper view cannot recover a contributor queue rec
   const view=await f.http('Mia','POST','/views',{shopId:f.shopId,mode:'read',shopLabel:'Shared meal',language:'en',items:[]});
   assert.equal((await f.http('Alex','POST','/v1/invites/redeem',{token:view.data.token,intent:'join',adultAttestation:true})).status,200);
   assert.equal((await f.http('Alex','GET','/bootstrap')).data.role,'helper');
-  for(const scope of [{},{'X-View-Grant-ID':view.data.grantId}])assert.equal((await send(scope)).data.error.code,'queue_permission_ended');
+  assert.equal((await send()).data.error.code,'queue_permission_ended');
+  assert.equal((await send({'X-View-Grant-ID':view.data.grantId})).status,404);
 });
 
 test('Foundation Grocery 30 routing and replay vectors over four authenticated HTTP clients',
