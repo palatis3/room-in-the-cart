@@ -84,8 +84,15 @@ struct DinnerTemplateEditor: View {
                             if let value { supplyEvidence.append(value) }
                             reviewedIdea?.supplyEvidence = supplyEvidence
                         }
-                        Button(dinnerText("Accept idea")) { Task { completed = await model.acceptIdea(idea, acceptedID: acceptedID) } }
-                            .buttonStyle(PrimaryAction()).disabled(!review.canAccept || !model.editable).accessibilityIdentifier("dinnerAcceptIdea")
+                        // Let the Form handle activation across the entire accessible row.
+                        Button {
+                            Task { completed = await model.acceptIdea(idea, acceptedID: acceptedID) }
+                        } label: {
+                            PrimaryActionLabel(label: Text(dinnerText("Accept idea")))
+                        }
+                        .buttonStyle(.automatic)
+                        .disabled(!review.canAccept || !model.editable)
+                        .accessibilityIdentifier("dinnerAcceptIdea")
                         Button(dinnerText("Save editable draft")) { Task { completed = await model.saveIdea(idea) } }
                             .foregroundStyle(Theme.action).disabled(!model.editable)
                     } else {

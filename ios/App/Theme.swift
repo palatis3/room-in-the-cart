@@ -39,14 +39,22 @@ func workingTextField(_ title: String, text: Binding<String>, axis: Axis) -> Tex
     TextField(title, text: text, prompt: Text(title).foregroundStyle(Theme.secondary), axis: axis)
 }
 
-struct PrimaryAction: ButtonStyle {
+struct PrimaryActionLabel<Label: View>: View {
+    let label: Label
+    var isPressed = false
     @Environment(\.isEnabled) private var isEnabled
 
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label.font(.headline).fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, minHeight: 44)
+    var body: some View {
+        label.font(.headline).fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, minHeight: 44)
             .padding(.horizontal, 12).padding(.vertical, 4)
             .foregroundStyle(Theme.onAction).background(Theme.action, in: RoundedRectangle(cornerRadius: 14))
-            .opacity(isEnabled ? (configuration.isPressed ? 0.8 : 1) : 0.45)
+            .opacity(isEnabled ? (isPressed ? 0.8 : 1) : 0.45)
+    }
+}
+
+struct PrimaryAction: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        PrimaryActionLabel(label: configuration.label, isPressed: configuration.isPressed)
     }
 }
 

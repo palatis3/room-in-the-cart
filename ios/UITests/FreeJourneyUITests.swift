@@ -1530,6 +1530,11 @@ import XCTest
         tap(element("dinnerAcceptIdea"))
         assertText(copy("Dinner saved. Choose it separately to add grocery needs.", "Cena guardada. Elígela por separado para agregar sus necesidades de compra."))
         app.terminate(); launch(reset: false, spanish: spanish)
+        tap(app.tabBars.buttons[copy("Dinners", "Cenas")])
+        dinnerRoot()
+        tap(element("dinnerLibrary"))
+        assertText(copy("Bean and cabbage wraps", "Tortillas rellenas de frijoles y repollo"))
+        XCTAssertTrue(app.buttons["ledgerChooseTemplate"].isEnabled)
         openShoppingList()
         assertText(copy("Add the groceries you need for this pickup.", "Añade los alimentos que necesitas para esta compra."))
     }
