@@ -37,7 +37,11 @@ struct HouseholdRequestMealContextView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label(ht("Protected meal commitments"), systemImage: "lock").font(.headline)
+            Label(ht("Protected meal commitments"), systemImage: "lock")
+                .font(.headline)
+                .lineLimit(nil)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
             if context.meals == nil {
                 Text(ht("Meal commitments are unavailable. Check the meal plan before deciding."))
                     .accessibilityIdentifier("household.decision.meals.unknown")
@@ -55,7 +59,7 @@ struct HouseholdRequestMealContextView: View {
                 }
             }
             Text(ht("Check usable food separately; this review does not confirm meal coverage."))
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.caption).foregroundStyle(Theme.secondary)
         }
     }
 }
@@ -76,12 +80,37 @@ private struct HouseholdRequestMealFacts: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(occurrence.meal.title).font(.subheadline.weight(.semibold))
+                .fixedSize(horizontal: false, vertical: true)
             Text([kind, sharedMealDayText(occurrence.meal.day, locale: locale) ?? ht("Meal day unknown")].joined(separator: " · "))
                 .font(.caption)
-            LabeledContent(occurrence.meal.protected ? ht("Protected portions") : ht("Portions"), value: occurrence.meal.portions.formatted())
+                .fixedSize(horizontal: false, vertical: true)
+            HouseholdDecisionFact(occurrence.meal.protected ? ht("Protected portions") : ht("Portions"), value: occurrence.meal.portions.formatted())
                 .font(.caption)
         }
+        .lineLimit(nil)
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("household.decision.meal.\(occurrence.id.uuidString.lowercased())")
+    }
+}
+
+/// Preserve LabeledContent's native stacked layout at accessibility sizes.
+struct HouseholdDecisionFact: View {
+    let title: String
+    let value: String
+
+    init(_ title: String, value: String) {
+        self.title = title
+        self.value = value
+    }
+
+    var body: some View {
+        LabeledContent {
+            Text(value).foregroundStyle(Theme.secondary)
+        } label: {
+            Text(title)
+        }
+        .accessibilityElement(children: .combine)
+        .lineLimit(nil)
+        .fixedSize(horizontal: false, vertical: true)
     }
 }

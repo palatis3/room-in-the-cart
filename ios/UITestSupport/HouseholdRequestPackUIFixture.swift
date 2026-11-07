@@ -196,7 +196,7 @@ struct S24RequestPackFixtureRoot: View {
             }
             else if state.failed { Text("Fixture setup failed").accessibilityIdentifier("fixture.failure") }
             else { ProgressView("Opening isolated S24 fixture") }
-        }.task { await state.start() }
+        }.tint(Theme.action).task { await state.start() }
     }
 }
 

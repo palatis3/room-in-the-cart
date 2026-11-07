@@ -87,7 +87,7 @@ import XCTest
         XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 3")
     }
 
-    func testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite() {
+    func testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite() throws {
         openCerealReview()
         let sam = element("household.decision.meal.88888888-8888-4888-8888-888888888888")
         let mia = element("household.decision.meal.99999999-9999-4999-8999-999999999999")
@@ -104,6 +104,12 @@ import XCTest
         XCTAssertTrue(sam.label.contains("Sam’s wrap lunch") && sam.label.contains("Protected portions") && sam.label.contains("1"))
         XCTAssertTrue(mia.label.contains("Mia’s wrap lunch") && mia.label.contains("Protected portions") && mia.label.contains("1"))
         capture("S24-cereal-checkout-with-two-named-protected-lunches")
+        let total = element("household.decision.after-total").staticTexts["$40.69"]
+        centerForReading(total)
+        try assertReadableContrast(total)
+        let guidance = app.staticTexts["Check usable food separately; this review does not confirm meal coverage."]
+        centerForReading(guidance)
+        try assertReadableContrast(guidance)
         tap(element("household.decision.cancel"))
         let request = element("household.request.44444444-4444-4444-8444-444444444444")
         XCTAssertTrue(request.waitForExistence(timeout: 5)); XCTAssertTrue(request.label.contains("Received, waiting for review"))
@@ -115,6 +121,56 @@ import XCTest
         XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 0")
         capture("S24-shopper-access-ended-clears-private-context")
     }
+    func testLargestTextShowsCompleteProtectedLunchNamesAndDates() throws {
+        openCerealReview(extraArguments: ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"])
+        let dates = ["Lunch · November 4, 2026", "Lunch · November 5, 2026"]
+        let meals = [("88888888-8888-4888-8888-888888888888", "Sam’s wrap lunch"),
+                     ("99999999-9999-4999-8999-999999999999", "Mia’s wrap lunch")]
+        let traits = UITraitCollection(preferredContentSizeCategory: .accessibilityExtraExtraExtraLarge)
+        for ((id, name), date) in zip(meals, dates) {
+            let row = element("household.decision.meal." + id)
+            centerForReading(row)
+            XCTAssertTrue(row.label.contains(name) && row.label.contains(date) && row.label.contains("Protected portions, 1"))
+            for (label, style) in [(name, UIFont.TextStyle.subheadline), (date, .caption1)] {
+                let text = row.staticTexts.matching(NSPredicate(format: "label == %@", label)).firstMatch
+                XCTAssertTrue(text.exists, label)
+                let font = UIFont.preferredFont(forTextStyle: style, compatibleWith: traits)
+                let needed = (label as NSString).boundingRect(with: CGSize(width: row.frame.width, height: .greatestFiniteMagnitude),
+                    options: [.usesLineFragmentOrigin, .usesFontLeading], attributes: [.font: font], context: nil)
+                XCTAssertGreaterThanOrEqual(text.frame.height + 2, needed.height, label)
+            }
+            capture("Largest text " + name)
+        }
+        centerForReading(app.buttons["Cancel preview"])
+        capture("Largest text review actions")
+        tap(element("household.decision.cancel"))
+        XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 0")
+        XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 0")
+    }
+
+    // Measure the ink and background of this visible, single-color text element.
+    // Ignore the outermost 1% of values so individual antialiasing pixels cannot pass it.
+    private func assertReadableContrast(_ text: XCUIElement) throws {
+        let image = try XCTUnwrap(text.screenshot().image.cgImage)
+        let space = try XCTUnwrap(CGColorSpace(name: CGColorSpace.sRGB))
+        let bitmap = try XCTUnwrap(CGContext(data: nil, width: image.width, height: image.height, bitsPerComponent: 8,
+            bytesPerRow: image.width * 4, space: space, bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue))
+        bitmap.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+        let bytes = try XCTUnwrap(bitmap.data).assumingMemoryBound(to: UInt8.self)
+        let linear = (0...255).map { byte -> Double in
+            let value = Double(byte) / 255
+            return value <= 0.04045 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4)
+        }
+        let luminance = (0..<(image.width * image.height)).map { pixel in
+            let index = pixel * 4
+            return 0.2126 * linear[Int(bytes[index])] + 0.7152 * linear[Int(bytes[index + 1])]
+                + 0.0722 * linear[Int(bytes[index + 2])]
+        }.sorted()
+        let trim = luminance.count / 100
+        let contrast = (luminance[luminance.count - 1 - trim] + 0.05) / (luminance[trim] + 0.05)
+        XCTAssertGreaterThanOrEqual(contrast, 4.5, text.label)
+    }
+
     func testUnavailableMealFactsRemainUnknownInRequestDecision() {
         openCerealReview(extraArguments: ["--request-meals-unknown"])
         let unknown = element("household.decision.meals.unknown")
@@ -131,11 +187,24 @@ import XCTest
         app.launchArguments = ["--ui-testing", "--request-pack-fixture", "--request-meal-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"] + extraArguments
         app.launch()
         let request = element("household.request.44444444-4444-4444-8444-444444444444")
-        XCTAssertTrue(request.waitForExistence(timeout: 20)); tap(request)
-        tap(element("household.decision.choice")); tap(app.buttons["Add packs to this shop"])
+        XCTAssertTrue(app.collectionViews.firstMatch.waitForExistence(timeout: 20))
+        for _ in 0..<8 where !request.exists { app.collectionViews.firstMatch.swipeUp() }
+        tap(request)
+        tap(element("household.decision.choice"))
+        let add = app.buttons["Add packs to this shop"]
+        // At AX5 the native menu opens scrolled to its selected option.
+        let selected = app.buttons["Save for next shop"]
+        if add.exists && !add.isHittable && selected.isHittable {
+            let start = selected.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 0, dy: 160)))
+        }
+        tap(add)
         fill("3.49", into: "household.decision.price", replacing: true)
-        tap(element("household.decision.review"))
-        XCTAssertTrue(element("household.decision.after-total").waitForExistence(timeout: 10))
+        dismissKeyboardIfPresent()
+        let review = element("household.decision.review")
+        centerForReading(review)
+        review.tap()
+        reveal(element("household.decision.after-total"))
     }
     func testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite() {
         app.launchArguments = ["--ui-testing", "--request-pack-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
@@ -228,6 +297,20 @@ import XCTest
         XCTAssertTrue(target.exists && target.isHittable &&
             (!fullyVisible || (target.frame.minY >= area.minY && target.frame.maxY <= area.maxY)),
             "Missing fully actionable UI element: \(target.debugDescription)")
+    }
+    private func centerForReading(_ target: XCUIElement) {
+        reveal(target)
+        let area = scrollableArea()
+        let center = app.coordinate(withNormalizedOffset: .zero)
+            .withOffset(CGVector(dx: area.midX - app.frame.minX, dy: area.midY - app.frame.minY))
+        for _ in 0..<12 {
+            let frame = target.frame
+            if frame.minY >= area.minY && frame.maxY <= area.maxY { return }
+            let offset = max(-area.height * 0.4, min(frame.midY - area.midY, area.height * 0.4))
+            center.press(forDuration: 0.05, thenDragTo: center.withOffset(CGVector(dx: 0, dy: -offset)),
+                         withVelocity: .slow, thenHoldForDuration: 0.25)
+        }
+        XCTFail("Could not show the whole reading target: " + target.debugDescription)
     }
     private func revealTogether(_ targets: [XCUIElement]) {
         guard let first = targets.first, let last = targets.last else { return }

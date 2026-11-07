@@ -173,51 +173,51 @@ struct HouseholdRequestDecisionView: View {
                             }
                         } else { Section { Text(ht("This request has a recorded outcome. Refresh to check for changes.")) } }
                         if let preview = model.preview {
-                            Section(ht("Review before applying")) {
+                            Section(header: Text(ht("Review before applying")).foregroundStyle(Theme.secondary)) {
                                 Text(model.choice.title).font(.headline)
                                 if let selection = model.packSelection { HouseholdChosenPackSummary(selection: selection) }
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text(ht("After this decision")).font(.headline)
-                                    LabeledContent(ht("Expected total"), value: householdMoney(preview.after.totalMinor, currency: preview.after.currency))
+                                    HouseholdDecisionFact(ht("Expected total"), value: householdMoney(preview.after.totalMinor, currency: preview.after.currency))
                                         .accessibilityElement(children: .combine)
                                         .accessibilityIdentifier("household.decision.after-total")
                                     if preview.after.status == "overCap" {
-                                        LabeledContent(ht("Over cap"), value: householdMoney(preview.after.overCapMinor, currency: preview.after.currency))
+                                        HouseholdDecisionFact(ht("Over cap"), value: householdMoney(preview.after.overCapMinor, currency: preview.after.currency))
                                             .accessibilityElement(children: .combine)
                                             .accessibilityIdentifier("household.decision.over-cap")
                                     }
                                     if preview.after.status == "unresolved" { Text(ht("Missing facts prevent a confirmed budget result.")) }
                                     if preview.after.status == "scopeMismatch" { Text(ht("The cap and total cover different scopes.")) }
-                                    LabeledContent(ht("Scope"), value: householdScope(preview.after.scope))
-                                    LabeledContent(ht("Before this decision"), value: householdMoney(preview.before.totalMinor, currency: preview.before.currency))
+                                    HouseholdDecisionFact(ht("Scope"), value: householdScope(preview.after.scope))
+                                    HouseholdDecisionFact(ht("Before this decision"), value: householdMoney(preview.before.totalMinor, currency: preview.before.currency))
                                         .accessibilityElement(children: .combine)
                                         .accessibilityIdentifier("household.decision.before-total")
-                                    LabeledContent(ht("Cost change"), value: householdMoney(preview.changeMinor, currency: preview.after.currency))
-                                    LabeledContent(ht("Cap"), value: householdMoney(shop.quote.capMinor, currency: shop.quote.currency))
-                                    LabeledContent(ht("Cap scope"), value: householdScope(shop.quote.capScope))
+                                    HouseholdDecisionFact(ht("Cost change"), value: householdMoney(preview.changeMinor, currency: preview.after.currency))
+                                    HouseholdDecisionFact(ht("Cap"), value: householdMoney(shop.quote.capMinor, currency: shop.quote.currency))
+                                    HouseholdDecisionFact(ht("Cap scope"), value: householdScope(shop.quote.capScope))
                                     if let context = model.requestMealContext { HouseholdRequestMealContextView(context: context) }
                                 }
                                 .monospacedDigit()
                                 DisclosureGroup(ht("Checkout calculation details")) {
-                                    LabeledContent(ht("Shop revision"), value: shop.shopRevision.formatted())
-                                    LabeledContent(ht("Quote recorded"), value: householdTime(shop.quote.observedAt))
-                                    LabeledContent(ht("Quote expires"), value: householdTime(shop.quote.expiresAt))
+                                    HouseholdDecisionFact(ht("Shop revision"), value: shop.shopRevision.formatted())
+                                    HouseholdDecisionFact(ht("Quote recorded"), value: householdTime(shop.quote.observedAt))
+                                    HouseholdDecisionFact(ht("Quote expires"), value: householdTime(shop.quote.expiresAt))
                                     DisclosureGroup(ht("Included charges and discounts")) {
                                         if shop.quote.fee.kind == "fixed" {
-                                            LabeledContent(ht("Retailer fee"), value: householdMoney(shop.quote.fee.amountMinor, currency: shop.quote.currency))
+                                            HouseholdDecisionFact(ht("Retailer fee"), value: householdMoney(shop.quote.fee.amountMinor, currency: shop.quote.currency))
                                         } else {
-                                            LabeledContent(ht("Fee threshold"), value: householdMoney(shop.quote.fee.thresholdMinor, currency: shop.quote.currency))
-                                            LabeledContent(ht("Fee below threshold"), value: householdMoney(shop.quote.fee.belowMinor, currency: shop.quote.currency))
-                                            LabeledContent(ht("Fee at or above threshold"), value: householdMoney(shop.quote.fee.aboveMinor, currency: shop.quote.currency))
+                                            HouseholdDecisionFact(ht("Fee threshold"), value: householdMoney(shop.quote.fee.thresholdMinor, currency: shop.quote.currency))
+                                            HouseholdDecisionFact(ht("Fee below threshold"), value: householdMoney(shop.quote.fee.belowMinor, currency: shop.quote.currency))
+                                            HouseholdDecisionFact(ht("Fee at or above threshold"), value: householdMoney(shop.quote.fee.aboveMinor, currency: shop.quote.currency))
                                         }
-                                        LabeledContent(ht("Tax"), value: householdMoney(shop.quote.taxesMinor, currency: shop.quote.currency))
-                                        LabeledContent(ht("Deposits"), value: householdMoney(shop.quote.depositsMinor, currency: shop.quote.currency))
-                                        LabeledContent(ht("Discounts"), value: householdMoney(shop.quote.discountsMinor, currency: shop.quote.currency))
+                                        HouseholdDecisionFact(ht("Tax"), value: householdMoney(shop.quote.taxesMinor, currency: shop.quote.currency))
+                                        HouseholdDecisionFact(ht("Deposits"), value: householdMoney(shop.quote.depositsMinor, currency: shop.quote.currency))
+                                        HouseholdDecisionFact(ht("Discounts"), value: householdMoney(shop.quote.discountsMinor, currency: shop.quote.currency))
                                     }
                                     ShopperBudgetView(title: ht("Before this decision"), value: preview.before)
                                     ShopperBudgetView(title: ht("After this decision"), value: preview.after)
                                 }
-                                LabeledContent(ht("Preview expires"), value: householdTime(preview.expiresAt))
+                                HouseholdDecisionFact(ht("Preview expires"), value: householdTime(preview.expiresAt))
                                 if preview.requiresOverageAcceptance { Toggle(ht("I accept the displayed overage"), isOn: $model.acceptOverage).accessibilityIdentifier("household.decision.overage") }
                                 if preview.requiresUnknownAcceptance { Toggle(ht("I understand the total or its scope is unresolved"), isOn: $model.acceptUnknown) }
                                 Button(ht("Apply reviewed decision")) { Task { await model.apply() } }
@@ -243,6 +243,8 @@ struct HouseholdRequestDecisionView: View {
         .scrollDismissesKeyboard(.immediately)
         .disabled(model.busy)
         .navigationTitle(ht("Review request"))
+        .toolbarBackground(Theme.canvas, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ht("Cancel")) { model.cancelReview(); dismiss() }.accessibilityIdentifier("household.decision.cancel") } }
         .task { model.select(request) }
     }
@@ -295,10 +297,10 @@ private struct ShopperBudgetView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title).font(.headline)
-            LabeledContent(ht("Scope"), value: householdScope(value.scope))
-            LabeledContent(ht("Expected total"), value: householdMoney(value.totalMinor, currency: value.currency))
-            if value.status == "overCap" { LabeledContent(ht("Over cap"), value: householdMoney(value.overCapMinor, currency: value.currency)) }
-            if value.status == "withinCap" { LabeledContent(ht("Remaining within this cap"), value: householdMoney(value.headroomMinor, currency: value.currency)) }
+            HouseholdDecisionFact(ht("Scope"), value: householdScope(value.scope))
+            HouseholdDecisionFact(ht("Expected total"), value: householdMoney(value.totalMinor, currency: value.currency))
+            if value.status == "overCap" { HouseholdDecisionFact(ht("Over cap"), value: householdMoney(value.overCapMinor, currency: value.currency)) }
+            if value.status == "withinCap" { HouseholdDecisionFact(ht("Remaining within this cap"), value: householdMoney(value.headroomMinor, currency: value.currency)) }
             if value.status == "scopeMismatch" { Text(ht("The cap and total cover different scopes.")) }
             if value.status == "unresolved" { Text(ht("Missing facts prevent a confirmed budget result.")) }
             ForEach(value.missing, id: \.self) { code in Text(missingBudgetFact(code)).font(.caption) }

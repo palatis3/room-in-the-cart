@@ -1,0 +1,18 @@
+--- a/ios/UITests/HouseholdRequestPackUITests.swift
++++ b/ios/UITests/HouseholdRequestPackUITests.swift
+@@ -104,6 +104,15 @@
+         XCTAssertTrue(sam.label.contains("Sam’s wrap lunch") && sam.label.contains("Protected portions") && sam.label.contains("1"))
+         XCTAssertTrue(mia.label.contains("Mia’s wrap lunch") && mia.label.contains("Protected portions") && mia.label.contains("1"))
+         capture("S24-cereal-checkout-with-two-named-protected-lunches")
++        continueAfterFailure = true
++        try app.performAccessibilityAudit { issue in
++            let details = XCTAttachment(string: issue.detailedDescription + "\n" + (issue.element?.debugDescription ?? ""))
++            details.name = "Family request review accessibility"
++            details.lifetime = .keepAlways
++            self.add(details)
++            return false
++        }
++        continueAfterFailure = false
+         let total = element("household.decision.after-total").staticTexts["$40.69"]
+         centerForReading(total)
+         try assertReadableContrast(total)
