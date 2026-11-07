@@ -579,7 +579,8 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     public func importMatchOptions(for preview: StagedListImport, decisions: [UUID: ImportResolution])
         -> [UUID: [ImportMatchOption]] {
         guard preview.shopID == id, preview.baseRevision == revision else { return [:] }
-        let candidateIDs = Set(preview.lines.flatMap(\.duplicateLineIDs))
+        var candidateIDs = Set<UUID>()
+        for entry in preview.lines { candidateIDs.formUnion(entry.duplicateLineIDs) }
         guard !candidateIDs.isEmpty else { return [:] }
 
         struct Target {
