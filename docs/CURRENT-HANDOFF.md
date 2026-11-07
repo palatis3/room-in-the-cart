@@ -2,6 +2,12 @@
 
 Updated November 7, 2026 UTC. The owner resumed and explicitly approved the reviewed hosted staging update; the full first-version goal is active and release acceptance remains incomplete. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
+## Protected meal quantities and GitHub share-sheet investigation, November 7
+
+A shared meal marked protected now preserves each named group, its servings, and its exact ingredient quantities when a planner proposes changes or the shopper edits directly. A quantity entered for an ordinary group previously allowed a reduction when the amount reserved for a protected group was unknown. The service now preserves the ingredient total in that case. A title-only edit remains possible. The whole-meal regression reproduced on the previous service. After the fix all 180 PostgreSQL integration tests passed.
+
+On published commit `08309eb`, [GitHub Core ui-07](https://github.com/palatis3/room-in-the-cart/actions/runs/42366985966/job/128401513671) passed five of six tests. With Reduce Motion enabled, the system share Close control missed its 15-second readiness deadline. The screenshot taken at failure shows a dimmed retailer handoff with no visible share panel or Close. The hierarchy shows the activity container. The same downloaded GitHub binaries passed the original test on a fresh local iPhone 17 simulator with iOS 26.2. Close was tapped 2.35 seconds after Share, and the exact frozen list and its cancellation record reopened after relaunch. The hosted failure is still open.
+
 ## Matching a shared delivery to meal ingredients, November 7
 
 From **What came home**, an assigned shopper can match or unmatch a delivery segment to an ingredient from the meal revision reviewed at checkout. The review shows the date, confirmed usable amount, ingredient quantity, exclusions and named group requirements. A match can span multiple meals. The food keeps one physical count. Calculating coverage across those matches and publishing a repaired shared dinner to the cook are still open.

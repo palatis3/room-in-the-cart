@@ -55,10 +55,11 @@ export function preserveProtectedMeal(original: SharedMealValue | undefined, nex
   const fail = () => { throw new ServiceError(409, 'protected_meal', 'Keep existing protected portions and ingredient reservations.'); };
   if (!original) return;
   if (original.protected && (!next || !next.protected || next.portions < original.portions || next.kind !== original.kind)) fail();
-  const protectedGroups = original.planning?.groups.filter(g => g.protected) ?? [];
+  // A whole-meal reservation covers each named group even when its own flag is off.
+  const protectedGroups = original.planning?.groups.filter(g => original.protected || g.protected) ?? [];
   for (const group of protectedGroups) {
     const replacement = next?.planning?.groups.find(g => g.id === group.id);
-    if (!replacement || !replacement.protected || replacement.name !== group.name || !atLeast(replacement.servings, group.servings)) fail();
+    if (!replacement || (group.protected && !replacement.protected) || replacement.name !== group.name || !atLeast(replacement.servings, group.servings)) fail();
   }
   for (const binding of original.planning?.bindings ?? []) {
     if (!protectedGroups.some(g => g.id === binding.groupId)) continue;
@@ -73,8 +74,9 @@ export function preserveProtectedMeal(original: SharedMealValue | undefined, nex
     if (!replacement || replacement.name !== ingredient.name ||
         protectedIds.some(id => !replacement.groupIds.includes(id)) ||
         ingredient.exclusions.some(value => !replacement.exclusions.includes(value))) { fail(); continue; }
-    const hasExactBindings = (original.planning?.bindings ?? []).some(b => b.ingredientId === ingredient.id);
-    if ((original.protected || !hasExactBindings) && ingredient.quantity && (!replacement.quantity || ingredient.quantity.unit !== replacement.quantity.unit ||
+    const hasProtectedAmounts = protectedIds.every(groupId => original.planning?.bindings?.some(
+      b => b.ingredientId === ingredient.id && b.groupId === groupId));
+    if ((original.protected || !hasProtectedAmounts) && ingredient.quantity && (!replacement.quantity || ingredient.quantity.unit !== replacement.quantity.unit ||
         !atLeast(replacement.quantity.amount, ingredient.quantity.amount))) fail();
   }
 }

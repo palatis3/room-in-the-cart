@@ -62,6 +62,44 @@ test('cross-device proposal keeps basket private and applies exact reviewed meal
  assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.shared_meal_revision WHERE household_id=$1',[f.h])).rows[0].n,2);
 });
 
+test('protecting a whole meal also preserves its named groups and their exact ingredient quantities',async()=>{
+ const f=await mealFixture(), occurrenceId=f.proposal.occurrenceId;
+ const protectedMeal={...f.meal,protected:true};
+ ok(await call(f.owner,f.base+'/commands','POST',f.patch(2,{occurrenceId,baseMealRevision:2,meal:protectedMeal})));
+ const propose=meal=>call(f.planner,f.changePath,'POST',{...f.proposal,proposalId:randomUUID(),
+   baseMealRevision:3,shopRevision:3,meal});
+ const apply=meal=>call(f.owner,f.base+'/commands','POST',f.patch(3,{occurrenceId,baseMealRevision:3,meal}));
+ for(const change of [
+   m=>{m.planning.groups[0].name='Different recipient';},
+   m=>{m.planning.groups[0].servings.numerator=3;},
+   m=>{m.planning.bindings[0].quantity=f.changed.planning.bindings[0].quantity;
+       m.planning.bindings[1].quantity=f.meal.planning.bindings[0].quantity;},
+ ]){
+   const meal=structuredClone(protectedMeal);change(meal);
+   assert.equal((await propose(meal)).data.error?.code,'protected_meal');
+   assert.equal((await apply(meal)).data.error?.code,'protected_meal');
+ }
+ const renamed={...protectedMeal,title:'Reviewed dinner title'};
+ ok(await propose(renamed));ok(await apply(renamed));
+ assert.deepEqual(ok(await call(f.owner,f.path)).meals[0].meal,renamed);
+});
+
+test('an ordinary group binding cannot establish the amount available to an unquantified protected group',async()=>{
+ const f=await mealFixture(), occurrenceId=randomUUID();
+ const original=structuredClone(f.meal), ingredient=original.planning.ingredients[0];
+ original.planning.bindings=original.planning.bindings.slice(0,1);
+ original.planning.bindings[0].quantity=ingredient.quantity;
+ const save=(revision,prior,meal)=>call(f.owner,f.base+'/commands','POST',f.patch(revision,{occurrenceId,baseMealRevision:prior,meal}));
+ ok(await save(2,null,original));
+ const reduced=structuredClone(original);
+ reduced.planning.ingredients[0].quantity=f.changed.planning.ingredients[0].quantity;
+ reduced.planning.bindings[0].quantity=reduced.planning.ingredients[0].quantity;
+ const rejected=await save(3,3,reduced);
+ assert.equal(rejected.status,409);assert.equal(rejected.data.error.code,'protected_meal');
+ const relabeled={...original,title:'Same reserved beans'};
+ ok(await save(3,3,relabeled));
+});
+
 test('protected group identities, servings, ingredients, exclusions and fixed allocations cannot be reduced through proposal or direct patch',async()=>{
  const f=await mealFixture();
  const mutations=[m=>m.planning.groups.pop(),m=>m.planning.groups[1].servings.numerator=1,m=>m.planning.groups[1].protected=false,

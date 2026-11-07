@@ -13,7 +13,7 @@ Migration 016 stores proposals with tenant RLS and privacy cleanup. Migration 01
 
 Optional `SharedMeal.planning` is backward compatible. It records stable group and ingredient UUIDs, exact positive rational amounts, original quantity literals, units, exclusions, and optional explicit per-group ingredient bindings. Unknown ingredient quantities are explicit null. Typed UUIDs normalize to lowercase before comparison; user-entered labels retain their text semantics. Binding references must exist and be unique; complete bindings must sum exactly to the entered ingredient quantity in the same unit. All arithmetic uses integers/BigInt, never floating-point quantity comparison.
 
-Existing protected meal portions, group identities/servings, protected ingredient allocations and exclusions cannot be silently removed, reassigned or reduced by proposals or direct edits. Exact protected bindings stay reserved while guest allocations elsewhere can decrease. Without exact bindings, the server conservatively protects the entered ingredient quantity instead of guessing a protected share.
+Existing protected meal portions, group identities/servings, protected ingredient allocations and exclusions cannot be silently removed, reassigned or reduced by proposals or direct edits. Exact protected bindings stay reserved while guest allocations elsewhere can decrease. Protecting the entire meal extends these checks to every named group and its allocations. If any protected group has no exact binding for an ingredient, the server conservatively preserves the entered ingredient total.
 
 ## Native routes and review
 
