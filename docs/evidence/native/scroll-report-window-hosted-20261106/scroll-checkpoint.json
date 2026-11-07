@@ -1,0 +1,61 @@
+{
+  "artifactID": 13558995823,
+  "sha256": "1efaf6029dd905b9b94a4803d34b666e4b6878cff1207ed299ed58f9e9f9190e",
+  "strictReplayExit": 0,
+  "passedTests": 1,
+  "failedTests": 0,
+  "skippedTests": 0,
+  "runtimeWarnings": 0,
+  "environment": {
+    "osVersion": "26.2",
+    "osBuildNumber": "23C54",
+    "modelName": "iPhone 17",
+    "architecture": "arm64",
+    "xcode": "Xcode 26.3\nBuild version 17C529",
+    "buildConfiguration": "Release",
+    "testConfiguration": "Test Scheme Action"
+  },
+  "comparisons": {
+    "scrollMedianSeconds": {
+      "measured": 2.5836895,
+      "maximum": 3.25,
+      "passed": true
+    },
+    "absoluteMemoryMedianKilobytes": {
+      "measured": 111058.816,
+      "maximum": 150000,
+      "passed": true
+    },
+    "peakMemoryMedianKilobytes": {
+      "measured": 111124.352,
+      "maximum": 155000,
+      "passed": true
+    },
+    "maximumPeakMemoryKilobytes": {
+      "measured": 111468.416,
+      "maximum": 160000,
+      "passed": true
+    }
+  },
+  "hostedPickupReadback": {
+    "sqliteQuickCheck": "ok",
+    "revision": 2,
+    "payloadSHA256": "1b54eeaff26c5d88fb08a8613197910691c99d4073319cc125e6981ab7f7cab2",
+    "lineCount": 500,
+    "contributionCount": 500,
+    "importCount": 1,
+    "source": "paste",
+    "checkedCount": 0,
+    "checkedRowIDs": []
+  },
+  "simulatorHitches": {
+    "status": "unavailable",
+    "detail": "XCTest emitted scroll duration and memory, but no animation hitch samples on this simulator. This run cannot evaluate frame hitches."
+  },
+  "candidate": "ab149a7f27d9366db61c4fe2d9047095f166be3d",
+  "runID": 42332357700,
+  "rootVerifiedFiles": 60,
+  "checkpointSHA256": "3bfc4188684df1ee557b3cdb8e88a7ab161ee8bbda8d211cc1bcbe480f34e92e",
+  "capturedAtUTC": "2026-11-07T03:31:11.251980+00:00",
+  "scope": "Scroll case only; rendered case still active at this checkpoint. Instrumented nonreproduction and hosted compatibility, not a fix for the original missing series."
+}
