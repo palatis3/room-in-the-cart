@@ -52,7 +52,6 @@ struct SharedFallbackLibraryView: View {
     @State private var enteringRecipe = false
     @State private var approval: FallbackApprovalReview?
     @State private var entered: SharedFallbackRecipe?
-    @State private var withdrawal: SharedFallbackLibrary.Candidate?
     @State private var displayingSources = false
     @State private var sourceIdeas: [SharedMealIdeaPage.Idea] = []
     @State private var sourceFailure = false
@@ -75,21 +74,7 @@ struct SharedFallbackLibraryView: View {
                     if library.candidates.isEmpty { Text(fallbackText("No household fallback recipes accepted yet.")) }
                     ForEach(library.candidates) { candidate in
                         NavigationLink {
-                            if model.live, model.library == library {
-                                Form {
-                                    SharedFallbackRecipeFacts(recipe: candidate.recipe)
-                                    if candidate.usual { Text(fallbackText("Usual fallback")) }
-                                    if model.canSuggest {
-                                        Button(fallbackText("Review household approval")) {
-                                            approval = .init(candidateID: candidate.id, priorRevision: candidate.revision,
-                                                source: .disclosed, recipe: candidate.recipe, usual: candidate.usual, library: library)
-                                        }
-                                    }
-                                    Button(fallbackText("Withdraw household approval"), role: .destructive) { withdrawal = candidate }
-                                        .accessibilityIdentifier("fallback.withdraw")
-                                        .disabled(model.busy || model.pending != nil)
-                                }.navigationTitle(candidate.recipe.title)
-                            }
+                            SharedFallbackCandidateView(model: model, candidateID: candidate.id)
                         } label: {
                             VStack(alignment: .leading) {
                                 Text(verbatim: candidate.recipe.title)
@@ -143,13 +128,6 @@ struct SharedFallbackLibraryView: View {
                 FallbackApprovalSheet(model: model, review: selected)
             }
         }
-        .confirmationDialog(fallbackText("Withdraw household approval?"), isPresented: Binding(get: { withdrawal != nil }, set: { if !$0 { withdrawal = nil } }),
-            titleVisibility: .visible, presenting: withdrawal) { selected in
-            Button(fallbackText("Withdraw household approval"), role: .destructive) {
-                guard let library = model.library, library.candidates.contains(selected) else { return }
-                Task { await model.save(.revoke(candidateId: selected.id, baseRevision: selected.revision), reviewed: library) }
-            }.accessibilityIdentifier("fallback.withdrawConfirm")
-        } message: { candidate in Text(verbatim: candidate.recipe.title) }
         .confirmationDialog(fallbackText("Clear local retry?"), isPresented: $clearing, titleVisibility: .visible) {
             Button(fallbackText("Clear local retry"), role: .destructive) {
                 guard let library = model.library else { return }
@@ -162,7 +140,7 @@ struct SharedFallbackLibraryView: View {
     }
 
     private func clearPersonalReview() {
-        approval = nil; withdrawal = nil; entered = nil; enteringRecipe = false
+        approval = nil; entered = nil; enteringRecipe = false
         sourceIdeas = []; displayingSources = false; clearing = false
     }
 
@@ -185,6 +163,60 @@ struct SharedFallbackLibraryView: View {
             guard model.library == library, displayingSources, scene == .active else { return }
             sourceIdeas = []; sourceFailure = true
         }
+    }
+}
+
+private struct SharedFallbackCandidateView: View {
+    @ObservedObject var model: SharedFallbackModel
+    let candidateID: UUID
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.scenePhase) private var scene
+    @State private var approval: FallbackApprovalReview?
+    @State private var withdrawal: SharedFallbackLibrary?
+
+    private var candidate: SharedFallbackLibrary.Candidate? {
+        guard scene == .active, model.live else { return nil }
+        return model.library?.candidates.first { $0.id == candidateID }
+    }
+
+    var body: some View {
+        Form {
+            if let candidate, let library = model.library {
+                SharedFallbackRecipeFacts(recipe: candidate.recipe)
+                if candidate.usual { Text(fallbackText("Usual fallback")) }
+                if model.canSuggest {
+                    Button(fallbackText("Review household approval")) {
+                        approval = .init(candidateID: candidate.id, priorRevision: candidate.revision, source: .disclosed,
+                                         recipe: candidate.recipe, usual: candidate.usual, library: library)
+                    }.disabled(model.busy || model.pending != nil)
+                }
+                Button(fallbackText("Withdraw household approval"), role: .destructive) { withdrawal = library }
+                    .accessibilityIdentifier("fallback.withdraw")
+                    .disabled(model.busy || model.pending != nil)
+                    .confirmationDialog(fallbackText("Withdraw household approval?"), isPresented: Binding(
+                        get: { withdrawal != nil }, set: { if !$0 { withdrawal = nil } }
+                    ), titleVisibility: .visible, presenting: withdrawal) { reviewed in
+                        Button(fallbackText("Withdraw household approval"), role: .destructive) {
+                            guard scene == .active, model.live, model.library == reviewed else { return }
+                            Task {
+                                _ = await model.save(.revoke(candidateId: candidate.id, baseRevision: candidate.revision), reviewed: reviewed)
+                            }
+                        }.accessibilityIdentifier("fallback.withdrawConfirm")
+                    } message: { _ in Text(verbatim: candidate.recipe.title) }
+            }
+            if let notice = model.notice { Text(verbatim: notice) }
+        }
+        .navigationTitle(candidate?.recipe.title ?? fallbackText("Household fallback recipes"))
+        .sheet(item: $approval) { review in
+            if model.canSuggest, model.library == review.library { FallbackApprovalSheet(model: model, review: review) }
+        }
+        .onChange(of: model.library) { _, current in
+            approval = nil
+            withdrawal = nil
+            if current?.candidates.contains(where: { $0.id == candidateID }) != true { dismiss() }
+        }
+        .onChange(of: model.canSuggest) { _, allowed in if !allowed { approval = nil } }
+        .onChange(of: scene) { _, phase in if phase != .active { approval = nil; withdrawal = nil } }
     }
 }
 
