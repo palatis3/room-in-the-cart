@@ -124,6 +124,27 @@ import UIKit
         assertText("Amount per pack on the original label: 15 ounces (weight)")
     }
 
+    func testPrintedFluidOuncesKeepTheirVolumeAndPackLabelAfterRestart() {
+        launch(reset: true)
+        tap(element("openPickupList"))
+        tap(element("ledgerImport"))
+        let label = "2 cans of seltzer, 12 fl. oz. each"
+        fill(label, into: "ledgerImportText")
+        tap(element("ledgerReviewImport"))
+        assertText("Amount per pack on the original label: 12 US fluid ounces")
+        XCTAssertEqual(element("ledgerImportAmount-1").value as? String, "24")
+        tap(element("ledgerCommitImport"))
+        let item = app.buttons["Inspect seltzer"]
+        reveal(item)
+        let id = item.identifier
+        restart()
+        if !element("ledgerSearch").waitForExistence(timeout: 4) { tap(element("openPickupList")) }
+        tap(element(id))
+        assertText(label)
+        assertText("24 US fluid ounces")
+        assertText("Amount per pack on the original label: 12 US fluid ounces")
+    }
+
     func testOversizedNativePasteKeepsTheOriginalAndAcceptsASmallerList() {
         let original = Array(repeating: "2 wraps", count: 1_001).joined(separator: "\n")
         UIPasteboard.general.string = original

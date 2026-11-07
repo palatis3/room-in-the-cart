@@ -13,6 +13,16 @@ final class StructuredCaptureTests: XCTestCase {
         XCTAssertEqual(spanish.purpose, "la cena"); XCTAssertEqual(spanish.destination, destination)
     }
     func testMixedMeasuresAndSpanishPackEvidenceReachTheSameReviewedList() throws {
+        for label in ["2 × 12 fl. oz. seltzer", "dos latas de 12 oz. líq. seltzer"] {
+            var draft = try row(label)
+            XCTAssertEqual(draft.name, "seltzer")
+            XCTAssertEqual(draft.packUnit, .fluidOunce)
+            draft.confirmed = true
+            let captured = try XCTUnwrap(draft.reviewed(expectedDestination: destination))
+            let preview = try ShoppingLedger().stageCaptureImport(id: UUID(), originalText: label, source: .voice, lines: [captured])
+            XCTAssertEqual(preview.lines.first?.quantity?.unit, .fluidOunce)
+            XCTAssertEqual(preview.lines.first?.quantity?.amount, try Rational(24))
+        }
         for text in ["1 1/2 cups of arroz", "1½ tazas de arroz"] {
             let draft = try row(text)
             XCTAssertEqual(draft.amount, "3/2")
@@ -94,6 +104,7 @@ final class StructuredCaptureTests: XCTestCase {
     func testUnknownMeasureAndAmbiguousCommaNeverBecomeKnownCount() throws {
         let unknown = try row("2 handfuls almonds")
         XCTAssertEqual(unknown.amount, ""); XCTAssertTrue(unknown.warnings.contains(.ambiguous))
+        XCTAssertTrue(try row("2 tsp. sugar").amount.isEmpty)
         let comma = try row("1,000 tortillas")
         XCTAssertEqual(comma.amount, ""); XCTAssertEqual(comma.name, "1,000 tortillas")
         XCTAssertThrowsError(try CaptureNumber.parse("1,000"))

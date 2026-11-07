@@ -43,9 +43,9 @@ public enum ListQuantityParser {
     /// Consume a unit before interpreting a bare number as an item count.
     /// In "onzas líquidas" the two words are one volume unit, distinct from "onzas".
     public static func takeUnit(from tokens: inout ArraySlice<String>) -> UnitOfMeasure? {
-        guard let first = tokens.first?.lowercased() else { return nil }
+        guard let first = tokens.first.map(unitKey) else { return nil }
         let unit: UnitOfMeasure
-        if fluidOunces.contains(tokens.prefix(2).joined(separator: " ").lowercased()) {
+        if fluidOunces.contains(tokens.prefix(2).map(unitKey).joined(separator: " ")) {
             unit = .fluidOunce
             tokens = tokens.dropFirst(2)
         } else if let single = units[first] {
@@ -59,7 +59,14 @@ public enum ListQuantityParser {
 
     public static func needsUnitReview(_ token: String?) -> Bool {
         guard let token else { return false }
-        return unresolvedMeasures.contains(token.lowercased())
+        return unresolvedMeasures.contains(unitKey(token))
+    }
+
+    // Printed abbreviations may end in a period. Only normalize candidate units,
+    // leaving product names and the original label untouched.
+    private static func unitKey(_ token: String) -> String {
+        let word = token.lowercased()
+        return word.hasSuffix(".") ? String(word.dropLast()) : word
     }
 
     public struct PackLabel: Codable, Equatable, Sendable {
@@ -162,7 +169,8 @@ public enum ListQuantityParser {
     private static func separatingUnit(_ token: String) -> (amount: String, unit: String)? {
         guard let start = token.firstIndex(where: \.isLetter), start != token.startIndex else { return nil }
         let unit = String(token[start...])
-        guard units[unit.lowercased()] != nil else { return nil }
+        let key = unitKey(unit)
+        guard units[key] != nil || unresolvedMeasures.contains(key) else { return nil }
         var amount = token[..<start]
         if amount.last == "-" { amount = amount.dropLast() }
         guard !amount.isEmpty else { return nil }
@@ -208,13 +216,14 @@ public enum ListQuantityParser {
     ]
     private static let fluidOunces: Set<String> = [
         "fl oz", "fl ounce", "fl ounces", "fluid ounce", "fluid ounces", "onza líquida", "onzas líquidas",
-        "onza liquida", "onzas liquidas"
+        "onza liquida", "onzas liquidas", "oz líq", "oz liq", "oz líquidas", "oz liquidas"
     ]
     private static let units: [String: UnitOfMeasure] = [
         "count": .count, "ct": .count, "each": .count, "unit": .count, "units": .count, "unidad": .count, "unidades": .count,
         "g": .gram, "gram": .gram, "grams": .gram, "gramo": .gram, "gramos": .gram,
         "kg": .kilogram, "kilogram": .kilogram, "kilograms": .kilogram, "kilogramo": .kilogram, "kilogramos": .kilogram,
         "kilo": .kilogram, "kilos": .kilogram,
+        "fl.oz": .fluidOunce, "floz": .fluidOunce,
         "oz": .ounce, "ounce": .ounce, "ounces": .ounce, "onza": .ounce, "onzas": .ounce,
         "lb": .pound, "lbs": .pound, "pound": .pound, "pounds": .pound, "libra": .pound, "libras": .pound,
         "ml": .milliliter, "milliliter": .milliliter, "milliliters": .milliliter, "mililitro": .milliliter, "mililitros": .milliliter,

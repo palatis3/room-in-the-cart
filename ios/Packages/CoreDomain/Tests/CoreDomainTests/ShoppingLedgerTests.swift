@@ -70,6 +70,17 @@ final class ShoppingLedgerTests: XCTestCase {
     }
 
     func testBilingualMeasuresMatchFoodWithoutChangingOriginalEvidence() throws {
+        for label in ["2 × 12 fl. oz. seltzer", "2 × 12fl.oz. seltzer", "2 × 12fl. oz. seltzer",
+                      "2 latas de 12 oz. líq. seltzer", "2 cans of seltzer, 12 fl. oz. each"] {
+            let row = try ShoppingLedger().stageImport(text: label).lines[0]
+            XCTAssertEqual(row.name, "seltzer", label)
+            XCTAssertEqual(row.originalPack?.amountPerPack?.unit, .fluidOunce, label)
+            XCTAssertEqual(row.quantity?.amount, try Rational(24), label)
+            XCTAssertEqual(row.originalText, label)
+        }
+        let mass = try ShoppingLedger().stageImport(text: "2 oz. St. André").lines[0]
+        XCTAssertEqual(mass.quantity?.unit, .ounce)
+        XCTAssertEqual(mass.name, "St. André")
         var ledger = ShoppingLedger()
         let first = try ledger.stageImport(text: "1 1/2 cups of arroz\n2 onzas de queso\n2 onzas líquidas de caldo sin sal\n1 kg De Cecco")
         XCTAssertEqual(first.lines.map(\.name), ["arroz", "queso", "caldo sin sal", "De Cecco"])
@@ -89,7 +100,7 @@ final class ShoppingLedgerTests: XCTestCase {
 
     func testUnsupportedMeasuresAndMalformedMixedAmountsStayUnresolved() throws {
         let shop = ShoppingLedger()
-        for text in ["2 cucharadas de arroz", "2 cucharaditas de sal", "3 manojos de cilantro",
+        for text in ["2 tbsp. cocoa", "2 fl. broth", "2 cucharadas de arroz", "2 cucharaditas de sal", "3 manojos de cilantro",
                      "1 1/0 cups rice", "9223372036854775807 1/2 cups rice"] {
             let row = try shop.stageImport(text: text).lines[0]
             XCTAssertNil(row.quantity, text)
