@@ -81,6 +81,7 @@ public struct MealRecoveryProjection: Equatable, Sendable {
     public let revisionID: UUID
     public let meals: [RecoveryMeal]
     public let demands: [StockNeed]
+    public let outsideDemands: [StockNeed]
 }
 
 public struct MealRecoveryEvent: Codable, Equatable, Sendable, Identifiable {
@@ -99,12 +100,13 @@ public struct MealRecoveryState: Codable, Equatable, Sendable {
     public let originalMeals: [RecoveryMeal]
     public let outsideDemands: [StockNeed]
     public private(set) var events: [MealRecoveryEvent]
+    public private(set) var contextChanges: [MealRecoveryContextEvent]
     public init(shopID: UUID, originalRevisionID: UUID, originalMeals: [RecoveryMeal], outsideDemands: [StockNeed]) throws {
         self.shopID = shopID; self.originalRevisionID = originalRevisionID; self.originalMeals = originalMeals
-        self.outsideDemands = outsideDemands; self.events = []
+        self.outsideDemands = outsideDemands; self.events = []; self.contextChanges = []
         _ = try MealRecoveryEngine.project(self)
     }
-    private enum CodingKeys: String, CodingKey { case shopID, originalRevisionID, originalMeals, outsideDemands, events }
+    private enum CodingKeys: String, CodingKey { case shopID, originalRevisionID, originalMeals, outsideDemands, events, contextChanges }
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         shopID = try c.decode(UUID.self, forKey: .shopID)
@@ -112,10 +114,12 @@ public struct MealRecoveryState: Codable, Equatable, Sendable {
         originalMeals = try c.decode([RecoveryMeal].self, forKey: .originalMeals)
         outsideDemands = try c.decode([StockNeed].self, forKey: .outsideDemands)
         events = try c.decode([MealRecoveryEvent].self, forKey: .events)
+        contextChanges = try c.decodeIfPresent([MealRecoveryContextEvent].self, forKey: .contextChanges) ?? []
         // Historical validation uses event instants, never the decoder's wall clock.
         _ = try MealRecoveryEngine.project(self)
     }
-    fileprivate mutating func append(_ event: MealRecoveryEvent) { events.append(event) }
+    mutating func append(_ event: MealRecoveryEvent) { events.append(event) }
+    mutating func append(_ event: MealRecoveryContextEvent) { contextChanges.append(event) }
 }
 
 public struct MealRecoveryReview: Equatable, Sendable {
@@ -146,18 +150,36 @@ public enum MealRecoveryEngine {
         var usedRevisions = Set(state.originalMeals.map(\.revisionID) + [state.originalRevisionID])
         var knownTemplates = Set(state.originalMeals.compactMap(\.templateID))
         var priorInstant: Date?
-        for event in state.events {
-            guard operations.insert(event.id).inserted,
-                  priorInstant.map({ event.appliedAt >= $0 }) ?? true else { throw MealRecoveryError.invalid }
-            let result = try evaluate(event.request, shopID: state.shopID, current: current,
-                outside: state.outsideDemands, usedNeeds: usedNeeds, usedRevisions: usedRevisions,
-                knownTemplates: knownTemplates, evidence: event.stockEvidence, reservations: event.reservations, at: event.appliedAt)
-            try consent(event.request, feasible: result.food && result.timing, repeats: result.repeats)
-            current = result.after
-            usedNeeds.formUnion(event.request.replacement.needs.map(\.id))
-            usedRevisions.insert(event.request.replacement.revisionID)
-            if let template = event.request.replacement.templateID { knownTemplates.insert(template) }
-            priorInstant = event.appliedAt
+        var remainingRecoveries = state.events, remainingContexts = state.contextChanges
+        guard remainingRecoveries.count + remainingContexts.count <= 1_000,
+              Set(remainingRecoveries.map(\.id) + remainingContexts.map(\.id)).count ==
+                remainingRecoveries.count + remainingContexts.count else { throw MealRecoveryError.invalid }
+        while !remainingRecoveries.isEmpty || !remainingContexts.isEmpty {
+            let recovery = remainingRecoveries.filter { $0.request.baseRevisionID == current.revisionID }
+            let context = remainingContexts.filter { $0.request.baseRevisionID == current.revisionID }
+            guard recovery.count + context.count == 1 else { throw MealRecoveryError.invalid }
+            if let event = recovery.first {
+                guard operations.insert(event.id).inserted,
+                      priorInstant.map({ event.appliedAt >= $0 }) ?? true else { throw MealRecoveryError.invalid }
+                let result = try evaluate(event.request, shopID: state.shopID, current: current,
+                    outside: current.outsideDemands, usedNeeds: usedNeeds, usedRevisions: usedRevisions,
+                    knownTemplates: knownTemplates, evidence: event.stockEvidence, reservations: event.reservations, at: event.appliedAt)
+                try consent(event.request, feasible: result.food && result.timing, repeats: result.repeats)
+                current = result.after
+                usedNeeds.formUnion(event.request.replacement.needs.map(\.id))
+                usedRevisions.insert(event.request.replacement.revisionID)
+                if let template = event.request.replacement.templateID { knownTemplates.insert(template) }
+                priorInstant = event.appliedAt
+                remainingRecoveries.removeAll { $0.id == event.id }
+            } else if let event = context.first {
+                guard operations.insert(event.id).inserted,
+                      priorInstant.map({ event.appliedAt >= $0 }) ?? true else { throw MealRecoveryError.invalid }
+                current = try applyContextEvent(event, shopID: state.shopID, current: current,
+                    usedNeeds: usedNeeds, usedRevisions: usedRevisions)
+                usedNeeds.formUnion(current.demands.map(\.id)); usedRevisions.insert(event.request.revisionID)
+                priorInstant = event.appliedAt
+                remainingContexts.removeAll { $0.id == event.id }
+            }
         }
         return current
     }
@@ -167,9 +189,9 @@ public enum MealRecoveryEngine {
                                at instant: Date) throws -> MealRecoveryReview {
         let current = try project(state)
         let meals = state.originalMeals + state.events.map { $0.request.replacement }
-        let result = try evaluate(request, shopID: state.shopID, current: current, outside: state.outsideDemands,
-            usedNeeds: Set(meals.flatMap(\.needs).map(\.id) + state.outsideDemands.map(\.id)),
-            usedRevisions: Set(meals.map(\.revisionID) + [state.originalRevisionID]),
+        let result = try evaluate(request, shopID: state.shopID, current: current, outside: current.outsideDemands,
+            usedNeeds: Set(meals.flatMap(\.needs).map(\.id) + current.outsideDemands.map(\.id)),
+            usedRevisions: Set(meals.map(\.revisionID) + [state.originalRevisionID] + state.contextChanges.map { $0.request.revisionID }),
             knownTemplates: Set(meals.compactMap(\.templateID)), evidence: stockEvidence, reservations: reservations, at: instant)
         return MealRecoveryReview(request: request, source: state, stockEvidence: stockEvidence, reservations: reservations,
             before: current, after: result.after, beforeAllocation: result.beforeAllocation, afterAllocation: result.afterAllocation,
@@ -294,14 +316,14 @@ public enum MealRecoveryEngine {
         }
         guard feasible || request.acceptsUnresolved else { throw MealRecoveryError.unresolved }
     }
-    private static func projection(revision: UUID, meals: [RecoveryMeal], outside: [StockNeed]) -> MealRecoveryProjection {
-        MealRecoveryProjection(revisionID: revision, meals: meals, demands: meals.flatMap(\.needs) + outside)
+    static func projection(revision: UUID, meals: [RecoveryMeal], outside: [StockNeed]) -> MealRecoveryProjection {
+        MealRecoveryProjection(revisionID: revision, meals: meals, demands: meals.flatMap(\.needs) + outside, outsideDemands: outside)
     }
-    private static func validateDemands(_ demands: [StockNeed]) throws {
+    static func validateDemands(_ demands: [StockNeed]) throws {
         guard demands.count <= 10_000, demands.allSatisfy({ $0.amount.amount > .zero }) else { throw MealRecoveryError.invalid }
         _ = try ConfirmedStockAllocator.allocate(lots: [], needs: demands)
     }
-    private static func validate(_ meal: RecoveryMeal) throws {
+    static func validate(_ meal: RecoveryMeal) throws {
         guard !meal.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, meal.title.utf8.count <= 2_048,
               meal.servings > .zero, !meal.ingredients.isEmpty, meal.ingredients.count <= 1_000,
               meal.templateVersion.map({ $0 >= 0 }) ?? true,

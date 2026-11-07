@@ -1,0 +1,21 @@
+{
+  "files": {
+    "ios/Packages/CoreDomain/Sources/CoreDomain/MealRecovery.swift": {
+      "base_sha256": "c3808eb22a921728a0b34f192919e470eb3133332c551678ec8fee52ed4cf6cd",
+      "sha256": "f03b86c54e549f9af59d250abf2de572d5834d458d239a26daaae467f65f73f5"
+    },
+    "ios/Packages/CoreDomain/Sources/CoreDomain/MealRecoveryContext.swift": {
+      "base_sha256": null,
+      "sha256": "e77553d071625df74448a682209ecd57b7bccebe59758fe0a15730eff318b112"
+    },
+    "ios/Packages/CoreDomain/Tests/CoreDomainTests/MealRecoveryContextTests.swift": {
+      "base_sha256": null,
+      "sha256": "93d2b3bc45b27e5d5c6ca2f9a19c191fc98d45a96210ccd73513b299987e8361"
+    }
+  },
+  "patch_sha256": "b26d4f64e558ea5ca7eb8b6b527bc296ca5196b4016348ab9f5189a508564dca",
+  "tests": 183,
+  "failures": 0,
+  "command": "swift test --package-path adapter-v2/workspace/ios/Packages/CoreDomain --jobs 1",
+  "log_sha256": "9b634fe733806b7050d61922a8748c615e1b0e7bbc9268592d13934804a5be53"
+}
