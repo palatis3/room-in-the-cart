@@ -649,26 +649,27 @@ import XCTest
         func assertField(_ name: String, _ expected: String) {
             let target = field(name)
             reveal(target)
-            let exact = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", expected), object: target)
-            let outcome = XCTWaiter.wait(for: [exact], timeout: 5)
-            if outcome != .completed {
-                // Preserve the failed five-second decision before slower public
-                // observations. Do not refocus, retype, save or retry the field.
-                let facts = [
-                    "Field: \(name); expected: \(expected); failed wait: \(outcome)",
-                    "Value: \(String(reflecting: target.value)); placeholder: \(String(reflecting: target.placeholderValue))",
-                    "Label: \(target.label); identifier: \(target.identifier)",
-                    "Exists: \(target.exists); enabled: \(target.isEnabled); hittable: \(target.isHittable); frame: \(target.frame)",
-                    "Software keyboard present: \(app.keyboards.firstMatch.exists)"
-                ]
-                let attachment = XCTAttachment(string: facts.joined(separator: "\n"))
-                attachment.name = "S14-failed-field-value-boundary"
-                attachment.lifetime = .keepAlways
-                add(attachment)
+            do {
+                // All input has finished or the saved editor is open. Read the actual
+                // field once so a slow accessibility query cannot outlive a predicate timer.
+                let snapshot = try target.snapshot()
+                let value = snapshot.value as? String
+                if value != expected {
+                    let facts = [
+                        "Field: \(name); expected: \(expected)",
+                        "Value: \(String(reflecting: snapshot.value)); placeholder: \(String(reflecting: snapshot.placeholderValue))",
+                        "Label: \(snapshot.label); identifier: \(snapshot.identifier)",
+                        "Enabled: \(snapshot.isEnabled); frame: \(snapshot.frame)"
+                    ]
+                    let attachment = XCTAttachment(string: facts.joined(separator: "\n"))
+                    attachment.name = "S14-failed-field-value-boundary"
+                    attachment.lifetime = .keepAlways
+                    add(attachment)
+                }
+                XCTAssertEqual(value, expected, "Persisted or entered value for \(name)")
+            } catch {
+                XCTFail("Could not read \(name): \(error)")
             }
-            XCTAssertEqual(outcome, .completed,
-                           "Persisted or entered value for \(name) must be \(expected)")
-            XCTAssertEqual(target.value as? String, expected)
         }
         func enter(_ value: String, _ name: String, replacing: Bool = false) {
             fill(value, into: name, replacing: replacing)
@@ -724,8 +725,15 @@ import XCTest
         tap(element("ledgerSaveDinner"))
         tap(app.buttons["Done"])
         tap(element("ledgerChooseTemplate"))
-        tap(element("dinnerApply"))
-        XCTAssertTrue(element("dinnerApply").waitForNonExistence(timeout: 10))
+        XCTAssertTrue(app.navigationBars["Dinner preview"].waitForExistence(timeout: 8))
+        let previewMeals = app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@", "dinnerPreviewMeal-"))
+        let previewNeeds = app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@", "dinnerPreviewNeed-"))
+        XCTAssertEqual(previewMeals.firstMatch.label, "\(title), Servings: 3, Unscheduled")
+        XCTAssertEqual(previewNeeds.firstMatch.label, "Wraps, New need, After: 6 units")
+        let apply = app.buttons["dinnerApply"]
+        XCTAssertTrue(apply.isEnabled)
+        tap(apply)
+        XCTAssertTrue(apply.waitForNonExistence(timeout: 10))
         let occurrenceID = openChosen()
         assertText("Servings: 3")
         openBindings()
