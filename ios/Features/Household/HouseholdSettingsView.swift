@@ -83,6 +83,7 @@ struct HouseholdSettingsView: View {
                                 VStack(alignment: .leading, spacing: 6) {
                                     Text(request.originalItem).font(.headline)
                                     if let quantity = request.ownQuantity { Text(quantity) }
+                                    if request.fromPreviousShop == true { Text(ht("From an earlier pickup")) }
                                     Text(status(request)).foregroundStyle(.secondary)
                                     if let outcome = request.purchaseOutcome { Text(purchaseStatus(outcome)) }
                                     if let clarification = request.clarification { Text(clarification) }
@@ -186,6 +187,7 @@ struct HouseholdSettingsView: View {
         }
     }
     private func status(_ request: OwnRequest) -> String {
+        if request.carriedForward == true { return ht("Moved to a later pickup for review") }
         switch request.status {
         case "pending": return request.route == "next" ? ht("Received for next shop") : ht("Received, waiting for review")
         case "clarified": return ht("Clarification requested")

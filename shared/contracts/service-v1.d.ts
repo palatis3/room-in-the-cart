@@ -3,6 +3,7 @@ export type RequestStatus = 'pending' | 'clarified' | 'added' | 'deferred' | 'ha
 export interface OwnRequest {
   requestId: string; shopId: string; revision: number; originalItem: string; ownQuantity: string | null;
   authoredAt: string; receivedAt: string; route: 'current' | 'next'; status: RequestStatus;
+  carriedForward?: true; fromPreviousShop?: true;
   purchaseOutcome?: 'bought' | 'notBought';
   ownActionAllowed: boolean; clarification: string | null; followupTo: string | null;
 }

@@ -59,6 +59,8 @@ const es: Record<string, string> = {
   'Review request':'Revisar solicitud', 'Review before sending':'Revisar antes de enviar', 'Send request':'Enviar solicitud',
   'Back to edit':'Volver a editar', 'Edit':'Editar', 'Withdraw':'Retirar', 'Cancel':'Cancelar',
   'Follow up':'Enviar aclaración', 'Received':'Recibida', 'Needs clarification':'Necesita aclaración',
+  'Moved to a later pickup for review':'Se pasó a una compra posterior para su revisión',
+  'From an earlier pickup':'De una compra anterior',
   'Shopper confirmed purchase':'La persona que hizo la compra confirmó que compró el artículo',
   'Shopper confirmed the item was not bought':'La persona que hizo la compra confirmó que no compró el artículo',
   'Purchase not confirmed':'Compra sin confirmar',

@@ -1,6 +1,142 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Ready for review in this pickup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ready for review in this pickup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lista para revisar en esta compra"
+          }
+        }
+      }
+    },
+    "From an earlier pickup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From an earlier pickup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De una compra anterior"
+          }
+        }
+      }
+    },
+    "Moved to a later pickup for review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moved to a later pickup for review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se pasó a una compra posterior para su revisión"
+          }
+        }
+      }
+    },
+    "No earlier requests are waiting for this pickup.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No earlier requests are waiting for this pickup."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay solicitudes anteriores pendientes para esta compra."
+          }
+        }
+      }
+    },
+    "Keep for later": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep for later"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar para después"
+          }
+        }
+      }
+    },
+    "Bring to this inbox": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bring to this inbox"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pasar a esta bandeja"
+          }
+        }
+      }
+    },
+    "Bring this request to the current inbox. Review the price and quantity there before changing the basket.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bring this request to the current inbox. Review the price and quantity there before changing the basket."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pasa esta solicitud a la bandeja de esta compra. Revisa allí el precio y la cantidad antes de cambiar la canasta."
+          }
+        }
+      }
+    },
+    "Saved from earlier pickups": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved from earlier pickups"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicitudes guardadas de compras anteriores"
+          }
+        }
+      }
+    },
     "Available for this reservation before": {
       "extractionState": "manual",
       "localizations": {

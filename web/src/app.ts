@@ -315,7 +315,8 @@ export class WebApp {
     const own=this.el('section');own.append(this.el('h2',this.t('Your requests')));
     if(!this.requests.length)own.append(this.el('p',this.t('No requests yet.')));
     for(const r of this.requests){const card=this.el('article');card.className='card';card.dataset.requestId=r.requestId;
-      card.append(this.el('h3',r.originalItem),this.el('p',r.ownQuantity??this.t('Unknown amount')),this.el('p',this.t(statuses[r.status]??'Status unavailable')),this.el('p',this.t(r.route==='next'?'Next shop':'This pickup')),this.el('p',this.date(r.receivedAt)));
+      card.append(this.el('h3',r.originalItem),this.el('p',r.ownQuantity??this.t('Unknown amount')),this.el('p',this.t(r.carriedForward?'Moved to a later pickup for review':statuses[r.status]??'Status unavailable')),this.el('p',this.t(r.route==='next'?'Next shop':'This pickup')),this.el('p',this.date(r.receivedAt)));
+      if(r.fromPreviousShop)card.append(this.el('p',this.t('From an earlier pickup')));
       if(r.status==='added'){
         const purchaseLabel=r.purchaseOutcome==='bought'?'Shopper confirmed purchase':
           r.purchaseOutcome==='notBought'?'Shopper confirmed the item was not bought':'Purchase not confirmed';

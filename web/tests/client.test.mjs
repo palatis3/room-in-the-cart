@@ -836,3 +836,19 @@ for(const [language,refresh,unconfirmed,bought,notBought] of [
   }
  });
 }
+
+test('a carried request keeps its own source and later trip legible without disclosing a shop link',async t=>{
+ const source={...own(),route:'next',status:'deferred',ownActionAllowed:false,carriedForward:true,sourceShopId:'private-source'};
+ const next={...own(),requestId:'next-request',shopId:'next-shop',fromPreviousShop:true};
+ const api=new API(async()=>Response.json({requests:[source,next],nextCursor:null}));
+ const rows=await api.requests(session());
+ assert.equal(rows[0].carriedForward,true);
+ assert.equal('sourceShopId' in rows[0],false);
+ assert.equal(rows[1].fromPreviousShop,true);
+ const {dom,root}=await setup(fakeAPI({requests:async()=>rows}),'es');
+ t.after(()=>dom.window.close());
+ assert.match(root.textContent,/Se pasó a una compra posterior para su revisión/);
+ assert.match(root.textContent,/De una compra anterior/);
+ const malformed=new API(async()=>Response.json({requests:[{...source,ownActionAllowed:true}],nextCursor:null}));
+ await assert.rejects(()=>malformed.requests(session()),ApiError);
+});

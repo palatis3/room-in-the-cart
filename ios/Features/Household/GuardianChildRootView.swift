@@ -146,6 +146,7 @@ struct GuardianChildRequestsView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Text(request.originalItem).font(.headline)
                             if let quantity = request.ownQuantity { Text(quantity) }
+                            if request.fromPreviousShop == true { Text(ht("From an earlier pickup")) }
                             Text(requestStatus(request)).foregroundStyle(.secondary)
                             if let outcome = request.purchaseOutcome { Text(purchaseStatus(outcome)) }
                             if let clarification = request.clarification { Text(clarification) }
@@ -193,6 +194,7 @@ struct GuardianChildRequestsView: View {
         }
     }
     private func requestStatus(_ request: OwnRequest) -> String {
+        if request.carriedForward == true { return ht("Moved to a later pickup for review") }
         switch request.status {
         case "pending": return request.route == "next" ? ht("Received for next shop") : ht("Received, waiting for review")
         case "clarified": return ht("Clarification requested")

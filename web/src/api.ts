@@ -108,9 +108,13 @@ function ownRequest(value: unknown): OwnRequest {
       (status !== 'added' || (purchaseOutcome !== 'bought' && purchaseOutcome !== 'notBought'))) return invalid();
   const ownActionAllowed = boolean(r.ownActionAllowed);
   if (ownActionAllowed && status !== 'pending' && status !== 'clarified') return invalid();
+  if (r.carriedForward !== undefined && (r.carriedForward !== true || ownActionAllowed || route !== 'next')) return invalid();
+  if (r.fromPreviousShop !== undefined && r.fromPreviousShop !== true) return invalid();
   return {requestId:identity(r.requestId), shopId:identity(r.shopId), revision:integer(r.revision, 1),
     originalItem:text(r.originalItem, 240), ownQuantity:optionalText(r.ownQuantity, 80),
     authoredAt:timestamp(r.authoredAt), receivedAt:timestamp(r.receivedAt), route, status:status as OwnRequest['status'], ownActionAllowed,
+    ...(r.carriedForward === true ? {carriedForward:true} : {}),
+    ...(r.fromPreviousShop === true ? {fromPreviousShop:true} : {}),
     ...(purchaseOutcome === undefined ? {} : {purchaseOutcome}),
     clarification:optionalText(r.clarification ?? null, 300), followupTo:r.followupTo == null ? null : identity(r.followupTo)};
 }
