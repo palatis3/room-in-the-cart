@@ -816,13 +816,19 @@ test('trusted recovery basis reads real freezer history, preserves Tuesday and p
  const next={...wed,title:'Repaired Wednesday',revisionId:randomUUID(),needs:[{...ordinary,id:randomUUID(),quantity:q(3)},protectedLunch]};
  const intent={occurrenceId:wed.occurrenceId,targetDigest:recoveryDigest(wed),replacement:next,reviewedAt:before.context.asOf,repeatOfOccurrenceId:null,
    agreesToRepeat:false,proposesExtraTrip:false,agreesToExtraTrip:false,acceptsUnresolved:true};
- const preview=previewRecovery(before.basis,{v:1,base:before.basis.base,intent},before.context.asOf);
+ const preview=await repo.transaction(f.h,async(db,now)=>{
+   const member=await repo.member(db,f.h,{issuer,subject:f.owner.subject}),ctx={db,now,householdId:f.h,member};
+   const shop=await repo.shop(ctx,f.shopId),{loadSharedRecoveryDecisionBasis}=await import('../dist/shared-recovery-basis.js');
+   const {basis,verifyReplacementCoverage}=await loadSharedRecoveryDecisionBasis(ctx,shop,async()=>emptyRecoveryPublication());
+   return verifyReplacementCoverage(previewRecovery(basis,{v:1,base:basis.base,intent},now.toISOString()));
+ });
  assert.equal(preview.timingConfirmed,false);assert.equal(preview.consentSatisfied,true);
  assert.deepEqual(preview.after.meals.find(m=>m.occurrenceId===tue.occurrenceId),tue);
  assert.deepEqual(preview.after.demands.filter(d=>tue.needs.some(n=>n.id===d.needId)),demands(tue));
  const published=new Map([[f.shopId,{...emptyRecoveryPublication(),recoveryRevision:1,meals:[next],usedNeedIds:[ordinary.id],usedRevisionIds:[wed.revisionId]}]]);
  const current=await realRecoveryRead(f,f.shopId,published);
  assert.equal(current.context.meals.find(m=>m.occurrenceId===wed.occurrenceId).title,next.title);
+ assert.equal(current.context.mealSources.find(m=>m.occurrenceId===wed.occurrenceId).sealedRevisionId,wed.revisionId);
  assert.deepEqual(current.coverage.needs.filter(n=>n.occurrenceId===wed.occurrenceId).map(n=>n.missing.numerator),['0','0']);
  assert.equal((await f.delivery()).meals.find(m=>m.occurrenceId===wed.occurrenceId).meal.title,f.meal.title);
  const edit=await p.preview(lotId,q(1));ok(await p.send(edit.cmd));
@@ -862,6 +868,22 @@ test('trusted recovery basis carries a genuine foreign delivery once and publish
  assert.equal(after.basis.foreignHolds[0].quantity.amount.numerator,'2');
  assert.equal(after.projection.demands[0].allocated.numerator,'3');
  assert.equal(after.coverage.needs[0].freezer.numerator,'3');
+ // Restoring the earlier shop's source match would take all three already
+ // allocated wraps from the later dinner. The single-shop domain preview is
+ // deliberately unresolved and can be agreed to; the actual household plan vetoes it.
+ await repo.transaction(f.h,async(db,now)=>{
+   const member=await repo.member(db,f.h,{issuer,subject:f.owner.subject}),ctx={db,now,householdId:f.h,member};
+   const shop=await repo.shop(ctx,f.shopId),{loadSharedRecoveryDecisionBasis}=await import('../dist/shared-recovery-basis.js');
+   const {previewRecovery,recoveryDigest}=await import('../dist/recovery-domain.js');
+   const {basis,verifyReplacementCoverage}=await loadSharedRecoveryDecisionBasis(ctx,shop,async(_,id)=>loaded.get(id)??emptyRecoveryPublication());
+   const previous=basis.meals.find(m=>m.occurrenceId===old.occurrenceId),replacement={...previous,revisionId:randomUUID(),
+     needs:previous.needs.map(n=>n.priority==='protected'?n:{...n,id:randomUUID(),matchedSourceIds:[f.sourceId]})};
+   const intent={occurrenceId:previous.occurrenceId,targetDigest:recoveryDigest(previous),replacement,reviewedAt:now.toISOString(),
+     repeatOfOccurrenceId:null,agreesToRepeat:false,proposesExtraTrip:false,agreesToExtraTrip:false,acceptsUnresolved:true};
+   const preview=previewRecovery(basis,{v:1,base:basis.base,intent},now.toISOString());
+   assert.equal(preview.consentSatisfied,true);assert.equal(preview.foodConfirmed,false);
+   assert.throws(()=>verifyReplacementCoverage(preview),e=>e.code==='steals_food');
+ });
  // Different shops can issue identical client observation UUIDs for independent
  // physical lots. Each usable count must still bind to its actual shop/source.
  const local=ok(await f.send(other.envelope('delivery.register',{supplyRevision:0,placedRevision:2,lineId:initial.lines[0].lineId,

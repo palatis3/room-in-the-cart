@@ -5,7 +5,7 @@ import {unavailable,ServiceError} from './errors.js';
 import {jointInputs,pantryRevision,guardDeliveryEdit,recordPantry,previewPantryObservation,type PantryProjectionLoader} from './pantry-lots.js';
 import {add,amount,cmp,dimension,inUnit,sub,wire,zero,type Rat} from './physical-quantity.js';
 import {deliveryReservationBody,pantryBodies,recoveryBasisSchema,recoveryMealSchema,type Quantity,type RecoveryBasis,type RecoveryMeal,type RecoveryNeed} from './recovery-contracts.js';
-import {exclusionConflict} from './recovery-domain.js';
+import {exclusionConflict,previewRecovery,recoveryDigest,RecoveryError} from './recovery-domain.js';
 import type {Context,Shop} from './repository.js';
 
 /** Only the publication repository supplies accepted overlays and lifetime identity fences. */
@@ -63,6 +63,16 @@ function originForNeed(stock:Stock,m:ScopedMeal,n:RecoveryNeed,sourceId:string):
   }
   return eligibleOrigin(stock,m.shopId,sourceId);
 }
+function currentDefinition(stock:Stock,shopId:string,original:RecoveryMeal,accepted:RecoveryMeal){
+  const needs=accepted.needs.map(n=>{
+    const retained=original.needs.find(old=>old.id===n.id);
+    const delivery=stock.deliverySources.find(s=>s.shopId===shopId && s.physical.foodId===n.foodId);
+    const candidates=n.matchedSourceIds??(delivery?[delivery.physical.sourceId]:[]);
+    return {...n,foodId:n.foodId && eligibleOrigin(stock,shopId,n.foodId)?n.foodId:null,
+      matchedSourceIds:retained?.matchedSourceIds??candidates.filter(id=>eligibleOrigin(stock,shopId,id))};
+  });
+  return recoveryMealSchema.parse({...accepted,needs});
+}
 async function effectiveMeals(ctx:Context,stock:Stock,load:RecoveryPublicationLoader){
   const publications=new Map<string,SharedRecoveryPublication>();
   for(const id of stock.shopIds) publications.set(id,await load(ctx,id));
@@ -73,14 +83,7 @@ async function effectiveMeals(ctx:Context,stock:Stock,load:RecoveryPublicationLo
     if(accepted && accepted.sourceMealRevision!==sealed.revision) throw unavailable();
     // Original identities follow current reviews; replacement identities use their
     // accepted explicit matches while the original lot is still in this scope.
-    const current=p.removedOccurrences?.includes(original.occurrenceId)?null:accepted?recoveryMealSchema.parse({...accepted,
-      needs:accepted.needs.map(n=>{
-        const retained=original.needs.find(old=>old.id===n.id);
-        const nativeFood=stock.deliverySources.find(s=>s.shopId===shopId && s.physical.foodId===n.foodId);
-        const accepted=n.matchedSourceIds??(nativeFood?[nativeFood.physical.sourceId]:[]);
-        return {...n,foodId:n.foodId && eligibleOrigin(stock,shopId,n.foodId)?n.foodId:null,
-          matchedSourceIds:retained?.matchedSourceIds??accepted.filter(id=>eligibleOrigin(stock,shopId,id))};
-      })}):original;
+    const current=p.removedOccurrences?.includes(original.occurrenceId)?null:accepted?currentDefinition(stock,shopId,original,accepted):original;
     return {shopId,sealed,original,current};
   });
   return {meals,publications};
@@ -169,7 +172,7 @@ async function loadGraph(ctx:Context,shop:Shop,load:RecoveryPublicationLoader,fo
   const p=publications.get(shop.shop_id)!;
   const base={shopRevision:shop.revision,authorityEpoch:shop.authority_epoch,recoveryRevision:p.recoveryRevision,
     contextRevision:p.contextRevision,supplyRevision:shop.supply_revision,pantryRevision:await pantryRevision(ctx)};
-  return {stock,graph:effectiveGraph(stock,meals),local,current,options,base,p,hasRecovery:[...publications.values()].some(p=>p.recoveryRevision>0)};
+  return {stock,meals,graph:effectiveGraph(stock,meals),local,current,options,base,p,hasRecovery:[...publications.values()].some(p=>p.recoveryRevision>0)};
 }
 type Loaded=Awaited<ReturnType<typeof loadGraph>>;
 
@@ -208,8 +211,8 @@ async function history(ctx:Context,shop:Shop,state:Loaded){
 
 /** Call inside an authorized household command/read transaction. Never serialize
  * this internal basis: it includes genuine observation provenance from carried lots. */
-export async function loadSharedRecoveryBasis(ctx:Context,shop:Shop,load:RecoveryPublicationLoader):Promise<RecoveryBasis>{
-  const state=await loadGraph(ctx,shop,load),own=new Set(state.options.map(s=>s.sourceId));
+async function basisFromGraph(ctx:Context,shop:Shop,state:Loaded):Promise<RecoveryBasis>{
+  const own=new Set(state.options.map(s=>s.sourceId));
   const physical=await history(ctx,shop,state);
   const used=[...state.local.map(m=>m.original),...state.current];
   const localNeedIds=new Set(state.current.flatMap(m=>m.needs.map(n=>n.id)));
@@ -222,6 +225,61 @@ export async function loadSharedRecoveryBasis(ctx:Context,shop:Shop,load:Recover
     commitmentInventoryComplete:state.current.every(m=>m.needs.length>0)});
 }
 
+export async function loadSharedRecoveryBasis(ctx:Context,shop:Shop,load:RecoveryPublicationLoader):Promise<RecoveryBasis>{
+  return basisFromGraph(ctx,shop,await loadGraph(ctx,shop,load));
+}
+
+type Preview=ReturnType<typeof previewRecovery>;
+function guardOtherRequirements(before:Graph,after:Graph,shop:Shop,replacement:RecoveryMeal){
+  const rows=new Map(after.report.needs.map(n=>[n.ingredientId,n]));
+  const occurrence=shop.shop_id+'/'+replacement.occurrenceId;
+  for(const old of before.report.needs){
+    const next=rows.get(old.ingredientId);
+    if(old.occurrenceId===occurrence && !old.protected && !old.reservations.length && !next) continue;
+    if(!next || old.covered && (!next.covered || lower(next.covered,old.covered))) throw new RecoveryError('steals_food');
+    for(const pin of old.reservations){
+      const kept=next.reservations.find(p=>p.reservationId===pin.reservationId && p.sourceId===pin.sourceId);
+      if(!kept || lower(kept.backed,pin.backed)) throw new RecoveryError('changes_reservation');
+    }
+  }
+}
+
+function checkedLocalProjection(shop:Shop,shown:Preview['before'],graph:Graph):Preview['before']{
+  const prefix=shop.shop_id+'/';
+  const current=graph.report.needs.filter(n=>n.occurrenceId.startsWith(prefix));
+  const shownById=new Map(shown.demands.map(d=>[d.needId,d]));
+  const allocations:Preview['before']['allocations']=[];
+  if(shown.demands.length!==current.length) throw new RecoveryError('divergent_coverage');
+  for(const row of current){
+    const id=graph.needByKey.get(row.ingredientId)!.id,need=shownById.get(id);
+    if(!need || recoveryDigest([need.allocated,need.shortfall])!==recoveryDigest([row.covered,row.missing]))
+      throw new RecoveryError('divergent_coverage');
+    const reservations='reservations' in need?need.reservations:[];
+    if(recoveryDigest(reservations)!==recoveryDigest(row.reservations)) throw new RecoveryError('changes_reservation');
+    for(const a of row.allocations) allocations.push({needId:id,sourceId:a.sourceId,amount:a.amount,unit:row.required!.unit});
+  }
+  return {...shown,allocations};
+}
+
+// Retain one authorized component snapshot for both the private domain projection
+// and the actual household allocation. No foreign identifiers leave the verifier.
+export async function loadSharedRecoveryDecisionBasis(ctx:Context,shop:Shop,load:RecoveryPublicationLoader){
+  const state=await loadGraph(ctx,shop,load),basis=await basisFromGraph(ctx,shop,state);
+  function verifyReplacementCoverage(reviewed:Preview):Preview {
+    const replacement=reviewed.intent.replacement;
+    const target=state.local.find(m=>m.current?.occurrenceId===replacement.occurrenceId);
+    if(!target?.current || recoveryDigest(target.current)!==reviewed.intent.targetDigest || recoveryDigest(reviewed.base)!==recoveryDigest(state.base))
+      throw new RecoveryError('stale_target');
+    const accepted=currentDefinition(state.stock,shop.shop_id,target.original,replacement);
+    const projected=effectiveGraph(state.stock,state.meals.map(m=>m===target?{...m,current:accepted}:m));
+    guardOtherRequirements(state.graph,projected,shop,replacement);
+    const before=checkedLocalProjection(shop,reviewed.before,state.graph);
+    const after=checkedLocalProjection(shop,reviewed.after,projected);
+    return {...reviewed,before,after,previewDigest:recoveryDigest({decision:reviewed.previewDigest,
+      before:before.allocations,after:after.allocations})};
+  }
+  return {basis,verifyReplacementCoverage};
+}
 export async function readSharedRecoveryContext(ctx:Context,shop:Shop,load:RecoveryPublicationLoader){
   const state=await loadGraph(ctx,shop,load);
   const ideas=await ctx.db.query(`SELECT c.occurrence_id,c.shop_revision+1 AS meal_revision,
@@ -232,7 +290,7 @@ export async function readSharedRecoveryContext(ctx:Context,shop:Shop,load:Recov
   const mealSources=state.local.filter(m=>m.current).map(m=>{
     const original=m.sealed.meal.planning,idea=ideas.rows.find(r=>r.occurrence_id===m.original.occurrenceId && r.meal_revision===m.sealed.revision);
     const source=original?.sourceOccurrenceId;
-    return {occurrenceId:m.original.occurrenceId,sourceMealRevision:m.sealed.revision,completedSteps:original?.completedSteps??[],
+    return {occurrenceId:m.original.occurrenceId,sourceMealRevision:m.sealed.revision,sealedRevisionId:m.original.revisionId,completedSteps:original?.completedSteps??[],
       sourceOccurrenceId:source&&source!==m.original.occurrenceId&&state.current.some(x=>x.occurrenceId===source)?source:null,
       approvedIdea:idea?{id:idea.id,revision:idea.revision}:null};
   });
