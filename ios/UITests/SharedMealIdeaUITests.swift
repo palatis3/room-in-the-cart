@@ -124,12 +124,25 @@ import XCTest
         tap(element("household-idea-propose"))
         assertProposalReady()
         tap(element("household-idea-prepare-proposal"))
-        XCTAssertTrue(element("household-idea-send-proposal").waitForExistence(timeout: 10))
+        // Preparing inserts the reviewed meal facts above the send action in the Form.
+        assertMealFact("shared-meal-preparation-minutes", contains: "25")
+        assertText("Ingredient quantity, 250 grams")
+        let send = element("household-idea-send-proposal")
+        reveal(send, fullyVisible: true)
+        XCTAssertTrue(send.isEnabled, "The approved meal must be ready to send after reviewing its facts")
+        capture("S26-reviewed-proposal-action-before-cancellation")
         tap(app.buttons["Cancel proposal review"])
+        assertProposalReady()
         waitCounter("proposals", "Fixture meal proposals: 0"); waitCounter("basket", "Fixture basket writes: 0")
         capture("S26-approved-proposal-enabled-after-parent-disappearance")
         tap(app.navigationBars.buttons.element(boundBy: 0))
-        tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Route lifecycle beans")).firstMatch)
+        XCTAssertTrue(app.navigationBars["Household dinner ideas"].waitForExistence(timeout: 5))
+        // On return the editor may retain its scroll position at the approved
+        // idea detail. Its saved-ideas list is at the top of this same Form.
+        let savedIdea = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS %@",
+                                                         "Route lifecycle beans", "Adult approved")).firstMatch
+        reveal(savedIdea, fullyVisible: true, searchTowardEndFirst: false)
+        savedIdea.tap()
         tap(element("household-idea-propose")); assertProposalReady()
         waitCounter("ideas", "Fixture idea writes: 2")
         waitCounter("proposals", "Fixture meal proposals: 0"); waitCounter("basket", "Fixture basket writes: 0")
@@ -185,7 +198,7 @@ import XCTest
             XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
         }
     }
-    private func reveal(_ target: XCUIElement, fullyVisible: Bool = false) {
+    private func reveal(_ target: XCUIElement, fullyVisible: Bool = false, searchTowardEndFirst: Bool = true) {
         for attempt in 0..<24 {
             let area = scrollableArea()
             // A partly visible multiline switch can be hittable while its
@@ -195,7 +208,7 @@ import XCTest
             let upward: Bool
             if target.exists && !target.frame.isEmpty {
                 upward = target.frame.midY > area.midY
-            } else { upward = attempt < 16 }
+            } else { upward = attempt < 16 ? searchTowardEndFirst : !searchTowardEndFirst }
             scrollContent(upward: upward)
         }
         let area = scrollableArea()
