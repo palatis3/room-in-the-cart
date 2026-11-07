@@ -28,8 +28,9 @@ const minor=z.number().int().min(0).max(1_000_000_000);
 const fallbackOffer=z.object({packId:id.optional(),label,exclusionTags:z.array(label).max(20),
   usablePerPack:mealQuantity,priceMinor:minor,availablePacks:z.number().int().nonnegative().max(1_000_000)}).strict();
 export const fallbackReviewSchema=z.object({candidateId:id,revision:revision.min(1),
-  remainingElapsedMinutes:minutes.nullable(),advanceStepsCompleted:z.boolean(),
-  ingredients:z.array(z.object({ingredientId:id,sourceIds:z.array(id).max(100),offer:fallbackOffer.nullable()}).strict()).max(260)}).strict();
+  remainingElapsedMinutes:minutes.nullable(),remainingTimeUnknown:z.literal(true).optional(),advanceStepsCompleted:z.boolean(),
+  ingredients:z.array(z.object({ingredientId:id,sourceIds:z.array(id).max(100),offer:fallbackOffer.nullable()}).strict()).max(260)}).strict()
+  .refine(review=>!review.remainingTimeUnknown || review.remainingElapsedMinutes===null);
 const fallbackTrip=z.object({minutes,budgetMinor:minor,chargesMinor:minor,currency:z.string().regex(/^[A-Z]{3}$/)}).strict();
 export const fallbackSelectionSchema=z.object({review:fallbackReviewSchema,trip:fallbackTrip.nullable()}).strict();
 export const fallbackOptionsSchema=z.object({v:z.literal(1),base:recoveryBaseSchema,occurrenceId:id,targetDigest:hash,

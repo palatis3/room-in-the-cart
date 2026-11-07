@@ -64,7 +64,9 @@ struct CandidateReviewDraft: Identifiable, Equatable {
             } else { offer = item.hasOwnPack ? try item.pack.offer() : nil }
             return .init(ingredientId: item.id, sourceIds: item.sources.sorted { $0.uuidString < $1.uuidString }, offer: offer)
         }
-        return .init(candidateId: candidate.id, revision: candidate.revision, remainingElapsedMinutes: try DinnerEntry.minutes(remaining, maximum: 1_000_000),
+        let minutes = try DinnerEntry.minutes(remaining, maximum: 1_000_000)
+        return .init(candidateId: candidate.id, revision: candidate.revision, remainingElapsedMinutes: minutes,
+                     remainingTimeUnknown: minutes == nil && candidate.recipe.elapsedMinutes != nil,
                      advanceStepsCompleted: stepsComplete, ingredients: rows)
     }
 }

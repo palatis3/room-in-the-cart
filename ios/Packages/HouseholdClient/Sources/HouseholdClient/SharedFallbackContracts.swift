@@ -178,13 +178,16 @@ public struct SharedFallbackReview: Codable, Equatable, Sendable {
     public let candidateId: UUID
     public let revision: Int
     @RecoveryNullable public var remainingElapsedMinutes: Int?
+    /// Older reviewers sent null to use the accepted recipe's estimate.
+    public let remainingTimeUnknown: Bool?
     public let advanceStepsCompleted: Bool
     public let ingredients: [Ingredient]
 
-    public init(candidateId: UUID, revision: Int, remainingElapsedMinutes: Int?, advanceStepsCompleted: Bool, ingredients: [Ingredient]) {
+    public init(candidateId: UUID, revision: Int, remainingElapsedMinutes: Int?, remainingTimeUnknown: Bool = false, advanceStepsCompleted: Bool, ingredients: [Ingredient]) {
         self.candidateId = candidateId
         self.revision = revision
         self.remainingElapsedMinutes = remainingElapsedMinutes
+        self.remainingTimeUnknown = remainingTimeUnknown ? true : nil
         self.advanceStepsCompleted = advanceStepsCompleted
         self.ingredients = ingredients
     }

@@ -38,6 +38,7 @@ final class SharedFallbackDraftTests: XCTestCase {
 
     func testTwoIngredientsShareOneReviewedPackOnlyByItsSelectedIdentity() throws {
         var raw = recipeDraft()
+        raw.elapsed = "12"
         var second = DinnerIngredientDraft()
         second.name = "Beans for lunch"; second.amount = "2"
         raw.ingredients.append(second)
@@ -46,6 +47,11 @@ final class SharedFallbackDraftTests: XCTestCase {
         let data = try JSONSerialization.data(withJSONObject: ["candidateId":UUID().uuidString, "revision":2, "usual":false, "recipe":json])
         let candidate = try JSONDecoder().decode(SharedFallbackLibrary.Candidate.self, from: data)
         var review = CandidateReviewDraft(candidate)
+        XCTAssertEqual(try review.review(includeOffers: false).remainingElapsedMinutes, 12)
+        review.remaining = ""
+        let cleared = try review.review(includeOffers: false)
+        XCTAssertNil(cleared.remainingElapsedMinutes)
+        XCTAssertEqual(cleared.remainingTimeUnknown, true)
         for index in review.ingredients.indices {
             review.ingredients[index].hasOwnPack = true
             review.ingredients[index].pack.label = "Beans"

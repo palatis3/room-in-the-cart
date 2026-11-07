@@ -101,7 +101,7 @@ function replacement(state:State,target:RecoveryMeal,c:AcceptedFallback,s:Fallba
     }
   }
   return {...target,title:recipe.title,revisionId,template:null,notes:recipe.notes,sourceURL:recipe.sourceURL,exclusions:mealExclusions,needs,
-    remainingElapsedMinutes:review.remainingElapsedMinutes??recipe.elapsedMinutes,requiredLeadMinutes:recipe.requiredLeadMinutes,
+    remainingElapsedMinutes:review.remainingTimeUnknown?null:review.remainingElapsedMinutes??recipe.elapsedMinutes,requiredLeadMinutes:recipe.requiredLeadMinutes,
     advanceStepsCompleted:review.advanceStepsCompleted};
 }
 

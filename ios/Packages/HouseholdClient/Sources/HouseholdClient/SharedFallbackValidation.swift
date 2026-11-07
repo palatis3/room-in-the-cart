@@ -72,7 +72,8 @@ extension SharedFallbackTrip {
 
 extension SharedFallbackReview {
     func validate(_ candidate: SharedFallbackLibrary.Candidate, page: SharedRecoveryPage) throws {
-        guard candidate.id == candidateId, candidate.revision == revision, (0...1_000_000).contains(remainingElapsedMinutes ?? 0),
+        guard remainingTimeUnknown == nil || (remainingTimeUnknown == true && remainingElapsedMinutes == nil),
+              candidate.id == candidateId, candidate.revision == revision, (0...1_000_000).contains(remainingElapsedMinutes ?? 0),
               ingredients.count <= 260, unique(ingredients.map(\.ingredientId)),
               Set(ingredients.map(\.ingredientId)) == Set(candidate.recipe.ingredients.map(\.id)) else { throw ClientError.configuration }
         let sources = Set(page.sourceOptions.map(\.id))
@@ -164,7 +165,7 @@ private extension SharedFallbackOptions.Option {
         let added = recipe.exclusions.filter { e in protected.allSatisfy { $0.exclusions.contains(e) } }
         let mealExclusions = (target.exclusions + added).reduce(into: [String]()) { if !$0.contains($1) { $0.append($1) } }
         guard next.title == recipe.title, next.notes == recipe.notes, next.sourceURL == recipe.sourceURL,
-              next.remainingElapsedMinutes == (review.remainingElapsedMinutes ?? recipe.elapsedMinutes), next.requiredLeadMinutes == recipe.requiredLeadMinutes,
+              review.remainingTimeUnknown != true, next.remainingElapsedMinutes == (review.remainingElapsedMinutes ?? recipe.elapsedMinutes), next.requiredLeadMinutes == recipe.requiredLeadMinutes,
               next.advanceStepsCompleted == review.advanceStepsCompleted, next.exclusions == mealExclusions,
               review.advanceStepsCompleted || (next.remainingElapsedMinutes ?? 0) >= (recipe.elapsedMinutes ?? 0),
               repeatRequired || !page.meals.contains(where: { fallbackName($0.title) == fallbackName(next.title) })

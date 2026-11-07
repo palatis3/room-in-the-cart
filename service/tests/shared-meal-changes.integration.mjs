@@ -1214,6 +1214,11 @@ test('paid fallback ranking uses the accepted household library, current physica
  assert.deepEqual(ok(await rank([inconsistent],trip)).options,[]);
  const single=ok(await rank([large,unknown,slow,easy]));assert.deepEqual(single.options.map(o=>o.candidateId),[easy.candidateId]);
  assert.deepEqual(single.conditional.map(c=>c.reason),['topUpUnreviewed','timingUnknown','leadStepUnconfirmed']);
+ const clearedTime=ok(await rank([{...easy,remainingTimeUnknown:true}],trip));
+ assert.deepEqual(clearedTime.options,[]);assert.equal(clearedTime.usualMinutes,null);
+ assert.deepEqual(clearedTime.conditional,[{candidateId:easy.candidateId,revision:1,reason:'timingUnknown'}]);
+ assert.deepEqual(clearedTime.target,target);
+ assert.equal((await rank([{...easy,remainingElapsedMinutes:10,remainingTimeUnknown:true}],trip)).status,422);
  const enough=ok(await rank([slow,large,easy],trip));
  assert.equal(enough.usualMinutes,10);assert.deepEqual(enough.options.map(o=>o.candidateId),[easy.candidateId,large.candidateId]);
  const [onHand,topUp]=enough.options;

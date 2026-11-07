@@ -461,8 +461,8 @@ extension SharedMealNativeWireTests {
         let replay = try await service.executeFallback(durable)
         XCTAssertEqual(replay, accepted)
         library = try await service.acceptedFallbacks(shopID: id)
-        func review(_ cid: UUID, _ candidate: SharedFallbackRecipe, offer: SharedFallbackOffer? = nil) -> SharedFallbackReview {
-            .init(candidateId: cid, revision: 1, remainingElapsedMinutes: nil, advanceStepsCompleted: false,
+        func review(_ cid: UUID, _ candidate: SharedFallbackRecipe, offer: SharedFallbackOffer? = nil, unknownTime: Bool = false) -> SharedFallbackReview {
+            .init(candidateId: cid, revision: 1, remainingElapsedMinutes: nil, remainingTimeUnknown: unknownTime, advanceStepsCompleted: false,
                   ingredients: [.init(ingredientId: candidate.ingredients[0].id, sourceIds: [source.id], offer: offer)])
         }
         let offer = SharedFallbackOffer(label: "Two wraps", exclusionTags: [], usablePerPack: count(2), priceMinor: 200, availablePacks: 2)
@@ -471,6 +471,13 @@ extension SharedMealNativeWireTests {
                                                        for: target.id, reviewed: desk, library: library)
         XCTAssertEqual(ranking.options.map(\.id), [easyID,biggerID])
         XCTAssertEqual(ranking.usualMinutes, 10)
+        let clearedTime = try await service.recoveryOptions([review(easyID, easy, unknownTime: true)], trip: nil,
+                                                            for: target.id, reviewed: desk, library: library)
+        XCTAssertEqual(clearedTime.target, target)
+        XCTAssertTrue(clearedTime.options.isEmpty)
+        XCTAssertNil(clearedTime.usualMinutes)
+        XCTAssertEqual(clearedTime.conditional.map(\.reason), ["timingUnknown"])
+
         XCTAssertEqual(ranking.conditional, [])
         let topUp = try XCTUnwrap(ranking.options.last)
         XCTAssertEqual(topUp.buys.map(\.packs), [2])
