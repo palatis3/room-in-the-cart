@@ -80,7 +80,7 @@ private struct SharedCookSavedView: View {
         let baseline: SharedCookCopyBaseline?
     }
 
-    private var name: String { recipient.trimmingCharacters(in: .whitespacesAndNewlines) }
+    private var name: String { (try? SharedCookCopyEdit.recipientLabel(recipient)) ?? "" }
     private var allowed: Bool {
         !household.locked && household.sharedShop === model && model.canReadCookCopies &&
         model.deliveryRecord == page && page.shopId == copy.shopId && occurrence.id == copy.occurrenceId
@@ -97,12 +97,12 @@ private struct SharedCookSavedView: View {
                     ShareLink(item: copy.text) { Label(ht("Share dated copy"), systemImage: "square.and.arrow.up") }
                         .accessibilityIdentifier("delivery.cook.savedShare")
                 }
-                Section(pTr("Recipient and version")) {
+                Section {
                     TextField(pTr("Recipient (for explicit sent history)"), text: $recipient)
                         .focused($enteringName).autocorrectionDisabled().submitLabel(.done)
                         .accessibilityIdentifier("delivery.cook.recipient")
                     Button(ht("Check previous send")) { Task { await checkRecipient() } }
-                        .disabled(!canCheck || name.isEmpty || name.utf16.count > 80)
+                        .disabled(!canCheck || name.isEmpty)
                         .accessibilityIdentifier("delivery.cook.checkRecipient")
                     if let reviewed, reviewed.name.utf8.elementsEqual(name.utf8) {
                         if let prior = reviewed.baseline {
@@ -119,6 +119,8 @@ private struct SharedCookSavedView: View {
                     if requestID != nil { ProgressView() }
                     if failure { Text(ht("Check the current recipient record and try again.")) }
                     if let notice = model.notice { Text(notice) }
+                } header: {
+                    Text(pTr("Recipient and version"))
                 } footer: {
                     Text(pTr("A sent version does not prove receipt or acknowledgment. Cancelling share does not mark it sent."))
                 }
@@ -139,7 +141,7 @@ private struct SharedCookSavedView: View {
     private func invalidate() { requestID = nil; reviewed = nil; failure = false }
 
     private func checkRecipient() async {
-        guard canCheck, !name.isEmpty, name.utf16.count <= 80 else { return }
+        guard canCheck, !name.isEmpty else { return }
         let selected = name, id = UUID()
         enteringName = false
         reviewed = nil

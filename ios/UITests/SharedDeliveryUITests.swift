@@ -113,8 +113,8 @@ import XCTest
         tap(mark)
         assertFirstVersionSent()
 
-        tap(app.navigationBars.buttons.firstMatch)
-        tap(app.navigationBars.buttons.firstMatch)
+        tap(app.navigationBars["Dated copy"].buttons.firstMatch)
+        tap(app.navigationBars["Saved cook notes"].buttons.firstMatch)
         openSavedCopy()
         enter("Fixture cook", in: recipient)
         recipient.typeText("\n")
